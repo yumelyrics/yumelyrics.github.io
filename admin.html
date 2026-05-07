@@ -100,7 +100,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sub-extra{font-size:.72rem;color:var(--muted);margin-bottom:.7rem}
 .sub-extra a{color:var(--accent2);text-decoration:none}
 .sub-extra a:hover{text-decoration:underline}
-.sub-replied{display:flex;align-items:flex-start;gap:.6rem;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.18);padding:.65rem .9rem;margin-bottom:.6rem;border-radius:2px}
+.sub-replied{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.18);padding:.65rem .9rem;margin-bottom:.6rem;border-radius:2px;position:relative;overflow:hidden;isolation:isolate}.sub-replied::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}.sub-replied::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
 .admin-badge{font-size:.56rem;color:#07060f;background:var(--accent);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;white-space:nowrap;margin-top:.1rem}
 .sub-replied-text{font-size:.78rem;color:var(--text);line-height:1.6;flex:1}
 .reply-area{display:none;flex-direction:column;gap:.5rem;margin-top:.4rem}
