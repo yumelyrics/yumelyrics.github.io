@@ -78,7 +78,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .req-date{font-size:.65rem;color:var(--muted)}
 .req-artist{font-size:.74rem;color:var(--muted);margin-bottom:.35rem}
 .req-msg{font-size:.78rem;color:var(--text);opacity:.7;margin-bottom:.5rem;line-height:1.6}
-.admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;border-radius:2px}
+.admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;border-radius:2px;position:relative;overflow:hidden;isolation:isolate}.admin-reply-block::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}.admin-reply-block::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
 .admin-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0}
 .admin-badge{font-size:.54rem;color:#07060f;background:var(--accent);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;white-space:nowrap}
 .admin-name{font-size:.6rem;color:var(--accent);white-space:nowrap}
