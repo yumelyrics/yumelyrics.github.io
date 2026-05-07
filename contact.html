@@ -70,6 +70,21 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
 
+.req-list{display:flex;flex-direction:column;gap:.8rem;margin-top:2rem}
+.req-card{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.9rem 1.1rem;transition:border-color .2s}
+.req-card:hover{border-color:rgba(255,255,255,.1)}
+.req-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;margin-bottom:.4rem}
+.req-song{font-size:.88rem;color:var(--text);font-weight:500}
+.req-date{font-size:.65rem;color:var(--muted)}
+.req-artist{font-size:.74rem;color:var(--muted);margin-bottom:.35rem}
+.req-msg{font-size:.78rem;color:var(--text);opacity:.7;margin-bottom:.5rem;line-height:1.6}
+.admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;background:rgba(201,169,110,.07);border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;border-radius:2px}
+.admin-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0}
+.admin-badge{font-size:.54rem;color:#07060f;background:var(--accent);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.admin-name{font-size:.6rem;color:var(--accent);white-space:nowrap}
+.admin-reply-text{font-size:.78rem;color:var(--text);line-height:1.65;flex:1}
+.req-section-title{font-size:.62rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:2rem;margin-bottom:.5rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1.2rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
 </style>
@@ -136,6 +151,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <textarea class="fi" id="rq-msg" rows="3" placeholder="Lagu ini bagus banget, tolong diterjemahin..."></textarea>
     </div>
     <button class="bsend" id="rq-btn" onclick="submitRequest()">Kirim Request</button>
+    <div class="req-section-title">Request yang sudah masuk</div>
+    <div class="req-list" id="reqList"><div style="font-size:.78rem;color:var(--muted)">Memuat...</div></div>
   </div>
 
   <!-- KONTAK -->
@@ -175,7 +192,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -188,6 +205,37 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// Load & display requests
+onSnapshot(
+  query(collection(db,'submissions'), orderBy('ts','desc')),
+  snap => {
+    const reqs = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.type==='request');
+    const list = document.getElementById('reqList');
+    if(!reqs.length){ list.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada request.</div>'; return; }
+    list.innerHTML = reqs.map(s => {
+      const replyHtml = s.adminReply ? `
+        <div class="admin-reply-block">
+          <div class="admin-badge-wrap">
+            <span class="admin-badge">Admin</span>
+            <span class="admin-name">YumeSubs</span>
+          </div>
+          <div class="admin-reply-text">${escH(s.adminReply)}</div>
+        </div>` : '';
+      const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
+      return `<div class="req-card">
+        <div class="req-card-head">
+          <div class="req-song">${escH(s.title)}</div>
+          <div class="req-date">${s.date||''}</div>
+        </div>
+        <div class="req-artist">${escH(s.artist)}</div>
+        ${msgHtml}${replyHtml}
+      </div>`;
+    }).join('');
+  }
+);
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function toast(m){
   const t=document.getElementById('toast');
