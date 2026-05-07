@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hubungi Kami — YumeSubs</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <meta name="description" content="Bagikan pengalaman, saran, atau hubungi admin YumeSubs.">
@@ -16,11 +16,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--en);min-height:100
 .bg-img{position:absolute;inset:0;background:url('https://images5.alphacoders.com/139/thumb-1920-1396456.png') center/cover no-repeat;opacity:.06}
 .bg-grad{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%)}
 .wrap{position:relative;z-index:2}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(7,6,15,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
-.nav-logo{display:flex;align-items:baseline;gap:.6rem;text-decoration:none;cursor:pointer}
-.nljp{font-family:var(--jp);font-size:1.3rem;font-weight:800;color:var(--accent)}
-.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
-.nav-links{display:flex;gap:.25rem;align-items:center}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(7,6,15,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);min-width:0}
+.nav-logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;cursor:pointer;flex-shrink:0;min-width:0}
+.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap;line-height:1}
+.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;line-height:1}
+.nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
 .nb{background:none;border:none;font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
 .nb:hover,.nb.on{color:var(--text);background:rgba(255,255,255,.06)}
 .nb.adm{border:1px solid rgba(201,169,110,.3);color:var(--accent)}
@@ -134,7 +134,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .no-sharing{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-@media(max-width:600px){nav{padding:0 1.2rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
+@media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
+@media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}}
 </style>
 </head>
 <body>
