@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YumeSubs — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07060f;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#8b6bb1;--text:#e8e4f0;--muted:#6a6478;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--en);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1800&q=70') center/cover no-repeat;opacity:.06;z-index:0;pointer-events:none}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%);z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:2}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(7,6,15,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:baseline;gap:.6rem;text-decoration:none}
+.nljp{font-family:var(--jp);font-size:1.3rem;font-weight:800;color:var(--accent)}
+.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
+.nav-badge{font-size:.6rem;color:var(--accent2);border:1px solid rgba(139,107,177,.35);padding:.2rem .55rem;border-radius:2rem;letter-spacing:.12em;text-transform:uppercase;margin-left:.3rem}
+.nav-right{display:flex;align-items:center;gap:.6rem}
+.nb{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+.nb:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.logout-btn{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.logout-btn:hover{background:rgba(201,110,110,.1)}
+.adm-wrap{padding:2.5rem 2.5rem 6rem;max-width:800px}
+.admtit{font-family:var(--jp);font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
+.admsub{font-size:.8rem;color:var(--muted);margin-bottom:2.5rem}
+.admform{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fg{display:flex;flex-direction:column;gap:.4rem}
+.fg.full{grid-column:1/-1}
+.fl{font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+.fi{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;transition:border-color .2s;width:100%}
+.fi::placeholder{color:var(--muted)}
+.fi:focus{border-color:rgba(201,169,110,.4)}
+.lbhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.lrows{display:flex;flex-direction:column;gap:.6rem;margin-bottom:.6rem}
+.lrow{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;align-items:center}
+.lrow-hdr{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;opacity:.4;margin-bottom:.3rem}
+.bdel{background:none;border:1px solid rgba(201,110,110,.3);color:var(--red);font-size:.85rem;width:34px;height:34px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.bdel:hover{background:rgba(201,110,110,.1)}
+.badd{background:none;border:1px dashed var(--border);font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%}
+.badd:hover{border-color:var(--accent2);color:var(--accent2)}
+.form-actions{grid-column:1/-1;display:flex;gap:.7rem;margin-top:.3rem}
+.bsave{flex:1;background:var(--accent);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#07060f;padding:.9rem 2rem;cursor:pointer;transition:opacity .2s;font-weight:500}
+.bsave:hover{opacity:.85}
+.bsave:disabled{opacity:.5;cursor:not-allowed}
+.bcancel{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.9rem 1.4rem;cursor:pointer;transition:all .2s}
+.bcancel:hover{border-color:var(--accent2);color:var(--accent2)}
+.divider{grid-column:1/-1;height:1px;background:var(--border);margin:1.5rem 0}
+.extit{font-size:.62rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;grid-column:1/-1}
+.exlist{display:flex;flex-direction:column;gap:.5rem;grid-column:1/-1}
+.exitem{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.8rem 1rem;transition:border-color .2s}
+.exitem:hover{border-color:rgba(255,255,255,.12)}
+.exn{font-size:.82rem;color:var(--text)}
+.exar{font-size:.68rem;color:var(--muted);margin-top:.15rem}
+.exitem-btns{display:flex;gap:.5rem;flex-shrink:0}
+.bedit{background:none;border:1px solid rgba(139,107,177,.3);color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .7rem;cursor:pointer;transition:all .2s}
+.bedit:hover{background:rgba(139,107,177,.12)}
+.bdels{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .7rem;cursor:pointer;transition:all .2s}
+.bdels:hover{background:rgba(201,110,110,.1)}
+.empty-list{font-size:.8rem;color:var(--muted);font-style:italic;grid-column:1/-1;padding:.5rem 0}
+.edit-banner{grid-column:1/-1;background:rgba(139,107,177,.1);border:1px solid rgba(139,107,177,.3);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.edit-banner.on{display:flex}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
+.toast.on{opacity:1;transform:translateY(0)}
+#loginOverlay{position:fixed;inset:0;z-index:200;background:rgba(7,6,15,.97);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
+#loginOverlay.hide{display:none}
+.loginbox{width:100%;max-width:360px;padding:2.5rem;border:1px solid var(--border);background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:1.2rem;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{text-align:center;margin-bottom:.5rem}
+.login-logo .nljp{font-family:var(--jp);font-size:2rem;font-weight:800;color:var(--accent);display:block}
+.login-logo .nlen{font-size:.6rem;color:var(--muted);letter-spacing:.3em;text-transform:uppercase}
+.login-title{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;text-align:center}
+.login-fg{display:flex;flex-direction:column;gap:.4rem}
+.login-lbl{font-size:.6rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+.login-inp{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.85rem;padding:.75rem 1rem;outline:none;transition:border-color .2s;width:100%}
+.login-inp::placeholder{color:var(--muted)}
+.login-inp:focus{border-color:rgba(201,169,110,.5)}
+.login-btn{background:var(--accent);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#07060f;padding:.85rem;cursor:pointer;font-weight:500;transition:opacity .2s;width:100%}
+.login-btn:hover{opacity:.85}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-err{font-size:.75rem;color:var(--red);text-align:center;min-height:1rem}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+@media(max-width:600px){nav{padding:0 1.2rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a class="nav-logo" href="yumesubs.html">
+    <div class="nljp">夢字幕</div>
+    <div class="nlen">YumeSubs</div>
+    <div class="nav-badge">Admin</div>
+  </a>
+  <div class="nav-right">
+    <a class="nb" href="yumesubs.html">← Beranda</a>
+    <button class="logout-btn" id="logoutBtn" style="display:none" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="adm-wrap">
+  <div class="admtit">Form Admin</div>
+  <div class="admsub">Tambah, edit, atau hapus lagu. Data tersimpan ke Firestore.</div>
+  <div class="admform">
+    <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
+    <input type="hidden" id="f-editid" value="">
+    <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="花束を君に"></div>
+    <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder="Bunga Untukmu"></div>
+    <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder="Utada Hikaru"></div>
+    <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Hanataba wo Kimi ni"></div>
+    <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
+    <div class="fg full"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder="https://... link gambar JPG/PNG"></div>
+    <div class="fg full">
+      <div class="lbhd"><div class="fl">Baris Lirik</div></div>
+      <div class="lrow-hdr"><div class="fl">Jepang</div><div class="fl">Romaji</div><div class="fl">Terjemahan ID</div><div></div></div>
+      <div class="lrows" id="lrows"></div>
+      <button class="badd" onclick="addRow()">+ Tambah Baris Lirik</button>
+    </div>
+    <div class="form-actions">
+      <button class="bsave" id="bsaveBtn" onclick="saveSong()">Simpan Lagu ke Katalog</button>
+      <button class="bcancel" id="bcancelBtn" style="display:none" onclick="cancelEdit()">✕ Batal Edit</button>
+    </div>
+    <div class="divider"></div>
+    <div class="extit">Lagu di Katalog (<span id="songCount">0</span>)</div>
+    <div class="exlist" id="exlist"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+
+<div id="loginOverlay">
+  <div class="loginbox">
+    <div class="login-logo">
+      <span class="nljp">夢字幕</span>
+      <span class="nlen">Admin Panel</span>
+    </div>
+    <div class="login-title">Masuk dulu bos</div>
+    <div class="login-fg">
+      <div class="login-lbl">Email</div>
+      <input class="login-inp" id="l-email" type="email" placeholder="admin@email.com" autocomplete="off">
+    </div>
+    <div class="login-fg">
+      <div class="login-lbl">Password</div>
+      <input class="login-inp" id="l-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-err" id="l-err"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+  authDomain: "yumesubs7.firebaseapp.com",
+  projectId: "yumesubs7",
+  storageBucket: "yumesubs7.firebasestorage.app",
+  messagingSenderId: "1076202015626",
+  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let songs = [];
+let unsubSongs = null;
+
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// Auth state listener
+onAuthStateChanged(auth, user => {
+  if(user){
+    document.getElementById('loginOverlay').classList.add('hide');
+    document.getElementById('logoutBtn').style.display='block';
+    startListening();
+  } else {
+    document.getElementById('loginOverlay').classList.remove('hide');
+    document.getElementById('logoutBtn').style.display='none';
+    if(unsubSongs){ unsubSongs(); unsubSongs=null; }
+  }
+});
+
+window.doLogin = async () => {
+  const email = document.getElementById('l-email').value.trim();
+  const pw    = document.getElementById('l-pw').value;
+  const err   = document.getElementById('l-err');
+  const btn   = document.getElementById('loginBtn');
+  if(!email||!pw){ err.textContent='Email & password wajib diisi.'; return; }
+  btn.disabled=true; err.textContent='';
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    document.getElementById('l-pw').value='';
+  } catch(e){
+    err.textContent = (e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')
+      ? 'Email atau password salah.' : 'Login gagal, coba lagi.';
+    document.getElementById('l-pw').value='';
+    document.getElementById('l-pw').focus();
+  }
+  btn.disabled=false;
+};
+
+window.doLogout = async () => {
+  await signOut(auth);
+  window.location.href='yumesubs.html';
+};
+
+function startListening(){
+  if(unsubSongs) unsubSongs();
+  unsubSongs = onSnapshot(
+    query(collection(db,'songs'), orderBy('order','asc')),
+    snap => { songs=snap.docs.map(d=>({id:d.id,...d.data()})); ra(); }
+  );
+}
+
+window.addRow = (jp='',ro='',id='') => {
+  const r=document.createElement('div'); r.className='lrow';
+  r.innerHTML=`<input class="fi rjp" placeholder="日本語" value="${esc(jp)}">` +
+    `<input class="fi rro" placeholder="Romaji" value="${esc(ro)}">` +
+    `<input class="fi rid" placeholder="Terjemahan" value="${esc(id)}">` +
+    `<button class="bdel" onclick="this.parentElement.remove()">&#x2715;</button>`;
+  document.getElementById('lrows').appendChild(r);
+};
+function esc(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+window.saveSong = async () => {
+  const jt=document.getElementById('f-jt').value.trim();
+  const it=document.getElementById('f-it').value.trim();
+  const ar=document.getElementById('f-ar').value.trim();
+  const ro=document.getElementById('f-ro').value.trim();
+  const yt=document.getElementById('f-yt').value.trim();
+  const img=document.getElementById('f-img').value.trim();
+  const editId=document.getElementById('f-editid').value;
+  if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
+  const lyrics=[];
+  document.querySelectorAll('#lrows .lrow').forEach(r=>{
+    const jp=r.querySelector('.rjp').value.trim();
+    const ro=r.querySelector('.rro').value.trim();
+    const id=r.querySelector('.rid').value.trim();
+    if(jp) lyrics.push({jp,ro,id});
+  });
+  const btn=document.getElementById('bsaveBtn');
+  btn.disabled=true;
+  try {
+    if(editId){
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,lyrics});
+      toast('Lagu berhasil diupdate!');
+      cancelEdit();
+    } else {
+      const snap=await getCountFromServer(collection(db,'songs'));
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,lyrics,order:snap.data().count});
+      toast('Lagu berhasil ditambah!');
+      clearForm();
+    }
+  } catch(e){ toast('Gagal menyimpan: '+e.message); }
+  btn.disabled=false;
+};
+
+function clearForm(){
+  ['f-jt','f-it','f-ar','f-ro','f-yt','f-img'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('lrows').innerHTML='';
+  addRow();
+}
+
+window.editSong = id => {
+  const s=songs.find(x=>x.id===id); if(!s)return;
+  document.getElementById('f-jt').value=s.titleJp||'';
+  document.getElementById('f-it').value=s.titleId||'';
+  document.getElementById('f-ar').value=s.artist||'';
+  document.getElementById('f-ro').value=s.titleRo||'';
+  document.getElementById('f-yt').value=s.ytId||'';
+  document.getElementById('f-img').value=s.img||'';
+  document.getElementById('f-editid').value=s.id;
+  document.getElementById('lrows').innerHTML='';
+  (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id));
+  document.getElementById('bsaveBtn').textContent='✓ Update Lagu';
+  document.getElementById('bcancelBtn').style.display='block';
+  document.getElementById('editBanner').classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('Form diisi data lagu yang dipilih.');
+};
+
+window.cancelEdit = () => {
+  document.getElementById('f-editid').value='';
+  clearForm();
+  document.getElementById('bsaveBtn').textContent='Simpan Lagu ke Katalog';
+  document.getElementById('bcancelBtn').style.display='none';
+  document.getElementById('editBanner').classList.remove('on');
+};
+
+window.delSong = async id => {
+  if(!confirm('Yakin mau hapus lagu ini?')) return;
+  try {
+    await deleteDoc(doc(db,'songs',id));
+    toast('Lagu dihapus.');
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+function ra(){
+  document.getElementById('songCount').textContent=songs.length;
+  if(!songs.length){
+    document.getElementById('exlist').innerHTML='<div class="empty-list">Belum ada lagu.</div>';
+    return;
+  }
+  document.getElementById('exlist').innerHTML=songs.map(s=>`
+    <div class="exitem">
+      <div>
+        <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
+        <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
+      </div>
+      <div class="exitem-btns">
+        <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
+        <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
+      </div>
+    </div>`).join('');
+}
+
+addRow();
+</script>
+</body>
+</html>
