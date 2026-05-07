@@ -531,6 +531,47 @@ onSnapshot(
 );
 
 sv('cat');
+
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  doc,
+  updateDoc,
+  getDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+await addDoc(collection(db,'comments'),{
+  songId:cur,
+  parentId:null,
+  name:name||'Anonim',
+  text:text,
+  isAdmin:isAdmin,
+  date:dateStr(),
+  ts:serverTimestamp()
+});
+
+await addDoc(collection(db,'comments'),{
+  songId:cur,
+  parentId:parentId,
+  name:name||'Anonim',
+  text:text,
+  isAdmin:isAdmin,
+  date:dateStr(),
+  ts:serverTimestamp()
+});
+
+{isAdm ? adminBadge() : ''}
+
+<div class="replies">
+  ${repliesHtml}
+</div>
 </script>
 </body>
 </html>
