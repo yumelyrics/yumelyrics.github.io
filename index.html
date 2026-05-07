@@ -20,8 +20,9 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--en);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1800&q=70') center/cover no-repeat;opacity:.06;z-index:0;pointer-events:none}
-body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%);z-index:0;pointer-events:none}
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;will-change:transform;transform:translateZ(0)}
+.bg-img{position:absolute;inset:0;background:url('https://images4.alphacoders.com/628/thumb-1920-628927.png') center/cover no-repeat;opacity:.06}
+.bg-grad{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%)}
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(7,6,15,.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
 .nav-logo{display:flex;align-items:baseline;gap:.6rem;cursor:pointer}
@@ -128,12 +129,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
-@media(max-width:600px){nav{padding:0 1rem}.hero,.sec-hd,.song-grid,#lyrView{padding-left:1.2rem;padding-right:1.2rem}.search-wrap{padding-left:1.2rem;padding-right:1.2rem}.song-grid{grid-template-columns:1fr 1fr;gap:.8rem}.nljp{font-size:1.05rem}.nlen{display:none}.nb{font-size:.6rem;padding:.4rem .6rem;letter-spacing:.06em}.nb.adm{padding:.4rem .7rem}}
-@media(max-width:600px){.search-inp,.cmi,.fi{font-size:16px!important}}
-@media(max-width:480px){.nav-links{gap:0}}
+@media(max-width:600px){nav{padding:0 1.2rem}.hero,.sec-hd,.song-grid,#lyrView{padding-left:1.2rem;padding-right:1.2rem}.search-wrap{padding-left:1.2rem;padding-right:1.2rem}.song-grid{grid-template-columns:1fr 1fr;gap:.8rem}}
 </style>
 </head>
 <body>
+<div class="bg-fixed"><div class="bg-img"></div><div class="bg-grad"></div></div>
 <div class="wrap">
 <nav>
   <div class="nav-logo" onclick="sv('cat')">
