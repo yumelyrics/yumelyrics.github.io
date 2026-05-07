@@ -2,36 +2,50 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>YumeSubs — Lirik & Terjemahan Lagu Jepang Indonesia</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <meta name="description" content="YumeSubs adalah website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia. Temukan arti lagu favoritmu dari artis seperti Back Number, Yorushika, Yoasobi, Ado, Fujii Kaze, Amazarashi, dan banyak lagi. Nyanyi sambil ngerti maknanya, gratis dan lengkap.">
 <meta name="keywords" content="YumeSubs, yumelyrics, lirik lagu jepang, terjemahan lagu jepang, romaji indonesia, lirik jepang indonesia, japanese lyrics translation, terjemahan back number, terjemahan yorushika, terjemahan yoasobi, terjemahan ado, terjemahan fujii kaze, terjemahan amazarashi, lagu jepang sedih, lagu anime terjemahan, j-pop terjemahan indonesia, lirik romaji, arti lagu jepang, subtitle lagu jepang, japanese song lyrics bahasa indonesia, lirik lagu jepang dan artinya, lagu jepang populer terjemahan, terjemahan lagu jepang viral, lirik terjemahan jepang indo, belajar jepang dari lagu, yume jimaku">
 <meta property="og:title" content="YumeSubs — Lirik & Terjemahan Lagu Jepang">
 <meta property="og:description" content="Lirik lagu Jepang, romaji, dan terjemahan Indonesia lengkap. Back Number, Yorushika, Yoasobi, dan lainnya. Nyanyi sambil ngerti maknanya.">
-<meta property="og:url" content="https://yumelyrics.github.io/yumesubs.html">
+<meta property="og:url" content="https://yumelyrics.github.io/index.html">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://yumelyrics.github.io">
 <meta name="google-site-verification" content="kUWbuwBUM0v9gKqMXVG7t9A80DgPCgMYQvOU533ERjE">
 
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#07060f;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#8b6bb1;--text:#e8e4f0;--muted:#6a6478;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
+:root{--bg:#07060f;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#8b6bb1;--text:#e8e4f0;--muted:#6a6478;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e;--admin-bg:rgba(139,107,177,.12);--admin-border:rgba(139,107,177,.35);--admin-text:#c4aee8}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--en);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:url('https://4kwallpapers.com/images/walls/thumbs_3t/22725.jpg') center/cover no-repeat;opacity:.06;z-index:0;pointer-events:none}
-body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%);z-index:0;pointer-events:none}
+
+/* Fix background glitch — use transform for GPU layer, no fixed on mobile */
+.bg-img{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1800&q=70') center/cover no-repeat;
+  opacity:.06;
+  transform:translateZ(0);
+  will-change:transform;}
+.bg-grd{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.18) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.12) 0%,transparent 50%);
+  transform:translateZ(0);}
+
 .wrap{position:relative;z-index:2}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(7,6,15,.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
-.nav-logo{display:flex;align-items:baseline;gap:.6rem;cursor:pointer}
-.nljp{font-family:var(--jp);font-size:1.3rem;font-weight:800;color:var(--accent)}
-.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
-.nav-links{display:flex;gap:.25rem;align-items:center}
-.nb{background:none;border:none;font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+
+/* ── Navbar fix ── */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;min-height:60px;background:rgba(7,6,15,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);gap:1rem;overflow:hidden}
+.nav-logo{display:flex;align-items:center;gap:.5rem;cursor:pointer;text-decoration:none;flex-shrink:0;min-width:0}
+.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap;line-height:1}
+.nlen{font-size:.55rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;line-height:1}
+.nav-links{display:flex;gap:.2rem;align-items:center;flex-shrink:0}
+.nb{background:none;border:none;font-family:var(--en);font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
 .nb:hover,.nb.on{color:var(--text);background:rgba(255,255,255,.06)}
 .nb.adm{border:1px solid rgba(201,169,110,.3);color:var(--accent)}
 .nb.adm:hover{background:rgba(201,169,110,.08)}
+
+/* Hero */
 .hero{padding:5rem 2.5rem 3rem;max-width:860px}
 .eyebrow{font-size:.6rem;color:var(--accent);letter-spacing:.35em;text-transform:uppercase;margin-bottom:1rem}
 .hero h1{font-family:var(--jp);font-size:clamp(2.2rem,5.5vw,4rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:.9rem}
@@ -89,7 +103,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .lid{font-size:.88rem;color:var(--accent);font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
 .lro.h,.lid.h{opacity:0;max-height:0}
 .lsep{height:1px;background:var(--border);opacity:.4;margin:.5rem 0}
-.cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
+
+/* ── Comment section ── */
+.cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:620px}
 .cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
 .cmform{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
 .cmi{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;resize:none;transition:border-color .2s}
@@ -97,26 +113,69 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .cmi:focus{border-color:rgba(201,169,110,.4)}
 .cmrow{display:flex;gap:.6rem}
 .cmrow .cmi{flex:1}
-.sbtn{background:var(--accent2);border:none;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 1.2rem;cursor:pointer;transition:opacity .2s}
+.sbtn{background:var(--accent2);border:none;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 1.2rem;cursor:pointer;transition:opacity .2s;height:42px}
 .sbtn:hover{opacity:.8}
 .sbtn:disabled{opacity:.4;cursor:not-allowed}
 .cmlist{display:flex;flex-direction:column;gap:1rem}
+
+/* Normal comment */
 .citem{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.2rem}
-.chdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.4rem}
+.chdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.4rem;gap:.5rem;flex-wrap:wrap}
 .cname{font-size:.72rem;color:var(--accent);font-weight:500}
 .cdate{font-size:.6rem;color:var(--muted)}
 .ctxt{font-size:.82rem;color:var(--text);line-height:1.65;font-weight:300}
+
+/* Admin comment — special */
+.citem.is-admin{background:var(--admin-bg);border:1px solid var(--admin-border);position:relative;overflow:hidden}
+.citem.is-admin::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--accent2),var(--accent))}
+.citem.is-admin .cname{color:var(--admin-text)}
+.citem.is-admin .ctxt{color:#ddd6f0}
+.admin-badge{display:inline-flex;align-items:center;gap:.3rem;background:linear-gradient(135deg,rgba(139,107,177,.35),rgba(201,169,110,.2));border:1px solid var(--admin-border);color:var(--accent2);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;padding:.18rem .55rem;border-radius:2rem;font-weight:500;vertical-align:middle;margin-left:.4rem}
+.admin-badge::before{content:'✦';font-size:.45rem}
+
+/* Reply area */
+.reply-btn{background:none;border:none;font-family:var(--en);font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.3rem 0;transition:color .2s;margin-top:.5rem}
+.reply-btn:hover{color:var(--accent)}
+.replies{margin-top:.8rem;padding-left:1rem;border-left:2px solid var(--border);display:flex;flex-direction:column;gap:.6rem}
+.ritem{background:rgba(255,255,255,.015);border:1px solid var(--border);padding:.7rem 1rem}
+.ritem.is-admin{background:var(--admin-bg);border-color:var(--admin-border);position:relative;overflow:hidden}
+.ritem.is-admin::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent2),var(--accent))}
+.ritem.is-admin .cname{color:var(--admin-text)}
+.ritem.is-admin .ctxt{color:#ddd6f0}
+.reply-form{margin-top:.8rem;padding:.8rem 1rem;background:rgba(255,255,255,.015);border:1px dashed var(--border);display:none;flex-direction:column;gap:.5rem}
+.reply-form.open{display:flex}
+.reply-form .cmi{font-size:.78rem;padding:.55rem .85rem}
+.reply-form-row{display:flex;gap:.5rem;align-items:center}
+.reply-form-row .cmi{flex:1}
+.rsbtn{background:var(--accent2);border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#fff;padding:.5rem .9rem;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.rsbtn:hover{opacity:.8}
+.rsbtn:disabled{opacity:.4;cursor:not-allowed}
+.cancel-reply{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);cursor:pointer;padding:.5rem .4rem;transition:color .2s}
+.cancel-reply:hover{color:var(--text)}
+
 .nocm{font-size:.78rem;color:var(--muted);font-style:italic}
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-@media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
-@media(max-width:600px){nav{padding:0 1.2rem}.hero,.sec-hd,.song-grid,#lyrView{padding-left:1.2rem;padding-right:1.2rem}.search-wrap{padding-left:1.2rem;padding-right:1.2rem}.song-grid{grid-template-columns:1fr 1fr;gap:.8rem}}
+
+@media(max-width:760px){
+  .lvgrid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  nav{padding:0 1rem;gap:.5rem}
+  .nljp{font-size:1.1rem}
+  .nb{font-size:.6rem;padding:.35rem .55rem}
+  .hero,.sec-hd,#lyrView{padding-left:1.2rem;padding-right:1.2rem}
+  .search-wrap{padding-left:1.2rem;padding-right:1.2rem}
+  .song-grid{padding:0 1.2rem;grid-template-columns:1fr 1fr;gap:.8rem}
+}
 </style>
 </head>
 <body>
+<div class="bg-img"></div>
+<div class="bg-grd"></div>
 <div class="wrap">
 <nav>
   <div class="nav-logo" onclick="sv('cat')">
@@ -197,7 +256,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs }
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, getDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -209,12 +269,21 @@ const firebaseConfig = {
   appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-let songs = [];
-let cur   = null;
-let sro   = true, str = true;
+let songs    = [];
+let cur      = null;
+let sro      = true, str = true;
+let isAdmin  = false;
+let currentUser = null;
+
+// Track admin status from auth
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  isAdmin = !!user;
+});
 
 // ── Helpers ──
 function norm(s){
@@ -233,6 +302,12 @@ function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m; t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),2800);
+}
+function adminBadge(){
+  return `<span class="admin-badge">Admin</span>`;
+}
+function dateStr(){
+  return new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
 }
 
 // ── Render catalog ──
@@ -322,6 +397,7 @@ async function rcm(songId){
     const q = query(
       collection(db,'comments'),
       where('songId','==',songId),
+      where('parentId','==',null),
       orderBy('ts','desc')
     );
     const snap = await getDocs(q);
@@ -329,20 +405,92 @@ async function rcm(songId){
       el.innerHTML = '<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';
       return;
     }
-    el.innerHTML = snap.docs.map(d=>{
+    // Render top-level comments with replies
+    const items = await Promise.all(snap.docs.map(async d => {
       const c = d.data();
-      return `<div class="citem">
-        <div class="chdr">
-          <div class="cname">${c.name}</div>
-          <div class="cdate">${c.date}</div>
-        </div>
-        <div class="ctxt">${c.text}</div>
-      </div>`;
-    }).join('');
+      const replies = await loadReplies(d.id);
+      return renderComment(d.id, c, replies);
+    }));
+    el.innerHTML = items.join('');
   } catch(e){
     el.innerHTML = '<div class="nocm">Gagal memuat komentar.</div>';
   }
 }
+
+async function loadReplies(parentId){
+  try {
+    const q = query(
+      collection(db,'comments'),
+      where('parentId','==',parentId),
+      orderBy('ts','asc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e){ return []; }
+}
+
+function renderComment(id, c, replies){
+  const isAdm = c.isAdmin === true;
+  const repliesHtml = (replies||[]).map(r=>{
+    const rAdm = r.isAdmin===true;
+    return `<div class="ritem${rAdm?' is-admin':''}">
+      <div class="chdr">
+        <div class="cname">${escH(r.name)}${rAdm?adminBadge():''}</div>
+        <div class="cdate">${r.date}</div>
+      </div>
+      <div class="ctxt">${escH(r.text)}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="citem${isAdm?' is-admin':''}" id="cm-${id}">
+    <div class="chdr">
+      <div class="cname">${escH(c.name)}${isAdm?adminBadge():''}</div>
+      <div class="cdate">${c.date}</div>
+    </div>
+    <div class="ctxt">${escH(c.text)}</div>
+    ${replies&&replies.length?`<div class="replies">${repliesHtml}</div>`:'<div class="replies" id="rep-${id}"></div>'}
+    <button class="reply-btn" onclick="toggleReplyForm('${id}')">↩ Balas</button>
+    <div class="reply-form" id="rf-${id}">
+      <div class="reply-form-row">
+        <input class="cmi" id="rn-${id}" placeholder="Nama (opsional)">
+        <button class="rsbtn" id="rb-${id}" onclick="postReply('${id}')">Kirim</button>
+        <button class="cancel-reply" onclick="toggleReplyForm('${id}')">✕</button>
+      </div>
+      <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Tulis balasan..."></textarea>
+    </div>
+  </div>`;
+}
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+window.toggleReplyForm = id => {
+  const rf = document.getElementById('rf-'+id);
+  if(rf) rf.classList.toggle('open');
+};
+
+window.postReply = async parentId => {
+  const t = document.getElementById('rt-'+parentId).value.trim();
+  if(!t) return;
+  const n = document.getElementById('rn-'+parentId).value.trim();
+  const btn = document.getElementById('rb-'+parentId);
+  btn.disabled=true;
+  try {
+    await addDoc(collection(db,'comments'),{
+      songId  : cur,
+      parentId: parentId,
+      name    : isAdmin ? 'Admin YumeSubs' : (n||'Anonim'),
+      text    : t,
+      isAdmin : isAdmin,
+      date    : dateStr(),
+      ts      : Date.now()
+    });
+    document.getElementById('rt-'+parentId).value='';
+    toggleReplyForm(parentId);
+    rcm(cur);
+    toast(isAdmin ? 'Balasan admin terkirim! ✦' : 'Balasan terkirim!');
+  } catch(e){ toast('Gagal kirim balasan.'); }
+  btn.disabled=false;
+};
 
 window.postCm = async () => {
   const n   = document.getElementById('cm-n').value.trim();
@@ -352,15 +500,17 @@ window.postCm = async () => {
   btn.disabled = true;
   try {
     await addDoc(collection(db,'comments'), {
-      songId : cur,
-      name   : n||'Anonim',
-      text   : t,
-      date   : new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts     : Date.now()
+      songId   : cur,
+      parentId : null,
+      name     : isAdmin ? 'Admin YumeSubs' : (n||'Anonim'),
+      text     : t,
+      isAdmin  : isAdmin,
+      date     : dateStr(),
+      ts       : Date.now()
     });
     document.getElementById('cm-t').value = '';
     rcm(cur);
-    toast('Komentar terkirim!');
+    toast(isAdmin ? 'Komentar admin terkirim! ✦' : 'Komentar terkirim!');
   } catch(e){
     toast('Gagal kirim komentar.');
   }
