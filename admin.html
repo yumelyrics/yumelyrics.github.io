@@ -120,6 +120,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .bdel-sub{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .75rem;cursor:pointer;transition:all .2s}
 .bdel-sub:hover{background:rgba(201,110,110,.1)}
 .sub-empty{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
+.cm-section{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.cm-card{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.1rem;transition:border-color .2s}
+.cm-card:hover{border-color:rgba(255,255,255,.12)}
+.cm-song-label{font-size:.58rem;color:var(--accent2);border:1px solid rgba(139,107,177,.35);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem;display:inline-block}
+.cm-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;margin-bottom:.3rem}
+.cm-meta{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.cm-name{font-size:.8rem;color:var(--text);font-weight:500}
+.cm-date{font-size:.68rem;color:var(--muted)}
+.cm-body{font-size:.82rem;color:var(--text);line-height:1.65;margin-bottom:.7rem}
+.cm-replied{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.18);padding:.65rem .9rem;margin-bottom:.6rem;border-radius:2px;position:relative;overflow:hidden;isolation:isolate}.cm-replied::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}.cm-replied::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
+.cm-replied-text{font-size:.78rem;color:var(--text);line-height:1.6;flex:1}
+.cm-reply-area{display:none;flex-direction:column;gap:.5rem;margin-top:.4rem}
+.cm-reply-area.open{display:flex}
+.cm-footer{display:flex;align-items:center;gap:.5rem}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1.2rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}}
 </style>
@@ -176,6 +190,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       </div>
       <div class="sub-list" id="subList"><div class="sub-empty">Memuat pesan...</div></div>
     </div>
+
+    <!-- COMMENTS SECTION -->
+    <div class="cm-section">
+      <div class="sub-title">Komentar Lagu</div>
+      <div class="sub-desc">Lihat & balas komentar pengunjung di halaman lagu. Balasan tampil langsung di komentar tersebut.</div>
+      <div class="sub-list" id="cmAdminList"><div class="sub-empty">Memuat komentar...</div></div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -205,7 +226,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, where }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -223,9 +244,11 @@ const db   = getFirestore(app);
 
 let songs = [];
 let submissions = [];
+let comments = [];
 let subFilter = 'all';
 let unsubSongs = null;
 let unsubSubs = null;
+let unsubCms = null;
 
 function toast(m){
   const t=document.getElementById('toast');
@@ -280,6 +303,11 @@ function startListening(){
   unsubSubs = onSnapshot(
     query(collection(db,'submissions'), orderBy('ts','desc')),
     snap => { submissions=snap.docs.map(d=>({id:d.id,...d.data()})); renderSubs(); }
+  );
+  if(unsubCms) unsubCms();
+  unsubCms = onSnapshot(
+    query(collection(db,'comments'), where('parentId','==',null), orderBy('ts','desc')),
+    snap => { comments=snap.docs.map(d=>({id:d.id,...d.data()})); renderCmAdmin(); }
   );
 }
 
@@ -369,6 +397,78 @@ window.deleteSub = async id => {
   try {
     await deleteDoc(doc(db,'submissions',id));
     toast('Pesan dihapus.');
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+function renderCmAdmin(){
+  const list = document.getElementById('cmAdminList');
+  if(!comments.length){ list.innerHTML='<div class="sub-empty">Belum ada komentar.</div>'; return; }
+  const songMap = {};
+  songs.forEach(s=>{ songMap[s.id]=s; });
+  list.innerHTML = comments.map(c => {
+    const song = songMap[c.songId];
+    const songName = song ? (song.titleRo||song.titleJp||c.songId) : c.songId;
+    const replied = c.adminReply ? `
+      <div class="cm-replied">
+        <div class="admin-badge">Admin</div>
+        <div class="cm-replied-text">${escHtml(c.adminReply)}</div>
+      </div>` : '';
+    return `
+    <div class="cm-card" id="cmcard-${c.id}">
+      <div class="cm-song-label">♪ ${escHtml(songName)}</div>
+      <div class="cm-head">
+        <div class="cm-meta">
+          <span class="cm-name">${escHtml(c.name||'Anonim')}</span>
+          <span class="cm-date">${c.date||''}</span>
+        </div>
+      </div>
+      <div class="cm-body">${escHtml(c.text)}</div>
+      ${replied}
+      <div class="cm-reply-area" id="cmra-${c.id}">
+        <textarea class="reply-inp" id="cmrinp-${c.id}" rows="3" placeholder="Tulis balasan sebagai Admin YumeSubs..."></textarea>
+        <div class="reply-actions">
+          <button class="breply" onclick="sendCmReply('${c.id}')">✓ Kirim Balasan</button>
+          <button class="bcancel-reply" onclick="toggleCmReply('${c.id}')">Batal</button>
+        </div>
+      </div>
+      <div class="cm-footer">
+        <button class="breply-toggle" onclick="toggleCmReply('${c.id}')">${c.adminReply?'✏️ Edit Balasan':'↩ Balas'}</button>
+        <button class="bdel-sub" onclick="deleteCm('${c.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleCmReply = id => {
+  const area = document.getElementById('cmra-'+id);
+  const inp = document.getElementById('cmrinp-'+id);
+  const isOpen = area.classList.toggle('open');
+  if(isOpen){
+    const cm = comments.find(c=>c.id===id);
+    if(cm && cm.adminReply) inp.value = cm.adminReply;
+    inp.focus();
+  }
+};
+
+window.sendCmReply = async id => {
+  const inp = document.getElementById('cmrinp-'+id);
+  const text = inp.value.trim();
+  if(!text){ toast('Balasannya kosong!'); return; }
+  const btn = inp.nextElementSibling.querySelector('.breply');
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db,'comments',id), { adminReply: text, adminReplyDate: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) });
+    toast('Balasan komentar terkirim! 📨');
+    document.getElementById('cmra-'+id).classList.remove('open');
+  } catch(e){ toast('Gagal kirim: '+e.message); }
+  btn.disabled = false;
+};
+
+window.deleteCm = async id => {
+  if(!confirm('Hapus komentar ini?')) return;
+  try {
+    await deleteDoc(doc(db,'comments',id));
+    toast('Komentar dihapus.');
   } catch(e){ toast('Gagal hapus: '+e.message); }
 };
 
