@@ -374,7 +374,7 @@ async function rcm(songId){
   const el = document.getElementById('cmlist');
   el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
   try {
-    const q = query(collection(db,'comments'), where('songId','==',songId), where('parentId','==',null), orderBy('ts','desc'));
+    const q = query(collection(db,'comments'), where('songId','==',songId), where('parentId','in',[null,'']), orderBy('ts','desc'));
     const snap = await getDocs(q);
     if(snap.empty){ el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>'; return; }
     const parents = snap.docs.map(d=>({id:d.id,...d.data()}));
