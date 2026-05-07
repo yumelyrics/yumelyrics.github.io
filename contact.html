@@ -85,6 +85,53 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .admin-reply-text{font-size:.78rem;color:var(--text);line-height:1.65;flex:1}
 .req-section-title{font-size:.62rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:2rem;margin-bottom:.5rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
 
+/* Sharing list */
+.sharing-section-title{font-size:.62rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:2.5rem;margin-bottom:.8rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sharing-count{font-size:.6rem;color:var(--accent2);border:1px solid rgba(139,107,177,.3);padding:.1rem .5rem;border-radius:2rem}
+.sharing-list{display:flex;flex-direction:column;gap:1.2rem;margin-top:.5rem}
+.sharing-card{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.1rem;transition:border-color .2s;animation:fu .3s ease}
+.sharing-card:hover{border-color:rgba(255,255,255,.1)}
+.sharing-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;margin-bottom:.6rem}
+.sharing-author{font-size:.78rem;color:var(--accent);font-weight:500}
+.sharing-date{font-size:.62rem;color:var(--muted)}
+.sharing-text{font-size:.82rem;color:var(--text);line-height:1.75;margin-bottom:.5rem}
+.sharing-link{font-size:.72rem;color:var(--accent2);word-break:break-all;display:block;margin-bottom:.6rem;text-decoration:none}
+.sharing-link:hover{text-decoration:underline}
+
+/* Admin reply on sharing */
+.sharing-admin-reply{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-bottom:.6rem;border-radius:2px;position:relative;overflow:hidden;isolation:isolate}
+.sharing-admin-reply::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}
+.sharing-admin-reply::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
+
+/* Replies thread */
+.replies-thread{display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.reply-card{background:rgba(139,107,177,.04);border:1px solid rgba(139,107,177,.12);padding:.6rem .85rem;border-radius:2px;animation:fu .25s ease}
+.reply-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;margin-bottom:.3rem}
+.reply-author{font-size:.7rem;color:var(--accent2);font-weight:500}
+.reply-date{font-size:.6rem;color:var(--muted)}
+.reply-text{font-size:.78rem;color:var(--text);line-height:1.65}
+
+/* Reply form */
+.reply-toggle-btn{background:none;border:1px solid rgba(139,107,177,.3);color:var(--accent2);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .7rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.reply-toggle-btn:hover{background:rgba(139,107,177,.1)}
+.reply-count-badge{font-size:.6rem;color:var(--muted);margin-left:.3rem}
+.sharing-footer{display:flex;align-items:center;gap:.6rem;margin-top:.5rem}
+.reply-form{display:none;flex-direction:column;gap:.5rem;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border);animation:fu .25s ease}
+.reply-form.open{display:flex}
+.reply-form-row{display:grid;grid-template-columns:1fr 2fr;gap:.5rem}
+.reply-form-name{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.78rem;padding:.5rem .75rem;outline:none;transition:border-color .2s}
+.reply-form-name::placeholder{color:var(--muted)}
+.reply-form-name:focus{border-color:rgba(139,107,177,.4)}
+.reply-form-text{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.78rem;padding:.5rem .75rem;outline:none;resize:none;transition:border-color .2s;width:100%}
+.reply-form-text::placeholder{color:var(--muted)}
+.reply-form-text:focus{border-color:rgba(139,107,177,.4)}
+.reply-submit-btn{background:var(--accent2);border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.55rem 1.2rem;cursor:pointer;transition:opacity .2s;align-self:flex-start}
+.reply-submit-btn:hover{opacity:.85}
+.reply-submit-btn:disabled{opacity:.4;cursor:not-allowed}
+.reply-cancel-btn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem .9rem;cursor:pointer;transition:all .2s}
+.reply-cancel-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.no-sharing{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1.2rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
 </style>
@@ -128,6 +175,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <input class="fi" id="sh-link" placeholder="https://youtube.com/...">
     </div>
     <button class="bsend" id="sh-btn" onclick="submitSharing()">Kirim Cerita</button>
+
+    <!-- SHARING LIST -->
+    <div class="sharing-section-title">
+      <span>✦ Cerita dari pembaca</span>
+      <span class="sharing-count" id="sharingCountBadge">0</span>
+    </div>
+    <div class="sharing-list" id="sharingList">
+      <div class="no-sharing">Memuat cerita...</div>
+    </div>
   </div>
 
   <!-- REQUEST -->
@@ -192,7 +248,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -206,34 +262,143 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Load & display requests
+// Load sharing posts with replies
 onSnapshot(
   query(collection(db,'submissions'), orderBy('ts','desc')),
-  snap => {
-    const reqs = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.type==='request');
+  async snap => {
+    const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const sharings = all.filter(s=>s.type==='sharing');
+    const reqs = all.filter(s=>s.type==='request');
+
+    // Render requests
     const list = document.getElementById('reqList');
-    if(!reqs.length){ list.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada request.</div>'; return; }
-    list.innerHTML = reqs.map(s => {
-      const replyHtml = s.adminReply ? `
-        <div class="admin-reply-block">
-          <div class="admin-badge-wrap">
-            <span class="admin-badge">Admin</span>
-            <span class="admin-name">YumeSubs</span>
+    if(!reqs.length){ list.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada request.</div>'; }
+    else {
+      list.innerHTML = reqs.map(s => {
+        const replyHtml = s.adminReply ? `
+          <div class="admin-reply-block">
+            <div class="admin-badge-wrap">
+              <span class="admin-badge">Admin</span>
+              <span class="admin-name">YumeSubs</span>
+            </div>
+            <div class="admin-reply-text">${escH(s.adminReply)}</div>
+          </div>` : '';
+        const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
+        return `<div class="req-card">
+          <div class="req-card-head">
+            <div class="req-song">${escH(s.title)}</div>
+            <div class="req-date">${s.date||''}</div>
           </div>
-          <div class="admin-reply-text">${escH(s.adminReply)}</div>
-        </div>` : '';
-      const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
-      return `<div class="req-card">
-        <div class="req-card-head">
-          <div class="req-song">${escH(s.title)}</div>
-          <div class="req-date">${s.date||''}</div>
-        </div>
-        <div class="req-artist">${escH(s.artist)}</div>
-        ${msgHtml}${replyHtml}
-      </div>`;
-    }).join('');
+          <div class="req-artist">${escH(s.artist)}</div>
+          ${msgHtml}${replyHtml}
+        </div>`;
+      }).join('');
+    }
+
+    // Render sharings
+    const sharingList = document.getElementById('sharingList');
+    const badge = document.getElementById('sharingCountBadge');
+    badge.textContent = sharings.length;
+    if(!sharings.length){
+      sharingList.innerHTML='<div class="no-sharing">Belum ada cerita yang dibagikan. Jadilah yang pertama! 🌸</div>';
+      return;
+    }
+    // Fetch replies for each sharing
+    const withReplies = await Promise.all(sharings.map(async s => {
+      const rsnap = await getDocs(query(collection(db,'submissions',s.id,'replies'), orderBy('ts','asc')));
+      s._replies = rsnap.docs.map(d=>({id:d.id,...d.data()}));
+      return s;
+    }));
+    sharingList.innerHTML = withReplies.map(s => renderSharingCard(s)).join('');
   }
 );
+
+function renderSharingCard(s){
+  const adminReplyHtml = s.adminReply ? `
+    <div class="sharing-admin-reply">
+      <div class="admin-badge-wrap">
+        <span class="admin-badge">Admin</span>
+        <span class="admin-name">YumeSubs</span>
+      </div>
+      <div class="admin-reply-text">${escH(s.adminReply)}</div>
+    </div>` : '';
+  const linkHtml = s.link ? `<a class="sharing-link" href="${escH(s.link)}" target="_blank">🔗 ${escH(s.link)}</a>` : '';
+  const replies = s._replies||[];
+  const repliesHtml = replies.length ? `
+    <div class="replies-thread" id="thread-${s.id}">
+      ${replies.map(r=>`
+        <div class="reply-card">
+          <div class="reply-card-head">
+            <span class="reply-author">↩ ${escH(r.name||'Anonim')}</span>
+            <span class="reply-date">${r.date||''}</span>
+          </div>
+          <div class="reply-text">${escH(r.text)}</div>
+        </div>`).join('')}
+    </div>` : `<div class="replies-thread" id="thread-${s.id}" style="display:none"></div>`;
+  return `
+  <div class="sharing-card" id="sc-${s.id}">
+    <div class="sharing-card-head">
+      <div class="sharing-author">✦ ${escH(s.name||'Anonim')}</div>
+      <div class="sharing-date">${s.date||''}</div>
+    </div>
+    <div class="sharing-text">${escH(s.text)}</div>
+    ${linkHtml}${adminReplyHtml}${repliesHtml}
+    <div class="sharing-footer">
+      <button class="reply-toggle-btn" onclick="toggleReplyForm('${s.id}')">
+        💬 Reply <span class="reply-count-badge">${replies.length?'('+replies.length+')':''}</span>
+      </button>
+    </div>
+    <div class="reply-form" id="rf-${s.id}">
+      <div class="reply-form-row">
+        <input class="reply-form-name" id="rn-${s.id}" placeholder="Namamu (opsional)">
+        <textarea class="reply-form-text" id="rt-${s.id}" rows="2" placeholder="Ikut cerita dong... 💬"></textarea>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="reply-submit-btn" onclick="submitReply('${s.id}')">Kirim</button>
+        <button class="reply-cancel-btn" onclick="toggleReplyForm('${s.id}')">Batal</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.toggleReplyForm = id => {
+  const form = document.getElementById('rf-'+id);
+  form.classList.toggle('open');
+  if(form.classList.contains('open')) document.getElementById('rt-'+id).focus();
+};
+
+window.submitReply = async id => {
+  const name = document.getElementById('rn-'+id).value.trim();
+  const text = document.getElementById('rt-'+id).value.trim();
+  if(!text){ toast('Tuliskan sesuatu dulu 😊'); return; }
+  const btn = document.getElementById('rf-'+id).querySelector('.reply-submit-btn');
+  btn.disabled = true;
+  try {
+    await addDoc(collection(db,'submissions',id,'replies'), {
+      name: name || 'Anonim',
+      text,
+      ts: Date.now(),
+      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})
+    });
+    // Add reply to DOM immediately
+    const thread = document.getElementById('thread-'+id);
+    thread.style.display='';
+    const div = document.createElement('div');
+    div.className = 'reply-card';
+    div.innerHTML = `
+      <div class="reply-card-head">
+        <span class="reply-author">↩ ${escH(name||'Anonim')}</span>
+        <span class="reply-date">baru saja</span>
+      </div>
+      <div class="reply-text">${escH(text)}</div>`;
+    thread.appendChild(div);
+    document.getElementById('rt-'+id).value='';
+    document.getElementById('rn-'+id).value='';
+    document.getElementById('rf-'+id).classList.remove('open');
+    toast('Reply terkirim! 💬');
+  } catch(e){ toast('Gagal kirim reply.'); }
+  btn.disabled = false;
+};
 
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
