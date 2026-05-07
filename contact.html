@@ -284,13 +284,14 @@ onSnapshot(
             <div class="admin-reply-text">${escH(s.adminReply)}</div>
           </div>` : '';
         const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
+        const linkHtml = s.link ? `<div class="req-msg" style="margin-bottom:.4rem">🔗 <a href="${escH(s.link)}" target="_blank" style="color:var(--accent2);text-decoration:none;word-break:break-all" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escH(s.link)}</a></div>` : '';
         return `<div class="req-card">
           <div class="req-card-head">
             <div class="req-song">${escH(s.title)}</div>
             <div class="req-date">${s.date||''}</div>
           </div>
           <div class="req-artist">${escH(s.artist)}</div>
-          ${msgHtml}${replyHtml}
+          ${linkHtml}${msgHtml}${replyHtml}
         </div>`;
       }).join('');
     }
