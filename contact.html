@@ -70,38 +70,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
 
-.cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
-.cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
-.cmform{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
-.cmi{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;resize:none;transition:border-color .2s;width:100%}
-.cmi::placeholder{color:var(--muted)}
-.cmi:focus{border-color:rgba(201,169,110,.4)}
-.cmrow{display:flex;gap:.6rem}
-.cmrow .cmi{flex:1}
-.sbtn{background:var(--accent2);border:none;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 1.2rem;cursor:pointer;transition:opacity .2s}
-.sbtn:hover{opacity:.8}
-.sbtn:disabled{opacity:.4;cursor:not-allowed}
-.cmlist{display:flex;flex-direction:column;gap:1rem}
-.citem{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.2rem}
-.citem.is-admin{background:rgba(201,169,110,.05);border-color:rgba(201,169,110,.2)}
-.chdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;gap:.5rem;flex-wrap:wrap}
-.chdr-left{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.cname{font-size:.72rem;color:var(--accent);font-weight:500}
-.cdate{font-size:.6rem;color:var(--muted)}
-.ctxt{font-size:.82rem;color:var(--text);line-height:1.65;font-weight:300}
-.nocm{font-size:.78rem;color:var(--muted);font-style:italic}
-.admin-badge{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;background:var(--accent);padding:.15rem .45rem;font-weight:600}
-.reply-btn{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:.2rem .5rem;transition:color .2s}
-.reply-btn:hover{color:var(--accent2)}
-.replies{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
-.ritem{padding:.7rem 1rem;border-left:2px solid var(--border)}
-.ritem.is-admin{border-left-color:var(--accent);background:rgba(201,169,110,.04)}
-.reply-form{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:none;flex-direction:column;gap:.5rem}
-.reply-form.open{display:flex}
-.reply-row{display:flex;gap:.5rem}
-.reply-row .cmi{flex:1}
-.rbtn-cancel{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;color:var(--muted);padding:.4rem .8rem;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
-.rbtn-cancel:hover{border-color:var(--red);color:var(--red)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+@media(max-width:600px){nav{padding:0 1.2rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -168,19 +138,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <button class="bsend" id="rq-btn" onclick="submitRequest()">Kirim Request</button>
   </div>
 
-  <!-- KOMENTAR REQUEST -->
-  <div class="form-panel" id="panel-request-comments" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
-    <div class="cmtit">Diskusi Request</div>
-    <div class="cmform">
-      <div class="cmrow">
-        <input class="cmi" id="rcm-n" placeholder="Nama lo (opsional)">
-        <button class="sbtn" id="rcm-btn" onclick="postRqCm()">Kirim</button>
-      </div>
-      <textarea class="cmi" id="rcm-t" rows="3" placeholder="Komentar soal request lagu..."></textarea>
-    </div>
-    <div class="cmlist" id="rqcmlist"><div class="nocm">Belum ada komentar.</div></div>
-  </div>
-
   <!-- KONTAK -->
   <div class="form-panel" id="panel-kontak">
     <p class="hint">Mau langsung ngobrol sama admin? Reach out lewat sini.</p>
@@ -218,7 +175,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -232,8 +189,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
 function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m; t.classList.add('on');
@@ -242,110 +197,9 @@ function toast(m){
 
 window.switchTab = tab => {
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.form-panel').forEach(p=>{ p.classList.remove('on'); p.style.display='none'; });
+  document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('on'));
   event.target.classList.add('on');
   document.getElementById('panel-'+tab).classList.add('on');
-  document.getElementById('panel-'+tab).style.display='';
-  if(tab==='request'){
-    const rcsec = document.getElementById('panel-request-comments');
-    rcsec.style.display='block';
-    loadRqComments();
-  } else {
-    document.getElementById('panel-request-comments').style.display='none';
-  }
-};
-
-// ── Render komentar request ──
-function renderRqCm(id, c, replies){
-  const isAdm = !!c.isAdmin;
-  const repHtml = replies.length ? `<div class="replies">${replies.map(r=>{
-    const ra=!!r.isAdmin;
-    return `<div class="ritem${ra?' is-admin':''}">
-      <div class="chdr"><div class="chdr-left">
-        <div class="cname">${esc(r.name)}</div>
-        ${ra?'<span class="admin-badge">Admin</span>':''}
-        <div class="cdate">${esc(r.date)}</div>
-      </div></div>
-      <div class="ctxt">${esc(r.text)}</div>
-    </div>`;
-  }).join('')}</div>` : '';
-  return `<div class="citem${isAdm?' is-admin':''}" id="rq-${id}">
-    <div class="chdr">
-      <div class="chdr-left">
-        <div class="cname">${esc(c.name)}</div>
-        ${isAdm?'<span class="admin-badge">Admin</span>':''}
-        <div class="cdate">${esc(c.date)}</div>
-      </div>
-      <button class="reply-btn" onclick="toggleRqReply('${id}')">↩ Balas</button>
-    </div>
-    <div class="ctxt">${esc(c.text)}</div>
-    ${repHtml}
-    <div class="reply-form" id="rrf-${id}">
-      <div class="reply-row">
-        <input class="cmi" id="rrn-${id}" placeholder="Nama (opsional)">
-        <button class="rbtn-cancel" onclick="toggleRqReply('${id}')">✕</button>
-      </div>
-      <textarea class="cmi" id="rrt-${id}" rows="2" placeholder="Balas..."></textarea>
-      <button class="sbtn" style="padding:.55rem 1rem;align-self:flex-start" onclick="postRqReply('${id}')">Kirim</button>
-    </div>
-  </div>`;
-}
-
-async function loadRqComments(){
-  const el = document.getElementById('rqcmlist');
-  el.innerHTML='<div class="nocm">Memuat...</div>';
-  try {
-    const q = query(collection(db,'rq_comments'), where('parentId','==',null), orderBy('ts','desc'));
-    const snap = await getDocs(q);
-    if(snap.empty){ el.innerHTML='<div class="nocm">Belum ada komentar. Gas duluan!</div>'; return; }
-    const parents = snap.docs.map(d=>({id:d.id,...d.data()}));
-    const rq2 = query(collection(db,'rq_comments'), where('parentId','!=',null), orderBy('parentId'), orderBy('ts','asc'));
-    const rsnap = await getDocs(rq2);
-    const rm = {};
-    rsnap.docs.forEach(d=>{ const r={id:d.id,...d.data()}; if(!rm[r.parentId]) rm[r.parentId]=[]; rm[r.parentId].push(r); });
-    el.innerHTML = parents.map(c=>renderRqCm(c.id,c,rm[c.id]||[])).join('');
-  } catch(e){ el.innerHTML='<div class="nocm">Gagal muat komentar.</div>'; }
-}
-
-window.toggleRqReply = id => {
-  const rf = document.getElementById('rrf-'+id);
-  rf.classList.toggle('open');
-  if(rf.classList.contains('open')) document.getElementById('rrt-'+id).focus();
-};
-
-window.postRqReply = async parentId => {
-  const t = document.getElementById('rrt-'+parentId).value.trim();
-  if(!t) return;
-  const n = document.getElementById('rrn-'+parentId).value.trim();
-  try {
-    await addDoc(collection(db,'rq_comments'),{
-      parentId, name:n||'Anonim', text:t, isAdmin:false,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now()
-    });
-    toast('Balasan terkirim!');
-    loadRqComments();
-  } catch(e){ toast('Gagal.'); }
-};
-
-window.postRqCm = async () => {
-  const t = document.getElementById('rcm-t').value.trim();
-  if(!t){ toast('Komentarnya kosong!'); return; }
-  const btn = document.getElementById('rcm-btn');
-  btn.disabled=true;
-  try {
-    await addDoc(collection(db,'rq_comments'),{
-      parentId:null,
-      name:document.getElementById('rcm-n').value.trim()||'Anonim',
-      text:t, isAdmin:false,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now()
-    });
-    toast('Komentar terkirim!');
-    document.getElementById('rcm-t').value='';
-    loadRqComments();
-  } catch(e){ toast('Gagal kirim.'); }
-  btn.disabled=false;
 };
 
 window.submitSharing = async () => {
