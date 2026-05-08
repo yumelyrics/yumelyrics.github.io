@@ -268,16 +268,43 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
     <!-- GITHUB WORKFLOW SECTION -->
     <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
-      <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Generate Song Pages</div>
-      <div class="admsub" style="margin-bottom:1.5rem">Trigger workflow GitHub Actions buat generate halaman lagu. Token disimpen di browser, ga perlu input ulang.</div>
-      <div style="display:flex;flex-direction:column;gap:.8rem;max-width:520px">
+      <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Generate Pages</div>
+      <div class="admsub" style="margin-bottom:1.5rem">Trigger GitHub Actions buat generate halaman. Token disimpen di browser, ga perlu input ulang.</div>
+      <div style="display:flex;flex-direction:column;gap:.8rem;max-width:520px;margin-bottom:2rem">
         <div class="fg">
           <div class="fl">GitHub Personal Access Token</div>
           <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
           <div style="font-size:.62rem;color:var(--muted);margin-top:.4rem">Butuh scope <code style="color:var(--accent2)">workflow</code>. Disimpen di localStorage browser ini aja.</div>
         </div>
-        <div>
-          <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow()" style="max-width:260px">Run Generate Song Pages</button>
+      </div>
+
+      <!-- Song Pages -->
+      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px;margin-bottom:1rem">
+        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Song Pages</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per lagu dari koleksi Firestore + update sitemap.</div>
+        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+          <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px">▶ Run Generate Song Pages</button>
+          <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
+        </div>
+        <div id="gh-songs-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="gh-songs-status-text"></span>
+          <a id="gh-songs-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+        </div>
+      </div>
+
+      <!-- Resource Pages -->
+      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px">
+        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Resource Pages</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per resource dari koleksi Firestore + update sitemap.</div>
+        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+          <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px">▶ Run Generate Resource Pages</button>
+          <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
+        </div>
+        <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="gh-res-status-text"></span>
+          <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
         </div>
       </div>
     </div>
@@ -824,7 +851,12 @@ window.resetResForm = () => {
 // ── GITHUB WORKFLOW ──
 const GH_OWNER = 'yumelyrics';
 const GH_REPO  = 'yumelyrics.github.io';
-const GH_WORKFLOW = 'generate-pages.yml';
+const GH_WORKFLOWS = {
+  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: 'Run Generate Song Pages',     dlUrl: 'https://yumelyrics.github.io/lagu/' },
+  resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.github.io/resources-pages/' }
+};
+const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
+let _pollTimers = {};
 
 function ghTokenGet(){ return localStorage.getItem('yume_gh_token')||''; }
 function ghTokenSet(t){ localStorage.setItem('yume_gh_token', t); }
@@ -832,38 +864,99 @@ function ghTokenSet(t){ localStorage.setItem('yume_gh_token', t); }
 document.getElementById('gh-token-inp').addEventListener('input', function(){
   ghTokenSet(this.value.trim());
 });
+(function(){ const t=ghTokenGet(); if(t) document.getElementById('gh-token-inp').value=t; })();
 
-// isi token dari localStorage saat load
-(function(){
-  const t = ghTokenGet();
-  if(t) document.getElementById('gh-token-inp').value = t;
-})();
+function ghHeaders(token){
+  return { 'Authorization':'Bearer '+(token||ghTokenGet()), 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+}
 
-window.triggerWorkflow = async () => {
+function setStatus(type, visible, conclusion, text){
+  const cfg = GH_WORKFLOWS[type];
+  const el = document.getElementById(cfg.statusEl);
+  el.style.display = visible ? 'flex' : 'none';
+  if(!visible) return;
+  const dot = document.getElementById(cfg.dotEl);
+  const txt = document.getElementById(cfg.textEl);
+  const dl  = document.getElementById(cfg.dlEl);
+  dot.style.background = GH_DOT_COLORS[conclusion] || 'var(--muted)';
+  if(conclusion === 'in_progress') dot.style.animation = 'blink 1s infinite';
+  else dot.style.animation = '';
+  txt.textContent = text;
+  if(conclusion === 'success'){
+    dl.style.display = 'inline-flex';
+    dl.href = cfg.dlUrl;
+    dl.target = '_blank';
+    dl.rel = 'noopener';
+    dl.textContent = '↗ Lihat Hasil';
+  } else { dl.style.display = 'none'; }
+}
+
+async function pollRunStatus(type, runId){
+  const cfg = GH_WORKFLOWS[type];
+  const token = ghTokenGet();
+  clearTimeout(_pollTimers[type]);
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/runs/${runId}`, { headers: ghHeaders(token) });
+    if(!r.ok) return;
+    const run = await r.json();
+    const status = run.status; // queued, in_progress, completed
+    const conclusion = run.conclusion; // success, failure, cancelled, null
+    if(status !== 'completed'){
+      const label = status === 'in_progress' ? 'Sedang berjalan...' : 'Antri...';
+      setStatus(type, true, status, label);
+      _pollTimers[type] = setTimeout(() => pollRunStatus(type, runId), 6000);
+    } else {
+      const labels = { success:'✅ Selesai! Halaman berhasil di-generate.', failure:'❌ Workflow gagal. Cek log di GitHub.', cancelled:'⚠️ Workflow dibatalkan.', skipped:'— Dilewati.' };
+      setStatus(type, true, conclusion, labels[conclusion] || conclusion);
+      document.getElementById(cfg.btn).disabled = false;
+      document.getElementById(cfg.btn).textContent = cfg.label;
+    }
+  } catch(e){ /* silent */ }
+}
+
+async function getLatestRunId(workflowFile, token){
+  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${workflowFile}/runs?per_page=1`, { headers: ghHeaders(token) });
+  if(!r.ok) return null;
+  const d = await r.json();
+  return d.workflow_runs?.[0]?.id || null;
+}
+
+window.triggerWorkflow = async (type) => {
+  const cfg = GH_WORKFLOWS[type];
   const token = ghTokenGet();
   if(!token){ toast('Token belum diisi!'); return; }
-  const btn = document.getElementById('gh-run-btn');
+  const btn = document.getElementById(cfg.btn);
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
+  setStatus(type, true, 'queued', 'Mengirim trigger...');
   try {
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${GH_WORKFLOW}/dispatches`, {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${cfg.file}/dispatches`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'Content-Type': 'application/json'
-      },
+      headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ref: 'main' })
     });
-    if(res.status === 204){ toast('Workflow berhasil di-trigger! 🚀'); }
-    else {
+    if(res.status === 204){
+      toast('Workflow berhasil di-trigger! 🚀');
+      setStatus(type, true, 'queued', 'Antri, menunggu runner...');
+      // Tunggu sebentar baru poll (GH butuh ~2-3 detik buat buat run baru)
+      setTimeout(async () => {
+        const runId = await getLatestRunId(cfg.file, token);
+        if(runId) pollRunStatus(type, runId);
+        else setStatus(type, true, 'queued', 'Run sedang diantri, refresh manual jika perlu.');
+      }, 3500);
+    } else {
       const err = await res.json().catch(()=>({}));
       toast('Gagal: ' + (err.message||res.status));
+      setStatus(type, false);
+      btn.disabled = false;
+      btn.textContent = cfg.label;
     }
-  } catch(e){ toast('Error: ' + e.message); }
-  btn.disabled = false;
-  btn.textContent = 'Run Generate Song Pages';
+  } catch(e){
+    toast('Error: ' + e.message);
+    setStatus(type, false);
+    btn.disabled = false;
+    btn.textContent = cfg.label;
+  }
 };
 
 </script>
