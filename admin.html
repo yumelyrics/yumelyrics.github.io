@@ -260,6 +260,22 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="extit">Lagu di Katalog (<span id="songCount">0</span>)</div>
     <div class="exlist" id="exlist"></div>
   </div>
+    <!-- GITHUB WORKFLOW SECTION -->
+    <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
+      <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Generate Song Pages</div>
+      <div class="admsub" style="margin-bottom:1.5rem">Trigger workflow GitHub Actions buat generate halaman lagu. Token disimpen di browser, ga perlu input ulang.</div>
+      <div style="display:flex;flex-direction:column;gap:.8rem;max-width:520px">
+        <div class="fg">
+          <div class="fl">GitHub Personal Access Token</div>
+          <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.4rem">Butuh scope <code style="color:var(--accent2)">workflow</code>. Disimpen di localStorage browser ini aja.</div>
+        </div>
+        <div>
+          <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow()" style="max-width:260px">Run Generate Song Pages</button>
+        </div>
+      </div>
+    </div>
+
     <!-- STORY EDITOR SECTION -->
     <div class="story-section">
       <div class="story-tit">Tulis Cerita</div>
@@ -797,6 +813,51 @@ window.resetResForm = () => {
   document.getElementById('rf-cat').value='Aplikasi';
   document.getElementById('resBanner').style.display='none';
   document.getElementById('resSaveBtn').textContent='Simpan Resource';
+};
+
+// ── GITHUB WORKFLOW ──
+const GH_OWNER = 'yumelyrics';
+const GH_REPO  = 'yumelyrics.github.io';
+const GH_WORKFLOW = 'generate-pages.yml';
+
+function ghTokenGet(){ return localStorage.getItem('yume_gh_token')||''; }
+function ghTokenSet(t){ localStorage.setItem('yume_gh_token', t); }
+
+document.getElementById('gh-token-inp').addEventListener('input', function(){
+  ghTokenSet(this.value.trim());
+});
+
+// isi token dari localStorage saat load
+(function(){
+  const t = ghTokenGet();
+  if(t) document.getElementById('gh-token-inp').value = t;
+})();
+
+window.triggerWorkflow = async () => {
+  const token = ghTokenGet();
+  if(!token){ toast('Token belum diisi!'); return; }
+  const btn = document.getElementById('gh-run-btn');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${GH_WORKFLOW}/dispatches`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ref: 'main' })
+    });
+    if(res.status === 204){ toast('Workflow berhasil di-trigger! 🚀'); }
+    else {
+      const err = await res.json().catch(()=>({}));
+      toast('Gagal: ' + (err.message||res.status));
+    }
+  } catch(e){ toast('Error: ' + e.message); }
+  btn.disabled = false;
+  btn.textContent = 'Run Generate Song Pages';
 };
 
 </script>
