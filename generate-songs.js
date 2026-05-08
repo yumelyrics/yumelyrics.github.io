@@ -341,7 +341,7 @@ async function main() {
     const html=generateHTML(song,finalSlug);
     fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
     console.log(`  ✓ lagu/${finalSlug}.html`);
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}</loc><priority>0.8</priority></url>`);
+    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><priority>0.8</priority></url>`);
   }
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,'utf8');
