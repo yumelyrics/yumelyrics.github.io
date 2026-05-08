@@ -386,13 +386,13 @@ async function rcm(songId){
   const el = document.getElementById('cmlist');
   el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
   try {
-    const allQ = query(collection(db,'comments'), where('songId','==',songId), orderBy('ts','desc'));
+    const allQ = query(collection(db,'comments'), where('songId','==',songId));
     const allSnap = await getDocs(allQ);
-    if(allSnap.empty){ el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>'; return; }
-    const all = allSnap.docs.map(d=>({id:d.id,...d.data()}));
-    const parents = all.filter(c=>!c.parentId);
+    const allDocs = allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts?.seconds||0)-(a.ts?.seconds||0));
+    if(allDocs.length===0){ el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>'; return; }
+    const parents = allDocs.filter(c=>!c.parentId);
     const replyMap = {};
-    all.filter(c=>!!c.parentId).forEach(r=>{
+    allDocs.filter(c=>!!c.parentId).forEach(r=>{
       if(!replyMap[r.parentId]) replyMap[r.parentId]=[];
       replyMap[r.parentId].push(r);
     });

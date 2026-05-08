@@ -368,10 +368,10 @@ async function loadCm(storyId){
   const el = document.getElementById('cmlist');
   el.innerHTML='<div class="nocm">Memuat komentar...</div>';
   try {
-    const allQ = query(collection(db,'story_comments'), where('storyId','==',storyId), orderBy('ts','desc'));
+    const allQ = query(collection(db,'story_comments'), where('storyId','==',storyId));
     const snap = await getDocs(allQ);
     if(snap.empty){ el.innerHTML='<div class="nocm">Belum ada komentar.</div>'; return; }
-    const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const all = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts?.seconds||0)-(a.ts?.seconds||0));
     const parents = all.filter(c=>!c.parentId);
     const replyMap={};
     all.filter(c=>!!c.parentId).forEach(r=>{
