@@ -196,6 +196,7 @@ async function main() {
   console.log(`📦 Ditemukan ${items.length} resource. Mulai generate...`);
 
   const generatedUrls = [];
+  const validFilenames = new Set();
 
   for (const item of items) {
     if (!item.title || !item.link) {
@@ -208,7 +209,17 @@ async function main() {
     const html = buildPage(item);
     fs.writeFileSync(filepath, html, 'utf8');
     generatedUrls.push(`${BASE_URL}/resources/${filename}`);
+    validFilenames.add(filename);
     console.log(`  ✔ resources/${filename}`);
+  }
+
+  // Hapus file yang ga ada di Firestore
+  const existingFiles = fs.readdirSync(OUT_DIR).filter(f => f.endsWith('.html'));
+  for (const file of existingFiles) {
+    if (!validFilenames.has(file)) {
+      fs.unlinkSync(path.join(OUT_DIR, file));
+      console.log(`  🗑 Dihapus: resources/${file}`);
+    }
   }
 
   updateSitemap(generatedUrls);
