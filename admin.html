@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;min-height:100%;background:#050d1a}
+html{scroll-behavior:smooth;min-height:100%;background:#07060f radial-gradient(ellipse 90% 70% at 15% 5%,rgba(63,44,95,.6) 0%,transparent 55%),radial-gradient(ellipse 70% 60% at 85% 90%,rgba(42,28,70,.55) 0%,transparent 55%),radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.2) 0%,transparent 50%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.13) 0%,transparent 45%)}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
 
 
@@ -177,7 +177,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </style>
 </head>
 <body>
-<div id="sitebg" style="position:fixed;inset:0;z-index:0;background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat;filter:brightness(.32) saturate(.75)"></div>
 <div class="wrap">
 <nav>
   <a class="nav-logo" href="index.html">
@@ -230,8 +229,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       </div>
       <div class="sub-list" id="subList"><div class="sub-empty">Memuat pesan...</div></div>
     </div>
-  </div>
-</div>
 
     <!-- STORY EDITOR SECTION -->
     <div class="story-section">
@@ -296,6 +293,7 @@ Paragraf dipisah dengan enter 2x.
     </div>
 
 <div class="toast" id="toast"></div>
+</div>
 </div>
 
 <div id="loginOverlay">
