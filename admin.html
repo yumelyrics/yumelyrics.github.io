@@ -217,6 +217,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="nav-badge">Admin</div>
   </a>
   <div class="nav-right">
+    <a class="nb" href="inbox.html" style="border-color:rgba(201,169,110,.3);color:var(--accent)">✉ Inbox</a>
     <a class="nb" href="index.html">← Beranda</a>
     <button class="logout-btn" id="logoutBtn" style="display:none" onclick="doLogout()">Logout</button>
   </div>
@@ -225,6 +226,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <div class="adm-wrap">
   <div class="admtit">Form Admin</div>
   <div class="admsub">Tambah, edit, atau hapus lagu. Data tersimpan ke Firestore.</div>
+  <a href="inbox.html" style="display:flex;align-items:center;justify-content:space-between;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.25);padding:.9rem 1.1rem;text-decoration:none;margin-bottom:1.8rem;transition:background .2s;max-width:800px" onmouseover="this.style.background='rgba(201,169,110,.1)'" onmouseout="this.style.background='rgba(201,169,110,.06)'">
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <span style="font-size:1.1rem">✉</span>
+      <div>
+        <div style="font-size:.8rem;color:var(--accent);font-weight:500;letter-spacing:.05em">Pesan Masuk & Moderasi Komentar</div>
+        <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">Lihat request lagu, sharing, kontak, dan komentar pengunjung</div>
+      </div>
+    </div>
+    <span style="font-size:.72rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap">Buka Inbox →</span>
+  </a>
   <div class="admform">
     <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
     <input type="hidden" id="f-editid" value="">
