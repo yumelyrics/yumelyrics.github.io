@@ -187,7 +187,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, orderBy, getDocs, where }
+import { getFirestore, collection, addDoc, query, orderBy, getDocs, where }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -425,17 +425,27 @@ window.postCm = async () => {
   btn.disabled=false;
 };
 
-// Load stories realtime
-onSnapshot(
-  query(collection(db,'stories'), orderBy('ts','desc')),
-  snap => {
+// Load stories
+async function loadStories(){
+  try {
+    const snap = await getDocs(query(collection(db,'stories'), orderBy('ts','desc')));
     stories = snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(!curStory) renderList();
-  },
-  err => {
-    document.getElementById('storyGrid').innerHTML='<div class="no-story">Gagal memuat. Coba refresh.</div>';
+    renderList();
+  } catch(e){
+    console.error(e);
+    // kalo orderBy gagal (belum ada index), coba tanpa orderBy
+    try {
+      const snap2 = await getDocs(collection(db,'stories'));
+      stories = snap2.docs.map(d=>({id:d.id,...d.data()}));
+      stories.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      renderList();
+    } catch(e2){
+      console.error(e2);
+      document.getElementById('storyGrid').innerHTML='<div class="no-story" style="padding:2rem 2.5rem;color:var(--muted);font-size:.8rem">Belum ada cerita yang dipublish.</div>';
+    }
   }
-);
+}
+loadStories();
 </script>
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;document.body.style.minHeight=h+'px';}
