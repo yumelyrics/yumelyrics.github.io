@@ -314,6 +314,15 @@ rcm();
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
 fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);window.visualViewport.addEventListener('scroll',fixBg);}window.addEventListener('resize',fixBg);
 </script>
+<script>
+document.addEventListener('copy', function(e) {
+  const selected = window.getSelection().toString();
+  if (selected.length > 10) {
+    e.clipboardData.setData('text/plain', selected + '\n\n\u00a9 YumeSubs \u2014 yumelyrics.github.io');
+    e.preventDefault();
+  }
+});
+</script>
 </body>
 </html>`;
 }
