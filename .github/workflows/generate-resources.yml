@@ -23,7 +23,7 @@ jobs:
         env:
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-        run: node generate-resources.js
+        run: node generate-resources.cjs
 
       - name: Commit & push
         run: |
