@@ -115,6 +115,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .replies{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
 .ritem{padding:.7rem 1rem;border-left:2px solid var(--border)}
 .ritem.is-admin{border-left-color:var(--accent);background:rgba(201,169,110,.04)}
+.admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;border-radius:2px;position:relative;overflow:hidden;isolation:isolate}
+.admin-reply-block::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}
+.admin-reply-block::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
+.admin-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0}
+.admin-badge-wrap .admin-badge{font-size:.54rem;color:#07060f;background:var(--accent);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.admin-name{font-size:.6rem;color:var(--accent);white-space:nowrap}
+.admin-reply-text{font-size:.78rem;color:var(--text);line-height:1.65;flex:1}
 .reply-form{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:none;flex-direction:column;gap:.5rem}
 .reply-form.open{display:flex}
 .reply-form .cmi{font-size:.78rem}
@@ -349,11 +356,17 @@ function renderComment(id, c, replies){
   const isAdm = !!c.isAdmin;
   const repHtml = replies.length ? `<div class="replies">${replies.map(r=>{
     const ra = !!r.isAdmin;
-    return `<div class="ritem${ra?' is-admin':''}">
+    if(ra) return `<div class="admin-reply-block">
+      <div class="admin-badge-wrap">
+        <span class="admin-badge">Admin</span>
+        <span class="admin-name">YumeSubs</span>
+      </div>
+      <div class="admin-reply-text">${esc(r.text)}</div>
+    </div>`;
+    return `<div class="ritem">
       <div class="chdr">
         <div class="chdr-left">
           <div class="cname">${esc(r.name)}</div>
-          ${ra?'<span class="admin-badge">Admin</span>':''}
           <div class="cdate">${esc(r.date)}</div>
         </div>
       </div>
