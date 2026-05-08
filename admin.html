@@ -123,7 +123,58 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nav-badge{display:none}}
-@media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}</style>
+@media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}
+/* ── Story Editor ── */
+.story-section{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.story-tit{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
+.story-desc{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
+.story-form{display:flex;flex-direction:column;gap:1rem;max-width:760px}
+.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.sf-label{font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem}
+.sf-input{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;transition:border-color .2s;width:100%}
+.sf-input::placeholder{color:var(--muted)}
+.sf-input:focus{border-color:rgba(201,169,110,.4)}
+.sf-tags{display:flex;gap:.5rem;flex-wrap:wrap}
+.sf-tag{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.3rem .75rem;cursor:pointer;border-radius:2rem;transition:all .2s}
+.sf-tag.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.editor-toolbar{display:flex;gap:.3rem;flex-wrap:wrap;padding:.5rem;border:1px solid var(--border);border-bottom:none;background:rgba(255,255,255,.02)}
+.etool{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.7rem;color:var(--muted);padding:.3rem .6rem;cursor:pointer;transition:all .2s;border-radius:2px}
+.etool:hover{border-color:var(--accent);color:var(--accent)}
+.etool.sep{width:1px;background:var(--border);border:none;padding:0;margin:0 .2rem;pointer-events:none}
+.sf-editor{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.84rem;padding:1rem;outline:none;resize:vertical;min-height:280px;line-height:1.8;transition:border-color .2s;width:100%}
+.sf-editor:focus{border-color:rgba(201,169,110,.4)}
+.editor-hint{font-size:.62rem;color:var(--muted);line-height:1.7;padding:.5rem 0}
+.sf-preview{background:rgba(255,255,255,.015);border:1px solid var(--border);padding:1.2rem;min-height:100px;display:none}
+.sf-preview.on{display:block}
+.preview-body{font-size:.88rem;color:var(--text);line-height:1.9;font-weight:300}
+.preview-body p{margin-bottom:1rem}
+.preview-body a{color:var(--accent2);text-decoration:underline}
+.preview-body img{max-width:100%;border:1px solid var(--border);margin:.5rem 0;display:block}
+.preview-body blockquote{border-left:3px solid var(--accent);padding:.4rem 0 .4rem 1rem;color:var(--muted);font-style:italic;margin:.8rem 0}
+.preview-body strong{color:var(--accent)}
+.story-actions{display:flex;gap:.7rem;align-items:center}
+.bpublish{flex:1;background:var(--accent);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#07060f;padding:.9rem 2rem;cursor:pointer;transition:opacity .2s;font-weight:500}
+.bpublish:hover{opacity:.85}
+.bpublish:disabled{opacity:.5;cursor:not-allowed}
+.bpreview-toggle{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.9rem 1.2rem;cursor:pointer;transition:all .2s}
+.bpreview-toggle:hover{border-color:var(--accent2);color:var(--accent2)}
+.bdraft{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.9rem 1.2rem;cursor:pointer;transition:all .2s}
+.bdraft:hover{border-color:var(--accent);color:var(--accent)}
+/* story list di admin */
+.slist{display:flex;flex-direction:column;gap:.6rem;margin-top:1.5rem}
+.slist-tit{font-size:.62rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.8rem}
+.slist-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.8rem 1rem;gap:.8rem;flex-wrap:wrap}
+.slist-info{flex:1;min-width:0}
+.slist-title{font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slist-meta{font-size:.65rem;color:var(--muted);margin-top:.2rem}
+.slist-btns{display:flex;gap:.4rem;flex-shrink:0}
+.bedit-s{background:none;border:1px solid rgba(79,126,196,.3);color:var(--accent2);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.bedit-s:hover{background:rgba(79,126,196,.1)}
+.bdel-s{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.bdel-s:hover{background:rgba(201,110,110,.1)}
+.story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.story-edit-banner.on{display:flex}
+</style>
 </head>
 <body>
 <div id="sitebg" style="position:fixed;inset:0;z-index:0;background:url('https://image-5.uhdpaper.com/wallpaper/elfaria-wistoria-wand-and-sword-4k-wallpaper-uhdpaper.com-767@5@n.jpg') center/cover no-repeat;filter:brightness(.32) saturate(.75)"></div>
@@ -151,6 +202,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder="Utada Hikaru"></div>
     <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Hanataba wo Kimi ni"></div>
     <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
+    <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder="https://open.spotify.com/track/..."></div>
     <div class="fg full"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder="https://... link gambar JPG/PNG"></div>
     <div class="fg full">
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
@@ -180,6 +232,69 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
   </div>
 </div>
+
+    <!-- STORY EDITOR SECTION -->
+    <div class="story-section">
+      <div class="story-tit">Tulis Cerita</div>
+      <div class="story-desc">Publish tulisan ke halaman <a href="stories.html" style="color:var(--accent2);text-decoration:none">stories.html</a>. Support link, gambar, dan format dasar.</div>
+      <div class="story-form">
+        <div class="story-edit-banner" id="storyEditBanner">✏️ <strong style="font-weight:500">Mode Edit Cerita</strong></div>
+        <input type="hidden" id="sf-editid" value="">
+        <div class="sf-row">
+          <div>
+            <div class="sf-label">Judul Cerita *</div>
+            <input class="sf-input" id="sf-title" placeholder="Tulis judulnya...">
+          </div>
+          <div>
+            <div class="sf-label">URL Gambar Cover (opsional)</div>
+            <input class="sf-input" id="sf-img" placeholder="https://... link gambar">
+          </div>
+        </div>
+        <div>
+          <div class="sf-label">Tag Kategori</div>
+          <div class="sf-tags">
+            <button class="sf-tag" data-tag="curhat" onclick="toggleTag(this)">💜 Curhat</button>
+            <button class="sf-tag" data-tag="review" onclick="toggleTag(this)">🎵 Review</button>
+            <button class="sf-tag" data-tag="opini" onclick="toggleTag(this)">💭 Opini</button>
+            <button class="sf-tag" data-tag="random" onclick="toggleTag(this)">✨ Random</button>
+          </div>
+        </div>
+        <div>
+          <div class="sf-label">Isi Cerita *</div>
+          <div class="editor-toolbar">
+            <button class="etool" onclick="wrapText('**','**')" title="Bold">B</button>
+            <button class="etool" style="font-style:italic" onclick="wrapText('*','*')" title="Italic">I</button>
+            <div class="etool sep"></div>
+            <button class="etool" onclick="insertLink()" title="Sisipkan Link">🔗 Link</button>
+            <button class="etool" onclick="insertImg()" title="Sisipkan Gambar">🖼 Gambar</button>
+            <button class="etool" onclick="insertQuote()" title="Quote">❝ Quote</button>
+            <div class="etool sep"></div>
+            <button class="etool" onclick="togglePreview()" id="prevBtn">👁 Preview</button>
+          </div>
+          <textarea class="sf-editor" id="sf-body" placeholder="Tulis cerita lo di sini...
+
+Paragraf dipisah dengan enter 2x.
+**teks tebal**, *teks miring*
+[teks link](https://url.com)
+![alt gambar](https://url-gambar.com)
+> Quote / kutipan"></textarea>
+          <div class="sf-preview" id="sf-preview"><div class="preview-body" id="preview-body"></div></div>
+          <div class="editor-hint">
+            <strong>**bold**</strong> · <em>*italic*</em> · [teks](url) buat link · ![alt](url) buat gambar sisipan · &gt; buat quote · Enter 2x = paragraf baru
+          </div>
+        </div>
+        <div class="story-actions">
+          <button class="bpublish" id="storyPublishBtn" onclick="publishStory()">Publish Cerita</button>
+          <button class="bpreview-toggle" onclick="togglePreview()">Preview</button>
+          <button class="bdraft" id="storyCancelBtn" style="display:none" onclick="cancelStoryEdit()">✕ Batal</button>
+        </div>
+        <div>
+          <div class="slist-tit">Cerita yang Sudah Publish (<span id="storyCount">0</span>)</div>
+          <div class="slist" id="storyList"></div>
+        </div>
+      </div>
+    </div>
+
 <div class="toast" id="toast"></div>
 </div>
 
@@ -394,6 +509,170 @@ window.deleteSub = async id => {
   } catch(e){ toast('Gagal hapus: '+e.message); }
 };
 
+
+// ── STORY EDITOR ──
+let storyEditId = null;
+let stories = [];
+
+function renderBody(raw){
+  if(!raw) return '';
+  let html = raw.split(/\n\n+/).map(para => {
+    if(!para.trim()) return '';
+    if(para.startsWith('> ')) return `<blockquote>${escHtml(para.slice(2))}</blockquote>`;
+    return `<p>${escHtml(para)}</p>`;
+  }).join('');
+  html = html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/g,'<img src="$2" alt="$1" style="max-width:100%;border:1px solid var(--border);margin:.5rem 0;display:block">');
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--accent2)">$1</a>');
+  return html;
+}
+
+window.toggleTag = btn => {
+  btn.classList.toggle('on');
+};
+
+function getSelectedTags(){
+  return [...document.querySelectorAll('.sf-tag.on')].map(b=>b.dataset.tag);
+}
+
+window.wrapText = (before, after) => {
+  const ta = document.getElementById('sf-body');
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end) || 'teks';
+  const newVal = ta.value.slice(0,start) + before + sel + after + ta.value.slice(end);
+  ta.value = newVal;
+  ta.focus();
+  ta.setSelectionRange(start+before.length, start+before.length+sel.length);
+};
+
+window.insertLink = () => {
+  const url = prompt('URL link:','https://');
+  if(!url) return;
+  const teks = prompt('Teks link:','klik di sini');
+  if(!teks) return;
+  const ta = document.getElementById('sf-body');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + `[${teks}](${url})` + ta.value.slice(pos);
+  ta.focus();
+};
+
+window.insertImg = () => {
+  const url = prompt('URL gambar:','https://');
+  if(!url) return;
+  const alt = prompt('Deskripsi gambar (opsional):','') || '';
+  const ta = document.getElementById('sf-body');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + `\n![${alt}](${url})\n` + ta.value.slice(pos);
+  ta.focus();
+};
+
+window.insertQuote = () => {
+  const ta = document.getElementById('sf-body');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + '\n> ' + ta.value.slice(pos);
+  ta.focus();
+};
+
+let previewOn = false;
+window.togglePreview = () => {
+  previewOn = !previewOn;
+  const prev = document.getElementById('sf-preview');
+  prev.classList.toggle('on', previewOn);
+  document.getElementById('preview-body').innerHTML = renderBody(document.getElementById('sf-body').value);
+  document.getElementById('prevBtn').textContent = previewOn ? '✕ Tutup Preview' : '👁 Preview';
+};
+
+window.publishStory = async () => {
+  const title = document.getElementById('sf-title').value.trim();
+  const body  = document.getElementById('sf-body').value.trim();
+  const img   = document.getElementById('sf-img').value.trim();
+  const tags  = getSelectedTags();
+  const editId = document.getElementById('sf-editid').value;
+  if(!title||!body){ toast('Judul & isi cerita wajib diisi!'); return; }
+  const btn = document.getElementById('storyPublishBtn');
+  btn.disabled = true;
+  const now = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  try {
+    if(editId){
+      await updateDoc(doc(db,'stories',editId),{title,body,img,tags,date:now,ts:Date.now()});
+      toast('Cerita berhasil diupdate!');
+      cancelStoryEdit();
+    } else {
+      await addDoc(collection(db,'stories'),{title,body,img,tags,date:now,ts:Date.now()});
+      toast('Cerita berhasil dipublish! 🎉');
+      clearStoryForm();
+    }
+  } catch(e){ toast('Gagal: '+e.message); }
+  btn.disabled = false;
+};
+
+function clearStoryForm(){
+  document.getElementById('sf-title').value='';
+  document.getElementById('sf-body').value='';
+  document.getElementById('sf-img').value='';
+  document.querySelectorAll('.sf-tag').forEach(b=>b.classList.remove('on'));
+  if(previewOn) togglePreview();
+}
+
+window.cancelStoryEdit = () => {
+  storyEditId = null;
+  document.getElementById('sf-editid').value='';
+  clearStoryForm();
+  document.getElementById('storyPublishBtn').textContent='Publish Cerita';
+  document.getElementById('storyCancelBtn').style.display='none';
+  document.getElementById('storyEditBanner').classList.remove('on');
+};
+
+window.editStory = id => {
+  const s = stories.find(x=>x.id===id); if(!s) return;
+  document.getElementById('sf-editid').value = id;
+  document.getElementById('sf-title').value = s.title||'';
+  document.getElementById('sf-body').value = s.body||'';
+  document.getElementById('sf-img').value = s.img||'';
+  document.querySelectorAll('.sf-tag').forEach(b=>{
+    b.classList.toggle('on', (s.tags||[]).includes(b.dataset.tag));
+  });
+  document.getElementById('storyPublishBtn').textContent='✓ Update Cerita';
+  document.getElementById('storyCancelBtn').style.display='block';
+  document.getElementById('storyEditBanner').classList.add('on');
+  document.getElementById('sf-title').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('Form diisi data cerita yang dipilih.');
+};
+
+window.deleteStory = async id => {
+  if(!confirm('Hapus cerita ini?')) return;
+  try {
+    await deleteDoc(doc(db,'stories',id));
+    toast('Cerita dihapus.');
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+function renderStoryList(){
+  document.getElementById('storyCount').textContent = stories.length;
+  const el = document.getElementById('storyList');
+  if(!stories.length){ el.innerHTML='<div class="sub-empty">Belum ada cerita yang dipublish.</div>'; return; }
+  const tagLabel = {curhat:'💜 Curhat',review:'🎵 Review',opini:'💭 Opini',random:'✨ Random'};
+  el.innerHTML = stories.map(s=>`
+    <div class="slist-item">
+      <div class="slist-info">
+        <div class="slist-title">${escHtml(s.title)}</div>
+        <div class="slist-meta">${s.date||''} · ${(s.tags||[]).map(t=>tagLabel[t]||t).join(', ')||'Tanpa tag'}</div>
+      </div>
+      <div class="slist-btns">
+        <button class="bedit-s" onclick="editStory('${s.id}')">Edit</button>
+        <button class="bdel-s" onclick="deleteStory('${s.id}')">Hapus</button>
+      </div>
+    </div>`).join('');
+}
+
+// Listen to stories collection
+onSnapshot(
+  query(collection(db,'stories'), orderBy('ts','desc')),
+  snap => { stories = snap.docs.map(d=>({id:d.id,...d.data()})); renderStoryList(); },
+  err => console.error('stories listen error:', err)
+);
+
 window.addRow = (jp='',ro='',id='') => {
   const r=document.createElement('div'); r.className='lrow';
   r.innerHTML=`<input class="fi rjp" placeholder="日本語" value="${esc(jp)}">` +
@@ -411,6 +690,7 @@ window.saveSong = async () => {
   const ro=document.getElementById('f-ro').value.trim();
   const yt=document.getElementById('f-yt').value.trim();
   const img=document.getElementById('f-img').value.trim();
+  const sp=document.getElementById('f-sp').value.trim();
   const editId=document.getElementById('f-editid').value;
   if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
   const lyrics=[];
@@ -424,12 +704,12 @@ window.saveSong = async () => {
   btn.disabled=true;
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,lyrics});
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,sp,lyrics});
       toast('Lagu berhasil diupdate!');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,lyrics,order:snap.data().count});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,img,sp,lyrics,order:snap.data().count});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
@@ -438,7 +718,7 @@ window.saveSong = async () => {
 };
 
 function clearForm(){
-  ['f-jt','f-it','f-ar','f-ro','f-yt','f-img'].forEach(i=>document.getElementById(i).value='');
+  ['f-jt','f-it','f-ar','f-ro','f-yt','f-img','f-sp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('lrows').innerHTML='';
   addRow();
 }
@@ -451,6 +731,7 @@ window.editSong = id => {
   document.getElementById('f-ro').value=s.titleRo||'';
   document.getElementById('f-yt').value=s.ytId||'';
   document.getElementById('f-img').value=s.img||'';
+  document.getElementById('f-sp').value=s.sp||'';
   document.getElementById('f-editid').value=s.id;
   document.getElementById('lrows').innerHTML='';
   (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id));
