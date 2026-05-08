@@ -260,19 +260,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="extit">Lagu di Katalog (<span id="songCount">0</span>)</div>
     <div class="exlist" id="exlist"></div>
   </div>
-    <!-- SUBMISSIONS SECTION -->
-    <div class="sub-section">
-      <div class="sub-title">Pesan Masuk</div>
-      <div class="sub-desc">Lihat & balas request lagu, sharing, dan pesan kontak dari pengunjung.</div>
-      <div class="sub-tabs">
-        <button class="stab on" onclick="filterSubs('all',this)">Semua</button>
-        <button class="stab" onclick="filterSubs('request',this)">♪ Request Lagu</button>
-        <button class="stab" onclick="filterSubs('sharing',this)">✦ Sharing</button>
-        <button class="stab" onclick="filterSubs('kontak',this)">✉ Kontak</button>
-      </div>
-      <div class="sub-list" id="subList"><div class="sub-empty">Memuat pesan...</div></div>
-    </div>
-
     <!-- STORY EDITOR SECTION -->
     <div class="story-section">
       <div class="story-tit">Tulis Cerita</div>
@@ -337,16 +324,6 @@ Paragraf dipisah dengan enter 2x.
 
 <div class="toast" id="toast"></div>
 
-    <!-- COMMENT MODERATION SECTION -->
-    <div class="cm-section">
-      <div class="cm-tit">Moderasi Komentar</div>
-      <div class="cm-desc">Lihat, balas, dan hapus komentar dari halaman lirik maupun cerita.</div>
-      <div class="cm-tabs">
-        <button class="cmtab on" onclick="switchCmTab('songs',this)">♪ Lirik Lagu</button>
-        <button class="cmtab" onclick="switchCmTab('stories',this)">✦ Cerita</button>
-      </div>
-      <div class="cm-list" id="cmList"><div class="cm-empty">Memuat komentar...</div></div>
-    </div>
 
 </div>
 </div>
@@ -392,10 +369,7 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 
 let songs = [];
-let submissions = [];
-let subFilter = 'all';
 let unsubSongs = null;
-let unsubSubs = null;
 
 function toast(m){
   const t=document.getElementById('toast');
@@ -409,7 +383,6 @@ onAuthStateChanged(auth, user => {
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display='block';
     startListening();
-    loadCmAdmin('songs');
   } else {
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display='none';
@@ -447,122 +420,9 @@ function startListening(){
     query(collection(db,'songs'), orderBy('order','asc')),
     snap => { songs=snap.docs.map(d=>({id:d.id,...d.data()})); ra(); }
   );
-  if(unsubSubs) unsubSubs();
-  unsubSubs = onSnapshot(
-    query(collection(db,'submissions'), orderBy('ts','desc')),
-    snap => { submissions=snap.docs.map(d=>({id:d.id,...d.data()})); renderSubs(); }
-  );
-}
-
-window.filterSubs = (filter, btn) => {
-  subFilter = filter;
-  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  renderSubs();
-};
-
-async function renderSubs(){
-  const list = document.getElementById('subList');
-  const filtered = subFilter==='all' ? submissions : submissions.filter(s=>s.type===subFilter);
-  if(!filtered.length){
-    list.innerHTML='<div class="sub-empty">Belum ada pesan di kategori ini.</div>';
-    return;
-  }
-  // Load user replies for sharing items
-  await Promise.all(filtered.filter(s=>s.type==='sharing').map(async s => {
-    try {
-      const rsnap = await getDocs(query(collection(db,'submissions',s.id,'replies'), orderBy('ts','asc')));
-      s._userReplies = rsnap.docs.map(d=>({id:d.id,...d.data()}));
-    } catch(e){ s._userReplies=[]; }
-  }));
-  const typeLabel = {request:'♪ Request Lagu', sharing:'✦ Sharing', kontak:'✉ Kontak'};
-  list.innerHTML = filtered.map(s => {
-    const replied = s.adminReply ? `
-      <div class="sub-replied">
-        <div class="admin-badge">Admin</div>
-        <div class="sub-replied-text">${escHtml(s.adminReply)}</div>
-      </div>` : '';
-    let body = '';
-    if(s.type==='request'){
-      body = `<div class="sub-body"><strong>${escHtml(s.title)}</strong> — ${escHtml(s.artist)}</div>`;
-      if(s.msg) body += `<div class="sub-extra">${escHtml(s.msg)}</div>`;
-    } else {
-      body = `<div class="sub-body">${escHtml(s.text||s.msg||'')}</div>`;
-    }
-    // User replies (for sharing type)
-    const userRepliesHtml = (s.type==='sharing' && s._userReplies && s._userReplies.length) ? `
-      <div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">
-        <div style="font-size:.58rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.4rem">💬 Replies dari pembaca (${s._userReplies.length})</div>
-        ${s._userReplies.map(r=>`
-          <div style="background:rgba(139,107,177,.04);border:1px solid rgba(139,107,177,.12);padding:.5rem .8rem;margin-bottom:.3rem;border-radius:2px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:.2rem">
-              <span style="font-size:.7rem;color:var(--accent2);font-weight:500">↩ ${escHtml(r.name||'Anonim')}</span>
-              <span style="font-size:.6rem;color:var(--muted)">${r.date||''}</span>
-            </div>
-            <div style="font-size:.78rem;color:var(--text);line-height:1.6">${escHtml(r.text)}</div>
-          </div>`).join('')}
-      </div>` : '';
-    const linkHtml = s.link ? `<div class="sub-extra">🔗 <a href="${escHtml(s.link)}" target="_blank">${escHtml(s.link)}</a></div>` : '';
-    return `
-    <div class="sub-card" id="card-${s.id}">
-      <div class="sub-card-head">
-        <div class="sub-meta">
-          <span class="sub-type">${typeLabel[s.type]||s.type}</span>
-          <span class="sub-name">${escHtml(s.name||s.title||'—')}</span>
-          <span class="sub-date">${s.date||''}</span>
-        </div>
-      </div>
-      ${body}${linkHtml}${userRepliesHtml}${replied}
-      <div class="reply-area" id="reply-${s.id}">
-        <textarea class="reply-inp" id="rinp-${s.id}" rows="3" placeholder="Tulis balasan sebagai Admin YumeSubs..."></textarea>
-        <div class="reply-actions">
-          <button class="breply" onclick="sendReply('${s.id}')">✓ Kirim Balasan</button>
-          <button class="bcancel-reply" onclick="toggleReply('${s.id}')">Batal</button>
-        </div>
-      </div>
-      <div class="sub-footer">
-        <button class="breply-toggle" onclick="toggleReply('${s.id}')">${s.adminReply?'✏️ Edit Balasan':'↩ Balas'}</button>
-        <button class="bdel-sub" onclick="deleteSub('${s.id}')">Hapus</button>
-      </div>
-    </div>`;
-  }).join('');
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-window.toggleReply = id => {
-  const area = document.getElementById('reply-'+id);
-  const inp = document.getElementById('rinp-'+id);
-  const isOpen = area.classList.toggle('open');
-  if(isOpen){
-    const sub = submissions.find(s=>s.id===id);
-    if(sub && sub.adminReply) inp.value = sub.adminReply;
-    inp.focus();
-  }
-};
-
-window.sendReply = async id => {
-  const inp = document.getElementById('rinp-'+id);
-  const text = inp.value.trim();
-  if(!text){ toast('Balasannya kosong!'); return; }
-  const btn = inp.nextElementSibling.querySelector('.breply');
-  btn.disabled = true;
-  try {
-    await updateDoc(doc(db,'submissions',id), { adminReply: text, adminReplyDate: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) });
-    toast('Balasan terkirim! 📨');
-    document.getElementById('reply-'+id).classList.remove('open');
-  } catch(e){ toast('Gagal kirim: '+e.message); }
-  btn.disabled = false;
-};
-
-window.deleteSub = async id => {
-  if(!confirm('Hapus pesan ini?')) return;
-  try {
-    await deleteDoc(doc(db,'submissions',id));
-    toast('Pesan dihapus.');
-  } catch(e){ toast('Gagal hapus: '+e.message); }
-};
-
 
 // ── STORY EDITOR ──
 let storyEditId = null;
@@ -832,113 +692,6 @@ function ra(){
 }
 
 addRow();
-
-// ── Comment Moderation ──
-let curCmTab = 'songs';
-let songMap = {}; // id -> titleJp for reference
-
-// Build song map for reference labels
-onSnapshot(query(collection(db,'songs')), snap => {
-  snap.docs.forEach(d => { songMap[d.id] = d.data().titleJp || d.data().titleRo || d.id; });
-});
-
-function escCm(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-async function loadCmAdmin(tab){
-  const el = document.getElementById('cmList');
-  el.innerHTML = '<div class="cm-empty">Memuat komentar...</div>';
-  try {
-    const colName = tab === 'songs' ? 'comments' : 'story_comments';
-    const refField = tab === 'songs' ? 'songId' : 'storyId';
-    const snap = await getDocs(collection(db, colName));
-    const all = snap.docs.map(d=>({id:d.id,...d.data()}));
-    // only parent comments
-    const parents = all.filter(c=>!c.parentId).sort((a,b)=>(b.ts||0)-(a.ts||0));
-    const replyMap = {};
-    all.filter(c=>!!c.parentId).forEach(r=>{
-      if(!replyMap[r.parentId]) replyMap[r.parentId]=[];
-      replyMap[r.parentId].push(r);
-    });
-    if(!parents.length){ el.innerHTML='<div class="cm-empty">Belum ada komentar.</div>'; return; }
-    el.innerHTML = parents.map(c=>{
-      const replies = (replyMap[c.id]||[]).sort((a,b)=>(a.ts||0)-(b.ts||0));
-      const refLabel = tab==='songs' ? (songMap[c[refField]] || c[refField] || '') : (c[refField] || '');
-      const repliesHtml = replies.length ? `<div class="cm-replies">${replies.map(r=>`
-        <div class="cm-reply-item" id="cri-${r.id}">
-          <div>
-            <div>${escCm(r.text)}</div>
-            <div class="rm">${r.isAdmin?'<strong>Admin</strong> · ':''}${escCm(r.name)} · ${escCm(r.date)}</div>
-          </div>
-          <button class="cm-del" onclick="delCm('${colName}','${r.id}','${c.id}')">Hapus</button>
-        </div>`).join('')}</div>` : '';
-      return `<div class="cm-item" id="cmi-${c.id}">
-        <div class="cm-item-hdr">
-          <div class="cm-item-info">
-            <div class="cm-item-name">${escCm(c.name)}</div>
-            <div class="cm-item-meta">${escCm(c.date)}</div>
-            ${refLabel?`<div class="cm-item-ref">↳ ${escCm(refLabel)}</div>`:''}
-          </div>
-          <div class="cm-item-actions">
-            <button class="cm-reply-btn" onclick="toggleCmReply('${c.id}')">↩ Balas</button>
-            <button class="cm-del" onclick="delCm('${colName}','${c.id}',null)">Hapus</button>
-          </div>
-        </div>
-        <div class="cm-item-text">${escCm(c.text)}</div>
-        ${repliesHtml}
-        <div class="cm-reply-form" id="crf-${c.id}">
-          <textarea class="cm-reply-inp" id="crt-${c.id}" rows="2" placeholder="Tulis balasan sebagai Admin..."></textarea>
-          <div class="cm-reply-actions">
-            <button class="cm-reply-send" onclick="sendCmReply('${colName}','${c.id}','${c[refField]||''}')">Kirim Balasan</button>
-            <button class="bdraft" onclick="toggleCmReply('${c.id}')">Batal</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e){ console.error(e); document.getElementById('cmList').innerHTML='<div class="cm-empty">Gagal memuat komentar.</div>'; }
-}
-
-window.switchCmTab = (tab, btn) => {
-  curCmTab = tab;
-  document.querySelectorAll('.cmtab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  loadCmAdmin(tab);
-};
-
-window.toggleCmReply = id => {
-  const f = document.getElementById('crf-'+id);
-  f.classList.toggle('open');
-  if(f.classList.contains('open')) document.getElementById('crt-'+id).focus();
-};
-
-window.sendCmReply = async (colName, parentId, refId) => {
-  const t = document.getElementById('crt-'+parentId).value.trim();
-  if(!t) return;
-  const refField = colName==='comments' ? 'songId' : 'storyId';
-  try {
-    await addDoc(collection(db, colName), {
-      [refField]: refId, parentId,
-      name: 'Admin', text: t, isAdmin: true,
-      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts: Date.now()
-    });
-    toast('Balasan terkirim!');
-    loadCmAdmin(curCmTab);
-  } catch(e){ toast('Gagal kirim.'); }
-};
-
-window.delCm = async (colName, id, parentId) => {
-  if(!confirm('Hapus komentar ini?')) return;
-  try {
-    await deleteDoc(doc(db, colName, id));
-    // kalau hapus parent, hapus juga semua replynya
-    if(!parentId){
-      const rSnap = await getDocs(query(collection(db,colName), where('parentId','==',id)));
-      await Promise.all(rSnap.docs.map(d=>deleteDoc(doc(db,colName,d.id))));
-    }
-    toast('Komentar dihapus.');
-    loadCmAdmin(curCmTab);
-  } catch(e){ toast('Gagal hapus.'); }
-};
 
 // Load komentar saat auth ready - handled by main onAuthStateChanged above
 </script>
