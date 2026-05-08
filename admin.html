@@ -322,6 +322,41 @@ Paragraf dipisah dengan enter 2x.
       </div>
     </div>
 
+
+    <!-- ── RESOURCES SECTION ── -->
+    <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
+      <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Resources</div>
+      <div class="admsub" style="margin-bottom:1.5rem">Tambah, edit, atau hapus rekomendasi Aplikasi, Video, dan Tools.</div>
+
+      <div class="admform" id="resForm">
+        <div class="edit-banner" id="resBanner" style="display:none">✏️ <strong style="font-weight:500">Mode Edit Resource</strong> — Ubah data lalu klik Update.</div>
+        <input type="hidden" id="rf-editid" value="">
+
+        <div class="fg"><div class="fl">Judul *</div><input class="fi" id="rf-title" placeholder="Nama aplikasi / video / tools"></div>
+        <div class="fg">
+          <div class="fl">Kategori *</div>
+          <select class="fi" id="rf-cat">
+            <option value="Aplikasi">Aplikasi</option>
+            <option value="Video">Video</option>
+            <option value="Tools">Tools</option>
+          </select>
+        </div>
+        <div class="fg full"><div class="fl">Link URL *</div><input class="fi" id="rf-link" placeholder="https://..."></div>
+        <div class="fg full"><div class="fl">URL Thumbnail</div><input class="fi" id="rf-thumb" placeholder="https://... gambar 16:9"></div>
+        <div class="fg full"><div class="fl">Deskripsi</div><textarea class="fi" id="rf-desc" rows="3" placeholder="Penjelasan singkat tentang ini..."></textarea></div>
+
+        <div class="form-actions">
+          <button class="bsave" id="resSaveBtn" onclick="saveResource()">Simpan Resource</button>
+          <button class="bcancel" onclick="resetResForm()">Reset</button>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem">
+        <div class="extit">Daftar Resources</div>
+        <div class="exlist" id="resList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
+      </div>
+    </div>
+
 <div class="toast" id="toast"></div>
 
 
@@ -694,6 +729,76 @@ function ra(){
 addRow();
 
 // Load komentar saat auth ready - handled by main onAuthStateChanged above
+
+// ── RESOURCES ──
+let resItems = [];
+
+onSnapshot(query(collection(db,'resources'), orderBy('order','asc')), snap => {
+  resItems = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderResList();
+});
+
+function renderResList() {
+  const el = document.getElementById('resList');
+  if(!el) return;
+  if(!resItems.length){el.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada resource.</div>';return;}
+  el.innerHTML = resItems.map(r=>`<div class="exitem">
+    <div>
+      <div class="exn">${esc(r.title)}</div>
+      <div class="exar">${esc(r.category)} · <a href="${esc(r.link)}" target="_blank" style="color:var(--accent2);text-decoration:none;font-size:.65rem">${esc(r.link.substring(0,50))}${r.link.length>50?'...':''}</a></div>
+    </div>
+    <div class="exitem-btns">
+      <button class="bedit" onclick="editResource('${r.id}')">Edit</button>
+      <button class="bdels" onclick="delResource('${r.id}')">Hapus</button>
+    </div>
+  </div>`).join('');
+}
+
+window.saveResource = async () => {
+  const title = document.getElementById('rf-title').value.trim();
+  const cat   = document.getElementById('rf-cat').value;
+  const link  = document.getElementById('rf-link').value.trim();
+  const thumb = document.getElementById('rf-thumb').value.trim();
+  const desc  = document.getElementById('rf-desc').value.trim();
+  const editId = document.getElementById('rf-editid').value;
+  if(!title||!link){toast('Judul dan Link wajib diisi!');return;}
+  const btn = document.getElementById('resSaveBtn');
+  btn.disabled=true;
+  const data = {title, category:cat, link, thumb, desc, order: editId ? (resItems.find(r=>r.id===editId)?.order||Date.now()) : Date.now()};
+  try {
+    if(editId){ await updateDoc(doc(db,'resources',editId),data); toast('Resource diupdate!'); }
+    else { await addDoc(collection(db,'resources'),data); toast('Resource disimpan!'); }
+    resetResForm();
+  } catch(e){toast('Gagal simpan: '+e.message);}
+  btn.disabled=false;
+};
+
+window.editResource = id => {
+  const r = resItems.find(x=>x.id===id); if(!r) return;
+  document.getElementById('rf-editid').value = id;
+  document.getElementById('rf-title').value  = r.title||'';
+  document.getElementById('rf-cat').value    = r.category||'Aplikasi';
+  document.getElementById('rf-link').value   = r.link||'';
+  document.getElementById('rf-thumb').value  = r.thumb||'';
+  document.getElementById('rf-desc').value   = r.desc||'';
+  document.getElementById('resBanner').style.display='block';
+  document.getElementById('resSaveBtn').textContent='Update Resource';
+  document.getElementById('resForm').scrollIntoView({behavior:'smooth'});
+};
+
+window.delResource = async id => {
+  if(!confirm('Hapus resource ini?')) return;
+  await deleteDoc(doc(db,'resources',id));
+  toast('Resource dihapus.');
+};
+
+window.resetResForm = () => {
+  ['rf-editid','rf-title','rf-link','rf-thumb','rf-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rf-cat').value='Aplikasi';
+  document.getElementById('resBanner').style.display='none';
+  document.getElementById('resSaveBtn').textContent='Simpan Resource';
+};
+
 </script>
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
