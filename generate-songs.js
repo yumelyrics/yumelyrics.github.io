@@ -344,6 +344,11 @@ async function main() {
 
   if(!fs.existsSync('lagu')) fs.mkdirSync('lagu');
 
+  // Hapus semua file HTML lama dulu biar tidak ada duplikat
+  const oldFiles = fs.readdirSync('lagu').filter(f => f.endsWith('.html'));
+  for(const f of oldFiles) fs.unlinkSync(path.join('lagu', f));
+  console.log(`🗑  ${oldFiles.length} file lama dihapus`);
+
   const urls = [`  <url><loc>${BASE_URL}/</loc><priority>1.0</priority></url>`];
   const slugMap = {};
 
