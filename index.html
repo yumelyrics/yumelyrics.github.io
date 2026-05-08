@@ -310,30 +310,20 @@ window.sv = v => {
   window.scrollTo({top:0,behavior:'smooth'});
 };
 
-// ── Open song ──
+// ── Slug generator (sama dengan generate-songs.js) ──
+function toSlug(titleRo, docId) {
+  if (titleRo) {
+    return titleRo.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,60);
+  }
+  return docId;
+}
+
+// ── Open song → redirect ke halaman statis ──
 window._os = id => {
   const s = songs.find(x=>x.id===id);
   if(!s) return;
-  cur=id; sro=true; str=true;
-  document.getElementById('tp-ro').classList.add('on');
-  document.getElementById('tp-tr').classList.add('on');
-  document.getElementById('lv-t').textContent  = s.titleJp+(s.titleRo?' — '+s.titleRo:'')+(s.titleId?' / '+s.titleId:'');
-  document.getElementById('lv-a').textContent  = s.artist;
-  document.getElementById('lv-mt').textContent = s.titleJp+(s.titleRo?' ('+s.titleRo+')':'');
-  document.getElementById('lv-ma').textContent = s.artist;
-  document.getElementById('lv-cov').src = s.img||'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA';
-  document.getElementById('ytf').src    = 'https://www.youtube.com/embed/'+s.ytId;
-  const spBtn = document.getElementById('sp-btn');
-  if(s.sp){ spBtn.href=s.sp; spBtn.style.display='inline-flex'; } else { spBtn.style.display='none'; }
-  document.getElementById('ll').innerHTML = (s.lyrics||[]).map((l,i)=>`
-    <div>
-      <div class="ljp">${l.jp}</div>
-      <div class="lro">${l.ro}</div>
-      <div class="lid">${l.id}</div>
-    </div>
-    ${i<s.lyrics.length-1?'<div class="lsep"></div>':''}`).join('');
-  rcm(id);
-  sv('lyr');
+  const slug = toSlug(s.titleRo, s.id);
+  window.location.href = '/lagu/' + slug + '.html';
 };
 
 // ── Toggle romaji/terjemahan ──
