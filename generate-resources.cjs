@@ -49,11 +49,43 @@ function buildPage(item) {
   const desc    = item.desc     || '';
   const link    = item.link     || '#';
   const thumb   = item.thumb    || '';
+  const tags    = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
   const pageUrl = `${BASE_URL}/resources/${slug(title)}.html`;
 
   const thumbTag = thumb
-    ? `<img class="res-thumb" src="${esc(thumb)}" alt="${esc(title)}" onerror="this.style.display='none'">`
+    ? `<img class="res-thumb" src="${esc(thumb)}" alt="${esc(title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="res-thumb-placeholder" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" width="48" height="48" opacity=".15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
     : `<div class="res-thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" width="48" height="48" opacity=".15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+
+  const tagsHTML = tags.length
+    ? `<div class="res-tags">${tags.map(t => `<span class="res-tag">${esc(t)}</span>`).join('')}</div>`
+    : '';
+
+  // JSON-LD structured data for Google
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": title,
+    "description": desc || `${title} — rekomendasi dari YumeSubs`,
+    "url": pageUrl,
+    "keywords": [cat, ...tags].join(', '),
+    "image": thumb || undefined,
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "YumeSubs",
+      "url": BASE_URL
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Resources", "item": `${BASE_URL}/resources.html` },
+        { "@type": "ListItem", "position": 2, "name": cat, "item": `${BASE_URL}/resources.html` },
+        { "@type": "ListItem", "position": 3, "name": title, "item": pageUrl }
+      ]
+    }
+  };
+  // Remove undefined keys (image if not set)
+  if (!thumb) delete structuredData.image;
 
   return `<!DOCTYPE html>
 <html lang="id">
@@ -63,12 +95,15 @@ function buildPage(item) {
 <title>${esc(title)} — YumeSubs Resources</title>
 <link rel="icon" type="image/jpeg" href="/anime_icon.png">
 <meta name="description" content="${esc(desc || title + ' — rekomendasi dari YumeSubs')}">
+${tags.length ? `<meta name="keywords" content="${esc([cat, ...tags].join(', '))}">` : ''}
 <meta property="og:title" content="${esc(title)} — YumeSubs">
-<meta property="og:description" content="${esc(desc)}">
+<meta property="og:description" content="${esc(desc || title)}">
 ${thumb ? `<meta property="og:image" content="${esc(thumb)}">` : ''}
 <meta property="og:url" content="${esc(pageUrl)}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="YumeSubs">
 <link rel="canonical" href="${esc(pageUrl)}">
+<script type="application/ld+json">${JSON.stringify(structuredData, null, 2)}</script>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif}
@@ -93,6 +128,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 h1{font-family:var(--jp);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;color:var(--text);line-height:1.25;margin-bottom:1rem}
 .res-thumb{width:100%;max-height:380px;object-fit:cover;display:block;border:1px solid var(--border);filter:saturate(.85);margin-bottom:2rem}
 .res-thumb-placeholder{width:100%;height:200px;background:linear-gradient(135deg,#0d1629,#152035);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:2rem}
+/* ── Tags ── */
+.res-tags{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1.5rem}
+.res-tag{font-size:.58rem;color:var(--accent2);border:1px solid rgba(79,126,196,.35);padding:.25rem .7rem;border-radius:2rem;letter-spacing:.12em;text-transform:uppercase}
 .desc{font-size:.9rem;color:var(--text);line-height:1.85;font-weight:300;margin-bottom:2rem;white-space:pre-line}
 .cta{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:#07060f;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:.85rem 2rem;text-decoration:none;font-weight:500;transition:opacity .2s}
 .cta:hover{opacity:.85}
@@ -125,6 +163,8 @@ h1{font-family:var(--jp);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;colo
   <h1>${esc(title)}</h1>
 
   ${thumbTag}
+
+  ${tagsHTML}
 
   ${desc ? `<div class="desc">${esc(desc)}</div>` : ''}
 
@@ -210,7 +250,8 @@ async function main() {
     fs.writeFileSync(filepath, html, 'utf8');
     generatedUrls.push(`${BASE_URL}/resources/${filename}`);
     validFilenames.add(filename);
-    console.log(`  ✔ resources/${filename}`);
+    const tagInfo = (item.tags && item.tags.length) ? ` [tags: ${item.tags.join(', ')}]` : '';
+    console.log(`  ✔ resources/${filename}${tagInfo}`);
   }
 
   // Hapus file yang ga ada di Firestore

@@ -377,6 +377,24 @@ Paragraf dipisah dengan enter 2x.
       <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Resources</div>
       <div class="admsub" style="margin-bottom:1.5rem">Tambah, edit, atau hapus rekomendasi Aplikasi, Video, dan Tools.</div>
 
+      <style>
+        .tag-input-wrap{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;background:rgba(255,255,255,.03);border:1px solid var(--border);padding:.5rem .7rem;min-height:42px;cursor:text;transition:border-color .2s}
+        .tag-input-wrap:focus-within{border-color:rgba(201,169,110,.4)}
+        .tag-pill{display:inline-flex;align-items:center;gap:.3rem;background:rgba(79,126,196,.18);border:1px solid rgba(79,126,196,.35);color:var(--accent2);font-size:.65rem;letter-spacing:.08em;padding:.15rem .5rem;border-radius:2rem}
+        .tag-pill button{background:none;border:none;color:var(--accent2);cursor:pointer;font-size:.75rem;line-height:1;padding:0;opacity:.7}
+        .tag-pill button:hover{opacity:1}
+        .tag-bare-input{background:none;border:none;outline:none;color:var(--text);font-family:var(--en);font-size:.8rem;min-width:120px;flex:1}
+        .tag-bare-input::placeholder{color:var(--muted)}
+        .cat-row{display:flex;gap:.5rem;align-items:flex-end}
+        .cat-row .fi{flex:1}
+        .cat-presets{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem}
+        .cat-preset{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s}
+        .cat-preset:hover{border-color:var(--accent2);color:var(--accent2)}
+        .thumb-hint{font-size:.6rem;color:var(--muted);margin-top:.35rem;line-height:1.6}
+        .thumb-hint a{color:var(--accent2);text-decoration:none}
+        .thumb-hint a:hover{text-decoration:underline}
+      </style>
+
       <div class="admform" id="resForm">
         <div class="edit-banner" id="resBanner" style="display:none">✏️ <strong style="font-weight:500">Mode Edit Resource</strong> — Ubah data lalu klik Update.</div>
         <input type="hidden" id="rf-editid" value="">
@@ -384,15 +402,35 @@ Paragraf dipisah dengan enter 2x.
         <div class="fg"><div class="fl">Judul *</div><input class="fi" id="rf-title" placeholder="Nama aplikasi / video / tools"></div>
         <div class="fg">
           <div class="fl">Kategori *</div>
-          <select class="fi" id="rf-cat">
-            <option value="Aplikasi">Aplikasi</option>
-            <option value="Video">Video</option>
-            <option value="Tools">Tools</option>
-          </select>
+          <input class="fi" id="rf-cat" placeholder="Aplikasi / Video / Tools / atau ketik sendiri...">
+          <div class="cat-presets">
+            <button class="cat-preset" onclick="setCat('Aplikasi')">Aplikasi</button>
+            <button class="cat-preset" onclick="setCat('Video')">Video</button>
+            <button class="cat-preset" onclick="setCat('Tools')">Tools</button>
+          </div>
         </div>
+
         <div class="fg full"><div class="fl">Link URL *</div><input class="fi" id="rf-link" placeholder="https://..."></div>
-        <div class="fg full"><div class="fl">URL Thumbnail</div><input class="fi" id="rf-thumb" placeholder="https://... gambar 16:9"></div>
-        <div class="fg full"><div class="fl">Deskripsi</div><textarea class="fi" id="rf-desc" rows="3" placeholder="Penjelasan singkat tentang ini..."></textarea></div>
+
+        <div class="fg full">
+          <div class="fl">URL Thumbnail</div>
+          <input class="fi" id="rf-thumb" placeholder="https://i.imgur.com/... atau https://cdn.xxxxxx.com/...">
+          <div class="thumb-hint">
+            Pakai host gambar yang support hotlink: <a href="https://imgur.com/upload" target="_blank" rel="noopener">Imgur</a>, <a href="https://imgbb.com" target="_blank" rel="noopener">ImgBB</a>, atau <a href="https://postimages.org" target="_blank" rel="noopener">Postimages</a>.
+            <strong style="color:var(--red)">Jangan pakai Imgbox</strong> (tidak support hotlink).
+          </div>
+        </div>
+
+        <div class="fg full">
+          <div class="fl">Genre / Tags</div>
+          <div class="tag-input-wrap" id="rf-tags-wrap" onclick="document.getElementById('rf-tag-input').focus()">
+            <div id="rf-tags-pills"></div>
+            <input class="tag-bare-input" id="rf-tag-input" placeholder="Ketik tag lalu Enter atau koma..." autocomplete="off">
+          </div>
+          <div style="font-size:.6rem;color:var(--muted);margin-top:.35rem">Pisah dengan Enter atau koma. Contoh: <em>belajar bahasa, kosakata, JLPT</em></div>
+        </div>
+
+        <div class="fg full"><div class="fl">Deskripsi</div><textarea class="fi" id="rf-desc" rows="4" placeholder="Penjelasan lengkap tentang ini, fitur-fitur, kenapa direkomendasikan, dsb..."></textarea></div>
 
         <div class="form-actions">
           <button class="bsave" id="resSaveBtn" onclick="saveResource()">Simpan Resource</button>
@@ -781,6 +819,7 @@ addRow();
 
 // ── RESOURCES ──
 let resItems = [];
+let resTags = []; // current tags being edited
 
 onSnapshot(query(collection(db,'resources'), orderBy('order','asc')), snap => {
   resItems = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -794,7 +833,7 @@ function renderResList() {
   el.innerHTML = resItems.map(r=>`<div class="exitem">
     <div>
       <div class="exn">${esc(r.title)}</div>
-      <div class="exar">${esc(r.category)} · <a href="${esc(r.link)}" target="_blank" style="color:var(--accent2);text-decoration:none;font-size:.65rem">${esc(r.link.substring(0,50))}${r.link.length>50?'...':''}</a></div>
+      <div class="exar">${esc(r.category)}${r.tags&&r.tags.length?' · '+r.tags.map(t=>esc(t)).join(', '):''} · <a href="${esc(r.link)}" target="_blank" style="color:var(--accent2);text-decoration:none;font-size:.65rem">${esc(r.link.substring(0,50))}${r.link.length>50?'...':''}</a></div>
     </div>
     <div class="exitem-btns">
       <button class="bedit" onclick="editResource('${r.id}')">Edit</button>
@@ -803,17 +842,55 @@ function renderResList() {
   </div>`).join('');
 }
 
+// ── Tag pill manager ──
+window.setCat = v => { document.getElementById('rf-cat').value = v; };
+
+function renderTagPills() {
+  const wrap = document.getElementById('rf-tags-pills');
+  wrap.innerHTML = resTags.map((t,i) => `<span class="tag-pill">${escHtml(t)}<button type="button" onclick="removeTag(${i})">×</button></span>`).join('');
+}
+
+window.removeTag = i => {
+  resTags.splice(i,1);
+  renderTagPills();
+};
+
+function addTagFromInput() {
+  const inp = document.getElementById('rf-tag-input');
+  const raw = inp.value;
+  const parts = raw.split(/[,،]/);
+  parts.forEach(p => {
+    const t = p.trim();
+    if(t && !resTags.includes(t)) resTags.push(t);
+  });
+  inp.value = '';
+  renderTagPills();
+}
+
+document.getElementById('rf-tag-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTagFromInput(); }
+  if(e.key === 'Backspace' && !this.value && resTags.length) { resTags.pop(); renderTagPills(); }
+});
+document.getElementById('rf-tag-input').addEventListener('blur', function(){
+  if(this.value.trim()) addTagFromInput();
+});
+
 window.saveResource = async () => {
+  // flush any pending tag text
+  const tagInpEl = document.getElementById('rf-tag-input');
+  if(tagInpEl.value.trim()) addTagFromInput();
+
   const title = document.getElementById('rf-title').value.trim();
-  const cat   = document.getElementById('rf-cat').value;
+  const cat   = document.getElementById('rf-cat').value.trim();
   const link  = document.getElementById('rf-link').value.trim();
   const thumb = document.getElementById('rf-thumb').value.trim();
   const desc  = document.getElementById('rf-desc').value.trim();
   const editId = document.getElementById('rf-editid').value;
   if(!title||!link){toast('Judul dan Link wajib diisi!');return;}
+  if(!cat){toast('Kategori wajib diisi!');return;}
   const btn = document.getElementById('resSaveBtn');
   btn.disabled=true;
-  const data = {title, category:cat, link, thumb, desc, order: editId ? (resItems.find(r=>r.id===editId)?.order||Date.now()) : Date.now()};
+  const data = {title, category:cat, link, thumb, desc, tags: resTags, order: editId ? (resItems.find(r=>r.id===editId)?.order||Date.now()) : Date.now()};
   try {
     if(editId){ await updateDoc(doc(db,'resources',editId),data); toast('Resource diupdate!'); }
     else { await addDoc(collection(db,'resources'),data); toast('Resource disimpan!'); }
@@ -830,7 +907,9 @@ window.editResource = id => {
   document.getElementById('rf-link').value   = r.link||'';
   document.getElementById('rf-thumb').value  = r.thumb||'';
   document.getElementById('rf-desc').value   = r.desc||'';
-  document.getElementById('resBanner').style.display='block';
+  resTags = [...(r.tags||[])];
+  renderTagPills();
+  document.getElementById('resBanner').style.display='flex';
   document.getElementById('resSaveBtn').textContent='Update Resource';
   document.getElementById('resForm').scrollIntoView({behavior:'smooth'});
 };
@@ -842,8 +921,9 @@ window.delResource = async id => {
 };
 
 window.resetResForm = () => {
-  ['rf-editid','rf-title','rf-link','rf-thumb','rf-desc'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('rf-cat').value='Aplikasi';
+  ['rf-editid','rf-title','rf-cat','rf-link','rf-thumb','rf-desc'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  resTags = [];
+  renderTagPills();
   document.getElementById('resBanner').style.display='none';
   document.getElementById('resSaveBtn').textContent='Simpan Resource';
 };
