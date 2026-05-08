@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;min-height:100%;background:#050d1a}
+html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#050d1a}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(5,13,26,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);min-width:0}
@@ -117,11 +117,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1rem}.hero,.filter-wrap,.story-grid,#detailView{padding-left:1.2rem;padding-right:1.2rem}.story-grid{grid-template-columns:1fr}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}}
-@media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}
+
 </style>
 </head>
 <body>
-<div id="sitebg" style="position:fixed;inset:0;z-index:0;background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat;filter:brightness(.32) saturate(.75)"></div>
+<div id="bgwrap" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden"><div id="sitebg" style="position:absolute;inset:0;background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat;filter:brightness(.32) saturate(.75);will-change:transform"></div></div>
 <div class="wrap">
 <nav>
   <a class="nav-logo" href="index.html">
@@ -448,7 +448,7 @@ async function loadStories(){
 loadStories();
 </script>
 <script>
-function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;document.body.style.minHeight=h+'px';}
+function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
 fixBg();
 if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);window.visualViewport.addEventListener('scroll',fixBg);}
 window.addEventListener('resize',fixBg);

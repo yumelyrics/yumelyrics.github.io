@@ -9,7 +9,7 @@
 <style>
 :root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;min-height:100%;background:#07060f radial-gradient(ellipse 90% 70% at 15% 5%,rgba(63,44,95,.6) 0%,transparent 55%),radial-gradient(ellipse 70% 60% at 85% 90%,rgba(42,28,70,.55) 0%,transparent 55%),radial-gradient(ellipse at 20% 10%,rgba(139,107,177,.2) 0%,transparent 50%),radial-gradient(ellipse at 85% 85%,rgba(201,169,110,.13) 0%,transparent 45%)}
+html{scroll-behavior:smooth;min-height:100%;background:#050d1a}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
 
 
@@ -177,6 +177,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </style>
 </head>
 <body>
+<div id="bgwrap" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden"><div id="sitebg" style="position:absolute;inset:0;background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat;filter:brightness(.32) saturate(.75);will-change:transform"></div></div>
 <div class="wrap">
 <nav>
   <a class="nav-logo" href="index.html">
@@ -778,7 +779,7 @@ function ra(){
 addRow();
 </script>
 <script>
-function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;document.body.style.minHeight=h+'px';}
+function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
 fixBg();
 if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);window.visualViewport.addEventListener('scroll',fixBg);}
 window.addEventListener('resize',fixBg);
