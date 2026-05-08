@@ -126,7 +126,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </style>
 </head>
 <body>
-<div style="position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1920&q=80') center/cover no-repeat;filter:brightness(.35) saturate(.8)"></div>
+<div id="sitebg" style="position:fixed;inset:0;z-index:0;background:url('https://image-5.uhdpaper.com/wallpaper/elfaria-wistoria-wand-and-sword-4k-wallpaper-uhdpaper.com-767@5@n.jpg') center/cover no-repeat;filter:brightness(.35) saturate(.8)"></div>
+<script>
+if(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent))
+  document.getElementById('sitebg').style.backgroundImage="url('https://i.pinimg.com/1200x/98/58/c0/9858c08bbcb582190b6cf711a1c70d1d.jpg')";
+</script>
 <div class="wrap">
 <nav>
   <a class="nav-logo" href="index.html">
