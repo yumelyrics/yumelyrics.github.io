@@ -156,6 +156,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
+<script>
+function showThumbFallback(img) {
+  var div = document.createElement('div');
+  div.className = 'card-thumb-placeholder';
+  div.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  img.parentNode.replaceChild(div, img);
+}
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, query, orderBy }
@@ -193,11 +201,10 @@ function buildTabs() {
 
 /* ── Card thumbnail HTML ── */
 function thumbHTML(item) {
-  const ph = `<div class="card-thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   if (item.thumb) {
-    return `<img class="card-thumb" src="${esc(item.thumb)}" alt="${esc(item.title)}" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\"card-thumb-placeholder\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"1.5\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><polyline points=\"21 15 16 10 5 21\"/></svg></div>')">`;
+    return `<img class="card-thumb" src="${esc(item.thumb)}" alt="${esc(item.title)}" loading="lazy" onerror="showThumbFallback(this)">`;
   }
-  return ph;
+  return `<div class="card-thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
 }
 
 function tagsHTML(tags) {
