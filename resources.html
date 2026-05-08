@@ -98,7 +98,21 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .detail-back:hover{color:var(--accent2)}
 
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border)}
-@media(max-width:600px){nav{padding:0 1rem}.nb{padding:.4rem .6rem;font-size:.62rem}.main{padding:2rem 1.2rem 5rem}.nlen{display:none}.overlay{padding:2.5rem .75rem 2rem}.detail-body{padding:1.2rem 1.2rem 1.6rem}}
+@media(max-width:600px){nav{padding:0 1rem;height:52px}.nb{padding:.35rem .55rem;font-size:.6rem;letter-spacing:.08em}.main{padding:2rem 1.2rem 5rem}.nljp{font-size:1.05rem}.nlen{display:none}.overlay{padding:2.5rem .75rem 2rem}.detail-body{padding:1.2rem 1.2rem 1.6rem}}
+
+/* ── Toast / notification banner ── */
+#imgNotif{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-8px);z-index:300;max-width:480px;width:calc(100% - 2rem);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none}
+#imgNotif.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}
+.notif-inner{background:rgba(10,18,34,.92);border:1px solid rgba(201,169,110,.22);backdrop-filter:blur(20px);padding:.75rem 1.1rem .75rem 1rem;display:flex;align-items:flex-start;gap:.75rem;position:relative}
+.notif-icon{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--accent);margin-top:.05rem}
+.notif-icon svg{width:16px;height:16px}
+.notif-text{flex:1;min-width:0}
+.notif-title{font-size:.7rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.28rem;font-weight:500}
+.notif-body{font-size:.75rem;color:var(--muted);line-height:1.6;font-weight:300}
+.notif-body b{color:var(--text);font-weight:400}
+.notif-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:.1rem .3rem;line-height:1;transition:color .2s;flex-shrink:0;align-self:flex-start;margin-top:.05rem}
+.notif-close:hover{color:var(--text)}
+@media(max-width:600px){#imgNotif{top:58px}.notif-body{font-size:.72rem}}
 </style>
 </head>
 <body>
@@ -122,6 +136,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="contact.html">Hubungi</a>
   </div>
 </nav>
+
+<!-- Notification banner -->
+<div id="imgNotif">
+  <div class="notif-inner">
+    <div class="notif-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="notif-text">
+      <div class="notif-title">Gambar tidak muncul?</div>
+      <div class="notif-body">Kemungkinan internet kamu memblokir gambar tersebut. Coba pakai <b>DNS publik</b> (seperti 1.1.1.1 atau 8.8.8.8) atau aktifkan <b>VPN</b> untuk mengaksesnya.</div>
+    </div>
+    <button class="notif-close" onclick="document.getElementById('imgNotif').classList.remove('show')" aria-label="Tutup">✕</button>
+  </div>
+</div>
 
 <div class="main">
   <div class="hero">
@@ -361,6 +389,12 @@ onSnapshot(query(collection(db,'resources'), orderBy('order','asc')), snap => {
 }
 </script>
 
+<script>
+// Show notification after short delay
+setTimeout(()=>{ document.getElementById('imgNotif').classList.add('show'); }, 800);
+// Auto-hide after 9 seconds
+setTimeout(()=>{ document.getElementById('imgNotif').classList.remove('show'); }, 9800);
+</script>
 <script>
 document.addEventListener('copy', function(e) {
   const selected = window.getSelection().toString();
