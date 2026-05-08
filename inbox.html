@@ -545,7 +545,7 @@ async function loadCmAdmin(tab){
             <div>${escCm(r.text)}</div>
             <div class="rm">${r.isAdmin?'<strong>Admin</strong> · ':''}${escCm(r.name)} · ${escCm(r.date)}</div>
           </div>
-          <button class="cm-del" onclick="delCm('${colName}','${r.id}','${c.id}')">Hapus</button>
+          <button class="cm-del" onclick="window._delCm('${colName}','${r.id}','${c.id}')">Hapus</button>
         </div>`).join('')}</div>` : '';
 
       return `<div class="cm-item" id="cmi-${c.id}">
@@ -556,8 +556,8 @@ async function loadCmAdmin(tab){
             ${refLabel?`<div class="cm-item-ref">↳ ${escCm(refLabel)}</div>`:''}
           </div>
           <div class="cm-item-actions">
-            <button class="cm-reply-btn" onclick="toggleCmReply('${c.id}')">↩ Balas</button>
-            <button class="cm-del" onclick="delCm('${colName}','${c.id}',null)">Hapus</button>
+            <button class="cm-reply-btn" onclick="window._toggleCmReply('${c.id}')">↩ Balas</button>
+            <button class="cm-del" onclick="window._delCm('${colName}','${c.id}',null)">Hapus</button>
           </div>
         </div>
         <div class="cm-item-text">${escCm(c.text)}</div>
@@ -565,8 +565,8 @@ async function loadCmAdmin(tab){
         <div class="cm-reply-form" id="crf-${c.id}">
           <textarea class="cm-reply-inp" id="crt-${c.id}" rows="2" placeholder="Tulis balasan sebagai Admin..."></textarea>
           <div class="cm-reply-actions">
-            <button class="cm-reply-send" onclick="sendCmReply('${colName}','${c.id}','${c[refField]||''}')">Kirim Balasan</button>
-            <button style="background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem .9rem;cursor:pointer;transition:all .2s" onclick="toggleCmReply('${c.id}')">Batal</button>
+            <button class="cm-reply-send" onclick="window._sendCmReply('${colName}','${c.id}','${c[refField]||''}')">Kirim Balasan</button>
+            <button style="background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem .9rem;cursor:pointer;transition:all .2s" onclick="window._toggleCmReply('${c.id}')">Batal</button>
           </div>
         </div>
       </div>`;
@@ -581,16 +581,19 @@ window.switchCmTab = (tab, btn) => {
   loadCmAdmin(tab);
 };
 
-window.toggleCmReply = id => {
+// Expose functions to global scope with _prefix to avoid collisions
+window._toggleCmReply = id => {
   const f = document.getElementById('crf-'+id);
   f.classList.toggle('open');
   if(f.classList.contains('open')) document.getElementById('crt-'+id).focus();
 };
 
-window.sendCmReply = async (colName, parentId, refId) => {
+window._sendCmReply = async (colName, parentId, refId) => {
   const t = document.getElementById('crt-'+parentId).value.trim();
   if(!t) return;
   const refField = colName==='comments' ? 'songId' : 'storyId';
+  const btn = document.querySelector(`#crf-${parentId} .cm-reply-send`);
+  if(btn) btn.disabled = true;
   try {
     await addDoc(collection(db, colName), {
       [refField]: refId, parentId,
@@ -598,12 +601,12 @@ window.sendCmReply = async (colName, parentId, refId) => {
       date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       ts: Date.now()
     });
-    toast('Balasan terkirim!');
+    toast('Balasan terkirim! 💬');
     loadCmAdmin(curCmTab);
-  } catch(e){ toast('Gagal kirim.'); }
+  } catch(e){ toast('Gagal kirim: '+e.message); if(btn) btn.disabled = false; }
 };
 
-window.delCm = async (colName, id, parentId) => {
+window._delCm = async (colName, id, parentId) => {
   if(!confirm('Hapus komentar ini?')) return;
   try {
     await deleteDoc(doc(db, colName, id));
