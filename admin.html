@@ -130,6 +130,37 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .story-desc{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
 .story-form{display:flex;flex-direction:column;gap:1rem;max-width:760px}
 .sf-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+/* ── Comment Section ── */
+.cm-section{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.cm-tit{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
+.cm-desc{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
+.cm-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem}
+.cmtab{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.35rem .85rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.cmtab.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.cm-list{display:flex;flex-direction:column;gap:.8rem}
+.cm-item{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.2rem}
+.cm-item-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;margin-bottom:.5rem}
+.cm-item-info{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.cm-item-name{font-size:.82rem;color:var(--text);font-weight:500}
+.cm-item-meta{font-size:.65rem;color:var(--muted)}
+.cm-item-ref{font-size:.65rem;color:var(--accent2);margin-top:.1rem}
+.cm-item-text{font-size:.82rem;color:var(--text);line-height:1.6;margin-bottom:.8rem}
+.cm-item-actions{display:flex;gap:.5rem;align-items:center;flex-shrink:0}
+.cm-del{background:none;border:1px solid rgba(201,110,110,.3);color:var(--red);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s;border-radius:2px}
+.cm-del:hover{background:rgba(201,110,110,.1)}
+.cm-replies{margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem}
+.cm-reply-item{background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.12);padding:.6rem .9rem;font-size:.78rem;color:var(--text);line-height:1.5;display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.cm-reply-item .rm{font-size:.6rem;color:var(--muted);margin-top:.2rem}
+.cm-reply-form{margin-top:.8rem;display:none;flex-direction:column;gap:.5rem}
+.cm-reply-form.open{display:flex}
+.cm-reply-inp{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.8rem;padding:.6rem .9rem;outline:none;resize:none;transition:border-color .2s;width:100%;line-height:1.6;box-sizing:border-box}
+.cm-reply-inp:focus{border-color:rgba(201,169,110,.4)}
+.cm-reply-actions{display:flex;gap:.5rem;align-items:center}
+.cm-reply-send{background:var(--accent);border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;padding:.55rem 1.2rem;cursor:pointer;font-weight:500;transition:opacity .2s}
+.cm-reply-send:hover{opacity:.85}
+.cm-reply-btn{background:none;border:1px solid rgba(79,126,196,.3);color:var(--accent2);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s;border-radius:2px}
+.cm-reply-btn:hover{background:rgba(79,126,196,.1)}
+.cm-empty{font-size:.78rem;color:var(--muted);font-style:italic;padding:1rem 0}
 .sf-label{font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem}
 .sf-input{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;transition:border-color .2s;width:100%}
 .sf-input::placeholder{color:var(--muted)}
@@ -294,6 +325,18 @@ Paragraf dipisah dengan enter 2x.
     </div>
 
 <div class="toast" id="toast"></div>
+
+    <!-- COMMENT MODERATION SECTION -->
+    <div class="cm-section">
+      <div class="cm-tit">Moderasi Komentar</div>
+      <div class="cm-desc">Lihat, balas, dan hapus komentar dari halaman lirik maupun cerita.</div>
+      <div class="cm-tabs">
+        <button class="cmtab on" onclick="switchCmTab('songs',this)">♪ Lirik Lagu</button>
+        <button class="cmtab" onclick="switchCmTab('stories',this)">✦ Cerita</button>
+      </div>
+      <div class="cm-list" id="cmList"><div class="cm-empty">Memuat komentar...</div></div>
+    </div>
+
 </div>
 </div>
 
@@ -321,7 +364,7 @@ Paragraf dipisah dengan enter 2x.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, where }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -355,6 +398,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display='block';
     startListening();
+    loadCmAdmin('songs');
   } else {
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display='none';
@@ -777,6 +821,115 @@ function ra(){
 }
 
 addRow();
+
+// ── Comment Moderation ──
+let curCmTab = 'songs';
+let songMap = {}; // id -> titleJp for reference
+
+// Build song map for reference labels
+onSnapshot(query(collection(db,'songs')), snap => {
+  snap.docs.forEach(d => { songMap[d.id] = d.data().titleJp || d.data().titleRo || d.id; });
+});
+
+function escCm(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function loadCmAdmin(tab){
+  const el = document.getElementById('cmList');
+  el.innerHTML = '<div class="cm-empty">Memuat komentar...</div>';
+  try {
+    const colName = tab === 'songs' ? 'comments' : 'story_comments';
+    const refField = tab === 'songs' ? 'songId' : 'storyId';
+    const snap = await getDocs(collection(db, colName));
+    const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+    // only parent comments
+    const parents = all.filter(c=>!c.parentId).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const replyMap = {};
+    all.filter(c=>!!c.parentId).forEach(r=>{
+      if(!replyMap[r.parentId]) replyMap[r.parentId]=[];
+      replyMap[r.parentId].push(r);
+    });
+    if(!parents.length){ el.innerHTML='<div class="cm-empty">Belum ada komentar.</div>'; return; }
+    el.innerHTML = parents.map(c=>{
+      const replies = (replyMap[c.id]||[]).sort((a,b)=>(a.ts||0)-(b.ts||0));
+      const refLabel = tab==='songs' ? (songMap[c[refField]] || c[refField] || '') : (c[refField] || '');
+      const repliesHtml = replies.length ? `<div class="cm-replies">${replies.map(r=>`
+        <div class="cm-reply-item" id="cri-${r.id}">
+          <div>
+            <div>${escCm(r.text)}</div>
+            <div class="rm">${r.isAdmin?'<strong>Admin</strong> · ':''}${escCm(r.name)} · ${escCm(r.date)}</div>
+          </div>
+          <button class="cm-del" onclick="delCm('${colName}','${r.id}','${c.id}')">Hapus</button>
+        </div>`).join('')}</div>` : '';
+      return `<div class="cm-item" id="cmi-${c.id}">
+        <div class="cm-item-hdr">
+          <div class="cm-item-info">
+            <div class="cm-item-name">${escCm(c.name)}</div>
+            <div class="cm-item-meta">${escCm(c.date)}</div>
+            ${refLabel?`<div class="cm-item-ref">↳ ${escCm(refLabel)}</div>`:''}
+          </div>
+          <div class="cm-item-actions">
+            <button class="cm-reply-btn" onclick="toggleCmReply('${c.id}')">↩ Balas</button>
+            <button class="cm-del" onclick="delCm('${colName}','${c.id}',null)">Hapus</button>
+          </div>
+        </div>
+        <div class="cm-item-text">${escCm(c.text)}</div>
+        ${repliesHtml}
+        <div class="cm-reply-form" id="crf-${c.id}">
+          <textarea class="cm-reply-inp" id="crt-${c.id}" rows="2" placeholder="Tulis balasan sebagai Admin..."></textarea>
+          <div class="cm-reply-actions">
+            <button class="cm-reply-send" onclick="sendCmReply('${colName}','${c.id}','${c[refField]||''}')">Kirim Balasan</button>
+            <button class="bdraft" onclick="toggleCmReply('${c.id}')">Batal</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){ console.error(e); document.getElementById('cmList').innerHTML='<div class="cm-empty">Gagal memuat komentar.</div>'; }
+}
+
+window.switchCmTab = (tab, btn) => {
+  curCmTab = tab;
+  document.querySelectorAll('.cmtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  loadCmAdmin(tab);
+};
+
+window.toggleCmReply = id => {
+  const f = document.getElementById('crf-'+id);
+  f.classList.toggle('open');
+  if(f.classList.contains('open')) document.getElementById('crt-'+id).focus();
+};
+
+window.sendCmReply = async (colName, parentId, refId) => {
+  const t = document.getElementById('crt-'+parentId).value.trim();
+  if(!t) return;
+  const refField = colName==='comments' ? 'songId' : 'storyId';
+  try {
+    await addDoc(collection(db, colName), {
+      [refField]: refId, parentId,
+      name: 'Admin', text: t, isAdmin: true,
+      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts: Date.now()
+    });
+    toast('Balasan terkirim!');
+    loadCmAdmin(curCmTab);
+  } catch(e){ toast('Gagal kirim.'); }
+};
+
+window.delCm = async (colName, id, parentId) => {
+  if(!confirm('Hapus komentar ini?')) return;
+  try {
+    await deleteDoc(doc(db, colName, id));
+    // kalau hapus parent, hapus juga semua replynya
+    if(!parentId){
+      const rSnap = await getDocs(query(collection(db,colName), where('parentId','==',id)));
+      await Promise.all(rSnap.docs.map(d=>deleteDoc(doc(db,colName,d.id))));
+    }
+    toast('Komentar dihapus.');
+    loadCmAdmin(curCmTab);
+  } catch(e){ toast('Gagal hapus.'); }
+};
+
+// Load komentar saat auth ready - handled by main onAuthStateChanged above
 </script>
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
