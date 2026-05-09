@@ -87,6 +87,43 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .art-body blockquote{border-left:3px solid var(--accent);padding:.5rem 0 .5rem 1.2rem;color:var(--muted);font-style:italic;margin:1.2rem 0}
 .back-link{display:inline-flex;align-items:center;gap:.4rem;margin-top:2.5rem;font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:color .2s;border:1px solid var(--border);padding:.5rem 1rem}
 .back-link:hover{color:var(--accent);border-color:rgba(201,169,110,.4)}
+.dcm-sec{margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border);max-width:600px}
+.dcm-tit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
+.dcm-form{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
+.cmi{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;resize:none;transition:border-color .2s;width:100%}
+.cmi::placeholder{color:var(--muted)}.cmi:focus{border-color:rgba(201,169,110,.4)}
+.cmrow{display:flex;gap:.6rem}.cmrow .cmi{flex:1}
+.sbtn{background:var(--accent2);border:none;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 1.2rem;cursor:pointer;transition:opacity .2s;height:42px}
+.sbtn:hover{opacity:.8}.sbtn:disabled{opacity:.4;cursor:not-allowed}
+.cmlist{display:flex;flex-direction:column;gap:1rem}
+.citem{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1rem 1.2rem}
+.citem.is-admin{background:rgba(201,169,110,.05);border-color:rgba(201,169,110,.2)}
+.chdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;gap:.5rem;flex-wrap:wrap}
+.chdr-left{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.cname{font-size:.72rem;color:var(--accent);font-weight:500}
+.cdate{font-size:.6rem;color:var(--muted)}
+.ctxt{font-size:.82rem;color:var(--text);line-height:1.65;font-weight:300}
+.nocm{font-size:.78rem;color:var(--muted);font-style:italic}
+.admin-badge{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;background:var(--accent);padding:.15rem .45rem;font-weight:600}
+.reply-btn{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:.2rem .5rem;transition:color .2s}
+.reply-btn:hover{color:var(--accent2)}
+.replies{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
+.ritem{padding:.7rem 1rem;border-left:2px solid var(--border)}
+.ritem.is-admin{border-left-color:var(--accent);background:rgba(201,169,110,.04)}
+.admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;position:relative;overflow:hidden;isolation:isolate}
+.admin-reply-block::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.18;z-index:-1;pointer-events:none}
+.admin-reply-block::after{content:'';position:absolute;inset:0;background:rgba(7,6,15,.55);z-index:-1;pointer-events:none}
+.admin-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0}
+.admin-badge-wrap .admin-badge{font-size:.54rem;color:#07060f;background:var(--accent);padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.admin-name{font-size:.6rem;color:var(--accent);white-space:nowrap}
+.admin-reply-text{font-size:.78rem;color:var(--text);line-height:1.65;flex:1}
+.reply-form{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:none;flex-direction:column;gap:.5rem}
+.reply-form.open{display:flex}
+.reply-row{display:flex;gap:.5rem}.reply-row .cmi{flex:1}
+.rbtn-cancel{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;color:var(--muted);padding:.4rem .8rem;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.rbtn-cancel:hover{border-color:#c96e6e;color:#c96e6e}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
+.toast.on{opacity:1;transform:translateY(0)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border)}
 @media(max-width:600px){nav{padding:0 1rem}.nlen{display:none}.main{padding:2rem 1.2rem 5rem}}
 </style>
@@ -123,8 +160,151 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="art-body"><p>alowwww</p></div>
 
   <a class="back-link" href="/stories.html">← Kembali ke Cerita</a>
+
+  <!-- KOMENTAR -->
+  <div class="dcm-sec">
+    <div class="dcm-tit">Komentar</div>
+    <div class="dcm-form">
+      <div class="cmrow">
+        <input class="cmi" id="cm-n" placeholder="Nama lo (opsional)">
+        <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
+      </div>
+      <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis sesuatu..."></textarea>
+    </div>
+    <div class="cmlist" id="cmlist"><div class="nocm">Memuat komentar...</div></div>
+  </div>
 </div>
 </div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, getDocs, where, orderBy }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+  authDomain: "yumesubs7.firebaseapp.com",
+  projectId: "yumesubs7",
+  storageBucket: "yumesubs7.firebasestorage.app",
+  messagingSenderId: "1076202015626",
+  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const STORY_ID = "tHHnhzXGxJBvBKrqdraj";
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+function renderComment(id, c, replies){
+  const isAdm = !!c.isAdmin;
+  const repHtml = replies.length ? `<div class="replies">${replies.map(r=>{
+    if(r.isAdmin) return `<div class="admin-reply-block">
+      <div class="admin-badge-wrap">
+        <span class="admin-badge">Admin</span>
+        <span class="admin-name">YumeSubs</span>
+      </div>
+      <div class="admin-reply-text">${esc(r.text)}</div>
+    </div>`;
+    return `<div class="ritem">
+      <div class="chdr"><div class="chdr-left">
+        <div class="cname">${esc(r.name)}</div>
+        <div class="cdate">${esc(r.date)}</div>
+      </div></div>
+      <div class="ctxt">${esc(r.text)}</div>
+    </div>`;
+  }).join('')}</div>` : '';
+  return `<div class="citem${isAdm?' is-admin':''}" id="scm-${id}">
+    <div class="chdr"><div class="chdr-left">
+      <div class="cname">${esc(c.name)}</div>
+      ${isAdm?'<span class="admin-badge">Admin</span>':''}
+      <div class="cdate">${esc(c.date)}</div>
+    </div>
+    <button class="reply-btn" onclick="toggleRepForm('${id}')">↩ Balas</button>
+    </div>
+    <div class="ctxt">${esc(c.text)}</div>
+    ${repHtml}
+    <div class="reply-form" id="srf-${id}">
+      <div class="reply-row">
+        <input class="cmi" id="srn-${id}" placeholder="Nama (opsional)">
+        <button class="rbtn-cancel" onclick="toggleRepForm('${id}')">✕</button>
+      </div>
+      <textarea class="cmi" id="srt-${id}" rows="2" placeholder="Balas..."></textarea>
+      <button class="sbtn" style="padding:.55rem 1rem;align-self:flex-start" onclick="postReply('${id}')">Kirim</button>
+    </div>
+  </div>`;
+}
+
+async function loadCm(){
+  const el = document.getElementById('cmlist');
+  try {
+    const q = query(collection(db,'story_comments'), where('storyId','==',STORY_ID));
+    const snap = await getDocs(q);
+    if(snap.empty){ el.innerHTML='<div class="nocm">Belum ada komentar.</div>'; return; }
+    const all = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const parents = all.filter(c=>!c.parentId);
+    const replyMap = {};
+    all.filter(c=>!!c.parentId).forEach(r=>{
+      if(!replyMap[r.parentId]) replyMap[r.parentId]=[];
+      replyMap[r.parentId].push(r);
+    });
+    if(!parents.length){ el.innerHTML='<div class="nocm">Belum ada komentar.</div>'; return; }
+    el.innerHTML = parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
+  } catch(e){ el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>'; }
+}
+
+window.toggleRepForm = id => {
+  const rf=document.getElementById('srf-'+id);
+  rf.classList.toggle('open');
+  if(rf.classList.contains('open')) document.getElementById('srt-'+id).focus();
+};
+
+window.postReply = async parentId => {
+  const t=document.getElementById('srt-'+parentId).value.trim();
+  if(!t) return;
+  const n=document.getElementById('srn-'+parentId).value.trim();
+  try {
+    await addDoc(collection(db,'story_comments'),{
+      storyId:STORY_ID, parentId,
+      name:n||'Anonim', text:t,
+      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts:Date.now(), isAdmin:false
+    });
+    toast('Balasan terkirim!');
+    loadCm();
+  } catch(e){ toast('Gagal kirim.'); }
+};
+
+window.postCm = async () => {
+  const n=document.getElementById('cm-n').value.trim();
+  const t=document.getElementById('cm-t').value.trim();
+  const btn=document.getElementById('cm-btn');
+  if(!t) return;
+  btn.disabled=true;
+  try {
+    await addDoc(collection(db,'story_comments'),{
+      storyId:STORY_ID, parentId:null,
+      name:n||'Anonim', text:t,
+      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts:Date.now(), isAdmin:false
+    });
+    document.getElementById('cm-t').value='';
+    toast('Komentar terkirim!');
+    loadCm();
+  } catch(e){ toast('Gagal kirim.'); }
+  btn.disabled=false;
+};
+
+loadCm();
+</script>
 <script>
 document.addEventListener('copy', function(e) {
   const sel = window.getSelection().toString();
