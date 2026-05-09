@@ -288,10 +288,17 @@ function renderBody(raw){
   return html;
 }
 
+function slug(title){
+  return String(title||'').toLowerCase().trim()
+    .replace(/[^\w\s-]/g,'').replace(/\s+/g,'-')
+    .replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
 function renderCard(s){
   const tags = (s.tags||[]).map(tagPill).join('');
   const imgHtml = s.img ? `<img class="scard-img" src="${esc(s.img)}" alt="" loading="lazy">` : '';
-  return `<div class="scard" onclick="openStory('${s.id}')">
+  const href = `stories/${slug(s.title)}.html`;
+  return `<a class="scard" href="${href}" style="text-decoration:none">
     ${imgHtml}
     <div class="scard-body">
       <div class="scard-tags">${tags}</div>
@@ -302,7 +309,7 @@ function renderCard(s){
         <div class="scard-arrow">→</div>
       </div>
     </div>
-  </div>`;
+  </a>`;
 }
 
 function renderList(){
