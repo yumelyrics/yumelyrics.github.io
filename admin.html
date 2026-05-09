@@ -202,6 +202,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .bedit-s{background:none;border:1px solid rgba(79,126,196,.3);color:var(--accent2);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .bedit-s:hover{background:rgba(79,126,196,.1)}
 .bdel-s{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.bpin-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.bpin-s:hover{border-color:rgba(201,169,110,.5);color:var(--accent)}
+.bpin-s.on{border-color:rgba(201,169,110,.6);color:var(--accent);background:rgba(201,169,110,.08)}
 .bdel-s:hover{background:rgba(201,110,110,.1)}
 .story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .story-edit-banner.on{display:flex}
@@ -699,6 +702,13 @@ window.deleteStory = async id => {
   } catch(e){ toast('Gagal hapus: '+e.message); }
 };
 
+window.togglePin = async (id, isPinned) => {
+  try {
+    await updateDoc(doc(db,'stories',id),{ pinned: !isPinned });
+    toast(isPinned ? 'Cerita di-unpin.' : '📌 Cerita di-pin!');
+  } catch(e){ toast('Gagal: '+e.message); }
+};
+
 function renderStoryList(){
   document.getElementById('storyCount').textContent = stories.length;
   const el = document.getElementById('storyList');
@@ -707,10 +717,11 @@ function renderStoryList(){
   el.innerHTML = stories.map(s=>`
     <div class="slist-item">
       <div class="slist-info">
-        <div class="slist-title">${escHtml(s.title)}</div>
+        <div class="slist-title">${s.pinned?'📌 ':''}${escHtml(s.title)}</div>
         <div class="slist-meta">${s.date||''} · ${(s.tags||[]).map(t=>tagLabel[t]||t).join(', ')||'Tanpa tag'}</div>
       </div>
       <div class="slist-btns">
+        <button class="bpin-s${s.pinned?' on':''}" onclick="togglePin('${s.id}',${!!s.pinned})">${s.pinned?'📌 Unpin':'📌 Pin'}</button>
         <button class="bedit-s" onclick="editStory('${s.id}')">Edit</button>
         <button class="bdel-s" onclick="deleteStory('${s.id}')">Hapus</button>
       </div>

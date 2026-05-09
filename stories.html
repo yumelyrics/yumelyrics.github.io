@@ -55,6 +55,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scard-date{font-size:.62rem;color:var(--muted)}
 .scard-arrow{font-size:.7rem;color:var(--muted);transition:transform .2s,color .2s}
 .scard:hover .scard-arrow{transform:translateX(4px);color:var(--accent)}
+.scard.pinned{border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.04)}
+.scard.pinned:hover{border-color:rgba(201,169,110,.6);background:rgba(201,169,110,.07)}
+.pin-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.55rem;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);padding:.15rem .55rem;margin-bottom:.6rem;width:fit-content}
 .no-story{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;font-style:italic}
 .loading-msg{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem}
 
@@ -298,9 +301,11 @@ function renderCard(s){
   const tags = (s.tags||[]).map(tagPill).join('');
   const imgHtml = s.img ? `<img class="scard-img" src="${esc(s.img)}" alt="" loading="lazy">` : '';
   const href = `stories/${slug(s.title)}.html`;
-  return `<a class="scard" href="${href}" style="text-decoration:none">
+  const pinBadge = s.pinned ? `<div class="pin-badge">📌 Pinned</div>` : '';
+  return `<a class="scard${s.pinned?' pinned':''}" href="${href}" style="text-decoration:none">
     ${imgHtml}
     <div class="scard-body">
+      ${pinBadge}
       <div class="scard-tags">${tags}</div>
       <div class="scard-title">${esc(s.title)}</div>
       <div class="scard-excerpt">${esc(excerpt(s.body||''))}</div>
@@ -313,7 +318,8 @@ function renderCard(s){
 }
 
 function renderList(){
-  const filtered = activeFilter==='all' ? stories : stories.filter(s=>(s.tags||[]).includes(activeFilter));
+  let filtered = activeFilter==='all' ? stories : stories.filter(s=>(s.tags||[]).includes(activeFilter));
+  filtered = [...filtered.filter(s=>s.pinned), ...filtered.filter(s=>!s.pinned)];
   const grid = document.getElementById('storyGrid');
   if(!filtered.length){
     grid.innerHTML='';
