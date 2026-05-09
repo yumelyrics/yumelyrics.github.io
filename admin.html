@@ -307,6 +307,21 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
           <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
         </div>
       </div>
+
+      <!-- Story Pages -->
+      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px;margin-top:1rem">
+        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Story Pages</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per cerita dari koleksi Firestore + update sitemap.</div>
+        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+          <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px">▶ Run Generate Story Pages</button>
+          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
+        </div>
+        <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="gh-str-status-text"></span>
+          <a id="gh-str-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+        </div>
+      </div>
     </div>
 
     <!-- STORY EDITOR SECTION -->
@@ -933,7 +948,8 @@ const GH_OWNER = 'yumelyrics';
 const GH_REPO  = 'yumelyrics.github.io';
 const GH_WORKFLOWS = {
   songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: 'Run Generate Song Pages',     dlUrl: 'https://yumelyrics.github.io/lagu/' },
-  resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.github.io/resources/' }
+  resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.github.io/resources/' },
+  stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.github.io/stories/' }
 };
 const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
 let _pollTimers = {};
