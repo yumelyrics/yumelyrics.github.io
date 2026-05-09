@@ -238,45 +238,50 @@ function tagPill(tag){
   return `<span class="stag-pill ${cls}">${esc(lbl)}</span>`;
 }
 
+function stripMarkdown(raw){
+  return raw
+    .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^>\s?/gm, '')
+    .replace(/<[^>]+>/g, '');
+}
+
 function excerpt(body){
-  // strip basic HTML tags dari konten
-  return body.replace(/<[^>]+>/g,'').slice(0,160);
+  return stripMarkdown(body).replace(/\s+/g,' ').trim().slice(0,160);
 }
 
 function readTime(body){
-  const words = body.replace(/<[^>]+>/g,'').split(/\s+/).length;
+  const words = stripMarkdown(body).split(/\s+/).length;
   const mins = Math.max(1, Math.round(words/200));
   return `${mins} menit baca`;
+}
+
+function renderInline(text){
+  return text
+    .replace(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/g,
+      (_, alt, url) => `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy">`)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
+      (_, t, url) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(t)}</a>`)
+    .replace(/\*\*(.+?)\*\*/g, (_, t) => `<strong>${esc(t)}</strong>`)
+    .replace(/\*(.+?)\*/g, (_, t) => `<em>${esc(t)}</em>`)
+    .replace(/(^|[\s])((https?:\/\/[^\s<]+))/g,
+      (_, pre, url) => `${pre}<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`);
 }
 
 // Render konten cerita (support basic markdown-ish + link + img)
 function renderBody(raw){
   if(!raw) return '';
-  // Escape dulu, lalu restore intentional tags
   let html = raw
-    // newline jadi <p>
     .split(/\n\n+/).map(para => {
-      if(!para.trim()) return '';
-      // quote block
-      if(para.startsWith('> ')){
-        return `<blockquote>${esc(para.slice(2))}</blockquote>`;
+      const trimmed = para.trim();
+      if(!trimmed) return '';
+      if(trimmed.startsWith('> ')){
+        return `<blockquote>${renderInline(trimmed.slice(2))}</blockquote>`;
       }
-      return `<p>${esc(para)}</p>`;
+      return `<p>${renderInline(trimmed)}</p>`;
     }).join('');
-
-  // inline: **bold**
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // inline: *italic*
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // inline: [text](url)
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  // inline: bare URL
-  html = html.replace(/(^|[\s>])(https?:\/\/\S+)/g,
-    '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-  // inline: ![alt](url) gambar sisipan
-  html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/g,
-    '<img src="$2" alt="$1" loading="lazy">');
 
   return html;
 }
