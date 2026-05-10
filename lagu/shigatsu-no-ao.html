@@ -478,10 +478,14 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     }
   });
 
-  /* 4. Blokir selectstart (desktop) */
+  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik */
   document.addEventListener('selectstart', function(e){
     if(isInput(e.target)) return;
-    e.preventDefault();
+    var el = e.target;
+    while(el && el !== document.body){
+      if(el.id==='ll') { e.preventDefault(); return; }
+      el = el.parentElement;
+    }
   });
 
   /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi */
