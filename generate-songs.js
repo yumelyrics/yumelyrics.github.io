@@ -60,6 +60,10 @@ function generateHTML(song, slug) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="index, follow">
+<meta name="apple-itunes-app" content="app-id=0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<style>html{-webkit-text-size-adjust:100%}</style>
 <title>Lirik ${escHtml(titleRo||titleDisplay)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="lirik ${escHtml(titleRo||titleDisplay)}, terjemahan ${escHtml(titleRo||titleDisplay)}, ${escHtml(artist)} lirik indonesia, ${escHtml(titleRo||titleDisplay)} romaji, lirik lagu jepang, YumeSubs">
