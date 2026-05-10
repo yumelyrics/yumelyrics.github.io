@@ -328,7 +328,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 <script>
 /* ── YumeSubs Copy Protection ── */
 (function(){
-  const WATERMARK = '\n\n\u00a9 YumeSubs \u2014 yumelyrics.github.io';
+  const WATERMARK = '\n\n© YumeSubs — yumelyrics.github.io';
   const CHAR_LIMIT = 10;
 
   function isInput(el){ const t=el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
@@ -353,10 +353,14 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     }
   });
 
-  /* 4. Blokir selectstart (desktop) */
+  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik */
   document.addEventListener('selectstart', function(e){
     if(isInput(e.target)) return;
-    e.preventDefault();
+    var el = e.target;
+    while(el && el !== document.body){
+      if(el.id==='ll') { e.preventDefault(); return; }
+      el = el.parentElement;
+    }
   });
 
   /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi */
