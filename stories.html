@@ -58,6 +58,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scard.pinned{border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.04)}
 .scard.pinned:hover{border-color:rgba(201,169,110,.6);background:rgba(201,169,110,.07)}
 .pin-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.55rem;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);padding:.15rem .55rem;margin-bottom:.6rem;width:fit-content}
+.verified-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.55rem;color:#60a5fa;letter-spacing:.15em;text-transform:uppercase;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);padding:.15rem .55rem;margin-bottom:.6rem;width:fit-content;margin-left:.4rem}
 .no-story{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;font-style:italic}
 .loading-msg{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem}
 
@@ -302,10 +303,11 @@ function renderCard(s){
   const imgHtml = s.img ? `<img class="scard-img" src="${esc(s.img)}" alt="" loading="lazy">` : '';
   const href = `stories/${slug(s.title)}.html`;
   const pinBadge = s.pinned ? `<div class="pin-badge">📌 Pinned</div>` : '';
+  const verifBadge = s.verified ? `<span class="verified-badge">✅ Verified</span>` : '';
   return `<a class="scard${s.pinned?' pinned':''}" href="${href}" style="text-decoration:none">
     ${imgHtml}
     <div class="scard-body">
-      ${pinBadge}
+      <div style="display:flex;align-items:center;flex-wrap:wrap">${pinBadge}${verifBadge}</div>
       <div class="scard-tags">${tags}</div>
       <div class="scard-title">${esc(s.title)}</div>
       <div class="scard-excerpt">${esc(excerpt(s.body||''))}</div>
