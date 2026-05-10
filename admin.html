@@ -261,9 +261,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="fg full"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder="https://... link gambar JPG/PNG"></div>
     <div class="fg full">
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
+      <div style="margin-bottom:.8rem">
+        <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="document.getElementById('bulkArea').style.display=document.getElementById('bulkArea').style.display==='none'?'flex':'none'">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
+        <div id="bulkArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(79,126,196,.05);border:1px solid rgba(79,126,196,.2);padding:.9rem">
+          <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris. Format: baris 1 JP, baris 2 Romaji, baris 3 Terjemahan. Pisah paragraf dengan baris kosong. Support sampai 100+ baris.</div>
+          <textarea class="fi" id="bulkInput" rows="8" placeholder="見上げれば痛みさえも　淡くほぐれてゆく&#10;Miagereba itami sae mo awaku hogrete yuku&#10;Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;散っていった恋も　枯れてしまった絆も&#10;Chitte itta koi mo karete shimatta kizuna mo&#10;Cinta yang udah pergi, ikatan yang udah layu"></textarea>
+          <div style="display:flex;gap:.5rem">
+            <button class="bsave" style="flex:1" onclick="parseBulk()">⚡ Generate Baris</button>
+            <button class="bcancel" onclick="document.getElementById('bulkArea').style.display='none';document.getElementById('bulkInput').value=''">Tutup</button>
+          </div>
+        </div>
+      </div>
       <div class="lrow-hdr"><div class="fl">Jepang</div><div class="fl">Romaji</div><div class="fl">Terjemahan ID</div><div></div></div>
       <div class="lrows" id="lrows"></div>
-      <button class="badd" onclick="addRow()">+ Tambah Baris Lirik</button>
+      <button class="badd" onclick="addRow()">+ Tambah Baris Manual</button>
     </div>
     <div class="form-actions">
       <button class="bsave" id="bsaveBtn" onclick="saveSong()">Simpan Lagu ke Katalog</button>
@@ -746,6 +757,24 @@ onSnapshot(
   snap => { stories = snap.docs.map(d=>({id:d.id,...d.data()})); renderStoryList(); },
   err => console.error('stories listen error:', err)
 );
+
+window.parseBulk = () => {
+  const raw = document.getElementById('bulkInput').value;
+  const paragraphs = raw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  if(!paragraphs.length){ toast('Isi dulu liriknya!'); return; }
+  if(paragraphs.length > 100){ toast('Maksimal 100 paragraf sekaligus!'); return; }
+  let added = 0;
+  paragraphs.forEach(para => {
+    const lines = para.split('\n').map(l=>l.trim());
+    const jp = lines[0]||'';
+    const ro = lines[1]||'';
+    const id = lines[2]||'';
+    if(jp) { addRow(jp, ro, id); added++; }
+  });
+  toast(`✓ ${added} baris lirik berhasil di-generate!`);
+  document.getElementById('bulkInput').value='';
+  document.getElementById('bulkArea').style.display='none';
+};
 
 window.addRow = (jp='',ro='',id='') => {
   const r=document.createElement('div'); r.className='lrow';
