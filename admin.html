@@ -24,7 +24,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nb:hover{color:var(--text);background:rgba(255,255,255,.06)}
 .logout-btn{background:none;border:1px solid rgba(201,110,110,.25);color:var(--red);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;cursor:pointer;transition:all .2s;border-radius:2rem}
 .logout-btn:hover{background:rgba(201,110,110,.1)}
-.adm-wrap{padding:2.5rem 2.5rem 6rem;max-width:800px}
+.adm-wrap{padding:2.5rem 3.5rem 6rem;max-width:860px;margin:0 auto}
 .admtit{font-family:var(--jp);font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
 .admsub{font-size:.8rem;color:var(--muted);margin-bottom:2.5rem}
 .admform{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
@@ -262,6 +262,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <span style="font-size:.72rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap">Buka Inbox →</span>
   </a>
 
+  <!-- TOKEN INPUT -->
+  <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.9rem 1.2rem;max-width:800px;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+    <div class="fg" style="flex:1;min-width:200px;margin:0">
+      <div class="fl">GitHub Personal Access Token</div>
+      <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
+    </div>
+    <div style="font-size:.6rem;color:var(--muted);line-height:1.6">Butuh scope <code style="color:var(--accent2)">workflow</code>. Disimpen di browser.</div>
+  </div>
+
   <!-- TAB NAV -->
   <div style="display:flex;gap:.4rem;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:0;max-width:800px">
     <button class="adm-tab on" id="tab-katalog" onclick="switchTab('katalog')">🎵 Katalog</button>
@@ -305,63 +314,17 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="extit">Lagu di Katalog (<span id="songCount">0</span>)</div>
     <div class="exlist" id="exlist"></div>
   </div>
-    <!-- GITHUB WORKFLOW SECTION -->
-    <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
-      <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Generate Pages</div>
-      <div class="admsub" style="margin-bottom:1.5rem">Trigger GitHub Actions buat generate halaman. Token disimpen di browser, ga perlu input ulang.</div>
-      <div style="display:flex;flex-direction:column;gap:.8rem;max-width:520px;margin-bottom:2rem">
-        <div class="fg">
-          <div class="fl">GitHub Personal Access Token</div>
-          <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
-          <div style="font-size:.62rem;color:var(--muted);margin-top:.4rem">Butuh scope <code style="color:var(--accent2)">workflow</code>. Disimpen di localStorage browser ini aja.</div>
-        </div>
-      </div>
-
-      <!-- Song Pages -->
-      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px;margin-bottom:1rem">
-        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Song Pages</div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per lagu dari koleksi Firestore + update sitemap.</div>
-        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-          <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px">▶ Run Generate Song Pages</button>
-          <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
-        </div>
-        <div id="gh-songs-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-          <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-          <span id="gh-songs-status-text"></span>
-          <a id="gh-songs-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
-        </div>
-      </div>
-
-      <!-- Resource Pages -->
-      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px">
-        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Resource Pages</div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per resource dari koleksi Firestore + update sitemap.</div>
-        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-          <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px">▶ Run Generate Resource Pages</button>
-          <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
-        </div>
-        <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-          <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-          <span id="gh-res-status-text"></span>
-          <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
-        </div>
-      </div>
-
-      <!-- Story Pages -->
-      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);padding:1.2rem 1.4rem;max-width:520px;margin-top:1rem">
-        <div style="font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem">Story Pages</div>
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Generate halaman HTML per cerita dari koleksi Firestore + update sitemap.</div>
-        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-          <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px">▶ Run Generate Story Pages</button>
-          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ Lihat di GitHub</a>
-        </div>
-        <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-          <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-          <span id="gh-str-status-text"></span>
-          <a id="gh-str-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
-        </div>
-      </div>
+  <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+    <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px">▶ Generate Song Pages</button>
+      <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
     </div>
+    <div id="gh-songs-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+      <span id="gh-songs-status-text"></span>
+      <a id="gh-songs-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+    </div>
+  </div>
 
     <!-- STORY EDITOR SECTION -->
     </div><!-- end sec-katalog -->
@@ -423,6 +386,17 @@ Paragraf dipisah dengan enter 2x.
         <div>
           <div class="slist-tit">Cerita yang Sudah Publish (<span id="storyCount">0</span>)</div>
           <div class="slist" id="storyList"></div>
+          <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+            <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+              <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px">▶ Generate Story Pages</button>
+              <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+            </div>
+            <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+              <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+              <span id="gh-str-status-text"></span>
+              <a id="gh-str-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -499,6 +473,17 @@ Paragraf dipisah dengan enter 2x.
       <div style="margin-top:2rem">
         <div class="extit">Daftar Resources</div>
         <div class="exlist" id="resList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
+        <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+          <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
+            <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px">▶ Generate Resource Pages</button>
+            <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+          </div>
+          <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+            <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+            <span id="gh-res-status-text"></span>
+            <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+          </div>
+        </div>
       </div>
     </div>
     </div><!-- end sec-resources -->
