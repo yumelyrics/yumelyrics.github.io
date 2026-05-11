@@ -219,6 +219,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .views-badge{font-size:.6rem;color:var(--muted);letter-spacing:.05em;margin-top:.2rem}
 .story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .story-edit-banner.on{display:flex}
+.adm-tab{background:none;border:none;border-bottom:2px solid transparent;font-family:var(--en);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.6rem 1.1rem;cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.adm-tab:hover{color:var(--text)}
+.adm-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.adm-section{display:none}
+.adm-section.on{display:block}
 </style>
 </head>
 <body>
@@ -256,7 +261,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
     <span style="font-size:.72rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap">Buka Inbox →</span>
   </a>
-  <div class="admform">
+
+  <!-- TAB NAV -->
+  <div style="display:flex;gap:.4rem;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:0;max-width:800px">
+    <button class="adm-tab on" id="tab-katalog" onclick="switchTab('katalog')">🎵 Katalog</button>
+    <button class="adm-tab" id="tab-cerita" onclick="switchTab('cerita')">📝 Cerita</button>
+    <button class="adm-tab" id="tab-resources" onclick="switchTab('resources')">🔧 Resources</button>
+  </div>
+
+  <div id="sec-katalog" class="adm-section on">
     <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
     <input type="hidden" id="f-editid" value="">
     <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="花束を君に"></div>
@@ -351,6 +364,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
 
     <!-- STORY EDITOR SECTION -->
+    </div><!-- end sec-katalog -->
+    <div id="sec-cerita" class="adm-section">
     <div class="story-section">
       <div class="story-tit">Tulis Cerita</div>
       <div class="story-desc">Publish tulisan ke halaman <a href="stories.html" style="color:var(--accent2);text-decoration:none">stories.html</a>. Support link, gambar, dan format dasar.</div>
@@ -414,6 +429,8 @@ Paragraf dipisah dengan enter 2x.
 
 
     <!-- ── RESOURCES SECTION ── -->
+    </div><!-- end sec-cerita -->
+    <div id="sec-resources" class="adm-section">
     <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
       <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Resources</div>
       <div class="admsub" style="margin-bottom:1.5rem">Tambah, edit, atau hapus rekomendasi Aplikasi, Video, dan Tools.</div>
@@ -484,6 +501,7 @@ Paragraf dipisah dengan enter 2x.
         <div class="exlist" id="resList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
       </div>
     </div>
+    </div><!-- end sec-resources -->
 
 <div class="toast" id="toast"></div>
 
@@ -552,6 +570,13 @@ onAuthStateChanged(auth, user => {
     if(unsubSongs){ unsubSongs(); unsubSongs=null; }
   }
 });
+
+window.switchTab = (tab) => {
+  ['katalog','cerita','resources'].forEach(t=>{
+    document.getElementById('sec-'+t).classList.toggle('on', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('on', t===tab);
+  });
+};
 
 window.doLogin = async () => {
   const email = document.getElementById('l-email').value.trim();
