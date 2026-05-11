@@ -294,7 +294,7 @@ function rc(filter=''){
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
   document.getElementById('songGrid').innerHTML = filtered.map((s,i)=>`
     <div class="sc" data-id="${s.id}" onclick="_os('${s.id}')">
-      <img src="${s.img||''}" alt="${s.titleJp}" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">
+      <img src="https://c.tenor.com/PICSgVJuzWgAAAAd/tenor.gif" data-src="${s.img||''}" alt="${s.titleJp}" class="lazy-img" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">
       <div class="scb">
         <div class="scn">0${i+1}</div>
         ${s.recommended?`<div class="rec-tag">★ Rekomendasi</div>`:''}
@@ -308,6 +308,7 @@ function rc(filter=''){
     </div>`).join('');
   document.getElementById('noResult').style.display =
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
+  initLazy();
 }
 
 window.toggleRec = () => {
@@ -329,6 +330,22 @@ window.togglePop = () => {
   document.getElementById('recBtn').textContent = '★ Rekomendasi';
   rc(document.getElementById('searchInp').value);
 };
+
+// ── Lazy load images ──
+function initLazy(){
+  const imgs = document.querySelectorAll('img.lazy-img');
+  const obs = new IntersectionObserver((entries,o)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const img = e.target;
+        const real = img.dataset.src;
+        if(real){ img.src = real; }
+        o.unobserve(img);
+      }
+    });
+  },{rootMargin:'100px'});
+  imgs.forEach(img=>obs.observe(img));
+}
 
 // ── Search ──
 window.onSearch = val => {
