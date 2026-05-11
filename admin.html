@@ -209,6 +209,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .bverif-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .bverif-s:hover{border-color:rgba(96,165,250,.5);color:#60a5fa}
 .bverif-s.on{border-color:rgba(96,165,250,.6);color:#60a5fa;background:rgba(96,165,250,.08)}
+.brec-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.brec-s:hover{border-color:rgba(201,169,110,.5);color:var(--accent)}
+.brec-s.on{border-color:rgba(201,169,110,.6);color:var(--accent);background:rgba(201,169,110,.08)}
 .story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .story-edit-banner.on{display:flex}
 </style>
@@ -731,6 +734,13 @@ window.toggleVerified = async (id, isVerified) => {
   } catch(e){ toast('Gagal: '+e.message); }
 };
 
+window.toggleRec = async (id, isRec) => {
+  try {
+    await updateDoc(doc(db,'songs',id),{ recommended: !isRec });
+    toast(isRec ? 'Rekomendasi dicabut.' : '★ Lagu dijadiin rekomendasi!');
+  } catch(e){ toast('Gagal: '+e.message); }
+};
+
 function renderStoryList(){
   document.getElementById('storyCount').textContent = stories.length;
   const el = document.getElementById('storyList');
@@ -876,6 +886,7 @@ function ra(){
         <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
       </div>
       <div class="exitem-btns">
+        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Unrec':'★ Rec'}</button>
         <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
         <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
       </div>
