@@ -246,7 +246,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, updateDoc, doc, increment }
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -365,7 +365,6 @@ function toSlug(titleRo, docId) {
 window._os = id => {
   const s = songs.find(x=>x.id===id);
   if(!s) return;
-  try { updateDoc(doc(db,'songs',id), { views: increment(1) }); } catch(e){}
   const slug = toSlug(s.titleRo, s.id);
   window.location.href = '/lagu/' + slug + '.html';
 };
