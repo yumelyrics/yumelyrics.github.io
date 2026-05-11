@@ -425,7 +425,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const db = getFirestore(initializeApp({
@@ -438,6 +438,7 @@ const db = getFirestore(initializeApp({
 }));
 
 const SONG_ID = "tNMBD6wIPdfbPAd3ByWj";
+try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let sro=true, str=true;
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
