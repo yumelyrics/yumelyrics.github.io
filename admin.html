@@ -381,20 +381,18 @@ Paragraf dipisah dengan enter 2x.
           <button class="bpreview-toggle" onclick="togglePreview()">Preview</button>
           <button class="bdraft" id="storyCancelBtn" style="display:none" onclick="cancelStoryEdit()">✕ Batal</button>
         </div>
+        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-top:.8rem;margin-bottom:1.5rem">
+          <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Story Pages</button>
+          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+        </div>
+        <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+          <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="gh-str-status-text"></span>
+          <a id="gh-str-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+        </div>
         <div>
           <div class="slist-tit">Cerita yang Sudah Publish (<span id="storyCount">0</span>)</div>
           <div class="slist" id="storyList"></div>
-          <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
-            <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-              <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Story Pages</button>
-              <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
-            </div>
-            <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-              <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-              <span id="gh-str-status-text"></span>
-              <a id="gh-str-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -466,22 +464,20 @@ Paragraf dipisah dengan enter 2x.
           <button class="bsave" id="resSaveBtn" onclick="saveResource()">Simpan Resource</button>
           <button class="bcancel" onclick="resetResForm()">Reset</button>
         </div>
+        <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-top:.8rem">
+          <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Resource Pages</button>
+          <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+        </div>
+        <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem">
+          <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="gh-res-status-text"></span>
+          <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
+        </div>
       </div>
 
       <div style="margin-top:2rem">
         <div class="extit">Daftar Resources</div>
         <div class="exlist" id="resList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
-        <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
-          <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-            <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Resource Pages</button>
-            <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
-          </div>
-          <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-            <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-            <span id="gh-res-status-text"></span>
-            <a id="gh-res-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
-          </div>
-        </div>
       </div>
     </div>
     </div><!-- end sec-resources -->
