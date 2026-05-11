@@ -66,7 +66,7 @@ function generateHTML(song, slug) {
 <style>html{-webkit-text-size-adjust:100%}</style>
 <title>Lirik ${escHtml(titleRo||titleDisplay)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${escHtml(metaDesc)}">
-<meta name="keywords" content="lirik ${escHtml(titleRo||titleDisplay)}, terjemahan ${escHtml(titleRo||titleDisplay)}, ${escHtml(artist)} lirik indonesia, ${escHtml(titleRo||titleDisplay)} romaji, lirik lagu jepang, YumeSubs">
+<meta name="keywords" content="lirik ${escHtml(titleRo||titleDisplay)}, terjemahan ${escHtml(titleRo||titleDisplay)}, ${escHtml(titleDisplay)}, lirik ${escHtml(titleDisplay)}, ${escHtml(artist)} lirik indonesia, ${escHtml(titleRo||titleDisplay)} romaji, ${escHtml(titleId?titleId:'')}${titleId?' terjemahan, ':''} lirik lagu jepang terjemahan indonesia, YumeSubs">
 <meta property="og:title" content="Lirik ${escHtml(titleRo||titleDisplay)} - ${escHtml(artist)} | YumeSubs">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}">
