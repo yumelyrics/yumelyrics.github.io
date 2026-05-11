@@ -183,8 +183,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <input class="search-inp" id="searchInp" placeholder="Cari judul, romaji, artis..." oninput="onSearch(this.value)">
       <button class="search-clear" id="searchClear" onclick="clearSearch()">&#x2715;</button>
     </div>
-    <div style="margin-top:.7rem">
+    <div style="margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap">
       <button class="fbtn" id="recBtn" onclick="toggleRec()">★ Rekomendasi</button>
+      <button class="fbtn" id="popBtn" onclick="togglePop()">🔥 Populer</button>
     </div>
   </div>
   <div class="sec-hd">
@@ -245,7 +246,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs }
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, updateDoc, doc, increment }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -284,17 +285,21 @@ function toast(m){
 }
 
 let recOnly = false;
+let popOnly = false;
 
 function rc(filter=''){
   const q = filter.trim();
-  let filtered = q ? songs.filter(s=>matches(s,q)) : songs;
+  let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
+  if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
   document.getElementById('songGrid').innerHTML = filtered.map((s,i)=>`
     <div class="sc" data-id="${s.id}" onclick="_os('${s.id}')">
       <img src="${s.img||''}" alt="${s.titleJp}" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">
       <div class="scb">
         <div class="scn">0${i+1}</div>
         ${s.recommended?`<div class="rec-tag">★ Rekomendasi</div>`:''}
+        ${s.popularLabel?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.popularLabel}</div>`:''}
+        ${popOnly&&(s.views||0)>0?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.views} views</div>`:''}
         <div class="scjp">${s.titleJp}</div>
         ${s.titleRo?`<div class="scro">${s.titleRo}</div>`:''}
         <div class="scid">${s.titleId||''}</div>
@@ -307,8 +312,21 @@ function rc(filter=''){
 
 window.toggleRec = () => {
   recOnly = !recOnly;
+  if(recOnly) popOnly = false;
   document.getElementById('recBtn').classList.toggle('on', recOnly);
+  document.getElementById('popBtn').classList.remove('on');
   document.getElementById('recBtn').textContent = recOnly ? '★ Semua Lagu' : '★ Rekomendasi';
+  document.getElementById('popBtn').textContent = '🔥 Populer';
+  rc(document.getElementById('searchInp').value);
+};
+
+window.togglePop = () => {
+  popOnly = !popOnly;
+  if(popOnly) recOnly = false;
+  document.getElementById('popBtn').classList.toggle('on', popOnly);
+  document.getElementById('recBtn').classList.remove('on');
+  document.getElementById('popBtn').textContent = popOnly ? '🔥 Semua Lagu' : '🔥 Populer';
+  document.getElementById('recBtn').textContent = '★ Rekomendasi';
   rc(document.getElementById('searchInp').value);
 };
 
@@ -347,6 +365,7 @@ function toSlug(titleRo, docId) {
 window._os = id => {
   const s = songs.find(x=>x.id===id);
   if(!s) return;
+  try { updateDoc(doc(db,'songs',id), { views: increment(1) }); } catch(e){}
   const slug = toSlug(s.titleRo, s.id);
   window.location.href = '/lagu/' + slug + '.html';
 };

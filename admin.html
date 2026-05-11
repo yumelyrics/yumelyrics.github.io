@@ -212,6 +212,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .brec-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .brec-s:hover{border-color:rgba(201,169,110,.5);color:var(--accent)}
 .brec-s.on{border-color:rgba(201,169,110,.6);color:var(--accent);background:rgba(201,169,110,.08)}
+.bpop-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.bpop-s:hover{border-color:rgba(251,146,60,.5);color:#fb923c}
+.bpop-s.on{border-color:rgba(251,146,60,.6);color:#fb923c;background:rgba(251,146,60,.08)}
+.pop-input{background:rgba(255,255,255,.04);border:1px solid rgba(251,146,60,.3);color:var(--text);font-family:var(--en);font-size:.7rem;padding:.3rem .6rem;outline:none;width:160px}
+.views-badge{font-size:.6rem;color:var(--muted);letter-spacing:.05em;margin-top:.2rem}
 .story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .story-edit-banner.on{display:flex}
 </style>
@@ -741,6 +746,18 @@ window.toggleRec = async (id, isRec) => {
   } catch(e){ toast('Gagal: '+e.message); }
 };
 
+window.togglePopLabel = async (id, current) => {
+  if(current){
+    await updateDoc(doc(db,'songs',id),{ popularLabel: '' });
+    toast('Tag populer dicabut.');
+  } else {
+    const label = prompt('Tulis label populer (misal: Populer di Mei 2026):','Populer di Mei 2026');
+    if(!label) return;
+    await updateDoc(doc(db,'songs',id),{ popularLabel: label });
+    toast('🔥 Tag populer disimpan!');
+  }
+};
+
 function renderStoryList(){
   document.getElementById('storyCount').textContent = stories.length;
   const el = document.getElementById('storyList');
@@ -880,13 +897,15 @@ function ra(){
     return;
   }
   document.getElementById('exlist').innerHTML=songs.map(s=>`
-    <div class="exitem">
-      <div>
+    <div class="exitem" style="flex-wrap:wrap;gap:.6rem">
+      <div style="flex:1;min-width:0">
         <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
         <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
+        <div class="views-badge">👁 ${s.views||0} views${s.popularLabel?' · 🔥 '+s.popularLabel:''}</div>
       </div>
-      <div class="exitem-btns">
+      <div class="exitem-btns" style="flex-wrap:wrap">
         <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Unrec':'★ Rec'}</button>
+        <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')">${s.popularLabel?'🔥 Unpopuler':'🔥 Set Populer'}</button>
         <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
         <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
       </div>
