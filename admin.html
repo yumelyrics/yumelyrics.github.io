@@ -125,7 +125,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nav-badge{display:none}}
 @media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}
 /* ── Story Editor ── */
-.story-section{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.story-section{margin-top:0;padding-top:0;border-top:none;max-width:800px}
 .story-tit{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
 .story-desc{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
 .story-form{display:flex;flex-direction:column;gap:1rem;max-width:760px}
@@ -310,20 +310,18 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <button class="bsave" id="bsaveBtn" onclick="saveSong()">Simpan Lagu ke Katalog</button>
       <button class="bcancel" id="bcancelBtn" style="display:none" onclick="cancelEdit()">✕ Batal Edit</button>
     </div>
-    <div class="divider"></div>
-    <div class="extit">Lagu di Katalog (<span id="songCount">0</span>)</div>
-    <div class="exlist" id="exlist"></div>
-  </div>
-  <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
-    <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px">▶ Generate Song Pages</button>
+    <div style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
+      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Song Pages</button>
       <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
     </div>
-    <div id="gh-songs-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+    <div id="gh-songs-status" style="grid-column:1/-1;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
       <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
       <span id="gh-songs-status-text"></span>
       <a id="gh-songs-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
     </div>
+    <div class="divider" style="grid-column:1/-1"></div>
+    <div class="extit" style="grid-column:1/-1">Lagu di Katalog (<span id="songCount">0</span>)</div>
+    <div class="exlist" style="grid-column:1/-1" id="exlist"></div>
   </div>
 
     <!-- STORY EDITOR SECTION -->
@@ -405,7 +403,7 @@ Paragraf dipisah dengan enter 2x.
     <!-- ── RESOURCES SECTION ── -->
     </div><!-- end sec-cerita -->
     <div id="sec-resources" class="adm-section">
-    <div style="margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border)">
+    <div style="padding-top:2rem;max-width:800px">
       <div class="admtit" style="font-size:1.3rem;margin-bottom:.3rem">Resources</div>
       <div class="admsub" style="margin-bottom:1.5rem">Tambah, edit, atau hapus rekomendasi Aplikasi, Video, dan Tools.</div>
 
