@@ -41,12 +41,19 @@ function generateHTML(song, slug) {
 
   const titleMain    = titleRo || titleDisplay;
   const firstLines   = lyrics.slice(0,3).map(l=>l.id||l.ro||l.jp).filter(Boolean).join(' / ');
+  const descId       = song.descId || '';
+  const descJp       = song.descJp || '';
 
-  // Metadesc dinamis — sertakan anime & type kalau ada
-  const animeCtx  = anime ? ` dari anime ${anime}` : '';
-  const typeCtx   = songType ? ` (${songType})` : '';
-  const titleIdCtx = titleId ? ` Artinya: "${titleId}".` : '';
-  const metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0,160);
+  // Metadesc — pakai descId kalau admin udah isi, fallback ke auto-generated
+  let metaDesc;
+  if (descId) {
+    metaDesc = descId.substring(0, 160);
+  } else {
+    const animeCtx   = anime ? ` dari anime ${anime}` : '';
+    const typeCtx    = songType ? ` (${songType})` : '';
+    const titleIdCtx = titleId ? ` Artinya: "${titleId}".` : '';
+    metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
+  }
 
   const lyricsHTML = lyrics.map(l => `
         <div class="ll-item">
@@ -299,6 +306,38 @@ function generateHTML(song, slug) {
   'yume lyrics',
   'yumelyrics github',
   'yumesubs terjemahan',
+
+  // ── DARI DESKRIPSI KUSTOM (descId & descJp) ──
+  ...(() => {
+    const stopwords = new Set(['yang','dari','dan','atau','ini','itu','di','ke','adalah','sebagai','dalam','untuk','dengan','pada','telah','juga','oleh','akan','sudah','bisa','ada','tidak','lebih','satu','lagu','lirik','terjemahan','bahasa','indonesia','jepang','romaji','no','of','the','a','an','in','is','to','and','or','for','this','that','it','wa','ga','wo','ni','de','mo','ha','ya','ka','na','o','e','ne','yo','sa','su','shi','ta','te','to','ku','ru','ri','re','ra','mu','mi','me','ma']);
+    const extract = str => {
+      if(!str) return [];
+      return str.toLowerCase()
+        .replace(/[.,!?;:「」『』【】（）()"'""'']/g,' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !stopwords.has(w));
+    };
+    const idWords = extract(descId);
+    const jpWords = extract(descJp);
+    const unique = [...new Set([...idWords, ...jpWords])];
+
+    // konteks untuk kombinasi
+    const ctx = [titleMain, artist, anime, animeEn, titleId].filter(Boolean);
+
+    const combined = [];
+    unique.forEach(w => {
+      ctx.forEach(c => {
+        const cl = c.toLowerCase();
+        // kombinasi: kata_desc + judul/artis/anime dan sebaliknya
+        combined.push(`${w} ${cl}`);
+        combined.push(`${cl} ${w}`);
+        combined.push(`lirik ${w} ${cl}`);
+        combined.push(`${w} lagu ${cl}`);
+      });
+    });
+
+    return [...unique, ...combined.slice(0, 80)]; // kata mentah semua + maks 80 kombinasi
+  })(),
 ].filter(Boolean).join(', ')}">
 <meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
 <meta property="og:description" content="${escHtml(metaDesc)}">
@@ -484,8 +523,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="cmsec" style="margin-bottom:2rem">
         <div class="cmtit" style="margin-bottom:.8rem">Tentang Lagu Ini</div>
         <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
-          <strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(anime)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia. YumeSubs menyediakan terjemahan lagu Jepang secara gratis untuk membantu kamu memahami arti dan makna dari lagu-lagu Jepang favorit.
+          ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(anime)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia. YumeSubs menyediakan terjemahan lagu Jepang secara gratis untuk membantu kamu memahami arti dan makna dari lagu-lagu Jepang favorit.`}
         </p>
+        ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
       </div>
       <div class="cmsec">
         <div class="cmtit">Komentar</div>

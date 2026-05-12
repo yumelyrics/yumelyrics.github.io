@@ -290,6 +290,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder="https://open.spotify.com/track/..."></div>
     <div class="fg full"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder="https://... link gambar JPG/PNG"></div>
     <div class="fg full">
+      <div class="fl">Deskripsi Indonesia (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— maks 160 karakter, buat meta description</span></div>
+      <textarea class="fi" id="f-descid" rows="3" maxlength="300" placeholder="Contoh: Lirik Hanataba wo Kimi ni dari Utada Hikaru lengkap dengan romaji dan terjemahan Indonesia. Lagu OST Boruto ini menceritakan perasaan kehilangan seseorang yang dicintai."></textarea>
+      <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Yang nongol di hasil Google. Kosongkan = pakai deskripsi otomatis.</div>
+    </div>
+    <div class="fg full">
+      <div class="fl">Deskripsi Jepang (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional, untuk pengunjung JP</span></div>
+      <textarea class="fi" id="f-descjp" rows="3" placeholder="日本語での説明（任意）。Googleの日本語検索向け。"></textarea>
+      <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Kalau diisi, tampil di bawah deskripsi ID di halaman lagu.</div>
+    </div>
+    <div class="fg full">
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
       <div style="margin-bottom:.8rem">
         <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="document.getElementById('bulkArea').style.display=document.getElementById('bulkArea').style.display==='none'?'flex':'none'">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
@@ -826,6 +836,8 @@ window.saveSong = async () => {
   const nico=document.getElementById('f-nico').value.trim();
   const img=document.getElementById('f-img').value.trim();
   const sp=document.getElementById('f-sp').value.trim();
+  const descid=document.getElementById('f-descid').value.trim();
+  const descjp=document.getElementById('f-descjp').value.trim();
   const editId=document.getElementById('f-editid').value;
   if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
   const lyrics=[];
@@ -839,12 +851,12 @@ window.saveSong = async () => {
   btn.disabled=true;
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics});
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp});
       toast('Lagu berhasil diupdate!');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,order:snap.data().count});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
@@ -853,7 +865,7 @@ window.saveSong = async () => {
 };
 
 function clearForm(){
-  ['f-jt','f-it','f-ar','f-ro','f-yt','f-nico','f-img','f-sp'].forEach(i=>document.getElementById(i).value='');
+  ['f-jt','f-it','f-ar','f-ro','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('lrows').innerHTML='';
   addRow();
 }
@@ -868,6 +880,8 @@ window.editSong = id => {
   document.getElementById('f-nico').value=s.nicoId||'';
   document.getElementById('f-img').value=s.img||'';
   document.getElementById('f-sp').value=s.sp||'';
+  document.getElementById('f-descid').value=s.descId||'';
+  document.getElementById('f-descjp').value=s.descJp||'';
   document.getElementById('f-editid').value=s.id;
   document.getElementById('lrows').innerHTML='';
   (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id));
