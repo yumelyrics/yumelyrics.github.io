@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Progress Belajar | YumeSubs</title>
+<link rel="icon" type="image/jpeg" href="anime_icon.png">
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--green:#4caf81;--red:#c96e6e}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#050d1a;color:var(--text);font-family:var(--en);min-height:100dvh}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:#07101f}
+@media(min-width:768px){
+  #bgwrap{background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat fixed;filter:brightness(.32) saturate(.75)}
+}
+.wrap{position:relative;z-index:2}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(5,13,26,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:.5rem;cursor:pointer;text-decoration:none}
+.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap}
+.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+.nav-links{display:flex;gap:.25rem;align-items:center}
+.nb{background:none;border:none;font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
+.nb:hover,.nb.on{color:var(--text);background:rgba(255,255,255,.06)}
+
+.page{padding:3rem 2.5rem;max-width:860px;margin:0 auto}
+.eyebrow{font-size:.6rem;color:var(--accent);letter-spacing:.35em;text-transform:uppercase;margin-bottom:.8rem}
+.page-title{font-family:var(--jp);font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:.5rem}
+.page-sub{color:var(--muted);font-size:.82rem;font-weight:300;line-height:1.75;margin-bottom:2.5rem}
+
+.last-sync{font-size:.68rem;color:var(--muted);margin-bottom:2rem;display:flex;align-items:center;gap:.5rem}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.sync-dot.old{background:var(--red)}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2.5rem}
+.stat-card{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:1.4rem 1.2rem;border-radius:2px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-family:var(--jp);font-size:2.2rem;font-weight:800;color:var(--accent);line-height:1}
+.stat-label{font-size:.62rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:.4rem}
+.stat-sub{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+
+.section-title{font-size:.6rem;color:var(--accent);letter-spacing:.3em;text-transform:uppercase;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+
+.deck-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2.5rem}
+.deck-item{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:1rem 1.2rem;border-radius:2px}
+.deck-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.deck-name{font-size:.82rem;font-weight:500;color:var(--text)}
+.deck-count{font-size:.75rem;color:var(--accent);font-weight:600}
+.deck-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.deck-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .8s ease;opacity:.7}
+.deck-meta{display:flex;gap:1rem;margin-top:.5rem}
+.deck-meta span{font-size:.62rem;color:var(--muted)}
+.deck-meta b{color:var(--text)}
+
+.chart-wrap{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:1.5rem;margin-bottom:2.5rem}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:1rem}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-bar{width:100%;background:var(--accent);opacity:.5;border-radius:1px 1px 0 0;min-height:2px;transition:height .6s ease}
+.chart-bar.today{opacity:.9}
+.chart-day{font-size:.5rem;color:var(--muted);text-align:center}
+.chart-val{font-size:.52rem;color:var(--muted)}
+
+.empty{padding:3rem;text-align:center;color:var(--muted);font-size:.82rem;border:1px dashed var(--border)}
+.loading-msg{padding:2rem;text-align:center;color:var(--muted);font-size:.82rem}
+</style>
+</head>
+<body>
+<div id="bgwrap"></div>
+<div class="wrap">
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nljp">夢字幕</div>
+    <div class="nlen">YumeSubs</div>
+  </a>
+  <div class="nav-links">
+    <a class="nb" href="index.html">Katalog</a>
+    <a class="nb" href="resources.html">Resources</a>
+    <a class="nb" href="stories.html">Cerita</a>
+    <a class="nb" href="contact.html">Hubungi</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="eyebrow">Anki Tracker</div>
+  <div class="page-title">Progress Belajar</div>
+  <div class="page-sub">Data review kartu Anki — disync otomatis dari laptop.</div>
+
+  <div class="last-sync" id="lastSync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">Memuat data...</span>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="loading-msg">Memuat...</div>
+  </div>
+
+  <div class="section-title">Review 7 Hari Terakhir</div>
+  <div class="chart-wrap">
+    <div class="chart-bars" id="chartBars"><div class="loading-msg" style="width:100%">Memuat...</div></div>
+  </div>
+
+  <div class="section-title">Per Deck</div>
+  <div class="deck-list" id="deckList">
+    <div class="loading-msg">Memuat deck...</div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: "AIzaSyDiZpwPKgQJRycm-2pB9UxFz3M_lFMn0NY",
+  authDomain: "yumesubs7.firebaseapp.com",
+  projectId: "yumesubs7",
+  storageBucket: "yumesubs7.firebasestorage.app",
+  messagingSenderId: "1076202015626",
+  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+});
+const db = getFirestore(app);
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff/60000);
+  const h = Math.floor(diff/3600000);
+  const d = Math.floor(diff/86400000);
+  if(m < 1) return 'baru saja';
+  if(m < 60) return `${m} menit lalu`;
+  if(h < 24) return `${h} jam lalu`;
+  return `${d} hari lalu`;
+}
+
+function isOld(ts) {
+  return Date.now() - ts > 86400000 * 2; // lebih dari 2 hari = outdated
+}
+
+async function load() {
+  try {
+    const snap = await getDoc(doc(db, 'anki_progress', 'latest'));
+    if(!snap.exists()) {
+      document.getElementById('statsGrid').innerHTML = '<div class="empty">Belum ada data. Jalankan sync_anki.py dulu di laptop.</div>';
+      document.getElementById('deckList').innerHTML = '';
+      document.getElementById('chartBars').innerHTML = '';
+      document.getElementById('syncText').textContent = 'Belum ada data sync';
+      return;
+    }
+
+    const d = snap.data();
+    const old = isOld(d.syncedAt);
+
+    // Last sync
+    document.getElementById('syncText').textContent = `Terakhir sync: ${timeAgo(d.syncedAt)}${old ? ' — data mungkin sudah basi' : ''}`;
+    document.getElementById('syncDot').className = 'sync-dot' + (old ? ' old' : '');
+
+    // Stats utama
+    const todayTotal = d.decks ? Object.values(d.decks).reduce((s,dk)=>s+(dk.reviewedToday||0),0) : 0;
+    const totalCards = d.decks ? Object.values(d.decks).reduce((s,dk)=>s+(dk.totalCards||0),0) : 0;
+    const totalMature = d.decks ? Object.values(d.decks).reduce((s,dk)=>s+(dk.mature||0),0) : 0;
+    const streak = d.streak || 0;
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num">${todayTotal}</div>
+        <div class="stat-label">Review Hari Ini</div>
+        <div class="stat-sub">semua deck</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${streak}</div>
+        <div class="stat-label">Streak</div>
+        <div class="stat-sub">hari berturut-turut</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${totalCards.toLocaleString()}</div>
+        <div class="stat-label">Total Kartu</div>
+        <div class="stat-sub">semua deck</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${totalMature.toLocaleString()}</div>
+        <div class="stat-label">Kartu Mature</div>
+        <div class="stat-sub">sudah hafal</div>
+      </div>
+    `;
+
+    // Chart 7 hari
+    const history = d.history || {};
+    const days = [];
+    for(let i=6; i>=0; i--) {
+      const date = new Date(Date.now() - i*86400000);
+      const key = date.toISOString().split('T')[0];
+      const label = date.toLocaleDateString('id-ID',{weekday:'short'});
+      days.push({key, label, val: history[key] || 0});
+    }
+    const maxVal = Math.max(...days.map(d=>d.val), 1);
+    document.getElementById('chartBars').innerHTML = days.map((d,i)=>`
+      <div class="chart-col">
+        <div class="chart-val">${d.val||''}</div>
+        <div class="chart-bar${i===6?' today':''}" style="height:${Math.round((d.val/maxVal)*70)+2}px"></div>
+        <div class="chart-day">${d.label}</div>
+      </div>
+    `).join('');
+
+    // Per deck
+    if(!d.decks || Object.keys(d.decks).length === 0) {
+      document.getElementById('deckList').innerHTML = '<div class="empty">Tidak ada data deck.</div>';
+      return;
+    }
+    const decks = Object.entries(d.decks).sort((a,b)=>(b[1].reviewedToday||0)-(a[1].reviewedToday||0));
+    const maxReview = Math.max(...decks.map(([,v])=>v.reviewedToday||0), 1);
+    document.getElementById('deckList').innerHTML = decks.map(([name,dk])=>`
+      <div class="deck-item">
+        <div class="deck-top">
+          <div class="deck-name">${name}</div>
+          <div class="deck-count">${dk.reviewedToday||0} hari ini</div>
+        </div>
+        <div class="deck-bar-wrap">
+          <div class="deck-bar" style="width:${Math.round(((dk.reviewedToday||0)/maxReview)*100)}%"></div>
+        </div>
+        <div class="deck-meta">
+          <span>Total: <b>${(dk.totalCards||0).toLocaleString()}</b></span>
+          <span>Mature: <b>${(dk.mature||0).toLocaleString()}</b></span>
+          <span>Due: <b>${(dk.due||0).toLocaleString()}</b></span>
+        </div>
+      </div>
+    `).join('');
+
+  } catch(e) {
+    document.getElementById('statsGrid').innerHTML = '<div class="empty">Gagal memuat data.</div>';
+    console.error(e);
+  }
+}
+
+load();
+</script>
+</body>
+</html>
