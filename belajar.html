@@ -63,6 +63,21 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 .empty{padding:3rem;text-align:center;color:var(--muted);font-size:.82rem;border:1px dashed var(--border)}
 .loading-msg{padding:2rem;text-align:center;color:var(--muted);font-size:.82rem}
+
+/* Riwayat Harian */
+.daily-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:2.5rem}
+.daily-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:2px;overflow:hidden}
+.daily-header{display:flex;justify-content:space-between;align-items:center;padding:.85rem 1.2rem;cursor:pointer;user-select:none;transition:background .15s}
+.daily-header:hover{background:rgba(255,255,255,.04)}
+.daily-date{font-size:.78rem;font-weight:500;color:var(--text)}
+.daily-badge{font-size:.7rem;color:var(--accent);font-weight:600;background:rgba(201,169,110,.1);padding:.2rem .6rem;border-radius:1rem}
+.daily-body{display:none;padding:.75rem 1.2rem 1rem;border-top:1px solid var(--border);grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.6rem}
+.daily-body.open{display:grid}
+.daily-stat{display:flex;flex-direction:column;gap:.2rem}
+.daily-stat-val{font-size:1.1rem;font-weight:700;font-family:var(--jp);color:var(--accent)}
+.daily-stat-lbl{font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.daily-arrow{font-size:.6rem;color:var(--muted);transition:transform .2s}
+.daily-header.open .daily-arrow{transform:rotate(180deg)}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nav-logo{gap:.35rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem;letter-spacing:.08em}.page{padding:2rem 1.2rem}}
 </style>
 </head>
@@ -104,6 +119,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="section-title">Per Deck</div>
   <div class="deck-list" id="deckList">
     <div class="loading-msg">Memuat deck...</div>
+  </div>
+
+  <div class="section-title">Riwayat Harian</div>
+  <div class="daily-list" id="dailyList">
+    <div class="loading-msg">Memuat riwayat...</div>
   </div>
 </div>
 </div>
@@ -205,26 +225,77 @@ async function load() {
     // Per deck
     if(!d.decks || Object.keys(d.decks).length === 0) {
       document.getElementById('deckList').innerHTML = '<div class="empty">Tidak ada data deck.</div>';
-      return;
+    } else {
+      const decks = Object.entries(d.decks).sort((a,b)=>(b[1].reviewedToday||0)-(a[1].reviewedToday||0));
+      const maxReview = Math.max(...decks.map(([,v])=>v.reviewedToday||0), 1);
+      document.getElementById('deckList').innerHTML = decks.map(([name,dk])=>`
+        <div class="deck-item">
+          <div class="deck-top">
+            <div class="deck-name">${name}</div>
+            <div class="deck-count">${dk.reviewedToday||0} hari ini</div>
+          </div>
+          <div class="deck-bar-wrap">
+            <div class="deck-bar" style="width:${Math.round(((dk.reviewedToday||0)/maxReview)*100)}%"></div>
+          </div>
+          <div class="deck-meta">
+            <span>Total: <b>${(dk.totalCards||0).toLocaleString()}</b></span>
+            <span>Mature: <b>${(dk.mature||0).toLocaleString()}</b></span>
+            <span>Due: <b>${(dk.due||0).toLocaleString()}</b></span>
+          </div>
+        </div>
+      `).join('');
     }
-    const decks = Object.entries(d.decks).sort((a,b)=>(b[1].reviewedToday||0)-(a[1].reviewedToday||0));
-    const maxReview = Math.max(...decks.map(([,v])=>v.reviewedToday||0), 1);
-    document.getElementById('deckList').innerHTML = decks.map(([name,dk])=>`
-      <div class="deck-item">
-        <div class="deck-top">
-          <div class="deck-name">${name}</div>
-          <div class="deck-count">${dk.reviewedToday||0} hari ini</div>
-        </div>
-        <div class="deck-bar-wrap">
-          <div class="deck-bar" style="width:${Math.round(((dk.reviewedToday||0)/maxReview)*100)}%"></div>
-        </div>
-        <div class="deck-meta">
-          <span>Total: <b>${(dk.totalCards||0).toLocaleString()}</b></span>
-          <span>Mature: <b>${(dk.mature||0).toLocaleString()}</b></span>
-          <span>Due: <b>${(dk.due||0).toLocaleString()}</b></span>
-        </div>
-      </div>
-    `).join('');
+
+    // Riwayat harian
+    const detail = d.historyDetail || {};
+    const detailKeys = Object.keys(detail).sort((a,b) => b.localeCompare(a)); // terbaru dulu
+    if(detailKeys.length === 0) {
+      document.getElementById('dailyList').innerHTML = '<div class="empty">Belum ada data riwayat. Sync ulang dari laptop setelah update script.</div>';
+    } else {
+      document.getElementById('dailyList').innerHTML = detailKeys.map((key, idx) => {
+        const row = detail[key];
+        const dateObj = new Date(key + 'T00:00:00+07:00');
+        const label = dateObj.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+        const minsDisplay = row.minutes >= 60
+          ? `${Math.floor(row.minutes/60)} j ${Math.round(row.minutes%60)} m`
+          : `${row.minutes} menit`;
+        const isToday = idx === 0;
+        return `
+          <div class="daily-item">
+            <div class="daily-header${isToday?' open':''}" onclick="toggleDay(this)">
+              <div class="daily-date">${label}${isToday ? ' <span style="color:var(--accent);font-size:.6rem;letter-spacing:.1em">— HARI INI</span>' : ''}</div>
+              <div style="display:flex;align-items:center;gap:.75rem">
+                <div class="daily-badge">${row.reviewed} kartu</div>
+                <div class="daily-arrow">▼</div>
+              </div>
+            </div>
+            <div class="daily-body${isToday?' open':''}">
+              <div class="daily-stat">
+                <div class="daily-stat-val">${row.reviewed}</div>
+                <div class="daily-stat-lbl">Total Review</div>
+              </div>
+              <div class="daily-stat">
+                <div class="daily-stat-val">${minsDisplay}</div>
+                <div class="daily-stat-lbl">Durasi</div>
+              </div>
+              <div class="daily-stat">
+                <div class="daily-stat-val">${row.matureReviewed ?? '—'}</div>
+                <div class="daily-stat-lbl">Mature Review</div>
+              </div>
+              <div class="daily-stat">
+                <div class="daily-stat-val">${row.newCards ?? '—'}</div>
+                <div class="daily-stat-lbl">Kartu Baru</div>
+              </div>
+              ${row.reviewed > 0 ? `
+              <div class="daily-stat">
+                <div class="daily-stat-val">${Math.round((row.minutes*60) / row.reviewed)}d</div>
+                <div class="daily-stat-lbl">Rata-rata/kartu</div>
+              </div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
   } catch(e) {
     document.getElementById('statsGrid').innerHTML = '<div class="empty">Gagal memuat data.</div>';
@@ -233,6 +304,12 @@ async function load() {
 }
 
 load();
+</script>
+<script>
+function toggleDay(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
 </script>
 </body>
 </html>
