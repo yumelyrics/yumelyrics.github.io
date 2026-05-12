@@ -303,6 +303,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
       <div style="margin-bottom:.8rem">
         <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="document.getElementById('bulkArea').style.display=document.getElementById('bulkArea').style.display==='none'?'flex':'none'">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
+        <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
         <div id="bulkArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(79,126,196,.05);border:1px solid rgba(79,126,196,.2);padding:.9rem">
           <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris. Format: baris 1 JP, baris 2 Romaji, baris 3 Terjemahan. Pisah paragraf dengan baris kosong. Support sampai 100+ baris.</div>
           <textarea class="fi" id="bulkInput" rows="8" placeholder="見上げれば痛みさえも　淡くほぐれてゆく&#10;Miagereba itami sae mo awaku hogrete yuku&#10;Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;散っていった恋も　枯れてしまった絆も&#10;Chitte itta koi mo karete shimatta kizuna mo&#10;Cinta yang udah pergi, ikatan yang udah layu"></textarea>
@@ -815,6 +816,21 @@ window.parseBulk = () => {
   toast(`✓ ${added} baris lirik berhasil di-generate!`);
   document.getElementById('bulkInput').value='';
   document.getElementById('bulkArea').style.display='none';
+};
+
+window.undoToBulk = () => {
+  const rows = document.querySelectorAll('#lrows .lrow');
+  if(!rows.length){ toast('Belum ada baris lirik!'); return; }
+  const bulk = [...rows].map(r => {
+    const jp = r.querySelector('.rjp').value.trim();
+    const ro = r.querySelector('.rro').value.trim();
+    const id = r.querySelector('.rid').value.trim();
+    return [jp, ro, id].filter(Boolean).join('\n');
+  }).filter(Boolean).join('\n\n');
+  document.getElementById('bulkInput').value = bulk;
+  document.getElementById('bulkArea').style.display = 'flex';
+  document.getElementById('lrows').innerHTML = '';
+  toast(`↩ ${rows.length} baris dikembaliin ke bulk!`);
 };
 
 window.addRow = (jp='',ro='',id='') => {
