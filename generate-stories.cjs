@@ -19,7 +19,7 @@ initializeApp({
 const db = getFirestore();
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const BASE_URL = 'https://yumelyrics.github.io';
+const BASE_URL = 'https://yumelyrics.my.id';
 const OUT_DIR  = path.join(__dirname, 'stories');
 const SITE_XML = path.join(__dirname, 'sitemap.xml');
 
