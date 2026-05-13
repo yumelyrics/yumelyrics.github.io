@@ -249,6 +249,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div class="sec-hd">
     <div class="sec-lb">Katalog Lagu</div>
+    <div id="songCount" style="font-size:.6rem;color:var(--accent);letter-spacing:.15em;font-family:var(--en);white-space:nowrap;flex-shrink:0"></div>
     <div class="sec-ln"></div>
   </div>
   <div class="song-grid" id="songGrid"><div class="loading-msg">Memuat lagu...</div></div>
@@ -362,7 +363,7 @@ function rc(filter=''){
       <img src="https://c.tenor.com/PICSgVJuzWgAAAAd/tenor.gif" data-src="${s.img||''}" alt="${s.titleJp}" class="lazy-img" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">
       <div class="scb">
         <div class="scn">0${i+1}</div>
-        ${s.recommended?`<div class="rec-tag">★ Rekomendasi</div>`:''}
+        ${s.recommended?`<div class="rec-tag">★ Rekomendasi Admin</div>`:''}
         ${s.popularLabel?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.popularLabel}</div>`:''}
         ${popOnly&&(s.views||0)>0?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.views} views</div>`:''}
         <div class="scjp">${s.titleJp}</div>
@@ -373,6 +374,14 @@ function rc(filter=''){
     </div>`).join('');
   document.getElementById('noResult').style.display =
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
+  const countEl = document.getElementById('songCount');
+  if(countEl){
+    if(q || recOnly || popOnly){
+      countEl.textContent = filtered.length + ' / ' + songs.length + ' lagu';
+    } else {
+      countEl.textContent = songs.length + ' lagu';
+    }
+  }
   initLazy();
 }
 
