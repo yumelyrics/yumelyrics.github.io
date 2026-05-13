@@ -274,7 +274,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, getDocs }
+import { getFirestore, collection, getDocs, addDoc, query, orderBy, limit }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const db = getFirestore(initializeApp({
@@ -308,63 +308,59 @@ document.getElementById('inputNama').addEventListener('keydown', e => {
   if (e.key === 'Enter') window.submitNama();
 });
 
-// ── Leaderboard (localStorage) ──
-const LB_KEY = 'yumesubs_leaderboard';
-
-function getLB() {
-  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch { return []; }
-}
-
-function saveLB(data) {
-  localStorage.setItem(LB_KEY, JSON.stringify(data));
-}
-
-function addToLB(entry) {
-  const lb = getLB();
-  lb.push(entry);
-  // Skor komposit = akurasi% × jumlah_baris (makin banyak baris = makin tinggi potensi)
-  lb.sort((a,b) => (b.score * (b.rows||1)) - (a.score * (a.rows||1)));
-  if (lb.length > 100) lb.length = 100;
-  saveLB(lb);
-  renderLB();
-}
-
-function renderLB() {
-  const lb = getLB();
-  const wrap = document.getElementById('leaderboardWrap');
-  if (!lb.length) {
-    wrap.innerHTML = '<div class="lb-empty">Belum ada skor. Jadilah yang pertama! 🎌</div>';
-    return;
+// ── Leaderboard (Firestore) ──
+async function addToLB(entry) {
+  try {
+    // Simpan entry baru ke Firestore
+    await addDoc(collection(db, 'leaderboard'), {
+      ...entry,
+      ts: Date.now()
+    });
+  } catch(e) {
+    console.error('Gagal simpan skor:', e);
   }
-  const rankIcon = (i) => {
-    if (i===0) return '<span class="lb-rank gold">①</span>';
-    if (i===1) return '<span class="lb-rank silver">②</span>';
-    if (i===2) return '<span class="lb-rank bronze">③</span>';
-    return `<span class="lb-rank">${i+1}</span>`;
-  };
-  wrap.innerHTML = `<table class="lb-table">
-    <thead><tr>
-      <th>#</th><th>Nama</th><th>Lagu</th><th>Tanggal</th><th>Baris</th><th>Akurasi</th><th>Skor</th>
-    </tr></thead>
-    <tbody>
-    ${lb.map((e,i)=>`<tr>
-      <td>${rankIcon(i)}</td>
-      <td><div class="lb-name">${esc(e.name)}</div></td>
-      <td><div class="lb-song">${esc(e.song)}</div></td>
-      <td class="lb-date">${esc(e.date)}</td>
-      <td style="color:var(--muted);font-size:.82rem;text-align:center">${e.rows||'—'}</td>
-      <td style="color:var(--muted);font-size:.82rem;text-align:right">${e.score}%</td>
-      <td class="lb-score">${Math.round(e.score * (e.rows||1))}</td>
-    </tr>`).join('')}
-    </tbody>
-  </table>`;
+  renderLB();
 }
 
-window.clearLeaderboard = () => {
-  if (!confirm('Hapus semua data leaderboard?')) return;
-  localStorage.removeItem(LB_KEY);
-  renderLB();
-};
+async function renderLB() {
+  const wrap = document.getElementById('leaderboardWrap');
+  wrap.innerHTML = '<div class="lb-empty">Memuat leaderboard...</div>';
+  try {
+    // Ambil 100 skor tertinggi berdasarkan compositeScore
+    const q = query(collection(db, 'leaderboard'), orderBy('compositeScore', 'desc'), limit(100));
+    const snap = await getDocs(q);
+    const lb = snap.docs.map(d => d.data());
+
+    if (!lb.length) {
+      wrap.innerHTML = '<div class="lb-empty">Belum ada skor. Jadilah yang pertama! 🎌</div>';
+      return;
+    }
+    const rankIcon = (i) => {
+      if (i===0) return '<span class="lb-rank gold">①</span>';
+      if (i===1) return '<span class="lb-rank silver">②</span>';
+      if (i===2) return '<span class="lb-rank bronze">③</span>';
+      return `<span class="lb-rank">${i+1}</span>`;
+    };
+    wrap.innerHTML = `<table class="lb-table">
+      <thead><tr>
+        <th>#</th><th>Nama</th><th>Lagu</th><th>Tanggal</th><th>Baris</th><th>Akurasi</th><th>Skor</th>
+      </tr></thead>
+      <tbody>
+      ${lb.map((e,i)=>`<tr>
+        <td>${rankIcon(i)}</td>
+        <td><div class="lb-name">${esc(e.name)}</div></td>
+        <td><div class="lb-song">${esc(e.song)}</div></td>
+        <td class="lb-date">${esc(e.date)}</td>
+        <td style="color:var(--muted);font-size:.82rem;text-align:center">${e.rows||'—'}</td>
+        <td style="color:var(--muted);font-size:.82rem;text-align:right">${e.score}%</td>
+        <td class="lb-score">${e.compositeScore ?? Math.round(e.score * (e.rows||1))}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>`;
+  } catch(e) {
+    wrap.innerHTML = '<div class="lb-empty">Gagal memuat leaderboard.</div>';
+  }
+}
 
 // ── Load semua lagu dari Firestore ──
 async function loadSongs() {
@@ -609,6 +605,7 @@ function showHasil() {
     song: currentSong.title || currentSong.titleJp || '—',
     score: pct,
     rows: total,
+    compositeScore: compositeScore,
     date: dateStr,
     ts: Date.now()
   });
