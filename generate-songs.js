@@ -15,7 +15,7 @@ const firebaseConfig = {
   appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
 };
 
-const BASE_URL = 'https://yumelyrics.github.io';
+const BASE_URL = 'https://yumelyrics.my.id';
 
 function toSlug(titleRo, titleJp, docId) {
   if (titleRo) {
@@ -643,7 +643,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 <script>
 /* ── YumeSubs Copy Protection ── */
 (function(){
-  const WATERMARK = '\n\n© YumeSubs — yumelyrics.github.io';
+  const WATERMARK = '\n\n© YumeSubs — yumelyrics.my.id';
   const CHAR_LIMIT = 10;
 
   function isInput(el){ const t=el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
