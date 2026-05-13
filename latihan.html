@@ -156,6 +156,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hasil-player{font-size:.78rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.08em}
 .hasil-player span{color:var(--accent);font-weight:500}
 
+/* tombol pilih baris */
+.baris-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);font-family:var(--en);font-size:.82rem;color:var(--text);padding:.5rem 1.1rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.baris-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.baris-btn.active{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:600}
+
 @media(max-width:600px){
   .main{padding:1.5rem 1rem 5rem}
   nav{padding:0 1rem}
@@ -184,6 +189,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <p>Masukkan namamu dulu sebelum mulai latihan.<br>Nama ini akan muncul di leaderboard.</p>
     <input class="modal-input" type="text" id="inputNama" placeholder="Nama kamu..." maxlength="30" autocomplete="off">
     <button class="modal-btn" onclick="submitNama()">Mulai Latihan →</button>
+  </div>
+</div>
+
+<!-- Modal pilih jumlah baris -->
+<div class="modal-overlay" id="modalBaris" style="display:none">
+  <div class="modal-box">
+    <h2>設定</h2>
+    <p id="modalBarisDesc">Mau latihan berapa baris?<br><span style="color:var(--muted);font-size:.75rem">Lagu ini punya <strong id="modalBarisTotal" style="color:var(--accent)">0</strong> baris tersedia.</span></p>
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-bottom:1.2rem" id="barisBtnGroup"></div>
+    <button class="modal-btn" id="modalBarisOk" onclick="confirmBaris()">Mulai →</button>
   </div>
 </div>
 
@@ -235,7 +250,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="hasil-wrap">
       <div class="hasil-player" id="hasilPlayer"></div>
       <div class="hasil-score" id="hasilScore">0</div>
-      <div class="hasil-label">Skor Akhir</div>
+      <div class="hasil-label">Skor (Akurasi × Baris)</div>
       <div class="hasil-stats">
         <div class="hs-item">
           <div class="hs-num green" id="hsBenar">0</div>
@@ -279,6 +294,8 @@ let stats = { benar: 0, salah: 0, skip: 0 };
 let currentSong = null;
 let answered = false;
 let playerName = '';
+let selectedRows = 10; // default
+let pendingSongId = null;
 
 // ── Nama & Modal ──
 window.submitNama = () => {
@@ -306,8 +323,9 @@ function saveLB(data) {
 function addToLB(entry) {
   const lb = getLB();
   lb.push(entry);
-  lb.sort((a,b) => b.score - a.score);
-  if (lb.length > 50) lb.length = 50;
+  // Skor komposit = akurasi% × jumlah_baris (makin banyak baris = makin tinggi potensi)
+  lb.sort((a,b) => (b.score * (b.rows||1)) - (a.score * (a.rows||1)));
+  if (lb.length > 100) lb.length = 100;
   saveLB(lb);
   renderLB();
 }
@@ -327,7 +345,7 @@ function renderLB() {
   };
   wrap.innerHTML = `<table class="lb-table">
     <thead><tr>
-      <th>#</th><th>Nama</th><th>Lagu</th><th>Tanggal</th><th>Skor</th>
+      <th>#</th><th>Nama</th><th>Lagu</th><th>Tanggal</th><th>Baris</th><th>Akurasi</th><th>Skor</th>
     </tr></thead>
     <tbody>
     ${lb.map((e,i)=>`<tr>
@@ -335,7 +353,9 @@ function renderLB() {
       <td><div class="lb-name">${esc(e.name)}</div></td>
       <td><div class="lb-song">${esc(e.song)}</div></td>
       <td class="lb-date">${esc(e.date)}</td>
-      <td class="lb-score">${e.score}%</td>
+      <td style="color:var(--muted);font-size:.82rem;text-align:center">${e.rows||'—'}</td>
+      <td style="color:var(--muted);font-size:.82rem;text-align:right">${e.score}%</td>
+      <td class="lb-score">${Math.round(e.score * (e.rows||1))}</td>
     </tr>`).join('')}
     </tbody>
   </table>`;
@@ -399,20 +419,58 @@ window.startLatihan = async (songId) => {
 
   // ambil lines dari field lyrics / lines di Firestore
   const raw = currentSong.lines || currentSong.lyrics || [];
-  // filter: hanya baris yang punya jp dan id, skip separator/kosong
-  currentLines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim())
-    // normalisasi: ans = jawaban latihan, fallback ke id
+  const allLines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim())
     .map(l => ({ ...l, _ans: (l.ans && l.ans.trim()) ? l.ans.trim() : l.id.trim() }));
 
-  if (currentLines.length === 0) {
+  if (allLines.length === 0) {
     toast('Lagu ini belum punya data lirik.');
     return;
   }
 
+  // Tampilkan modal pilih jumlah baris
+  pendingSongId = songId;
+  const total = allLines.length;
+  document.getElementById('modalBarisTotal').textContent = total;
+
+  // Buat pilihan: 5, 10, 15, 20, semua (max 100) — tergantung total baris
+  const opts = [5, 10, 15, 20];
+  if (total > 20) opts.push(Math.min(total, 30));
+  if (total > 30) opts.push(Math.min(total, 50));
+  opts.push(total); // selalu ada opsi "Semua"
+
+  // Hapus duplikat dan filter yang melebihi total
+  const uniqueOpts = [...new Set(opts)].filter(n => n <= total);
+
+  // Default: pilih yang paling dekat dengan 10
+  selectedRows = uniqueOpts.reduce((prev, curr) => Math.abs(curr - 10) < Math.abs(prev - 10) ? curr : prev);
+
+  const group = document.getElementById('barisBtnGroup');
+  group.innerHTML = uniqueOpts.map(n => `
+    <button class="baris-btn${n === selectedRows ? ' active' : ''}" onclick="selectBaris(${n}, this)">${n === total ? `Semua (${n})` : n + ' baris'}</button>
+  `).join('');
+
+  document.getElementById('modalBaris').style.display = 'flex';
+};
+
+window.selectBaris = (n, btn) => {
+  selectedRows = n;
+  document.querySelectorAll('.baris-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.confirmBaris = () => {
+  document.getElementById('modalBaris').style.display = 'none';
+  beginLatihan();
+};
+
+function beginLatihan() {
+  const raw = currentSong.lines || currentSong.lyrics || [];
+  let lines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim())
+    .map(l => ({ ...l, _ans: (l.ans && l.ans.trim()) ? l.ans.trim() : l.id.trim() }));
+
   // shuffle biar ga urutan terus
-  currentLines = shuffle([...currentLines]);
-  // ambil max 15 baris
-  if (currentLines.length > 15) currentLines = currentLines.slice(0, 15);
+  lines = shuffle([...lines]);
+  currentLines = lines.slice(0, selectedRows);
 
   currentIdx = 0;
   stats = { benar: 0, salah: 0, skip: 0 };
@@ -423,7 +481,7 @@ window.startLatihan = async (songId) => {
 
   show('stepLatihan');
   renderQuestion();
-};
+}
 
 function renderQuestion() {
   const total = currentLines.length;
@@ -528,14 +586,16 @@ window.nextQuestion = () => {
 function showHasil() {
   const total = currentLines.length;
   const pct = Math.round((stats.benar / total) * 100);
-  document.getElementById('hasilScore').textContent = pct + '%';
+  const compositeScore = Math.round(pct * total);
+
+  document.getElementById('hasilScore').textContent = compositeScore;
   document.getElementById('hsBenar').textContent = stats.benar;
   document.getElementById('hsSalah').textContent = stats.salah;
   document.getElementById('hsSkip').textContent = stats.skip;
   document.getElementById('progressFill').style.width = '100%';
 
   // Nama pemain
-  document.getElementById('hasilPlayer').innerHTML = `Pemain: <span>${esc(playerName)}</span>`;
+  document.getElementById('hasilPlayer').innerHTML = `Pemain: <span>${esc(playerName)}</span> &nbsp;·&nbsp; Akurasi: <span>${pct}%</span> &nbsp;·&nbsp; ${total} baris`;
 
   // Format tanggal
   const now = new Date();
@@ -549,6 +609,7 @@ function showHasil() {
     name: playerName,
     song: currentSong.title || currentSong.titleJp || '—',
     score: pct,
+    rows: total,
     date: dateStr,
     ts: Date.now()
   });
