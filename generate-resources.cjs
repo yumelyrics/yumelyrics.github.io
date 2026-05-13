@@ -184,7 +184,7 @@ h1{font-family:var(--jp);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;colo
 document.addEventListener('copy', function(e) {
   const sel = window.getSelection().toString();
   if (sel.length > 10) {
-    e.clipboardData.setData('text/plain', sel + '\\n\\n© YumeSubs — yumelyrics.github.io');
+    e.clipboardData.setData('text/plain', sel + '\\n\\n© YumeSubs — yumelyrics.my.id');
     e.preventDefault();
   }
 });

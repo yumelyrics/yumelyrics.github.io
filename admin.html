@@ -323,7 +323,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
     <div style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
       <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Song Pages</button>
-      <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+      <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
     </div>
     <div id="gh-songs-status" style="grid-column:1/-1;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
       <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
@@ -394,7 +394,7 @@ Paragraf dipisah dengan enter 2x.
         </div>
         <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-top:.8rem;margin-bottom:1.5rem">
           <button class="bsave" id="gh-str-run-btn" onclick="triggerWorkflow('stories')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Story Pages</button>
-          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+          <a href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-stories.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
         </div>
         <div id="gh-str-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
           <span id="gh-str-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
@@ -477,7 +477,7 @@ Paragraf dipisah dengan enter 2x.
         </div>
         <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-top:.8rem">
           <button class="bsave" id="gh-res-run-btn" onclick="triggerWorkflow('resources')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Resource Pages</button>
-          <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+          <a id="gh-res-link" href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-resources.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
         </div>
         <div id="gh-res-status" style="font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem">
           <span id="gh-res-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
@@ -1064,11 +1064,11 @@ window.resetResForm = () => {
 
 // ── GITHUB WORKFLOW ──
 const GH_OWNER = 'yumelyrics';
-const GH_REPO  = 'yumelyrics.github.io';
+const GH_REPO  = 'yumelyrics.my.id';
 const GH_WORKFLOWS = {
-  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: 'Run Generate Song Pages',     dlUrl: 'https://yumelyrics.github.io/lagu/' },
-  resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.github.io/resources/' },
-  stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.github.io/stories/' }
+  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: 'Run Generate Song Pages',     dlUrl: 'https://yumelyrics.my.id/lagu/' },
+  resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.my.id/resources/' },
+  stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' }
 };
 const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
 let _pollTimers = {};
@@ -1185,7 +1185,7 @@ window.addEventListener('resize',fixBg);
 document.addEventListener('copy', function(e) {
   const selected = window.getSelection().toString();
   if (selected.length > 10) {
-    e.clipboardData.setData('text/plain', selected + '\n\n© YumeSubs — yumelyrics.github.io');
+    e.clipboardData.setData('text/plain', selected + '\n\n© YumeSubs — yumelyrics.my.id');
     e.preventDefault();
   }
 });

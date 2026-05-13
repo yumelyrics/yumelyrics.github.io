@@ -348,7 +348,7 @@ window.openDetail = id => {
     "description": item.desc || item.title,
     "url": item.link,
     "keywords": (item.tags||[]).join(', '),
-    "isPartOf": { "@type": "WebSite", "name": "YumeSubs", "url": "https://yumelyrics.github.io" }
+    "isPartOf": { "@type": "WebSite", "name": "YumeSubs", "url": "https://yumelyrics.my.id" }
   });
   document.head.appendChild(sd);
 };
@@ -392,11 +392,11 @@ onSnapshot(query(collection(db,'resources'), orderBy('order','asc')), snap => {
   "@type": "CollectionPage",
   "name": "Resources — YumeSubs",
   "description": "Kumpulan rekomendasi aplikasi, video, dan tools seputar budaya Jepang dan belajar bahasa.",
-  "url": "https://yumelyrics.github.io/resources.html",
+  "url": "https://yumelyrics.my.id/resources.html",
   "isPartOf": {
     "@type": "WebSite",
     "name": "YumeSubs",
-    "url": "https://yumelyrics.github.io"
+    "url": "https://yumelyrics.my.id"
   }
 }
 </script>
@@ -411,7 +411,7 @@ setTimeout(()=>{ document.getElementById('imgNotif').classList.remove('show'); }
 document.addEventListener('copy', function(e) {
   const selected = window.getSelection().toString();
   if (selected.length > 10) {
-    e.clipboardData.setData('text/plain', selected + '\n\n© YumeSubs — yumelyrics.github.io');
+    e.clipboardData.setData('text/plain', selected + '\n\n© YumeSubs — yumelyrics.my.id');
     e.preventDefault();
   }
 });
