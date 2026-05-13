@@ -302,8 +302,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="fg full">
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
       <div style="margin-bottom:.8rem">
-        <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="document.getElementById('bulkArea').style.display=document.getElementById('bulkArea').style.display==='none'?'flex':'none'">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
+        <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
+        <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Terjemahan</button>
         <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
+
+        <!-- Bulk Terjemahan Area -->
+        <div id="bulkTransArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.2);padding:.9rem;margin-bottom:.6rem">
+          <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris terjemahan. Pisah baris dengan baris kosong. JP & ROM akan dikosongkan — isi sendiri nanti. Support sampai 100+ baris.</div>
+          <textarea class="fi" id="bulkTransInput" rows="8" placeholder="Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;Cinta yang udah pergi, ikatan yang udah layu&#10;&#10;Semuanya terbawa angin musim semi"></textarea>
+          <div style="display:flex;gap:.5rem">
+            <button class="bsave" style="flex:1;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" onclick="parseBulkTrans()">🈯 Generate Baris Terjemahan</button>
+            <button class="bcancel" onclick="document.getElementById('bulkTransArea').style.display='none';document.getElementById('bulkTransInput').value=''">Tutup</button>
+          </div>
+        </div>
+
         <div id="bulkArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(79,126,196,.05);border:1px solid rgba(79,126,196,.2);padding:.9rem">
           <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris. Format: baris 1 JP, baris 2 Romaji, baris 3 Terjemahan. Pisah paragraf dengan baris kosong. Support sampai 100+ baris.</div>
           <textarea class="fi" id="bulkInput" rows="8" placeholder="見上げれば痛みさえも　淡くほぐれてゆく&#10;Miagereba itami sae mo awaku hogrete yuku&#10;Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;散っていった恋も　枯れてしまった絆も&#10;Chitte itta koi mo karete shimatta kizuna mo&#10;Cinta yang udah pergi, ikatan yang udah layu"></textarea>
@@ -799,6 +811,31 @@ onSnapshot(
   snap => { stories = snap.docs.map(d=>({id:d.id,...d.data()})); renderStoryList(); },
   err => console.error('stories listen error:', err)
 );
+
+// ── Toggle bulk area (tutup yang lain dulu) ──
+window.toggleBulk = (id) => {
+  const ids = ['bulkArea', 'bulkTransArea'];
+  ids.forEach(otherId => {
+    if(otherId !== id) document.getElementById(otherId).style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+};
+
+window.parseBulkTrans = () => {
+  const raw = document.getElementById('bulkTransInput').value;
+  const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  if(!paragraphs.length){ toast('Isi dulu terjemahannya!'); return; }
+  if(paragraphs.length > 100){ toast('Maksimal 100 paragraf sekaligus!'); return; }
+  let added = 0;
+  paragraphs.forEach(para => {
+    const id = para.trim();
+    if(id){ addRow('', '', id, ''); added++; }
+  });
+  toast(`✓ ${added} baris terjemahan berhasil di-generate!`);
+  document.getElementById('bulkTransInput').value = '';
+  document.getElementById('bulkTransArea').style.display = 'none';
+};
 
 window.parseBulk = () => {
   const raw = document.getElementById('bulkInput').value;
