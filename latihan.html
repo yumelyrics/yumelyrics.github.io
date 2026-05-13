@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="index, follow">
+<meta name="author" content="YumeSubs">
+<meta name="theme-color" content="#050d1a">
+<title>Latihan Terjemahan | YumeSubs</title>
+<meta name="description" content="Latih kemampuan terjemahan lagu Jepang kamu. Pilih lagu dari katalog YumeSubs, terjemahkan per baris, dan cek seberapa tepat jawabanmu.">
+<meta property="og:title" content="Latihan Terjemahan | YumeSubs">
+<meta property="og:description" content="Latih kemampuan terjemahan lagu Jepang kamu. Pilih lagu dari katalog YumeSubs, terjemahkan per baris, dan cek seberapa tepat jawabanmu.">
+<meta property="og:url" content="https://yumelyrics.my.id/latihan.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YumeSubs">
+<link rel="canonical" href="https://yumelyrics.my.id/latihan.html">
+<link rel="icon" type="image/jpeg" href="anime_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e;--green:#6ec98a}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden}
+
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(5,13,26,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;flex-shrink:0}
+.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap}
+.nlen{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+.nav-links{display:flex;gap:.25rem;align-items:center}
+.nb{background:none;border:none;font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+.nb:hover{color:var(--text);background:rgba(255,255,255,.06)}
+
+.main{max-width:860px;margin:0 auto;padding:2.5rem 2rem 6rem}
+
+.page-hd{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.page-hd h1{font-family:var(--jp);font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
+.page-hd p{font-size:.82rem;color:var(--muted);line-height:1.7}
+
+/* STEP 1 - pilih lagu */
+#stepPilih{}
+.search-wrap{position:relative;margin-bottom:1rem}
+.search-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.9rem;padding:.75rem 1rem .75rem 2.8rem;outline:none;border-radius:4px;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--accent2)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;pointer-events:none}
+.song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem;max-height:420px;overflow-y:auto;padding-right:.25rem}
+.song-grid::-webkit-scrollbar{width:4px}
+.song-grid::-webkit-scrollbar-track{background:transparent}
+.song-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.song-card{background:rgba(255,255,255,.03);border:1px solid var(--border);padding:.9rem 1rem;cursor:pointer;border-radius:4px;transition:all .2s;display:flex;gap:.75rem;align-items:center}
+.song-card:hover{border-color:var(--accent2);background:rgba(79,126,196,.06)}
+.song-card img{width:44px;height:44px;object-fit:cover;border-radius:2px;flex-shrink:0;filter:saturate(.7)}
+.sc-info{min-width:0}
+.sc-title{font-family:var(--jp);font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-artist{font-size:.68rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loading-txt{color:var(--muted);font-size:.82rem;padding:2rem 0;text-align:center}
+
+/* STEP 2 - latihan */
+#stepLatihan{display:none}
+.latihan-hd{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.back-btn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.4rem .9rem;cursor:pointer;transition:all .2s;border-radius:2px}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lh-info{flex:1;min-width:0}
+.lh-title{font-family:var(--jp);font-size:1.1rem;font-weight:600;color:var(--text)}
+.lh-artist{font-size:.65rem;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:2rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent2);border-radius:2px;transition:width .4s ease}
+.progress-txt{font-size:.7rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem}
+
+/* kartu soal */
+.q-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1.5rem}
+.q-romaji{font-size:.78rem;color:var(--muted);font-style:italic;margin-bottom:.5rem}
+.q-jp{font-family:var(--jp);font-size:1.4rem;font-weight:600;color:var(--text);margin-bottom:1.2rem;line-height:1.5}
+.q-input-wrap{position:relative}
+.q-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.95rem;padding:.75rem 1rem;outline:none;border-radius:4px;transition:border-color .2s;resize:none;min-height:54px}
+.q-input:focus{border-color:var(--accent2)}
+.q-input.correct{border-color:var(--green);background:rgba(110,201,138,.06)}
+.q-input.wrong{border-color:var(--red);background:rgba(201,110,110,.06)}
+.q-input.skipped{border-color:var(--muted);background:rgba(90,106,130,.06)}
+.q-input::placeholder{color:var(--muted)}
+.q-input:disabled{opacity:.8}
+.feedback{margin-top:.75rem;font-size:.82rem;display:none;line-height:1.6}
+.feedback.show{display:block}
+.fb-correct{color:var(--green)}
+.fb-wrong{color:var(--red)}
+.fb-answer{color:var(--muted);margin-top:.25rem;font-size:.78rem}
+.fb-answer span{color:var(--accent)}
+
+.q-actions{display:flex;gap:.75rem;margin-top:1rem}
+.btn-check{background:var(--accent2);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;padding:.6rem 1.4rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-check:hover{opacity:.85}
+.btn-check:disabled{opacity:.4;cursor:not-allowed}
+.btn-skip{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-skip:hover{border-color:var(--muted);color:var(--text)}
+.btn-skip:disabled{opacity:.3;cursor:not-allowed}
+.btn-next{background:none;border:1px solid var(--accent2);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent2);padding:.6rem 1.2rem;cursor:pointer;border-radius:4px;transition:all .2s;display:none}
+.btn-next:hover{background:var(--accent2);color:#fff}
+.btn-next.show{display:block}
+
+/* hasil */
+#stepHasil{display:none}
+.hasil-wrap{text-align:center;padding:3rem 0}
+.hasil-score{font-family:var(--jp);font-size:4rem;font-weight:800;color:var(--accent);line-height:1}
+.hasil-label{font-size:.75rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:.5rem;margin-bottom:2rem}
+.hasil-stats{display:flex;gap:1.5rem;justify-content:center;margin-bottom:2.5rem;flex-wrap:wrap}
+.hs-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:4px;padding:.9rem 1.5rem;min-width:100px}
+.hs-num{font-family:var(--jp);font-size:1.6rem;font-weight:600}
+.hs-num.green{color:var(--green)}
+.hs-num.red{color:var(--red)}
+.hs-num.muted{color:var(--muted)}
+.hs-lbl{font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:.2rem}
+.btn-ulang{background:var(--accent2);border:none;font-family:var(--en);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;padding:.75rem 2rem;cursor:pointer;border-radius:4px;transition:all .2s;margin-right:.75rem}
+.btn-ulang:hover{opacity:.85}
+.btn-lagu-lain{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.75rem 1.5rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-lagu-lain:hover{border-color:var(--text);color:var(--text)}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(1rem);background:rgba(30,40,60,.95);border:1px solid var(--border);color:var(--text);font-size:.8rem;padding:.6rem 1.2rem;border-radius:4px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:600px){
+  .main{padding:1.5rem 1rem 5rem}
+  nav{padding:0 1rem}
+  .song-grid{grid-template-columns:1fr}
+  .hasil-stats{gap:1rem}
+  .latihan-hd{gap:.75rem}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nljp">夢字幕</div>
+    <div class="nlen">YumeSubs</div>
+  </a>
+  <div class="nav-links">
+    <a class="nb" href="index.html">Katalog</a>
+    <a class="nb" href="contact.html">Hubungi</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-hd">
+    <h1>練習 — Latihan Terjemahan</h1>
+    <p>Pilih lagu dari katalog, terjemahkan setiap baris lirik, dan lihat seberapa tepat jawabanmu.</p>
+  </div>
+
+  <!-- Step 1: Pilih lagu -->
+  <div id="stepPilih">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Cari judul atau artis..." oninput="filterSongs()">
+    </div>
+    <div class="song-grid" id="songGrid">
+      <div class="loading-txt">Memuat katalog...</div>
+    </div>
+  </div>
+
+  <!-- Step 2: Latihan -->
+  <div id="stepLatihan">
+    <div class="latihan-hd">
+      <button class="back-btn" onclick="backToPilih()">← Ganti Lagu</button>
+      <div class="lh-info">
+        <div class="lh-title" id="lhTitle"></div>
+        <div class="lh-artist" id="lhArtist"></div>
+      </div>
+    </div>
+    <div class="progress-txt" id="progressTxt"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div id="qCard"></div>
+  </div>
+
+  <!-- Step 3: Hasil -->
+  <div id="stepHasil">
+    <div class="hasil-wrap">
+      <div class="hasil-score" id="hasilScore">0</div>
+      <div class="hasil-label">Skor Akhir</div>
+      <div class="hasil-stats">
+        <div class="hs-item">
+          <div class="hs-num green" id="hsBenar">0</div>
+          <div class="hs-lbl">Benar</div>
+        </div>
+        <div class="hs-item">
+          <div class="hs-num red" id="hsSalah">0</div>
+          <div class="hs-lbl">Salah</div>
+        </div>
+        <div class="hs-item">
+          <div class="hs-num muted" id="hsSkip">0</div>
+          <div class="hs-lbl">Skip</div>
+        </div>
+      </div>
+      <button class="btn-ulang" onclick="ulangLagu()">Ulangi Lagu Ini</button>
+      <button class="btn-lagu-lain" onclick="backToPilih()">Pilih Lagu Lain</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const db = getFirestore(initializeApp({
+  apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+  authDomain:"yumesubs7.firebaseapp.com",
+  projectId:"yumesubs7",
+  storageBucket:"yumesubs7.firebasestorage.app",
+  messagingSenderId:"1076202015626",
+  appId:"1:1076202015626:web:ce89fb668eb6b2bd021673"
+}));
+
+let allSongs = [];
+let currentLines = [];
+let currentIdx = 0;
+let stats = { benar: 0, salah: 0, skip: 0 };
+let currentSong = null;
+let answered = false;
+
+// ── Load semua lagu dari Firestore ──
+async function loadSongs() {
+  try {
+    const snap = await getDocs(query(collection(db, 'songs'), orderBy('title')));
+    allSongs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderSongGrid(allSongs);
+  } catch(e) {
+    document.getElementById('songGrid').innerHTML = '<div class="loading-txt">Gagal memuat katalog.</div>';
+  }
+}
+
+function renderSongGrid(songs) {
+  const grid = document.getElementById('songGrid');
+  if (!songs.length) {
+    grid.innerHTML = '<div class="loading-txt">Lagu tidak ditemukan.</div>';
+    return;
+  }
+  grid.innerHTML = songs.map(s => `
+    <div class="song-card" onclick="startLatihan('${s.id}')">
+      ${s.coverUrl ? `<img src="${s.coverUrl}" alt="" loading="lazy">` : `<div style="width:44px;height:44px;background:rgba(255,255,255,.05);border-radius:2px;flex-shrink:0"></div>`}
+      <div class="sc-info">
+        <div class="sc-title">${esc(s.title||s.titleJp||'')}</div>
+        <div class="sc-artist">${esc(s.artist||'')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.filterSongs = () => {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allSongs.filter(s =>
+    (s.title||'').toLowerCase().includes(q) ||
+    (s.titleJp||'').toLowerCase().includes(q) ||
+    (s.artist||'').toLowerCase().includes(q)
+  );
+  renderSongGrid(filtered);
+};
+
+// ── Mulai latihan ──
+window.startLatihan = async (songId) => {
+  currentSong = allSongs.find(s => s.id === songId);
+  if (!currentSong) return;
+
+  // ambil lines dari field lyrics / lines di Firestore
+  const raw = currentSong.lines || currentSong.lyrics || [];
+  // filter: hanya baris yang punya jp dan id, skip separator/kosong
+  currentLines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim());
+
+  if (currentLines.length === 0) {
+    toast('Lagu ini belum punya data lirik.');
+    return;
+  }
+
+  // shuffle biar ga urutan terus
+  currentLines = shuffle([...currentLines]);
+  // ambil max 15 baris
+  if (currentLines.length > 15) currentLines = currentLines.slice(0, 15);
+
+  currentIdx = 0;
+  stats = { benar: 0, salah: 0, skip: 0 };
+  answered = false;
+
+  document.getElementById('lhTitle').textContent = currentSong.title || currentSong.titleJp || '';
+  document.getElementById('lhArtist').textContent = currentSong.artist || '';
+
+  show('stepLatihan');
+  renderQuestion();
+};
+
+function renderQuestion() {
+  const total = currentLines.length;
+  const pct = (currentIdx / total) * 100;
+  document.getElementById('progressTxt').textContent = `Soal ${currentIdx + 1} dari ${total}`;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const line = currentLines[currentIdx];
+  answered = false;
+
+  document.getElementById('qCard').innerHTML = `
+    <div class="q-card" id="qCardInner">
+      ${line.ro ? `<div class="q-romaji">${esc(line.ro)}</div>` : ''}
+      <div class="q-jp">${esc(line.jp)}</div>
+      <div class="q-input-wrap">
+        <textarea class="q-input" id="qInput" placeholder="Tulis terjemahan kamu..." rows="2" oninput="autoResize(this)"></textarea>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="q-actions">
+        <button class="btn-check" id="btnCheck" onclick="checkAnswer()">Cek Jawaban</button>
+        <button class="btn-skip" id="btnSkip" onclick="skipQuestion()">Lewati</button>
+        <button class="btn-next" id="btnNext" onclick="nextQuestion()">Lanjut →</button>
+      </div>
+    </div>
+  `;
+
+  const inp = document.getElementById('qInput');
+  inp.focus();
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!answered) checkAnswer();
+      else nextQuestion();
+    }
+  });
+}
+
+window.autoResize = el => {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+};
+
+window.checkAnswer = () => {
+  if (answered) return;
+  const inp = document.getElementById('qInput');
+  const userAns = inp.value.trim();
+  if (!userAns) { toast('Tulis dulu jawabannya 😐'); return; }
+
+  const line = currentLines[currentIdx];
+  const correct = line.id;
+  const isCorrect = fuzzyMatch(userAns, correct);
+
+  inp.disabled = true;
+  inp.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById('feedback');
+  fb.classList.add('show');
+  if (isCorrect) {
+    fb.innerHTML = `<div class="fb-correct">✓ Bener!</div>`;
+    stats.benar++;
+  } else {
+    fb.innerHTML = `<div class="fb-wrong">✗ Kurang tepat.</div><div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
+    stats.salah++;
+  }
+
+  answered = true;
+  document.getElementById('btnCheck').disabled = true;
+  document.getElementById('btnSkip').disabled = true;
+  document.getElementById('btnNext').classList.add('show');
+};
+
+window.skipQuestion = () => {
+  if (answered) return;
+  const inp = document.getElementById('qInput');
+  const line = currentLines[currentIdx];
+  inp.disabled = true;
+  inp.classList.add('skipped');
+
+  const fb = document.getElementById('feedback');
+  fb.classList.add('show');
+  fb.innerHTML = `<div class="fb-answer">Jawaban: <span>${esc(line.id)}</span></div>`;
+
+  stats.skip++;
+  answered = true;
+  document.getElementById('btnCheck').disabled = true;
+  document.getElementById('btnSkip').disabled = true;
+  document.getElementById('btnNext').classList.add('show');
+};
+
+window.nextQuestion = () => {
+  currentIdx++;
+  if (currentIdx >= currentLines.length) {
+    showHasil();
+  } else {
+    renderQuestion();
+  }
+};
+
+function showHasil() {
+  const total = currentLines.length;
+  const pct = Math.round((stats.benar / total) * 100);
+  document.getElementById('hasilScore').textContent = pct + '%';
+  document.getElementById('hsBenar').textContent = stats.benar;
+  document.getElementById('hsSalah').textContent = stats.salah;
+  document.getElementById('hsSkip').textContent = stats.skip;
+  document.getElementById('progressFill').style.width = '100%';
+  show('stepHasil');
+}
+
+window.ulangLagu = () => {
+  startLatihan(currentSong.id);
+};
+
+window.backToPilih = () => {
+  show('stepPilih');
+  document.getElementById('searchInput').value = '';
+  renderSongGrid(allSongs);
+};
+
+// ── Fuzzy match ──
+function fuzzyMatch(a, b) {
+  a = normalize(a);
+  b = normalize(b);
+  if (a === b) return true;
+  // kalo user ngetik sama persis atau substring panjang
+  if (b.includes(a) && a.length >= b.length * 0.6) return true;
+  if (a.includes(b) && b.length >= a.length * 0.6) return true;
+  // similarity ratio
+  return similarity(a, b) >= 0.65;
+}
+
+function normalize(s) {
+  return s.toLowerCase()
+    .replace(/[^a-z0-9\s]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function similarity(a, b) {
+  const longer = a.length > b.length ? a : b;
+  const shorter = a.length > b.length ? b : a;
+  if (!longer.length) return 1.0;
+  const dist = editDistance(longer, shorter);
+  return (longer.length - dist) / longer.length;
+}
+
+function editDistance(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_,i) => Array.from({length: n+1}, (_,j) => i===0?j:j===0?i:0));
+  for (let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function shuffle(arr) {
+  for (let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function show(id) {
+  ['stepPilih','stepLatihan','stepHasil'].forEach(s => {
+    document.getElementById(s).style.display = s===id ? 'block' : 'none';
+  });
+}
+
+function toast(m) {
+  const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2500);
+}
+
+loadSongs();
+</script>
+</body>
+</html>
