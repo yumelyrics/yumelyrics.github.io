@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e;--green:#6ec98a}
+:root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e;--green:#6ec98a;--yellow:#c9b96e}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--bg)}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden}
@@ -79,11 +79,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .q-input.correct{border-color:var(--green);background:rgba(110,201,138,.06)}
 .q-input.wrong{border-color:var(--red);background:rgba(201,110,110,.06)}
 .q-input.skipped{border-color:var(--muted);background:rgba(90,106,130,.06)}
+.q-input.partial{border-color:var(--yellow);background:rgba(201,185,110,.06)}
 .q-input::placeholder{color:var(--muted)}
 .q-input:disabled{opacity:.8}
 .feedback{margin-top:.75rem;font-size:.82rem;display:none;line-height:1.6}
 .feedback.show{display:block}
 .fb-correct{color:var(--green)}
+.fb-partial{color:var(--yellow)}
 .fb-wrong{color:var(--red)}
 .fb-answer{color:var(--muted);margin-top:.25rem;font-size:.78rem}
 .fb-answer span{color:var(--accent)}
@@ -239,7 +241,7 @@ function renderSongGrid(songs) {
   }
   grid.innerHTML = songs.map(s => `
     <div class="song-card" onclick="startLatihan('${s.id}')">
-      ${s.coverUrl ? `<img src="${s.coverUrl}" alt="" loading="lazy">` : `<div style="width:44px;height:44px;background:rgba(255,255,255,.05);border-radius:2px;flex-shrink:0"></div>`}
+      ${(s.coverUrl||s.img) ? `<img src="${s.coverUrl||s.img}" alt="" loading="lazy">` : `<div style="width:44px;height:44px;background:rgba(255,255,255,.05);border-radius:2px;flex-shrink:0"></div>`}
       <div class="sc-info">
         <div class="sc-title">${esc(s.title||s.titleJp||'')}</div>
         <div class="sc-artist">${esc(s.artist||'')}</div>
@@ -338,16 +340,19 @@ window.checkAnswer = () => {
 
   const line = currentLines[currentIdx];
   const correct = line.id;
-  const isCorrect = fuzzyMatch(userAns, correct);
+  const result = fuzzyMatch(userAns, correct);
 
   inp.disabled = true;
-  inp.classList.add(isCorrect ? 'correct' : 'wrong');
+  inp.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'partial' : 'wrong');
 
   const fb = document.getElementById('feedback');
   fb.classList.add('show');
-  if (isCorrect) {
+  if (result === 'correct') {
     fb.innerHTML = `<div class="fb-correct">✓ Bener!</div>`;
     stats.benar++;
+  } else if (result === 'partial') {
+    fb.innerHTML = `<div class="fb-partial">○ Hampir! Tapi kurang lengkap.</div><div class="fb-answer">Jawaban lengkap: <span>${esc(correct)}</span></div>`;
+    stats.salah++;
   } else {
     fb.innerHTML = `<div class="fb-wrong">✗ Kurang tepat.</div><div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
     stats.salah++;
@@ -408,15 +413,36 @@ window.backToPilih = () => {
 };
 
 // ── Fuzzy match ──
+// return: 'correct' | 'partial' | 'wrong'
 function fuzzyMatch(a, b) {
   a = normalize(a);
   b = normalize(b);
-  if (a === b) return true;
-  // kalo user ngetik sama persis atau substring panjang
-  if (b.includes(a) && a.length >= b.length * 0.6) return true;
-  if (a.includes(b) && b.length >= a.length * 0.6) return true;
-  // similarity ratio
-  return similarity(a, b) >= 0.65;
+  if (a === b) return 'correct';
+
+  // substring coverage full
+  if (b.includes(a) && a.length >= b.length * 0.6) return 'correct';
+  if (a.includes(b) && b.length >= a.length * 0.6) return 'correct';
+
+  // full string similarity
+  if (similarity(a, b) >= 0.65) return 'correct';
+
+  // word-level
+  const wordsA = a.split(' ').filter(Boolean);
+  const wordsB = b.split(' ').filter(Boolean);
+  if (!wordsA.length || !wordsB.length) return 'wrong';
+
+  let matched = 0;
+  for (const wa of wordsA) {
+    const hit = wordsB.some(wb => wa === wb || similarity(wa, wb) >= 0.7);
+    if (hit) matched++;
+  }
+  const ratio = matched / Math.max(wordsA.length, wordsB.length);
+  if (ratio >= 0.6) return 'correct';
+
+  // partial: user jawab sebagian — minimal 1 kata cocok dan coveragenya 20-59%
+  if (matched >= 1 && ratio >= 0.2) return 'partial';
+
+  return 'wrong';
 }
 
 function normalize(s) {
