@@ -90,14 +90,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fb-answer{color:var(--muted);margin-top:.25rem;font-size:.78rem}
 .fb-answer span{color:var(--accent)}
 
-.q-actions{display:flex;gap:.75rem;margin-top:1rem}
-.btn-check{background:var(--accent2);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;padding:.6rem 1.4rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.q-actions{display:flex;gap:.75rem;margin-top:1rem;flex-wrap:wrap}
+.btn-check{background:var(--accent2);border:none;font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;padding:.6rem 1.4rem;cursor:pointer;border-radius:4px;transition:all .2s;flex:1;min-width:0}
 .btn-check:hover{opacity:.85}
 .btn-check:disabled{opacity:.4;cursor:not-allowed}
-.btn-skip{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-skip{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;cursor:pointer;border-radius:4px;transition:all .2s;flex:1;min-width:0}
 .btn-skip:hover{border-color:var(--muted);color:var(--text)}
 .btn-skip:disabled{opacity:.3;cursor:not-allowed}
-.btn-next{background:none;border:1px solid var(--accent2);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent2);padding:.6rem 1.2rem;cursor:pointer;border-radius:4px;transition:all .2s;display:none}
+.btn-next{background:none;border:1px solid var(--accent2);font-family:var(--en);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent2);padding:.6rem 1.2rem;cursor:pointer;border-radius:4px;transition:all .2s;display:none;flex:1;min-width:0}
 .btn-next:hover{background:var(--accent2);color:#fff}
 .btn-next.show{display:block}
 
@@ -223,7 +223,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="lb-section">
       <div class="lb-hd">
         <h2>🏆 Leaderboard</h2>
-        <button class="lb-clear" onclick="clearLeaderboard()">Hapus Semua</button>
       </div>
       <div id="leaderboardWrap">
         <div class="lb-empty">Belum ada skor. Jadilah yang pertama! 🎌</div>
