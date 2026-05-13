@@ -305,6 +305,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
         <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Jawaban Latihan</button>
         <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
+        <button class="badd" style="border-color:rgba(201,169,110,.3);color:var(--accent);margin-bottom:.6rem" onclick="undoTransToBulk()">↩ Undo Jawaban Latihan → Bulk</button>
         <div id="bulkTransArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.2);padding:.9rem;margin-bottom:.6rem">
           <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris jawaban latihan. Pisah dengan baris kosong. Akan mengisi kolom <strong style="color:var(--accent2)">Jawaban Latihan</strong> (bukan Terjemahan) di baris yang sudah ada secara urut — edit lagu dulu biar JP & ROM ke-load.</div>
           <textarea class="fi" id="bulkTransInput" rows="8" placeholder="Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;Cinta yang udah pergi, ikatan yang udah layu&#10;&#10;Semuanya terbawa angin musim semi"></textarea>
@@ -869,6 +870,18 @@ window.undoToBulk = () => {
   document.getElementById('bulkArea').style.display = 'flex';
   document.getElementById('lrows').innerHTML = '';
   toast(`↩ ${rows.length} baris dikembaliin ke bulk!`);
+};
+
+window.undoTransToBulk = () => {
+  const rows = document.querySelectorAll('#lrows .lrow');
+  if(!rows.length){ toast('Belum ada baris lirik!'); return; }
+  const bulk = [...rows].map(r => r.querySelector('.rans').value.trim()).filter(Boolean).join('\n\n');
+  if(!bulk){ toast('Kolom jawaban latihan masih kosong semua!'); return; }
+  [...rows].forEach(r => r.querySelector('.rans').value = '');
+  document.getElementById('bulkTransInput').value = bulk;
+  document.getElementById('bulkTransArea').style.display = 'flex';
+  const filled = [...rows].filter((_,i) => bulk.split('\n\n')[i]).length;
+  toast(`↩ Jawaban latihan dikembaliin ke bulk!`);
 };
 
 window.addRow = (jp='',ro='',id='',ans='') => {
