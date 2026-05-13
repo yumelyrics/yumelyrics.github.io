@@ -303,13 +303,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
       <div style="margin-bottom:.8rem">
         <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
-        <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Terjemahan</button>
+        <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Jawaban Latihan</button>
         <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
         <div id="bulkTransArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.2);padding:.9rem;margin-bottom:.6rem">
-          <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris terjemahan. Pisah dengan baris kosong. Akan mengisi kolom ID di baris yang sudah ada secara urut — edit lagu dulu biar JP & ROM ke-load.</div>
+          <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris jawaban latihan. Pisah dengan baris kosong. Akan mengisi kolom <strong style="color:var(--accent2)">Jawaban Latihan</strong> (bukan Terjemahan) di baris yang sudah ada secara urut — edit lagu dulu biar JP & ROM ke-load.</div>
           <textarea class="fi" id="bulkTransInput" rows="8" placeholder="Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;Cinta yang udah pergi, ikatan yang udah layu&#10;&#10;Semuanya terbawa angin musim semi"></textarea>
           <div style="display:flex;gap:.5rem">
-            <button class="bsave" style="flex:1;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" onclick="parseBulkTrans()">🈯 Isi Terjemahan ke Baris</button>
+            <button class="bsave" style="flex:1;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" onclick="parseBulkTrans()">🈯 Isi Jawaban Latihan ke Baris</button>
             <button class="bcancel" onclick="document.getElementById('bulkTransArea').style.display='none';document.getElementById('bulkTransInput').value=''">Tutup</button>
           </div>
         </div>
@@ -829,11 +829,11 @@ window.parseBulkTrans = () => {
   let filled = 0;
   existingRows.forEach((row, i) => {
     if(i < paragraphs.length && paragraphs[i]){
-      row.querySelector('.rid').value = paragraphs[i];
+      row.querySelector('.rans').value = paragraphs[i];
       filled++;
     }
   });
-  toast(`✓ ${filled} baris terjemahan berhasil diisi!`);
+  toast(`✓ ${filled} jawaban latihan berhasil diisi!`);
   document.getElementById('bulkTransInput').value = '';
   document.getElementById('bulkTransArea').style.display = 'none';
 };
