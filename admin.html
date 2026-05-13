@@ -938,7 +938,8 @@ function ra(){
         <div class="views-badge">👁 ${s.views||0} views${s.popularLabel?' · 🔥 '+s.popularLabel:''}</div>
       </div>
       <div class="exitem-btns" style="flex-wrap:wrap">
-        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Unrec':'★ Rec'}</button>
+        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Batal Rekomen':'★ Rekomen Admin'}</button>
+        ${s.recommended?`<a href="index.html" target="_blank" rel="noopener" class="brec-s on" style="text-decoration:none;font-size:.58rem" title="Lihat di katalog">↗ Index</a>`:''}
         <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')">${s.popularLabel?'🔥 Unpopuler':'🔥 Set Populer'}</button>
         <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
         <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
