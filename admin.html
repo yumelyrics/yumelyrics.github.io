@@ -36,8 +36,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fi:focus{border-color:rgba(201,169,110,.4)}
 .lbhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
 .lrows{display:flex;flex-direction:column;gap:.6rem;margin-bottom:.6rem}
-.lrow{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;align-items:center}
-.lrow-hdr{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;opacity:.4;margin-bottom:.3rem}
+.lrow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center}
+.lrow-hdr{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.5rem;opacity:.4;margin-bottom:.3rem}
 .bdel{background:none;border:1px solid rgba(201,110,110,.3);color:var(--red);font-size:.85rem;width:34px;height:34px;cursor:pointer;transition:all .2s;flex-shrink:0}
 .bdel:hover{background:rgba(201,110,110,.1)}
 .badd{background:none;border:1px dashed var(--border);font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%}
@@ -121,7 +121,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .bdel-sub:hover{background:rgba(201,110,110,.1)}
 .sub-empty{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-@media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}}
+@media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}.lrow .fi:nth-child(4){grid-column:1/-1}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nav-badge{display:none}}
 @media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}
 /* ── Story Editor ── */
@@ -313,7 +313,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
           </div>
         </div>
       </div>
-      <div class="lrow-hdr"><div class="fl">Jepang</div><div class="fl">Romaji</div><div class="fl">Terjemahan ID</div><div></div></div>
+      <div class="lrow-hdr"><div class="fl">Jepang</div><div class="fl">Romaji</div><div class="fl">Terjemahan ID</div><div class="fl">Jawaban Latihan <span style="color:var(--accent2);font-size:.55rem;letter-spacing:.05em;text-transform:none">(opsional, kalau terjemahan ngalir)</span></div><div></div></div>
       <div class="lrows" id="lrows"></div>
       <button class="badd" onclick="addRow()">+ Tambah Baris Manual</button>
     </div>
@@ -811,7 +811,7 @@ window.parseBulk = () => {
     const jp = lines[0]||'';
     const ro = lines[1]||'';
     const id = lines[2]||'';
-    if(jp) { addRow(jp, ro, id); added++; }
+    if(jp) { addRow(jp, ro, id, ''); added++; }
   });
   toast(`✓ ${added} baris lirik berhasil di-generate!`);
   document.getElementById('bulkInput').value='';
@@ -833,11 +833,12 @@ window.undoToBulk = () => {
   toast(`↩ ${rows.length} baris dikembaliin ke bulk!`);
 };
 
-window.addRow = (jp='',ro='',id='') => {
+window.addRow = (jp='',ro='',id='',ans='') => {
   const r=document.createElement('div'); r.className='lrow';
   r.innerHTML=`<input class="fi rjp" placeholder="日本語" value="${esc(jp)}">` +
     `<input class="fi rro" placeholder="Romaji" value="${esc(ro)}">` +
-    `<input class="fi rid" placeholder="Terjemahan" value="${esc(id)}">` +
+    `<input class="fi rid" placeholder="Terjemahan (tampil di site)" value="${esc(id)}">` +
+    `<input class="fi rans" placeholder="Jawaban latihan (kosongkan = pakai terjemahan)" value="${esc(ans)}">` +
     `<button class="bdel" onclick="this.parentElement.remove()">&#x2715;</button>`;
   document.getElementById('lrows').appendChild(r);
 };
@@ -861,7 +862,8 @@ window.saveSong = async () => {
     const jp=r.querySelector('.rjp').value.trim();
     const ro=r.querySelector('.rro').value.trim();
     const id=r.querySelector('.rid').value.trim();
-    if(jp) lyrics.push({jp,ro,id});
+    const ans=r.querySelector('.rans').value.trim();
+    if(jp) lyrics.push({jp,ro,id,ans});
   });
   const btn=document.getElementById('bsaveBtn');
   btn.disabled=true;
@@ -900,7 +902,7 @@ window.editSong = id => {
   document.getElementById('f-descjp').value=s.descJp||'';
   document.getElementById('f-editid').value=s.id;
   document.getElementById('lrows').innerHTML='';
-  (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id));
+  (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id,l.ans||''));
   document.getElementById('bsaveBtn').textContent='✓ Update Lagu';
   document.getElementById('bcancelBtn').style.display='block';
   document.getElementById('editBanner').classList.add('on');
