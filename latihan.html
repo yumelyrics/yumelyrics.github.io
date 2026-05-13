@@ -268,7 +268,9 @@ window.startLatihan = async (songId) => {
   // ambil lines dari field lyrics / lines di Firestore
   const raw = currentSong.lines || currentSong.lyrics || [];
   // filter: hanya baris yang punya jp dan id, skip separator/kosong
-  currentLines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim());
+  currentLines = raw.filter(l => l && l.jp && l.id && l.jp.trim() && l.id.trim())
+    // normalisasi: ans = jawaban latihan, fallback ke id
+    .map(l => ({ ...l, _ans: (l.ans && l.ans.trim()) ? l.ans.trim() : l.id.trim() }));
 
   if (currentLines.length === 0) {
     toast('Lagu ini belum punya data lirik.');
@@ -339,7 +341,7 @@ window.checkAnswer = () => {
   if (!userAns) { toast('Tulis dulu jawabannya 😐'); return; }
 
   const line = currentLines[currentIdx];
-  const correct = line.id;
+  const correct = line._ans;
   const result = fuzzyMatch(userAns, correct);
 
   inp.disabled = true;
@@ -373,7 +375,7 @@ window.skipQuestion = () => {
 
   const fb = document.getElementById('feedback');
   fb.classList.add('show');
-  fb.innerHTML = `<div class="fb-answer">Jawaban: <span>${esc(line.id)}</span></div>`;
+  fb.innerHTML = `<div class="fb-answer">Jawaban: <span>${esc(line._ans)}</span></div>`;
 
   stats.skip++;
   answered = true;
