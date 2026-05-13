@@ -200,7 +200,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy }
+import { getFirestore, collection, getDocs }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const db = getFirestore(initializeApp({
@@ -222,8 +222,9 @@ let answered = false;
 // ── Load semua lagu dari Firestore ──
 async function loadSongs() {
   try {
-    const snap = await getDocs(query(collection(db, 'songs'), orderBy('title')));
-    allSongs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'songs'));
+    allSongs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.title||a.titleJp||'').localeCompare(b.title||b.titleJp||''));
     renderSongGrid(allSongs);
   } catch(e) {
     document.getElementById('songGrid').innerHTML = '<div class="loading-txt">Gagal memuat katalog.</div>';
