@@ -118,7 +118,23 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .btn-lagu-lain{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.75rem 1.5rem;cursor:pointer;border-radius:4px;transition:all .2s}
 .btn-lagu-lain:hover{border-color:var(--text);color:var(--text)}
 
-.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(1rem);background:rgba(30,40,60,.95);border:1px solid var(--border);color:var(--text);font-size:.8rem;padding:.6rem 1.2rem;border-radius:4px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+/* puzzle tiles */
+.puzzle-zone{min-height:52px;border:1.5px dashed rgba(79,126,196,.35);border-radius:6px;padding:.6rem .75rem;display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .2s;background:rgba(79,126,196,.03)}
+.puzzle-zone.has-tile{border-color:var(--accent2)}
+.puzzle-zone.correct{border-color:var(--green);background:rgba(110,201,138,.05)}
+.puzzle-zone.wrong{border-color:var(--red);background:rgba(201,110,110,.05)}
+.puzzle-zone.skipped{border-color:var(--muted)}
+.puzzle-bank{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;min-height:40px}
+.tile{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);font-family:var(--en);font-size:.88rem;padding:.38rem .75rem;border-radius:4px;cursor:pointer;transition:all .15s;user-select:none;line-height:1.4}
+.tile:hover{background:rgba(79,126,196,.2);border-color:var(--accent2)}
+.tile.used{opacity:0;pointer-events:none}
+.tile.in-answer{background:rgba(79,126,196,.18);border-color:var(--accent2)}
+.tile.correct{background:rgba(110,201,138,.18);border-color:var(--green);color:var(--green)}
+.tile.wrong{background:rgba(201,110,110,.18);border-color:var(--red);color:var(--red)}
+.tile.skipped{background:rgba(90,106,130,.12);border-color:var(--muted);color:var(--muted)}
+.zone-hint{color:var(--muted);font-size:.75rem;font-style:italic;pointer-events:none;align-self:center}
+
+.q-input-wrap{display:none}left:50%;transform:translateX(-50%) translateY(1rem);background:rgba(30,40,60,.95);border:1px solid var(--border);color:var(--text);font-size:.8rem;padding:.6rem 1.2rem;border-radius:4px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── Modal nama ── */
@@ -478,6 +494,20 @@ function beginLatihan() {
   renderQuestion();
 }
 
+function makeTiles(answer) {
+  // pecah per kata, shuffle
+  const words = answer.trim().split(/\s+/).filter(Boolean);
+  // tambahin beberapa distraktor acak dari baris lain
+  const otherWords = currentLines
+    .filter((_, i) => i !== currentIdx)
+    .flatMap(l => (l._ans||'').split(/\s+/))
+    .filter(w => w && !words.includes(w));
+  shuffle(otherWords);
+  const distractors = otherWords.slice(0, Math.min(3, words.length));
+  const allTiles = shuffle([...words, ...distractors]);
+  return { words, allTiles };
+}
+
 function renderQuestion() {
   const total = currentLines.length;
   const pct = (currentIdx / total) * 100;
@@ -487,12 +517,19 @@ function renderQuestion() {
   const line = currentLines[currentIdx];
   answered = false;
 
+  const { words, allTiles } = makeTiles(line._ans);
+  // state puzzle
+  window._puzzleState = { answer: words, selected: [], allTiles };
+
   document.getElementById('qCard').innerHTML = `
     <div class="q-card" id="qCardInner">
       ${line.ro ? `<div class="q-romaji">${esc(line.ro)}</div>` : ''}
       <div class="q-jp">${esc(line.jp)}</div>
-      <div class="q-input-wrap">
-        <textarea class="q-input" id="qInput" placeholder="Tulis terjemahan kamu..." rows="2" oninput="autoResize(this)"></textarea>
+      <div class="puzzle-zone" id="puzzleZone">
+        <span class="zone-hint" id="zoneHint">Klik kata di bawah untuk menyusun terjemahan...</span>
+      </div>
+      <div class="puzzle-bank" id="puzzleBank">
+        ${allTiles.map((w,i) => `<div class="tile" id="tile-${i}" onclick="tileClick(${i})">${esc(w)}</div>`).join('')}
       </div>
       <div class="feedback" id="feedback"></div>
       <div class="q-actions">
@@ -502,17 +539,46 @@ function renderQuestion() {
       </div>
     </div>
   `;
-
-  const inp = document.getElementById('qInput');
-  inp.focus();
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (!answered) checkAnswer();
-      else nextQuestion();
-    }
-  });
 }
+
+window.tileClick = (idx) => {
+  if (answered) return;
+  const state = window._puzzleState;
+  const tile = document.getElementById(`tile-${idx}`);
+  const word = state.allTiles[idx];
+
+  if (state.selected.includes(idx)) {
+    // hapus dari jawaban
+    state.selected = state.selected.filter(i => i !== idx);
+    tile.classList.remove('in-answer', 'used');
+  } else {
+    // tambah ke jawaban
+    state.selected.push(idx);
+    tile.classList.add('in-answer');
+  }
+
+  // update zone
+  const zone = document.getElementById('puzzleZone');
+  const hint = document.getElementById('zoneHint');
+  if (state.selected.length === 0) {
+    zone.classList.remove('has-tile');
+    if (hint) hint.style.display = '';
+    // hapus tile di zone
+    zone.querySelectorAll('.tile').forEach(t => t.remove());
+  } else {
+    zone.classList.add('has-tile');
+    if (hint) hint.style.display = 'none';
+    // render ulang tile di zone
+    zone.querySelectorAll('.tile').forEach(t => t.remove());
+    state.selected.forEach(i => {
+      const t = document.createElement('div');
+      t.className = 'tile in-answer';
+      t.textContent = state.allTiles[i];
+      t.onclick = () => tileClick(i);
+      zone.appendChild(t);
+    });
+  }
+};
 
 window.autoResize = el => {
   el.style.height = 'auto';
@@ -521,25 +587,35 @@ window.autoResize = el => {
 
 window.checkAnswer = () => {
   if (answered) return;
-  const inp = document.getElementById('qInput');
-  const userAns = inp.value.trim();
-  if (!userAns) { toast('Tulis dulu jawabannya 😐'); return; }
+  const state = window._puzzleState;
+  if (!state.selected.length) { toast('Susun dulu jawabannya 😐'); return; }
 
-  const line = currentLines[currentIdx];
-  const correct = line._ans;
+  const userWords = state.selected.map(i => state.allTiles[i]);
+  const userAns = userWords.join(' ');
+  const correct = state.answer.join(' ');
   const result = fuzzyMatch(userAns, correct);
 
-  inp.disabled = true;
-  inp.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'partial' : 'wrong');
+  // lock tiles di zone
+  const zone = document.getElementById('puzzleZone');
+  zone.querySelectorAll('.tile').forEach(t => {
+    t.onclick = null;
+    t.classList.remove('in-answer');
+    t.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'correct' : 'wrong');
+  });
+  zone.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'correct' : 'wrong');
+
+  // lock bank tiles
+  document.getElementById('puzzleBank').querySelectorAll('.tile').forEach(t => {
+    t.onclick = null;
+    t.style.opacity = '.25';
+    t.style.pointerEvents = 'none';
+  });
 
   const fb = document.getElementById('feedback');
   fb.classList.add('show');
-  if (result === 'correct') {
+  if (result === 'correct' || result === 'partial') {
     fb.innerHTML = `<div class="fb-correct">✓ Bener!</div>`;
     stats.benar++;
-  } else if (result === 'partial') {
-    fb.innerHTML = `<div class="fb-partial">○ Hampir! Tapi kurang lengkap.</div><div class="fb-answer">Jawaban lengkap: <span>${esc(correct)}</span></div>`;
-    stats.salah++;
   } else {
     fb.innerHTML = `<div class="fb-wrong">✗ Kurang tepat.</div><div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
     stats.salah++;
@@ -553,14 +629,19 @@ window.checkAnswer = () => {
 
 window.skipQuestion = () => {
   if (answered) return;
-  const inp = document.getElementById('qInput');
-  const line = currentLines[currentIdx];
-  inp.disabled = true;
-  inp.classList.add('skipped');
+  const state = window._puzzleState;
+  const correct = state.answer.join(' ');
+
+  const zone = document.getElementById('puzzleZone');
+  zone.classList.add('skipped');
+  zone.querySelectorAll('.tile').forEach(t => { t.onclick = null; t.classList.add('skipped'); });
+  document.getElementById('puzzleBank').querySelectorAll('.tile').forEach(t => {
+    t.onclick = null; t.style.opacity = '.2'; t.style.pointerEvents = 'none';
+  });
 
   const fb = document.getElementById('feedback');
   fb.classList.add('show');
-  fb.innerHTML = `<div class="fb-answer">Jawaban: <span>${esc(line._ans)}</span></div>`;
+  fb.innerHTML = `<div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
 
   stats.skip++;
   answered = true;
