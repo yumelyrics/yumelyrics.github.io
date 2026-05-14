@@ -595,12 +595,16 @@ window.checkAnswer = () => {
   const correct = state.answer.join(' ');
   const result = fuzzyMatch(userAns, correct);
 
-  // lock tiles di zone
+  // warnai tiap tile per posisi (hijau = posisi bener, merah = posisi salah)
+  const tileResults = getTileResults(userWords, state.answer);
+
   const zone = document.getElementById('puzzleZone');
-  zone.querySelectorAll('.tile').forEach(t => {
+  const zoneTiles = zone.querySelectorAll('.tile');
+  zoneTiles.forEach((t, idx) => {
     t.onclick = null;
     t.classList.remove('in-answer');
-    t.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'correct' : 'wrong');
+    const tileColor = tileResults[idx] === 'correct' ? 'correct' : 'wrong';
+    t.classList.add(tileColor);
   });
   zone.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'correct' : 'wrong');
 
@@ -705,37 +709,49 @@ window.backToPilih = () => {
   renderLB();
 };
 
-// ── Fuzzy match ──
+// ── Fuzzy match (order-sensitive) ──
 // return: 'correct' | 'partial' | 'wrong'
 function fuzzyMatch(a, b) {
   a = normalize(a);
   b = normalize(b);
   if (a === b) return 'correct';
 
-  // substring coverage full
-  if (b.includes(a) && a.length >= b.length * 0.6) return 'correct';
-  if (a.includes(b) && b.length >= a.length * 0.6) return 'correct';
+  // full string similarity (order-aware via edit distance)
+  if (similarity(a, b) >= 0.75) return 'correct';
 
-  // full string similarity
-  if (similarity(a, b) >= 0.65) return 'correct';
-
-  // word-level
+  // word-level ORDER-SENSITIVE: compare kata per posisi
   const wordsA = a.split(' ').filter(Boolean);
   const wordsB = b.split(' ').filter(Boolean);
   if (!wordsA.length || !wordsB.length) return 'wrong';
 
-  let matched = 0;
-  for (const wa of wordsA) {
-    const hit = wordsB.some(wb => wa === wb || similarity(wa, wb) >= 0.7);
-    if (hit) matched++;
+  // hitung berapa kata yang cocok di posisi yang sama
+  const minLen = Math.min(wordsA.length, wordsB.length);
+  let orderedMatch = 0;
+  for (let i = 0; i < minLen; i++) {
+    if (wordsA[i] === wordsB[i] || similarity(wordsA[i], wordsB[i]) >= 0.8) {
+      orderedMatch++;
+    }
   }
-  const ratio = matched / Math.max(wordsA.length, wordsB.length);
-  if (ratio >= 0.6) return 'correct';
+  const orderRatio = orderedMatch / Math.max(wordsA.length, wordsB.length);
 
-  // partial: user jawab sebagian — minimal 1 kata cocok dan coveragenya 20-59%
-  if (matched >= 1 && ratio >= 0.2) return 'partial';
+  // cek juga apakah panjangnya sama (kalau beda jauh, kemungkinan salah urutan)
+  const lenRatio = minLen / Math.max(wordsA.length, wordsB.length);
+
+  if (orderRatio >= 0.6 && lenRatio >= 0.7) return 'correct';
+  if (orderRatio >= 0.3 || (orderedMatch >= 1 && lenRatio >= 0.5)) return 'partial';
 
   return 'wrong';
+}
+
+// ── Per-tile color check: bandingkan tiap kata user vs jawaban per posisi ──
+// return array of 'correct' | 'wrong' per kata user
+function getTileResults(userWords, answerWords) {
+  return userWords.map((w, i) => {
+    const expected = answerWords[i];
+    if (!expected) return 'wrong';
+    if (w === expected || similarity(normalize(w), normalize(expected)) >= 0.8) return 'correct';
+    return 'wrong';
+  });
 }
 
 function normalize(s) {
