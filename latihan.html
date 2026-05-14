@@ -274,7 +274,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, orderBy, limit }
+import { getFirestore, collection, getDocs, addDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const db = getFirestore(initializeApp({
@@ -326,10 +326,10 @@ async function renderLB() {
   const wrap = document.getElementById('leaderboardWrap');
   wrap.innerHTML = '<div class="lb-empty">Memuat leaderboard...</div>';
   try {
-    // Ambil 100 skor tertinggi berdasarkan compositeScore
-    const q = query(collection(db, 'leaderboard'), orderBy('compositeScore', 'desc'), limit(100));
-    const snap = await getDocs(q);
-    const lb = snap.docs.map(d => d.data());
+    const snap = await getDocs(collection(db, 'leaderboard'));
+    const lb = snap.docs.map(d => d.data())
+      .sort((a,b) => (b.compositeScore??0) - (a.compositeScore??0))
+      .slice(0, 100);
 
     if (!lb.length) {
       wrap.innerHTML = '<div class="lb-empty">Belum ada skor. Jadilah yang pertama! 🎌</div>';
