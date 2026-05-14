@@ -503,16 +503,8 @@ function beginLatihan() {
 }
 
 function makeTiles(answer) {
-  // pecah per kata, shuffle
   const words = answer.trim().split(/\s+/).filter(Boolean);
-  // tambahin beberapa distraktor acak dari baris lain
-  const otherWords = currentLines
-    .filter((_, i) => i !== currentIdx)
-    .flatMap(l => (l._ans||'').split(/\s+/))
-    .filter(w => w && !words.includes(w));
-  shuffle(otherWords);
-  const distractors = otherWords.slice(0, Math.min(3, words.length));
-  const allTiles = shuffle([...words, ...distractors]);
+  const allTiles = shuffle([...words]);
   return { words, allTiles };
 }
 
