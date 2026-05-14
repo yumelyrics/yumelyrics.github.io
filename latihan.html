@@ -162,10 +162,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .lb-clear{background:none;border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:.3rem .6rem;border-radius:2px;transition:all .2s}
 .lb-clear:hover{color:var(--red)}
 .lb-empty{color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem 0}
-.lb-table{width:100%;border-collapse:collapse}
-.lb-table th{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.5rem .75rem;text-align:left;border-bottom:1px solid var(--border)}
-.lb-table th:last-child,.lb-table td:last-child{text-align:right}
-.lb-table td{padding:.65rem .75rem;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text);vertical-align:middle}
+.lb-list{display:flex;flex-direction:column;gap:.5rem}
+.lb-row{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:4px}
+.lb-rank-col{flex-shrink:0;width:2rem;text-align:center}
+.lb-info{flex:1;min-width:0}
+.lb-right{flex-shrink:0;text-align:right}
+.lb-meta{font-size:.65rem;color:var(--muted);margin-top:.15rem}
 .lb-rank{font-family:var(--jp);font-weight:600;color:var(--muted);font-size:.9rem;width:2rem}
 .lb-rank.gold{color:#f0c040}
 .lb-rank.silver{color:#a0b4c8}
@@ -364,22 +366,21 @@ async function renderLB() {
       if (i===2) return '<span class="lb-rank bronze">③</span>';
       return `<span class="lb-rank">${i+1}</span>`;
     };
-    wrap.innerHTML = `<table class="lb-table">
-      <thead><tr>
-        <th>#</th><th>Nama</th><th>Lagu</th><th>Tanggal</th><th>Baris</th><th>Akurasi</th><th>Skor</th>
-      </tr></thead>
-      <tbody>
-      ${lb.map((e,i)=>`<tr>
-        <td>${rankIcon(i)}</td>
-        <td><div class="lb-name">${esc(e.name)}</div></td>
-        <td><div class="lb-song">${esc(e.song)}</div></td>
-        <td class="lb-date">${esc(e.date)}</td>
-        <td style="color:var(--muted);font-size:.82rem;text-align:center">${e.rows||'—'}</td>
-        <td style="color:var(--muted);font-size:.82rem;text-align:right">${e.score}%</td>
-        <td class="lb-score">${e.compositeScore ?? Math.round(e.score * (e.rows||1))}</td>
-      </tr>`).join('')}
-      </tbody>
-    </table>`;
+    wrap.innerHTML = `
+      <div class="lb-list">
+      ${lb.map((e,i)=>`
+        <div class="lb-row">
+          <div class="lb-rank-col">${rankIcon(i)}</div>
+          <div class="lb-info">
+            <div class="lb-name">${esc(e.name)}</div>
+            <div class="lb-song">${esc(e.song)} · ${esc(e.date)}</div>
+          </div>
+          <div class="lb-right">
+            <div class="lb-score">${e.compositeScore ?? Math.round(e.score * (e.rows||1))}</div>
+            <div class="lb-meta">${e.score}% · ${e.rows||'—'} baris</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
   } catch(e) {
     wrap.innerHTML = '<div class="lb-empty">Gagal memuat leaderboard.</div>';
   }
@@ -748,30 +749,24 @@ function fuzzyMatch(a, b) {
   b = normalize(b);
   if (a === b) return 'correct';
 
-  // full string similarity (order-aware via edit distance)
-  if (similarity(a, b) >= 0.75) return 'correct';
-
-  // word-level ORDER-SENSITIVE: compare kata per posisi
   const wordsA = a.split(' ').filter(Boolean);
   const wordsB = b.split(' ').filter(Boolean);
   if (!wordsA.length || !wordsB.length) return 'wrong';
 
-  // hitung berapa kata yang cocok di posisi yang sama
+  // panjang beda jauh = salah
+  const lenRatio = Math.min(wordsA.length, wordsB.length) / Math.max(wordsA.length, wordsB.length);
+  if (lenRatio < 0.6) return 'wrong';
+
+  // cek urutan kata per posisi (ORDER SENSITIVE)
   const minLen = Math.min(wordsA.length, wordsB.length);
-  let orderedMatch = 0;
+  let matched = 0;
   for (let i = 0; i < minLen; i++) {
-    if (wordsA[i] === wordsB[i] || similarity(wordsA[i], wordsB[i]) >= 0.8) {
-      orderedMatch++;
-    }
+    if (wordsA[i] === wordsB[i] || similarity(wordsA[i], wordsB[i]) >= 0.85) matched++;
   }
-  const orderRatio = orderedMatch / Math.max(wordsA.length, wordsB.length);
+  const ratio = matched / Math.max(wordsA.length, wordsB.length);
 
-  // cek juga apakah panjangnya sama (kalau beda jauh, kemungkinan salah urutan)
-  const lenRatio = minLen / Math.max(wordsA.length, wordsB.length);
-
-  if (orderRatio >= 0.6 && lenRatio >= 0.7) return 'correct';
-  if (orderRatio >= 0.3 || (orderedMatch >= 1 && lenRatio >= 0.5)) return 'partial';
-
+  if (ratio >= 0.75) return 'correct';
+  if (ratio >= 0.4) return 'partial';
   return 'wrong';
 }
 
