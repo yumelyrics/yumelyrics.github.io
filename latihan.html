@@ -133,6 +133,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .tile.wrong{background:rgba(201,110,110,.18);border-color:var(--red);color:var(--red)}
 .tile.skipped{background:rgba(90,106,130,.12);border-color:var(--muted);color:var(--muted)}
 .zone-hint{color:var(--muted);font-size:.75rem;font-style:italic;pointer-events:none;align-self:center}
+.tile-wrap{display:inline-flex;flex-direction:column;align-items:center;gap:.2rem}
+.tile-correct-hint{font-size:.65rem;color:var(--green);letter-spacing:.03em;white-space:nowrap}
+.tile-wrong-hint{font-size:.65rem;color:var(--muted);letter-spacing:.03em;white-space:nowrap}
+.tile-wrong-hint span{color:var(--accent);font-weight:500}
+.fb-poin{display:inline-block;font-size:.95rem;font-weight:700;color:var(--green);margin-left:.5rem;animation:popIn .3s ease}
+.fb-poin.zero{color:var(--red)}
+@keyframes popIn{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 
 .q-input-wrap{display:none}left:50%;transform:translateX(-50%) translateY(1rem);background:rgba(30,40,60,.95);border:1px solid var(--border);color:var(--text);font-size:.8rem;padding:.6rem 1.2rem;border-radius:4px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -265,7 +272,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="hasil-wrap">
       <div class="hasil-player" id="hasilPlayer"></div>
       <div class="hasil-score" id="hasilScore">0</div>
-      <div class="hasil-label">Skor (Akurasi × Baris)</div>
+      <div class="hasil-label">Total Poin (5 poin / kata benar)</div>
       <div class="hasil-stats">
         <div class="hs-item">
           <div class="hs-num green" id="hsBenar">0</div>
@@ -305,7 +312,7 @@ const db = getFirestore(initializeApp({
 let allSongs = [];
 let currentLines = [];
 let currentIdx = 0;
-let stats = { benar: 0, salah: 0, skip: 0 };
+let stats = { benar: 0, salah: 0, skip: 0, poin: 0 };
 let currentSong = null;
 let answered = false;
 let playerName = '';
@@ -484,7 +491,7 @@ function beginLatihan() {
   currentLines = lines.slice(0, selectedRows);
 
   currentIdx = 0;
-  stats = { benar: 0, salah: 0, skip: 0 };
+  stats = { benar: 0, salah: 0, skip: 0, poin: 0 };
   answered = false;
 
   document.getElementById('lhTitle').textContent = currentSong.title || currentSong.titleJp || '';
@@ -599,12 +606,32 @@ window.checkAnswer = () => {
   const tileResults = getTileResults(userWords, state.answer);
 
   const zone = document.getElementById('puzzleZone');
-  const zoneTiles = zone.querySelectorAll('.tile');
-  zoneTiles.forEach((t, idx) => {
-    t.onclick = null;
-    t.classList.remove('in-answer');
-    const tileColor = tileResults[idx] === 'correct' ? 'correct' : 'wrong';
-    t.classList.add(tileColor);
+  // rebuild zone dengan wrapper + hint per tile
+  zone.querySelectorAll('.tile, .tile-wrap').forEach(t => t.remove());
+  userWords.forEach((word, idx) => {
+    const isCorrect = tileResults[idx] === 'correct';
+    const expected = state.answer[idx];
+    const wrap = document.createElement('div');
+    wrap.className = 'tile-wrap';
+
+    const t = document.createElement('div');
+    t.className = 'tile ' + (isCorrect ? 'correct' : 'wrong');
+    t.textContent = word;
+    wrap.appendChild(t);
+
+    if (!isCorrect && expected) {
+      const hint = document.createElement('div');
+      hint.className = 'tile-wrong-hint';
+      hint.innerHTML = '\u2192 <span>' + esc(expected) + '</span>';
+      wrap.appendChild(hint);
+    } else if (isCorrect) {
+      const hint = document.createElement('div');
+      hint.className = 'tile-correct-hint';
+      hint.textContent = '\u2713';
+      wrap.appendChild(hint);
+    }
+
+    zone.appendChild(wrap);
   });
   zone.classList.add(result === 'correct' ? 'correct' : result === 'partial' ? 'correct' : 'wrong');
 
@@ -615,13 +642,18 @@ window.checkAnswer = () => {
     t.style.pointerEvents = 'none';
   });
 
+  const correctCount = tileResults.filter(r => r === 'correct').length;
+  const poinDapat = correctCount * 5;
+  stats.poin += poinDapat;
+
   const fb = document.getElementById('feedback');
   fb.classList.add('show');
   if (result === 'correct' || result === 'partial') {
-    fb.innerHTML = `<div class="fb-correct">✓ Bener!</div>`;
+    fb.innerHTML = `<div class="fb-correct">✓ Bener! <span class="fb-poin">+${poinDapat} poin</span></div>`;
     stats.benar++;
   } else {
-    fb.innerHTML = `<div class="fb-wrong">✗ Kurang tepat.</div><div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
+    const poinTxt = poinDapat > 0 ? `<span class="fb-poin">+${poinDapat} poin</span>` : `<span class="fb-poin zero">+0 poin</span>`;
+    fb.innerHTML = `<div class="fb-wrong">✗ Kurang tepat. ${poinTxt}</div><div class="fb-answer">Jawaban: <span>${esc(correct)}</span></div>`;
     stats.salah++;
   }
 
@@ -666,7 +698,7 @@ window.nextQuestion = () => {
 function showHasil() {
   const total = currentLines.length;
   const pct = Math.round((stats.benar / total) * 100);
-  const compositeScore = Math.round(pct * total);
+  const compositeScore = stats.poin;
 
   document.getElementById('hasilScore').textContent = compositeScore;
   document.getElementById('hsBenar').textContent = stats.benar;
