@@ -221,9 +221,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .spbtn:hover{opacity:.85}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
 .rec-tag{display:inline-block;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);background:rgba(255,110,180,.1);border:1px solid rgba(255,110,180,.3);padding:.1rem .45rem;margin-bottom:.4rem;font-family:var(--en);border-radius:2rem}
-.fbtn{background:none;border:1px solid rgba(255,255,255,.08);font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.4rem .9rem;cursor:pointer;transition:all .2s;white-space:nowrap;border-radius:2rem}
+.fbtn{background:none;border:1px solid rgba(255,255,255,.08);font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.4rem .9rem;cursor:pointer;transition:all .25s;white-space:nowrap;border-radius:2rem;position:relative;overflow:hidden}
 .fbtn:hover{border-color:rgba(255,110,180,.4);color:var(--accent)}
 .fbtn.on{border-color:rgba(255,110,180,.5);color:var(--accent);background:rgba(255,110,180,.08);box-shadow:0 0 12px rgba(255,110,180,.1)}
+.fbtn-ripple{position:absolute;border-radius:50%;background:rgba(255,110,180,.35);transform:scale(0);animation:ripple .5s linear;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+@keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.sc.reorder-anim{animation:card-in .3s cubic-bezier(.25,.8,.25,1) both}
 </style>
 </head>
 <body>
@@ -280,8 +284,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <button class="search-clear" id="searchClear" onclick="clearSearch()">&#x2715;</button>
     </div>
     <div style="margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap">
-      <button class="fbtn" id="recBtn" onclick="toggleRec()">★ Rekomendasi</button>
-      <button class="fbtn" id="popBtn" onclick="togglePop()">🔥 Populer</button>
+      <button class="fbtn" id="recBtn" onclick="toggleRec(event)">★ Rekomendasi</button>
+      <button class="fbtn" id="popBtn" onclick="togglePop(event)">🔥 Populer</button>
     </div>
   </div>
   <div class="sec-hd">
@@ -415,7 +419,7 @@ function buildCard(s, i) {
   return div;
 }
 
-function rc(filter=''){
+function rc(filter='', animate=false){
   const q = filter.trim();
   let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
@@ -423,7 +427,7 @@ function rc(filter=''){
 
   const grid = document.getElementById('songGrid');
 
-  // Hapus loading-msg / elemen non-kartu sekali saja
+  // Hapus loading-msg sekali saja
   grid.querySelectorAll('.loading-msg, .no-result-inline').forEach(el => el.remove());
 
   const filteredIds = new Set(filtered.map(s=>s.id));
@@ -441,13 +445,15 @@ function rc(filter=''){
     }
   });
 
-  // Show/hide berdasarkan filter, update nomor urut
+  // Reorder DOM sesuai urutan filtered, lalu sembunyikan yang tidak lolos
   filtered.forEach((s, i) => {
     const el = existing.get(s.id);
     if (!el) return;
     el.style.display = '';
+    // Update nomor urut
     const numEl = el.querySelector('.scn');
     if (numEl) numEl.textContent = `0${i+1}`;
+    // Update / hapus views tag
     const scb = el.querySelector('.scb');
     let viewsTag = el.querySelector('.views-tag');
     if (popOnly && (s.views||0) > 0) {
@@ -461,44 +467,67 @@ function rc(filter=''){
     } else if (viewsTag) {
       viewsTag.remove();
     }
+    // Pindahkan ke posisi yang benar di DOM
+    grid.appendChild(el);
+    // Animasi saat reorder
+    if (animate) {
+      el.classList.remove('reorder-anim');
+      void el.offsetWidth; // force reflow
+      el.style.animationDelay = `${i * 0.03}s`;
+      el.classList.add('reorder-anim');
+    }
   });
 
-  // Sembunyikan kartu yang tidak lolos filter
+  // Sembunyikan yang tidak lolos filter
   existing.forEach((el, id) => {
-    el.style.display = filteredIds.has(id) ? '' : 'none';
+    if (!filteredIds.has(id)) el.style.display = 'none';
   });
 
   document.getElementById('noResult').style.display =
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
   const countEl = document.getElementById('songCount');
   if(countEl){
-    if(q || recOnly || popOnly){
-      countEl.textContent = filtered.length + ' / ' + songs.length + ' lagu';
-    } else {
-      countEl.textContent = songs.length + ' lagu';
-    }
+    countEl.textContent = (q || recOnly || popOnly)
+      ? filtered.length + ' / ' + songs.length + ' lagu'
+      : songs.length + ' lagu';
   }
   initLazy();
 }
 
-window.toggleRec = () => {
+function addRipple(btn, e) {
+  const r = document.createElement('span');
+  r.className = 'fbtn-ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+window.toggleRec = (e) => {
   recOnly = !recOnly;
   if(recOnly) popOnly = false;
-  document.getElementById('recBtn').classList.toggle('on', recOnly);
-  document.getElementById('popBtn').classList.remove('on');
-  document.getElementById('recBtn').textContent = recOnly ? '★ Semua Lagu' : '★ Rekomendasi';
-  document.getElementById('popBtn').textContent = '🔥 Populer';
-  rc(document.getElementById('searchInp').value);
+  const recBtn = document.getElementById('recBtn');
+  const popBtn = document.getElementById('popBtn');
+  addRipple(recBtn, e);
+  recBtn.classList.toggle('on', recOnly);
+  popBtn.classList.remove('on');
+  recBtn.textContent = recOnly ? '★ Semua Lagu' : '★ Rekomendasi';
+  popBtn.textContent = '🔥 Populer';
+  rc(document.getElementById('searchInp').value, true);
 };
 
-window.togglePop = () => {
+window.togglePop = (e) => {
   popOnly = !popOnly;
   if(popOnly) recOnly = false;
-  document.getElementById('popBtn').classList.toggle('on', popOnly);
-  document.getElementById('recBtn').classList.remove('on');
-  document.getElementById('popBtn').textContent = popOnly ? '🔥 Semua Lagu' : '🔥 Populer';
-  document.getElementById('recBtn').textContent = '★ Rekomendasi';
-  rc(document.getElementById('searchInp').value);
+  const popBtn = document.getElementById('popBtn');
+  const recBtn = document.getElementById('recBtn');
+  addRipple(popBtn, e);
+  popBtn.classList.toggle('on', popOnly);
+  recBtn.classList.remove('on');
+  popBtn.textContent = popOnly ? '🔥 Semua Lagu' : '🔥 Populer';
+  recBtn.textContent = '★ Rekomendasi';
+  rc(document.getElementById('searchInp').value, true);
 };
 
 // ── Lazy load images ──
