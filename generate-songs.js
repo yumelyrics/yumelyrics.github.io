@@ -41,11 +41,14 @@ function obfuscateLine(str) {
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   return indices.map(origIdx => {
+    const ch = chars[origIdx];
+    const isSpace = ch === ' ';
     const noiseCount = Math.floor(Math.random() * 2) + 1;
-    const noiseSpans = Array.from({length: noiseCount}, () =>
+    const noiseSpans = isSpace ? '' : Array.from({length: noiseCount}, () =>
       '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>'
     ).join('');
-    return '<span data-c="' + origIdx + '">' + escHtml(chars[origIdx]) + '</span>' + noiseSpans;
+    const spaceAttr = isSpace ? ' data-sp="1"' : '';
+    return '<span data-c="' + origIdx + '"' + spaceAttr + '>' + (isSpace ? ' ' : escHtml(ch)) + '</span>' + noiseSpans;
   }).join('');
 }
 
@@ -457,6 +460,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .lid{font-size:.88rem;color:var(--accent);font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
 /* Obfuscated line containers - karakter tampil urut via CSS order di flex container */
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
+[data-obf="1"] span[data-c]{white-space:pre}
 .lro.h,.lid.h{opacity:0;max-height:0}
 .lsep{height:1px;background:linear-gradient(90deg,rgba(255,110,180,.2),transparent);opacity:.6;margin:.5rem 0}
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
