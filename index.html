@@ -124,8 +124,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.05) 0%,transparent 50%,rgba(0,229,255,.03) 100%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1}
 .sc:hover{border-color:rgba(255,110,180,.45);box-shadow:0 8px 32px rgba(255,110,180,.15),0 0 0 1px rgba(255,110,180,.1),inset 0 0 20px rgba(255,110,180,.03)}
 .sc:hover::before{opacity:1}
-.sc-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;flex-shrink:0}
-.sc-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75) hue-rotate(10deg);transition:filter .4s,transform .4s;transform:scale(1);will-change:transform}
+.sc-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;flex-shrink:0;position:relative;background:#0d0c1a}
+.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75) hue-rotate(10deg);transition:filter .4s,transform .4s;transform:scale(1);transform-origin:center;will-change:transform}
 .sc:hover .sc-img-wrap img{filter:saturate(.9) brightness(.9) hue-rotate(0deg);transform:scale(1.05)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:rgba(255,110,180,.5)}
@@ -422,6 +422,10 @@ function rc(filter=''){
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
 
   const grid = document.getElementById('songGrid');
+
+  // Hapus loading-msg / elemen non-kartu sekali saja
+  grid.querySelectorAll('.loading-msg, .no-result-inline').forEach(el => el.remove());
+
   const filteredIds = new Set(filtered.map(s=>s.id));
 
   // Kartu yang sudah ada di DOM
@@ -437,15 +441,13 @@ function rc(filter=''){
     }
   });
 
-  // Show/hide berdasarkan filter, urutkan sesuai filtered
+  // Show/hide berdasarkan filter, update nomor urut
   filtered.forEach((s, i) => {
     const el = existing.get(s.id);
     if (!el) return;
     el.style.display = '';
-    // Update nomor urut
     const numEl = el.querySelector('.scn');
     if (numEl) numEl.textContent = `0${i+1}`;
-    // Update views tag kalau popOnly
     const scb = el.querySelector('.scb');
     let viewsTag = el.querySelector('.views-tag');
     if (popOnly && (s.views||0) > 0) {
