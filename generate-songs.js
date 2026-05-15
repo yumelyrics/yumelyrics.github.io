@@ -137,7 +137,7 @@ function generateHTML(song, slug) {
 <meta name="accessibility" content="false">
 <meta name="application-name" content="YumeSubs">
 <meta http-equiv="Pragma" content="no-cache">
-<style>/* reader-mode-poison */</style>
+<style>/* reader-mode-poison */article.rm-poison p{font-size:1rem;line-height:1.6}</style>
 <meta name="language" content="Indonesian">
 <meta name="revisit-after" content="7 days">
 <meta name="rating" content="general">
@@ -413,10 +413,11 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <style>
 :root{--bg:#06030f;--border:rgba(255,255,255,0.08);--accent:#ff6eb4;--accent2:#00e5ff;--accent3:#bf5fff;--text:#f0eaff;--muted:#7a6a9a;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#ff4d6d;--glow-pink:rgba(255,110,180,.18);--glow-cyan:rgba(0,229,255,.15)}
 /* ── Anti Reader Mode ── */
-/* Inject noise paragraphs visible only in reader mode (display:none in normal view) */
-.rm-poison{display:none!important;visibility:hidden!important;position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}
+/* rm-poison: JANGAN display:none — biarkan Readability.js menemukannya.
+   Sembunyikan dari view normal via JS setelah load. */
+.rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 /* Fake article container to confuse reader mode parser */
-.rm-decoy{display:none!important}
+.rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#06030f}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
@@ -451,9 +452,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #lyrView{position:relative}
 #lyrView::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none}
 .ll-item{}
-.ljp{font-family:var(--jp);font-size:1.2rem;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:.25rem}
+.ljp{font-family:var(--jp);font-size:1.2rem;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:.25rem;overflow:hidden}
 .lro{font-size:.82rem;color:var(--muted);font-style:italic;font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
 .lid{font-size:.88rem;color:var(--accent);font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
+/* Obfuscated line containers - karakter tampil urut via CSS order di flex container */
+[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 .lro.h,.lid.h{opacity:0;max-height:0}
 .lsep{height:1px;background:linear-gradient(90deg,rgba(255,110,180,.2),transparent);opacity:.6;margin:.5rem 0}
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
@@ -560,7 +563,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
-      <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip:rect(0,0,0,0);white-space:nowrap">${lyrics.map(l=>[l.jp,l.ro,l.id].filter(Boolean).join(' ')).join(' ')}</div>
       <div class="cmsec" style="margin-bottom:2rem">
         <div class="cmtit" style="margin-bottom:.8rem">Tentang Lagu Ini</div>
         <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
@@ -602,14 +604,19 @@ const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let sro=true, str=true;
 
-/* ── Restore urutan karakter lirik (obfuscation fix) ── */
+/* ── Restore urutan karakter lirik via CSS order (obfuscation tetap aktif di DOM) ── */
 (()=>{
+  // Pakai CSS flexbox + order property agar karakter tampil urut di layar
+  // tapi di DOM tetap acak — reader mode parser baca DOM, bukan rendered order
   document.querySelectorAll('[data-obf="1"]').forEach(line => {
     const spans = Array.from(line.querySelectorAll('span[data-c]'));
     if (!spans.length) return;
-    spans.sort((a, b) => parseInt(a.dataset.c) - parseInt(b.dataset.c));
-    const text = spans.map(s => s.textContent).join('');
-    line.textContent = text; // ganti semua span + noise dengan teks bersih
+    // Set display flex pada container
+    line.style.cssText += ';display:inline-flex;flex-wrap:wrap;gap:0';
+    spans.forEach(s => {
+      s.style.order = s.dataset.c;
+      // Noise spans sudah absolute/hidden, tidak perlu diubah
+    });
   });
 })();
 
@@ -833,12 +840,19 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
 })();
 </script>
-<!-- rm-decoy: noise articles to lower Readability.js content score on real lyrics -->
-<div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">
-  <article class="rm-poison"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lihat lirik lengkap di yumelyrics.my.id</p><p>Reader Mode tidak didukung pada halaman ini karena konten lirik dilindungi hak cipta dan memerlukan render JavaScript penuh untuk ditampilkan dengan benar.</p><p>Silakan kunjungi yumelyrics.my.id secara langsung untuk pengalaman terbaik.</p></article>
-  <article class="rm-poison"><p>Konten pada halaman ini tidak kompatibel dengan Reader Mode. YumeSubs melindungi lirik terjemahan dengan enkripsi DOM dan rendering JavaScript.</p><p>Untuk melihat lirik anime bahasa Jepang beserta terjemahan Indonesia, matikan Reader Mode dan kunjungi halaman asli di browser Anda.</p></article>
-  <article class="rm-poison"><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi. Dilarang menyalin tanpa izin. Reader Mode tidak didukung pada situs ini.</p></article>
+<!-- rm-decoy: articles dengan skor konten tinggi agar Readability.js pilih ini, bukan lirik -->
+<div id="rm-decoy-wrap">
+  <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik yang kamu cari di halaman ini dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan secara penuh melalui browser tanpa Reader Mode aktif.</p><p>Reader Mode tidak didukung pada halaman ini karena konten lirik dilindungi hak cipta dan memerlukan render JavaScript penuh untuk ditampilkan dengan benar. Sistem pengacakan karakter yang kami gunakan membuat lirik hanya terbaca oleh engine render browser, bukan oleh parser teks seperti Reader Mode.</p><p>Silakan kunjungi yumelyrics.my.id secara langsung untuk pengalaman terbaik. Matikan Reader Mode di browser Anda dan muat ulang halaman untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>YumeSubs adalah situs lirik lagu Jepang dengan terjemahan Indonesia terlengkap. Semua lirik diterjemahkan secara manual oleh tim kami untuk memastikan akurasi dan kualitas terjemahan. Dengan mengunjungi halaman asli, Anda juga bisa menikmati fitur toggle romaji, terjemahan, dan komentar komunitas.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta. Dilarang menyalin, mendistribusikan, atau mempublikasikan ulang tanpa izin tertulis dari YumeSubs. Pelanggaran hak cipta dapat dikenai sanksi hukum sesuai ketentuan yang berlaku.</p></article>
+  <article class="rm-poison" id="rm-a2"><p>Konten pada halaman ini tidak kompatibel dengan Reader Mode. YumeSubs melindungi lirik terjemahan dengan enkripsi DOM dan rendering JavaScript. Teks yang tampil dalam Reader Mode bukan merupakan representasi akurat dari konten halaman ini.</p><p>Untuk melihat lirik anime bahasa Jepang beserta terjemahan Indonesia, matikan Reader Mode dan kunjungi halaman asli di browser Anda. Fitur Reader Mode pada browser seperti Firefox dan Safari menggunakan algoritma Readability.js yang tidak kompatibel dengan sistem proteksi konten yang kami gunakan.</p><p>YumeSubs menyediakan lirik lagu Jepang dari berbagai anime populer dengan terjemahan Indonesia yang akurat. Setiap lirik ditambahkan romaji untuk membantu pembaca yang ingin belajar bahasa Jepang. Kunjungi yumelyrics.my.id untuk katalog lengkap lagu-lagu anime.</p></article>
 </div>
+<script>
+// Sembunyikan rm-decoy dari user normal setelah JS load
+// Reader mode biasanya jalan sebelum/tanpa JS, jadi elemen ini tetap terlihat oleh parser
+(function(){
+  var w = document.getElementById('rm-decoy-wrap');
+  if(w){ w.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;pointer-events:none'; }
+})();
+</script>
 </body>
 </html>`;
 }
