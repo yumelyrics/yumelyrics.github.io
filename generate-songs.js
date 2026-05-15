@@ -518,6 +518,31 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem;letter-spacing:.08em}#lyrView{padding-left:1.2rem;padding-right:1.2rem}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nb{padding:.35rem .5rem;font-size:.58rem}}
+/* ── Login Gate ── */
+.lid{position:relative}
+.lid-blur{filter:blur(6px);pointer-events:none;user-select:none;-webkit-user-select:none}
+#login-gate{margin:1.5rem 0 2rem;padding:1.5rem;border:1px solid rgba(255,110,180,.2);border-radius:8px;background:rgba(255,110,180,.04);text-align:center;display:flex;flex-direction:column;align-items:center;gap:.9rem}
+#login-gate-title{font-size:.95rem;color:var(--text);font-weight:500;letter-spacing:.02em}
+#login-gate-sub{font-size:.75rem;color:var(--muted);line-height:1.6;max-width:320px}
+.google-btn{display:inline-flex;align-items:center;gap:.6rem;background:#fff;border:none;border-radius:4px;padding:.6rem 1.2rem;font-family:var(--en);font-size:.8rem;font-weight:500;color:#3c4043;cursor:pointer;letter-spacing:.02em;transition:box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.google-btn:hover{box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.google-btn svg{width:18px;height:18px;flex-shrink:0}
+/* ── Copy Lyric Gate ── */
+#copy-gate{margin:1.5rem 0 .5rem;padding:1.2rem 1.4rem;border:1px solid rgba(201,169,110,.2);border-radius:6px;background:rgba(201,169,110,.03);display:flex;flex-direction:column;align-items:flex-start;gap:.7rem}
+#copy-gate-title{font-size:.88rem;color:var(--text);font-weight:500}
+#copy-gate-sub{font-size:.72rem;color:var(--muted);line-height:1.65}
+#copy-lyric-btn{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.6rem 1.4rem;cursor:pointer;font-weight:600;transition:opacity .2s;border-radius:4px;margin-top:.2rem}
+#copy-lyric-btn:hover{opacity:.85}
+#copy-lyric-btn:disabled{opacity:.4;cursor:not-allowed}
+.copy-done-badge{display:none;align-items:center;gap:.4rem;font-size:.7rem;color:#34d399;letter-spacing:.1em;text-transform:uppercase}
+.copy-done-badge.show{display:flex}
+/* User badge di nav */
+.nav-user{display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-left:.25rem}
+.nav-avatar{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,110,180,.3);object-fit:cover}
+.nav-avatar-placeholder{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,110,180,.3);background:rgba(255,110,180,.15);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent)}
+.nav-user-name{font-size:.65rem;color:var(--muted);letter-spacing:.08em;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-logout{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);cursor:pointer;padding:.2rem .4rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s}
+.nav-logout:hover{color:var(--red)}
 </style>
 </head>
 <body>
@@ -538,6 +563,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="../index.html">Katalog</a>
     <a class="nb" href="../stories.html">Cerita</a>
     <a class="nb" href="../contact.html">Hubungi</a>
+    <div id="nav-user-slot" style="display:none" class="nav-user">
+      <div id="nav-avatar-wrap"></div>
+      <span id="nav-user-name" class="nav-user-name"></span>
+      <button class="nav-logout" onclick="doLogout()">Keluar</button>
+    </div>
   </div>
 </nav>
 
@@ -570,6 +600,25 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
+      <!-- Login Gate — ditampilkan jika belum login, disembunyikan JS setelah auth -->
+      <div id="login-gate">
+        <div id="login-gate-title">Login untuk melihat terjemahan & copy lirik</div>
+        <div id="login-gate-sub">Lirik Jepang & romaji bisa dilihat gratis.<br>Terjemahan bahasa Indonesia & akses copy lirik tersedia setelah login dengan Google — gratis, tanpa syarat.</div>
+        <button class="google-btn" onclick="doLogin()">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Masuk dengan Google
+        </button>
+      </div>
+      <!-- Copy Lyric Gate — muncul setelah login, tapi harus komentar dulu -->
+      <div id="copy-gate" style="display:none">
+        <div id="copy-gate-title">📋 Copy Lirik</div>
+        <div id="copy-gate-sub" id="copy-gate-sub">Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!</div>
+        <button id="copy-lyric-btn" onclick="doCopyLyric()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="copy-btn-label">Komentar dulu untuk copy lirik</span>
+        </button>
+        <div class="copy-done-badge" id="copy-done-badge">✓ Lirik berhasil di-copy!</div>
+      </div>
       <div class="cmsec" style="margin-bottom:2rem">
         <div class="cmtit" style="margin-bottom:.8rem">Tentang Lagu Ini</div>
         <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
@@ -579,12 +628,26 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       </div>
       <div class="cmsec">
         <div class="cmtit">Komentar</div>
-        <div class="cmform">
-          <div class="cmrow">
-            <input class="cmi" id="cm-n" placeholder="Nama lo (opsional)">
-            <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
+        <!-- Login-gated comment form -->
+        <div id="cm-login-gate" style="display:none;margin-bottom:1.2rem;padding:1rem 1.2rem;border:1px solid rgba(255,110,180,.2);border-radius:6px;background:rgba(255,110,180,.03);display:flex;flex-direction:column;align-items:flex-start;gap:.7rem">
+          <div style="font-size:.82rem;color:var(--text);font-weight:500">Login untuk berkomentar</div>
+          <div style="font-size:.72rem;color:var(--muted);line-height:1.6">Kamu perlu login dengan Google untuk menulis komentar. Gratis dan tanpa syarat.</div>
+          <button class="google-btn" onclick="doLogin()" style="font-size:.75rem;padding:.5rem 1rem">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Masuk dengan Google
+          </button>
+        </div>
+        <div id="cm-form-wrap" style="display:none" class="cmform">
+          <div id="cm-banned-notice" style="display:none;padding:.75rem 1rem;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);border-radius:4px;font-size:.78rem;color:var(--red);line-height:1.6;margin-bottom:.5rem">
+            🚫 Akunmu telah dibanned dari komentar oleh admin. Kamu tidak bisa mengirim komentar.
           </div>
-          <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentar tentang lagu ini..."></textarea>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;padding:.5rem .75rem;background:rgba(255,110,180,.04);border:1px solid rgba(255,110,180,.12);border-radius:4px">
+            <div id="cm-user-avatar-wrap"></div>
+            <span id="cm-user-display" style="font-size:.75rem;color:var(--accent);font-weight:500"></span>
+            <span style="font-size:.65rem;color:var(--muted);margin-left:auto">Berkomentar sebagai akun Google kamu</span>
+          </div>
+          <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentar tentang lagu ini... Jaga sopan santun ya!"></textarea>
+          <button class="sbtn" id="cm-btn" onclick="postCm()" style="padding:.6rem 1.4rem;align-self:flex-start">Kirim Komentar</button>
         </div>
         <div class="cmlist" id="cmlist"><div class="nocm">Memuat komentar...</div></div>
       </div>
@@ -595,20 +658,211 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <div class="toast" id="toast"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-const db = getFirestore(initializeApp({
+const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
   authDomain:"yumesubs7.firebaseapp.com",
   projectId:"yumesubs7",
   storageBucket:"yumesubs7.firebasestorage.app",
   messagingSenderId:"1076202015626",
   appId:"1:1076202015626:web:ce89fb668eb6b2bd021673"
-}));
+});
+const db   = getFirestore(_app);
+const auth = getAuth(_app);
+const provider = new GoogleAuthProvider();
 
 const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
+
+/* ── Auth: Google Login Gate ── */
+let _currentUser = null;
+let _isBanned = false;
+let _banReason = '';
+let _hasCommented = false; // apakah user sudah pernah komentar di lagu ini
+
+async function checkBanStatus(uid) {
+  try {
+    const banDoc = await getDoc(doc(db, 'banned_users', uid));
+    if (banDoc.exists()) {
+      _banReason = banDoc.data().reason || '';
+      return true;
+    }
+    _banReason = '';
+    return false;
+  } catch(e) { _banReason = ''; return false; }
+}
+
+async function checkHasCommented(uid) {
+  try {
+    const q = query(
+      collection(db, 'comments'),
+      where('songId','==', SONG_ID),
+      where('uid','==', uid),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    return !snap.empty;
+  } catch(e) { return false; }
+}
+
+function updateCopyGate() {
+  const gate = document.getElementById('copy-gate');
+  const btn  = document.getElementById('copy-lyric-btn');
+  const label= document.getElementById('copy-btn-label');
+  const sub  = document.getElementById('copy-gate-sub');
+  if (!gate) return;
+  if (!_currentUser) { gate.style.display = 'none'; return; }
+  gate.style.display = 'flex';
+  if (_isBanned) {
+    // Tampilkan pesan banned, sembunyikan tombol copy sama sekali
+    btn.style.display = 'none';
+    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''} Kamu tidak bisa meng-copy lirik.</span>\`;
+  } else if (_hasCommented) {
+    btn.style.display = 'inline-flex';
+    btn.disabled = false;
+    label.textContent = '📋 Copy Semua Lirik';
+    sub.textContent = 'Terima kasih sudah berkomentar! Kamu bisa meng-copy lirik ini.';
+  } else {
+    // Sembunyikan tombol, tampilkan pesan instruksi saja
+    btn.style.display = 'none';
+    sub.textContent = 'Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!';
+  }
+}
+
+async function applyAuthState(user) {
+  _currentUser = user;
+  const gate   = document.getElementById('login-gate');
+  const navSlot= document.getElementById('nav-user-slot');
+  const lidEls = document.querySelectorAll('.lid');
+  const cmLoginGate = document.getElementById('cm-login-gate');
+  const cmFormWrap  = document.getElementById('cm-form-wrap');
+
+  if (user) {
+    // Sembunyikan gate terjemahan, tampilkan terjemahan
+    gate.style.display = 'none';
+    lidEls.forEach(el => el.classList.remove('lid-blur'));
+
+    // Cek status ban & sudah komentar
+    [_isBanned, _hasCommented] = await Promise.all([
+      checkBanStatus(user.uid),
+      checkHasCommented(user.uid)
+    ]);
+
+    // Tampilkan form komentar (tapi notice banned jika kena ban)
+    cmLoginGate.style.display = 'none';
+    cmFormWrap.style.display  = 'flex';
+    const bannedNotice = document.getElementById('cm-banned-notice');
+    if (_isBanned) {
+      bannedNotice.style.display = 'block';
+      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''} Kamu tidak bisa mengirim komentar.\`;
+    } else {
+      bannedNotice.style.display = 'none';
+    }
+    const cmBtn = document.getElementById('cm-btn');
+    if (cmBtn) cmBtn.disabled = _isBanned;
+
+    // Update copy gate
+    updateCopyGate();
+
+    // Isi nama user di form komentar
+    const displayName = user.displayName || 'Anonim';
+    document.getElementById('cm-user-display').textContent = displayName;
+    const cmAvatarWrap = document.getElementById('cm-user-avatar-wrap');
+    if (user.photoURL) {
+      cmAvatarWrap.innerHTML = \`<img style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,110,180,.3)" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
+    } else {
+      cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">\${displayName[0].toUpperCase()}</div>\`;
+    }
+
+    // Tampilkan user di nav
+    navSlot.style.display = 'flex';
+    document.getElementById('nav-user-name').textContent = user.displayName ? user.displayName.split(' ')[0] : 'Kamu';
+    const avatarWrap = document.getElementById('nav-avatar-wrap');
+    if (user.photoURL) {
+      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
+    } else {
+      const initial = (user.displayName||'U')[0].toUpperCase();
+      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
+    }
+  } else {
+    // Tampilkan gate terjemahan, blur terjemahan
+    gate.style.display = 'flex';
+    lidEls.forEach(el => el.classList.add('lid-blur'));
+    navSlot.style.display = 'none';
+    _hasCommented = false;
+    _isBanned = false;
+    _banReason = '';
+    updateCopyGate();
+
+    // Tampilkan login gate komentar
+    cmLoginGate.style.display = 'flex';
+    cmFormWrap.style.display  = 'none';
+  }
+}
+
+onAuthStateChanged(auth, applyAuthState);
+
+window.doLogin = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') toast('Login gagal. Coba lagi.');
+  }
+};
+
+window.doLogout = async () => {
+  await signOut(auth);
+  toast('Berhasil keluar.');
+};
+
+/* ── Copy Lyric (harus sudah login + komentar) ── */
+window.doCopyLyric = async () => {
+  if (!_currentUser) { toast('Login dulu untuk copy lirik.'); return; }
+  // Re-check ban status secara realtime sebelum copy
+  const stillBanned = await checkBanStatus(_currentUser.uid);
+  if (stillBanned) {
+    _isBanned = true;
+    updateCopyGate();
+    toast('🚫 Akunmu dibanned, tidak bisa copy lirik.');
+    return;
+  }
+  if (!_hasCommented) { toast('Tinggalkan komentar dulu untuk membuka akses copy lirik!'); return; }
+
+  // Kumpulkan semua teks lirik dari DOM (urutan sudah benar via CSS order)
+  const lines = [];
+  document.querySelectorAll('.ll-item').forEach(item => {
+    const jp  = item.querySelector('.ljp');
+    const ro  = item.querySelector('.lro');
+    const lid = item.querySelector('.lid');
+    const jpText  = jp  ? Array.from(jp.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
+    const roText  = ro  ? Array.from(ro.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
+    const lidText = lid ? Array.from(lid.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
+    const parts = [jpText, roText, lidText].filter(Boolean);
+    if (parts.length) lines.push(parts.join('\\n'));
+  });
+
+  if (!lines.length) { toast('Tidak ada lirik untuk di-copy.'); return; }
+  const full = lines.join('\\n\\n') + '\\n\\n© YumeSubs — yumelyrics.my.id';
+
+  // Copy ke clipboard
+  navigator.clipboard.writeText(full).then(() => {
+    toast('✓ Lirik berhasil di-copy!');
+    const badge = document.getElementById('copy-done-badge');
+    if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 3000); }
+  }).catch(() => {
+    // Fallback untuk browser lama
+    const ta = document.createElement('textarea');
+    ta.value = full; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('✓ Lirik berhasil di-copy!');
+  });
+};
 let sro=true, str=true;
 
 /* ── Restore urutan karakter lirik via CSS order (obfuscation tetap aktif di DOM) ── */
@@ -687,9 +941,9 @@ function renderComment(id, c, replies){
     <div class="ctxt">\${esc(c.text)}</div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
-      <div class="reply-row"><input class="cmi" id="rn-\${id}" placeholder="Nama (opsional)"><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕</button></div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)'}</span></div>
       <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <button class="sbtn" style="padding:.55rem 1rem;align-self:flex-start" onclick="postReply('\${id}')">Kirim Balasan</button>
+      <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
     </div>
   </div>\`;
 }
@@ -715,22 +969,53 @@ window.toggleReplyForm = id => {
 };
 
 window.postReply = async parentId => {
+  if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
+  if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('rt-'+parentId).value.trim();if(!t)return;
-  const n=document.getElementById('rn-'+parentId).value.trim();
   try{
-    await addDoc(collection(db,'comments'),{songId:SONG_ID,parentId,name:n||'Anonim',text:t,date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now(),isAdmin:false});
+    await addDoc(collection(db,'comments'),{
+      songId:SONG_ID,
+      parentId,
+      name:_currentUser.displayName||'Anonim',
+      uid:_currentUser.uid,
+      photoURL:_currentUser.photoURL||null,
+      text:t,
+      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts:Date.now(),
+      isAdmin:false
+    });
     toast('Balasan terkirim!');rcm();
   }catch(e){toast('Gagal kirim.');}
 };
 
 window.postCm = async () => {
-  const n=document.getElementById('cm-n').value.trim();
+  if (!_currentUser) { toast('Login dulu untuk berkomentar.'); return; }
+  if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
   if(!t)return;btn.disabled=true;
   try{
-    await addDoc(collection(db,'comments'),{songId:SONG_ID,parentId:null,name:n||'Anonim',text:t,date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),ts:Date.now(),isAdmin:false});
-    document.getElementById('cm-t').value='';rcm();toast('Komentar terkirim!');
+    await addDoc(collection(db,'comments'),{
+      songId:SONG_ID,
+      parentId:null,
+      name:_currentUser.displayName||'Anonim',
+      uid:_currentUser.uid,
+      photoURL:_currentUser.photoURL||null,
+      text:t,
+      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts:Date.now(),
+      isAdmin:false
+    });
+    document.getElementById('cm-t').value='';
+    // Buka akses copy lirik setelah komentar pertama
+    if (!_hasCommented) {
+      _hasCommented = true;
+      updateCopyGate();
+      toast('Komentar terkirim! 💬 Akses copy lirik sekarang terbuka.');
+    } else {
+      toast('Komentar terkirim! 💬');
+    }
+    rcm();
   }catch(e){toast('Gagal kirim komentar.');}
   btn.disabled=false;
 };
