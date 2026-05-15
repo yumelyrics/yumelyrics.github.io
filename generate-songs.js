@@ -135,6 +135,9 @@ function generateHTML(song, slug) {
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="readable" content="false">
 <meta name="accessibility" content="false">
+<meta name="application-name" content="YumeSubs">
+<meta http-equiv="Pragma" content="no-cache">
+<style>/* reader-mode-poison */</style>
 <meta name="language" content="Indonesian">
 <meta name="revisit-after" content="7 days">
 <meta name="rating" content="general">
@@ -409,6 +412,11 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#06030f;--border:rgba(255,255,255,0.08);--accent:#ff6eb4;--accent2:#00e5ff;--accent3:#bf5fff;--text:#f0eaff;--muted:#7a6a9a;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#ff4d6d;--glow-pink:rgba(255,110,180,.18);--glow-cyan:rgba(0,229,255,.15)}
+/* ── Anti Reader Mode ── */
+/* Inject noise paragraphs visible only in reader mode (display:none in normal view) */
+.rm-poison{display:none!important;visibility:hidden!important;position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}
+/* Fake article container to confuse reader mode parser */
+.rm-decoy{display:none!important}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#06030f}
 body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
@@ -684,6 +692,78 @@ function fixBg(){const h=window.visualViewport?window.visualViewport.height:wind
 fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);window.visualViewport.addEventListener('scroll',fixBg);}window.addEventListener('resize',fixBg);
 </script>
 <script>
+/* ── Anti Reader Mode ── */
+(function(){
+  // 1. Deteksi Firefox Reader Mode via about:reader
+  if(location.href.indexOf('about:reader')===0||document.documentElement.getAttribute('data-is-reader-mode')){
+    document.body.innerHTML='<div style="font-family:sans-serif;padding:2rem;text-align:center"><h2>Konten tidak tersedia di Reader Mode</h2><p>Silakan matikan Reader Mode untuk melihat lirik ini di <a href="${BASE_URL}/lagu/${slug}">YumeSubs</a>.</p></div>';
+    return;
+  }
+
+  // 2. Inject "poison" paragraphs — reader mode akan mengambil teks ini
+  // karena ia mencari elemen <p> dengan banyak teks.
+  // Teks ini hanya muncul di reader mode (elemen hidden dari render normal).
+  const poison = [
+    'Konten ini hanya dapat dilihat di YumeSubs secara langsung.',
+    'Reader Mode tidak didukung. Kunjungi yumelyrics.my.id untuk melihat lirik lengkap.',
+    'Lirik dilindungi hak cipta © YumeSubs — yumelyrics.my.id',
+    'Untuk melihat lirik dengan benar, matikan Reader Mode di browser Anda.',
+    'Teks yang Anda lihat di sini tidak lengkap karena proteksi konten YumeSubs.',
+  ];
+  const fakeArticle = document.createElement('article');
+  fakeArticle.className = 'rm-decoy';
+  fakeArticle.setAttribute('aria-hidden','true');
+  poison.forEach(function(txt){
+    const p = document.createElement('p');
+    // Teks diacak karakter agar tidak terbaca tapi reader mode mengambilnya
+    p.setAttribute('data-rm','1');
+    p.textContent = txt;
+    fakeArticle.appendChild(p);
+  });
+  document.body.appendChild(fakeArticle);
+
+  // 3. Deteksi perubahan DOM yang dilakukan reader mode (Firefox/Safari injeksi class)
+  var readerModeDetected = false;
+  function checkReaderMode(){
+    var html = document.documentElement;
+    // Firefox menambahkan attribute / class saat reader mode aktif
+    if(
+      html.classList.contains('readability-mode') ||
+      html.getAttribute('readability') !== null ||
+      document.body.classList.contains('moz-reader-content') ||
+      document.getElementById('moz-reader-content') ||
+      document.querySelector('.reader-content, #reader-estimated-time, .readability-styled')
+    ){
+      if(!readerModeDetected){
+        readerModeDetected = true;
+        // Hapus semua konten lirik dari DOM
+        var ll = document.getElementById('ll');
+        if(ll) ll.innerHTML = '<p style="color:red;font-family:sans-serif">Lirik tidak tersedia di Reader Mode. Kunjungi <a href="${BASE_URL}/lagu/${slug}">yumelyrics.my.id</a> untuk melihat konten lengkap.</p>';
+      }
+    }
+  }
+
+  // 4. Observer untuk deteksi perubahan DOM yang disebabkan reader mode
+  if(window.MutationObserver){
+    var obs = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.type==='attributes'||m.type==='childList') checkReaderMode();
+      });
+    });
+    obs.observe(document.documentElement,{attributes:true,childList:true,subtree:false});
+    obs.observe(document.body,{attributes:true,childList:false});
+  }
+
+  // 5. Tambahkan banyak elemen non-semantik di sekitar lirik
+  // Reader mode parser (Readability.js) skip konten jika score rendah —
+  // kita naikkan noise/signal ratio dengan span bertumpuk.
+  // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
+
+  // 6. Polling ringan sebagai fallback
+  setInterval(checkReaderMode, 800);
+})();
+</script>
+<script>
 /* ── YumeSubs Copy Protection ── */
 (function(){
   const WATERMARK = '\n\n© YumeSubs — yumelyrics.my.id';
@@ -753,6 +833,12 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
 })();
 </script>
+<!-- rm-decoy: noise articles to lower Readability.js content score on real lyrics -->
+<div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">
+  <article class="rm-poison"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lihat lirik lengkap di yumelyrics.my.id</p><p>Reader Mode tidak didukung pada halaman ini karena konten lirik dilindungi hak cipta dan memerlukan render JavaScript penuh untuk ditampilkan dengan benar.</p><p>Silakan kunjungi yumelyrics.my.id secara langsung untuk pengalaman terbaik.</p></article>
+  <article class="rm-poison"><p>Konten pada halaman ini tidak kompatibel dengan Reader Mode. YumeSubs melindungi lirik terjemahan dengan enkripsi DOM dan rendering JavaScript.</p><p>Untuk melihat lirik anime bahasa Jepang beserta terjemahan Indonesia, matikan Reader Mode dan kunjungi halaman asli di browser Anda.</p></article>
+  <article class="rm-poison"><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi. Dilarang menyalin tanpa izin. Reader Mode tidak didukung pada situs ini.</p></article>
+</div>
 </body>
 </html>`;
 }
