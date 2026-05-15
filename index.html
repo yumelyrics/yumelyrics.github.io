@@ -120,12 +120,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* KARTU LAGU */
 .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;padding:0 2.5rem}
-.sc{background:rgba(12,6,28,.7);border:1px solid rgba(255,110,180,.1);cursor:pointer;transition:transform .3s cubic-bezier(.25,.8,.25,1),border-color .3s,box-shadow .3s;overflow:hidden;display:flex;flex-direction:column;backdrop-filter:blur(12px);position:relative;border-radius:4px}
+.sc{background:rgba(12,6,28,.7);border:1px solid rgba(255,110,180,.1);cursor:pointer;transition:border-color .3s,box-shadow .3s;overflow:hidden;display:flex;flex-direction:column;backdrop-filter:blur(12px);position:relative;border-radius:4px;will-change:transform}
 .sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.05) 0%,transparent 50%,rgba(0,229,255,.03) 100%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1}
-.sc:hover{transform:translateY(-6px);border-color:rgba(255,110,180,.45);box-shadow:0 8px 32px rgba(255,110,180,.15),0 0 0 1px rgba(255,110,180,.1),inset 0 0 20px rgba(255,110,180,.03)}
+.sc:hover{border-color:rgba(255,110,180,.45);box-shadow:0 8px 32px rgba(255,110,180,.15),0 0 0 1px rgba(255,110,180,.1),inset 0 0 20px rgba(255,110,180,.03)}
 .sc:hover::before{opacity:1}
-.sc img{width:100%;aspect-ratio:1;object-fit:cover;display:block;filter:saturate(.6) brightness(.75) hue-rotate(10deg);transition:filter .4s,transform .4s}
-.sc:hover img{filter:saturate(.9) brightness(.9) hue-rotate(0deg);transform:scale(1.05)}
+.sc-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;flex-shrink:0}
+.sc-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75) hue-rotate(10deg);transition:filter .4s,transform .4s;transform:scale(1);will-change:transform}
+.sc:hover .sc-img-wrap img{filter:saturate(.9) brightness(.9) hue-rotate(0deg);transform:scale(1.05)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:rgba(255,110,180,.5)}
 .sc-corner::before{top:0;right:0;width:1px;height:14px}
@@ -389,26 +390,82 @@ function toast(m){
 let recOnly = false;
 let popOnly = false;
 
+// Cache gambar yang sudah dimuat
+const imgCache = new Set();
+
+function buildCard(s, i) {
+  const div = document.createElement('div');
+  div.className = 'sc';
+  div.dataset.id = s.id;
+  div.onclick = () => _os(s.id);
+  const imgSrc = s.img || '';
+  const imgEl = imgCache.has(imgSrc) ? `<img src="${imgSrc}" alt="${s.titleJp}" loading="lazy" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">` : `<img src="https://c.tenor.com/PICSgVJuzWgAAAAd/tenor.gif" data-src="${imgSrc}" alt="${s.titleJp}" class="lazy-img" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  div.innerHTML = `
+    <div class="sc-corner"></div>
+    <div class="sc-img-wrap">${imgEl}</div>
+    <div class="scb">
+      <div class="scn">0${i+1}</div>
+      ${s.recommended?`<div class="rec-tag">★ Rekomendasi Admin</div>`:''}
+      ${s.popularLabel?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.popularLabel}</div>`:''}
+      <div class="scjp">${s.titleJp}</div>
+      ${s.titleRo?`<div class="scro">${s.titleRo}</div>`:''}
+      <div class="scid">${s.titleId||''}</div>
+      <div class="scf"><div class="scar">${s.artist}</div><div class="scarr">&#x2192;</div></div>
+    </div>`;
+  return div;
+}
+
 function rc(filter=''){
   const q = filter.trim();
   let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
-  document.getElementById('songGrid').innerHTML = filtered.map((s,i)=>`
-    <div class="sc" data-id="${s.id}" onclick="_os('${s.id}')">
-      <div class="sc-corner"></div>
-      <img src="https://c.tenor.com/PICSgVJuzWgAAAAd/tenor.gif" data-src="${s.img||''}" alt="${s.titleJp}" class="lazy-img" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">
-      <div class="scb">
-        <div class="scn">0${i+1}</div>
-        ${s.recommended?`<div class="rec-tag">★ Rekomendasi Admin</div>`:''}
-        ${s.popularLabel?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.popularLabel}</div>`:''}
-        ${popOnly&&(s.views||0)>0?`<div class="rec-tag" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">🔥 ${s.views} views</div>`:''}
-        <div class="scjp">${s.titleJp}</div>
-        ${s.titleRo?`<div class="scro">${s.titleRo}</div>`:''}
-        <div class="scid">${s.titleId||''}</div>
-        <div class="scf"><div class="scar">${s.artist}</div><div class="scarr">&#x2192;</div></div>
-      </div>
-    </div>`).join('');
+
+  const grid = document.getElementById('songGrid');
+  const filteredIds = new Set(filtered.map(s=>s.id));
+
+  // Kartu yang sudah ada di DOM
+  const existing = new Map();
+  grid.querySelectorAll('.sc[data-id]').forEach(el => existing.set(el.dataset.id, el));
+
+  // Tambah kartu baru yang belum ada
+  songs.forEach((s, i) => {
+    if (!existing.has(s.id)) {
+      const card = buildCard(s, i);
+      grid.appendChild(card);
+      existing.set(s.id, card);
+    }
+  });
+
+  // Show/hide berdasarkan filter, urutkan sesuai filtered
+  filtered.forEach((s, i) => {
+    const el = existing.get(s.id);
+    if (!el) return;
+    el.style.display = '';
+    // Update nomor urut
+    const numEl = el.querySelector('.scn');
+    if (numEl) numEl.textContent = `0${i+1}`;
+    // Update views tag kalau popOnly
+    const scb = el.querySelector('.scb');
+    let viewsTag = el.querySelector('.views-tag');
+    if (popOnly && (s.views||0) > 0) {
+      if (!viewsTag) {
+        viewsTag = document.createElement('div');
+        viewsTag.className = 'rec-tag views-tag';
+        viewsTag.style.cssText = 'border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)';
+        scb.insertBefore(viewsTag, scb.querySelector('.scjp'));
+      }
+      viewsTag.textContent = `🔥 ${s.views} views`;
+    } else if (viewsTag) {
+      viewsTag.remove();
+    }
+  });
+
+  // Sembunyikan kartu yang tidak lolos filter
+  existing.forEach((el, id) => {
+    el.style.display = filteredIds.has(id) ? '' : 'none';
+  });
+
   document.getElementById('noResult').style.display =
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
   const countEl = document.getElementById('songCount');
@@ -450,7 +507,10 @@ function initLazy(){
       if(e.isIntersecting){
         const img = e.target;
         const real = img.dataset.src;
-        if(real){ img.src = real; }
+        if(real){
+          img.src = real;
+          img.onload = () => { imgCache.add(real); img.classList.remove('lazy-img'); delete img.dataset.src; };
+        }
         o.unobserve(img);
       }
     });
