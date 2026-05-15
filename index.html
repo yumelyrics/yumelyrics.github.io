@@ -241,8 +241,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hero h1{font-family:var(--jp);font-size:clamp(2rem,5.5vw,3.8rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:1rem}
 .hero h1 em{color:var(--accent);font-style:normal;text-shadow:0 0 20px rgba(255,110,180,.4)}
 .hero p{color:var(--muted);font-size:.85rem;font-weight:300;max-width:460px;line-height:1.8}
-.hero-kanji{position:absolute;right:1.2rem;top:2.5rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(0,229,255,.08));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none}
-@media(min-width:768px){.hero-kanji{font-size:7rem;right:2.5rem;top:3rem}}
+.hero-kanji{position:absolute;right:2.5rem;top:3rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.15),rgba(0,229,255,.1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none;z-index:1}
+@media(min-width:768px){.hero-kanji{font-size:7rem;right:3rem;top:4rem}}
 
 /* grid line deco di background */
 #bgwrap::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,110,180,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,110,180,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
@@ -263,9 +263,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </nav>
 
-<div id="catView">
+<div id="catView" style="position:relative">
+  <div class="hero-kanji">夢詞</div>
   <div class="hero">
-    <div class="hero-kanji">夢詞</div>
     <div class="eyebrow">Terjemahan Lagu Jepang</div>
     <h1>Kata-kata yang<br>terasa seperti <em>mimpi</em></h1>
     <p>Lirik Jepang, romaji, dan terjemahan Indonesia. Biar lo nyanyi sambil ngerti maknanya.</p>
@@ -346,7 +346,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </footer>
 </div>
 
-
+<script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
