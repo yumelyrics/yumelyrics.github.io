@@ -72,7 +72,6 @@
   }
 ]
 </script>
-  
 
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
@@ -218,7 +217,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(min-width:768px){#bgwrap{background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat fixed;filter:brightness(.15) saturate(.5) hue-rotate(200deg)}}
 #bgwrap::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,110,180,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,110,180,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
 /* hero */
-.hero{padding:4.5rem 0 2rem;width:100%;position:relative}
+.hero{padding:4.5rem 0 2rem;width:100%;position:relative;overflow:hidden}
 .hero-inner{padding:0 2.5rem}
 .eyebrow{font-size:.58rem;color:var(--accent);letter-spacing:.45em;text-transform:uppercase;margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
 .eyebrow::before{content:'';display:inline-block;width:24px;height:1px;background:var(--accent);opacity:.6}
@@ -232,8 +231,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .req-btn:hover .req-btn-arr{transform:translateX(4px)}
 .req-btn-icon{display:flex;align-items:center;color:var(--accent);flex-shrink:0}
 .req-btn-arr{color:var(--accent);transition:transform .25s;font-size:.85rem;margin-left:.1rem}
-.hero-kanji{position:absolute;right:2.5rem;top:3rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.15),rgba(0,229,255,.1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none;z-index:1}
-@media(min-width:768px){.hero-kanji{font-size:7rem;right:3rem;top:4em}}
+.hero-kanji{position:absolute;right:2.5rem;top:2.5rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.15),rgba(0,229,255,.1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none;z-index:1}
+@media(min-width:768px){.hero-kanji{font-size:7rem;right:3rem;top:2.5rem}}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,110,180,.2);border-radius:4px}
@@ -273,8 +272,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </nav>
 
 <div id="catView" style="position:relative">
-  <div class="hero-kanji">夢詞</div>
   <div class="hero">
+    <div class="hero-kanji">夢詞</div>
     <div class="hero-inner">
     <div class="eyebrow">Terjemahan Lagu Jepang</div>
     <h1>Kata-kata yang<br>terasa seperti <em>mimpi</em></h1>
