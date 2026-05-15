@@ -8,22 +8,37 @@
 <meta name="description" content="Bagikan pengalaman, saran, atau hubungi admin YumeSubs.">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e}
+:root{
+  --bg:#06030f;
+  --border:rgba(255,255,255,0.08);
+  --accent:#ff6eb4;
+  --accent2:#00e5ff;
+  --accent3:#bf5fff;
+  --text:#f0eaff;
+  --muted:#7a6a9a;
+  --jp:'Shippori Mincho',serif;
+  --en:'DM Sans',sans-serif;
+  --red:#ff4d6d;
+  --glow-pink:rgba(255,110,180,.18);
+  --glow-cyan:rgba(0,229,255,.15);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#050d1a}
-body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
+html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#06030f}
+body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+@media(pointer:coarse){body{-webkit-user-select:none;-moz-user-select:none;user-select:none}}
 
 
 .wrap{position:relative;z-index:2}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(5,13,26,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);min-width:0}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(6,3,15,.85);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,110,180,.12);min-width:0;box-shadow:0 1px 24px rgba(255,110,180,.06)}
 .nav-logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;cursor:pointer;flex-shrink:0;min-width:0}
-.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap;line-height:1}
+.nljp{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--accent);white-space:nowrap;line-height:1;text-shadow:0 0 12px rgba(255,110,180,.5)}
 .nlen{font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;line-height:1}
 .nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
 .nb{background:none;border:none;font-family:var(--en);font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
-.nb:hover,.nb.on{color:var(--text);background:rgba(255,255,255,.06)}
-.nb.adm{border:1px solid rgba(201,169,110,.3);color:var(--accent)}
-.nb.adm:hover{background:rgba(201,169,110,.08)}
+.nb:hover,.nb.on{color:var(--text);background:rgba(255,110,180,.08);text-shadow:0 0 8px rgba(255,110,180,.4)}
+.nb.adm{border:1px solid rgba(255,110,180,.3);color:var(--accent)}
+.nb.adm:hover{background:rgba(255,110,180,.1)}
 
 .page{padding:4rem 2.5rem 6rem;max-width:680px}
 .eyebrow{font-size:.6rem;color:var(--accent);letter-spacing:.35em;text-transform:uppercase;margin-bottom:1rem}
@@ -132,7 +147,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .reply-cancel-btn:hover{border-color:var(--accent2);color:var(--accent2)}
 .no-sharing{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,110,180,.2);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}}
 </style>
@@ -140,10 +155,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <body>
 <div id="bgwrap"></div>
 <style>
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;z-index:0;pointer-events:none;background:#07101f}
-@media(min-width:768px){
-  #bgwrap{background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat fixed;filter:brightness(.32) saturate(.75)}
-}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 20% 50%,rgba(191,95,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(255,110,180,.07) 0%,transparent 55%),radial-gradient(ellipse at 60% 80%,rgba(0,229,255,.05) 0%,transparent 50%),#06030f}
+@media(min-width:768px){#bgwrap{background:url('https://images7.alphacoders.com/131/thumb-1920-1316304.jpeg') center/cover no-repeat fixed;filter:brightness(.15) saturate(.5) hue-rotate(200deg)}}
+#bgwrap::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,110,180,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,110,180,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
 </style>
 <div class="wrap">
 <nav>
@@ -491,14 +505,41 @@ function fixBg(){var h=screen.height||window.innerHeight;var w=screen.width||win
 fixBg();
 window.addEventListener('resize',fixBg);
 </script>
+
 <script>
-document.addEventListener('copy', function(e) {
-  const selected = window.getSelection().toString();
-  if (selected.length > 10) {
-    e.clipboardData.setData('text/plain', selected + '\n\n© YumeSubs — yumelyrics.my.id');
-    e.preventDefault();
-  }
-});
+(function(){
+  const MARK = '\n\n© YumeSubs — yumelyrics.my.id';
+  const LIM = 10;
+  function isInput(el){var t=el.tagName;return t==='INPUT'||t==='TEXTAREA';}
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&['a','c','u','s'].includes(e.key.toLowerCase()))e.preventDefault();
+  });
+  document.addEventListener('copy',function(e){
+    var sel=window.getSelection().toString();
+    if(sel.length>LIM){e.clipboardData.setData('text/plain',sel.substring(0,LIM)+MARK);e.preventDefault();}
+  });
+  document.addEventListener('selectstart',function(e){
+    if(isInput(e.target))return;
+    var el=e.target;
+    while(el&&el!==document.body){if(el.id==='ll'){e.preventDefault();return;}el=el.parentElement;}
+  });
+  var tt=null;
+  document.addEventListener('touchstart',function(e){
+    if(isInput(e.target))return;
+    tt=setTimeout(function(){if(window.getSelection)window.getSelection().removeAllRanges();},300);
+  },{passive:true});
+  document.addEventListener('touchend',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
+  document.addEventListener('touchcancel',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
+  document.addEventListener('selectionchange',function(){
+    var sel=window.getSelection();
+    if(!sel||sel.isCollapsed)return;
+    var node=sel.anchorNode;if(!node)return;
+    var el=node.nodeType===3?node.parentElement:node;
+    if(isInput(el))return;
+    if(sel.toString().length>LIM)sel.removeAllRanges();
+  });
+})();
 </script>
 </body>
 </html>
