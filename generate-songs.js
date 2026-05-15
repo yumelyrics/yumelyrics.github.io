@@ -560,12 +560,25 @@ body.gate-open #lyrView{padding-top:3.5rem}
 .copy-done-badge{display:none;align-items:center;gap:.4rem;font-size:.7rem;color:#34d399;letter-spacing:.1em;text-transform:uppercase}
 .copy-done-badge.show{display:flex}
 /* User badge di nav */
-.nav-user{display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-left:.25rem}
-.nav-avatar{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,110,180,.3);object-fit:cover}
-.nav-avatar-placeholder{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,110,180,.3);background:rgba(255,110,180,.15);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent)}
-.nav-user-name{font-size:.65rem;color:var(--muted);letter-spacing:.08em;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav-logout{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);cursor:pointer;padding:.2rem .4rem;letter-spacing:.1em;text-transform:uppercase;transition:color .2s}
-.nav-logout:hover{color:var(--red)}
+/* floating avatar bubble */
+#nav-avatar-bubble{position:fixed;bottom:1.4rem;right:1.4rem;z-index:200;display:none;cursor:pointer;user-select:none}
+.nav-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,110,180,.5);object-fit:cover;box-shadow:0 2px 16px rgba(255,110,180,.25);transition:transform .18s,box-shadow .18s;display:block}
+.nav-avatar:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(255,110,180,.4)}
+.nav-avatar-placeholder{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,110,180,.5);background:rgba(255,110,180,.18);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--accent);box-shadow:0 2px 16px rgba(255,110,180,.2);transition:transform .18s,box-shadow .18s}
+.nav-avatar-placeholder:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(255,110,180,.35)}
+/* dropdown popup */
+#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:8px;padding:.6rem;display:none;flex-direction:column;gap:.3rem;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropUp .15s ease}
+@keyframes dropUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#nav-user-dropdown.open{display:flex}
+.nud-name{font-size:.78rem;color:var(--text);font-weight:500;padding:.3rem .6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.nud-email{font-size:.6rem;color:var(--muted);padding:0 .6rem .4rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.nud-btn{background:none;border:none;font-family:var(--en);font-size:.65rem;color:var(--muted);cursor:pointer;padding:.45rem .6rem;text-align:left;letter-spacing:.08em;text-transform:uppercase;transition:color .18s,background .18s;border-radius:4px;width:100%}
+.nud-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nud-btn.logout{color:var(--red)}
+.nud-btn.logout:hover{background:rgba(255,77,109,.08)}
+/* sembunyiin dari nav lama */
+.nav-user{display:none}
+.nav-user-name,.nav-logout{display:none}
 </style>
 </head>
 <body>
@@ -586,12 +599,7 @@ body.gate-open #lyrView{padding-top:3.5rem}
     <a class="nb" href="../index.html">Katalog</a>
     <a class="nb" href="../stories.html">Cerita</a>
     <a class="nb" href="../contact.html">Hubungi</a>
-    <div id="nav-user-slot" style="display:none" class="nav-user">
-      <div id="nav-avatar-wrap" onclick="openEditProfile()" style="cursor:pointer" title="Edit profil"></div>
-      <span id="nav-user-name" class="nav-user-name" onclick="openEditProfile()" style="cursor:pointer" title="Edit profil"></span>
-      <button class="nav-logout" onclick="openEditProfile()" style="color:var(--muted);font-size:.58rem;letter-spacing:.08em">✏</button>
-      <button class="nav-logout" onclick="doLogout()">Keluar</button>
-    </div>
+    <div id="nav-user-slot" style="display:none" class="nav-user"></div>
   </div>
 </nav>
 
@@ -678,6 +686,17 @@ body.gate-open #lyrView{padding-top:3.5rem}
     </div>
   </div>
 </div>
+</div>
+<!-- ── Floating Avatar Bubble ── -->
+<div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
+  <div id="nav-avatar-wrap"></div>
+</div>
+<!-- ── User Dropdown ── -->
+<div id="nav-user-dropdown">
+  <div class="nud-name" id="nud-name">—</div>
+  <div class="nud-email" id="nud-email">—</div>
+  <button class="nud-btn" onclick="openEditProfile();closeUserDropdown()">✏ Edit Profil</button>
+  <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
 <!-- ── Edit Profile Modal ── -->
@@ -823,9 +842,11 @@ async function applyAuthState(user) {
       cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">\${displayName[0].toUpperCase()}</div>\`;
     }
 
-    // Tampilkan user di nav
-    navSlot.style.display = 'flex';
-    document.getElementById('nav-user-name').textContent = user.displayName ? user.displayName.split(' ')[0] : 'Kamu';
+    // Tampilkan floating avatar bubble
+    const bubble = document.getElementById('nav-avatar-bubble');
+    if (bubble) bubble.style.display = 'block';
+    document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
+    document.getElementById('nud-email').textContent = user.email || '';
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (user.photoURL) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
@@ -838,6 +859,9 @@ async function applyAuthState(user) {
     gate.style.display = 'flex';
     document.body.classList.add('gate-open');
     navSlot.style.display = 'none';
+    const bubbleEl = document.getElementById('nav-avatar-bubble');
+    if (bubbleEl) bubbleEl.style.display = 'none';
+    closeUserDropdown();
     _hasCommented = false;
     _isBanned = false;
     _banReason = '';
@@ -860,9 +884,29 @@ window.doLogin = async () => {
 };
 
 window.doLogout = async () => {
+  closeUserDropdown();
   await signOut(auth);
   toast('Berhasil keluar.');
 };
+
+window.toggleUserDropdown = () => {
+  const dd = document.getElementById('nav-user-dropdown');
+  if (!dd) return;
+  dd.classList.toggle('open');
+};
+
+window.closeUserDropdown = () => {
+  const dd = document.getElementById('nav-user-dropdown');
+  if (dd) dd.classList.remove('open');
+};
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', e => {
+  const bubble = document.getElementById('nav-avatar-bubble');
+  const dd = document.getElementById('nav-user-dropdown');
+  if (!dd || !dd.classList.contains('open')) return;
+  if (!bubble?.contains(e.target) && !dd.contains(e.target)) closeUserDropdown();
+});
 
 /* ── Edit Profile ── */
 window.openEditProfile = () => {
@@ -904,7 +948,7 @@ window.saveEditProfile = async () => {
     const { updateProfile } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
     await updateProfile(_currentUser, { displayName: newName });
     // Update nav
-    document.getElementById('nav-user-name').textContent = newName.split(' ')[0];
+    document.getElementById('nud-name').textContent = newName;
     document.getElementById('cm-user-display').textContent = newName;
     document.getElementById('ep-display-name-preview').textContent = newName;
     toast('Profil berhasil diperbarui!');
