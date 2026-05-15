@@ -469,6 +469,26 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
 .cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
 .cmform{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
+/* ── Admin comment box ── */
+.cmform.is-admin-form{background:rgba(255,110,180,.03);border:1px solid rgba(255,110,180,.2);padding:1rem;border-radius:6px;position:relative;overflow:hidden}
+.cmform.is-admin-form::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.07;z-index:0;pointer-events:none}
+.cmform.is-admin-form>*{position:relative;z-index:1}
+.cmform.is-admin-form .cmi{border-color:rgba(255,110,180,.3);background:rgba(6,3,15,.7)}
+.cmform.is-admin-form .cmi:focus{border-color:rgba(255,110,180,.6);box-shadow:0 0 16px rgba(255,110,180,.12)}
+.admin-form-header{display:flex;align-items:center;gap:.6rem;padding:.4rem .7rem;background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(191,95,255,.08));border:1px solid rgba(255,110,180,.25);border-radius:4px;margin-bottom:.4rem}
+.admin-crown{font-size:1rem;line-height:1}
+.admin-form-badge{font-size:.54rem;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));padding:.18rem .55rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.admin-form-name{font-size:.75rem;color:var(--accent);font-weight:600}
+.admin-form-sub{font-size:.6rem;color:var(--muted);margin-left:auto}
+/* admin comment card */
+.citem.is-admin{background:rgba(255,110,180,.04);border-color:rgba(255,110,180,.25);position:relative;overflow:hidden}
+.citem.is-admin::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.09;z-index:0;pointer-events:none}
+.citem.is-admin>*{position:relative;z-index:1}
+.admin-cm-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:linear-gradient(135deg,rgba(255,110,180,.1),rgba(191,95,255,.07));border-bottom:1px solid rgba(255,110,180,.15);margin:-0px;margin-bottom:.7rem;border-radius:2px 2px 0 0}
+.admin-cm-crown{font-size:.95rem}
+.admin-cm-name{font-size:.78rem;color:var(--accent);font-weight:700;font-family:var(--jp)}
+.admin-cm-badge{font-size:.52rem;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));padding:.15rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.admin-cm-date{font-size:.58rem;color:var(--muted);margin-left:auto}
 .cmi{background:rgba(255,255,255,.03);border:1px solid rgba(255,110,180,.15);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;resize:none;transition:border-color .2s;border-radius:2px}
 .cmi::placeholder{color:var(--muted)}
 .cmi:focus{border-color:rgba(255,110,180,.4);box-shadow:0 0 12px rgba(255,110,180,.08)}
@@ -634,8 +654,8 @@ body.gate-open #lyrView{padding-top:3.5rem}
       </div>
       <!-- Login Gate — melayang di bawah navbar, ditampilkan jika belum login -->
       <div id="login-gate">
-        <div id="login-gate-title">Login untuk copy lirik & komentar</div>
-        <div id="login-gate-sub">Lirik bisa dibaca tanpa login. Login dengan Google untuk copy lirik (setelah komentar) & bergabung di kolom komentar — gratis!</div>
+        <div id="login-gate-title">Login dan berkomentar untuk copy lirik</div>
+        <div id="login-gate-sub">Lirik bisa dibaca tanpa login. Login dengan Google untuk copy lirik (setelah komentar) & bergabung di kolom komentar</div>
         <button class="google-btn" onclick="doLogin()">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           Masuk dengan Google
@@ -748,6 +768,8 @@ let _currentUser = null;
 let _isBanned = false;
 let _banReason = '';
 let _hasCommented = false; // apakah user sudah pernah komentar di lagu ini
+let _isAdmin = false;
+const ADMIN_EMAIL = "admin@yumesubs.com";
 
 async function checkBanStatus(uid) {
   try {
@@ -832,11 +854,22 @@ async function applyAuthState(user) {
     // Update copy gate
     updateCopyGate();
 
+    // Deteksi admin
+    _isAdmin = user.email === ADMIN_EMAIL;
+
     // Isi nama user di form komentar
-    const displayName = user.displayName || 'Anonim';
+    const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
     document.getElementById('cm-user-display').textContent = displayName;
     const cmAvatarWrap = document.getElementById('cm-user-avatar-wrap');
-    if (user.photoURL) {
+
+    if (_isAdmin) {
+      // Admin: header khusus + form styling
+      const cmForm = document.getElementById('cm-form-wrap');
+      if (cmForm) cmForm.classList.add('is-admin-form');
+      cmAvatarWrap.innerHTML = \`<span style="font-size:1.1rem">👑</span>\`;
+      const cmUserInfo = cmAvatarWrap.parentElement;
+      cmUserInfo.innerHTML = \`<div class="admin-form-header"><span class="admin-crown">👑</span><span class="admin-form-badge">Admin</span><span class="admin-form-name">YumeSubs</span><span class="admin-form-sub">Berkomentar sebagai Admin</span></div>\`;
+    } else if (user.photoURL) {
       cmAvatarWrap.innerHTML = \`<img style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,110,180,.3)" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
       cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">\${displayName[0].toUpperCase()}</div>\`;
@@ -927,7 +960,7 @@ window.openEditProfile = () => {
   }
   document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '(nama tidak ada)';
   document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
-  document.getElementById('ep-displayname').value = _currentUser.displayName || '';
+  document.getElementById('ep-displayname').value = _currentUser.displayName || (_isAdmin ? 'YumeSubs' : '');
   modal.classList.add('open');
   setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
 };
@@ -1079,13 +1112,31 @@ function renderComment(id, c, replies){
       return \`<div class="ritem"><div class="chdr-left"><span class="cname">\${esc(r.name)}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
     }).join('')+'</div>';
   }
-  return \`<div class="citem\${isAdm?' is-admin':''}">
-    <div class="chdr"><div class="chdr-left"><div class="cname">\${esc(c.name)}</div>\${isAdm?'<span class="admin-badge">Admin</span>':''}<div class="cdate">\${esc(c.date)}</div></div>
+  const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
+  if (isAdm) {
+    return \`<div class="citem is-admin">
+      <div class="admin-cm-header">
+        <span class="admin-cm-crown">👑</span>
+        <span class="admin-cm-name">YumeSubs</span>
+        <span class="admin-cm-badge">Admin</span>
+        <span class="admin-cm-date">\${esc(c.date)}</span>
+      </div>
+      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}</div>
+      \${repHtml}
+      <div class="reply-form" id="rf-\${id}">
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
+        <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
+        <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
+      </div>
+    </div>\`;
+  }
+  return \`<div class="citem">
+    <div class="chdr"><div class="chdr-left"><div class="cname">\${esc(c.name)}</div><div class="cdate">\${esc(c.date)}</div></div>
     <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
     <div class="ctxt">\${esc(c.text)}</div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
-      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)'}</span></div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
       <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
       <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
     </div>
@@ -1117,42 +1168,45 @@ window.postReply = async parentId => {
   if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('rt-'+parentId).value.trim();if(!t)return;
   try{
+    const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId,
-      name:_currentUser.displayName||'Anonim',
+      name:repName,
       uid:_currentUser.uid,
-      photoURL:_currentUser.photoURL||null,
+      photoURL:_isAdmin ? null : (_currentUser.photoURL||null),
       text:t,
       date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       ts:Date.now(),
-      isAdmin:false
+      isAdmin:_isAdmin
     });
-    toast('Balasan terkirim!');rcm();
+    toast(_isAdmin ? 'Balasan admin terkirim! 👑' : 'Balasan terkirim!');rcm();
   }catch(e){toast('Gagal kirim.');}
 };
 
 window.postCm = async () => {
   if (!_currentUser) { toast('Login dulu untuk berkomentar.'); return; }
-  if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
+  if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
   if(!t)return;btn.disabled=true;
+  const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
   try{
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId:null,
-      name:_currentUser.displayName||'Anonim',
+      name:cmName,
       uid:_currentUser.uid,
-      photoURL:_currentUser.photoURL||null,
+      photoURL:_isAdmin ? null : (_currentUser.photoURL||null),
       text:t,
       date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       ts:Date.now(),
-      isAdmin:false
+      isAdmin:_isAdmin
     });
     document.getElementById('cm-t').value='';
-    // Buka akses copy lirik setelah komentar pertama
-    if (!_hasCommented) {
+    if (_isAdmin) {
+      toast('Komentar admin terkirim! 👑');
+    } else if (!_hasCommented) {
       _hasCommented = true;
       updateCopyGate();
       toast('Komentar terkirim! 💬 Akses copy lirik sekarang terbuka.');
