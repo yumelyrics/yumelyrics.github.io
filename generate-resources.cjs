@@ -109,7 +109,9 @@ ${thumb ? `<meta property="og:image" content="${esc(thumb)}">` : ''}
 :root{--bg:#06030f;--border:rgba(255,255,255,0.08);--accent:#ff6eb4;--accent2:#00e5ff;--accent3:#bf5fff;--text:#f0eaff;--muted:#7a6a9a;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#ff4d6d;--glow-pink:rgba(255,110,180,.18);--glow-cyan:rgba(0,229,255,.15)}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#06030f}
-body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
+body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+@media(pointer:coarse){body{-webkit-user-select:none;-moz-user-select:none;user-select:none}}
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(6,3,15,.85);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,110,180,.12);min-width:0;box-shadow:0 1px 24px rgba(255,110,180,.06)}
 .nav-logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;flex-shrink:0;min-width:0}
@@ -183,13 +185,39 @@ h1{font-family:var(--jp);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;colo
 </div>
 </div>
 <script>
-document.addEventListener('copy', function(e) {
-  const sel = window.getSelection().toString();
-  if (sel.length > 10) {
-    e.clipboardData.setData('text/plain', sel + '\\n\\n© YumeSubs — yumelyrics.my.id');
-    e.preventDefault();
-  }
-});
+(function(){
+  const MARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
+  const LIM = 10;
+  function isInput(el){var t=el.tagName;return t==='INPUT'||t==='TEXTAREA';}
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&['a','c','u','s'].includes(e.key.toLowerCase()))e.preventDefault();
+  });
+  document.addEventListener('copy',function(e){
+    var sel=window.getSelection().toString();
+    if(sel.length>LIM){e.clipboardData.setData('text/plain',sel.substring(0,LIM)+MARK);e.preventDefault();}
+  });
+  document.addEventListener('selectstart',function(e){
+    if(isInput(e.target))return;
+    var el=e.target;
+    while(el&&el!==document.body){if(el.id==='ll'){e.preventDefault();return;}el=el.parentElement;}
+  });
+  var tt=null;
+  document.addEventListener('touchstart',function(e){
+    if(isInput(e.target))return;
+    tt=setTimeout(function(){if(window.getSelection)window.getSelection().removeAllRanges();},300);
+  },{passive:true});
+  document.addEventListener('touchend',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
+  document.addEventListener('touchcancel',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
+  document.addEventListener('selectionchange',function(){
+    var sel=window.getSelection();
+    if(!sel||sel.isCollapsed)return;
+    var node=sel.anchorNode;if(!node)return;
+    var el=node.nodeType===3?node.parentElement:node;
+    if(isInput(el))return;
+    if(sel.toString().length>LIM)sel.removeAllRanges();
+  });
+})();
 </script>
 </body>
 </html>`;
