@@ -999,6 +999,7 @@ function ra(){
   }
   document.getElementById('exlist').innerHTML=songs.map(s=>`
     <div class="exitem" style="flex-wrap:wrap;gap:.6rem">
+      ${s.img?`<img src="${s.img}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);filter:saturate(.7)" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;background:#1a1a2e;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)"></div>'}
       <div style="flex:1;min-width:0">
         <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
         <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
