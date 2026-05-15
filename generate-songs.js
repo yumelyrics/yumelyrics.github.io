@@ -55,25 +55,19 @@ function generateHTML(song, slug) {
     metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
   }
 
-  // Simpan urutan asli, lalu acak untuk HTML (reader mode protection)
-  const originalLyrics = [...lyrics];
-  const shuffledLyrics = [...lyrics];
-  for (let i = shuffledLyrics.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledLyrics[i], shuffledLyrics[j]] = [shuffledLyrics[j], shuffledLyrics[i]];
+  // Encode lirik — disimpan di script tag, tidak dirender langsung di DOM
+  // Reader mode tidak bisa baca script tag, JS normal bisa decode & inject
+  function xorEncode(str, key) {
+    return Buffer.from(str).map((b, i) => b ^ key.charCodeAt(i % key.length)).toString('base64');
   }
+  const XOR_KEY = 'yume' + songId.substring(0, 4);
+  const encodedLyrics = lyrics.map(l => ({
+    jp: l.jp ? xorEncode(l.jp, XOR_KEY) : '',
+    ro: l.ro ? xorEncode(l.ro, XOR_KEY) : '',
+    id: l.id ? xorEncode(l.id, XOR_KEY) : '',
+  }));
 
-  // Tiap item diberi data-orig-index supaya JS bisa restore urutan asli
-  const lyricsHTML = shuffledLyrics.map((l, i) => {
-    const origIdx = originalLyrics.indexOf(l);
-    return `
-        <div class="ll-item" data-orig="${origIdx}">
-          <div class="ljp">${escHtml(l.jp||'')}</div>
-          ${l.ro ? `<div class="lro">${escHtml(l.ro)}</div>` : ''}
-          ${l.id ? `<div class="lid">${escHtml(l.id)}</div>` : ''}
-        </div>
-        <div class="lsep" data-sep="${origIdx}"></div>`;
-  }).join('');
+  const lyricsHTML = ''; // kosong — diisi JS setelah decode
 
   const schema = JSON.stringify([
     {
@@ -540,6 +534,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
+      <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip:rect(0,0,0,0);white-space:nowrap">${lyrics.map(l=>[l.jp,l.ro,l.id].filter(Boolean).join(' ')).join(' ')}</div>
       <div class="cmsec" style="margin-bottom:2rem">
         <div class="cmtit" style="margin-bottom:.8rem">Tentang Lagu Ini</div>
         <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
@@ -563,22 +558,36 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div>
 </div>
 <div class="toast" id="toast"></div>
-
+<script type="application/json" id="ld">${JSON.stringify(encodedLyrics)}</script>
 <script>
-/* Restore urutan lirik asli — reorder tanpa destroy elemen */
 (function(){
-  var ll = document.getElementById('ll');
-  if(!ll) return;
-  var items = Array.from(ll.querySelectorAll('.ll-item'));
-  var seps  = Array.from(ll.querySelectorAll('.lsep'));
-  if(!items.length) return;
-  items.sort(function(a,b){ return parseInt(a.dataset.orig)-parseInt(b.dataset.orig); });
-  seps.sort(function(a,b){ return parseInt(a.dataset.sep)-parseInt(b.dataset.sep); });
-  // Reorder pakai appendChild — pindahkan node tanpa hapus, event listener tetap aman
-  items.forEach(function(item, i){
-    ll.appendChild(item);
-    if(seps[i]) ll.appendChild(seps[i]);
+  var el=document.getElementById('ld');
+  var ll=document.getElementById('ll');
+  if(!el||!ll) return;
+  var key='${XOR_KEY}';
+  function xd(b64){
+    try{
+      var buf=atob(b64);
+      var out='';
+      for(var i=0;i<buf.length;i++) out+=String.fromCharCode(buf.charCodeAt(i)^key.charCodeAt(i%key.length));
+      return out;
+    }catch(e){return '';}
+  }
+  var data=JSON.parse(el.textContent);
+  var frag=document.createDocumentFragment();
+  data.forEach(function(l){
+    var jp=l.jp?xd(l.jp):'';
+    var ro=l.ro?xd(l.ro):'';
+    var id=l.id?xd(l.id):'';
+    var item=document.createElement('div');
+    item.className='ll-item';
+    var djp=document.createElement('div');djp.className='ljp';djp.textContent=jp;item.appendChild(djp);
+    if(ro){var dro=document.createElement('div');dro.className='lro';dro.textContent=ro;item.appendChild(dro);}
+    if(id){var did=document.createElement('div');did.className='lid';did.textContent=id;item.appendChild(did);}
+    frag.appendChild(item);
+    var sep=document.createElement('div');sep.className='lsep';frag.appendChild(sep);
   });
+  ll.appendChild(frag);
 })();
 </script>
 
