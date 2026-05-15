@@ -54,7 +54,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .song-card img{width:44px;height:44px;object-fit:cover;border-radius:2px;flex-shrink:0;filter:saturate(.7)}
 .sc-info{min-width:0}
 .sc-title{font-family:var(--jp);font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sc-romaji{font-size:.65rem;color:var(--muted);font-style:italic;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.1rem}
 .sc-artist{font-size:.68rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .loading-txt{color:var(--muted);font-size:.82rem;padding:2rem 0;text-align:center}
 
@@ -239,7 +238,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div id="stepPilih">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Cari judul, romaji, atau artis..." oninput="filterSongs()">
+      <input type="text" id="searchInput" placeholder="Cari judul atau artis..." oninput="filterSongs()">
     </div>
     <div class="song-grid" id="songGrid">
       <div class="loading-txt">Memuat katalog...</div>
@@ -411,7 +410,6 @@ function renderSongGrid(songs) {
       ${(s.coverUrl||s.img) ? `<img src="${s.coverUrl||s.img}" alt="" loading="lazy">` : `<div style="width:44px;height:44px;background:rgba(255,255,255,.05);border-radius:2px;flex-shrink:0"></div>`}
       <div class="sc-info">
         <div class="sc-title">${esc(s.title||s.titleJp||'')}</div>
-        ${(s.titleRo) ? `<div class="sc-romaji">${esc(s.titleRo)}</div>` : ''}
         <div class="sc-artist">${esc(s.artist||'')}</div>
       </div>
     </div>
@@ -423,7 +421,6 @@ window.filterSongs = () => {
   const filtered = allSongs.filter(s =>
     (s.title||'').toLowerCase().includes(q) ||
     (s.titleJp||'').toLowerCase().includes(q) ||
-    (s.titleRo||'').toLowerCase().includes(q) ||
     (s.artist||'').toLowerCase().includes(q)
   );
   renderSongGrid(filtered);
@@ -547,17 +544,16 @@ function renderQuestion() {
 window.tileClick = (idx) => {
   if (answered) return;
   const state = window._puzzleState;
-  const tile = document.getElementById(`tile-${idx}`);
-  const word = state.allTiles[idx];
+  const bankTile = document.getElementById(`tile-${idx}`);
 
   if (state.selected.includes(idx)) {
     // hapus dari jawaban
     state.selected = state.selected.filter(i => i !== idx);
-    tile.classList.remove('in-answer', 'used');
+    if (bankTile) bankTile.classList.remove('in-answer', 'used');
   } else {
     // tambah ke jawaban
     state.selected.push(idx);
-    tile.classList.add('in-answer');
+    if (bankTile) bankTile.classList.add('in-answer');
   }
 
   // update zone
@@ -566,7 +562,6 @@ window.tileClick = (idx) => {
   if (state.selected.length === 0) {
     zone.classList.remove('has-tile');
     if (hint) hint.style.display = '';
-    // hapus tile di zone
     zone.querySelectorAll('.tile').forEach(t => t.remove());
   } else {
     zone.classList.add('has-tile');
@@ -581,6 +576,17 @@ window.tileClick = (idx) => {
       zone.appendChild(t);
     });
   }
+
+  // sync semua tile di bank — pastikan class sesuai state.selected
+  state.allTiles.forEach((_, i) => {
+    const bt = document.getElementById(`tile-${i}`);
+    if (!bt) return;
+    if (state.selected.includes(i)) {
+      bt.classList.add('in-answer');
+    } else {
+      bt.classList.remove('in-answer', 'used');
+    }
+  });
 };
 
 window.autoResize = el => {
