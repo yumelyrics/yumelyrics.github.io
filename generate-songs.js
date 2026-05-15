@@ -58,7 +58,9 @@ function generateHTML(song, slug) {
   // Encode lirik — disimpan di script tag, tidak dirender langsung di DOM
   // Reader mode tidak bisa baca script tag, JS normal bisa decode & inject
   function xorEncode(str, key) {
-    return Buffer.from(str).map((b, i) => b ^ key.charCodeAt(i % key.length)).toString('base64');
+    const keyBytes = Buffer.from(key, 'utf8');
+    const strBytes = Buffer.from(str, 'utf8');
+    return strBytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]).toString('base64');
   }
   const XOR_KEY = 'yume' + songId.substring(0, 4);
   const encodedLyrics = lyrics.map(l => ({
@@ -559,38 +561,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div>
 <div class="toast" id="toast"></div>
 <script type="application/json" id="ld">${JSON.stringify(encodedLyrics)}</script>
-<script>
-(function(){
-  var el=document.getElementById('ld');
-  var ll=document.getElementById('ll');
-  if(!el||!ll) return;
-  var key='${XOR_KEY}';
-  function xd(b64){
-    try{
-      var buf=atob(b64);
-      var out='';
-      for(var i=0;i<buf.length;i++) out+=String.fromCharCode(buf.charCodeAt(i)^key.charCodeAt(i%key.length));
-      return out;
-    }catch(e){return '';}
-  }
-  var data=JSON.parse(el.textContent);
-  var frag=document.createDocumentFragment();
-  data.forEach(function(l){
-    var jp=l.jp?xd(l.jp):'';
-    var ro=l.ro?xd(l.ro):'';
-    var id=l.id?xd(l.id):'';
-    var item=document.createElement('div');
-    item.className='ll-item';
-    var djp=document.createElement('div');djp.className='ljp';djp.textContent=jp;item.appendChild(djp);
-    if(ro){var dro=document.createElement('div');dro.className='lro';dro.textContent=ro;item.appendChild(dro);}
-    if(id){var did=document.createElement('div');did.className='lid';did.textContent=id;item.appendChild(did);}
-    frag.appendChild(item);
-    var sep=document.createElement('div');sep.className='lsep';frag.appendChild(sep);
-  });
-  ll.appendChild(frag);
-})();
-</script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment }
@@ -608,6 +578,38 @@ const db = getFirestore(initializeApp({
 const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let sro=true, str=true;
+
+/* ── Inject lirik dari encoded data (defer, jalan setelah reader mode snapshot) ── */
+(()=>{
+  const el=document.getElementById('ld');
+  const ll=document.getElementById('ll');
+  if(!el||!ll) return;
+  const key='${XOR_KEY}';
+  const keyBytes=new TextEncoder().encode(key);
+  function xd(b64){
+    try{
+      const bin=atob(b64);
+      const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i)^keyBytes[i%keyBytes.length];
+      return new TextDecoder('utf-8').decode(bytes);
+    }catch(e){return '';}
+  }
+  const data=JSON.parse(el.textContent);
+  const frag=document.createDocumentFragment();
+  data.forEach(l=>{
+    const jp=l.jp?xd(l.jp):'';
+    const ro=l.ro?xd(l.ro):'';
+    const id=l.id?xd(l.id):'';
+    const item=document.createElement('div');
+    item.className='ll-item';
+    const djp=document.createElement('div');djp.className='ljp';djp.textContent=jp;item.appendChild(djp);
+    if(ro){const dro=document.createElement('div');dro.className='lro';dro.textContent=ro;item.appendChild(dro);}
+    if(id){const did=document.createElement('div');did.className='lid';did.textContent=id;item.appendChild(did);}
+    frag.appendChild(item);
+    const sep=document.createElement('div');sep.className='lsep';frag.appendChild(sep);
+  });
+  ll.appendChild(frag);
+})();
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 
