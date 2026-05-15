@@ -241,8 +241,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hero h1{font-family:var(--jp);font-size:clamp(2rem,5.5vw,3.8rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:1rem}
 .hero h1 em{color:var(--accent);font-style:normal;text-shadow:0 0 20px rgba(255,110,180,.4)}
 .hero p{color:var(--muted);font-size:.85rem;font-weight:300;max-width:460px;line-height:1.8}
-.hero-kanji{position:absolute;right:2.5rem;top:3rem;font-family:var(--jp);font-size:7rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.06),rgba(0,229,255,.04));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none}
-@media(max-width:600px){.hero-kanji{font-size:4rem;right:1.2rem}}
+.hero-kanji{position:absolute;right:1.2rem;top:2.5rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(0,229,255,.08));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none}
+@media(min-width:768px){.hero-kanji{font-size:7rem;right:2.5rem;top:3rem}}
 
 /* grid line deco di background */
 #bgwrap::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,110,180,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,110,180,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
@@ -271,11 +271,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <p>Lirik Jepang, romaji, dan terjemahan Indonesia. Biar lo nyanyi sambil ngerti maknanya.</p>
     <p style="margin-top:.75rem;font-size:1rem;color:#f0e6c8;font-weight:400;line-height:1.6">Request Lagu ➜ <a href="contact.html" style="color:#ffe066;font-weight:700;font-size:1.05rem;text-decoration:underline;text-underline-offset:3px;transition:opacity .2s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">Request</a></p>
   </div>
-  <div class="hero-wave">
-    <svg viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z" fill="#c9a96e"/>
-    </svg>
-  </div>
+
   <div class="search-wrap">
     <div class="search-box">
       <span class="search-icon">&#x2315;</span>
@@ -626,17 +622,37 @@ window.postCm = async () => {
 };
 
 // ── Load songs (realtime) ──
-onSnapshot(
-  query(collection(db,'songs'), orderBy('order','asc')),
-  snap => {
-    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    rc(document.getElementById('searchInp').value||'');
-  },
-  () => {
-    document.getElementById('songGrid').innerHTML =
-      '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
-  }
-);
+// Coba load dengan orderBy, fallback ke tanpa order jika index belum ada
+let unsubSongs = null;
+function loadSongs() {
+  const grid = document.getElementById('songGrid');
+  const tryOrdered = () => {
+    unsubSongs = onSnapshot(
+      query(collection(db,'songs'), orderBy('order','asc')),
+      snap => {
+        songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        rc(document.getElementById('searchInp').value||'');
+      },
+      err => {
+        // Jika error karena index / permission, fallback tanpa orderBy
+        unsubSongs = onSnapshot(
+          collection(db,'songs'),
+          snap => {
+            songs = snap.docs
+              .map(d=>({id:d.id, ...d.data()}))
+              .sort((a,b)=>(a.order??999)-(b.order??999));
+            rc(document.getElementById('searchInp').value||'');
+          },
+          () => {
+            grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+          }
+        );
+      }
+    );
+  };
+  tryOrdered();
+}
+loadSongs();
 
 sv('cat');
 </script>
