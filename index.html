@@ -91,7 +91,9 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:#06030f}
-body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative}
+body{color:var(--text);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+@media(pointer:coarse){body{-webkit-user-select:none;-moz-user-select:none;user-select:none}}
 
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:rgba(6,3,15,.85);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,110,180,.12);min-width:0;box-shadow:0 1px 24px rgba(255,110,180,.06)}
