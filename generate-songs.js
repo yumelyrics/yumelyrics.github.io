@@ -55,13 +55,25 @@ function generateHTML(song, slug) {
     metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
   }
 
-  const lyricsHTML = lyrics.map(l => `
-        <div class="ll-item">
+  // Simpan urutan asli, lalu acak untuk HTML (reader mode protection)
+  const originalLyrics = [...lyrics];
+  const shuffledLyrics = [...lyrics];
+  for (let i = shuffledLyrics.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledLyrics[i], shuffledLyrics[j]] = [shuffledLyrics[j], shuffledLyrics[i]];
+  }
+
+  // Tiap item diberi data-orig-index supaya JS bisa restore urutan asli
+  const lyricsHTML = shuffledLyrics.map((l, i) => {
+    const origIdx = originalLyrics.indexOf(l);
+    return `
+        <div class="ll-item" data-orig="${origIdx}">
           <div class="ljp">${escHtml(l.jp||'')}</div>
           ${l.ro ? `<div class="lro">${escHtml(l.ro)}</div>` : ''}
           ${l.id ? `<div class="lid">${escHtml(l.id)}</div>` : ''}
         </div>
-        <div class="lsep"></div>`).join('');
+        <div class="lsep" data-sep="${origIdx}"></div>`;
+  }).join('');
 
   const schema = JSON.stringify([
     {
@@ -551,6 +563,25 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<script>
+/* Restore urutan lirik asli — jalan sebelum user sempat lihat acakan */
+(function(){
+  var ll = document.getElementById('ll');
+  if(!ll) return;
+  var items = Array.from(ll.querySelectorAll('.ll-item'));
+  var seps  = Array.from(ll.querySelectorAll('.lsep'));
+  if(!items.length) return;
+  // Sort berdasarkan data-orig index
+  items.sort(function(a,b){ return parseInt(a.dataset.orig)-parseInt(b.dataset.orig); });
+  seps.sort(function(a,b){ return parseInt(a.dataset.sep)-parseInt(b.dataset.sep); });
+  ll.innerHTML = '';
+  items.forEach(function(item, i){
+    ll.appendChild(item);
+    if(seps[i]) ll.appendChild(seps[i]);
+  });
+})();
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
