@@ -584,14 +584,10 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     }
   });
 
-  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik */
+  /* 4. Blokir selectstart (desktop) — blokir di seluruh halaman kecuali input/textarea */
   document.addEventListener('selectstart', function(e){
     if(isInput(e.target)) return;
-    var el = e.target;
-    while(el && el !== document.body){
-      if(el.id==='ll') { e.preventDefault(); return; }
-      el = el.parentElement;
-    }
+    e.preventDefault();
   });
 
   /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi */
@@ -617,11 +613,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     if(!node) return;
     var el = node.nodeType===3 ? node.parentElement : node;
     if(isInput(el)) return;
-    /* Biarkan max CHAR_LIMIT karakter, sisanya di-clear */
-    var txt = sel.toString();
-    if(txt.length > CHAR_LIMIT){
-      sel.removeAllRanges();
-    }
+    sel.removeAllRanges();
   });
 
 })();
