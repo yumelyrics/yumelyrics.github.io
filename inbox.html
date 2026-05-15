@@ -351,7 +351,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display = 'block';
     startListening();
-    loadSongMap();
+    await loadSongMap();
     loadCmAdmin('songs');
     loadBannedUsers();
   } else {
@@ -367,13 +367,23 @@ window.doLogin = async () => {
   const err   = document.getElementById('l-err');
   const btn   = document.getElementById('loginBtn');
   if(!email||!pw){ err.textContent='Email & password wajib diisi.'; return; }
-  btn.disabled = true; err.textContent = '';
+  btn.disabled = true; err.textContent = 'Mencoba masuk...';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
     document.getElementById('l-pw').value = '';
+    err.textContent = '';
   } catch(e){
-    err.textContent = (e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')
-      ? 'Email atau password salah.' : 'Login gagal, coba lagi.';
+    console.error('[Login Error]', e.code, e.message);
+    const msg = {
+      'auth/invalid-credential': 'Email atau password salah.',
+      'auth/wrong-password': 'Password salah.',
+      'auth/user-not-found': 'Email tidak terdaftar.',
+      'auth/invalid-email': 'Format email tidak valid.',
+      'auth/too-many-requests': 'Terlalu banyak percobaan. Coba beberapa menit lagi.',
+      'auth/network-request-failed': 'Gagal terhubung ke server. Cek koneksi internet.',
+      'auth/user-disabled': 'Akun ini telah dinonaktifkan.',
+    };
+    err.textContent = msg[e.code] || ('Login gagal: ' + (e.message || e.code));
     document.getElementById('l-pw').value = '';
     document.getElementById('l-pw').focus();
   }
