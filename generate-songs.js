@@ -565,17 +565,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <div class="toast" id="toast"></div>
 
 <script>
-/* Restore urutan lirik asli — jalan sebelum user sempat lihat acakan */
+/* Restore urutan lirik asli — reorder tanpa destroy elemen */
 (function(){
   var ll = document.getElementById('ll');
   if(!ll) return;
   var items = Array.from(ll.querySelectorAll('.ll-item'));
   var seps  = Array.from(ll.querySelectorAll('.lsep'));
   if(!items.length) return;
-  // Sort berdasarkan data-orig index
   items.sort(function(a,b){ return parseInt(a.dataset.orig)-parseInt(b.dataset.orig); });
   seps.sort(function(a,b){ return parseInt(a.dataset.sep)-parseInt(b.dataset.sep); });
-  ll.innerHTML = '';
+  // Reorder pakai appendChild — pindahkan node tanpa hapus, event listener tetap aman
   items.forEach(function(item, i){
     ll.appendChild(item);
     if(seps[i]) ll.appendChild(seps[i]);
