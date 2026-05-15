@@ -28,6 +28,27 @@ function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+function randNoise() {
+  return NOISE_CHARS[Math.floor(Math.random() * NOISE_CHARS.length)];
+}
+function obfuscateLine(str) {
+  if (!str) return '';
+  const chars = [...str];
+  const indices = chars.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices.map(origIdx => {
+    const noiseCount = Math.floor(Math.random() * 2) + 1;
+    const noiseSpans = Array.from({length: noiseCount}, () =>
+      '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>'
+    ).join('');
+    return '<span data-c="' + origIdx + '">' + escHtml(chars[origIdx]) + '</span>' + noiseSpans;
+  }).join('');
+}
+
 function generateHTML(song, slug) {
   const titleDisplay = song.titleJp || '';
   const titleRo      = song.titleRo || '';
@@ -55,38 +76,16 @@ function generateHTML(song, slug) {
     metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
   }
 
-  // Obfuskasi lirik: karakter asli diacak posisinya + disisipi noise
-  // Reader mode baca semua span → teks kacau. JS sort data-c → teks benar.
-  const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  function randNoise() {
-    return NOISE_CHARS[Math.floor(Math.random() * NOISE_CHARS.length)];
-  }
-  function obfuscateLine(str) {
-    if (!str) return '';
-    const chars = [...str]; // handle multibyte (Jepang dll)
-    // Buat array index acak
-    const indices = chars.map((_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    // Render: tiap karakter asli + 1-2 noise setelahnya
-    return indices.map(origIdx => {
-      const noiseCount = Math.floor(Math.random() * 2) + 1;
-      const noise = Array.from({length: noiseCount}, () =>
-        \`<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">\${randNoise()}</span>\`
-      ).join('');
-      return \`<span data-c="\${origIdx}">\${escHtml(chars[origIdx])}</span>\${noise}\`;
-    }).join('');
-  }
 
-  const lyricsHTML = lyrics.map(l => \`
-        <div class="ll-item">
-          <div class="ljp" data-obf="1">\${obfuscateLine(l.jp||'')}</div>
-          \${l.ro ? \`<div class="lro" data-obf="1">\${obfuscateLine(l.ro)}</div>\` : ''}
-          \${l.id ? \`<div class="lid" data-obf="1">\${obfuscateLine(l.id)}</div>\` : ''}
-        </div>
-        <div class="lsep"></div>\`).join('');
+  const lyricsHTML = lyrics.map(l =>
+    '<div class="ll-item">' +
+    '<div class="ljp" data-obf="1">' + obfuscateLine(l.jp||'') + '</div>' +
+    (l.ro ? '<div class="lro" data-obf="1">' + obfuscateLine(l.ro) + '</div>' : '') +
+    (l.id ? '<div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div>' : '') +
+    '</div><div class="lsep"></div>'
+  ).join('');
+
+
 
   const schema = JSON.stringify([
     {
