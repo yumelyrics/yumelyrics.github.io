@@ -246,6 +246,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hero h1{font-family:var(--jp);font-size:clamp(2rem,5.5vw,3.8rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:1rem}
 .hero h1 em{color:var(--accent);font-style:normal;text-shadow:0 0 20px rgba(255,110,180,.4)}
 .hero p{color:var(--muted);font-size:.85rem;font-weight:300;max-width:460px;line-height:1.8}
+.req-btn{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;padding:.65rem 1.4rem .65rem 1rem;background:linear-gradient(135deg,rgba(255,110,180,.1),rgba(191,95,255,.08));border:1px solid rgba(255,110,180,.3);color:var(--text);font-family:var(--en);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;border-radius:2rem;transition:all .3s cubic-bezier(.25,.8,.25,1);position:relative;overflow:hidden;backdrop-filter:blur(8px)}
+.req-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.15),rgba(191,95,255,.12));opacity:0;transition:opacity .3s;border-radius:inherit}
+.req-btn:hover{border-color:rgba(255,110,180,.6);box-shadow:0 4px 24px rgba(255,110,180,.2),0 0 0 1px rgba(255,110,180,.1)}
+.req-btn:hover::before{opacity:1}
+.req-btn:hover .req-btn-arr{transform:translateX(4px)}
+.req-btn-icon{display:flex;align-items:center;color:var(--accent);flex-shrink:0}
+.req-btn-arr{color:var(--accent);transition:transform .25s;font-size:.85rem;margin-left:.1rem}
 .hero-kanji{position:absolute;right:2.5rem;top:3rem;font-family:var(--jp);font-size:4.5rem;font-weight:800;background:linear-gradient(135deg,rgba(255,110,180,.15),rgba(0,229,255,.1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;pointer-events:none;user-select:none;z-index:1}
 @media(min-width:768px){.hero-kanji{font-size:7rem;right:3rem;top:4rem}}
 
@@ -274,7 +281,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="eyebrow">Terjemahan Lagu Jepang</div>
     <h1>Kata-kata yang<br>terasa seperti <em>mimpi</em></h1>
     <p>Lirik Jepang, romaji, dan terjemahan Indonesia. Biar lo nyanyi sambil ngerti maknanya.</p>
-    <p style="margin-top:.75rem;font-size:1rem;color:#f0e6c8;font-weight:400;line-height:1.6">Request Lagu ➜ <a href="contact.html" style="color:#ffe066;font-weight:700;font-size:1.05rem;text-decoration:underline;text-underline-offset:3px;transition:opacity .2s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">Request</a></p>
+    <a href="contact.html" class="req-btn">
+      <span class="req-btn-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </span>
+      <span>Request Lagu</span>
+      <span class="req-btn-arr">→</span>
+    </a>
   </div>
 
   <div class="search-wrap">
