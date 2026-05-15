@@ -518,15 +518,38 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem;letter-spacing:.08em}#lyrView{padding-left:1.2rem;padding-right:1.2rem}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nb{padding:.35rem .5rem;font-size:.58rem}}
-/* ── Login Gate ── */
-.lid{position:relative}
-.lid-blur{filter:blur(6px);pointer-events:none;user-select:none;-webkit-user-select:none}
-#login-gate{margin:1.5rem 0 2rem;padding:1.5rem;border:1px solid rgba(255,110,180,.2);border-radius:8px;background:rgba(255,110,180,.04);text-align:center;display:flex;flex-direction:column;align-items:center;gap:.9rem}
-#login-gate-title{font-size:.95rem;color:var(--text);font-weight:500;letter-spacing:.02em}
-#login-gate-sub{font-size:.75rem;color:var(--muted);line-height:1.6;max-width:320px}
-.google-btn{display:inline-flex;align-items:center;gap:.6rem;background:#fff;border:none;border-radius:4px;padding:.6rem 1.2rem;font-family:var(--en);font-size:.8rem;font-weight:500;color:#3c4043;cursor:pointer;letter-spacing:.02em;transition:box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+/* ── Login Gate (floating sticky di bawah navbar) ── */
+#login-gate{position:fixed;top:60px;left:0;right:0;z-index:90;margin:0;padding:.55rem 2.5rem;border:none;border-bottom:1px solid rgba(255,110,180,.2);border-radius:0;background:rgba(6,3,15,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:wrap;box-shadow:0 3px 20px rgba(255,110,180,.1)}
+#login-gate-title{font-size:.75rem;color:var(--text);font-weight:500;letter-spacing:.02em;white-space:nowrap}
+#login-gate-sub{font-size:.68rem;color:var(--muted);line-height:1.5;max-width:380px}
+.google-btn{display:inline-flex;align-items:center;gap:.55rem;background:#fff;border:none;border-radius:4px;padding:.42rem .95rem;font-family:var(--en);font-size:.7rem;font-weight:500;color:#3c4043;cursor:pointer;letter-spacing:.02em;transition:box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);white-space:nowrap;flex-shrink:0}
 .google-btn:hover{box-shadow:0 2px 10px rgba(0,0,0,.4)}
-.google-btn svg{width:18px;height:18px;flex-shrink:0}
+.google-btn svg{width:15px;height:15px;flex-shrink:0}
+body.gate-open #lyrView{padding-top:3.5rem}
+@media(max-width:600px){#login-gate{padding:.5rem 1.2rem;gap:.65rem}#login-gate-sub{display:none}}
+/* ── Edit Profile Modal ── */
+#editProfileModal{position:fixed;inset:0;z-index:300;background:rgba(6,3,15,.88);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+#editProfileModal.open{display:flex}
+.ep-box{width:100%;max-width:380px;padding:1.8rem;border:1px solid rgba(255,110,180,.2);background:rgba(10,6,20,.98);display:flex;flex-direction:column;gap:.9rem;margin:1rem;border-radius:4px}
+.ep-title{font-family:var(--jp);font-size:1rem;font-weight:800;color:var(--accent)}
+.ep-avatar-wrap{display:flex;align-items:center;gap:.9rem;padding:.65rem;background:rgba(255,110,180,.04);border:1px solid rgba(255,110,180,.1);border-radius:4px}
+.ep-avatar-big{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.3)}
+.ep-avatar-placeholder-big{width:46px;height:46px;border-radius:50%;background:rgba(255,110,180,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);border:2px solid rgba(255,110,180,.3)}
+.ep-info{display:flex;flex-direction:column;gap:.15rem}
+.ep-name{font-size:.85rem;color:var(--text);font-weight:500}
+.ep-email{font-size:.62rem;color:var(--muted)}
+.ep-field{display:flex;flex-direction:column;gap:.28rem}
+.ep-lbl{font-size:.53rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.ep-inp{background:rgba(255,255,255,.03);border:1px solid rgba(255,110,180,.15);color:var(--text);font-family:var(--en);font-size:.8rem;padding:.55rem .85rem;outline:none;transition:border-color .2s;border-radius:2px;width:100%;box-sizing:border-box}
+.ep-inp:focus{border-color:rgba(255,110,180,.4)}
+.ep-inp::placeholder{color:var(--muted)}
+.ep-note{font-size:.62rem;color:var(--muted);line-height:1.6}
+.ep-actions{display:flex;gap:.55rem;margin-top:.2rem}
+.ep-save{background:linear-gradient(135deg,rgba(255,110,180,.85),rgba(191,95,255,.85));border:none;font-family:var(--en);font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.55rem 1.1rem;cursor:pointer;font-weight:600;transition:opacity .2s;border-radius:2px;flex:1}
+.ep-save:hover{opacity:.85}
+.ep-save:disabled{opacity:.4;cursor:not-allowed}
+.ep-cancel{background:none;border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem .9rem;cursor:pointer;transition:all .2s;border-radius:2px}
+.ep-cancel:hover{border-color:var(--red);color:var(--red)}
 /* ── Copy Lyric Gate ── */
 #copy-gate{margin:1.5rem 0 .5rem;padding:1.2rem 1.4rem;border:1px solid rgba(201,169,110,.2);border-radius:6px;background:rgba(201,169,110,.03);display:flex;flex-direction:column;align-items:flex-start;gap:.7rem}
 #copy-gate-title{font-size:.88rem;color:var(--text);font-weight:500}
@@ -564,8 +587,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="../stories.html">Cerita</a>
     <a class="nb" href="../contact.html">Hubungi</a>
     <div id="nav-user-slot" style="display:none" class="nav-user">
-      <div id="nav-avatar-wrap"></div>
-      <span id="nav-user-name" class="nav-user-name"></span>
+      <div id="nav-avatar-wrap" onclick="openEditProfile()" style="cursor:pointer" title="Edit profil"></div>
+      <span id="nav-user-name" class="nav-user-name" onclick="openEditProfile()" style="cursor:pointer" title="Edit profil"></span>
+      <button class="nav-logout" onclick="openEditProfile()" style="color:var(--muted);font-size:.58rem;letter-spacing:.08em">✏</button>
       <button class="nav-logout" onclick="doLogout()">Keluar</button>
     </div>
   </div>
@@ -600,10 +624,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
-      <!-- Login Gate — ditampilkan jika belum login, disembunyikan JS setelah auth -->
+      <!-- Login Gate — melayang di bawah navbar, ditampilkan jika belum login -->
       <div id="login-gate">
-        <div id="login-gate-title">Login untuk melihat terjemahan & copy lirik</div>
-        <div id="login-gate-sub">Lirik Jepang & romaji bisa dilihat gratis.<br>Terjemahan bahasa Indonesia & akses copy lirik tersedia setelah login dengan Google — gratis, tanpa syarat.</div>
+        <div id="login-gate-title">Login untuk copy lirik & komentar</div>
+        <div id="login-gate-sub">Lirik bisa dibaca tanpa login. Login dengan Google untuk copy lirik (setelah komentar) & bergabung di kolom komentar — gratis!</div>
         <button class="google-btn" onclick="doLogin()">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           Masuk dengan Google
@@ -656,6 +680,28 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div>
 </div>
 <div class="toast" id="toast"></div>
+<!-- ── Edit Profile Modal ── -->
+<div id="editProfileModal">
+  <div class="ep-box">
+    <div class="ep-title">Edit Profil</div>
+    <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
+      <div class="ep-avatar-placeholder-big" id="ep-avatar-big">?</div>
+      <div class="ep-info">
+        <div class="ep-name" id="ep-display-name-preview">—</div>
+        <div class="ep-email" id="ep-email-preview">—</div>
+      </div>
+    </div>
+    <div class="ep-field">
+      <div class="ep-lbl">Nama Tampilan</div>
+      <input class="ep-inp" id="ep-displayname" type="text" placeholder="Nama yang tampil di komentar">
+    </div>
+    <div class="ep-note">Nama ini akan tampil di komentar kamu. Avatar diambil otomatis dari akun Google.</div>
+    <div class="ep-actions">
+      <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
+      <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
+    </div>
+  </div>
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit }
@@ -737,14 +783,13 @@ async function applyAuthState(user) {
   _currentUser = user;
   const gate   = document.getElementById('login-gate');
   const navSlot= document.getElementById('nav-user-slot');
-  const lidEls = document.querySelectorAll('.lid');
   const cmLoginGate = document.getElementById('cm-login-gate');
   const cmFormWrap  = document.getElementById('cm-form-wrap');
 
   if (user) {
-    // Sembunyikan gate terjemahan, tampilkan terjemahan
+    // Sembunyikan floating gate
     gate.style.display = 'none';
-    lidEls.forEach(el => el.classList.remove('lid-blur'));
+    document.body.classList.remove('gate-open');
 
     // Cek status ban & sudah komentar
     [_isBanned, _hasCommented] = await Promise.all([
@@ -789,9 +834,9 @@ async function applyAuthState(user) {
       avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
     }
   } else {
-    // Tampilkan gate terjemahan, blur terjemahan
+    // Tampilkan floating gate login (tanpa blur terjemahan)
     gate.style.display = 'flex';
-    lidEls.forEach(el => el.classList.add('lid-blur'));
+    document.body.classList.add('gate-open');
     navSlot.style.display = 'none';
     _hasCommented = false;
     _isBanned = false;
@@ -818,6 +863,61 @@ window.doLogout = async () => {
   await signOut(auth);
   toast('Berhasil keluar.');
 };
+
+/* ── Edit Profile ── */
+window.openEditProfile = () => {
+  if (!_currentUser) return;
+  const modal = document.getElementById('editProfileModal');
+  if (!modal) return;
+  // Isi preview avatar
+  const bigWrap = document.getElementById('ep-avatar-wrap-big');
+  const bigAv = document.getElementById('ep-avatar-big');
+  if (_currentUser.photoURL) {
+    bigWrap.querySelector('.ep-avatar-placeholder-big') && (bigWrap.querySelector('.ep-avatar-placeholder-big').outerHTML = \`<img class="ep-avatar-big" src="\${_currentUser.photoURL}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`);
+    const img = document.getElementById('ep-avatar-big');
+    if(img && img.tagName==='IMG') img.src = _currentUser.photoURL;
+  } else {
+    const initial = (_currentUser.displayName||'U')[0].toUpperCase();
+    const ph = document.getElementById('ep-avatar-big');
+    if(ph) ph.textContent = initial;
+  }
+  document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '(nama tidak ada)';
+  document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
+  document.getElementById('ep-displayname').value = _currentUser.displayName || '';
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
+};
+
+window.closeEditProfile = () => {
+  const modal = document.getElementById('editProfileModal');
+  if (modal) modal.classList.remove('open');
+};
+
+window.saveEditProfile = async () => {
+  if (!_currentUser) return;
+  const newName = document.getElementById('ep-displayname').value.trim();
+  if (!newName) { toast('Nama tidak boleh kosong.'); return; }
+  const btn = document.querySelector('.ep-save');
+  if (btn) btn.disabled = true;
+  try {
+    // Firebase Auth: updateProfile
+    const { updateProfile } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
+    await updateProfile(_currentUser, { displayName: newName });
+    // Update nav
+    document.getElementById('nav-user-name').textContent = newName.split(' ')[0];
+    document.getElementById('cm-user-display').textContent = newName;
+    document.getElementById('ep-display-name-preview').textContent = newName;
+    toast('Profil berhasil diperbarui!');
+    closeEditProfile();
+  } catch(e) { toast('Gagal simpan: ' + (e.message || e.code)); }
+  if (btn) btn.disabled = false;
+};
+
+// Tutup modal kalau klik backdrop
+document.addEventListener('click', e => {
+  const modal = document.getElementById('editProfileModal');
+  if (modal && modal.classList.contains('open') && e.target === modal) closeEditProfile();
+});
 
 /* ── Copy Lyric (harus sudah login + komentar) ── */
 window.doCopyLyric = async () => {

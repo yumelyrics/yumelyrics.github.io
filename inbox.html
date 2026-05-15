@@ -346,7 +346,7 @@ function toast(m){
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── AUTH ──
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if(user){
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display = 'block';
