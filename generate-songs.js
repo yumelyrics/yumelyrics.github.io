@@ -455,9 +455,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #lyrView{position:relative}
 #lyrView::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none}
 .ll-item{}
-.ljp{font-family:var(--jp);font-size:1.2rem;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:.25rem;overflow:hidden}
-.lro{font-size:.82rem;color:var(--muted);font-style:italic;font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
-.lid{font-size:.88rem;color:var(--accent);font-weight:300;line-height:1.6;transition:opacity .25s,max-height .3s;overflow:hidden;max-height:5rem}
+/* Sembunyikan lirik sampai JS selesai apply order — cegah flash karakter acak */
+.ljp{font-family:var(--jp);font-size:1.2rem;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:.25rem;overflow:hidden;visibility:hidden}
+.lro{font-size:.82rem;color:var(--muted);font-style:italic;font-weight:300;line-height:1.6;overflow:hidden;max-height:5rem;visibility:hidden}
+.lid{font-size:.88rem;color:var(--accent);font-weight:300;line-height:1.6;overflow:hidden;max-height:5rem;visibility:hidden}
+/* Reveal setelah JS selesai — class .rdy ditambah oleh script */
+.rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 /* Obfuscated line containers - karakter tampil urut via CSS order di flex container */
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 [data-obf="1"] span[data-c]{white-space:pre}
@@ -621,6 +624,42 @@ let sro=true, str=true;
       s.style.order = s.dataset.c;
       // Noise spans sudah absolute/hidden, tidak perlu diubah
     });
+  });
+  // Reveal lirik setelah semua order selesai di-apply — tidak ada flash lagi
+  document.body.classList.add('rdy');
+})();
+
+/* ── Anti-Copy: scramble teks yang di-copy dari halaman ini ── */
+(()=>{
+  function scrambleText(str) {
+    if (!str || str.length < 2) return str;
+    // Pisah per baris, scramble tiap baris secara independen
+    return str.split('\\n').map(line => {
+      if (line.trim().length < 2) return line;
+      const words = line.split(' ');
+      // Scramble karakter dalam tiap kata (jaga spasi antar kata)
+      return words.map(word => {
+        if (word.length < 2) return word;
+        const arr = [...word];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr.join('');
+      }).join(' ');
+    }).join('\\n');
+  }
+
+  document.addEventListener('copy', function(e) {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const raw = sel.toString();
+    if (!raw.trim()) return;
+    const scrambled = scrambleText(raw);
+    const watermarked = scrambled + '\\n\\n— yumelyrics.my.id';
+    e.clipboardData.setData('text/plain', watermarked);
+    e.clipboardData.setData('text/html', '<span>' + scrambled.replace(/\\n/g,'<br>') + '</span><br><br><em>— yumelyrics.my.id</em>');
+    e.preventDefault();
   });
 })();
 
