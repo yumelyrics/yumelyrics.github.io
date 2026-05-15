@@ -732,7 +732,7 @@ function loadSongs() {
     unsubSongs = onSnapshot(
       query(collection(db,'songs'), orderBy('order','asc')),
       snap => {
-        songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        songs = snap.docs.map(d=>({id:d.id, ...d.data()})).reverse();
         rc(document.getElementById('searchInp').value||'');
       },
       err => {
@@ -742,7 +742,7 @@ function loadSongs() {
           snap => {
             songs = snap.docs
               .map(d=>({id:d.id, ...d.data()}))
-              .sort((a,b)=>(a.order??999)-(b.order??999));
+              .sort((a,b)=>(a.order??999)-(b.order??999)).reverse();
             rc(document.getElementById('searchInp').value||'');
           },
           () => {
