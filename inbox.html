@@ -118,6 +118,23 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .cm-item-actions{display:flex;gap:.5rem;align-items:center;flex-shrink:0}
 .cm-del{background:none;border:1px solid rgba(201,110,110,.3);color:var(--red);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .cm-del:hover{background:rgba(201,110,110,.1)}
+.cm-ban{background:none;border:1px solid rgba(255,165,0,.35);color:#f5a623;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.cm-ban:hover{background:rgba(255,165,0,.1)}
+.cm-unban{background:none;border:1px solid rgba(52,211,153,.3);color:#34d399;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
+.cm-unban:hover{background:rgba(52,211,153,.08)}
+.banned-badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.55rem;font-weight:700;color:#07060f;background:#f5a623;padding:.2rem .55rem;border-radius:2rem;letter-spacing:.08em;text-transform:uppercase;margin-left:.5rem;vertical-align:middle;box-shadow:0 0 8px rgba(245,166,35,.45);animation:badge-pulse 2.5s ease-in-out infinite}
+@keyframes badge-pulse{0%,100%{box-shadow:0 0 6px rgba(245,166,35,.4)}50%{box-shadow:0 0 14px rgba(245,166,35,.75)}}
+.banned-item{background:rgba(255,165,0,.03);border:1px solid rgba(255,165,0,.15);padding:1rem 1.2rem;transition:border-color .2s;display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.banned-item:hover{border-color:rgba(255,165,0,.35);background:rgba(255,165,0,.05)}
+.banned-info{display:flex;flex-direction:column;gap:.25rem;min-width:0;flex:1}
+.banned-name{font-size:.84rem;color:var(--text);font-weight:600}
+.banned-uid{font-size:.62rem;color:var(--muted);word-break:break-all;font-family:monospace}
+.banned-reason{font-size:.73rem;color:#f5a623;line-height:1.55;margin-top:.1rem}
+.banned-trigger{font-size:.72rem;color:var(--muted);font-style:italic;line-height:1.55;padding:.4rem .7rem;border-left:2px solid rgba(255,165,0,.3);margin-top:.25rem;background:rgba(255,165,0,.04)}
+.banned-date{font-size:.61rem;color:var(--muted);margin-top:.1rem}
+.banned-actions{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;flex-shrink:0}
+.cm-item-banned{opacity:.65}
+.cm-item-banned .cm-item-name{display:flex;align-items:center;flex-wrap:wrap;gap:.1rem}
 .cm-replies{margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem}
 .cm-reply-item{background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.12);padding:.6rem .9rem;font-size:.78rem;color:var(--text);line-height:1.5;display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
 .cm-reply-item .rm{font-size:.6rem;color:var(--muted);margin-top:.2rem}
@@ -216,6 +233,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="stat-item"><div class="stat-val" id="stat-shr">—</div><div class="stat-lbl">Sharing</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-knt">—</div><div class="stat-lbl">Kontak</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-unread" style="color:var(--accent2)">—</div><div class="stat-lbl">Belum Dibalas</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-banned" style="color:var(--red)">—</div><div class="stat-lbl">User Banned</div></div>
   </div>
 
   <!-- ── PESAN MASUK ── -->
@@ -241,7 +259,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="sblock-head">
       <div class="sblock-info">
         <div class="sblock-tit">Moderasi Komentar</div>
-        <div class="sblock-desc">Lihat, balas, dan hapus komentar dari halaman lirik maupun cerita.</div>
+        <div class="sblock-desc">Lihat, balas, hapus, dan ban user dari komentar halaman lirik maupun cerita.</div>
       </div>
       <div class="sblock-count" id="cmCountBadge">0 komentar</div>
     </div>
@@ -250,6 +268,18 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <button class="cmtab" onclick="switchCmTab('stories',this)">✦ Cerita</button>
     </div>
     <div class="cm-list" id="cmList"><div class="cm-empty">Memuat komentar...</div></div>
+  </div>
+
+  <!-- ── BANNED USERS ── -->
+  <div class="section-block">
+    <div class="sblock-head">
+      <div class="sblock-info">
+        <div class="sblock-tit">Daftar User Banned</div>
+        <div class="sblock-desc">User yang diblokir dari komentar dan copy lirik. Klik Cabut Ban untuk memulihkan akses.</div>
+      </div>
+      <div class="sblock-count" id="bannedCountBadge">0 user</div>
+    </div>
+    <div class="cm-list" id="bannedList"><div class="cm-empty">Memuat daftar banned...</div></div>
   </div>
 
 </div><!-- /inbox-wrap -->
@@ -282,7 +312,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, where }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, where, setDoc, getDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -303,6 +333,7 @@ let subFilter = 'all';
 let songMap = {};
 let curCmTab = 'songs';
 let unsubSubs = null;
+let bannedMap = {}; // uid -> ban data
 
 // ── TOAST ──
 function toast(m){
@@ -322,6 +353,7 @@ onAuthStateChanged(auth, user => {
     startListening();
     loadSongMap();
     loadCmAdmin('songs');
+    loadBannedUsers();
   } else {
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display = 'none';
@@ -386,6 +418,8 @@ function updateStats(){
   document.getElementById('stat-shr').textContent    = shr;
   document.getElementById('stat-knt').textContent    = knt;
   document.getElementById('stat-unread').textContent = unread;
+  const bannedCount = Object.keys(bannedMap).length;
+  document.getElementById('stat-banned').textContent = bannedCount;
 }
 
 // ── FILTER SUBS ──
@@ -545,6 +579,8 @@ async function loadCmAdmin(tab){
     el.innerHTML = parents.map(c => {
       const replies  = (replyMap[c.id]||[]).sort((a,b) => (a.ts||0)-(b.ts||0));
       const refLabel = tab==='songs' ? (songMap[c[refField]] || c[refField] || '') : (c[refField] || '');
+      const isBanned = c.uid && bannedMap[c.uid];
+      const bannedBadge = isBanned ? '<span class="banned-badge">🚫 Banned</span>' : '';
       const repliesHtml = replies.length ? `<div class="cm-replies">${replies.map(r => `
         <div class="cm-reply-item" id="cri-${r.id}">
           <div>
@@ -554,15 +590,19 @@ async function loadCmAdmin(tab){
           <button class="cm-del" onclick="window._delCm('${colName}','${r.id}','${c.id}')">Hapus</button>
         </div>`).join('')}</div>` : '';
 
-      return `<div class="cm-item" id="cmi-${c.id}">
+      return `<div class="cm-item${isBanned?' cm-item-banned':''}" id="cmi-${c.id}">
         <div class="cm-item-hdr">
           <div class="cm-item-info">
-            <div class="cm-item-name">${escCm(c.name)}</div>
+            <div class="cm-item-name">${escCm(c.name)}${bannedBadge}</div>
             <div class="cm-item-meta">${escCm(c.date)}</div>
             ${refLabel?`<div class="cm-item-ref">↳ ${escCm(refLabel)}</div>`:''}
           </div>
           <div class="cm-item-actions">
             <button class="cm-reply-btn" onclick="window._toggleCmReply('${c.id}')">↩ Balas</button>
+            ${c.uid ? (isBanned
+              ? `<button class="cm-unban" onclick="window._unbanUser('${c.uid}','${escCm(c.name)}')">✓ Cabut Ban</button>`
+              : `<button class="cm-ban" onclick="window._banUser('${c.uid}','${escCm(c.name)}','${escCm(c.text.substring(0,60))}')">🚫 Ban</button>`
+            ) : ''}
             <button class="cm-del" onclick="window._delCm('${colName}','${c.id}',null)">Hapus</button>
           </div>
         </div>
@@ -624,6 +664,134 @@ window._delCm = async (colName, id, parentId) => {
     loadCmAdmin(curCmTab);
   } catch(e){ toast('Gagal hapus.'); }
 };
+
+// ── BAN USER ──
+// ── BAN DIALOG ──
+let _banPending = null;
+
+function createBanDialog(){
+  if(document.getElementById('banDialog')) return;
+  const d = document.createElement('div');
+  d.id = 'banDialog';
+  d.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(7,6,15,.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)';
+  d.innerHTML = `
+    <div style="width:100%;max-width:420px;padding:2rem;border:1px solid rgba(255,165,0,.3);background:rgba(10,16,28,.97);display:flex;flex-direction:column;gap:1rem;animation:fu .25s ease;margin:1rem">
+      <div style="font-family:var(--jp);font-size:1.1rem;font-weight:800;color:#f5a623">🚫 Ban User</div>
+      <div id="banDialogUser" style="font-size:.78rem;color:var(--muted)"></div>
+      <div>
+        <div style="font-size:.56rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.4rem">Komentar Pemicu</div>
+        <div id="banDialogPreview" style="font-size:.78rem;color:var(--text);line-height:1.6;padding:.55rem .8rem;background:rgba(255,165,0,.05);border:1px solid rgba(255,165,0,.2);border-left:3px solid #f5a623;font-style:italic"></div>
+      </div>
+      <div>
+        <div style="font-size:.56rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.4rem">Alasan Ban</div>
+        <input id="banDialogReason" style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,165,0,.25);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.65rem .9rem;outline:none;box-sizing:border-box;transition:border-color .2s" placeholder="Masukkan alasan ban...">
+      </div>
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:.25rem">
+        <button onclick="closeBanDialog()" style="background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem 1rem;cursor:pointer">Batal</button>
+        <button onclick="confirmBanDialog()" style="background:#f5a623;border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;padding:.55rem 1.2rem;cursor:pointer;font-weight:600">🚫 Konfirmasi Ban</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+}
+
+window.closeBanDialog = () => {
+  const d = document.getElementById('banDialog');
+  if(d){ d.style.display='none'; }
+  _banPending = null;
+};
+
+window.confirmBanDialog = async () => {
+  if(!_banPending) return;
+  const { uid, name, commentText } = _banPending;
+  const reasonEl = document.getElementById('banDialogReason');
+  const reason = reasonEl.value.trim();
+  if(!reason){ reasonEl.style.borderColor='rgba(201,110,110,.6)'; reasonEl.focus(); return; }
+  closeBanDialog();
+  try {
+    await setDoc(doc(db, 'banned_users', uid), {
+      uid, name,
+      reason,
+      triggerComment: commentText || '',
+      bannedAt: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      bannedTs: Date.now(),
+      bannedBy: 'Admin'
+    });
+    toast(`🚫 ${name} berhasil di-ban.`);
+    await loadBannedUsers();
+    loadCmAdmin(curCmTab);
+  } catch(e){ toast('Gagal ban: '+e.message); }
+};
+
+window._banUser = async (uid, name, commentText) => {
+  if(!uid){ toast('UID tidak ditemukan.'); return; }
+  createBanDialog();
+  _banPending = { uid, name, commentText };
+  document.getElementById('banDialogUser').textContent = `User: ${name}  ·  UID: ${uid}`;
+  document.getElementById('banDialogPreview').textContent = commentText || '(teks komentar tidak tersedia)';
+  const reasonEl = document.getElementById('banDialogReason');
+  reasonEl.value = '';
+  reasonEl.style.borderColor = 'rgba(255,165,0,.25)';
+  document.getElementById('banDialog').style.display = 'flex';
+  setTimeout(() => reasonEl.focus(), 80);
+};
+
+window._unbanUser = async (uid, name) => {
+  if(!confirm(`Cabut ban untuk "${name}"? User bisa komentar lagi.`)) return;
+  try {
+    await deleteDoc(doc(db, 'banned_users', uid));
+    toast(`✓ Ban ${name} berhasil dicabut.`);
+    await loadBannedUsers();
+    loadCmAdmin(curCmTab);
+  } catch(e){ toast('Gagal cabut ban: '+e.message); }
+};
+
+window._deleteBanRecord = async (uid, name) => {
+  if(!confirm(`Hapus record ban "${name}" dari database? User tidak akan dipulihkan, hanya record yang dihapus.`)) return;
+  try {
+    await deleteDoc(doc(db, 'banned_users', uid));
+    toast(`🗑 Record ban ${name} dihapus.`);
+    await loadBannedUsers();
+    loadCmAdmin(curCmTab);
+  } catch(e){ toast('Gagal hapus record: '+e.message); }
+};
+
+// ── LOAD BANNED USERS ──
+async function loadBannedUsers(){
+  const el = document.getElementById('bannedList');
+  try {
+    const snap = await getDocs(collection(db, 'banned_users'));
+    bannedMap = {};
+    snap.docs.forEach(d => { bannedMap[d.id] = d.data(); });
+    const count = snap.docs.length;
+    document.getElementById('bannedCountBadge').textContent = count + ' user';
+    document.getElementById('stat-banned').textContent = count;
+
+    if(!count){
+      el.innerHTML = '<div class="cm-empty">Tidak ada user yang dibanned.</div>';
+      return;
+    }
+
+    const sorted = snap.docs.map(d => d.data()).sort((a,b) => (b.bannedTs||0)-(a.bannedTs||0));
+    el.innerHTML = sorted.map(b => {
+      const triggerHtml = b.triggerComment
+        ? `<div class="banned-trigger">💬 "${escCm(b.triggerComment)}${b.triggerComment.length>=60?'…':''}"</div>`
+        : '';
+      return `<div class="banned-item" id="ban-${b.uid}">
+        <div class="banned-info">
+          <div class="banned-name">🚫 ${escCm(b.name||'Unknown')}</div>
+          <div class="banned-uid">UID: ${escCm(b.uid)}</div>
+          ${b.reason?`<div class="banned-reason">⚠ ${escCm(b.reason)}</div>`:''}
+          ${triggerHtml}
+          <div class="banned-date">Dibanned ${escCm(b.bannedAt||'')}${b.bannedBy?' · oleh '+escCm(b.bannedBy):''}</div>
+        </div>
+        <div class="banned-actions">
+          <button class="cm-unban" onclick="window._unbanUser('${b.uid}','${escCm(b.name||'Unknown')}')">✓ Cabut Ban</button>
+          <button class="cm-del" style="font-size:.58rem;padding:.28rem .6rem" onclick="window._deleteBanRecord('${b.uid}','${escCm(b.name||'Unknown')}')">Hapus Record</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){ el.innerHTML = '<div class="cm-empty">Gagal memuat daftar banned.</div>'; }
+}
 </script>
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
