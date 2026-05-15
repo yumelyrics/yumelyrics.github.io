@@ -55,21 +55,38 @@ function generateHTML(song, slug) {
     metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
   }
 
-  // Encode lirik — disimpan di script tag, tidak dirender langsung di DOM
-  // Reader mode tidak bisa baca script tag, JS normal bisa decode & inject
-  function xorEncode(str, key) {
-    const keyBytes = Buffer.from(key, 'utf8');
-    const strBytes = Buffer.from(str, 'utf8');
-    return strBytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]).toString('base64');
+  // Obfuskasi lirik: karakter asli diacak posisinya + disisipi noise
+  // Reader mode baca semua span → teks kacau. JS sort data-c → teks benar.
+  const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  function randNoise() {
+    return NOISE_CHARS[Math.floor(Math.random() * NOISE_CHARS.length)];
   }
-  const XOR_KEY = 'yume' + songId.substring(0, 4);
-  const encodedLyrics = lyrics.map(l => ({
-    jp: l.jp ? xorEncode(l.jp, XOR_KEY) : '',
-    ro: l.ro ? xorEncode(l.ro, XOR_KEY) : '',
-    id: l.id ? xorEncode(l.id, XOR_KEY) : '',
-  }));
+  function obfuscateLine(str) {
+    if (!str) return '';
+    const chars = [...str]; // handle multibyte (Jepang dll)
+    // Buat array index acak
+    const indices = chars.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    // Render: tiap karakter asli + 1-2 noise setelahnya
+    return indices.map(origIdx => {
+      const noiseCount = Math.floor(Math.random() * 2) + 1;
+      const noise = Array.from({length: noiseCount}, () =>
+        \`<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">\${randNoise()}</span>\`
+      ).join('');
+      return \`<span data-c="\${origIdx}">\${escHtml(chars[origIdx])}</span>\${noise}\`;
+    }).join('');
+  }
 
-  const lyricsHTML = ''; // kosong — diisi JS setelah decode
+  const lyricsHTML = lyrics.map(l => \`
+        <div class="ll-item">
+          <div class="ljp" data-obf="1">\${obfuscateLine(l.jp||'')}</div>
+          \${l.ro ? \`<div class="lro" data-obf="1">\${obfuscateLine(l.ro)}</div>\` : ''}
+          \${l.id ? \`<div class="lid" data-obf="1">\${obfuscateLine(l.id)}</div>\` : ''}
+        </div>
+        <div class="lsep"></div>\`).join('');
 
   const schema = JSON.stringify([
     {
@@ -560,7 +577,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<script type="application/json" id="ld">${JSON.stringify(encodedLyrics)}</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment }
@@ -579,36 +595,15 @@ const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let sro=true, str=true;
 
-/* ── Inject lirik dari encoded data (defer, jalan setelah reader mode snapshot) ── */
+/* ── Restore urutan karakter lirik (obfuscation fix) ── */
 (()=>{
-  const el=document.getElementById('ld');
-  const ll=document.getElementById('ll');
-  if(!el||!ll) return;
-  const key='${XOR_KEY}';
-  const keyBytes=new TextEncoder().encode(key);
-  function xd(b64){
-    try{
-      const bin=atob(b64);
-      const bytes=new Uint8Array(bin.length);
-      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i)^keyBytes[i%keyBytes.length];
-      return new TextDecoder('utf-8').decode(bytes);
-    }catch(e){return '';}
-  }
-  const data=JSON.parse(el.textContent);
-  const frag=document.createDocumentFragment();
-  data.forEach(l=>{
-    const jp=l.jp?xd(l.jp):'';
-    const ro=l.ro?xd(l.ro):'';
-    const id=l.id?xd(l.id):'';
-    const item=document.createElement('div');
-    item.className='ll-item';
-    const djp=document.createElement('div');djp.className='ljp';djp.textContent=jp;item.appendChild(djp);
-    if(ro){const dro=document.createElement('div');dro.className='lro';dro.textContent=ro;item.appendChild(dro);}
-    if(id){const did=document.createElement('div');did.className='lid';did.textContent=id;item.appendChild(did);}
-    frag.appendChild(item);
-    const sep=document.createElement('div');sep.className='lsep';frag.appendChild(sep);
+  document.querySelectorAll('[data-obf="1"]').forEach(line => {
+    const spans = Array.from(line.querySelectorAll('span[data-c]'));
+    if (!spans.length) return;
+    spans.sort((a, b) => parseInt(a.dataset.c) - parseInt(b.dataset.c));
+    const text = spans.map(s => s.textContent).join('');
+    line.textContent = text; // ganti semua span + noise dengan teks bersih
   });
-  ll.appendChild(frag);
 })();
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
