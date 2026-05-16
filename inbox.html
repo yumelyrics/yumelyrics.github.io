@@ -133,6 +133,24 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .banned-trigger{font-size:.72rem;color:var(--muted);font-style:italic;line-height:1.55;padding:.4rem .7rem;border-left:2px solid rgba(255,165,0,.3);margin-top:.25rem;background:rgba(255,165,0,.04)}
 .banned-date{font-size:.61rem;color:var(--muted);margin-top:.1rem}
 .banned-actions{display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;flex-shrink:0}
+/* ── Ban duration pills ── */
+.ban-dur-wrap{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem}
+.ban-dur-pill{background:none;border:1px solid rgba(255,165,0,.25);font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:.3rem .75rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.ban-dur-pill:hover{border-color:rgba(255,165,0,.55);color:#f5a623}
+.ban-dur-pill.sel{background:rgba(255,165,0,.15);border-color:#f5a623;color:#f5a623;font-weight:600}
+.ban-dur-custom{display:none;align-items:center;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.ban-dur-custom.show{display:flex}
+.ban-dur-custom-inp{width:80px;background:rgba(255,255,255,.03);border:1px solid rgba(255,165,0,.25);color:var(--text);font-family:var(--en);font-size:.8rem;padding:.42rem .65rem;outline:none;transition:border-color .2s;border-radius:2px;text-align:center}
+.ban-dur-custom-inp:focus{border-color:rgba(255,165,0,.55)}
+.ban-dur-custom-unit{display:flex;gap:.3rem}
+.ban-dur-unit-btn{background:none;border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.ban-dur-unit-btn.sel{background:rgba(255,165,0,.15);border-color:#f5a623;color:#f5a623}
+/* ── Sisa waktu ban di banned list ── */
+.banned-until{display:inline-flex;align-items:center;gap:.3rem;font-size:.62rem;font-weight:600;margin-top:.15rem}
+.banned-until.permanent{color:var(--red)}
+.banned-until.temp{color:#f5a623}
+.banned-until.expired{color:#34d399}
+
 .cm-item-banned{opacity:.65}
 .cm-item-banned .cm-item-name{display:flex;align-items:center;flex-wrap:wrap;gap:.1rem}
 .cm-replies{margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem}
@@ -680,13 +698,56 @@ window._delCm = async (colName, id, parentId) => {
 // ── BAN DIALOG ──
 let _banPending = null;
 
+// Durasi ban yang dipilih saat ini (ms). null = permanen
+let _banDurationMs = null;
+let _banCustomUnit = 'jam'; // 'jam' | 'hari'
+
+function selectBanDur(preset, el){
+  // preset: null (permanen) | number ms | 'custom'
+  document.querySelectorAll('.ban-dur-pill').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  const customRow = document.getElementById('banDurCustomRow');
+  if(preset === 'custom'){
+    _banDurationMs = 'custom';
+    if(customRow) customRow.classList.add('show');
+  } else {
+    _banDurationMs = preset; // null = permanen, angka = ms
+    if(customRow) customRow.classList.remove('show');
+  }
+}
+
+function selectBanUnit(unit, el){
+  _banCustomUnit = unit;
+  document.querySelectorAll('.ban-dur-unit-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function getEffectiveBanDurationMs(){
+  if(_banDurationMs === null) return null; // permanen
+  if(_banDurationMs === 'custom'){
+    const val = parseInt(document.getElementById('banDurCustomVal').value, 10);
+    if(!val || val < 1) return null;
+    const ms = _banCustomUnit === 'hari' ? val * 24 * 60 * 60 * 1000 : val * 60 * 60 * 1000;
+    return ms;
+  }
+  return _banDurationMs;
+}
+
+function formatBanDurLabel(ms){
+  if(!ms) return 'Permanen';
+  const h = ms / (60 * 60 * 1000);
+  if(h < 24) return h + ' jam';
+  const d = h / 24;
+  return d + ' hari';
+}
+
 function createBanDialog(){
   if(document.getElementById('banDialog')) return;
   const d = document.createElement('div');
   d.id = 'banDialog';
   d.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(7,6,15,.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)';
   d.innerHTML = `
-    <div style="width:100%;max-width:420px;padding:2rem;border:1px solid rgba(255,165,0,.3);background:rgba(10,16,28,.97);display:flex;flex-direction:column;gap:1rem;animation:fu .25s ease;margin:1rem">
+    <div style="width:100%;max-width:440px;padding:2rem;border:1px solid rgba(255,165,0,.3);background:rgba(10,16,28,.97);display:flex;flex-direction:column;gap:1rem;animation:fu .25s ease;margin:1rem;max-height:90dvh;overflow-y:auto">
       <div style="font-family:var(--jp);font-size:1.1rem;font-weight:800;color:#f5a623">🚫 Ban User</div>
       <div id="banDialogUser" style="font-size:.78rem;color:var(--muted)"></div>
       <div>
@@ -697,18 +758,53 @@ function createBanDialog(){
         <div style="font-size:.56rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.4rem">Alasan Ban</div>
         <input id="banDialogReason" style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,165,0,.25);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.65rem .9rem;outline:none;box-sizing:border-box;transition:border-color .2s" placeholder="Masukkan alasan ban...">
       </div>
+      <div>
+        <div style="font-size:.56rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.5rem">Durasi Ban</div>
+        <div class="ban-dur-wrap">
+          <button class="ban-dur-pill sel" onclick="selectBanDur(null,this)">∞ Permanen</button>
+          <button class="ban-dur-pill" onclick="selectBanDur(${1*24*60*60*1000},this)">1 Hari</button>
+          <button class="ban-dur-pill" onclick="selectBanDur(${3*24*60*60*1000},this)">3 Hari</button>
+          <button class="ban-dur-pill" onclick="selectBanDur(${7*24*60*60*1000},this)">7 Hari</button>
+          <button class="ban-dur-pill" onclick="selectBanDur(${30*24*60*60*1000},this)">30 Hari</button>
+          <button class="ban-dur-pill" onclick="selectBanDur('custom',this)">✎ Custom</button>
+        </div>
+        <div class="ban-dur-custom" id="banDurCustomRow">
+          <input class="ban-dur-custom-inp" id="banDurCustomVal" type="number" min="1" placeholder="12">
+          <div class="ban-dur-custom-unit">
+            <button class="ban-dur-unit-btn sel" onclick="selectBanUnit('jam',this)">Jam</button>
+            <button class="ban-dur-unit-btn" onclick="selectBanUnit('hari',this)">Hari</button>
+          </div>
+          <span style="font-size:.65rem;color:var(--muted)" id="banDurPreviewText"></span>
+        </div>
+      </div>
       <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:.25rem">
         <button onclick="closeBanDialog()" style="background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem 1rem;cursor:pointer">Batal</button>
         <button onclick="confirmBanDialog()" style="background:#f5a623;border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;padding:.55rem 1.2rem;cursor:pointer;font-weight:600">🚫 Konfirmasi Ban</button>
       </div>
     </div>`;
   document.body.appendChild(d);
+  // Live preview label untuk custom input
+  d.querySelector('#banDurCustomVal').addEventListener('input', function(){
+    const v = parseInt(this.value, 10);
+    const previewEl = document.getElementById('banDurPreviewText');
+    if(v && v > 0){
+      const label = _banCustomUnit === 'hari'
+        ? `= ${v} hari (${v*24} jam)`
+        : `= ${v} jam (${(v/24).toFixed(1)} hari)`;
+      previewEl.textContent = label;
+    } else {
+      previewEl.textContent = '';
+    }
+  });
 }
 
 window.closeBanDialog = () => {
   const d = document.getElementById('banDialog');
   if(d){ d.style.display='none'; }
   _banPending = null;
+  // Reset durasi ke default permanen
+  _banDurationMs = null;
+  _banCustomUnit = 'jam';
 };
 
 window.confirmBanDialog = async () => {
@@ -717,6 +813,11 @@ window.confirmBanDialog = async () => {
   const reasonEl = document.getElementById('banDialogReason');
   const reason = reasonEl.value.trim();
   if(!reason){ reasonEl.style.borderColor='rgba(201,110,110,.6)'; reasonEl.focus(); return; }
+
+  const durMs = getEffectiveBanDurationMs();
+  const bannedUntil = durMs ? Date.now() + durMs : null; // null = permanen
+  const durLabel = durMs ? formatBanDurLabel(durMs) : 'Permanen';
+
   closeBanDialog();
   try {
     await setDoc(doc(db, 'banned_users', uid), {
@@ -725,9 +826,11 @@ window.confirmBanDialog = async () => {
       triggerComment: commentText || '',
       bannedAt: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       bannedTs: Date.now(),
-      bannedBy: 'Admin'
+      bannedBy: 'Admin',
+      bannedUntil: bannedUntil,   // null = permanen, timestamp ms = sementara
+      banDuration: durLabel
     });
-    toast(`🚫 ${name} berhasil di-ban.`);
+    toast(`🚫 ${name} di-ban (${durLabel}).`);
     await loadBannedUsers();
     loadCmAdmin(curCmTab);
   } catch(e){ toast('Gagal ban: '+e.message); }
@@ -737,6 +840,12 @@ window._banUser = async (uid, name, commentText) => {
   if(!uid){ toast('UID tidak ditemukan.'); return; }
   createBanDialog();
   _banPending = { uid, name, commentText };
+  _banDurationMs = null; // reset ke permanen
+  _banCustomUnit = 'jam';
+  // Reset pill selection
+  document.querySelectorAll('.ban-dur-pill').forEach((p,i) => p.classList.toggle('sel', i===0));
+  const customRow = document.getElementById('banDurCustomRow');
+  if(customRow) customRow.classList.remove('show');
   document.getElementById('banDialogUser').textContent = `User: ${name}  ·  UID: ${uid}`;
   document.getElementById('banDialogPreview').textContent = commentText || '(teks komentar tidak tersedia)';
   const reasonEl = document.getElementById('banDialogReason');
@@ -767,6 +876,36 @@ window._deleteBanRecord = async (uid, name) => {
 };
 
 // ── LOAD BANNED USERS ──
+function formatEndDate(ts){
+  const d = new Date(ts);
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} pukul ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function formatRemainingTime(bannedUntil){
+  if(bannedUntil === null || bannedUntil === undefined){
+    return { label: '∞ Permanen', cls: 'permanent' };
+  }
+  const remaining = bannedUntil - Date.now();
+  if(remaining <= 0){
+    return { label: '✓ Sudah expired', cls: 'expired' };
+  }
+  const endStr = formatEndDate(bannedUntil);
+  const totalH = remaining / (60 * 60 * 1000);
+  let countdown;
+  if(totalH < 1){
+    const m = Math.ceil(remaining / (60 * 1000));
+    countdown = `${m} menit lagi`;
+  } else if(totalH < 24){
+    countdown = `${Math.ceil(totalH)} jam lagi`;
+  } else {
+    const d = Math.ceil(totalH / 24);
+    countdown = `${d} hari lagi`;
+  }
+  return { label: `⏱ ${countdown} — berakhir ${endStr}`, cls: 'temp' };
+}
+
 async function loadBannedUsers(){
   const el = document.getElementById('bannedList');
   try {
@@ -787,12 +926,18 @@ async function loadBannedUsers(){
       const triggerHtml = b.triggerComment
         ? `<div class="banned-trigger">💬 "${escCm(b.triggerComment)}${b.triggerComment.length>=60?'…':''}"</div>`
         : '';
+      const remaining = formatRemainingTime(b.bannedUntil !== undefined ? b.bannedUntil : null);
+      const durLine = b.banDuration
+        ? `<span style="color:var(--muted)"> · ${escCm(b.banDuration)}</span>`
+        : '';
+      const untilHtml = `<div class="banned-until ${remaining.cls}">${remaining.label}${durLine}</div>`;
       return `<div class="banned-item" id="ban-${b.uid}">
         <div class="banned-info">
           <div class="banned-name">🚫 ${escCm(b.name||'Unknown')}</div>
           <div class="banned-uid">UID: ${escCm(b.uid)}</div>
           ${b.reason?`<div class="banned-reason">⚠ ${escCm(b.reason)}</div>`:''}
           ${triggerHtml}
+          ${untilHtml}
           <div class="banned-date">Dibanned ${escCm(b.bannedAt||'')}${b.bannedBy?' · oleh '+escCm(b.bannedBy):''}</div>
         </div>
         <div class="banned-actions">

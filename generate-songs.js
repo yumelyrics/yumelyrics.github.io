@@ -620,6 +620,13 @@ body.gate-open #lyrView{padding-top:0}
 .nud-notif-msg{font-size:.62rem;color:var(--text);line-height:1.45;margin-bottom:.15rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nud-notif-meta{font-size:.55rem;color:var(--muted)}
 .nud-notif-empty{font-size:.65rem;color:var(--muted);font-style:italic;padding:.5rem .65rem}
+/* ── Banned badge di komentar ── */
+.cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);padding:.1rem .38rem;border-radius:2rem;font-weight:600;vertical-align:middle;margin-left:.3rem;flex-shrink:0}
+/* ── Banned overlay di nav avatar bubble ── */
+#nav-avatar-bubble.is-banned .nav-avatar,
+#nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red) !important;box-shadow:0 2px 16px rgba(255,77,109,.35) !important}
+#nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid #06030f;display:none;align-items:center;justify-content:center;font-size:.6rem;z-index:5;pointer-events:none}
+#nav-avatar-bubble.is-banned #nav-banned-overlay{display:flex}
 </style>
 </head>
 <body>
@@ -712,7 +719,7 @@ body.gate-open #lyrView{padding-top:0}
         </div>
         <div id="cm-form-wrap" style="display:none" class="cmform">
           <div id="cm-banned-notice" style="display:none;padding:.75rem 1rem;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);border-radius:4px;font-size:.78rem;color:var(--red);line-height:1.6;margin-bottom:.5rem">
-            🚫 Akunmu telah dibanned dari komentar oleh admin. Kamu tidak bisa mengirim komentar.
+            🚫 Akunmu telah <strong>dibanned</strong> dari komentar. Kamu tidak bisa mengirim komentar.
           </div>
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;padding:.5rem .75rem;background:rgba(255,110,180,.04);border:1px solid rgba(255,110,180,.12);border-radius:4px">
             <div id="cm-user-avatar-wrap"></div>
@@ -732,6 +739,7 @@ body.gate-open #lyrView{padding-top:0}
 <div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
   <div id="nav-avatar-wrap"></div>
   <div id="notif-badge"></div>
+  <div id="nav-banned-overlay" title="Akunmu dibanned">🚫</div>
 </div>
 <!-- ── User Dropdown ── -->
 <div id="nav-user-dropdown">
@@ -798,6 +806,7 @@ try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let _currentUser = null;
 let _isBanned = false;
 let _banReason = '';
+let _banUntil = undefined; // undefined = belum dicek, null = permanen, number = timestamp ms
 let _hasCommented = false;
 let _isAdmin = false;
 let _customPhotoURL = null;
@@ -811,14 +820,15 @@ async function checkBanStatus(uid) {
       const data = banDoc.data();
       // Cek apakah ban sementara sudah expired
       if (data.bannedUntil !== null && data.bannedUntil !== undefined && Date.now() > data.bannedUntil) {
-        _banReason = ''; return false; // ban sudah berakhir
+        _banReason = ''; _banUntil = undefined; return false; // ban sudah berakhir
       }
       _banReason = data.reason || '';
+      _banUntil = data.bannedUntil !== undefined ? data.bannedUntil : null;
       return true;
     }
-    _banReason = '';
+    _banReason = ''; _banUntil = undefined;
     return false;
-  } catch(e) { _banReason = ''; return false; }
+  } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
 }
 
 async function checkHasCommented(uid) {
@@ -845,7 +855,12 @@ function updateCopyGate() {
   if (_isBanned) {
     // Tampilkan pesan banned, sembunyikan tombol copy sama sekali
     btn.style.display = 'none';
-    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''} Kamu tidak bisa meng-copy lirik.</span>\`;
+    const remText = (() => {
+      const rem = formatBanRemaining(_banUntil);
+      if(_banUntil === null || _banUntil === undefined) return ' (permanen)';
+      return rem ? \` (berakhir dalam \${rem})\` : '';
+    })();
+    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''}\${remText} Kamu tidak bisa meng-copy lirik.</span>\`;
   } else if (_hasCommented) {
     btn.style.display = 'inline-flex';
     btn.disabled = false;
@@ -882,7 +897,12 @@ async function applyAuthState(user) {
     const bannedNotice = document.getElementById('cm-banned-notice');
     if (_isBanned) {
       bannedNotice.style.display = 'block';
-      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''} Kamu tidak bisa mengirim komentar.\`;
+      const remText = (() => {
+        const rem = formatBanRemaining(_banUntil);
+        if(_banUntil === null || _banUntil === undefined) return ' <em style="color:var(--muted)">(permanen)</em>';
+        return rem ? \` <em style="color:var(--muted)">(berakhir dalam \${rem})</em>\` : '';
+      })();
+      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''}\${remText} Kamu tidak bisa mengirim komentar.\`;
     } else {
       bannedNotice.style.display = 'none';
     }
@@ -929,7 +949,11 @@ async function applyAuthState(user) {
 
     // Tampilkan floating avatar bubble
     const bubble = document.getElementById('nav-avatar-bubble');
-    if (bubble) bubble.style.display = 'block';
+    if (bubble) {
+      bubble.style.display = 'block';
+      // Tandai bubble dengan class is-banned kalau kena ban
+      bubble.classList.toggle('is-banned', _isBanned);
+    }
     document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
     document.getElementById('nud-email').textContent = user.email || '';
     const avatarWrap = document.getElementById('nav-avatar-wrap');
@@ -950,6 +974,7 @@ async function applyAuthState(user) {
     _hasCommented = false;
     _isBanned = false;
     _banReason = '';
+    _banUntil = undefined;
     updateCopyGate();
 
     // Tampilkan login gate komentar
@@ -1204,6 +1229,26 @@ window.tl = type => {
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+// Hitung sisa waktu ban untuk ditampilkan ke user
+function formatEndDate(ts){
+  const d = new Date(ts);
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+' pukul '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+function formatBanRemaining(bannedUntil){
+  if(bannedUntil === null || bannedUntil === undefined) return 'permanen';
+  const rem = bannedUntil - Date.now();
+  if(rem <= 0) return null; // sudah expired
+  const h = rem / (60 * 60 * 1000);
+  let countdown;
+  if(h < 1) countdown = Math.ceil(rem / (60 * 1000)) + ' menit lagi';
+  else if(h < 24) countdown = Math.ceil(h) + ' jam lagi';
+  else countdown = Math.ceil(h / 24) + ' hari lagi';
+  return countdown + ' — ' + formatEndDate(bannedUntil);
+}
+
 function renderComment(id, c, replies){
   const isAdm=c.isAdmin;
   let repHtml='';
@@ -1211,7 +1256,12 @@ function renderComment(id, c, replies){
     repHtml='<div class="replies">'+replies.map(r=>{
       if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">\${esc(r.text)}</div></div></div>\`;
       const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
-      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
+      const rBannedBadge = r.isBanned ? (()=>{
+        const rem = formatBanRemaining(r.bannedUntil);
+        const remText = rem ? \` · \${rem}\` : '';
+        return \`<span class="cm-banned-badge" title="User ini dibanned">🚫 banned\${remText}</span>\`;
+      })() : '';
+      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}\${rBannedBadge}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
@@ -1239,8 +1289,13 @@ function renderComment(id, c, replies){
   } else {
     avHtml = \`<div class="cm-avatar-ph">\${(c.name||'A')[0].toUpperCase()}</div>\`;
   }
+  const bannedBadgeHtml = c.isBanned ? (()=>{
+    const rem = formatBanRemaining(c.bannedUntil);
+    const remText = rem ? \` · \${rem}\` : '';
+    return \`<span class="cm-banned-badge" title="User ini dibanned">🚫 banned\${remText}</span>\`;
+  })() : '';
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}</div><div class="cdate">\${esc(c.date)}</div></div>
+    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div></div>
     <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
     <div class="ctxt">\${esc(c.text)}</div>
     \${repHtml}
@@ -1366,10 +1421,20 @@ async function rcm(){
     // Fetch user_profiles semua uid unik — ambil foto & nama terbaru
     const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
     const profileMap={};
+    const banMap={};
     await Promise.all(uids.map(async uid=>{
       try{
-        const pSnap=await getDoc(doc(db,'user_profiles',uid));
+        const [pSnap, bSnap]=await Promise.all([
+          getDoc(doc(db,'user_profiles',uid)),
+          getDoc(doc(db,'banned_users',uid))
+        ]);
         if(pSnap.exists()) profileMap[uid]=pSnap.data();
+        if(bSnap.exists()){
+          const bd=bSnap.data();
+          // Cek apakah ban masih aktif (bannedUntil null = permanen, atau belum expired)
+          const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
+          if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
+        }
       }catch(e){}
     }));
 
@@ -1380,7 +1445,9 @@ async function rcm(){
       return {
         ...c,
         photoURL:(p&&p.photoURL)?p.photoURL:(c.photoURL||null),
-        name:(p&&p.displayName)?p.displayName:(c.name||'Anonim')
+        name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
+        isBanned:!!banMap[c.uid],
+        bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined
       };
     });
 
