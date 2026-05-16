@@ -689,6 +689,25 @@ body.gate-open #lyrView{padding-top:0}
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
+      <script>
+      /* ── Deobfuscate lirik: urutkan ulang span sesuai data-c ── */
+      (function(){
+        document.querySelectorAll('[data-obf="1"]').forEach(function(line){
+          var spans = Array.from(line.querySelectorAll('span[data-c]'));
+          if(!spans.length) return;
+          var sorted = spans.slice().sort(function(a,b){
+            return parseInt(a.getAttribute('data-c'),10) - parseInt(b.getAttribute('data-c'),10);
+          });
+          // Bangun ulang teks dari karakter yang sudah diurutkan
+          var text = sorted.map(function(s){
+            return s.hasAttribute('data-sp') ? ' ' : (s.textContent||'');
+          }).join('');
+          // Ganti konten obfuscated dengan teks bersih
+          line.textContent = text;
+          line.removeAttribute('data-obf');
+        });
+      })();
+      </script>
       <!-- Copy Lyric Gate — muncul setelah login, tapi harus komentar dulu -->
       <div id="copy-gate" style="display:none">
         <div id="copy-gate-title">📋 Copy Lirik</div>
@@ -787,7 +806,7 @@ body.gate-open #lyrView{padding-top:0}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const _app = initializeApp({
@@ -997,11 +1016,25 @@ onAuthStateChanged(auth, async (user) => {
   rcm();
 });
 
+/* ── Tangani hasil redirect login (jika sebelumnya pakai signInWithRedirect) ── */
+getRedirectResult(auth).then(result => {
+  if (result && result.user) {
+    // Login berhasil via redirect, onAuthStateChanged akan handle sisanya
+  }
+}).catch(e => {
+  if (e.code !== 'auth/popup-closed-by-user') console.warn('redirect result error:', e.code);
+});
+
 window.doLogin = async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') toast('Login gagal. Coba lagi.');
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      // Fallback ke redirect jika popup diblokir browser
+      try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal. Coba lagi.'); }
+    } else if (e.code !== 'auth/popup-closed-by-user') {
+      toast('Login gagal. Coba lagi.');
+    }
   }
 };
 

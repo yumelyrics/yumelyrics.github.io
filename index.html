@@ -298,7 +298,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="resources.html">Resources</a>
     <a class="nb" href="stories.html">Cerita</a>
     <a class="nb" href="contact.html">Hubungi</a>
-    <button id="nav-login-btn" onclick="doLogin()" style="display:none">Login</button>
+    <button id="nav-login-btn" onclick="doLogin()">Login</button>
     <div id="nav-avatar-wrap" style="display:none" onclick="toggleDropdown()">
       <div class="nav-avatar-placeholder" id="nav-avatar-ph"></div>
       <div id="notif-badge"></div>
@@ -415,7 +415,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -646,9 +646,22 @@ window.sv = v => {
 // ── AUTH ──
 function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+/* ── Tangani hasil redirect login ── */
+getRedirectResult(auth).then(result => {
+  // Login via redirect berhasil, onAuthStateChanged akan handle sisanya
+}).catch(e => {
+  if (e.code && e.code !== 'auth/popup-closed-by-user') console.warn('redirect result:', e.code);
+});
+
 window.doLogin = async () => {
   try { await signInWithPopup(auth, provider); }
-  catch(e){ if(e.code !== 'auth/popup-closed-by-user') toast('Login gagal.'); }
+  catch(e){
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal.'); }
+    } else if(e.code !== 'auth/popup-closed-by-user') {
+      toast('Login gagal.');
+    }
+  }
 };
 
 window.doLogout = async () => {
@@ -952,7 +965,7 @@ function loadSongs() {
     unsubSongs = onSnapshot(
       query(collection(db,'songs'), orderBy('order','asc')),
       snap => {
-        songs = snap.docs.map(d=>({id:d.id, ...d.data()})).reverse();
+        songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
         rc(document.getElementById('searchInp').value||'');
       },
       err => {
