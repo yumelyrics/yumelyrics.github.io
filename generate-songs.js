@@ -1092,9 +1092,9 @@ window.openEditProfile = async () => {
     const { getDoc: _getDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
     const userSnap = await _getDoc(_doc(db, 'user_profiles', _currentUser.uid));
     const customPhoto = userSnap.exists() ? (userSnap.data().photoURL || '') : '';
-    document.getElementById('ep-photourl').value = customPhoto || _currentUser.photoURL || '';
+    document.getElementById('ep-photourl').value = customPhoto || '';
   } catch(e) {
-    document.getElementById('ep-photourl').value = _currentUser.photoURL || '';
+    document.getElementById('ep-photourl').value = '';
   }
   modal.classList.add('open');
   setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
@@ -1120,7 +1120,7 @@ window.saveEditProfile = async () => {
     await updateProfile(_currentUser, { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null });
     // Simpan custom photoURL ke Firestore user_profiles
     const { setDoc: _setDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
-    await _setDoc(_doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null }, { merge: true });
+    await _setDoc(_doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
     // Update floating avatar bubble
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     const finalPhoto = newPhoto || _currentUser.photoURL;
@@ -1569,7 +1569,7 @@ async function rcm(){
       const p=profileMap[c.uid];
       return {
         ...c,
-        photoURL:(p&&p.photoURL)?p.photoURL:(c.photoURL||null),
+        photoURL:(p&&p.photoURL)?p.photoURL:null,
         name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
         isBanned:!!banMap[c.uid],
         bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined
