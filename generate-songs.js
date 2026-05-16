@@ -990,6 +990,7 @@ async function applyAuthState(user) {
 onAuthStateChanged(auth, async (user) => {
   await applyAuthState(user);
   if(user) loadNotifs(user.uid);
+  rcm();
 });
 
 window.doLogin = async () => {
@@ -1561,7 +1562,7 @@ window.toggleReplyForm = id => {
 
 window.postReply = async parentId => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
-  if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
+  if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('rt-'+parentId).value.trim();if(!t)return;
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
@@ -1630,7 +1631,6 @@ window.postCm = async () => {
   btn.disabled=false;
 };
 
-rcm();
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
