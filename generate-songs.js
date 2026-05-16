@@ -864,7 +864,7 @@ body.gate-open #lyrView{padding-top:0}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, setDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const _app = initializeApp({
@@ -1078,8 +1078,7 @@ async function applyAuthState(user) {
       if (upSnap.exists() && upSnap.data().displayName && !_isAdmin) {
         // sync displayName dari Firestore kalau beda
         if (upSnap.data().displayName !== user.displayName) {
-          const { updateProfile: _up } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
-          await _up(user, { displayName: upSnap.data().displayName });
+          await updateProfile(user, { displayName: upSnap.data().displayName });
         }
       }
     } catch(e) {}
@@ -1329,8 +1328,7 @@ window.openEditProfile = async () => {
   document.getElementById('ep-displayname').value = _currentUser.displayName || (_isAdmin ? 'YumeSubs' : '');
   // Load custom avatar dari Firestore kalau ada
   try {
-    const { getDoc: _getDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
-    const userSnap = await _getDoc(_doc(db, 'user_profiles', _currentUser.uid));
+    const userSnap = await getDoc(doc(db, 'user_profiles', _currentUser.uid));
     const customPhoto = userSnap.exists() ? (userSnap.data().photoURL || '') : '';
     document.getElementById('ep-photourl').value = customPhoto || '';
   } catch(e) {
@@ -1356,11 +1354,9 @@ window.saveEditProfile = async () => {
     // Validasi URL kalau diisi
     if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
     // Firebase Auth: updateProfile
-    const { updateProfile } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
     await updateProfile(_currentUser, { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null });
     // Simpan custom photoURL ke Firestore user_profiles
-    const { setDoc: _setDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
-    await _setDoc(_doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
+    await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
     // Update floating avatar bubble
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     const finalPhoto = newPhoto || _currentUser.photoURL;
