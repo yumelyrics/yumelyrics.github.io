@@ -729,7 +729,7 @@ body.gate-open #lyrView{padding-top:0}
 </div>
 </div>
 <!-- ── Floating Avatar Bubble ── -->
-<div id="nav-avatar-bubble" onclick="toggleUserDropdown()" style="position:relative">
+<div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
   <div id="nav-avatar-wrap"></div>
   <div id="notif-badge"></div>
 </div>
