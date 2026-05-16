@@ -971,7 +971,7 @@ document.addEventListener('click', e => {
 });
 
 /* ── Edit Profile ── */
-window.openEditProfile = () => {
+window.openEditProfile = async () => {
   if (!_currentUser) return;
   const modal = document.getElementById('editProfileModal');
   if (!modal) return;
@@ -1369,7 +1369,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 <script>
 /* ── YumeSubs Copy Protection ── */
 (function(){
-  const WATERMARK = '\n\n© YumeSubs — yumelyrics.my.id';
+  const WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
   const CHAR_LIMIT = 10;
 
   function isInput(el){ const t=el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
