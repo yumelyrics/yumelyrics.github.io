@@ -730,7 +730,7 @@ function startNotifListener(uid){
     }
     list.innerHTML = notifs.map(n=>{
       const cls='nud-notif-item'+(n.read?'':' unread');
-      return '<div class="'+cls+'" onclick="goToNotif(''+n.id+'',''+esc2(n.songSlug||'')+'')">'+
+      return '<div class="'+cls+'" onclick="goToNotif(\''+n.id+'\',\''+esc2(n.songSlug||'')+'\')">'+
         '<div class="nud-notif-from">💬 '+esc2(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
         '<div class="nud-notif-msg">&ldquo;'+esc2(n.replyText||'')+'&rdquo;</div>'+
         '<div class="nud-notif-meta">'+esc2(n.songTitle||'')+' &middot; '+esc2(n.date||'')+'</div>'+
