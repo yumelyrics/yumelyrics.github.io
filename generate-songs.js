@@ -1808,93 +1808,81 @@ async function sendNotif(toUid, toName, replyText, songSlug, songTitle){
 async function rcm(){
   const el=document.getElementById('cmlist');
   el.innerHTML='<div class="nocm">Memuat komentar...</div>';
-
-  // ── STEP 1: Ambil komentar — ini yang paling penting, jangan sampai gagal diam-diam ──
-  let allDocs;
-  try {
+  try{
+    let allDocs;
     try {
+      // Query dengan orderBy — butuh composite index di Firestore
       const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID),orderBy('ts','desc')));
       allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()}));
     } catch(indexErr) {
-      console.warn('[rcm] orderBy gagal, fallback tanpa index:', indexErr.message);
+      // Fallback: query tanpa orderBy kalau index belum dibuat
       const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID)));
       allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
     }
-  } catch(e) {
-    console.error('[rcm] Gagal fetch komentar:', e.code, e.message);
-    el.innerHTML='<div class="nocm">Gagal memuat komentar. ('+( e.code||e.message)+')</div>';
-    return;
-  }
+    if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
 
-  if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
-
-  // ── STEP 2: Fetch profil/ban/role — gagal di sini TIDAK boleh membatalkan tampilan komentar ──
-  const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
-  const profileMap={};
-  const banMap={};
-  const roleMap={};
-  const localCountMap={};
-  allDocs.filter(c=>c.uid&&!c.isAdmin).forEach(c=>{ localCountMap[c.uid]=(localCountMap[c.uid]||0)+1; });
-
-  try { if(_roleDefs.length <= 1) await _loadRoleDefsSong(); } catch(e){}
-
-  await Promise.all(uids.map(async uid=>{
-    // Setiap uid di-fetch secara independen — satu gagal tidak pengaruhi yang lain
-    try {
-      const pSnap = await getDoc(doc(db,'user_profiles',uid));
-      if(pSnap.exists()) profileMap[uid]=pSnap.data();
-    } catch(e){ console.warn('[rcm] user_profiles gagal uid='+uid, e.code); }
-
-    try {
-      const bSnap = await getDoc(doc(db,'banned_users',uid));
-      if(bSnap.exists()){
-        const bd=bSnap.data();
-        const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
-        if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
-      }
-    } catch(e){ console.warn('[rcm] banned_users gagal uid='+uid, e.code); }
-
-    if(_roleCache[uid] !== undefined){
-      roleMap[uid] = _roleCache[uid];
-    } else {
+    // Fetch user_profiles semua uid unik — ambil foto & nama terbaru
+    const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
+    const profileMap={};
+    const banMap={};
+    const roleMap={};
+    // Hitung comment count dari allDocs sebagai fallback kalau Firestore fetch gagal
+    const localCountMap={};
+    allDocs.filter(c=>c.uid&&!c.isAdmin).forEach(c=>{ localCountMap[c.uid]=(localCountMap[c.uid]||0)+1; });
+    try { if(_roleDefs.length <= 1) await _loadRoleDefsSong(); } catch(e){}
+    await Promise.all(uids.map(async uid=>{
+      // Fetch profil & ban — dua query ringan, cukup untuk render komentar
       try {
-        const [songCnt, storyCnt, rSnap] = await Promise.all([
-          getDocs(query(collection(db,'comments'), where('uid','==',uid))),
-          getDocs(query(collection(db,'story_comments'), where('uid','==',uid))),
-          getDoc(doc(db,'user_roles',uid))
+        const [pSnap, bSnap] = await Promise.all([
+          getDoc(doc(db,'user_profiles',uid)),
+          getDoc(doc(db,'banned_users',uid))
         ]);
-        const cnt = songCnt.size + storyCnt.size;
-        const custom = rSnap.exists() ? (rSnap.data().role ?? null) : null;
-        _roleCache[uid] = _getRoleBadgeSong(cnt, custom);
-      } catch(e){
-        console.warn('[rcm] role fetch gagal uid='+uid, e.code);
-        _roleCache[uid] = _getRoleBadgeSong(localCountMap[uid]||0, null);
+        if(pSnap.exists()) profileMap[uid]=pSnap.data();
+        if(bSnap.exists()){
+          const bd=bSnap.data();
+          const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
+          if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
+        }
+      } catch(e){}
+
+      // Role badge: pakai localCountMap dari allDocs — tidak perlu query count ke seluruh koleksi
+      // Query where('uid','==',uid) di comments/story_comments sangat lambat tanpa composite index
+      if(_roleCache[uid] !== undefined){
+        roleMap[uid] = _roleCache[uid];
+      } else {
+        try {
+          const rSnap = await getDoc(doc(db,'user_roles',uid));
+          const custom = rSnap.exists() ? (rSnap.data().role ?? null) : null;
+          _roleCache[uid] = _getRoleBadgeSong(localCountMap[uid]||0, custom);
+        } catch(e){
+          _roleCache[uid] = _getRoleBadgeSong(localCountMap[uid]||0, null);
+        }
+        roleMap[uid] = _roleCache[uid];
       }
-      roleMap[uid] = _roleCache[uid];
-    }
-  }));
+    }));
 
-  // ── STEP 3: Render — selalu jalan meski step 2 ada yang gagal ──
-  const enriched=allDocs.map(c=>{
-    if(c.isAdmin||!c.uid) return c;
-    const p=profileMap[c.uid];
-    return {
-      ...c,
-      photoURL:(p&&p.photoURL)?p.photoURL:null,
-      name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
-      isBanned:!!banMap[c.uid],
-      bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined,
-      _roleBadge: roleMap[c.uid] || ''
-    };
-  });
+    // Inject foto & nama terbaru dari profil ke setiap komentar/reply
+    const enriched=allDocs.map(c=>{
+      if(c.isAdmin||!c.uid) return c;
+      const p=profileMap[c.uid];
+      return {
+        ...c,
+        photoURL:(p&&p.photoURL)?p.photoURL:null,
+        name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
+        isBanned:!!banMap[c.uid],
+        bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined,
+        _roleBadge: roleMap[c.uid] || ''
+      };
+    });
 
-  const parents=enriched.filter(c=>!c.parentId);
-  const replyMap={};
-  enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
-  if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
-  el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
-  startBanTicker();
-  _resolveCustomRoleBadges();
+    const parents=enriched.filter(c=>!c.parentId);
+    const replyMap={};
+    enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
+    if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
+    el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
+    startBanTicker();
+    _resolveCustomRoleBadges(); // resolve CR: custom role badges async
+  }catch(e){el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';}
 }
 
 window.toggleReplyForm = id => {
