@@ -1141,14 +1141,18 @@ async function applyAuthState(user) {
   }
 }
 
+// Muat komentar segera saat halaman dibuka — tidak perlu tunggu auth selesai
+rcm();
+
 onAuthStateChanged(auth, async (user) => {
   await applyAuthState(user);
   if(user){
     loadNotifs(user.uid);
+    // Reload komentar setelah auth selesai supaya avatar/nama terbaru tampil
+    rcm();
   } else {
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
   }
-  rcm();
 });
 
 /* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
