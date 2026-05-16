@@ -886,11 +886,84 @@ let _banUntil = undefined; // undefined = belum dicek, null = permanen, number =
 let _hasCommented = false;
 let _isAdmin = false;
 let _customPhotoURL = null;
-const ADMIN_EMAIL = "khoirustsani143@gmail.com";
+const ADMIN_EMAILS = ["khoirustsani143@gmail.com", "admin@yumesubs.com"];
+const ADMIN_EMAIL = ADMIN_EMAILS[0]; // backward compat
+
+// ── RATE LIMIT CONFIG ──
+const RATELIMIT_COMMENT_MS  = 30_000;  // min jeda antar komentar (30 detik)
+const RATELIMIT_REPLY_MS    = 15_000;  // min jeda antar reply (15 detik)
+const RATELIMIT_MAX_PER_HOUR = 20;     // max komentar+reply per jam
+const RATELIMIT_MAX_PER_DAY  = 60;     // max komentar+reply per hari
+
+let _lastCommentTs  = 0;
+let _lastReplyTs    = 0;
+let _hourlyCount    = 0;
+let _dailyCount     = 0;
+let _hourlyResetTs  = 0;
+let _dailyResetTs   = 0;
+
+// Load rate limit state dari Firestore
+async function loadRateLimit(uid){
+  if(_isAdmin) return;
+  try {
+    const snap = await getDoc(doc(db, 'comment_ratelimit', uid));
+    if(!snap.exists()) return;
+    const d = snap.data();
+    const now = Date.now();
+    _lastCommentTs = d.lastComment || 0;
+    _lastReplyTs   = d.lastReply   || 0;
+    // Reset counter kalau sudah lewat window
+    _hourlyCount  = (now - (d.hourlyResetTs||0) < 3_600_000) ? (d.hourlyCount||0) : 0;
+    _dailyCount   = (now - (d.dailyResetTs||0)  < 86_400_000) ? (d.dailyCount||0) : 0;
+    _hourlyResetTs = (now - (d.hourlyResetTs||0) < 3_600_000) ? (d.hourlyResetTs||0) : now;
+    _dailyResetTs  = (now - (d.dailyResetTs||0)  < 86_400_000) ? (d.dailyResetTs||0) : now;
+  } catch(e){}
+}
+
+// Simpan rate limit state ke Firestore
+async function saveRateLimit(uid, type){
+  if(_isAdmin) return;
+  try {
+    const now = Date.now();
+    if(type === 'comment') _lastCommentTs = now;
+    if(type === 'reply')   _lastReplyTs   = now;
+    _hourlyCount++;
+    _dailyCount++;
+    await setDoc(doc(db, 'comment_ratelimit', uid), {
+      lastComment  : _lastCommentTs,
+      lastReply    : _lastReplyTs,
+      hourlyCount  : _hourlyCount,
+      dailyCount   : _dailyCount,
+      hourlyResetTs: _hourlyResetTs,
+      dailyResetTs : _dailyResetTs,
+    }, { merge: true });
+  } catch(e){}
+}
+
+// Cek apakah user boleh komentar/reply, return pesan error atau null
+function checkRateLimit(type){
+  if(_isAdmin) return null;
+  const now = Date.now();
+  const minJeda = type === 'reply' ? RATELIMIT_REPLY_MS : RATELIMIT_COMMENT_MS;
+  const lastTs  = type === 'reply' ? _lastReplyTs : _lastCommentTs;
+  const sisa    = minJeda - (now - lastTs);
+  if(sisa > 0){
+    const detik = Math.ceil(sisa / 1000);
+    return \`⏳ Tunggu \${detik} detik lagi sebelum \${type === 'reply' ? 'membalas' : 'berkomentar'}.\`;
+  }
+  if(_hourlyCount >= RATELIMIT_MAX_PER_HOUR){
+    const menitReset = Math.ceil((3_600_000 - (now - _hourlyResetTs)) / 60_000);
+    return \`🚫 Terlalu banyak komentar. Coba lagi \${menitReset} menit lagi.\`;
+  }
+  if(_dailyCount >= RATELIMIT_MAX_PER_DAY){
+    return \`🚫 Batas komentar harian tercapai. Coba lagi besok.\`;
+  }
+  return null;
+}
 
 async function checkBanStatus(uid) {
   try {
-    if (uid && _currentUser && _currentUser.email === ADMIN_EMAIL) return false;
+    if (uid && _currentUser && ADMIN_EMAILS.includes(_currentUser.email)) return false;
     const banDoc = await getDoc(doc(db, 'banned_users', uid));
     if (banDoc.exists()) {
       const data = banDoc.data();
@@ -991,7 +1064,7 @@ async function applyAuthState(user) {
     updateCopyGate();
 
     // Deteksi admin
-    _isAdmin = user.email === ADMIN_EMAIL;
+    _isAdmin = ADMIN_EMAILS.includes(user.email);
 
     // Load custom photoURL dari Firestore user_profiles
     _customPhotoURL = user.photoURL || null;
@@ -1035,6 +1108,7 @@ async function applyAuthState(user) {
     document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
     document.getElementById('nud-email').textContent = user.email || '';
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
+    if(!_isAdmin) loadRateLimit(user.uid);
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (_customPhotoURL) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
@@ -1126,9 +1200,25 @@ async function _loadRoleDefsSong(){
   } catch(e){}
 }
 
+// ── CUSTOM ROLES CACHE (CR: prefix) ──
+const _customRolesCache = {}; // id -> data
+async function _getCustomRole(crId){
+  if(_customRolesCache[crId] !== undefined) return _customRolesCache[crId];
+  try {
+    const snap = await getDoc(doc(db,'custom_roles',crId));
+    _customRolesCache[crId] = snap.exists() ? snap.data() : null;
+  } catch(e){ _customRolesCache[crId] = null; }
+  return _customRolesCache[crId];
+}
+
 function _getRoleBadgeSong(commentCount, customRole){
   let role;
   if(customRole !== null && customRole !== undefined){
+    // CR: prefix = custom_roles collection (resolved async, fallback ke icon dulu)
+    if(typeof customRole === 'string' && customRole.startsWith('CR:')){
+      // Return placeholder — akan di-replace async oleh _getRoleBadgeSongAsync
+      return \`<span class="role-badge role-custom" data-cr-id="\${customRole.slice(3)}" title="Custom Role">🎨 ...</span>\`;
+    }
     role = typeof customRole === 'number'
       ? (_roleDefs.find(r=>r.id===customRole) || _roleDefs[0])
       : { id:'custom', icon:'🎭', name:String(customRole), cls:'role-custom' };
@@ -1137,6 +1227,26 @@ function _getRoleBadgeSong(commentCount, customRole){
     for(const r of _roleDefs){ if(commentCount >= r.threshold) role = r; else break; }
   }
   return \`<span class="role-badge \${role.cls}" title="\${role.name}">\${role.icon} \${role.name}</span>\`;
+}
+
+// Setelah render, resolve semua CR: badge yang masih placeholder
+async function _resolveCustomRoleBadges(){
+  const placeholders = document.querySelectorAll('.role-badge[data-cr-id]');
+  if(!placeholders.length) return;
+  await Promise.all([...placeholders].map(async el => {
+    const crId = el.dataset.crId;
+    const cr = await _getCustomRole(crId);
+    if(!cr){ el.remove(); return; }
+    const iconHtml = cr.iconType === 'img' && cr.iconImg
+      ? \`<img src="\${cr.iconImg}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">\`
+      : (cr.icon || '🎭');
+    el.style.background = cr.bgColor || 'rgba(167,139,250,.18)';
+    el.style.color = cr.textColor || '#c4b0ff';
+    el.style.border = \`1px solid \${cr.textColor||'#c4b0ff'}33\`;
+    el.title = cr.name;
+    el.innerHTML = \`\${iconHtml} \${cr.name}\`;
+    delete el.dataset.crId;
+  }));
 }
 
 const _roleCache = {};
@@ -1701,10 +1811,12 @@ async function rcm(){
     const profileMap={};
     const banMap={};
     const roleMap={};
+    // Hitung comment count dari allDocs sebagai fallback kalau Firestore fetch gagal
+    const localCountMap={};
+    allDocs.filter(c=>c.uid&&!c.isAdmin).forEach(c=>{ localCountMap[c.uid]=(localCountMap[c.uid]||0)+1; });
     if(_roleDefs.length <= 1) await _loadRoleDefsSong();
     await Promise.all(uids.map(async uid=>{
       try{
-        // Gunakan cache role kalau sudah ada
         const needRoleFetch = _roleCache[uid] === undefined;
         const fetches = [
           getDoc(doc(db,'user_profiles',uid)),
@@ -1720,7 +1832,6 @@ async function rcm(){
         if(pSnap.exists()) profileMap[uid]=pSnap.data();
         if(bSnap.exists()){
           const bd=bSnap.data();
-          // Cek apakah ban masih aktif (bannedUntil null = permanen, atau belum expired)
           const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
           if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
         }
@@ -1731,7 +1842,14 @@ async function rcm(){
           _roleCache[uid] = _getRoleBadgeSong(cnt, custom);
         }
         roleMap[uid] = _roleCache[uid];
-      }catch(e){}
+      }catch(e){
+        // Firestore rules mungkin block saat tidak login — fallback ke local count
+        if(_roleCache[uid] !== undefined){
+          roleMap[uid] = _roleCache[uid];
+        } else {
+          roleMap[uid] = _getRoleBadgeSong(localCountMap[uid]||0, null);
+        }
+      }
     }));
 
     // Inject foto & nama terbaru dari profil ke setiap komentar/reply
@@ -1753,7 +1871,8 @@ async function rcm(){
     enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
     if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
-    startBanTicker(); // mulai countdown realtime setelah komentar dirender
+    startBanTicker();
+    _resolveCustomRoleBadges(); // resolve CR: custom role badges async
   }catch(e){el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';}
 }
 
@@ -1802,6 +1921,8 @@ document.getElementById('cmlist').addEventListener('change', e => {
 window.postReply = async parentId => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
+  const rateLimitErr = checkRateLimit('reply');
+  if(rateLimitErr){ toast(rateLimitErr); return; }
   const t=document.getElementById('rt-'+parentId).value.trim();
   const replyImg = _replyImgMap[parentId] || null;
   if(!t && !replyImg)return;
@@ -1819,6 +1940,7 @@ window.postReply = async parentId => {
       ts:Date.now(),
       isAdmin:_isAdmin
     });
+    await saveRateLimit(_currentUser.uid, 'reply');
     document.getElementById('rt-'+parentId).value='';
     removeReplyPhoto(parentId);
     toggleReplyForm(parentId);
@@ -1845,6 +1967,8 @@ window.postReply = async parentId => {
 window.postCm = async () => {
   if (!_currentUser) { toast('Login dulu untuk berkomentar.'); return; }
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
+  const rateLimitErr = checkRateLimit('comment');
+  if(rateLimitErr){ toast(rateLimitErr); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
   if(!t && !_cmImgDataUrl)return;btn.disabled=true;
@@ -1862,6 +1986,7 @@ window.postCm = async () => {
       ts:Date.now(),
       isAdmin:_isAdmin
     });
+    await saveRateLimit(_currentUser.uid, 'comment');
     document.getElementById('cm-t').value='';
     removeCmPhoto();
     if (_isAdmin) {
