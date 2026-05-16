@@ -817,7 +817,7 @@ function updateCopyGate() {
   if (_isBanned) {
     // Tampilkan pesan banned, sembunyikan tombol copy sama sekali
     btn.style.display = 'none';
-    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''} Kamu tidak bisa meng-copy lirik.</span>\`;
+    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''} Kamu tidak bisa meng-copy lirik.</span>\`;
   } else if (_hasCommented) {
     btn.style.display = 'inline-flex';
     btn.disabled = false;
@@ -854,7 +854,7 @@ async function applyAuthState(user) {
     const bannedNotice = document.getElementById('cm-banned-notice');
     if (_isBanned) {
       bannedNotice.style.display = 'block';
-      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''} Kamu tidak bisa mengirim komentar.\`;
+      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''} Kamu tidak bisa mengirim komentar.\`;
     } else {
       bannedNotice.style.display = 'none';
     }
@@ -894,9 +894,9 @@ async function applyAuthState(user) {
       const cmUserInfo = cmAvatarWrap.parentElement;
       cmUserInfo.innerHTML = \`<div class="admin-form-header"><span class="admin-crown">👑</span><span class="admin-form-badge">Admin</span><span class="admin-form-name">YumeSubs</span><span class="admin-form-sub">Berkomentar sebagai Admin</span></div>\`;
     } else if (user.photoURL) {
-      cmAvatarWrap.innerHTML = \`<img style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,110,180,.3)" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
+      cmAvatarWrap.innerHTML = \`<img style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,110,180,.3)" src="${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
-      cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">\${displayName[0].toUpperCase()}</div>\`;
+      cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">${displayName[0].toUpperCase()}</div>\`;
     }
 
     // Tampilkan floating avatar bubble
@@ -906,10 +906,10 @@ async function applyAuthState(user) {
     document.getElementById('nud-email').textContent = user.email || '';
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (_customPhotoURL) {
-      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
+      avatarWrap.innerHTML = \`<img class="nav-avatar" src="${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
       const initial = (user.displayName||'U')[0].toUpperCase();
-      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
+      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">${initial}</div>\`;
     }
   } else {
     // Tampilkan floating gate login (tanpa blur terjemahan)
@@ -974,7 +974,7 @@ window.openEditProfile = () => {
   const bigWrap = document.getElementById('ep-avatar-wrap-big');
   const bigAv = document.getElementById('ep-avatar-big');
   if (_currentUser.photoURL) {
-    bigWrap.querySelector('.ep-avatar-placeholder-big') && (bigWrap.querySelector('.ep-avatar-placeholder-big').outerHTML = \`<img class="ep-avatar-big" src="\${_currentUser.photoURL}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`);
+    bigWrap.querySelector('.ep-avatar-placeholder-big') && (bigWrap.querySelector('.ep-avatar-placeholder-big').outerHTML = \`<img class="ep-avatar-big" src="${_currentUser.photoURL}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`);
     const img = document.getElementById('ep-avatar-big');
     if(img && img.tagName==='IMG') img.src = _currentUser.photoURL;
   } else {
@@ -1023,9 +1023,9 @@ window.saveEditProfile = async () => {
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     const finalPhoto = newPhoto || _currentUser.photoURL;
     if (finalPhoto) {
-      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer">\`;
+      avatarWrap.innerHTML = \`<img class="nav-avatar" src="${finalPhoto}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
-      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${newName[0].toUpperCase()}</div>\`;
+      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">${newName[0].toUpperCase()}</div>\`;
     }
     // Update preview modal
     const nudName = document.getElementById('nud-name');
@@ -1036,7 +1036,7 @@ window.saveEditProfile = async () => {
     const epAvBig = document.getElementById('ep-avatar-big');
     if (epAvBig) {
       if (finalPhoto) {
-        epAvBig.outerHTML = \`<img class="ep-avatar-big" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`;
+        epAvBig.outerHTML = \`<img class="ep-avatar-big" src="${finalPhoto}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`;
       } else {
         epAvBig.textContent = newName[0].toUpperCase();
       }
@@ -1165,9 +1165,9 @@ function renderComment(id, c, replies){
   let repHtml='';
   if(replies&&replies.length){
     repHtml='<div class="replies">'+replies.map(r=>{
-      if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">\${esc(r.text)}</div></div></div>\`;
-      const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
-      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
+      if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">${esc(r.text)}</div></div></div>\`;
+      const rAv = r.photoURL ? \`<img class="cm-avatar" src="${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">${(r.name||'A')[0].toUpperCase()}</div>\`;
+      return \`<div class="ritem"><div class="chdr-left">${rAv}<span class="cname">${esc(r.name)}</span><span class="cdate">${esc(r.date)}</span></div><div class="ctxt">${esc(r.text)}</div></div>\`;
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
@@ -1177,33 +1177,33 @@ function renderComment(id, c, replies){
         <div class="cm-avatar-crown">👑</div>
         <span class="admin-cm-name">YumeSubs</span>
         <span class="admin-cm-badge">Admin</span>
-        <span class="admin-cm-date">\${esc(c.date)}</span>
+        <span class="admin-cm-date">${esc(c.date)}</span>
       </div>
-      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}</div>
-      \${repHtml}
-      <div class="reply-form" id="rf-\${id}">
-        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
-        <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-        <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
+      <div class="ctxt" style="padding:.1rem 0 .4rem">${esc(c.text)}</div>
+      ${repHtml}
+      <div class="reply-form" id="rf-${id}">
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">${replyAsLabel}</span></div>
+        <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
+        <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('${id}')">✕ Batal</button></div>
       </div>
     </div>\`;
   }
   // Avatar untuk komentar biasa
   let avHtml;
   if (c.photoURL) {
-    avHtml = \`<img class="cm-avatar" src="\${esc(c.photoURL)}" alt="av" referrerpolicy="no-referrer">\`;
+    avHtml = \`<img class="cm-avatar" src="${esc(c.photoURL)}" alt="av" referrerpolicy="no-referrer">\`;
   } else {
-    avHtml = \`<div class="cm-avatar-ph">\${(c.name||'A')[0].toUpperCase()}</div>\`;
+    avHtml = \`<div class="cm-avatar-ph">${(c.name||'A')[0].toUpperCase()}</div>\`;
   }
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}</div><div class="cdate">\${esc(c.date)}</div></div>
-    <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
-    <div class="ctxt">\${esc(c.text)}</div>
-    \${repHtml}
-    <div class="reply-form" id="rf-\${id}">
-      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
-      <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
+    <div class="chdr"><div class="chdr-left">${avHtml}<div class="cname">${esc(c.name)}</div><div class="cdate">${esc(c.date)}</div></div>
+    <button class="reply-btn" onclick="toggleReplyForm('${id}')">↩ Balas</button></div>
+    <div class="ctxt">${esc(c.text)}</div>
+    ${repHtml}
+    <div class="reply-form" id="rf-${id}">
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">${replyAsLabel}</span></div>
+      <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
+      <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('${id}')">✕ Batal</button></div>
     </div>
   </div>\`;
 }
