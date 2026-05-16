@@ -646,19 +646,14 @@ window.sv = v => {
 // ── AUTH ──
 function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-/* ── Tangani hasil redirect login ── */
-getRedirectResult(auth).then(result => {
-  // Login via redirect berhasil, onAuthStateChanged akan handle sisanya
-}).catch(e => {
-  if (e.code && e.code !== 'auth/popup-closed-by-user') console.warn('redirect result:', e.code);
-});
+getRedirectResult(auth).catch(()=>{});
 
 window.doLogin = async () => {
   try { await signInWithPopup(auth, provider); }
   catch(e){
-    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
-      try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal.'); }
-    } else if(e.code !== 'auth/popup-closed-by-user') {
+    if(e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment'){
+      try { await signInWithRedirect(auth, provider); } catch(e2){ toast('Login gagal.'); }
+    } else if(e.code !== 'auth/popup-closed-by-user'){
       toast('Login gagal.');
     }
   }

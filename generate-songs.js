@@ -689,25 +689,6 @@ body.gate-open #lyrView{padding-top:0}
       <div class="llines" id="ll">
         ${lyricsHTML}
       </div>
-      <script>
-      /* ── Deobfuscate lirik: urutkan ulang span sesuai data-c ── */
-      (function(){
-        document.querySelectorAll('[data-obf="1"]').forEach(function(line){
-          var spans = Array.from(line.querySelectorAll('span[data-c]'));
-          if(!spans.length) return;
-          var sorted = spans.slice().sort(function(a,b){
-            return parseInt(a.getAttribute('data-c'),10) - parseInt(b.getAttribute('data-c'),10);
-          });
-          // Bangun ulang teks dari karakter yang sudah diurutkan
-          var text = sorted.map(function(s){
-            return s.hasAttribute('data-sp') ? ' ' : (s.textContent||'');
-          }).join('');
-          // Ganti konten obfuscated dengan teks bersih
-          line.textContent = text;
-          line.removeAttribute('data-obf');
-        });
-      })();
-      </script>
       <!-- Copy Lyric Gate — muncul setelah login, tapi harus komentar dulu -->
       <div id="copy-gate" style="display:none">
         <div id="copy-gate-title">📋 Copy Lirik</div>
@@ -802,6 +783,25 @@ body.gate-open #lyrView{padding-top:0}
     </div>
   </div>
 </div>
+<script>
+/* ── Restore urutan karakter lirik via CSS order — jalan SEGERA, tidak nunggu Firebase ── */
+(function(){
+  function restoreLines(){
+    document.querySelectorAll('[data-obf="1"]').forEach(function(line){
+      var spans = Array.from(line.querySelectorAll('span[data-c]'));
+      if(!spans.length) return;
+      line.style.cssText += ';display:inline-flex;flex-wrap:wrap;gap:0';
+      spans.forEach(function(s){ s.style.order = s.dataset.c; });
+    });
+    document.body.classList.add('rdy');
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', restoreLines);
+  } else {
+    restoreLines();
+  }
+})();
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
@@ -1016,21 +1016,14 @@ onAuthStateChanged(auth, async (user) => {
   rcm();
 });
 
-/* ── Tangani hasil redirect login (jika sebelumnya pakai signInWithRedirect) ── */
-getRedirectResult(auth).then(result => {
-  if (result && result.user) {
-    // Login berhasil via redirect, onAuthStateChanged akan handle sisanya
-  }
-}).catch(e => {
-  if (e.code !== 'auth/popup-closed-by-user') console.warn('redirect result error:', e.code);
-});
+/* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
+getRedirectResult(auth).catch(()=>{});
 
 window.doLogin = async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
     if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
-      // Fallback ke redirect jika popup diblokir browser
       try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal. Coba lagi.'); }
     } else if (e.code !== 'auth/popup-closed-by-user') {
       toast('Login gagal. Coba lagi.');
@@ -1197,23 +1190,7 @@ window.doCopyLyric = async () => {
 };
 let sro=true, str=true;
 
-/* ── Restore urutan karakter lirik via CSS order (obfuscation tetap aktif di DOM) ── */
-(()=>{
-  // Pakai CSS flexbox + order property agar karakter tampil urut di layar
-  // tapi di DOM tetap acak — reader mode parser baca DOM, bukan rendered order
-  document.querySelectorAll('[data-obf="1"]').forEach(line => {
-    const spans = Array.from(line.querySelectorAll('span[data-c]'));
-    if (!spans.length) return;
-    // Set display flex pada container
-    line.style.cssText += ';display:inline-flex;flex-wrap:wrap;gap:0';
-    spans.forEach(s => {
-      s.style.order = s.dataset.c;
-      // Noise spans sudah absolute/hidden, tidak perlu diubah
-    });
-  });
-  // Reveal lirik setelah semua order selesai di-apply — tidak ada flash lagi
-  document.body.classList.add('rdy');
-})();
+
 
 /* ── Anti-Copy: scramble teks yang di-copy dari halaman ini ── */
 (()=>{
