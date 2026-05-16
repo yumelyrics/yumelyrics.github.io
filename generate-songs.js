@@ -1282,12 +1282,14 @@ async function loadNotifs(uid){
       list.innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
       return;
     }
-    list.innerHTML=notifs.map(n=>`
-      <div class="nud-notif-item${n.read?'':' unread'}" onclick="goToNotif('${n.id}','${esc(n.songSlug||'')}',this)">
-        <div class="nud-notif-from">💬 ${esc(n.fromName||'Seseorang')} membalas komentarmu</div>
-        <div class="nud-notif-msg">"${esc(n.replyText||'')}"</div>
-        <div class="nud-notif-meta">${esc(n.songTitle||'')} · ${esc(n.date||'')}</div>
-      </div>`).join('');
+    list.innerHTML=notifs.map(function(n){
+      var cls='nud-notif-item'+(n.read?'':' unread');
+      return '<div class="'+cls+'" onclick="goToNotif(\''+n.id+'\',\''+esc(n.songSlug||'')+'\',this)">'
+        +'<div class="nud-notif-from">\u{1F4AC} '+esc(n.fromName||'Seseorang')+' membalas komentarmu</div>'
+        +'<div class="nud-notif-msg">&ldquo;'+esc(n.replyText||'')+'&rdquo;</div>'
+        +'<div class="nud-notif-meta">'+esc(n.songTitle||'')+' &middot; '+esc(n.date||'')+'</div>'
+        +'</div>';
+    }).join('');
   }catch(e){}
 }
 
