@@ -604,6 +604,22 @@ body.gate-open #lyrView{padding-top:0}
 /* sembunyiin dari nav lama */
 .nav-user{display:none}
 .nav-user-name,.nav-logout{display:none}
+/* ── Notifikasi badge di avatar bubble ── */
+#notif-badge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1}
+#notif-badge.show{display:flex}
+/* ── Notif panel di dropdown ── */
+.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.3rem .6rem .2rem;border-top:1px solid rgba(255,255,255,.07);margin-top:.2rem}
+.nud-notif-title{font-size:.52rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+.nud-notif-clear{background:none;border:none;font-size:.52rem;color:var(--muted);cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
+.nud-notif-clear:hover{color:var(--accent)}
+#nud-notif-list{display:flex;flex-direction:column;gap:0;max-height:220px;overflow-y:auto;margin:0 -.1rem}
+.nud-notif-item{padding:.55rem .65rem;border-radius:4px;cursor:pointer;transition:background .15s;border-left:2px solid transparent;margin:.1rem 0}
+.nud-notif-item:hover{background:rgba(255,255,255,.04)}
+.nud-notif-item.unread{border-left-color:var(--accent);background:rgba(255,110,180,.04)}
+.nud-notif-from{font-size:.68rem;color:var(--accent);font-weight:500;margin-bottom:.15rem}
+.nud-notif-msg{font-size:.62rem;color:var(--text);line-height:1.45;margin-bottom:.15rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nud-notif-meta{font-size:.55rem;color:var(--muted)}
+.nud-notif-empty{font-size:.65rem;color:var(--muted);font-style:italic;padding:.5rem .65rem}
 </style>
 </head>
 <body>
@@ -713,14 +729,20 @@ body.gate-open #lyrView{padding-top:0}
 </div>
 </div>
 <!-- ── Floating Avatar Bubble ── -->
-<div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
+<div id="nav-avatar-bubble" onclick="toggleUserDropdown()" style="position:relative">
   <div id="nav-avatar-wrap"></div>
+  <div id="notif-badge"></div>
 </div>
 <!-- ── User Dropdown ── -->
 <div id="nav-user-dropdown">
   <div class="nud-name" id="nud-name">—</div>
   <div class="nud-email" id="nud-email">—</div>
   <button class="nud-btn" onclick="openEditProfile();closeUserDropdown()">✏ Edit Profil</button>
+  <div class="nud-notif-header">
+    <span class="nud-notif-title">🔔 Notifikasi</span>
+    <button class="nud-notif-clear" onclick="markAllNotifsRead()" id="notif-clear-btn" style="display:none">Tandai dibaca</button>
+  </div>
+  <div id="nud-notif-list"><div class="nud-notif-empty">Tidak ada notifikasi.</div></div>
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
@@ -752,7 +774,7 @@ body.gate-open #lyrView{padding-top:0}
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -936,7 +958,10 @@ async function applyAuthState(user) {
   }
 }
 
-onAuthStateChanged(auth, applyAuthState);
+onAuthStateChanged(auth, async (user) => {
+  await applyAuthState(user);
+  if(user) loadNotifs(user.uid);
+});
 
 window.doLogin = async () => {
   try {
@@ -1227,6 +1252,107 @@ function renderComment(id, c, replies){
   </div>\`;
 }
 
+/* ── NOTIFIKASI ── */
+async function loadNotifs(uid){
+  try{
+    const snap=await getDocs(query(
+      collection(db,'notifications'),
+      where('toUid','==',uid),
+      orderBy('ts','desc'),
+      limit(20)
+    ));
+    const notifs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const unread=notifs.filter(n=>!n.read);
+
+    // Badge
+    const badge=document.getElementById('notif-badge');
+    const clearBtn=document.getElementById('notif-clear-btn');
+    if(unread.length>0){
+      badge.textContent=unread.length>9?'9+':unread.length;
+      badge.classList.add('show');
+      if(clearBtn) clearBtn.style.display='';
+    } else {
+      badge.classList.remove('show');
+      if(clearBtn) clearBtn.style.display='none';
+    }
+
+    // List
+    const list=document.getElementById('nud-notif-list');
+    if(!notifs.length){
+      list.innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
+      return;
+    }
+    list.innerHTML=notifs.map(n=>`
+      <div class="nud-notif-item${n.read?'':' unread'}" onclick="goToNotif('${n.id}','${esc(n.songSlug||'')}',this)">
+        <div class="nud-notif-from">💬 ${esc(n.fromName||'Seseorang')} membalas komentarmu</div>
+        <div class="nud-notif-msg">"${esc(n.replyText||'')}"</div>
+        <div class="nud-notif-meta">${esc(n.songTitle||'')} · ${esc(n.date||'')}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+window.goToNotif = async (notifId, songSlug, el) => {
+  // Tandai sudah dibaca
+  try{
+    await updateDoc(doc(db,'notifications',notifId),{read:true});
+    el.classList.remove('unread');
+    // Update badge
+    const remaining=document.querySelectorAll('.nud-notif-item.unread').length;
+    const badge=document.getElementById('notif-badge');
+    const clearBtn=document.getElementById('notif-clear-btn');
+    if(remaining===0){ badge.classList.remove('show'); if(clearBtn) clearBtn.style.display='none'; }
+    else { badge.textContent=remaining>9?'9+':remaining; }
+  }catch(e){}
+  // Navigasi ke halaman lagu
+  if(songSlug){
+    const currentSlug=location.pathname.split('/').pop().replace('.html','');
+    if(songSlug===currentSlug){
+      closeUserDropdown();
+      document.getElementById('cmlist')?.scrollIntoView({behavior:'smooth',block:'start'});
+    } else {
+      location.href='../lagu/'+songSlug+'.html';
+    }
+  }
+};
+
+window.markAllNotifsRead = async () => {
+  if(!_currentUser) return;
+  try{
+    const snap=await getDocs(query(
+      collection(db,'notifications'),
+      where('toUid','==',_currentUser.uid),
+      where('read','==',false)
+    ));
+    if(snap.empty) return;
+    const batch=writeBatch(db);
+    snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
+    await batch.commit();
+    document.querySelectorAll('.nud-notif-item.unread').forEach(el=>el.classList.remove('unread'));
+    document.getElementById('notif-badge').classList.remove('show');
+    const clearBtn=document.getElementById('notif-clear-btn');
+    if(clearBtn) clearBtn.style.display='none';
+    toast('Semua notifikasi ditandai dibaca.');
+  }catch(e){}
+};
+
+async function sendNotif(toUid, toName, replyText, songSlug, songTitle){
+  if(!toUid || toUid===_currentUser.uid) return; // jangan notif diri sendiri
+  try{
+    const fromName=_isAdmin?'YumeSubs':(_currentUser.displayName||'Anonim');
+    await addDoc(collection(db,'notifications'),{
+      toUid,
+      fromUid:_currentUser.uid,
+      fromName,
+      replyText:replyText.substring(0,120),
+      songSlug,
+      songTitle,
+      read:false,
+      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts:Date.now()
+    });
+  }catch(e){}
+}
+
 async function rcm(){
   const el=document.getElementById('cmlist');
   el.innerHTML='<div class="nocm">Memuat komentar...</div>';
@@ -1234,9 +1360,31 @@ async function rcm(){
     const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID)));
     const allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
     if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
-    const parents=allDocs.filter(c=>!c.parentId);
+
+    // Fetch user_profiles semua uid unik — ambil foto & nama terbaru
+    const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
+    const profileMap={};
+    await Promise.all(uids.map(async uid=>{
+      try{
+        const pSnap=await getDoc(doc(db,'user_profiles',uid));
+        if(pSnap.exists()) profileMap[uid]=pSnap.data();
+      }catch(e){}
+    }));
+
+    // Inject foto & nama terbaru dari profil ke setiap komentar/reply
+    const enriched=allDocs.map(c=>{
+      if(c.isAdmin||!c.uid) return c;
+      const p=profileMap[c.uid];
+      return {
+        ...c,
+        photoURL:(p&&p.photoURL)?p.photoURL:(c.photoURL||null),
+        name:(p&&p.displayName)?p.displayName:(c.name||'Anonim')
+      };
+    });
+
+    const parents=enriched.filter(c=>!c.parentId);
     const replyMap={};
-    allDocs.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
+    enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
     if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
   }catch(e){el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';}
@@ -1264,7 +1412,23 @@ window.postReply = async parentId => {
       ts:Date.now(),
       isAdmin:_isAdmin
     });
-    toast(_isAdmin ? 'Balasan admin terkirim! 👑' : 'Balasan terkirim!');rcm();
+    // Ambil uid pemilik komentar parent → kirim notifikasi
+    try{
+      const parentSnap=await getDoc(doc(db,'comments',parentId));
+      if(parentSnap.exists()){
+        const parentData=parentSnap.data();
+        const currentSlug=location.pathname.split('/').pop().replace('.html','');
+        await sendNotif(
+          parentData.uid,
+          parentData.name||'',
+          t,
+          currentSlug,
+          document.title.split(' - ')[0].replace('Lirik ','')
+        );
+      }
+    }catch(e){}
+    toast(_isAdmin ? 'Balasan admin terkirim! 👑' : 'Balasan terkirim! 💬');
+    rcm();
   }catch(e){toast('Gagal kirim.');}
 };
 
