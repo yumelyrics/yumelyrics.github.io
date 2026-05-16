@@ -1628,9 +1628,8 @@ document.getElementById('crModalOverlay').addEventListener('click', function(e){
   if(e.target === this) closeCrModal();
 });
 
-// ── PATCH: include custom roles in user assign dropdown ──
-const _origRenderUserRoleList = renderUserRoleList;
-// We override below after function declaration
+// ── FILTER USER SEARCH ──
+window.filterRoleUsers = () => {
   const q = document.getElementById('roleUserSearch').value.toLowerCase();
   const filtered = q ? allCommentersRaw.filter(u =>
     u.name.toLowerCase().includes(q) || u.uid.toLowerCase().includes(q)
