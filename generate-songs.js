@@ -812,7 +812,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
-  authDomain:"yumelyrics.my.id",
+  authDomain:"yumesubs7.firebaseapp.com",
   projectId:"yumesubs7",
   storageBucket:"yumesubs7.firebasestorage.app",
   messagingSenderId:"1076202015626",
@@ -1430,7 +1430,7 @@ function loadNotifs(uid){
     }
     list.innerHTML=notifs.map(function(n){
       var cls='nud-notif-item'+(n.read?'':' unread');
-      return '<div class="'+cls+'" onclick="goToNotif(''+n.id+'',''+esc(n.songSlug||'')+'',this)">'+
+      return '<div class="'+cls+'" onclick="goToNotif(\''+n.id+'\',\''+esc(n.songSlug||'')+'\',' + 'this)">'+
         '<div class="nud-notif-from">💬 '+esc(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
         '<div class="nud-notif-msg">&ldquo;'+esc(n.replyText||'')+'&rdquo;</div>'+
         '<div class="nud-notif-meta">'+esc(n.songTitle||'')+' &middot; '+esc(n.date||'')+'</div>'+
