@@ -1493,6 +1493,7 @@ window.tl = type => {
 };
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderText(str){return esc(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>');}
 
 // Format tanggal + jam menit
 function fmtDate(d){
