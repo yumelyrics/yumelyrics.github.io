@@ -855,12 +855,12 @@ function updateCopyGate() {
   if (_isBanned) {
     // Tampilkan pesan banned, sembunyikan tombol copy sama sekali
     btn.style.display = 'none';
-    const remText = (() => {
-      const rem = formatBanRemaining(_banUntil);
-      if(_banUntil === null || _banUntil === undefined) return ' (permanen)';
-      return rem ? \` (berakhir dalam \${rem})\` : '';
-    })();
-    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''}\${remText} Kamu tidak bisa meng-copy lirik.</span>\`;
+    const _cgEndStr = (_banUntil && _banUntil !== null) ? ' — ' + formatEndDate(_banUntil) : '';
+    const _cgCountdown = (_banUntil && _banUntil !== null) ? formatBanCountdown(_banUntil - Date.now()) : null;
+    const _cgDurHtml = (_banUntil === null || _banUntil === undefined)
+      ? ' <em>(permanen)</em>'
+      : (_cgCountdown ? \` (berakhir dalam <span class="ban-countdown-notice" data-banned-until="\${_banUntil}">\${_cgCountdown}</span>\${_cgEndStr})\` : '');
+    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''}\${_cgDurHtml} Kamu tidak bisa meng-copy lirik.</span>\`;
   } else if (_hasCommented) {
     btn.style.display = 'inline-flex';
     btn.disabled = false;
@@ -897,17 +897,18 @@ async function applyAuthState(user) {
     const bannedNotice = document.getElementById('cm-banned-notice');
     if (_isBanned) {
       bannedNotice.style.display = 'block';
-      const remText = (() => {
-        const rem = formatBanRemaining(_banUntil);
-        if(_banUntil === null || _banUntil === undefined) return ' <em style="color:var(--muted)">(permanen)</em>';
-        return rem ? \` <em style="color:var(--muted)">(berakhir dalam \${rem})</em>\` : '';
-      })();
-      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''}\${remText} Kamu tidak bisa mengirim komentar.\`;
+      const _asEndStr = (_banUntil && _banUntil !== null) ? ' — ' + formatEndDate(_banUntil) : '';
+      const _asCountdown = (_banUntil && _banUntil !== null) ? formatBanCountdown(_banUntil - Date.now()) : null;
+      const _asDurHtml = (_banUntil === null || _banUntil === undefined)
+        ? ' <em style="color:var(--muted)">(permanen)</em>'
+        : (_asCountdown ? \` <em style="color:var(--muted)">(berakhir dalam <span class="ban-countdown-notice" data-banned-until="\${_banUntil}">\${_asCountdown}</span>\${_asEndStr})</em>\` : '');
+      bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''}\${_asDurHtml} Kamu tidak bisa mengirim komentar.\`;
     } else {
       bannedNotice.style.display = 'none';
     }
     const cmBtn = document.getElementById('cm-btn');
     if (cmBtn) cmBtn.disabled = _isBanned;
+    if (_isBanned) startBanTicker(); // mulai ticker realtime untuk notice banned
 
     // Update copy gate
     updateCopyGate();
@@ -1237,16 +1238,59 @@ function formatEndDate(ts){
   return days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+' pukul '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 }
 
+function formatBanCountdown(rem){
+  // rem = ms tersisa
+  if(rem <= 0) return null;
+  const totalSec = Math.floor(rem / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if(d > 0) return `${d}h ${String(h).padStart(2,'0')}j ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}d`;
+  if(h > 0) return `${h}j ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}d`;
+  return `${m}m ${String(s).padStart(2,'0')}d`;
+}
+
 function formatBanRemaining(bannedUntil){
   if(bannedUntil === null || bannedUntil === undefined) return 'permanen';
   const rem = bannedUntil - Date.now();
-  if(rem <= 0) return null; // sudah expired
-  const h = rem / (60 * 60 * 1000);
-  let countdown;
-  if(h < 1) countdown = Math.ceil(rem / (60 * 1000)) + ' menit lagi';
-  else if(h < 24) countdown = Math.ceil(h) + ' jam lagi';
-  else countdown = Math.ceil(h / 24) + ' hari lagi';
+  if(rem <= 0) return null;
+  const countdown = formatBanCountdown(rem);
   return countdown + ' — ' + formatEndDate(bannedUntil);
+}
+
+// ── Realtime countdown ticker untuk semua badge & notice banned ──
+let _banTickerStarted = false;
+function startBanTicker(){
+  if(_banTickerStarted) return;
+  _banTickerStarted = true;
+  setInterval(()=>{
+    // Badge di komentar orang lain
+    document.querySelectorAll('.cm-banned-badge[data-banned-until]').forEach(badge=>{
+      const until = parseInt(badge.dataset.bannedUntil, 10);
+      if(isNaN(until)) return;
+      const rem = until - Date.now();
+      const countdownEl = badge.querySelector('.ban-countdown');
+      if(!countdownEl) return;
+      if(rem <= 0){
+        countdownEl.textContent = 'expired';
+        badge.style.opacity = '0.5';
+      } else {
+        countdownEl.textContent = formatBanCountdown(rem);
+      }
+    });
+    // Notice di form komentar & copy gate untuk user yang kena ban
+    document.querySelectorAll('.ban-countdown-notice[data-banned-until]').forEach(el=>{
+      const until = parseInt(el.dataset.bannedUntil, 10);
+      if(isNaN(until)) return;
+      const rem = until - Date.now();
+      if(rem <= 0){
+        el.textContent = 'expired';
+      } else {
+        el.textContent = formatBanCountdown(rem);
+      }
+    });
+  }, 1000);
 }
 
 function renderComment(id, c, replies){
@@ -1257,9 +1301,13 @@ function renderComment(id, c, replies){
       if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">\${esc(r.text)}</div></div></div>\`;
       const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
       const rBannedBadge = r.isBanned ? (()=>{
-        const rem = formatBanRemaining(r.bannedUntil);
-        const remText = rem ? \` · \${rem}\` : '';
-        return \`<span class="cm-banned-badge" title="User ini dibanned">🚫 banned\${remText}</span>\`;
+        if(r.bannedUntil === null || r.bannedUntil === undefined){
+          return \`<span class="cm-banned-badge">🚫 permanen</span>\`;
+        }
+        const rem = r.bannedUntil - Date.now();
+        if(rem <= 0) return \`<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>\`;
+        const endStr = formatEndDate(r.bannedUntil);
+        return \`<span class="cm-banned-badge" data-banned-until="\${r.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
       })() : '';
       return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}\${rBannedBadge}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
     }).join('')+'</div>';
@@ -1290,9 +1338,13 @@ function renderComment(id, c, replies){
     avHtml = \`<div class="cm-avatar-ph">\${(c.name||'A')[0].toUpperCase()}</div>\`;
   }
   const bannedBadgeHtml = c.isBanned ? (()=>{
-    const rem = formatBanRemaining(c.bannedUntil);
-    const remText = rem ? \` · \${rem}\` : '';
-    return \`<span class="cm-banned-badge" title="User ini dibanned">🚫 banned\${remText}</span>\`;
+    if(c.bannedUntil === null || c.bannedUntil === undefined){
+      return \`<span class="cm-banned-badge">🚫 permanen</span>\`;
+    }
+    const rem = c.bannedUntil - Date.now();
+    if(rem <= 0) return \`<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>\`;
+    const endStr = formatEndDate(c.bannedUntil);
+    return \`<span class="cm-banned-badge" data-banned-until="\${c.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
   })() : '';
   return \`<div class="citem">
     <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div></div>
@@ -1456,6 +1508,7 @@ async function rcm(){
     enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
     if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
+    startBanTicker(); // mulai countdown realtime setelah komentar dirender
   }catch(e){el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';}
 }
 
