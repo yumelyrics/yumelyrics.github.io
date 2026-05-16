@@ -592,12 +592,12 @@ body.gate-open #lyrView{padding-top:0}
 .nav-avatar-placeholder{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,110,180,.5);background:rgba(255,110,180,.18);display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--accent);box-shadow:0 2px 16px rgba(255,110,180,.2);transition:transform .18s,box-shadow .18s}
 .nav-avatar-placeholder:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(255,110,180,.35)}
 /* dropdown popup */
-#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:8px;padding:.6rem;display:none;flex-direction:column;gap:.3rem;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropUp .15s ease}
+#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:10px;padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropUp .15s ease}
 @keyframes dropUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 #nav-user-dropdown.open{display:flex}
-.nud-name{font-size:.78rem;color:var(--text);font-weight:500;padding:.3rem .6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-.nud-email{font-size:.6rem;color:var(--muted);padding:0 .6rem .4rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-.nud-btn{background:none;border:none;font-family:var(--en);font-size:.65rem;color:var(--muted);cursor:pointer;padding:.45rem .6rem;text-align:left;letter-spacing:.08em;text-transform:uppercase;transition:color .18s,background .18s;border-radius:4px;width:100%}
+.nud-name{font-size:.95rem;color:var(--text);font-weight:600;padding:.4rem .8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.nud-email{font-size:.75rem;color:var(--muted);padding:0 .8rem .5rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.nud-btn{background:none;border:none;font-family:var(--en);font-size:.78rem;color:var(--muted);cursor:pointer;padding:.6rem .8rem;text-align:left;letter-spacing:.06em;text-transform:uppercase;transition:color .18s,background .18s;border-radius:6px;width:100%}
 .nud-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nud-btn.logout{color:var(--red)}
 .nud-btn.logout:hover{background:rgba(255,77,109,.08)}
@@ -608,18 +608,18 @@ body.gate-open #lyrView{padding-top:0}
 #notif-badge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1}
 #notif-badge.show{display:flex}
 /* ── Notif panel di dropdown ── */
-.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.3rem .6rem .2rem;border-top:1px solid rgba(255,255,255,.07);margin-top:.2rem}
-.nud-notif-title{font-size:.52rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
-.nud-notif-clear{background:none;border:none;font-size:.52rem;color:var(--muted);cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
+.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem .3rem;border-top:1px solid rgba(255,255,255,.07);margin-top:.3rem}
+.nud-notif-title{font-size:.65rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
+.nud-notif-clear{background:none;border:none;font-size:.62rem;color:var(--muted);cursor:pointer;padding:0;letter-spacing:.06em;text-transform:uppercase;transition:color .15s}
 .nud-notif-clear:hover{color:var(--accent)}
-#nud-notif-list{display:flex;flex-direction:column;gap:0;max-height:220px;overflow-y:auto;margin:0 -.1rem}
-.nud-notif-item{padding:.55rem .65rem;border-radius:4px;cursor:pointer;transition:background .15s;border-left:2px solid transparent;margin:.1rem 0}
+#nud-notif-list{display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;margin:0 -.1rem}
+.nud-notif-item{padding:.7rem .8rem;border-radius:6px;cursor:pointer;transition:background .15s;border-left:3px solid transparent;margin:.15rem 0}
 .nud-notif-item:hover{background:rgba(255,255,255,.04)}
 .nud-notif-item.unread{border-left-color:var(--accent);background:rgba(255,110,180,.04)}
-.nud-notif-from{font-size:.68rem;color:var(--accent);font-weight:500;margin-bottom:.15rem}
-.nud-notif-msg{font-size:.62rem;color:var(--text);line-height:1.45;margin-bottom:.15rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.nud-notif-meta{font-size:.55rem;color:var(--muted)}
-.nud-notif-empty{font-size:.65rem;color:var(--muted);font-style:italic;padding:.5rem .65rem}
+.nud-notif-from{font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.2rem}
+.nud-notif-msg{font-size:.74rem;color:var(--text);line-height:1.5;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nud-notif-meta{font-size:.66rem;color:var(--muted)}
+.nud-notif-empty{font-size:.76rem;color:var(--muted);font-style:italic;padding:.6rem .8rem}
 /* ── Banned badge di komentar ── */
 .cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);padding:.1rem .38rem;border-radius:2rem;font-weight:600;vertical-align:middle;margin-left:.3rem;flex-shrink:0}
 /* ── Banned overlay di nav avatar bubble ── */
@@ -748,7 +748,10 @@ body.gate-open #lyrView{padding-top:0}
   <button class="nud-btn" onclick="openEditProfile();closeUserDropdown()">✏ Edit Profil</button>
   <div class="nud-notif-header">
     <span class="nud-notif-title">🔔 Notifikasi</span>
-    <button class="nud-notif-clear" onclick="markAllNotifsRead()" id="notif-clear-btn" style="display:none">Tandai dibaca</button>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="nud-notif-clear" onclick="markAllNotifsRead()" id="notif-clear-btn" style="display:none">Tandai dibaca</button>
+      <button class="nud-notif-clear" onclick="deleteReadNotifs()" id="notif-delete-btn" style="display:none;color:var(--red)">Hapus semua</button>
+    </div>
   </div>
   <div id="nud-notif-list"><div class="nud-notif-empty">Tidak ada notifikasi.</div></div>
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
@@ -1362,6 +1365,22 @@ function renderComment(id, c, replies){
 /* ── NOTIFIKASI ── */
 async function loadNotifs(uid){
   try{
+    // Auto-delete notifikasi yang sudah dibaca & umurnya > 14 hari
+    const cutoff = Date.now() - (14 * 24 * 60 * 60 * 1000);
+    const oldSnap = await getDocs(query(
+      collection(db,'notifications'),
+      where('toUid','==',uid),
+      where('read','==',true)
+    ));
+    if(!oldSnap.empty){
+      const toDelete = oldSnap.docs.filter(d => (d.data().ts||0) < cutoff);
+      if(toDelete.length > 0){
+        const batch = writeBatch(db);
+        toDelete.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
     const snap=await getDocs(query(
       collection(db,'notifications'),
       where('toUid','==',uid),
@@ -1374,6 +1393,7 @@ async function loadNotifs(uid){
     // Badge
     const badge=document.getElementById('notif-badge');
     const clearBtn=document.getElementById('notif-clear-btn');
+    const deleteBtn=document.getElementById('notif-delete-btn');
     if(unread.length>0){
       badge.textContent=unread.length>9?'9+':unread.length;
       badge.classList.add('show');
@@ -1382,6 +1402,7 @@ async function loadNotifs(uid){
       badge.classList.remove('show');
       if(clearBtn) clearBtn.style.display='none';
     }
+    if(notifs.length>0){ if(deleteBtn) deleteBtn.style.display=''; } else { if(deleteBtn) deleteBtn.style.display='none'; }
 
     // List
     const list=document.getElementById('nud-notif-list');
@@ -1443,6 +1464,27 @@ window.markAllNotifsRead = async () => {
     toast('Semua notifikasi ditandai dibaca.');
   }catch(e){}
 };
+
+async function deleteReadNotifs(){
+  if(!_currentUser) return;
+  try{
+    const snap=await getDocs(query(
+      collection(db,'notifications'),
+      where('toUid','==',_currentUser.uid)
+    ));
+    if(snap.empty) return;
+    const batch=writeBatch(db);
+    snap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    document.getElementById('nud-notif-list').innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
+    document.getElementById('notif-badge').classList.remove('show');
+    const clearBtn=document.getElementById('notif-clear-btn');
+    const deleteBtn=document.getElementById('notif-delete-btn');
+    if(clearBtn) clearBtn.style.display='none';
+    if(deleteBtn) deleteBtn.style.display='none';
+    toast('Semua notifikasi dihapus.');
+  }catch(e){}
+}
 
 async function sendNotif(toUid, toName, replyText, songSlug, songTitle){
   if(!toUid || toUid===_currentUser.uid) return; // jangan notif diri sendiri
