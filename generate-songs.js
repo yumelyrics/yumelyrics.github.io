@@ -623,6 +623,26 @@ body.gate-open #lyrView{padding-top:0}
 .nud-notif-empty{font-size:.76rem;color:var(--muted);font-style:italic;padding:.6rem .8rem}
 /* ── Banned badge di komentar ── */
 .cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);padding:.1rem .38rem;border-radius:2rem;font-weight:600;vertical-align:middle;margin-left:.3rem;flex-shrink:0}
+/* ── Foto komentar ── */
+.cm-img-preview-wrap{position:relative;display:inline-block;margin-top:.5rem}
+.cm-img-preview{max-width:180px;max-height:140px;border-radius:6px;border:1px solid rgba(255,110,180,.25);object-fit:cover;display:block;cursor:pointer;transition:opacity .18s}
+.cm-img-preview:hover{opacity:.85}
+.cm-img-remove{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;font-weight:700}
+.cm-photo-btn{background:none;border:1px solid rgba(255,110,180,.3);color:var(--muted);font-size:.7rem;padding:.35rem .7rem;border-radius:4px;cursor:pointer;transition:color .15s,border-color .15s;font-family:var(--en);letter-spacing:.05em;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem}
+.cm-photo-btn:hover{color:var(--accent);border-color:rgba(255,110,180,.6)}
+.cm-photo-input{display:none}
+/* Gambar di dalam komentar (setelah diposting) */
+.cm-posted-img{max-width:260px;max-height:200px;border-radius:8px;border:1px solid rgba(255,110,180,.2);object-fit:cover;cursor:pointer;display:block;margin-top:.5rem;transition:opacity .18s}
+.cm-posted-img:hover{opacity:.85}
+/* Tombol hapus komentar */
+.cm-delete-btn{background:none;border:none;font-size:.65rem;color:var(--red);cursor:pointer;padding:.2rem .4rem;border-radius:4px;opacity:.6;transition:opacity .18s;letter-spacing:.04em;font-family:var(--en);display:inline-flex;align-items:center;gap:.2rem}
+.cm-delete-btn:hover{opacity:1;background:rgba(255,77,109,.08)}
+/* Modal foto besar */
+#img-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px)}
+#img-lightbox.open{display:flex}
+#img-lightbox img{max-width:90vw;max-height:88vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,.6);user-select:none}
+#img-lightbox-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;opacity:.7;transition:opacity .15s;z-index:10;line-height:1}
+#img-lightbox-close:hover{opacity:1}
 /* ── Banned overlay di nav avatar bubble ── */
 #nav-avatar-bubble.is-banned .nav-avatar,
 #nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red) !important;box-shadow:0 2px 16px rgba(255,77,109,.35) !important}
@@ -728,7 +748,18 @@ body.gate-open #lyrView{padding-top:0}
             <span style="font-size:.65rem;color:var(--muted);margin-left:auto">Berkomentar sebagai akun Google kamu</span>
           </div>
           <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentar tentang lagu ini... Jaga sopan santun ya!"></textarea>
-          <button class="sbtn" id="cm-btn" onclick="postCm()" style="padding:.6rem 1.4rem;align-self:flex-start">Kirim Komentar</button>
+          <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="handleCmPhoto(this)">
+          <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
+            <img id="cm-img-preview" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
+            <button class="cm-img-remove" onclick="removeCmPhoto()" title="Hapus foto">✕</button>
+          </div>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <button class="sbtn" id="cm-btn" onclick="postCm()" style="padding:.6rem 1.4rem">Kirim Komentar</button>
+            <button class="cm-photo-btn" onclick="document.getElementById('cm-photo-input').click()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Tambah Foto
+            </button>
+          </div>
         </div>
         <div class="cmlist" id="cmlist"><div class="nocm">Memuat komentar...</div></div>
       </div>
@@ -758,6 +789,11 @@ body.gate-open #lyrView{padding-top:0}
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
+<!-- ── Lightbox foto komentar ── -->
+<div id="img-lightbox" onclick="closeLightbox()">
+  <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="img-lightbox-img" src="" alt="foto komentar">
+</div>
 <!-- ── Edit Profile Modal ── -->
 <div id="editProfileModal">
   <div class="ep-box">
@@ -1259,6 +1295,12 @@ window.tl = type => {
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+// Format tanggal + jam menit
+function fmtDate(d){
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
 // Hitung sisa waktu ban untuk ditampilkan ke user
 function formatEndDate(ts){
   const d = new Date(ts);
@@ -1324,10 +1366,12 @@ function startBanTicker(){
 
 function renderComment(id, c, replies){
   const isAdm=c.isAdmin;
+  const canDelete = _currentUser && (c.uid===_currentUser.uid || _isAdmin);
   let repHtml='';
   if(replies&&replies.length){
     repHtml='<div class="replies">'+replies.map(r=>{
-      if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">\${esc(r.text)}</div></div></div>\`;
+      const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
+      if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">\${esc(r.date)}</span></div><div class="admin-reply-text">\${esc(r.text)}\${r.imgUrl?'<br><img class="cm-posted-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div></div>\${rCanDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+r.id+'\')">🗑 Hapus</button>':''}</div>\`;
       const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
       const rBannedBadge = r.isBanned ? (()=>{
         if(r.bannedUntil === null || r.bannedUntil === undefined){
@@ -1338,7 +1382,7 @@ function renderComment(id, c, replies){
         const endStr = formatEndDate(r.bannedUntil);
         return \`<span class="cm-banned-badge" data-banned-until="\${r.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
       })() : '';
-      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}\${rBannedBadge}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
+      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}\${rBannedBadge}</span><span class="cdate">\${esc(r.date)}</span>\${rCanDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+r.id+'\')">🗑</button>':''}</div><div class="ctxt">\${esc(r.text)}\${r.imgUrl?'<br><img class="cm-posted-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div></div>\`;
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
@@ -1349,13 +1393,23 @@ function renderComment(id, c, replies){
         <span class="admin-cm-name">YumeSubs</span>
         <span class="admin-cm-badge">Admin</span>
         <span class="admin-cm-date">\${esc(c.date)}</span>
+        \${canDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+id+'\')">🗑 Hapus</button>':''}
       </div>
-      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}</div>
+      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}\${c.imgUrl?'<br><img class="cm-posted-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div>
       \${repHtml}
       <div class="reply-form" id="rf-\${id}">
         <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
         <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-        <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
+        <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" onchange="handleReplyPhoto('\${id}',this)">
+        <div id="rp-img-preview-wrap-\${id}" class="cm-img-preview-wrap" style="display:none">
+          <img id="rp-img-preview-\${id}" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
+          <button class="cm-img-remove" onclick="removeReplyPhoto('\${id}')" title="Hapus foto">✕</button>
+        </div>
+        <div class="reply-row">
+          <button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button>
+          <button class="cm-photo-btn" onclick="document.getElementById('rp-photo-input-\${id}').click()">📷 Foto</button>
+          <button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button>
+        </div>
       </div>
     </div>\`;
   }
@@ -1376,14 +1430,23 @@ function renderComment(id, c, replies){
     return \`<span class="cm-banned-badge" data-banned-until="\${c.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
   })() : '';
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div></div>
+    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div>\${canDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+id+'\')">🗑</button>':''}</div>
     <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
-    <div class="ctxt">\${esc(c.text)}</div>
+    <div class="ctxt">\${esc(c.text)}\${c.imgUrl?'<br><img class="cm-posted-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
       <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <div class="reply-row"><button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button><button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button></div>
+      <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" onchange="handleReplyPhoto('\${id}',this)">
+      <div id="rp-img-preview-wrap-\${id}" class="cm-img-preview-wrap" style="display:none">
+        <img id="rp-img-preview-\${id}" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
+        <button class="cm-img-remove" onclick="removeReplyPhoto('\${id}')" title="Hapus foto">✕</button>
+      </div>
+      <div class="reply-row">
+        <button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button>
+        <button class="cm-photo-btn" onclick="document.getElementById('rp-photo-input-\${id}').click()">📷 Foto</button>
+        <button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button>
+      </div>
     </div>
   </div>\`;
 }
@@ -1521,7 +1584,7 @@ async function sendNotif(toUid, toName, replyText, songSlug, songTitle){
       songSlug,
       songTitle,
       read:false,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      date:fmtDate(new Date()),
       ts:Date.now()
     });
   }catch(e){}
@@ -1593,7 +1656,9 @@ window.toggleReplyForm = id => {
 window.postReply = async parentId => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
-  const t=document.getElementById('rt-'+parentId).value.trim();if(!t)return;
+  const t=document.getElementById('rt-'+parentId).value.trim();
+  const replyImg = _replyImgMap[parentId] || null;
+  if(!t && !replyImg)return;
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
     await addDoc(collection(db,'comments'),{
@@ -1603,10 +1668,14 @@ window.postReply = async parentId => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      imgUrl:replyImg,
+      date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
     });
+    document.getElementById('rt-'+parentId).value='';
+    removeReplyPhoto(parentId);
+    toggleReplyForm(parentId);
     // Ambil uid pemilik komentar parent → kirim notifikasi
     try{
       const parentSnap=await getDoc(doc(db,'comments',parentId));
@@ -1632,7 +1701,7 @@ window.postCm = async () => {
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
-  if(!t)return;btn.disabled=true;
+  if(!t && !_cmImgDataUrl)return;btn.disabled=true;
   const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
   try{
     await addDoc(collection(db,'comments'),{
@@ -1642,11 +1711,13 @@ window.postCm = async () => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      imgUrl:_cmImgDataUrl||null,
+      date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
     });
     document.getElementById('cm-t').value='';
+    removeCmPhoto();
     if (_isAdmin) {
       toast('Komentar admin terkirim! 👑');
     } else if (!_hasCommented) {
@@ -1659,6 +1730,122 @@ window.postCm = async () => {
     rcm();
   }catch(e){toast('Gagal kirim komentar.');}
   btn.disabled=false;
+};
+
+// ── State foto komentar utama ──
+let _cmImgDataUrl = null;
+// State foto per reply (key = parentId)
+const _replyImgMap = {};
+
+// Convert file ke base64 DataURL (max ~800px, compress)
+function fileToDataUrl(file, cb){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){
+        if(w > h){ h = Math.round(h * MAX/w); w = MAX; }
+        else { w = Math.round(w * MAX/h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+window.handleCmPhoto = input => {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { toast('Foto max 5MB.'); return; }
+  fileToDataUrl(file, dataUrl => {
+    _cmImgDataUrl = dataUrl;
+    const wrap = document.getElementById('cm-img-preview-wrap');
+    const prev = document.getElementById('cm-img-preview');
+    prev.src = dataUrl;
+    wrap.style.display = 'inline-block';
+  });
+  input.value = '';
+};
+
+window.removeCmPhoto = () => {
+  _cmImgDataUrl = null;
+  const wrap = document.getElementById('cm-img-preview-wrap');
+  const prev = document.getElementById('cm-img-preview');
+  if(wrap) wrap.style.display = 'none';
+  if(prev) prev.src = '';
+};
+
+window.handleReplyPhoto = (parentId, input) => {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { toast('Foto max 5MB.'); return; }
+  fileToDataUrl(file, dataUrl => {
+    _replyImgMap[parentId] = dataUrl;
+    const wrap = document.getElementById('rp-img-preview-wrap-'+parentId);
+    const prev = document.getElementById('rp-img-preview-'+parentId);
+    if(prev) prev.src = dataUrl;
+    if(wrap) wrap.style.display = 'inline-block';
+  });
+  input.value = '';
+};
+
+window.removeReplyPhoto = parentId => {
+  delete _replyImgMap[parentId];
+  const wrap = document.getElementById('rp-img-preview-wrap-'+parentId);
+  const prev = document.getElementById('rp-img-preview-'+parentId);
+  if(wrap) wrap.style.display = 'none';
+  if(prev) prev.src = '';
+};
+
+// ── Lightbox foto ──
+window.openLightbox = src => {
+  const lb = document.getElementById('img-lightbox');
+  const img = document.getElementById('img-lightbox-img');
+  if(!lb||!img) return;
+  img.src = src;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeLightbox = () => {
+  const lb = document.getElementById('img-lightbox');
+  if(lb) lb.classList.remove('open');
+  document.body.style.overflow = '';
+};
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+
+// ── Hapus komentar ──
+window.deleteCm = async cmId => {
+  if (!_currentUser) return;
+  if (!confirm('Hapus komentar ini?')) return;
+  try {
+    const cmSnap = await getDoc(doc(db, 'comments', cmId));
+    if (!cmSnap.exists()) { toast('Komentar tidak ditemukan.'); return; }
+    const cmData = cmSnap.data();
+    // Hanya pemilik atau admin yang boleh hapus
+    if (cmData.uid !== _currentUser.uid && !_isAdmin) { toast('Kamu tidak bisa menghapus komentar ini.'); return; }
+    // Kalau ini komentar parent, hapus juga semua replynya
+    if (!cmData.parentId) {
+      const repliesSnap = await getDocs(query(collection(db,'comments'), where('parentId','==',cmId)));
+      if (!repliesSnap.empty) {
+        const batch = writeBatch(db);
+        repliesSnap.docs.forEach(d => batch.delete(d.ref));
+        batch.delete(doc(db,'comments',cmId));
+        await batch.commit();
+      } else {
+        await deleteDoc(doc(db,'comments',cmId));
+      }
+    } else {
+      await deleteDoc(doc(db,'comments',cmId));
+    }
+    toast('Komentar dihapus.');
+    rcm();
+  } catch(e) { toast('Gagal hapus komentar.'); }
 };
 
 </script>
