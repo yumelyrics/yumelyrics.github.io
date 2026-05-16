@@ -770,7 +770,7 @@ window.deleteAllNotifs = async () => {
 // ── onAuthStateChanged ──
 onAuthStateChanged(auth, async user => {
   _currentUser = user;
-  const loginBtn  = document.getElementById('nav-login-btn');
+  const loginBtn  = document.getElementById('float-login-btn');
   const avatarWrap= document.getElementById('nav-avatar-wrap');
   const avatarPh  = document.getElementById('nav-avatar-ph');
   const nudName   = document.getElementById('nud-name');
@@ -778,9 +778,6 @@ onAuthStateChanged(auth, async user => {
 
   if(user){
     _isAdmin = user.email === ADMIN_EMAIL;
-    const floatLoginBtn = document.getElementById('float-login-btn');
-    if(floatLoginBtn) floatLoginBtn.style.display = 'none';
-
     // Ambil foto dari user_profiles
     _customPhoto = user.photoURL || null;
     try{
@@ -809,8 +806,6 @@ onAuthStateChanged(auth, async user => {
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
     loginBtn.style.display  = '';
     avatarWrap.style.display= 'none';
-    const _flb = document.getElementById('float-login-btn');
-    if(_flb) _flb.style.display = '';
     document.getElementById('notif-badge').classList.remove('show');
   }
 });
@@ -955,27 +950,33 @@ window.postCm = async () => {
   btn.disabled = false;
 };
 
-// ── Load songs (realtime) ──
-// One-time fetch — lebih cepet dari realtime listener
-async function loadSongs() {
+// ── Load songs — onSnapshot pakai cache Firestore (instan dari cache, update realtime) ──
+let _unsubSongs = null;
+function loadSongs() {
   const grid = document.getElementById('songGrid');
-  try {
-    let snap;
-    try {
-      snap = await getDocs(query(collection(db,'songs'), orderBy('order','desc')));
-    } catch(e) {
-      snap = await getDocs(collection(db,'songs'));
-      songs = snap.docs
-        .map(d=>({id:d.id, ...d.data()}))
-        .sort((a,b)=>(b.order??0)-(a.order??0));
+  // Coba ordered desc dulu
+  _unsubSongs = onSnapshot(
+    query(collection(db,'songs'), orderBy('order','desc')),
+    snap => {
+      songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
       rc(document.getElementById('searchInp').value||'');
-      return;
+    },
+    err => {
+      // Fallback tanpa orderBy
+      _unsubSongs = onSnapshot(
+        collection(db,'songs'),
+        snap => {
+          songs = snap.docs
+            .map(d=>({id:d.id, ...d.data()}))
+            .sort((a,b)=>(b.order??0)-(a.order??0));
+          rc(document.getElementById('searchInp').value||'');
+        },
+        () => {
+          grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+        }
+      );
     }
-    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    rc(document.getElementById('searchInp').value||'');
-  } catch(e) {
-    grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
-  }
+  );
 }
 loadSongs();
 
