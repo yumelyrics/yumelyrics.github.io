@@ -812,7 +812,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
-  authDomain:"yumesubs7.firebaseapp.com",
+  authDomain:"yumelyrics.my.id",
   projectId:"yumesubs7",
   storageBucket:"yumesubs7.firebasestorage.app",
   messagingSenderId:"1076202015626",
@@ -1028,10 +1028,16 @@ window.doLogin = async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
-    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+    if (
+      e.code === 'auth/popup-blocked' ||
+      e.code === 'auth/operation-not-supported-in-this-environment' ||
+      e.code === 'auth/popup-closed-by-user' && false
+    ) {
       try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal. Coba lagi.'); }
+    } else if (e.code === 'auth/unauthorized-domain') {
+      toast('Domain belum diizinkan di Firebase. Hubungi admin.');
     } else if (e.code !== 'auth/popup-closed-by-user') {
-      toast('Login gagal. Coba lagi.');
+      toast('Login gagal: ' + (e.code || e.message));
     }
   }
 };

@@ -420,7 +420,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
-  authDomain: "yumesubs7.firebaseapp.com",
+  authDomain: "yumelyrics.my.id",
   projectId: "yumesubs7",
   storageBucket: "yumesubs7.firebasestorage.app",
   messagingSenderId: "1076202015626",
@@ -965,13 +965,13 @@ function loadSongs() {
         rc(document.getElementById('searchInp').value||'');
       },
       err => {
-        // Jika error karena index / permission, fallback tanpa orderBy
+        // Fallback tanpa orderBy kalau index belum ada
         unsubSongs = onSnapshot(
           collection(db,'songs'),
           snap => {
             songs = snap.docs
               .map(d=>({id:d.id, ...d.data()}))
-              .sort((a,b)=>(a.order??999)-(b.order??999)).reverse();
+              .sort((a,b)=>(a.order??9999)-(b.order??9999));
             rc(document.getElementById('searchInp').value||'');
           },
           () => {
