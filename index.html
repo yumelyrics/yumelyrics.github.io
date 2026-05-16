@@ -259,7 +259,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nav-avatar-placeholder:hover,.nav-avatar:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(255,110,180,.35)}
 #notif-badge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1}
 #notif-badge.show{display:flex}
-#nav-user-dropdown{position:fixed;bottom:auto;top:4.2rem;right:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:10px;padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropDown .15s ease}
+#nav-user-dropdown{position:fixed;bottom:5.5rem;left:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:10px;padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropDown .15s ease}
 @keyframes dropDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 #nav-user-dropdown.open{display:flex}
 .nud-name{font-size:.95rem;color:var(--text);font-weight:600;padding:.4rem .8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
@@ -298,10 +298,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="resources.html">Resources</a>
     <a class="nb" href="stories.html">Cerita</a>
     <a class="nb" href="contact.html">Hubungi</a>
-    <div id="nav-avatar-wrap" style="display:none" onclick="toggleDropdown()">
-      <div class="nav-avatar-placeholder" id="nav-avatar-ph"></div>
-      <div id="notif-badge"></div>
-    </div>
+
   </div>
 </nav>
 
@@ -771,7 +768,7 @@ window.deleteAllNotifs = async () => {
 onAuthStateChanged(auth, async user => {
   _currentUser = user;
   const loginBtn  = document.getElementById('float-login-btn');
-  const avatarWrap= document.getElementById('nav-avatar-wrap');
+  const avatarWrap= document.getElementById('float-avatar-wrap');
   const avatarPh  = document.getElementById('nav-avatar-ph');
   const nudName   = document.getElementById('nud-name');
   const nudEmail  = document.getElementById('nud-email');
@@ -789,12 +786,13 @@ onAuthStateChanged(auth, async user => {
     nudName.textContent  = displayName;
     nudEmail.textContent = user.email||'';
 
-    // Avatar
+    // Avatar — update elemen di dalam float-avatar-wrap
     if(_customPhoto){
-      avatarWrap.innerHTML = '<img class="nav-avatar" src="'+_customPhoto+'" alt="avatar" referrerpolicy="no-referrer"><div id="notif-badge"></div>';
-      avatarWrap.onclick = toggleDropdown;
+      const _ph = document.getElementById('nav-avatar-ph');
+      if(_ph) _ph.outerHTML = '<img id="nav-avatar-img" class="nav-avatar" src="'+_customPhoto+'" alt="avatar" referrerpolicy="no-referrer" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)">';
     } else {
-      avatarPh.textContent = displayName[0].toUpperCase();
+      const _ph = document.getElementById('nav-avatar-ph');
+      if(_ph) _ph.textContent = displayName[0].toUpperCase();
     }
 
     loginBtn.style.display  = 'none';
@@ -1039,6 +1037,10 @@ window.addEventListener('resize', fixBg);
   });
 })();
 </script>
+<div id="float-avatar-wrap" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:none;cursor:pointer" onclick="toggleDropdown()">
+  <div class="nav-avatar-placeholder" id="nav-avatar-ph" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5);transition:transform .2s,box-shadow .2s"></div>
+  <div id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1"></div>
+</div>
 <button id="float-login-btn" onclick="doLogin()" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;padding:.6rem 1.1rem;cursor:pointer;backdrop-filter:blur(12px);border-radius:2rem;box-shadow:0 4px 24px rgba(255,110,180,.35);transition:all .2s">
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
   Login
