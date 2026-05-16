@@ -1571,6 +1571,7 @@ function renderComment(id, c, replies){
     repHtml='<div class="replies">'+replies.map(r=>{
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
       const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
+      // Hanya tampilkan imgUrl dari http/https — skip base64 (terlalu besar untuk Firestore)
       const rImgHtml = (r.imgUrl && r.imgUrl.startsWith('http')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
       if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
       const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
@@ -1882,7 +1883,10 @@ async function rcm(){
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
     startBanTicker();
     _resolveCustomRoleBadges(); // resolve CR: custom role badges async
-  }catch(e){el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';}
+  }catch(e){
+    console.error('[rcm] error:', e.code, e.message, e);
+    el.innerHTML='<div class="nocm">Gagal memuat komentar. ('+( e.code||e.message)+')</div>';
+  }
 }
 
 window.toggleReplyForm = id => {
@@ -1948,7 +1952,8 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
   if(!t && !replyImg)return;
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
-    const safeReplyImg = (replyImg && replyImg.startsWith('data:image/')) ? replyImg : null;
+    // Base64 image di Firestore bisa >1MB dan crash getDocs — skip imgUrl untuk reply
+    // TODO: upload ke Firebase Storage dulu, simpan URL-nya
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId,
@@ -1956,7 +1961,7 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      imgUrl:safeReplyImg,
+      imgUrl:null,
       date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
