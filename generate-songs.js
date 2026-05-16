@@ -584,6 +584,7 @@ body.gate-open #lyrView{padding-top:0}
 #copy-lyric-btn:disabled{opacity:.4;cursor:not-allowed}
 .copy-done-badge{display:none;align-items:center;gap:.4rem;font-size:.7rem;color:#34d399;letter-spacing:.1em;text-transform:uppercase}
 .copy-done-badge.show{display:flex}
+.cm-login-gate-hidden{display:none}
 /* User badge di nav */
 /* floating avatar bubble */
 #nav-avatar-bubble{position:fixed;bottom:1.4rem;right:1.4rem;z-index:200;display:none;cursor:pointer;user-select:none}
@@ -709,7 +710,7 @@ body.gate-open #lyrView{padding-top:0}
       <div class="cmsec">
         <div class="cmtit">Komentar</div>
         <!-- Login-gated comment form -->
-        <div id="cm-login-gate" style="display:none;margin-bottom:1.2rem;padding:1rem 1.2rem;border:1px solid rgba(255,110,180,.2);border-radius:6px;background:rgba(255,110,180,.03);display:flex;flex-direction:column;align-items:flex-start;gap:.7rem">
+        <div id="cm-login-gate" class="cm-login-gate-hidden" style="margin-bottom:1.2rem;padding:1rem 1.2rem;border:1px solid rgba(255,110,180,.2);border-radius:6px;background:rgba(255,110,180,.03);flex-direction:column;align-items:flex-start;gap:.7rem">
           <div style="font-size:.82rem;color:var(--text);font-weight:500">Login untuk berkomentar</div>
           <div style="font-size:.72rem;color:var(--muted);line-height:1.6">Kamu perlu login dengan Google untuk menulis komentar. Gratis dan tanpa syarat.</div>
           <button class="google-btn" onclick="doLogin()" style="font-size:.75rem;padding:.5rem 1rem">
@@ -914,6 +915,7 @@ async function applyAuthState(user) {
     ]);
 
     // Tampilkan form komentar (tapi notice banned jika kena ban)
+    cmLoginGate.classList.add('cm-login-gate-hidden');
     cmLoginGate.style.display = 'none';
     cmFormWrap.style.display  = 'flex';
     const bannedNotice = document.getElementById('cm-banned-notice');
@@ -1001,6 +1003,7 @@ async function applyAuthState(user) {
     updateCopyGate();
 
     // Tampilkan login gate komentar
+    cmLoginGate.classList.remove('cm-login-gate-hidden');
     cmLoginGate.style.display = 'flex';
     cmFormWrap.style.display  = 'none';
   }
@@ -1017,7 +1020,9 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
-getRedirectResult(auth).catch(()=>{});
+getRedirectResult(auth).then(result => {
+  // onAuthStateChanged otomatis terpicu jika redirect berhasil
+}).catch(()=>{});
 
 window.doLogin = async () => {
   try {
@@ -1515,8 +1520,16 @@ async function rcm(){
   const el=document.getElementById('cmlist');
   el.innerHTML='<div class="nocm">Memuat komentar...</div>';
   try{
-    const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID)));
-    const allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    let allDocs;
+    try {
+      // Query dengan orderBy — butuh composite index di Firestore
+      const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID),orderBy('ts','desc')));
+      allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()}));
+    } catch(indexErr) {
+      // Fallback: query tanpa orderBy kalau index belum dibuat
+      const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID)));
+      allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    }
     if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
 
     // Fetch user_profiles semua uid unik — ambil foto & nama terbaru

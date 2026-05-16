@@ -506,7 +506,7 @@ function rc(filter='', animate=false){
   const existing = new Map();
   grid.querySelectorAll('.sc[data-id]').forEach(el => existing.set(el.dataset.id, el));
 
-  // Tambah kartu baru yang belum ada
+  // Tambah kartu baru yang belum ada (gunakan indeks dari songs untuk buildCard awal)
   songs.forEach((s, i) => {
     if (!existing.has(s.id)) {
       const card = buildCard(s, i);
@@ -515,7 +515,10 @@ function rc(filter='', animate=false){
     }
   });
 
-  // Reorder DOM sesuai urutan filtered, lalu sembunyikan yang tidak lolos
+  // Sembunyikan dulu semua kartu
+  existing.forEach(el => { el.style.display = 'none'; });
+
+  // Reorder DOM sesuai urutan filtered, tampilkan yang lolos filter
   filtered.forEach((s, i) => {
     const el = existing.get(s.id);
     if (!el) return;
@@ -546,11 +549,6 @@ function rc(filter='', animate=false){
       el.style.animationDelay = `${i * 0.03}s`;
       el.classList.add('reorder-anim');
     }
-  });
-
-  // Sembunyikan yang tidak lolos filter
-  existing.forEach((el, id) => {
-    if (!filteredIds.has(id)) el.style.display = 'none';
   });
 
   document.getElementById('noResult').style.display =
@@ -646,7 +644,10 @@ window.sv = v => {
 // ── AUTH ──
 function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-getRedirectResult(auth).catch(()=>{});
+// Tangani hasil redirect login (popup diblokir → signInWithRedirect)
+getRedirectResult(auth).then(result => {
+  // onAuthStateChanged akan otomatis terpicu setelah redirect berhasil
+}).catch(() => {});
 
 window.doLogin = async () => {
   try { await signInWithPopup(auth, provider); }
