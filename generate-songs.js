@@ -1572,7 +1572,7 @@ function renderComment(id, c, replies){
     repHtml='<div class="replies">'+replies.map(r=>{
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
       const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
-      const rImgHtml = (r.imgUrl && !r.imgUrl.startsWith('data:')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
+      const rImgHtml = (r.imgUrl && r.imgUrl.startsWith('http')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
       if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
       const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
       const rBannedBadge = r.isBanned ? (()=>{
@@ -1601,7 +1601,7 @@ function renderComment(id, c, replies){
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
   const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
-  const imgHtml = (c.imgUrl && !c.imgUrl.startsWith('data:')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
+  const imgHtml = (c.imgUrl && c.imgUrl.startsWith('http')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
@@ -1955,6 +1955,7 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
   if(!t && !replyImg)return;
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
+    const safeReplyImg = (replyImg && replyImg.startsWith('data:image/')) ? replyImg : null;
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId,
@@ -1962,7 +1963,7 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      imgUrl:replyImg,
+      imgUrl:safeReplyImg,
       date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
@@ -2009,6 +2010,7 @@ window.postCm = async () => {
   if(!t && !_cmImgDataUrl)return;btn.disabled=true;
   const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
   try{
+    const safeImgUrl = (_cmImgDataUrl && _cmImgDataUrl.startsWith('data:image/')) ? _cmImgDataUrl : null;
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId:null,
@@ -2016,7 +2018,7 @@ window.postCm = async () => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      imgUrl:_cmImgDataUrl||null,
+      imgUrl:safeImgUrl,
       date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
