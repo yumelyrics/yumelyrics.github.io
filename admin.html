@@ -42,8 +42,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .adm-wrap{padding:2.5rem 3.5rem 6rem;max-width:860px;margin:0 auto}
 .admtit{font-family:var(--jp);font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
 .admsub{font-size:.8rem;color:var(--muted);margin-bottom:2.5rem}
-.admform{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.fg{display:flex;flex-direction:column;gap:.4rem}
+.admform{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+.fg{display:flex;flex-direction:column;gap:.5rem}
 .fg.full{grid-column:1/-1}
 .fl{font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
 .fi{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.7rem 1rem;outline:none;transition:border-color .2s;width:100%}
@@ -234,6 +234,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .views-badge{font-size:.6rem;color:var(--muted);letter-spacing:.05em;margin-top:.2rem}
 .story-edit-banner{background:rgba(79,126,196,.08);border:1px solid rgba(79,126,196,.25);padding:.65rem 1rem;font-size:.75rem;color:var(--accent2);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .story-edit-banner.on{display:flex}
+.catalog-search-wrap{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.03);border:1px solid var(--border);padding:.55rem 1rem;margin-bottom:1rem;max-width:100%;transition:border-color .2s}
+.catalog-search-wrap:focus-within{border-color:rgba(0,229,255,.35)}
+.catalog-search-ico{color:var(--muted);font-size:.9rem;flex-shrink:0}
+.catalog-search-inp{background:none;border:none;outline:none;color:var(--text);font-family:var(--en);font-size:.82rem;width:100%}
+.catalog-search-inp::placeholder{color:var(--muted)}
+.catalog-search-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:.1rem .3rem;opacity:.7;transition:opacity .2s;flex-shrink:0;display:none}
+.catalog-search-clear:hover{opacity:1}
+.catalog-search-count{font-size:.62rem;color:var(--muted);flex-shrink:0;white-space:nowrap}
 .adm-tab{background:none;border:none;border-bottom:2px solid transparent;font-family:var(--en);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.6rem 1.1rem;cursor:pointer;transition:all .2s;margin-bottom:-1px}
 .adm-tab:hover{color:var(--text)}
 .adm-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
@@ -295,22 +303,24 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div id="sec-katalog" class="adm-section on">
     <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
     <input type="hidden" id="f-editid" value="">
-    <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="花束を君に"></div>
-    <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder="Bunga Untukmu"></div>
-    <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder="Utada Hikaru"></div>
-    <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Hanataba wo Kimi ni"></div>
-    <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
-    <div class="fg"><div class="fl">Niconico ID (opsional)</div><input class="fi" id="f-nico" placeholder="sm12345678"></div>
-    <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder="https://open.spotify.com/track/..."></div>
-    <div class="fg full"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder="https://... link gambar JPG/PNG"></div>
-    <div class="fg full">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
+      <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="花束を君に"></div>
+      <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder="Bunga Untukmu"></div>
+      <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder="Utada Hikaru"></div>
+      <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Hanataba wo Kimi ni"></div>
+      <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
+      <div class="fg"><div class="fl">Niconico ID (opsional)</div><input class="fi" id="f-nico" placeholder="sm12345678"></div>
+      <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder=""></div>
+      <div class="fg" style="grid-column:1/-1"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder=""></div>
+    </div>
+    <div class="fg" style="margin-bottom:1.4rem">
       <div class="fl">Deskripsi Indonesia (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— maks 1000 karakter, buat meta description</span></div>
-      <textarea class="fi" id="f-descid" rows="3" maxlength="1000000" placeholder="Contoh: Lirik Hanataba wo Kimi ni dari Utada Hikaru lengkap dengan romaji dan terjemahan Indonesia. Lagu OST Boruto ini menceritakan perasaan kehilangan seseorang yang dicintai."></textarea>
+      <textarea class="fi" id="f-descid" rows="3" maxlength="1000000" placeholder=""></textarea>
       <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Yang nongol di hasil Google. Kosongkan = pakai deskripsi otomatis.</div>
     </div>
-    <div class="fg full">
+    <div class="fg" style="margin-bottom:1.4rem">
       <div class="fl">Deskripsi Jepang (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional, untuk pengunjung JP</span></div>
-      <textarea class="fi" id="f-descjp" rows="3" maxlength="1000000" placeholder="日本語での説明（任意）。Googleの日本語検索向け。"></textarea>
+      <textarea class="fi" id="f-descjp" rows="3" maxlength="1000000" placeholder=""></textarea>
       <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Kalau diisi, tampil di bawah deskripsi ID di halaman lagu.</div>
     </div>
     <div class="fg full">
@@ -355,7 +365,17 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <a id="gh-songs-dl" href="#" style="display:none;color:var(--accent2);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(79,126,196,.35);padding:.2rem .6rem;margin-left:.3rem">⬇ Download Output</a>
     </div>
     <div class="divider" style="grid-column:1/-1"></div>
-    <div class="extit" style="grid-column:1/-1">Lagu di Katalog (<span id="songCount">0</span>)</div>
+    <div style="grid-column:1/-1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem">
+        <div class="extit" style="margin-bottom:0">Lagu di Katalog (<span id="songCount">0</span>)</div>
+      </div>
+      <div class="catalog-search-wrap">
+        <span class="catalog-search-ico">🔍</span>
+        <input class="catalog-search-inp" id="catalogSearch" type="text" placeholder="Cari lagu, artis, atau judul..." oninput="filterCatalog(this.value)">
+        <span class="catalog-search-count" id="catalogSearchCount"></span>
+        <button class="catalog-search-clear" id="catalogSearchClear" onclick="clearCatalogSearch()">✕</button>
+      </div>
+    </div>
     <div class="exlist" style="grid-column:1/-1" id="exlist"></div>
   </div>
 
@@ -1016,6 +1036,53 @@ function ra(){
 }
 
 addRow();
+
+window.filterCatalog = (q) => {
+  const clearBtn = document.getElementById('catalogSearchClear');
+  const countEl = document.getElementById('catalogSearchCount');
+  clearBtn.style.display = q ? 'block' : 'none';
+  if(!q.trim()){
+    countEl.textContent = '';
+    ra();
+    return;
+  }
+  const ql = q.toLowerCase();
+  const filtered = songs.filter(s =>
+    (s.titleJp||'').toLowerCase().includes(ql) ||
+    (s.titleRo||'').toLowerCase().includes(ql) ||
+    (s.titleId||'').toLowerCase().includes(ql) ||
+    (s.artist||'').toLowerCase().includes(ql)
+  );
+  countEl.textContent = filtered.length + ' hasil';
+  document.getElementById('songCount').textContent = songs.length;
+  if(!filtered.length){
+    document.getElementById('exlist').innerHTML='<div class="empty-list">Tidak ada lagu yang cocok.</div>';
+    return;
+  }
+  document.getElementById('exlist').innerHTML=filtered.map(s=>`
+    <div class="exitem" style="flex-wrap:wrap;gap:.6rem">
+      ${s.img?`<img src="${s.img}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);filter:saturate(.7)" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;background:#1a1a2e;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)"></div>'}
+      <div style="flex:1;min-width:0">
+        <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
+        <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
+        <div class="views-badge">👁 ${s.views||0} views${s.popularLabel?' · 🔥 '+s.popularLabel:''}</div>
+      </div>
+      <div class="exitem-btns" style="flex-wrap:wrap">
+        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Batal Rekomen':'★ Rekomen Admin'}</button>
+        ${s.recommended?`<a href="index.html" target="_blank" rel="noopener" class="brec-s on" style="text-decoration:none;font-size:.58rem" title="Lihat di katalog">↗ Index</a>`:''}
+        <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')">${s.popularLabel?'🔥 Unpopuler':'🔥 Set Populer'}</button>
+        <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
+        <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
+      </div>
+    </div>`).join('');
+};
+
+window.clearCatalogSearch = () => {
+  document.getElementById('catalogSearch').value = '';
+  document.getElementById('catalogSearchClear').style.display = 'none';
+  document.getElementById('catalogSearchCount').textContent = '';
+  ra();
+};
 
 // Load komentar saat auth ready - handled by main onAuthStateChanged above
 
