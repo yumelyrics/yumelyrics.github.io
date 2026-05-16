@@ -1572,9 +1572,9 @@ function renderComment(id, c, replies){
     repHtml='<div class="replies">'+replies.map(r=>{
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
       const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
-      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
+      const rImgHtml = (r.imgUrl && !r.imgUrl.startsWith('data:')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
       if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
-      const rAv = r.photoURL ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
+      const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
       const rBannedBadge = r.isBanned ? (()=>{
         if(r.bannedUntil === null || r.bannedUntil === undefined){
           return '<span class="cm-banned-badge">🚫 permanen</span>';
@@ -1601,7 +1601,7 @@ function renderComment(id, c, replies){
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
   const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
-  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
+  const imgHtml = (c.imgUrl && !c.imgUrl.startsWith('data:')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
@@ -1631,7 +1631,7 @@ function renderComment(id, c, replies){
   }
   // Avatar untuk komentar biasa
   let avHtml;
-  if (c.photoURL) {
+  if (c.photoURL && !c.photoURL.startsWith('data:')) {
     avHtml = \`<img class="cm-avatar" src="\${esc(c.photoURL)}" alt="av" referrerpolicy="no-referrer">\`;
   } else {
     avHtml = \`<div class="cm-avatar-ph">\${(c.name||'A')[0].toUpperCase()}</div>\`;
@@ -1893,8 +1893,14 @@ async function rcm(){
 }
 
 window.toggleReplyForm = id => {
-  const rf=document.getElementById('rf-'+id);rf.classList.toggle('open');
-  if(rf.classList.contains('open'))document.getElementById('rt-'+id).focus();
+  // id bisa berupa parentId (komentar utama) atau 'ritem-{replyId}' (balasan)
+  const rf=document.getElementById('rf-'+id);
+  if(!rf) return;
+  rf.classList.toggle('open');
+  if(rf.classList.contains('open')){
+    const ta=rf.querySelector('textarea');
+    if(ta) ta.focus();
+  }
 };
 
 // ── Event delegation untuk cmlist (hapus, reply, foto, lightbox) ──
