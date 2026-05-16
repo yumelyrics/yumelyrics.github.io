@@ -862,7 +862,7 @@ body.gate-open #lyrView{padding-top:0}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, setDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
