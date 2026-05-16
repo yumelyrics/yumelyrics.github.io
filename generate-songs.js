@@ -785,7 +785,7 @@ body.gate-open #lyrView{padding-top:0}
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -989,7 +989,11 @@ async function applyAuthState(user) {
 
 onAuthStateChanged(auth, async (user) => {
   await applyAuthState(user);
-  if(user) loadNotifs(user.uid);
+  if(user){
+    loadNotifs(user.uid);
+  } else {
+    if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+  }
   rcm();
 });
 
@@ -1363,38 +1367,30 @@ function renderComment(id, c, replies){
   </div>\`;
 }
 
-/* ── NOTIFIKASI ── */
-async function loadNotifs(uid){
-  try{
-    // Auto-delete notifikasi yang sudah dibaca & umurnya > 14 hari
-    const cutoff = Date.now() - (14 * 24 * 60 * 60 * 1000);
-    const oldSnap = await getDocs(query(
-      collection(db,'notifications'),
-      where('toUid','==',uid),
-      where('read','==',true)
-    ));
-    if(!oldSnap.empty){
-      const toDelete = oldSnap.docs.filter(d => (d.data().ts||0) < cutoff);
-      if(toDelete.length > 0){
-        const batch = writeBatch(db);
-        toDelete.forEach(d => batch.delete(d.ref));
-        await batch.commit();
-      }
+/* ── NOTIFIKASI REALTIME ── */
+let _unsubNotif = null;
+function loadNotifs(uid){
+  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+  const q = query(collection(db,'notifications'), where('toUid','==',uid));
+  _unsubNotif = onSnapshot(q, snap => {
+    const all = snap.docs.map(d=>({id:d.id,_ref:d.ref,...d.data()}))
+      .sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+    // Auto-delete yang sudah dibaca > 14 hari
+    const cutoff = Date.now() - (14*24*60*60*1000);
+    const toDelete = all.filter(n=>n.read && (n.ts||0)<cutoff);
+    if(toDelete.length){
+      const batch=writeBatch(db);
+      toDelete.forEach(n=>batch.delete(n._ref));
+      batch.commit().catch(()=>{});
     }
 
-    const snap=await getDocs(query(
-      collection(db,'notifications'),
-      where('toUid','==',uid),
-      orderBy('ts','desc'),
-      limit(20)
-    ));
-    const notifs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const unread=notifs.filter(n=>!n.read);
+    const notifs = all.filter(n=>!(n.read&&(n.ts||0)<cutoff)).slice(0,20);
+    const unread = notifs.filter(n=>!n.read);
 
-    // Badge
-    const badge=document.getElementById('notif-badge');
-    const clearBtn=document.getElementById('notif-clear-btn');
-    const deleteBtn=document.getElementById('notif-delete-btn');
+    const badge    = document.getElementById('notif-badge');
+    const clearBtn = document.getElementById('notif-clear-btn');
+    const deleteBtn= document.getElementById('notif-delete-btn');
     if(unread.length>0){
       badge.textContent=unread.length>9?'9+':unread.length;
       badge.classList.add('show');
@@ -1403,9 +1399,9 @@ async function loadNotifs(uid){
       badge.classList.remove('show');
       if(clearBtn) clearBtn.style.display='none';
     }
-    if(notifs.length>0){ if(deleteBtn) deleteBtn.style.display=''; } else { if(deleteBtn) deleteBtn.style.display='none'; }
+    if(notifs.length>0){ if(deleteBtn) deleteBtn.style.display=''; }
+    else { if(deleteBtn) deleteBtn.style.display='none'; }
 
-    // List
     const list=document.getElementById('nud-notif-list');
     if(!notifs.length){
       list.innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
@@ -1413,13 +1409,13 @@ async function loadNotifs(uid){
     }
     list.innerHTML=notifs.map(function(n){
       var cls='nud-notif-item'+(n.read?'':' unread');
-      return \`<div class="\${cls}" onclick="goToNotif('\${n.id}','\${esc(n.songSlug||'')}',this)">\`
-        +\`<div class="nud-notif-from">💬 \${esc(n.fromName||'Seseorang')} membalas komentarmu</div>\`
-        +\`<div class="nud-notif-msg">&ldquo;\${esc(n.replyText||'')}&rdquo;</div>\`
-        +\`<div class="nud-notif-meta">\${esc(n.songTitle||'')} &middot; \${esc(n.date||'')}</div>\`
-        +\`</div>\`;
+      return '<div class="'+cls+'" onclick="goToNotif(''+n.id+'',''+esc(n.songSlug||'')+'',this)">'+
+        '<div class="nud-notif-from">💬 '+esc(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
+        '<div class="nud-notif-msg">&ldquo;'+esc(n.replyText||'')+'&rdquo;</div>'+
+        '<div class="nud-notif-meta">'+esc(n.songTitle||'')+' &middot; '+esc(n.date||'')+'</div>'+
+        '</div>';
     }).join('');
-  }catch(e){}
+  }, ()=>{});
 }
 
 window.goToNotif = async (notifId, songSlug, el) => {

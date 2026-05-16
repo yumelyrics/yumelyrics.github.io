@@ -251,6 +251,37 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @keyframes ripple{to{transform:scale(4);opacity:0}}
 @keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 .sc.reorder-anim{animation:card-in .3s cubic-bezier(.25,.8,.25,1) both}
+
+/* ── Nav Avatar & Dropdown (index) ── */
+#nav-avatar-wrap{position:relative;width:36px;height:36px;cursor:pointer;flex-shrink:0}
+.nav-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.4);transition:transform .2s,box-shadow .2s}
+.nav-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3,#00e5ff));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s;border:2px solid rgba(255,110,180,.4)}
+.nav-avatar-placeholder:hover,.nav-avatar:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(255,110,180,.35)}
+#notif-badge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1}
+#notif-badge.show{display:flex}
+#nav-user-dropdown{position:fixed;bottom:auto;top:4.2rem;right:1.4rem;z-index:201;background:rgba(10,6,20,.97);border:1px solid rgba(255,110,180,.2);border-radius:10px;padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(16px);animation:dropDown .15s ease}
+@keyframes dropDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+#nav-user-dropdown.open{display:flex}
+.nud-name{font-size:.95rem;color:var(--text);font-weight:600;padding:.4rem .8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.nud-email{font-size:.75rem;color:var(--muted);padding:0 .8rem .5rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.nud-btn{background:none;border:none;font-family:var(--en);font-size:.78rem;color:var(--muted);cursor:pointer;padding:.6rem .8rem;text-align:left;letter-spacing:.06em;text-transform:uppercase;transition:color .18s,background .18s;border-radius:6px;width:100%}
+.nud-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nud-btn.logout{color:#ff4d6d}
+.nud-btn.logout:hover{background:rgba(255,77,109,.08)}
+.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem .3rem;border-top:1px solid rgba(255,255,255,.07);margin-top:.3rem}
+.nud-notif-title{font-size:.65rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
+.nud-notif-clear{background:none;border:none;font-size:.62rem;color:var(--muted);cursor:pointer;padding:0;letter-spacing:.06em;text-transform:uppercase;transition:color .15s}
+.nud-notif-clear:hover{color:var(--accent)}
+#nud-notif-list{display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;margin:0 -.1rem}
+.nud-notif-item{padding:.7rem .8rem;border-radius:6px;cursor:pointer;transition:background .15s;border-left:3px solid transparent;margin:.15rem 0}
+.nud-notif-item:hover{background:rgba(255,255,255,.04)}
+.nud-notif-item.unread{border-left-color:var(--accent);background:rgba(255,110,180,.04)}
+.nud-notif-from{font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.2rem}
+.nud-notif-msg{font-size:.74rem;color:var(--text);line-height:1.5;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nud-notif-meta{font-size:.66rem;color:var(--muted)}
+.nud-notif-empty{font-size:.76rem;color:var(--muted);font-style:italic;padding:.6rem .8rem}
+#nav-login-btn{background:linear-gradient(135deg,var(--accent),var(--accent3,#b06aff));border:none;color:#fff;font-family:var(--en);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem 1rem;border-radius:2rem;cursor:pointer;transition:opacity .2s}
+#nav-login-btn:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -267,9 +298,27 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <a class="nb" href="resources.html">Resources</a>
     <a class="nb" href="stories.html">Cerita</a>
     <a class="nb" href="contact.html">Hubungi</a>
-    
+    <button id="nav-login-btn" onclick="doLogin()" style="display:none">Login</button>
+    <div id="nav-avatar-wrap" style="display:none" onclick="toggleDropdown()">
+      <div class="nav-avatar-placeholder" id="nav-avatar-ph"></div>
+      <div id="notif-badge"></div>
+    </div>
   </div>
 </nav>
+
+<div id="nav-user-dropdown">
+  <div class="nud-name" id="nud-name">—</div>
+  <div class="nud-email" id="nud-email">—</div>
+  <div class="nud-notif-header">
+    <span class="nud-notif-title">🔔 Notifikasi</span>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="nud-notif-clear" onclick="markAllRead()" id="notif-clear-btn" style="display:none">Tandai dibaca</button>
+      <button class="nud-notif-clear" onclick="deleteAllNotifs()" id="notif-delete-btn" style="display:none;color:#ff4d6d">Hapus semua</button>
+    </div>
+  </div>
+  <div id="nud-notif-list"><div class="nud-notif-empty">Tidak ada notifikasi.</div></div>
+  <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
+</div>
 
 <div id="catView" style="position:relative">
   <div class="hero">
@@ -364,8 +413,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs }
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -376,8 +427,16 @@ const firebaseConfig = {
   appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+const ADMIN_EMAIL = "khoirustsani143@gmail.com";
+let _currentUser  = null;
+let _isAdmin      = false;
+let _customPhoto  = null;
+let _unsubNotif   = null; // untuk unsubscribe realtime listener
 
 let songs = [];
 let cur   = null;
@@ -582,6 +641,167 @@ window.sv = v => {
   if(v!=='lyr') document.getElementById('ytf').src='';
   window.scrollTo({top:0,behavior:'smooth'});
 };
+
+
+// ── AUTH ──
+function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+window.doLogin = async () => {
+  try { await signInWithPopup(auth, provider); }
+  catch(e){ if(e.code !== 'auth/popup-closed-by-user') toast('Login gagal.'); }
+};
+
+window.doLogout = async () => {
+  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+  await signOut(auth);
+  closeDropdown();
+};
+
+window.toggleDropdown = () => {
+  const dd = document.getElementById('nav-user-dropdown');
+  dd.classList.toggle('open');
+  // tutup kalau klik di luar
+  if(dd.classList.contains('open')){
+    setTimeout(()=>{ document.addEventListener('click', _outsideClick); }, 50);
+  }
+};
+function _outsideClick(e){
+  const dd = document.getElementById('nav-user-dropdown');
+  const av = document.getElementById('nav-avatar-wrap');
+  if(!dd.contains(e.target) && !av.contains(e.target)){
+    dd.classList.remove('open');
+    document.removeEventListener('click', _outsideClick);
+  }
+}
+function closeDropdown(){
+  document.getElementById('nav-user-dropdown').classList.remove('open');
+  document.removeEventListener('click', _outsideClick);
+}
+
+// ── NOTIF REALTIME (onSnapshot) ──
+function startNotifListener(uid){
+  if(_unsubNotif){ _unsubNotif(); }
+  const q = query(collection(db,'notifications'), where('toUid','==',uid));
+  _unsubNotif = onSnapshot(q, snap => {
+    const all = snap.docs.map(d=>({id:d.id,_ref:d.ref,...d.data()}))
+      .sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+    // Auto-delete yang sudah dibaca > 14 hari
+    const cutoff = Date.now() - (14*24*60*60*1000);
+    const toDelete = all.filter(n=>n.read && (n.ts||0)<cutoff);
+    if(toDelete.length){
+      const batch = writeBatch(db);
+      toDelete.forEach(n=>batch.delete(n._ref));
+      batch.commit().catch(()=>{});
+    }
+
+    const notifs = all.filter(n=>!(n.read&&(n.ts||0)<cutoff)).slice(0,20);
+    const unread = notifs.filter(n=>!n.read);
+
+    // Badge
+    const badge    = document.getElementById('notif-badge');
+    const clearBtn = document.getElementById('notif-clear-btn');
+    const deleteBtn= document.getElementById('notif-delete-btn');
+    if(unread.length>0){
+      badge.textContent = unread.length>9?'9+':unread.length;
+      badge.classList.add('show');
+      if(clearBtn) clearBtn.style.display='';
+    } else {
+      badge.classList.remove('show');
+      if(clearBtn) clearBtn.style.display='none';
+    }
+    if(notifs.length>0){ if(deleteBtn) deleteBtn.style.display=''; }
+    else { if(deleteBtn) deleteBtn.style.display='none'; }
+
+    // List
+    const list = document.getElementById('nud-notif-list');
+    if(!notifs.length){
+      list.innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n=>{
+      const cls='nud-notif-item'+(n.read?'':' unread');
+      return '<div class="'+cls+'" onclick="goToNotif(''+n.id+'',''+esc2(n.songSlug||'')+'')">'+
+        '<div class="nud-notif-from">💬 '+esc2(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
+        '<div class="nud-notif-msg">&ldquo;'+esc2(n.replyText||'')+'&rdquo;</div>'+
+        '<div class="nud-notif-meta">'+esc2(n.songTitle||'')+' &middot; '+esc2(n.date||'')+'</div>'+
+        '</div>';
+    }).join('');
+  }, ()=>{});
+}
+
+window.goToNotif = async (notifId, songSlug) => {
+  try{ await updateDoc(doc(db,'notifications',notifId),{read:true}); }catch(e){}
+  if(songSlug) window.location.href = '/lagu/'+songSlug+'.html';
+};
+
+window.markAllRead = async () => {
+  if(!_currentUser) return;
+  try{
+    const snap = await getDocs(query(collection(db,'notifications'),where('toUid','==',_currentUser.uid),where('read','==',false)));
+    if(snap.empty) return;
+    const batch = writeBatch(db);
+    snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
+    await batch.commit();
+    toast('Semua notifikasi ditandai dibaca.');
+  }catch(e){}
+};
+
+window.deleteAllNotifs = async () => {
+  if(!_currentUser) return;
+  try{
+    const snap = await getDocs(query(collection(db,'notifications'),where('toUid','==',_currentUser.uid)));
+    if(snap.empty) return;
+    const batch = writeBatch(db);
+    snap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    toast('Semua notifikasi dihapus.');
+  }catch(e){}
+};
+
+// ── onAuthStateChanged ──
+onAuthStateChanged(auth, async user => {
+  _currentUser = user;
+  const loginBtn  = document.getElementById('nav-login-btn');
+  const avatarWrap= document.getElementById('nav-avatar-wrap');
+  const avatarPh  = document.getElementById('nav-avatar-ph');
+  const nudName   = document.getElementById('nud-name');
+  const nudEmail  = document.getElementById('nud-email');
+
+  if(user){
+    _isAdmin = user.email === ADMIN_EMAIL;
+
+    // Ambil foto dari user_profiles
+    _customPhoto = user.photoURL || null;
+    try{
+      const up = await getDoc(doc(db,'user_profiles',user.uid));
+      if(up.exists() && up.data().photoURL) _customPhoto = up.data().photoURL;
+    }catch(e){}
+
+    const displayName = _isAdmin ? 'YumeSubs' : (user.displayName||'User');
+    nudName.textContent  = displayName;
+    nudEmail.textContent = user.email||'';
+
+    // Avatar
+    if(_customPhoto){
+      avatarWrap.innerHTML = '<img class="nav-avatar" src="'+_customPhoto+'" alt="avatar" referrerpolicy="no-referrer"><div id="notif-badge"></div>';
+      avatarWrap.onclick = toggleDropdown;
+    } else {
+      avatarPh.textContent = displayName[0].toUpperCase();
+    }
+
+    loginBtn.style.display  = 'none';
+    avatarWrap.style.display= '';
+
+    startNotifListener(user.uid);
+  } else {
+    _isAdmin = false;
+    if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+    loginBtn.style.display  = '';
+    avatarWrap.style.display= 'none';
+    document.getElementById('notif-badge').classList.remove('show');
+  }
+});
 
 // ── Slug generator (sama dengan generate-songs.js) ──
 function toSlug(titleRo, docId) {
