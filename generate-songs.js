@@ -1470,7 +1470,7 @@ function renderComment(id, c, replies){
         const endStr = formatEndDate(r.bannedUntil);
         return '<span class="cm-banned-badge" data-banned-until="'+r.bannedUntil+'" title="Berakhir '+endStr+'">🚫 <span class="ban-countdown">'+formatBanCountdown(rem)+'</span> — '+endStr+'</span>';
       })() : '';
-      return '<div class="ritem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div><div class="ctxt">'+esc(r.text)+rImgHtml+'</div></div>';
+      return '<div class="ritem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+(r._roleBadge||'')+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div><div class="ctxt">'+esc(r.text)+rImgHtml+'</div></div>';
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
