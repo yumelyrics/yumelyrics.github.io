@@ -702,7 +702,7 @@ let _banPending = null;
 let _banDurationMs = null;
 let _banCustomUnit = 'jam'; // 'jam' | 'hari'
 
-function selectBanDur(preset, el){
+window.selectBanDur = function selectBanDur(preset, el){
   // preset: null (permanen) | number ms | 'custom'
   document.querySelectorAll('.ban-dur-pill').forEach(p => p.classList.remove('sel'));
   el.classList.add('sel');
@@ -716,7 +716,7 @@ function selectBanDur(preset, el){
   }
 }
 
-function selectBanUnit(unit, el){
+window.selectBanUnit = function selectBanUnit(unit, el){
   _banCustomUnit = unit;
   document.querySelectorAll('.ban-dur-unit-btn').forEach(b => b.classList.remove('sel'));
   el.classList.add('sel');
