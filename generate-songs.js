@@ -464,7 +464,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 /* Obfuscated line containers - karakter tampil urut via CSS order di flex container */
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 [data-obf="1"] span[data-c]{white-space:pre}
-.lro.h,.lid.h{opacity:0;max-height:0}
+.lro.h,.lid.h{display:none!important}
 .lsep{height:1px;background:linear-gradient(90deg,rgba(255,110,180,.2),transparent);opacity:.6;margin:.5rem 0}
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
 .cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
@@ -776,8 +776,9 @@ try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 let _currentUser = null;
 let _isBanned = false;
 let _banReason = '';
-let _hasCommented = false; // apakah user sudah pernah komentar di lagu ini
+let _hasCommented = false;
 let _isAdmin = false;
+let _customPhotoURL = null;
 const ADMIN_EMAIL = "khoirustsani143@gmail.com";
 
 async function checkBanStatus(uid) {
@@ -873,7 +874,7 @@ async function applyAuthState(user) {
     _isAdmin = user.email === ADMIN_EMAIL;
 
     // Load custom photoURL dari Firestore user_profiles
-    let _customPhotoURL = user.photoURL || null;
+    _customPhotoURL = user.photoURL || null;
     try {
       const upSnap = await getDoc(doc(db, 'user_profiles', user.uid));
       if (upSnap.exists() && upSnap.data().photoURL) _customPhotoURL = upSnap.data().photoURL;
@@ -1159,8 +1160,21 @@ let sro=true, str=true;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 
 window.tl = type => {
-  if(type==='ro'){sro=!sro;document.getElementById('tp-ro').classList.toggle('on',sro);document.querySelectorAll('.lro').forEach(e=>e.classList.toggle('h',!sro));}
-  else{str=!str;document.getElementById('tp-tr').classList.toggle('on',str);document.querySelectorAll('.lid').forEach(e=>e.classList.toggle('h',!str));}
+  if(type==='ro'){
+    sro=!sro;
+    document.getElementById('tp-ro').classList.toggle('on',sro);
+    document.querySelectorAll('.lro').forEach(e=>{
+      e.classList.toggle('h',!sro);
+      if(sro) e.style.display='';
+    });
+  } else {
+    str=!str;
+    document.getElementById('tp-tr').classList.toggle('on',str);
+    document.querySelectorAll('.lid').forEach(e=>{
+      e.classList.toggle('h',!str);
+      if(str) e.style.display='';
+    });
+  }
 };
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
