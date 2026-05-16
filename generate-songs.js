@@ -1912,8 +1912,8 @@ document.getElementById('cmlist').addEventListener('click', e => {
   if (toggleBtn) { window.toggleReplyForm(toggleBtn.dataset.togglereply); return; }
 
   // Kirim balasan
-  const postBtn = e.target.closest('[data-postReply]');
-  if (postBtn) { const srcTa = postBtn.closest('.reply-form') ? postBtn.closest('.reply-form').querySelector('textarea') : null; window.postReply(postBtn.dataset.postReply, srcTa ? srcTa.id : null, postBtn.dataset.mentionName || null); return; }
+  const postBtn = e.target.closest('[data-postreply]');
+  if (postBtn) { const srcTa = postBtn.closest('.reply-form') ? postBtn.closest('.reply-form').querySelector('textarea') : null; window.postReply(postBtn.dataset.postreply, srcTa ? srcTa.id : null, postBtn.dataset.mentionname || null); return; }
 
   // Pilih foto reply
   const pickBtn = e.target.closest('[data-pickphoto]');
