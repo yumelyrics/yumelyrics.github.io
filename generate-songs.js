@@ -750,7 +750,7 @@ body.gate-open #lyrView{padding-top:0}
           <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentar tentang lagu ini... Jaga sopan santun ya!"></textarea>
           <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="handleCmPhoto(this)">
           <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
-            <img id="cm-img-preview" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
+            <img id="cm-img-preview" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
             <button class="cm-img-remove" onclick="removeCmPhoto()" title="Hapus foto">✕</button>
           </div>
           <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
@@ -1371,21 +1371,25 @@ function renderComment(id, c, replies){
   if(replies&&replies.length){
     repHtml='<div class="replies">'+replies.map(r=>{
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
-      if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">\${esc(r.date)}</span></div><div class="admin-reply-text">\${esc(r.text)}\${r.imgUrl?'<br><img class="cm-posted-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div></div>\${rCanDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+r.id+'\')">🗑 Hapus</button>':''}</div>\`;
-      const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
+      const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
+      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
+      if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
+      const rAv = r.photoURL ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
       const rBannedBadge = r.isBanned ? (()=>{
         if(r.bannedUntil === null || r.bannedUntil === undefined){
-          return \`<span class="cm-banned-badge">🚫 permanen</span>\`;
+          return '<span class="cm-banned-badge">🚫 permanen</span>';
         }
         const rem = r.bannedUntil - Date.now();
-        if(rem <= 0) return \`<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>\`;
+        if(rem <= 0) return '<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>';
         const endStr = formatEndDate(r.bannedUntil);
-        return \`<span class="cm-banned-badge" data-banned-until="\${r.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
+        return '<span class="cm-banned-badge" data-banned-until="'+r.bannedUntil+'" title="Berakhir '+endStr+'">🚫 <span class="ban-countdown">'+formatBanCountdown(rem)+'</span> — '+endStr+'</span>';
       })() : '';
-      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}\${rBannedBadge}</span><span class="cdate">\${esc(r.date)}</span>\${rCanDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+r.id+'\')">🗑</button>':''}</div><div class="ctxt">\${esc(r.text)}\${r.imgUrl?'<br><img class="cm-posted-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div></div>\`;
+      return '<div class="ritem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div><div class="ctxt">'+esc(r.text)+rImgHtml+'</div></div>';
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
+  const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
+  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
@@ -1393,22 +1397,22 @@ function renderComment(id, c, replies){
         <span class="admin-cm-name">YumeSubs</span>
         <span class="admin-cm-badge">Admin</span>
         <span class="admin-cm-date">\${esc(c.date)}</span>
-        \${canDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+id+'\')">🗑 Hapus</button>':''}
+        \${delBtn}
       </div>
-      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}\${c.imgUrl?'<br><img class="cm-posted-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div>
+      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}\${imgHtml}</div>
       \${repHtml}
       <div class="reply-form" id="rf-\${id}">
         <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
         <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-        <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" onchange="handleReplyPhoto('\${id}',this)">
+        <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" data-repid="\${id}">
         <div id="rp-img-preview-wrap-\${id}" class="cm-img-preview-wrap" style="display:none">
-          <img id="rp-img-preview-\${id}" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
-          <button class="cm-img-remove" onclick="removeReplyPhoto('\${id}')" title="Hapus foto">✕</button>
+          <img id="rp-img-preview-\${id}" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
+          <button class="cm-img-remove" data-repid="\${id}" title="Hapus foto">✕</button>
         </div>
         <div class="reply-row">
-          <button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button>
-          <button class="cm-photo-btn" onclick="document.getElementById('rp-photo-input-\${id}').click()">📷 Foto</button>
-          <button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button>
+          <button class="sbtn" style="padding:.5rem 1rem" data-postReply="\${id}">Kirim Balasan</button>
+          <button class="cm-photo-btn" data-pickphoto="\${id}">📷 Foto</button>
+          <button class="rbtn-cancel" data-togglereply="\${id}">✕ Batal</button>
         </div>
       </div>
     </div>\`;
@@ -1430,22 +1434,22 @@ function renderComment(id, c, replies){
     return \`<span class="cm-banned-badge" data-banned-until="\${c.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
   })() : '';
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div>\${canDelete?'<button class="cm-delete-btn" onclick="deleteCm(\''+id+'\')">🗑</button>':''}</div>
-    <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
-    <div class="ctxt">\${esc(c.text)}\${c.imgUrl?'<br><img class="cm-posted-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" onclick="openLightbox(this.src)">':''}</div>
+    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div>\${delBtn}</div>
+    <button class="reply-btn" data-togglereply="\${id}">↩ Balas</button></div>
+    <div class="ctxt">\${esc(c.text)}\${imgHtml}</div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
       <textarea class="cmi" id="rt-\${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" onchange="handleReplyPhoto('\${id}',this)">
+      <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-\${id}" data-repid="\${id}">
       <div id="rp-img-preview-wrap-\${id}" class="cm-img-preview-wrap" style="display:none">
-        <img id="rp-img-preview-\${id}" class="cm-img-preview" src="" alt="preview" onclick="openLightbox(this.src)">
-        <button class="cm-img-remove" onclick="removeReplyPhoto('\${id}')" title="Hapus foto">✕</button>
+        <img id="rp-img-preview-\${id}" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
+        <button class="cm-img-remove" data-repid="\${id}" title="Hapus foto">✕</button>
       </div>
       <div class="reply-row">
-        <button class="sbtn" style="padding:.5rem 1rem" onclick="postReply('\${id}')">Kirim Balasan</button>
-        <button class="cm-photo-btn" onclick="document.getElementById('rp-photo-input-\${id}').click()">📷 Foto</button>
-        <button class="rbtn-cancel" onclick="toggleReplyForm('\${id}')">✕ Batal</button>
+        <button class="sbtn" style="padding:.5rem 1rem" data-postReply="\${id}">Kirim Balasan</button>
+        <button class="cm-photo-btn" data-pickphoto="\${id}">📷 Foto</button>
+        <button class="rbtn-cancel" data-togglereply="\${id}">✕ Batal</button>
       </div>
     </div>
   </div>\`;
@@ -1653,6 +1657,43 @@ window.toggleReplyForm = id => {
   if(rf.classList.contains('open'))document.getElementById('rt-'+id).focus();
 };
 
+// ── Event delegation untuk cmlist (hapus, reply, foto, lightbox) ──
+document.getElementById('cmlist').addEventListener('click', e => {
+  // Hapus komentar
+  const delBtn = e.target.closest('[data-cmid]');
+  if (delBtn) { window.deleteCm(delBtn.dataset.cmid); return; }
+
+  // Toggle reply form
+  const toggleBtn = e.target.closest('[data-togglereply]');
+  if (toggleBtn) { window.toggleReplyForm(toggleBtn.dataset.togglereply); return; }
+
+  // Kirim balasan
+  const postBtn = e.target.closest('[data-postReply]');
+  if (postBtn) { window.postReply(postBtn.dataset.postReply); return; }
+
+  // Pilih foto reply
+  const pickBtn = e.target.closest('[data-pickphoto]');
+  if (pickBtn) {
+    const inp = document.getElementById('rp-photo-input-'+pickBtn.dataset.pickphoto);
+    if(inp) inp.click();
+    return;
+  }
+
+  // Hapus preview foto reply
+  const removeBtn = e.target.closest('.cm-img-remove[data-repid]');
+  if (removeBtn) { window.removeReplyPhoto(removeBtn.dataset.repid); return; }
+
+  // Lightbox foto
+  const imgEl = e.target.closest('.cm-lightbox-img');
+  if (imgEl && imgEl.src) { window.openLightbox(imgEl.src); return; }
+});
+
+// Input file reply — pakai event delegation juga
+document.getElementById('cmlist').addEventListener('change', e => {
+  const inp = e.target.closest('.cm-photo-input[data-repid]');
+  if (inp) { window.handleReplyPhoto(inp.dataset.repid, inp); }
+});
+
 window.postReply = async parentId => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
@@ -1818,6 +1859,11 @@ window.closeLightbox = () => {
   document.body.style.overflow = '';
 };
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+// Lightbox untuk preview foto di form komentar utama
+document.addEventListener('click', e => {
+  const imgEl = e.target.closest('#cm-img-preview-wrap .cm-lightbox-img');
+  if (imgEl && imgEl.src) { window.openLightbox(imgEl.src); }
+});
 
 // ── Hapus komentar ──
 window.deleteCm = async cmId => {
