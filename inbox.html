@@ -238,6 +238,69 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .stat-val{font-family:var(--jp);font-size:1.6rem;font-weight:800;color:var(--accent);line-height:1}
 .stat-lbl{font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
 
+/* ── CUSTOM ROLE EDITOR ── */
+.custom-role-list{display:flex;flex-direction:column;gap:.6rem}
+.custom-role-item{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.9rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;transition:border-color .2s}
+.custom-role-item:hover{border-color:rgba(255,255,255,.12)}
+.cri-preview{flex-shrink:0}
+.cri-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:.15rem}
+.cri-name{font-size:.82rem;color:var(--text);font-weight:500}
+.cri-id{font-size:.6rem;color:var(--muted);font-family:monospace}
+.cri-actions{display:flex;gap:.4rem;flex-shrink:0;flex-wrap:wrap}
+.btn-cri-edit{background:none;border:1px solid rgba(79,126,196,.3);color:var(--accent2);font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .65rem;cursor:pointer;transition:all .2s}
+.btn-cri-edit:hover{background:rgba(79,126,196,.1)}
+.btn-cri-del{background:none;border:1px solid rgba(201,110,110,.3);color:var(--red);font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .65rem;cursor:pointer;transition:all .2s}
+.btn-cri-del:hover{background:rgba(201,110,110,.1)}
+.btn-add-custom-role{background:none;border:1px dashed rgba(167,139,250,.4);color:#c4b0ff;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.65rem 1.2rem;cursor:pointer;transition:all .2s;width:100%;text-align:center;margin-top:.4rem}
+.btn-add-custom-role:hover{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.7)}
+
+/* ── CUSTOM ROLE MODAL ── */
+.cr-modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(5,13,26,.92);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.cr-modal-overlay.hide{display:none}
+.cr-modal{width:100%;max-width:460px;background:rgba(15,25,45,.98);border:1px solid var(--border);padding:2rem;display:flex;flex-direction:column;gap:1.2rem;animation:fu .25s ease;max-height:90dvh;overflow-y:auto}
+.cr-modal-title{font-family:var(--jp);font-size:1.1rem;font-weight:800;color:var(--accent);margin-bottom:.1rem}
+.cr-modal-sub{font-size:.7rem;color:var(--muted)}
+.cr-field{display:flex;flex-direction:column;gap:.4rem}
+.cr-field-row{display:flex;gap:.75rem;align-items:flex-start;flex-wrap:wrap}
+.cr-lbl{font-size:.6rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+.cr-inp{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-family:var(--en);font-size:.82rem;padding:.6rem .85rem;outline:none;transition:border-color .2s;width:100%}
+.cr-inp:focus{border-color:rgba(201,169,110,.4)}
+.cr-inp::placeholder{color:var(--muted)}
+
+/* icon picker */
+.cr-icon-tabs{display:flex;gap:.4rem;margin-bottom:.7rem}
+.cr-icon-tab{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.3rem .75rem;cursor:pointer;transition:all .2s;border-radius:2rem}
+.cr-icon-tab.on{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.5);color:#c4b0ff}
+.cr-icon-emoji-wrap{display:flex;flex-direction:column;gap:.5rem}
+.cr-icon-img-wrap{display:flex;flex-direction:column;gap:.6rem}
+.cr-icon-img-wrap.hide{display:none}
+.cr-icon-emoji-wrap.hide{display:none}
+.cr-img-upload-area{border:1px dashed rgba(255,255,255,.12);padding:1.2rem;text-align:center;cursor:pointer;transition:border-color .2s;position:relative}
+.cr-img-upload-area:hover{border-color:rgba(201,169,110,.4)}
+.cr-img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.cr-img-upload-label{font-size:.72rem;color:var(--muted);pointer-events:none}
+.cr-img-preview{width:40px;height:40px;object-fit:cover;border-radius:50%;border:1px solid var(--border);display:block;margin:.4rem auto 0}
+.cr-img-preview.hide{display:none}
+
+/* color picker */
+.cr-color-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.cr-color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;flex-shrink:0}
+.cr-color-swatch.sel{border-color:#fff;transform:scale(1.15)}
+.cr-color-custom{display:flex;align-items:center;gap:.5rem}
+.cr-color-custom input[type=color]{width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0}
+
+/* preview box */
+.cr-preview-box{background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.75rem 1rem;display:flex;align-items:center;gap:.65rem}
+.cr-preview-label{font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;flex-shrink:0}
+
+/* modal actions */
+.cr-modal-actions{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
+.cr-btn-cancel{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem 1rem;cursor:pointer;transition:all .2s}
+.cr-btn-cancel:hover{border-color:var(--accent2);color:var(--accent2)}
+.cr-btn-save{background:var(--accent);border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#07060f;padding:.55rem 1.4rem;cursor:pointer;font-weight:600;transition:opacity .2s}
+.cr-btn-save:hover{opacity:.85}
+.cr-btn-save:disabled{opacity:.4;cursor:not-allowed}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
@@ -355,6 +418,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="role-tabs">
       <button class="roletab on" onclick="switchRoleTab('levels',this)">⚔ Level Role</button>
       <button class="roletab" onclick="switchRoleTab('users',this)">👤 Assign User</button>
+      <button class="roletab" onclick="switchRoleTab('custom',this)">🎨 Custom Role</button>
     </div>
     <!-- LEVEL ROLE PANEL -->
     <div id="rolePanel-levels" class="role-manager">
@@ -373,12 +437,101 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="cm-empty">Memuat user...</div>
       </div>
     </div>
+    <!-- CUSTOM ROLE PANEL -->
+    <div id="rolePanel-custom" class="role-manager" style="display:none">
+      <div style="font-size:.72rem;color:var(--muted);line-height:1.65;margin-bottom:.5rem">Buat role custom dengan nama, icon (emoji/gambar), dan warna background sendiri. Role ini bisa di-assign manual ke user.</div>
+      <div class="custom-role-list" id="customRoleList">
+        <div class="cm-empty">Memuat custom role...</div>
+      </div>
+      <button class="btn-add-custom-role" onclick="openCrModal()">＋ Buat Custom Role Baru</button>
+    </div>
   </div>
 
 </div><!-- /inbox-wrap -->
 </div><!-- /wrap -->
 
 <div class="toast" id="toast"></div>
+
+<!-- ── CUSTOM ROLE MODAL ── -->
+<div class="cr-modal-overlay hide" id="crModalOverlay">
+  <div class="cr-modal">
+    <div>
+      <div class="cr-modal-title">🎨 Custom Role</div>
+      <div class="cr-modal-sub" id="crModalSub">Buat role baru dengan desain sendiri</div>
+    </div>
+    <input type="hidden" id="crEditId">
+
+    <!-- Nama Role -->
+    <div class="cr-field">
+      <div class="cr-lbl">Nama Role</div>
+      <input class="cr-inp" id="crName" placeholder="contoh: Sakura Knight, Moonwalker...">
+    </div>
+
+    <!-- Icon -->
+    <div class="cr-field">
+      <div class="cr-lbl">Icon Role</div>
+      <div class="cr-icon-tabs">
+        <button class="cr-icon-tab on" onclick="switchCrIconTab('emoji',this)">😊 Emoji</button>
+        <button class="cr-icon-tab" onclick="switchCrIconTab('img',this)">🖼 Gambar</button>
+      </div>
+      <!-- EMOJI TAB -->
+      <div class="cr-icon-emoji-wrap" id="crIconEmojiWrap">
+        <input class="cr-inp" id="crIconEmoji" placeholder="Masukkan emoji, misal: 🌸 ⚔️ 🔮" style="font-size:1.3rem;text-align:center">
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.2rem" id="crEmojiPicker">
+          <!-- populated by JS -->
+        </div>
+      </div>
+      <!-- IMAGE TAB -->
+      <div class="cr-icon-img-wrap hide" id="crIconImgWrap">
+        <div class="cr-img-upload-area" id="crImgUploadArea">
+          <input type="file" accept="image/*" id="crImgFile" onchange="handleCrImgUpload(this)">
+          <div class="cr-img-upload-label">Klik untuk upload gambar (PNG/JPG/GIF · max 200KB)</div>
+        </div>
+        <img class="cr-img-preview hide" id="crImgPreview" src="" alt="preview">
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">Atau masukkan URL gambar langsung:</div>
+        <input class="cr-inp" id="crIconImgUrl" placeholder="https://..." oninput="updateCrPreview()">
+      </div>
+    </div>
+
+    <!-- Warna Background -->
+    <div class="cr-field">
+      <div class="cr-lbl">Warna Background Badge</div>
+      <div class="cr-color-row" id="crColorSwatches">
+        <!-- populated by JS -->
+      </div>
+      <div class="cr-color-custom" style="margin-top:.5rem">
+        <div style="font-size:.62rem;color:var(--muted)">Custom:</div>
+        <input type="color" id="crColorCustomPick" value="#7c3aed" oninput="selectCrColor(this.value,null)">
+        <input class="cr-inp" id="crColorHex" placeholder="#7c3aed" style="flex:1;font-size:.75rem;padding:.4rem .7rem;font-family:monospace" oninput="onCrHexInput()">
+      </div>
+    </div>
+
+    <!-- Warna Teks -->
+    <div class="cr-field">
+      <div class="cr-lbl">Warna Teks Badge</div>
+      <div class="cr-color-row" id="crTextColorSwatches"></div>
+      <div class="cr-color-custom" style="margin-top:.5rem">
+        <div style="font-size:.62rem;color:var(--muted)">Custom:</div>
+        <input type="color" id="crTextColorCustomPick" value="#ffffff" oninput="selectCrTextColor(this.value,null)">
+        <input class="cr-inp" id="crTextColorHex" placeholder="#ffffff" style="flex:1;font-size:.75rem;padding:.4rem .7rem;font-family:monospace" oninput="onCrTextHexInput()">
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="cr-field">
+      <div class="cr-lbl">Preview</div>
+      <div class="cr-preview-box">
+        <div class="cr-preview-label">Badge:</div>
+        <span id="crPreviewBadge" class="role-badge" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.5);color:#c4b0ff">🔮 Role Baru</span>
+      </div>
+    </div>
+
+    <div class="cr-modal-actions">
+      <button class="cr-btn-cancel" onclick="closeCrModal()">Batal</button>
+      <button class="cr-btn-save" id="crSaveBtn" onclick="saveCrRole()">✓ Simpan Role</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── LOGIN OVERLAY ── -->
 <div id="loginOverlay">
@@ -1014,6 +1167,21 @@ function getRoleForUser(uid, commentCount){
   const user = allCommenters.find(u => u.uid === uid);
   if(user && user.customRole !== undefined && user.customRole !== null){
     const cr = user.customRole;
+    // CR: prefix = custom_roles collection
+    if(typeof cr === 'string' && cr.startsWith('CR:')){
+      const crId = cr.slice(3);
+      const found = customRoles.find(r => r.id === crId);
+      if(found) return {
+        id: cr,
+        icon: found.iconType === 'img' && found.iconImg
+          ? `<img src="${found.iconImg}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">`
+          : (found.icon || '🎭'),
+        name: found.name,
+        cls: '',
+        isCustom: true,
+        _customStyle: `background:${found.bgColor||'rgba(167,139,250,.18)'};color:${found.textColor||'#c4b0ff'};border:1px solid ${found.textColor||'#c4b0ff'}33`
+      };
+    }
     // customRole bisa string nama atau id number
     const found = roleDefs.find(r => r.id === cr || r.name === cr);
     if(found) return { ...found, isCustom: true };
@@ -1032,7 +1200,8 @@ function getRoleForUser(uid, commentCount){
 // ── RENDER ROLE BADGE HTML ──
 function roleBadgeHtml(uid, commentCount){
   const role = getRoleForUser(uid, commentCount);
-  return `<span class="role-badge ${role.cls}" title="${role.isCustom?'Custom Role':'Auto Role · '+commentCount+' komentar'}">${role.icon} ${escCm(role.name)}</span>`;
+  const styleAttr = role._customStyle ? ` style="${role._customStyle}"` : '';
+  return `<span class="role-badge ${role.cls}"${styleAttr} title="${role.isCustom?'Custom Role':'Auto Role · '+commentCount+' komentar'}">${role.icon} ${escCm(role.name)}</span>`;
 }
 
 // ── LOAD ROLE CONFIG FROM FIRESTORE ──
@@ -1104,7 +1273,9 @@ window.switchRoleTab = (tab, btn) => {
   btn.classList.add('on');
   document.getElementById('rolePanel-levels').style.display = tab==='levels' ? '' : 'none';
   document.getElementById('rolePanel-users').style.display  = tab==='users'  ? '' : 'none';
+  document.getElementById('rolePanel-custom').style.display = tab==='custom' ? '' : 'none';
   if(tab==='users') renderUserRoleList(allCommenters);
+  if(tab==='custom') renderCustomRoleList();
 };
 
 // ── RENDER LEVEL ROLE LIST ──
@@ -1143,9 +1314,11 @@ function renderUserRoleList(users){
   const el = document.getElementById('userRoleList');
   if(!users.length){ el.innerHTML = '<div class="cm-empty">Belum ada user yang komentar.</div>'; return; }
   const roleOptions = roleDefs.map(r => `<option value="${r.id}">${r.icon} ${escCm(r.name)} (≥${r.threshold})</option>`).join('');
+  const customRoleOptions = customRoles.length
+    ? '<optgroup label="── Custom Role ──">' + customRoles.map(cr => `<option value="CR:${cr.id}">🎨 ${escCm(cr.name)}</option>`).join('') + '</optgroup>'
+    : '';
   el.innerHTML = users.map(u => {
     const role = getRoleForUser(u.uid, u.commentCount);
-    const selVal = u.customRole !== null && u.customRole !== undefined ? u.customRole : '';
     return `<div class="user-role-item" id="uri-${u.uid}">
       <div style="flex:1;min-width:0">
         <div class="uri-name">${escCm(u.name)} ${roleBadgeHtml(u.uid, u.commentCount)}</div>
@@ -1154,22 +1327,23 @@ function renderUserRoleList(users){
       <select class="uri-select" id="usel-${u.uid}">
         <option value="">— Auto (by lvl) —</option>
         ${roleOptions}
+        ${customRoleOptions}
         <option value="custom">✎ Custom nama...</option>
       </select>
       <button class="uri-apply" onclick="applyUserRole('${u.uid}','${escCm(u.name)}')">Apply</button>
     </div>`;
   }).join('');
 
-  // set existing custom values on selects
+  // restore existing selections
   users.forEach(u => {
     const sel = document.getElementById(`usel-${u.uid}`);
     if(!sel) return;
     if(u.customRole !== null && u.customRole !== undefined){
-      const numVal = typeof u.customRole === 'number' ? String(u.customRole) : '';
-      // try matching by id
-      const matchId = [...sel.options].find(o => o.value === String(u.customRole));
-      if(matchId) sel.value = matchId.value;
-      else sel.value = 'custom'; // string custom
+      const v = String(u.customRole);
+      const match = [...sel.options].find(o => o.value === v);
+      if(match) sel.value = v;
+      else if(!isNaN(v)) sel.value = v;
+      else sel.value = 'custom';
     }
   });
 }
@@ -1190,7 +1364,13 @@ window.applyUserRole = async (uid, name) => {
       if(user) user.customRole = null;
       toast(`✓ ${name} direset ke auto role.`);
     } else {
-      const parsedVal = isNaN(roleVal) ? roleVal : parseInt(roleVal, 10);
+      // CR: prefix = custom role object id
+      let parsedVal;
+      if(roleVal.startsWith('CR:')){
+        parsedVal = roleVal; // keep as string "CR:cr_xxxx"
+      } else {
+        parsedVal = isNaN(roleVal) ? roleVal : parseInt(roleVal, 10);
+      }
       await setDoc(doc(db,'user_roles',uid), { role: parsedVal, name, updatedAt: Date.now() });
       if(user) user.customRole = parsedVal;
       toast(`✓ Role ${name} diupdate.`);
@@ -1199,8 +1379,258 @@ window.applyUserRole = async (uid, name) => {
   } catch(e){ toast('Gagal update role: '+e.message); }
 };
 
-// ── FILTER USER SEARCH ──
-window.filterRoleUsers = () => {
+// ── CUSTOM ROLE SYSTEM ──
+let customRoles = []; // { id, name, icon, iconType, iconImg, bgColor, textColor }
+
+const CR_SWATCHES = [
+  '#3b1f6e','#1a3a6e','#0f4c2a','#5c1a1a','#3d2200',
+  '#7c3aed','#2563eb','#16a34a','#dc2626','#d97706',
+  'rgba(167,139,250,.18)','rgba(79,126,196,.15)','rgba(52,211,153,.12)','rgba(201,110,110,.14)','rgba(201,169,110,.14)',
+];
+const CR_TEXT_SWATCHES = ['#ffffff','#e8e8e8','#c4b0ff','#6fa3e8','#34d399','#f5a623','#f07850','#c9a96e','#07060f'];
+
+let crSelectedBg = 'rgba(167,139,250,.18)';
+let crSelectedText = '#c4b0ff';
+let crIconTab = 'emoji';
+let crImgBase64 = null;
+
+// init color swatches
+function initCrSwatches(){
+  const bg = document.getElementById('crColorSwatches');
+  bg.innerHTML = CR_SWATCHES.map(c => `
+    <div class="cr-color-swatch ${c===crSelectedBg?'sel':''}" style="background:${c}" title="${c}" onclick="selectCrColor('${c}',this)"></div>
+  `).join('');
+  const tx = document.getElementById('crTextColorSwatches');
+  tx.innerHTML = CR_TEXT_SWATCHES.map(c => `
+    <div class="cr-color-swatch ${c===crSelectedText?'sel':''}" style="background:${c};border-color:rgba(255,255,255,.15)" title="${c}" onclick="selectCrTextColor('${c}',this)"></div>
+  `).join('');
+  document.getElementById('crColorHex').value = crSelectedBg;
+  document.getElementById('crTextColorHex').value = crSelectedText;
+  // emoji picker quick picks
+  const emojis = ['🌸','⚔️','🔮','🌙','⭐','🌊','🔥','💀','🎭','🦋','🌺','🦁','🐉','👑','🎪','🌈','💎','🗡️','🏯','🎋'];
+  document.getElementById('crEmojiPicker').innerHTML = emojis.map(e =>
+    `<button style="background:none;border:1px solid var(--border);cursor:pointer;font-size:1.2rem;padding:.2rem .4rem;border-radius:4px;transition:border-color .2s" onclick="document.getElementById('crIconEmoji').value='${e}';updateCrPreview()" title="${e}">${e}</button>`
+  ).join('');
+}
+
+window.selectCrColor = (color, el) => {
+  crSelectedBg = color;
+  document.querySelectorAll('#crColorSwatches .cr-color-swatch').forEach(s => s.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  document.getElementById('crColorHex').value = color;
+  document.getElementById('crColorCustomPick').value = /^#/.test(color) ? color : '#7c3aed';
+  updateCrPreview();
+};
+window.selectCrTextColor = (color, el) => {
+  crSelectedText = color;
+  document.querySelectorAll('#crTextColorSwatches .cr-color-swatch').forEach(s => s.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  document.getElementById('crTextColorHex').value = color;
+  document.getElementById('crTextColorCustomPick').value = /^#/.test(color) ? color : '#ffffff';
+  updateCrPreview();
+};
+window.onCrHexInput = () => {
+  const v = document.getElementById('crColorHex').value.trim();
+  if(/^(#[0-9a-fA-F]{3,8}|rgba?\(.+\))$/.test(v)){ selectCrColor(v, null); }
+};
+window.onCrTextHexInput = () => {
+  const v = document.getElementById('crTextColorHex').value.trim();
+  if(/^(#[0-9a-fA-F]{3,8}|rgba?\(.+\))$/.test(v)){ selectCrTextColor(v, null); }
+};
+
+window.switchCrIconTab = (tab, btn) => {
+  crIconTab = tab;
+  document.querySelectorAll('.cr-icon-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('crIconEmojiWrap').classList.toggle('hide', tab !== 'emoji');
+  document.getElementById('crIconImgWrap').classList.toggle('hide', tab !== 'img');
+  updateCrPreview();
+};
+
+window.handleCrImgUpload = (input) => {
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 200*1024){ toast('Gambar max 200KB ya!'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    crImgBase64 = e.target.result;
+    const prev = document.getElementById('crImgPreview');
+    prev.src = crImgBase64;
+    prev.classList.remove('hide');
+    document.getElementById('crIconImgUrl').value = '';
+    updateCrPreview();
+  };
+  reader.readAsDataURL(file);
+};
+
+function getCrIconHtml(){
+  if(crIconTab === 'emoji'){
+    return document.getElementById('crIconEmoji').value.trim() || '🎭';
+  } else {
+    const url = crImgBase64 || document.getElementById('crIconImgUrl').value.trim();
+    if(url) return `<img src="${url}" style="width:14px;height:14px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">`;
+    return '🖼';
+  }
+}
+
+function updateCrPreview(){
+  const name = document.getElementById('crName').value.trim() || 'Role Baru';
+  const iconHtml = getCrIconHtml();
+  const badge = document.getElementById('crPreviewBadge');
+  badge.style.background = crSelectedBg;
+  badge.style.color = crSelectedText;
+  badge.style.border = `1px solid ${crSelectedText}33`;
+  badge.style.boxShadow = `0 0 8px ${crSelectedBg}88`;
+  badge.innerHTML = `${iconHtml} ${escHtml(name)}`;
+}
+
+// wire up name input live preview
+document.getElementById('crName').addEventListener('input', updateCrPreview);
+document.getElementById('crIconEmoji').addEventListener('input', updateCrPreview);
+document.getElementById('crIconImgUrl').addEventListener('input', () => {
+  crImgBase64 = null;
+  document.getElementById('crImgPreview').classList.add('hide');
+  updateCrPreview();
+});
+
+window.openCrModal = (editId = null) => {
+  const overlay = document.getElementById('crModalOverlay');
+  overlay.classList.remove('hide');
+  document.getElementById('crEditId').value = editId || '';
+  document.getElementById('crModalSub').textContent = editId ? 'Edit custom role' : 'Buat role baru dengan desain sendiri';
+  crImgBase64 = null;
+  crIconTab = 'emoji';
+
+  if(editId){
+    const cr = customRoles.find(r => r.id === editId);
+    if(cr){
+      document.getElementById('crName').value = cr.name;
+      crSelectedBg = cr.bgColor || 'rgba(167,139,250,.18)';
+      crSelectedText = cr.textColor || '#c4b0ff';
+      if(cr.iconType === 'img'){
+        switchCrIconTab('img', document.querySelectorAll('.cr-icon-tab')[1]);
+        const urlEl = document.getElementById('crIconImgUrl');
+        if(cr.iconImg && cr.iconImg.startsWith('data:')) { crImgBase64 = cr.iconImg; document.getElementById('crImgPreview').src = cr.iconImg; document.getElementById('crImgPreview').classList.remove('hide'); }
+        else urlEl.value = cr.iconImg || '';
+      } else {
+        switchCrIconTab('emoji', document.querySelectorAll('.cr-icon-tab')[0]);
+        document.getElementById('crIconEmoji').value = cr.icon || '';
+      }
+    }
+  } else {
+    document.getElementById('crName').value = '';
+    document.getElementById('crIconEmoji').value = '';
+    document.getElementById('crIconImgUrl').value = '';
+    document.getElementById('crImgPreview').classList.add('hide');
+    crSelectedBg = 'rgba(167,139,250,.18)';
+    crSelectedText = '#c4b0ff';
+    switchCrIconTab('emoji', document.querySelectorAll('.cr-icon-tab')[0]);
+  }
+  initCrSwatches();
+  updateCrPreview();
+};
+
+window.closeCrModal = () => {
+  document.getElementById('crModalOverlay').classList.add('hide');
+};
+
+window.saveCrRole = async () => {
+  const name = document.getElementById('crName').value.trim();
+  if(!name){ toast('Nama role harus diisi!'); return; }
+  const editId = document.getElementById('crEditId').value;
+  const btn = document.getElementById('crSaveBtn');
+  btn.disabled = true;
+
+  let iconImg = null;
+  if(crIconTab === 'img'){
+    iconImg = crImgBase64 || document.getElementById('crIconImgUrl').value.trim() || null;
+  }
+  const icon = crIconTab === 'emoji'
+    ? (document.getElementById('crIconEmoji').value.trim() || '🎭')
+    : (iconImg ? '' : '🖼');
+
+  const roleData = {
+    name, icon, iconType: crIconTab,
+    iconImg: iconImg || null,
+    bgColor: crSelectedBg,
+    textColor: crSelectedText,
+    updatedAt: Date.now()
+  };
+
+  try {
+    if(editId){
+      await setDoc(doc(db,'custom_roles',editId), roleData);
+      const idx = customRoles.findIndex(r => r.id===editId);
+      if(idx >= 0) customRoles[idx] = { ...roleData, id: editId };
+      toast(`✓ Role "${name}" diupdate.`);
+    } else {
+      const newId = 'cr_' + Date.now();
+      await setDoc(doc(db,'custom_roles',newId), roleData);
+      customRoles.push({ ...roleData, id: newId });
+      toast(`✓ Custom role "${name}" dibuat!`);
+    }
+    closeCrModal();
+    renderCustomRoleList();
+    // refresh user role selects to include new option
+    renderUserRoleList(allCommenters);
+  } catch(e){ toast('Gagal simpan: '+e.message); }
+  btn.disabled = false;
+};
+
+window.deleteCrRole = async (id, name) => {
+  if(!confirm(`Hapus custom role "${name}"? User yang pakai role ini akan direset ke auto.`)) return;
+  try {
+    await deleteDoc(doc(db,'custom_roles',id));
+    customRoles = customRoles.filter(r => r.id !== id);
+    renderCustomRoleList();
+    renderUserRoleList(allCommenters);
+    toast(`Custom role "${name}" dihapus.`);
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+async function loadCustomRoles(){
+  try {
+    const snap = await getDocs(collection(db,'custom_roles'));
+    customRoles = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  } catch(e){ console.warn('[loadCustomRoles]', e.message); }
+}
+
+function customRoleBadgeHtml(cr){
+  const iconHtml = cr.iconType === 'img' && cr.iconImg
+    ? `<img src="${escHtml(cr.iconImg)}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">`
+    : escHtml(cr.icon || '🎭');
+  return `<span class="role-badge" style="background:${escHtml(cr.bgColor||'rgba(167,139,250,.18)')};color:${escHtml(cr.textColor||'#c4b0ff')};border:1px solid ${escHtml(cr.textColor||'#c4b0ff')}33">${iconHtml} ${escHtml(cr.name)}</span>`;
+}
+
+function renderCustomRoleList(){
+  const el = document.getElementById('customRoleList');
+  if(!customRoles.length){
+    el.innerHTML = '<div class="cm-empty">Belum ada custom role. Klik tombol di bawah untuk membuat.</div>';
+    return;
+  }
+  el.innerHTML = customRoles.map(cr => `
+    <div class="custom-role-item" id="cri-${cr.id}">
+      <div class="cri-preview">${customRoleBadgeHtml(cr)}</div>
+      <div class="cri-info">
+        <div class="cri-name">${escHtml(cr.name)}</div>
+        <div class="cri-id">ID: ${cr.id} · bg: ${escHtml(cr.bgColor||'—')} · text: ${escHtml(cr.textColor||'—')}</div>
+      </div>
+      <div class="cri-actions">
+        <button class="btn-cri-edit" onclick="openCrModal('${cr.id}')">✏ Edit</button>
+        <button class="btn-cri-del" onclick="deleteCrRole('${cr.id}','${escHtml(cr.name)}')">✕ Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// close modal on overlay click
+document.getElementById('crModalOverlay').addEventListener('click', function(e){
+  if(e.target === this) closeCrModal();
+});
+
+// ── PATCH: include custom roles in user assign dropdown ──
+const _origRenderUserRoleList = renderUserRoleList;
+// We override below after function declaration
   const q = document.getElementById('roleUserSearch').value.toLowerCase();
   const filtered = q ? allCommentersRaw.filter(u =>
     u.name.toLowerCase().includes(q) || u.uid.toLowerCase().includes(q)
@@ -1212,6 +1642,7 @@ window.filterRoleUsers = () => {
 // ── INIT ROLE SYSTEM ──
 async function initRoleSystem(){
   await loadRoleConfig();
+  await loadCustomRoles();
   await loadAllCommenters();
   renderRoleDefList();
 }
