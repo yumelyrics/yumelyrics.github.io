@@ -1430,7 +1430,7 @@ function loadNotifs(uid){
     }
     list.innerHTML=notifs.map(function(n){
       var cls='nud-notif-item'+(n.read?'':' unread');
-      return '<div class="'+cls+'" onclick="goToNotif(\''+n.id+'\',\''+esc(n.songSlug||'')+'\',' + 'this)">'+
+      return '<div class="'+cls+'" data-nid="'+esc(n.id)+'" data-slug="'+esc(n.songSlug||'')+'" onclick="_onNotif(this)">'+
         '<div class="nud-notif-from">💬 '+esc(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
         '<div class="nud-notif-msg">&ldquo;'+esc(n.replyText||'')+'&rdquo;</div>'+
         '<div class="nud-notif-meta">'+esc(n.songTitle||'')+' &middot; '+esc(n.date||'')+'</div>'+
@@ -1439,6 +1439,11 @@ function loadNotifs(uid){
   }, ()=>{});
 }
 
+window._onNotif = function(el) {
+  const nid = el.dataset.nid;
+  const slug = el.dataset.slug;
+  window.goToNotif(nid, slug, el);
+};
 window.goToNotif = async (notifId, songSlug, el) => {
   // Tandai sudah dibaca
   try{
