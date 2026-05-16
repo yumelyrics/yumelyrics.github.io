@@ -333,6 +333,7 @@ let subFilter = 'all';
 let songMap = {};
 let curCmTab = 'songs';
 let unsubSubs = null;
+const ADMIN_EMAIL_INBOX = 'khoirustsani143@gmail.com';
 let bannedMap = {}; // uid -> ban data
 
 // ── TOAST ──
@@ -609,7 +610,7 @@ async function loadCmAdmin(tab){
           </div>
           <div class="cm-item-actions">
             <button class="cm-reply-btn" onclick="window._toggleCmReply('${c.id}')">↩ Balas</button>
-            ${c.uid ? (isBanned
+            ${c.uid && c.uid !== auth.currentUser?.uid ? (isBanned
               ? `<button class="cm-unban" onclick="window._unbanUser('${c.uid}','${escCm(c.name)}')">✓ Cabut Ban</button>`
               : `<button class="cm-ban" onclick="window._banUser('${c.uid}','${escCm(c.name)}','${escCm(c.text.substring(0,60))}')">🚫 Ban</button>`
             ) : ''}
@@ -800,7 +801,10 @@ async function loadBannedUsers(){
         </div>
       </div>`;
     }).join('');
-  } catch(e){ el.innerHTML = '<div class="cm-empty">Gagal memuat daftar banned.</div>'; }
+  } catch(e){
+    console.error('[loadBannedUsers] error:', e.code, e.message);
+    el.innerHTML = '<div class="cm-empty">Gagal memuat daftar banned.<br><small style="color:var(--muted);font-size:.65rem">' + (e.code||'') + ': ' + (e.message||'') + '</small><br><button class="cm-unban" style="margin-top:.5rem" onclick="loadBannedUsers()">&#x21BA; Coba Lagi</button></div>';
+  }
 }
 </script>
 <script>

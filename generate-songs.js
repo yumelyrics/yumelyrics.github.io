@@ -501,8 +501,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .citem{background:rgba(255,255,255,.02);border:1px solid rgba(255,110,180,.08);padding:1rem 1.2rem;border-radius:2px}
 .citem.is-admin{background:rgba(255,110,180,.04);border-color:rgba(255,110,180,.2)}
 .chdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;gap:.5rem;flex-wrap:wrap}
-.chdr-left{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.chdr-left{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .cname{font-size:.72rem;color:var(--accent);font-weight:500}
+.cm-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,110,180,.3);flex-shrink:0}
+.cm-avatar-ph{width:28px;height:28px;border-radius:50%;background:rgba(255,110,180,.15);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent);border:1.5px solid rgba(255,110,180,.2);flex-shrink:0}
+.cm-avatar-crown{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(255,110,180,.25),rgba(191,95,255,.2));display:flex;align-items:center;justify-content:center;font-size:.85rem;border:1.5px solid rgba(255,110,180,.4);flex-shrink:0}
+/* reply avatar kecil */
+.ritem .cm-avatar,.ritem .cm-avatar-ph{width:22px;height:22px;font-size:.6rem}
 .cdate{font-size:.6rem;color:var(--muted)}
 .ctxt{font-size:.82rem;color:var(--text);line-height:1.65;font-weight:300}
 .nocm{font-size:.78rem;color:var(--muted);font-style:italic}
@@ -734,7 +739,11 @@ body.gate-open #lyrView{padding-top:3.5rem}
       <div class="ep-lbl">Nama Tampilan</div>
       <input class="ep-inp" id="ep-displayname" type="text" placeholder="Nama yang tampil di komentar">
     </div>
-    <div class="ep-note">Nama ini akan tampil di komentar kamu. Avatar diambil otomatis dari akun Google.</div>
+    <div class="ep-field">
+      <div class="ep-lbl">URL Avatar Custom (opsional)</div>
+      <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg">
+    </div>
+    <div class="ep-note">Nama & avatar akan tampil di komentar. Kosongkan URL avatar untuk pakai foto Google.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -773,6 +782,7 @@ const ADMIN_EMAIL = "khoirustsani143@gmail.com";
 
 async function checkBanStatus(uid) {
   try {
+    if (uid && _currentUser && _currentUser.email === ADMIN_EMAIL) return { banned: false, reason: '' };
     const banDoc = await getDoc(doc(db, 'banned_users', uid));
     if (banDoc.exists()) {
       _banReason = banDoc.data().reason || '';
@@ -857,6 +867,20 @@ async function applyAuthState(user) {
     // Deteksi admin
     _isAdmin = user.email === ADMIN_EMAIL;
 
+    // Load custom photoURL dari Firestore user_profiles
+    let _customPhotoURL = user.photoURL || null;
+    try {
+      const upSnap = await getDoc(doc(db, 'user_profiles', user.uid));
+      if (upSnap.exists() && upSnap.data().photoURL) _customPhotoURL = upSnap.data().photoURL;
+      if (upSnap.exists() && upSnap.data().displayName && !_isAdmin) {
+        // sync displayName dari Firestore kalau beda
+        if (upSnap.data().displayName !== user.displayName) {
+          const { updateProfile: _up } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
+          await _up(user, { displayName: upSnap.data().displayName });
+        }
+      }
+    } catch(e) {}
+
     // Isi nama user di form komentar
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
     document.getElementById('cm-user-display').textContent = displayName;
@@ -881,8 +905,8 @@ async function applyAuthState(user) {
     document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
     document.getElementById('nud-email').textContent = user.email || '';
     const avatarWrap = document.getElementById('nav-avatar-wrap');
-    if (user.photoURL) {
-      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
+    if (_customPhotoURL) {
+      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
       const initial = (user.displayName||'U')[0].toUpperCase();
       avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
@@ -961,6 +985,15 @@ window.openEditProfile = () => {
   document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '(nama tidak ada)';
   document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
   document.getElementById('ep-displayname').value = _currentUser.displayName || (_isAdmin ? 'YumeSubs' : '');
+  // Load custom avatar dari Firestore kalau ada
+  try {
+    const { getDoc: _getDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
+    const userSnap = await _getDoc(_doc(db, 'user_profiles', _currentUser.uid));
+    const customPhoto = userSnap.exists() ? (userSnap.data().photoURL || '') : '';
+    document.getElementById('ep-photourl').value = customPhoto || _currentUser.photoURL || '';
+  } catch(e) {
+    document.getElementById('ep-photourl').value = _currentUser.photoURL || '';
+  }
   modal.classList.add('open');
   setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
 };
@@ -977,17 +1010,38 @@ window.saveEditProfile = async () => {
   const btn = document.querySelector('.ep-save');
   if (btn) btn.disabled = true;
   try {
+    const newPhoto = document.getElementById('ep-photourl').value.trim();
+    // Validasi URL kalau diisi
+    if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
     // Firebase Auth: updateProfile
     const { updateProfile } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js');
-    await updateProfile(_currentUser, { displayName: newName });
-    // Update nav — null-safe
+    await updateProfile(_currentUser, { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null });
+    // Simpan custom photoURL ke Firestore user_profiles
+    const { setDoc: _setDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
+    await _setDoc(_doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null }, { merge: true });
+    // Update floating avatar bubble
+    const avatarWrap = document.getElementById('nav-avatar-wrap');
+    const finalPhoto = newPhoto || _currentUser.photoURL;
+    if (finalPhoto) {
+      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer">\`;
+    } else {
+      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${newName[0].toUpperCase()}</div>\`;
+    }
+    // Update preview modal
     const nudName = document.getElementById('nud-name');
-    const cmDisp  = document.getElementById('cm-user-display');
     const epPrev  = document.getElementById('ep-display-name-preview');
     if (nudName) nudName.textContent = newName;
-    if (cmDisp)  cmDisp.textContent  = newName;
     if (epPrev)  epPrev.textContent  = newName;
-    toast('Profil berhasil diperbarui!');
+    // Update preview avatar di modal
+    const epAvBig = document.getElementById('ep-avatar-big');
+    if (epAvBig) {
+      if (finalPhoto) {
+        epAvBig.outerHTML = \`<img class="ep-avatar-big" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`;
+      } else {
+        epAvBig.textContent = newName[0].toUpperCase();
+      }
+    }
+    toast('Profil berhasil diperbarui! ✨');
     closeEditProfile();
   } catch(e) { toast('Gagal simpan: ' + (e.message || e.code)); }
   if (btn) btn.disabled = false;
@@ -1112,14 +1166,15 @@ function renderComment(id, c, replies){
   if(replies&&replies.length){
     repHtml='<div class="replies">'+replies.map(r=>{
       if(r.isAdmin) return \`<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span></div><div class="admin-reply-text">\${esc(r.text)}</div></div></div>\`;
-      return \`<div class="ritem"><div class="chdr-left"><span class="cname">\${esc(r.name)}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
+      const rAv = r.photoURL ? \`<img class="cm-avatar" src="\${esc(r.photoURL)}" alt="av" referrerpolicy="no-referrer">\` : \`<div class="cm-avatar-ph">\${(r.name||'A')[0].toUpperCase()}</div>\`;
+      return \`<div class="ritem"><div class="chdr-left">\${rAv}<span class="cname">\${esc(r.name)}</span><span class="cdate">\${esc(r.date)}</span></div><div class="ctxt">\${esc(r.text)}</div></div>\`;
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
-        <span class="admin-cm-crown">👑</span>
+        <div class="cm-avatar-crown">👑</div>
         <span class="admin-cm-name">YumeSubs</span>
         <span class="admin-cm-badge">Admin</span>
         <span class="admin-cm-date">\${esc(c.date)}</span>
@@ -1133,8 +1188,15 @@ function renderComment(id, c, replies){
       </div>
     </div>\`;
   }
+  // Avatar untuk komentar biasa
+  let avHtml;
+  if (c.photoURL) {
+    avHtml = \`<img class="cm-avatar" src="\${esc(c.photoURL)}" alt="av" referrerpolicy="no-referrer">\`;
+  } else {
+    avHtml = \`<div class="cm-avatar-ph">\${(c.name||'A')[0].toUpperCase()}</div>\`;
+  }
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left"><div class="cname">\${esc(c.name)}</div><div class="cdate">\${esc(c.date)}</div></div>
+    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}</div><div class="cdate">\${esc(c.date)}</div></div>
     <button class="reply-btn" onclick="toggleReplyForm('\${id}')">↩ Balas</button></div>
     <div class="ctxt">\${esc(c.text)}</div>
     \${repHtml}
@@ -1170,7 +1232,6 @@ window.postReply = async parentId => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
   if (_isBanned) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('rt-'+parentId).value.trim();if(!t)return;
-  if(!_isAdmin && t.trim().split(/\s+/).filter(w=>w.length>0).length < 5){ toast('Balasan minimal 5 kata ya! 📝'); return; }
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
     await addDoc(collection(db,'comments'),{
@@ -1178,7 +1239,7 @@ window.postReply = async parentId => {
       parentId,
       name:repName,
       uid:_currentUser.uid,
-      photoURL:_isAdmin ? null : (_currentUser.photoURL||null),
+      photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
       date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       ts:Date.now(),
@@ -1193,9 +1254,7 @@ window.postCm = async () => {
   if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
-  if(!t)return;
-  if(!_isAdmin && t.trim().split(/\s+/).filter(w=>w.length>0).length < 5){ toast('Komentar minimal 5 kata ya! 📝'); return; }
-  btn.disabled=true;
+  if(!t)return;btn.disabled=true;
   const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
   try{
     await addDoc(collection(db,'comments'),{
@@ -1203,7 +1262,7 @@ window.postCm = async () => {
       parentId:null,
       name:cmName,
       uid:_currentUser.uid,
-      photoURL:_isAdmin ? null : (_currentUser.photoURL||null),
+      photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
       date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
       ts:Date.now(),
