@@ -1246,9 +1246,9 @@ function formatBanCountdown(rem){
   const h = Math.floor((totalSec % 86400) / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  if(d > 0) return \`${d}h ${String(h).padStart(2,'0')}j ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}d\`;
-  if(h > 0) return \`${h}j ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}d\`;
-  return \`${m}m ${String(s).padStart(2,'0')}d\`;
+  if(d > 0) return d+'h '+String(h).padStart(2,'0')+'j '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'d';
+  if(h > 0) return h+'j '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'d';
+  return m+'m '+String(s).padStart(2,'0')+'d';
 }
 
 function formatBanRemaining(bannedUntil){
