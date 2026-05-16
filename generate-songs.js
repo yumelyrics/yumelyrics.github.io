@@ -621,6 +621,19 @@ body.gate-open #lyrView{padding-top:0}
 .nud-notif-msg{font-size:.74rem;color:var(--text);line-height:1.5;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nud-notif-meta{font-size:.66rem;color:var(--muted)}
 .nud-notif-empty{font-size:.76rem;color:var(--muted);font-style:italic;padding:.6rem .8rem}
+/* ── Role badge ── */
+.role-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;font-weight:700;padding:.15rem .48rem;border-radius:2rem;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;white-space:nowrap;line-height:1.4;margin-left:.3rem}
+.role-0{background:rgba(122,106,154,.15);border:1px solid rgba(122,106,154,.3);color:#9a8ab5}
+.role-1{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28);color:#34d399}
+.role-2{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.28);color:#00e5ff}
+.role-3{background:rgba(191,95,255,.1);border:1px solid rgba(191,95,255,.3);color:#bf5fff}
+.role-4{background:rgba(255,110,180,.1);border:1px solid rgba(255,110,180,.3);color:#ff6eb4}
+.role-5{background:rgba(255,120,60,.1);border:1px solid rgba(255,120,60,.3);color:#ff7840}
+.role-6{background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(191,95,255,.12));border:1px solid rgba(255,110,180,.45);color:#ffaadd;box-shadow:0 0 8px rgba(255,110,180,.2)}
+.role-7{background:linear-gradient(135deg,rgba(255,60,60,.1),rgba(255,120,60,.1));border:1px solid rgba(255,60,60,.4);color:#ff6060;box-shadow:0 0 10px rgba(255,60,60,.18)}
+.role-custom{background:rgba(191,95,255,.12);border:1px solid rgba(191,95,255,.4);color:#d4aaff;box-shadow:0 0 8px rgba(191,95,255,.18)}
+.nud-role{padding:.1rem .8rem .55rem;display:flex;align-items:center;gap:.4rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.3rem}
+.nud-role-label{font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
 /* ── Banned badge di komentar ── */
 .cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);padding:.1rem .38rem;border-radius:2rem;font-weight:600;vertical-align:middle;margin-left:.3rem;flex-shrink:0}
 /* ── Foto komentar ── */
@@ -777,6 +790,10 @@ body.gate-open #lyrView{padding-top:0}
 <div id="nav-user-dropdown">
   <div class="nud-name" id="nud-name">—</div>
   <div class="nud-email" id="nud-email">—</div>
+  <div class="nud-role" id="nud-role" style="display:none">
+    <span class="nud-role-label">Role</span>
+    <span id="nud-role-badge"></span>
+  </div>
   <button class="nud-btn" onclick="openEditProfile();closeUserDropdown()">✏ Edit Profil</button>
   <div class="nud-notif-header">
     <span class="nud-notif-title">🔔 Notifikasi</span>
@@ -1017,6 +1034,7 @@ async function applyAuthState(user) {
     }
     document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
     document.getElementById('nud-email').textContent = user.email || '';
+    if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (_customPhotoURL) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
@@ -1081,8 +1099,76 @@ window.doLogin = async () => {
 window.doLogout = async () => {
   closeUserDropdown();
   await signOut(auth);
+  const nr = document.getElementById('nud-role');
+  if(nr) nr.style.display = 'none';
   toast('Berhasil keluar.');
 };
+
+// ── ROLE SYSTEM ──
+const ROLE_DEFS_SONG = [
+  { id:0, icon:'🌫️', name:'Wanderer',  threshold:0,   cls:'role-0' },
+  { id:1, icon:'🌿', name:'Scout',      threshold:5,   cls:'role-1' },
+  { id:2, icon:'🏹', name:'Ranger',     threshold:15,  cls:'role-2' },
+  { id:3, icon:'🔮', name:'Mystic',     threshold:30,  cls:'role-3' },
+  { id:4, icon:'⚔️', name:'Champion',   threshold:50,  cls:'role-4' },
+  { id:5, icon:'🔥', name:'Warlord',    threshold:80,  cls:'role-5' },
+  { id:6, icon:'✨', name:'Archmage',   threshold:120, cls:'role-6' },
+  { id:7, icon:'💀', name:'Overlord',   threshold:200, cls:'role-7' },
+];
+let _roleDefs = [...ROLE_DEFS_SONG];
+
+async function _loadRoleDefsSong(){
+  try {
+    const snap = await getDoc(doc(db,'role_config','levels'));
+    if(snap.exists() && Array.isArray(snap.data().roles)){
+      _roleDefs = snap.data().roles.map((r,i)=>({...ROLE_DEFS_SONG[i],...r,id:i}));
+    }
+  } catch(e){}
+}
+
+function _getRoleBadgeSong(commentCount, customRole){
+  let role;
+  if(customRole !== null && customRole !== undefined){
+    role = typeof customRole === 'number'
+      ? (_roleDefs.find(r=>r.id===customRole) || _roleDefs[0])
+      : { id:'custom', icon:'🎭', name:String(customRole), cls:'role-custom' };
+  } else {
+    role = _roleDefs[0];
+    for(const r of _roleDefs){ if(commentCount >= r.threshold) role = r; else break; }
+  }
+  return \`<span class="role-badge \${role.cls}" title="\${role.name}">\${role.icon} \${role.name}</span>\`;
+}
+
+const _roleCache = {};
+
+async function _getRoleBadgeForUser(uid){
+  if(!uid) return '';
+  if(_roleCache[uid] !== undefined) return _roleCache[uid];
+  try {
+    const [songSnap, storySnap, overSnap] = await Promise.all([
+      getDocs(query(collection(db,'comments'), where('uid','==',uid))),
+      getDocs(query(collection(db,'story_comments'), where('uid','==',uid))),
+      getDoc(doc(db,'user_roles',uid))
+    ]);
+    const cnt = songSnap.size + storySnap.size;
+    const custom = overSnap.exists() ? (overSnap.data().role ?? null) : null;
+    const badge = _getRoleBadgeSong(cnt, custom);
+    _roleCache[uid] = badge;
+    return badge;
+  } catch(e){ return ''; }
+}
+
+async function loadAndShowUserRoleSong(uid){
+  const nudRole = document.getElementById('nud-role');
+  const nudRoleBadge = document.getElementById('nud-role-badge');
+  if(!nudRole || !nudRoleBadge) return;
+  try {
+    if(_roleDefs.length <= 1) await _loadRoleDefsSong();
+    const badge = await _getRoleBadgeForUser(uid);
+    nudRoleBadge.innerHTML = badge;
+    nudRole.style.display = '';
+  } catch(e){}
+}
 
 window.toggleUserDropdown = () => {
   const dd = document.getElementById('nav-user-dropdown');
@@ -1434,7 +1520,7 @@ function renderComment(id, c, replies){
     return \`<span class="cm-banned-badge" data-banned-until="\${c.bannedUntil}" title="Berakhir \${endStr}">🚫 <span class="ban-countdown">\${formatBanCountdown(rem)}</span> — \${endStr}</span>\`;
   })() : '';
   return \`<div class="citem">
-    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}</div><div class="cdate">\${esc(c.date)}</div>\${delBtn}</div>
+    <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}\${c._roleBadge||''}</div><div class="cdate">\${esc(c.date)}</div>\${delBtn}</div>
     <button class="reply-btn" data-togglereply="\${id}">↩ Balas</button></div>
     <div class="ctxt">\${esc(c.text)}\${imgHtml}</div>
     \${repHtml}
@@ -1614,12 +1700,23 @@ async function rcm(){
     const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
     const profileMap={};
     const banMap={};
+    const roleMap={};
+    if(_roleDefs.length <= 1) await _loadRoleDefsSong();
     await Promise.all(uids.map(async uid=>{
       try{
-        const [pSnap, bSnap]=await Promise.all([
+        // Gunakan cache role kalau sudah ada
+        const needRoleFetch = _roleCache[uid] === undefined;
+        const fetches = [
           getDoc(doc(db,'user_profiles',uid)),
-          getDoc(doc(db,'banned_users',uid))
-        ]);
+          getDoc(doc(db,'banned_users',uid)),
+          ...(needRoleFetch ? [
+            getDocs(query(collection(db,'comments'), where('uid','==',uid))),
+            getDocs(query(collection(db,'story_comments'), where('uid','==',uid))),
+            getDoc(doc(db,'user_roles',uid))
+          ] : [])
+        ];
+        const results = await Promise.all(fetches);
+        const [pSnap, bSnap] = results;
         if(pSnap.exists()) profileMap[uid]=pSnap.data();
         if(bSnap.exists()){
           const bd=bSnap.data();
@@ -1627,6 +1724,13 @@ async function rcm(){
           const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
           if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
         }
+        if(needRoleFetch){
+          const [songCnt, storyCnt, rSnap] = results.slice(2);
+          const cnt = songCnt.size + storyCnt.size;
+          const custom = rSnap.exists() ? (rSnap.data().role ?? null) : null;
+          _roleCache[uid] = _getRoleBadgeSong(cnt, custom);
+        }
+        roleMap[uid] = _roleCache[uid];
       }catch(e){}
     }));
 
@@ -1639,7 +1743,8 @@ async function rcm(){
         photoURL:(p&&p.photoURL)?p.photoURL:null,
         name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
         isBanned:!!banMap[c.uid],
-        bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined
+        bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined,
+        _roleBadge: roleMap[c.uid] || ''
       };
     });
 
