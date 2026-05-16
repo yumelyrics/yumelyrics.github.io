@@ -27,6 +27,9 @@ function toSlug(titleRo, titleJp, docId) {
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+function renderText(str) {
+  return escHtml(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g, '$1<span class="cm-mention">$2</span>');
+}
 
 const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
 function randNoise() {
@@ -510,6 +513,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .ritem .cm-avatar,.ritem .cm-avatar-ph{width:22px;height:22px;font-size:.6rem}
 .cdate{font-size:.6rem;color:var(--muted)}
 .ctxt{font-size:.82rem;color:var(--text);line-height:1.65;font-weight:300}
+.cm-mention{color:var(--accent);font-weight:500}
 .nocm{font-size:.78rem;color:var(--muted);font-style:italic}
 .admin-badge{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));padding:.15rem .45rem;font-weight:600;border-radius:2rem}
 .reply-btn{background:none;border:none;font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:.2rem .5rem;transition:color .2s}
@@ -1580,7 +1584,19 @@ function renderComment(id, c, replies){
         const endStr = formatEndDate(r.bannedUntil);
         return '<span class="cm-banned-badge" data-banned-until="'+r.bannedUntil+'" title="Berakhir '+endStr+'">🚫 <span class="ban-countdown">'+formatBanCountdown(rem)+'</span> — '+endStr+'</span>';
       })() : '';
-      return '<div class="ritem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+(r._roleBadge||'')+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div><div class="ctxt">'+esc(r.text)+rImgHtml+'</div></div>';
+      // Tombol balas reply → parentId tetap id komentar utama (flat thread)
+      const rReplyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
+      const rReplyBtn = _currentUser ? '<button class="reply-btn" data-togglereply="ritem-'+esc(r.id)+'">↩ Balas</button>' : '';
+      const rReplyForm = _currentUser ? (
+        '<div class="reply-form" id="rf-ritem-'+esc(r.id)+'">'+
+        '<div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">'+rReplyAsLabel+'</span></div>'+
+        '<textarea class="cmi" id="rt-ritem-'+esc(r.id)+'" rows="2" placeholder="Balas @'+esc(r.name)+'..."></textarea>'+
+        '<div class="reply-row">'+
+        '<button class="sbtn" style="padding:.5rem 1rem" data-postReply="'+esc(id)+'" data-mentionName="'+esc(r.name)+'">Kirim Balasan</button>'+
+        '<button class="rbtn-cancel" data-togglereply="ritem-'+esc(r.id)+'">✕ Batal</button>'+
+        '</div></div>'
+      ) : '';
+      return '<div class="ritem"><div class="chdr" style="margin-bottom:.25rem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+(r._roleBadge||'')+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div>'+rReplyBtn+'</div><div class="ctxt">'+renderText(r.text)+rImgHtml+'</div>'+rReplyForm+'</div>';
     }).join('')+'</div>';
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
@@ -1595,7 +1611,7 @@ function renderComment(id, c, replies){
         <span class="admin-cm-date">\${esc(c.date)}</span>
         \${delBtn}
       </div>
-      <div class="ctxt" style="padding:.1rem 0 .4rem">\${esc(c.text)}\${imgHtml}</div>
+      <div class="ctxt" style="padding:.1rem 0 .4rem">\${renderText(c.text)}\${imgHtml}</div>
       \${repHtml}
       <div class="reply-form" id="rf-\${id}">
         <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
@@ -1632,7 +1648,7 @@ function renderComment(id, c, replies){
   return \`<div class="citem">
     <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}\${c._roleBadge||''}</div><div class="cdate">\${esc(c.date)}</div>\${delBtn}</div>
     <button class="reply-btn" data-togglereply="\${id}">↩ Balas</button></div>
-    <div class="ctxt">\${esc(c.text)}\${imgHtml}</div>
+    <div class="ctxt">\${renderText(c.text)}\${imgHtml}</div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
@@ -1893,7 +1909,7 @@ document.getElementById('cmlist').addEventListener('click', e => {
 
   // Kirim balasan
   const postBtn = e.target.closest('[data-postReply]');
-  if (postBtn) { window.postReply(postBtn.dataset.postReply); return; }
+  if (postBtn) { const srcTa = postBtn.closest('.reply-form') ? postBtn.closest('.reply-form').querySelector('textarea') : null; window.postReply(postBtn.dataset.postReply, srcTa ? srcTa.id : null, postBtn.dataset.mentionName || null); return; }
 
   // Pilih foto reply
   const pickBtn = e.target.closest('[data-pickphoto]');
@@ -1918,12 +1934,17 @@ document.getElementById('cmlist').addEventListener('change', e => {
   if (inp) { window.handleReplyPhoto(inp.dataset.repid, inp); }
 });
 
-window.postReply = async parentId => {
+window.postReply = async (parentId, srcTaId, mentionName) => {
   if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
-  if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
+  if (_isBanned && !_isAdmin) { toast('\u{1F6AB} Akunmu dibanned, tidak bisa berkomentar.'); return; }
   const rateLimitErr = checkRateLimit('reply');
   if(rateLimitErr){ toast(rateLimitErr); return; }
-  const t=document.getElementById('rt-'+parentId).value.trim();
+  // Baca teks dari textarea aktif (bisa dari form ritem atau form utama)
+  const taId = srcTaId || ('rt-'+parentId);
+  const taEl = document.getElementById(taId);
+  let t = taEl ? taEl.value.trim() : '';
+  // Kalau dari form ritem, prepend @mention supaya jelas reply ke siapa
+  if(t && mentionName && !t.startsWith('@')) t = '@'+mentionName+' '+t;
   const replyImg = _replyImgMap[parentId] || null;
   if(!t && !replyImg)return;
   try{
@@ -1941,25 +1962,33 @@ window.postReply = async parentId => {
       isAdmin:_isAdmin
     });
     await saveRateLimit(_currentUser.uid, 'reply');
-    document.getElementById('rt-'+parentId).value='';
+    if(taEl) taEl.value='';
     removeReplyPhoto(parentId);
-    toggleReplyForm(parentId);
-    // Ambil uid pemilik komentar parent → kirim notifikasi
+    // Tutup semua reply form yang terbuka di thread ini
+    document.querySelectorAll('[id^="rf-"]').forEach(rf=>{
+      const rid=rf.id.replace('rf-','');
+      if(rid===parentId||rid.startsWith('ritem-')) rf.classList.remove('open');
+    });
+    // Notifikasi ke semua peserta thread (pemilik parent + semua replier sebelumnya)
     try{
-      const parentSnap=await getDoc(doc(db,'comments',parentId));
+      const currentSlug=location.pathname.split('/').pop().replace('.html','');
+      const songTitle=document.title.split(' - ')[0].replace('Lirik ','');
+      const [parentSnap, threadSnap]=await Promise.all([
+        getDoc(doc(db,'comments',parentId)),
+        getDocs(query(collection(db,'comments'),where('parentId','==',parentId)))
+      ]);
+      const notifTargets=new Map();
       if(parentSnap.exists()){
-        const parentData=parentSnap.data();
-        const currentSlug=location.pathname.split('/').pop().replace('.html','');
-        await sendNotif(
-          parentData.uid,
-          parentData.name||'',
-          t,
-          currentSlug,
-          document.title.split(' - ')[0].replace('Lirik ','')
-        );
+        const pd=parentSnap.data();
+        if(pd.uid&&pd.uid!==_currentUser.uid) notifTargets.set(pd.uid,pd.name||'');
       }
+      threadSnap.docs.forEach(d=>{
+        const rd=d.data();
+        if(rd.uid&&rd.uid!==_currentUser.uid&&!notifTargets.has(rd.uid)) notifTargets.set(rd.uid,rd.name||'');
+      });
+      await Promise.all([...notifTargets.entries()].map(([uid,name])=>sendNotif(uid,name,t,currentSlug,songTitle)));
     }catch(e){}
-    toast(_isAdmin ? 'Balasan admin terkirim! 👑' : 'Balasan terkirim! 💬');
+    toast(_isAdmin ? 'Balasan admin terkirim! \u{1F451}' : 'Balasan terkirim! \u{1F4AC}');
     rcm();
   }catch(e){toast('Gagal kirim.');}
 };
