@@ -561,19 +561,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .lro.h,.lid.h{display:none!important}
 .lsep{height:1px;background:linear-gradient(90deg,rgba(255,110,180,.2),transparent);opacity:.6;margin:.5rem 0}
 /* ── Related Songs ── */
-.related-section{margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--border)}
-.related-label{font-size:.55rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
-.related-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.85rem;margin-bottom:2.5rem}
-.rc{display:flex;flex-direction:column;text-decoration:none;border:1px solid rgba(255,110,180,.08);border-radius:3px;overflow:hidden;background:rgba(255,110,180,.02);transition:border-color .2s,background .2s,transform .2s;cursor:pointer}
-.rc:hover{border-color:rgba(255,110,180,.35);background:rgba(255,110,180,.05);transform:translateY(-2px)}
-.rc-img-wrap{width:100%;padding-top:100%;position:relative;overflow:hidden;background:#0d0616;flex-shrink:0}
-.rc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.65);transition:filter .3s,transform .3s;will-change:transform}
-.rc:hover .rc-img-wrap img{filter:saturate(.9);transform:scale(1.04)}
-.rc-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:rgba(255,110,180,.2)}
-.rc-info{padding:.55rem .65rem .65rem}
-.rc-title{font-family:var(--jp);font-size:.82rem;font-weight:600;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rc-artist{font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.related-section{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
+.related-label{font-size:.55rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:.9rem}
+.related-list{display:flex;flex-direction:column;gap:0;margin-bottom:2rem;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.rc{display:flex;align-items:center;gap:.75rem;text-decoration:none;padding:.55rem .75rem;border-bottom:1px solid var(--border);background:transparent;transition:background .15s;cursor:pointer}
+.rc:last-child{border-bottom:none}
+.rc:hover{background:rgba(255,110,180,.05)}
+.rc-thumb{width:40px;height:40px;border-radius:2px;overflow:hidden;flex-shrink:0;background:#0d0616;position:relative}
+.rc-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.7)}
+.rc-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:rgba(255,110,180,.25)}
+.rc-info{min-width:0;flex:1}
+.rc-title{font-family:var(--jp);font-size:.83rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+.rc-artist{font-size:.6rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-arr{font-size:.7rem;color:var(--muted);flex-shrink:0;transition:transform .15s,color .15s}
+.rc:hover .rc-arr{transform:translateX(3px);color:var(--accent)}
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
 .cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
 .cmform{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
@@ -874,37 +875,28 @@ body.gate-open #lyrView{padding-top:0}
         ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
       </div>
       ${(()=>{
+  const shuffle = arr => [...arr].sort(()=>Math.random()-.5);
+  const card = r => `<a class="rc" href="${BASE_URL}/lagu/${r.slug}">
+    <div class="rc-thumb">${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}</div>
+    <div class="rc-info">
+      <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+      <div class="rc-artist">${escHtml(r.artist)}</div>
+    </div>
+    <div class="rc-arr">›</div>
+  </a>`;
   const parts = [];
   if(relatedByArtist.length){
-    const cards = relatedByArtist.map(r=>`
-      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
-        <div class="rc-img-wrap">
-          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
-        </div>
-        <div class="rc-info">
-          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
-          <div class="rc-artist">${escHtml(r.artist)}</div>
-        </div>
-      </a>`).join('');
+    const items = shuffle(relatedByArtist).slice(0,4).map(card).join('');
     parts.push(`<div class="related-section">
       <div class="related-label">Lagu lain dari ${escHtml(artist)}</div>
-      <div class="related-grid">${cards}</div>
+      <div class="related-list">${items}</div>
     </div>`);
   }
   if(relatedByAnime.length){
-    const cards = relatedByAnime.map(r=>`
-      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
-        <div class="rc-img-wrap">
-          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
-        </div>
-        <div class="rc-info">
-          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
-          <div class="rc-artist">${escHtml(r.artist)}</div>
-        </div>
-      </a>`).join('');
+    const items = shuffle(relatedByAnime).slice(0,4).map(card).join('');
     parts.push(`<div class="related-section">
       <div class="related-label">Lagu lain dari ${escHtml(anime)}</div>
-      <div class="related-grid">${cards}</div>
+      <div class="related-list">${items}</div>
     </div>`);
   }
   return parts.join('');
@@ -2726,10 +2718,10 @@ async function main() {
   for(const {song, slug: finalSlug} of songMeta){
     // max 6 lagu terkait, exclude lagu itu sendiri
     const relByArtist = song.artist
-      ? (byArtist[song.artist]||[]).filter(r=>r.slug!==finalSlug).slice(0,6)
+      ? (byArtist[song.artist]||[]).filter(r=>r.slug!==finalSlug)
       : [];
     const relByAnime = song.anime
-      ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug).slice(0,6)
+      ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
       : [];
 
     const html=generateHTML(song,finalSlug,relByArtist,relByAnime);
