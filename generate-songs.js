@@ -55,7 +55,7 @@ function obfuscateLine(str) {
   }).join('');
 }
 
-function generateHTML(song, slug) {
+function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
   const titleDisplay = song.titleJp || '';
   const titleRo      = song.titleRo || '';
   const titleId      = song.titleId || '';
@@ -93,34 +93,97 @@ function generateHTML(song, slug) {
 
 
 
+  const today = new Date().toISOString().split('T')[0];
   const schema = JSON.stringify([
     {
-      "@context":"https://schema.org","@type":"MusicComposition",
+      "@context":"https://schema.org",
+      "@type":"MusicComposition",
       "name": titleMain,
       "alternateName": [titleDisplay, titleRo, titleId, anime, animeEn].filter(Boolean),
-      "composer":{"@type":"MusicGroup","name":artist},
+      "composer":{"@type":"MusicGroup","name":artist,"url":`${BASE_URL}/index.html?q=${encodeURIComponent(artist)}`},
+      "lyricist":{"@type":"MusicGroup","name":artist},
+      ...(song.genre ? {"genre": song.genre} : {}),
       "inLanguage":"ja",
       "description":metaDesc,
       "url":`${BASE_URL}/lagu/${slug}`,
       ...(songType ? {"musicCompositionForm": songType} : {}),
-      ...(anime ? {"isPartOf": {"@type":"TVSeries","name":anime}} : {}),
-      ...(song.img ? {"image": song.img} : {}),
-      ...(song.sp ? {"sameAs": song.sp} : {})
+      ...(anime ? {"isPartOf": {"@type":"TVSeries","name":anime,"alternateName":animeEn||undefined}} : {}),
+      ...(song.img ? {"image":{"@type":"ImageObject","url":song.img,"width":600,"height":600}} : {}),
+      ...(song.sp ? {"sameAs": Array.isArray(song.sp)?song.sp:[song.sp]} : {}),
+      "recordedAs":{
+        "@type":"MusicRecording",
+        "name": titleMain,
+        "byArtist":{"@type":"MusicGroup","name":artist},
+        "inLanguage":"ja",
+        ...(song.sp ? {"url": Array.isArray(song.sp)?song.sp[0]:song.sp} : {})
+      }
     },
     {
-      "@context":"https://schema.org","@type":"WebPage",
+      "@context":"https://schema.org",
+      "@type":"WebPage",
       "name":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
       "description":metaDesc,
       "url":`${BASE_URL}/lagu/${slug}`,
       "inLanguage":"id",
-      "isPartOf":{"@type":"WebSite","name":"YumeSubs","url":BASE_URL},
+      "datePublished":"2025-01-01",
+      "dateModified":today,
+      "isPartOf":{
+        "@type":"WebSite",
+        "name":"YumeSubs",
+        "alternateName":["YumeLyrics","Yume Subs","yumelyrics"],
+        "url":BASE_URL,
+        "description":"Website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia.",
+        "potentialAction":{
+          "@type":"SearchAction",
+          "target":{"@type":"EntryPoint","urlTemplate":`${BASE_URL}/index.html?q={search_term_string}`},
+          "query-input":"required name=search_term_string"
+        },
+        "publisher":{
+          "@type":"Organization",
+          "name":"YumeSubs",
+          "url":BASE_URL,
+          "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
+        }
+      },
       "breadcrumb":{
         "@type":"BreadcrumbList",
         "itemListElement":[
-          {"@type":"ListItem","position":1,"name":"Katalog","item":`${BASE_URL}/index.html`},
-          {"@type":"ListItem","position":2,"name":`${titleMain} - ${artist}`,"item":`${BASE_URL}/lagu/${slug}`}
+          {"@type":"ListItem","position":1,"name":"Beranda","item":BASE_URL},
+          {"@type":"ListItem","position":2,"name":"Katalog","item":`${BASE_URL}/index.html`},
+          {"@type":"ListItem","position":3,"name":`${titleMain} - ${artist}`,"item":`${BASE_URL}/lagu/${slug}`}
         ]
+      },
+      "mainEntity":{
+        "@type":"MusicComposition",
+        "name":titleMain,
+        "composer":{"@type":"MusicGroup","name":artist}
       }
+    },
+    {
+      "@context":"https://schema.org",
+      "@type":"Article",
+      "headline":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
+      "description":metaDesc,
+      "url":`${BASE_URL}/lagu/${slug}`,
+      "inLanguage":"id",
+      "datePublished":"2025-01-01",
+      "dateModified":today,
+      "author":{"@type":"Organization","name":"YumeSubs","url":BASE_URL},
+      "publisher":{
+        "@type":"Organization",
+        "name":"YumeSubs",
+        "url":BASE_URL,
+        "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
+      },
+      "image": song.img ? {"@type":"ImageObject","url":song.img,"width":600,"height":600} : {"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512},
+      "about":[
+        {"@type":"Thing","name":titleMain},
+        {"@type":"Thing","name":artist},
+        ...(anime ? [{"@type":"Thing","name":anime}] : [])
+      ],
+      "keywords":[titleMain, artist, anime, "lirik jepang", "terjemahan indonesia", "romaji"].filter(Boolean).join(", "),
+      "articleSection":"Lirik Lagu Jepang",
+      "isAccessibleForFree":true
     }
   ]);
 
@@ -139,9 +202,26 @@ function generateHTML(song, slug) {
 <meta name="msapplication-TileColor" content="#06030f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="YumeSubs">
+<meta name="apple-touch-fullscreen" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="readable" content="false">
 <meta name="accessibility" content="false">
 <meta name="application-name" content="YumeSubs">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="format-detection" content="telephone=no">
+<meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="copyright" content="YumeSubs — yumelyrics.my.id">
+<meta name="geo.region" content="ID">
+<meta name="geo.placename" content="Indonesia">
+<meta name="geo.country" content="Indonesia">
+<meta name="content-language" content="id">
+<meta name="coverage" content="Worldwide">
+<meta name="target" content="all">
+<meta name="classification" content="Entertainment/Music">
+<meta name="msapplication-TileImage" content="${BASE_URL}/anime_icon.png">
+<meta name="msapplication-config" content="none">
 <meta http-equiv="Pragma" content="no-cache">
 <style>/* reader-mode-poison */article.rm-poison p{font-size:1rem;line-height:1.6}</style>
 <meta name="language" content="Indonesian">
@@ -379,15 +459,22 @@ function generateHTML(song, slug) {
 <meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}">
-<meta property="og:type" content="article">
+<meta property="og:type" content="music.song">
+<meta property="music:musician" content="${escHtml(artist)}">
+${anime ? `<meta property="music:album" content="${escHtml(anime)}">` : ""}
 <meta property="og:site_name" content="YumeSubs">
 <meta property="og:locale" content="id_ID">
+<meta property="og:locale:alternate" content="ja_JP">
 ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
+<meta property="og:image:secure_url" content="${escHtml(song.img)}">
 <meta property="og:image:alt" content="Cover ${escHtml(titleMain)} - ${escHtml(artist)}">
 <meta property="og:image:width" content="600">
-<meta property="og:image:height" content="600">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">
+<meta property="og:image:height" content="600">
+<meta property="og:image:type" content="image/jpeg">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">
+<meta property="og:image:secure_url" content="${BASE_URL}/anime_icon.png">
 <meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">`}
+<meta property="og:image:height" content="512">
+<meta property="og:image:type" content="image/png">`}
 <meta property="article:author" content="YumeSubs">
 <meta property="article:publisher" content="${BASE_URL}">
 <meta property="article:section" content="Lirik Lagu Jepang">
@@ -409,9 +496,13 @@ ${songType ? `<meta property="article:tag" content="${escHtml(songType)}">` : ''
 <meta name="twitter:data1" content="${escHtml(artist)}">
 <meta name="twitter:label2" content="Bahasa">
 <meta name="twitter:data2" content="Jepang + Terjemahan Indonesia">
-${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
+${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">
+<meta name="twitter:image:alt" content="Cover ${escHtml(titleMain)} - ${escHtml(artist)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">
+<meta name="twitter:image:alt" content="YumeSubs — Lirik Lagu Jepang">`}
+<meta name="twitter:domain" content="yumelyrics.my.id">
 <link rel="canonical" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}">
+<link rel="alternate" hreflang="ja" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
@@ -469,6 +560,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 [data-obf="1"] span[data-c]{white-space:pre}
 .lro.h,.lid.h{display:none!important}
 .lsep{height:1px;background:linear-gradient(90deg,rgba(255,110,180,.2),transparent);opacity:.6;margin:.5rem 0}
+/* ── Related Songs ── */
+.related-section{margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--border)}
+.related-label{font-size:.55rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
+.related-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.85rem;margin-bottom:2.5rem}
+.rc{display:flex;flex-direction:column;text-decoration:none;border:1px solid rgba(255,110,180,.08);border-radius:3px;overflow:hidden;background:rgba(255,110,180,.02);transition:border-color .2s,background .2s,transform .2s;cursor:pointer}
+.rc:hover{border-color:rgba(255,110,180,.35);background:rgba(255,110,180,.05);transform:translateY(-2px)}
+.rc-img-wrap{width:100%;padding-top:100%;position:relative;overflow:hidden;background:#0d0616;flex-shrink:0}
+.rc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.65);transition:filter .3s,transform .3s;will-change:transform}
+.rc:hover .rc-img-wrap img{filter:saturate(.9);transform:scale(1.04)}
+.rc-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:rgba(255,110,180,.2)}
+.rc-info{padding:.55rem .65rem .65rem}
+.rc-title{font-family:var(--jp);font-size:.82rem;font-weight:600;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-artist{font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cmsec{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);max-width:600px}
 .cmtit{font-size:.62rem;color:var(--muted);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.5rem}
 .cmform{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
@@ -2511,6 +2616,42 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
 })();
 </script>
+${(()=>{
+  const parts = [];
+  if(relatedByArtist.length){
+    const cards = relatedByArtist.map(r=>`
+      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
+        <div class="rc-img-wrap">
+          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
+        </div>
+        <div class="rc-info">
+          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+          <div class="rc-artist">${escHtml(r.artist)}</div>
+        </div>
+      </a>`).join('');
+    parts.push(`<div class="related-section">
+      <div class="related-label">Lagu lain dari ${escHtml(artist)}</div>
+      <div class="related-grid">${cards}</div>
+    </div>`);
+  }
+  if(relatedByAnime.length){
+    const cards = relatedByAnime.map(r=>`
+      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
+        <div class="rc-img-wrap">
+          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
+        </div>
+        <div class="rc-info">
+          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+          <div class="rc-artist">${escHtml(r.artist)}</div>
+        </div>
+      </a>`).join('');
+    parts.push(`<div class="related-section">
+      <div class="related-label">Lagu lain dari ${escHtml(anime)}</div>
+      <div class="related-grid">${cards}</div>
+    </div>`);
+  }
+  return parts.join('');
+})()}
 <!-- rm-decoy: articles dengan skor konten tinggi agar Readability.js pilih ini, bukan lirik -->
 <div id="rm-decoy-wrap">
   <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik yang kamu cari di halaman ini dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan secara penuh melalui browser tanpa Reader Mode aktif.</p><p>Reader Mode tidak didukung pada halaman ini karena konten lirik dilindungi hak cipta dan memerlukan render JavaScript penuh untuk ditampilkan dengan benar. Sistem pengacakan karakter yang kami gunakan membuat lirik hanya terbaca oleh engine render browser, bukan oleh parser teks seperti Reader Mode.</p><p>Silakan kunjungi yumelyrics.my.id secara langsung untuk pengalaman terbaik. Matikan Reader Mode di browser Anda dan muat ulang halaman untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>YumeSubs adalah situs lirik lagu Jepang dengan terjemahan Indonesia terlengkap. Semua lirik diterjemahkan secara manual oleh tim kami untuk memastikan akurasi dan kualitas terjemahan. Dengan mengunjungi halaman asli, Anda juga bisa menikmati fitur toggle romaji, terjemahan, dan komentar komunitas.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta. Dilarang menyalin, mendistribusikan, atau mempublikasikan ulang tanpa izin tertulis dari YumeSubs. Pelanggaran hak cipta dapat dikenai sanksi hukum sesuai ketentuan yang berlaku.</p></article>
@@ -2544,23 +2685,66 @@ async function main() {
   for(const f of oldFiles) fs.unlinkSync(path.join('lagu', f));
   console.log(`🗑  ${oldFiles.length} file lama dihapus`);
 
-  const urls = [`  <url><loc>${BASE_URL}/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`];
-  const today = new Date().toISOString().split('T')[0];
+  const urls = [
+    `  <url><loc>${BASE_URL}/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/index.html</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/latihan.html</loc><lastmod>${today}</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
+  ];
   const slugMap = {};
 
+  // Build slug map dulu (pass 1) baru generate HTML (pass 2)
+  const songMeta = []; // [{song, slug}]
   for(const song of songs){
     const slug = toSlug(song.titleRo, song.titleJp, song.id);
     let finalSlug=slug, counter=2;
     while(slugMap[finalSlug]&&slugMap[finalSlug]!==song.id) finalSlug=`${slug}-${counter++}`;
     slugMap[finalSlug]=song.id;
-
-    const html=generateHTML(song,finalSlug);
-    fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
-    console.log(`  ✓ lagu/${finalSlug}.html`);
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>`);
+    songMeta.push({song, slug:finalSlug});
   }
 
-  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,'utf8');
+  // Build lookup: artist -> songs, anime -> songs
+  const byArtist = {};
+  const byAnime  = {};
+  for(const {song, slug} of songMeta){
+    const ref = {
+      slug, img: song.img||'', artist: song.artist||'',
+      titleMain: song.titleRo||song.titleJp||'',
+      titleDisplay: song.titleJp||'',
+    };
+    if(song.artist){
+      if(!byArtist[song.artist]) byArtist[song.artist]=[];
+      byArtist[song.artist].push(ref);
+    }
+    if(song.anime){
+      if(!byAnime[song.anime]) byAnime[song.anime]=[];
+      byAnime[song.anime].push(ref);
+    }
+  }
+
+  for(const {song, slug: finalSlug} of songMeta){
+    // max 6 lagu terkait, exclude lagu itu sendiri
+    const relByArtist = song.artist
+      ? (byArtist[song.artist]||[]).filter(r=>r.slug!==finalSlug).slice(0,6)
+      : [];
+    const relByAnime = song.anime
+      ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug).slice(0,6)
+      : [];
+
+    const html=generateHTML(song,finalSlug,relByArtist,relByAnime);
+    fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
+    console.log(`  ✓ lagu/${finalSlug}.html`);
+    const imgTag = song.img ? `
+    <image:image>
+      <image:loc>${song.img}</image:loc>
+      <image:title>${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')}</image:title>
+      <image:caption>Lirik ${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')} | YumeSubs</image:caption>
+    </image:image>` : '';
+    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}
+  </url>`);
+  }
+
+  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
   console.log(`\n✅ Selesai! ${songs.length} halaman + sitemap.xml dibuat`);
   process.exit(0);
 }
