@@ -123,11 +123,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 /* KARTU LAGU */
 .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;padding:0 2.5rem}
 .sc{background:rgba(12,6,28,.9);border:1px solid rgba(255,110,180,.1);cursor:pointer;transition:border-color .3s,box-shadow .3s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:4px}
+.sc:active{transition:none}
 .sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.05) 0%,transparent 50%,rgba(0,229,255,.03) 100%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1}
 .sc:hover{border-color:rgba(255,110,180,.45);box-shadow:0 8px 32px rgba(255,110,180,.15),0 0 0 1px rgba(255,110,180,.1)}
 .sc:hover::before{opacity:1}
 .sc-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;flex-shrink:0;position:relative;background:#0d0c1a}
-.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75);transition:filter .4s,transform .4s;transform:scale(1);transform-origin:center}
+.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75);transition:filter .4s,transform .4s,opacity .35s;transform:scale(1);transform-origin:center;opacity:1;will-change:transform,filter,opacity}
+.sc-img-wrap img.lazy-img{opacity:0}
+.sc-img-wrap img.lazy-loaded{opacity:1}
 .sc:hover .sc-img-wrap img{filter:saturate(.9) brightness(.9);transform:scale(1.05)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:rgba(255,110,180,.5)}
@@ -140,8 +143,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scid{font-size:.72rem;color:var(--muted);font-style:italic;font-weight:300;margin-bottom:.8rem}
 .scf{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
 .scar{font-size:.65rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
-.scarr{font-size:.7rem;color:var(--muted);transition:transform .2s,color .2s}
+.scarr{font-size:.7rem;color:var(--muted);transition:transform .2s,color .2s;display:inline-block}
 .sc:hover .scarr{transform:translateX(4px);color:var(--accent2)}
+.sc:active .scarr{transform:none;transition:none}
 
 .no-result{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;font-style:italic}
 .loading-msg{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;letter-spacing:.05em}
@@ -487,7 +491,7 @@ function buildCard(s, i) {
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
   const imgSrc = s.img || '';
-  const imgEl = imgCache.has(imgSrc) ? `<img src="${imgSrc}" alt="${s.titleJp}" loading="lazy" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">` : `<img src="https://c.tenor.com/PICSgVJuzWgAAAAd/tenor.gif" data-src="${imgSrc}" alt="${s.titleJp}" class="lazy-img" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  const imgEl = imgCache.has(imgSrc) ? `<img src="${imgSrc}" alt="${s.titleJp}" loading="lazy" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">` : `<img src="" data-src="${imgSrc}" alt="${s.titleJp}" class="lazy-img" onerror="this.classList.remove('lazy-img');this.classList.add('lazy-loaded');this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
   div.innerHTML = `
     <div class="sc-corner"></div>
     <div class="sc-img-wrap">${imgEl}</div>
@@ -622,7 +626,7 @@ function initLazy(){
         const real = img.dataset.src;
         if(real){
           img.src = real;
-          img.onload = () => { imgCache.add(real); img.classList.remove('lazy-img'); delete img.dataset.src; };
+          img.onload = () => { imgCache.add(real); img.classList.remove('lazy-img'); img.classList.add('lazy-loaded'); delete img.dataset.src; };
         }
         o.unobserve(img);
       }
