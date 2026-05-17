@@ -873,6 +873,42 @@ body.gate-open #lyrView{padding-top:0}
         </p>
         ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
       </div>
+      ${(()=>{
+  const parts = [];
+  if(relatedByArtist.length){
+    const cards = relatedByArtist.map(r=>`
+      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
+        <div class="rc-img-wrap">
+          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
+        </div>
+        <div class="rc-info">
+          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+          <div class="rc-artist">${escHtml(r.artist)}</div>
+        </div>
+      </a>`).join('');
+    parts.push(`<div class="related-section">
+      <div class="related-label">Lagu lain dari ${escHtml(artist)}</div>
+      <div class="related-grid">${cards}</div>
+    </div>`);
+  }
+  if(relatedByAnime.length){
+    const cards = relatedByAnime.map(r=>`
+      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
+        <div class="rc-img-wrap">
+          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
+        </div>
+        <div class="rc-info">
+          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+          <div class="rc-artist">${escHtml(r.artist)}</div>
+        </div>
+      </a>`).join('');
+    parts.push(`<div class="related-section">
+      <div class="related-label">Lagu lain dari ${escHtml(anime)}</div>
+      <div class="related-grid">${cards}</div>
+    </div>`);
+  }
+  return parts.join('');
+})()}
       <div class="cmsec">
         <div class="cmtit">Komentar</div>
         <!-- Login-gated comment form -->
@@ -2616,42 +2652,6 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
 })();
 </script>
-${(()=>{
-  const parts = [];
-  if(relatedByArtist.length){
-    const cards = relatedByArtist.map(r=>`
-      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
-        <div class="rc-img-wrap">
-          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
-        </div>
-        <div class="rc-info">
-          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
-          <div class="rc-artist">${escHtml(r.artist)}</div>
-        </div>
-      </a>`).join('');
-    parts.push(`<div class="related-section">
-      <div class="related-label">Lagu lain dari ${escHtml(artist)}</div>
-      <div class="related-grid">${cards}</div>
-    </div>`);
-  }
-  if(relatedByAnime.length){
-    const cards = relatedByAnime.map(r=>`
-      <a class="rc" href="${BASE_URL}/lagu/${r.slug}">
-        <div class="rc-img-wrap">
-          ${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}
-        </div>
-        <div class="rc-info">
-          <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
-          <div class="rc-artist">${escHtml(r.artist)}</div>
-        </div>
-      </a>`).join('');
-    parts.push(`<div class="related-section">
-      <div class="related-label">Lagu lain dari ${escHtml(anime)}</div>
-      <div class="related-grid">${cards}</div>
-    </div>`);
-  }
-  return parts.join('');
-})()}
 <!-- rm-decoy: articles dengan skor konten tinggi agar Readability.js pilih ini, bukan lirik -->
 <div id="rm-decoy-wrap">
   <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik yang kamu cari di halaman ini dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan secara penuh melalui browser tanpa Reader Mode aktif.</p><p>Reader Mode tidak didukung pada halaman ini karena konten lirik dilindungi hak cipta dan memerlukan render JavaScript penuh untuk ditampilkan dengan benar. Sistem pengacakan karakter yang kami gunakan membuat lirik hanya terbaca oleh engine render browser, bukan oleh parser teks seperti Reader Mode.</p><p>Silakan kunjungi yumelyrics.my.id secara langsung untuk pengalaman terbaik. Matikan Reader Mode di browser Anda dan muat ulang halaman untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>YumeSubs adalah situs lirik lagu Jepang dengan terjemahan Indonesia terlengkap. Semua lirik diterjemahkan secara manual oleh tim kami untuk memastikan akurasi dan kualitas terjemahan. Dengan mengunjungi halaman asli, Anda juga bisa menikmati fitur toggle romaji, terjemahan, dan komentar komunitas.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta. Dilarang menyalin, mendistribusikan, atau mempublikasikan ulang tanpa izin tertulis dari YumeSubs. Pelanggaran hak cipta dapat dikenai sanksi hukum sesuai ketentuan yang berlaku.</p></article>
