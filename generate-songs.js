@@ -539,6 +539,22 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .spbtn{display:inline-flex;align-items:center;gap:.5rem;background:#1DB954;border:none;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#000;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:600;transition:opacity .2s;margin-top:.8rem;border-radius:2rem}
 .spbtn:hover{opacity:.85}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
+.thumbs-wrap{display:flex;align-items:center;gap:.75rem;margin-top:1.2rem}
+.thumbs-btn{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,110,180,.07);border:1px solid rgba(255,110,180,.25);color:var(--text);font-family:var(--en);font-size:.8rem;font-weight:600;letter-spacing:.04em;padding:.5rem .9rem;border-radius:2rem;cursor:pointer;transition:all .2s;line-height:1}
+.thumbs-btn svg{width:16px;height:16px;flex-shrink:0;transition:transform .2s}
+.thumbs-btn:hover{background:rgba(255,110,180,.14);border-color:rgba(255,110,180,.5)}
+.thumbs-btn.voted{background:rgba(255,110,180,.18);border-color:var(--accent);color:var(--accent)}
+.thumbs-btn.voted svg{stroke:var(--accent);transform:scale(1.15)}
+.thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes thumbpop{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-12deg)}100%{transform:scale(1.15)}}
+.thumbs-label{font-size:.72rem;color:var(--muted)}
+.cm-thumbs{display:inline-flex;align-items:center;gap:.3rem;margin-top:.5rem}
+.cm-thumb-btn{display:inline-flex;align-items:center;gap:.28rem;background:none;border:1px solid rgba(255,255,255,.1);color:var(--muted);font-size:.72rem;font-family:var(--en);padding:.22rem .6rem;border-radius:1rem;cursor:pointer;transition:all .18s;line-height:1}
+.cm-thumb-btn svg{width:13px;height:13px;flex-shrink:0;transition:transform .18s}
+.cm-thumb-btn:hover{border-color:rgba(255,110,180,.4);color:var(--text)}
+.cm-thumb-btn.voted{border-color:rgba(255,110,180,.5);color:var(--accent);background:rgba(255,110,180,.08)}
+.cm-thumb-btn.voted svg{stroke:var(--accent);transform:scale(1.15)}
+.cm-thumb-btn.pop svg{animation:thumbpop .3s cubic-bezier(.34,1.56,.64,1)}
 .nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#252525;border:1px solid rgba(255,255,255,.12);font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:600;transition:all .2s;margin-top:.8rem;border-radius:2rem}
 .nicobtn:hover{background:#333;border-color:rgba(255,255,255,.25)}
 .nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--border);display:block;margin-top:1.2rem;filter:saturate(.7) brightness(.8)}
@@ -719,6 +735,13 @@ body.gate-open #lyrView{padding-top:0}
       ${song.ytId ? `<div class="ytwrap"><div class="ytlb">Video</div><iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
       ${song.nicoId ? `<div class="ytwrap"><div class="ytlb">Niconico<\/div><img class="nicothumb" src="https:\/\/nicovideo.cdn.nimg.jp\/thumbnails\/${escHtml(song.nicoId.replace("sm",""))}\/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'"><a class="nicobtn" href="https:\/\/www.nicovideo.jp\/watch\/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"\/><\/svg>Tonton di Niconico<\/a><\/div>` : ''}
       ${song.sp ? `<a class="spbtn" href="${escHtml(song.sp)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>Dengarkan di Spotify</a>` : ''}
+      <div class="thumbs-wrap" id="thumbs-wrap">
+        <button class="thumbs-btn" id="thumbs-btn" onclick="doThumb()" aria-label="Suka lagu ini">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          <span id="thumbs-count">…</span>
+        </button>
+        <div class="thumbs-label" id="thumbs-label">Suka lagu ini?</div>
+      </div>
     </div>
     <div>
       <div class="lctrl">
@@ -883,6 +906,123 @@ const provider = new GoogleAuthProvider();
 
 const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
+
+/* ── THUMBS (Suka) ── */
+// Visitor ID permanent untuk guest (tidak login)
+function getVisitorId(){
+  let id = localStorage.getItem('ym_visitor_id');
+  if(!id){
+    id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+    localStorage.setItem('ym_visitor_id', id);
+  }
+  return id;
+}
+
+let _thumbVoted = false;
+
+async function loadThumb(){
+  try {
+    const songSnap = await getDoc(doc(db,'songs',SONG_ID));
+    const total = songSnap.exists() ? (songSnap.data().thumbs || 0) : 0;
+    document.getElementById('thumbs-count').textContent = total;
+
+    // Cek apakah sudah vote
+    const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+    const voteSnap = await getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid));
+    _thumbVoted = voteSnap.exists();
+    const btn = document.getElementById('thumbs-btn');
+    if(_thumbVoted){
+      btn.classList.add('voted');
+      document.getElementById('thumbs-label').textContent = 'Kamu sudah suka lagu ini';
+    }
+  } catch(e){}
+}
+
+window.doThumb = async function(){
+  const btn = document.getElementById('thumbs-btn');
+  if(!btn || btn.disabled) return;
+  btn.disabled = true;
+
+  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+  const voteRef = doc(db,'song_thumbs',SONG_ID,'votes',uid);
+  const songRef = doc(db,'songs',SONG_ID);
+  const countEl = document.getElementById('thumbs-count');
+  const labelEl = document.getElementById('thumbs-label');
+
+  try {
+    if(!_thumbVoted){
+      // Tambah vote
+      await setDoc(voteRef, { ts: Date.now(), uid });
+      await updateDoc(songRef, { thumbs: increment(1) });
+      _thumbVoted = true;
+      btn.classList.add('voted','pop');
+      setTimeout(()=>btn.classList.remove('pop'),400);
+      countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
+      labelEl.textContent = 'Kamu sudah suka lagu ini';
+    } else {
+      // Hapus vote (toggle)
+      await deleteDoc(voteRef);
+      await updateDoc(songRef, { thumbs: increment(-1) });
+      _thumbVoted = false;
+      btn.classList.remove('voted');
+      countEl.textContent = Math.max(0,(parseInt(countEl.textContent)||1) - 1);
+      labelEl.textContent = 'Suka lagu ini?';
+    }
+  } catch(e){
+    console.error('Thumb error',e);
+  }
+  btn.disabled = false;
+};
+
+loadThumb();
+
+/* ── THUMBS KOMENTAR ── */
+const _cmThumbState = {}; // { [commentId]: true/false }
+
+async function loadCommentThumbs(commentIds){
+  if(!commentIds.length) return;
+  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+  await Promise.all(commentIds.map(async id => {
+    try {
+      const voteSnap = await getDoc(doc(db,'comment_thumbs',id,'votes',uid));
+      _cmThumbState[id] = voteSnap.exists();
+      const btn = document.querySelector('[data-cmthumb="'+id+'"]');
+      if(btn && _cmThumbState[id]) btn.classList.add('voted');
+
+      const cmSnap = await getDoc(doc(db,'comments',id));
+      const count = cmSnap.exists() ? (cmSnap.data().thumbs || 0) : 0;
+      const countEl = document.getElementById('cmtc-'+id);
+      if(countEl) countEl.textContent = count || 0;
+    } catch(e){}
+  }));
+}
+
+window.doCommentThumb = async function(cmId, btn){
+  if(!btn || btn.disabled) return;
+  btn.disabled = true;
+  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+  const voteRef = doc(db,'comment_thumbs',cmId,'votes',uid);
+  const cmRef = doc(db,'comments',cmId);
+  const countEl = document.getElementById('cmtc-'+cmId);
+
+  try {
+    if(!_cmThumbState[cmId]){
+      await setDoc(voteRef, { ts: Date.now(), uid });
+      await updateDoc(cmRef, { thumbs: increment(1) });
+      _cmThumbState[cmId] = true;
+      btn.classList.add('voted','pop');
+      setTimeout(()=>btn.classList.remove('pop'),350);
+      if(countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
+    } else {
+      await deleteDoc(voteRef);
+      await updateDoc(cmRef, { thumbs: increment(-1) });
+      _cmThumbState[cmId] = false;
+      btn.classList.remove('voted');
+      if(countEl) countEl.textContent = Math.max(0,(parseInt(countEl.textContent)||1) - 1);
+    }
+  } catch(e){ console.error('Comment thumb error',e); }
+  btn.disabled = false;
+};
 
 /* ── Auth: Google Login Gate ── */
 let _currentUser = null;
@@ -1615,6 +1755,7 @@ function renderComment(id, c, replies){
         \${delBtn}
       </div>
       <div class="ctxt" style="padding:.1rem 0 .4rem">\${renderText(c.text)}\${imgHtml}</div>
+      <div class="cm-thumbs"><button class="cm-thumb-btn" data-cmthumb="\${id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg><span class="cm-thumb-count" id="cmtc-\${id}">…</span></button></div>
       \${repHtml}
       <div class="reply-form" id="rf-\${id}">
         <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
@@ -1652,6 +1793,7 @@ function renderComment(id, c, replies){
     <div class="chdr"><div class="chdr-left">\${avHtml}<div class="cname">\${esc(c.name)}\${bannedBadgeHtml}\${c._roleBadge||''}</div><div class="cdate">\${esc(c.date)}</div>\${delBtn}</div>
     <button class="reply-btn" data-togglereply="\${id}">↩ Balas</button></div>
     <div class="ctxt">\${renderText(c.text)}\${imgHtml}</div>
+    <div class="cm-thumbs"><button class="cm-thumb-btn" data-cmthumb="\${id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg><span class="cm-thumb-count" id="cmtc-\${id}">…</span></button></div>
     \${repHtml}
     <div class="reply-form" id="rf-\${id}">
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">\${replyAsLabel}</span></div>
@@ -1886,6 +2028,7 @@ async function rcm(){
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
     startBanTicker();
     _resolveCustomRoleBadges(); // resolve CR: custom role badges async
+    loadCommentThumbs(parents.map(c=>c.id)); // load thumbs untuk semua komentar
   }catch(e){
     console.error('[rcm] error:', e.code, e.message, e);
     el.innerHTML='<div class="nocm">Gagal memuat komentar. ('+( e.code||e.message)+')</div>';
@@ -1932,6 +2075,10 @@ document.getElementById('cmlist').addEventListener('click', e => {
   // Lightbox foto
   const imgEl = e.target.closest('.cm-lightbox-img');
   if (imgEl && imgEl.src) { window.openLightbox(imgEl.src); return; }
+
+  // Thumbs komentar
+  const thumbBtn = e.target.closest('[data-cmthumb]');
+  if (thumbBtn) { window.doCommentThumb(thumbBtn.dataset.cmthumb, thumbBtn); return; }
 });
 
 // Input file reply — pakai event delegation juga
