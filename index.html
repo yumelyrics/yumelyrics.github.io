@@ -122,16 +122,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* KARTU LAGU */
 .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;padding:0 2.5rem}
-.sc{background:rgba(12,6,28,.9);border:1px solid rgba(255,110,180,.1);cursor:pointer;transition:border-color .3s,box-shadow .3s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:4px}
-.sc:active{transition:none}
-.sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.05) 0%,transparent 50%,rgba(0,229,255,.03) 100%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1}
-.sc:hover{border-color:rgba(255,110,180,.45);box-shadow:0 8px 32px rgba(255,110,180,.15),0 0 0 1px rgba(255,110,180,.1)}
+.sc{background:rgba(12,6,28,.9);border:1px solid rgba(255,110,180,.1);cursor:pointer;transition:border-color .25s,box-shadow .25s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:4px;contain:layout style}
+.sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,110,180,.06) 0%,transparent 50%,rgba(0,229,255,.04) 100%);pointer-events:none;opacity:0;transition:opacity .25s;z-index:1}
+.sc:hover{border-color:rgba(255,110,180,.45);box-shadow:0 6px 24px rgba(255,110,180,.12)}
 .sc:hover::before{opacity:1}
-.sc-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;flex-shrink:0;position:relative;background:#0d0c1a}
-.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.6) brightness(.75);transition:filter .4s,transform .4s,opacity .35s;transform:scale(1);transform-origin:center;opacity:1;will-change:transform,filter,opacity}
+/* padding-top trick: tinggi selalu = lebar, tidak pernah shift layout */
+.sc-img-wrap{width:100%;padding-top:100%;position:relative;overflow:hidden;flex-shrink:0;background:#0d0c1a}
+.sc-img-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0) scale(1);transform-origin:center;transition:transform .35s ease,opacity .3s ease;opacity:1}
 .sc-img-wrap img.lazy-img{opacity:0}
 .sc-img-wrap img.lazy-loaded{opacity:1}
-.sc:hover .sc-img-wrap img{filter:saturate(.9) brightness(.9);transform:scale(1.05)}
+/* overlay gelap menggantikan filter animasi — jauh lebih ringan di GPU */
+.sc-img-wrap::after{content:'';position:absolute;inset:0;background:rgba(6,3,15,.4);transition:background .25s;pointer-events:none;z-index:1}
+.sc:hover .sc-img-wrap::after{background:rgba(6,3,15,.1)}
+.sc:hover .sc-img-wrap img{transform:translateZ(0) scale(1.04)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:rgba(255,110,180,.5)}
 .sc-corner::before{top:0;right:0;width:1px;height:14px}
@@ -143,9 +146,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scid{font-size:.72rem;color:var(--muted);font-style:italic;font-weight:300;margin-bottom:.8rem}
 .scf{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
 .scar{font-size:.65rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
-.scarr{font-size:.7rem;color:var(--muted);transition:transform .2s,color .2s;display:inline-block}
+.scarr{font-size:.7rem;color:var(--muted);transition:transform .2s,color .2s;display:inline-block;will-change:transform}
 .sc:hover .scarr{transform:translateX(4px);color:var(--accent2)}
-.sc:active .scarr{transform:none;transition:none}
 
 .no-result{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;font-style:italic}
 .loading-msg{padding:2rem 2.5rem;color:var(--muted);font-size:.8rem;letter-spacing:.05em}
