@@ -866,8 +866,7 @@ import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, set
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
-  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
 
 const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -879,7 +878,6 @@ const _app = initializeApp({
 });
 const db       = getFirestore(_app);
 const auth     = getAuth(_app);
-const storage  = getStorage(_app);
 const provider = new GoogleAuthProvider();
 
 const SONG_ID = "${escHtml(songId)}";
@@ -2095,13 +2093,18 @@ function fileToDataUrl(file, cb){
   reader.readAsDataURL(file);
 }
 
-// Upload file ke Firebase Storage, return download URL
+// Upload foto ke ImgBB, return URL publik
 async function uploadCommentPhoto(file, uid){
-  const ext = file.type === 'image/png' ? 'png' : 'jpg';
-  const path = \`comment_photos/\${uid}/\${Date.now()}_\${Math.random().toString(36).slice(2)}.\${ext}\`;
-  const sRef = storageRef(storage, path);
-  const snap = await uploadBytes(sRef, file, { contentType: file.type });
-  return await getDownloadURL(snap.ref);
+  const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(\`https://api.imgbb.com/1/upload?key=\${IMGBB_KEY}\`, {
+    method: 'POST',
+    body: formData
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error('ImgBB upload failed');
+  return json.data.url;
 }
 
 window.handleCmPhoto = input => {
