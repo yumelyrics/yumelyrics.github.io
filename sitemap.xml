@@ -1,24 +1,149 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url><loc>https://yumelyrics.my.id/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/misut-bursukai.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/oyasumi-nakigoe-sayonara-utahime.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/shigatsu-no-ao.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/yui-yui-no-uta.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/kimi-no-kawari.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/kotoba-no-tsuzuki.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/amanojaku.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/suiheisen.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/pretender.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/stay-with-me.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/magnus.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/eien-no-akuruhi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/index.html</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/latihan.html</loc><lastmod>2026-05-17</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/contact.html</loc><lastmod>2026-05-17</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/lagu/misut-bursukai.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/72/10/65/721065ba-e620-35c5-fa90-7154c6afaed0/bigup11881687.jpg/600x600cc.webp</image:loc>
+      <image:title>Misutā Burūsukai - Macaroni Empitsu</image:title>
+      <image:caption>Lirik Misutā Burūsukai - Macaroni Empitsu | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/oyasumi-nakigoe-sayonara-utahime.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://images.genius.com/b05c3d5881adf9e89c9d738ab65d2b1e.1000x996x1.png</image:loc>
+      <image:title>Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ</image:title>
+      <image:caption>Lirik Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg</image:loc>
+      <image:title>Daiji na koto - Back Number</image:title>
+      <image:caption>Lirik Daiji na koto - Back Number | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://pict.giga.co.jp/images/gaia_htdocs/news/barks/image/20260504/202605042230110.jpg?width=500&height=400&type=resize</image:loc>
+      <image:title>Haru ni mau - Ado</image:title>
+      <image:caption>Lirik Haru ni mau - Ado | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/shigatsu-no-ao.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://yt3.googleusercontent.com/p61znZraiOz40J2PC2I_Vsm7xJ60wxPsuqj46_-wh9Uk8wTa9u7vxyq1eeMtF4lK6Thzzd_COp1WSZA=w544-h544-l90-rj</image:loc>
+      <image:title>Shigatsu no Ao - Mosawo</image:title>
+      <image:caption>Lirik Shigatsu no Ao - Mosawo | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://www.lyrical-nonsense.com/wp-content/uploads/2022/08/Polkadot-Stingray-Odoru-You-ni-300x300.jpg</image:loc>
+      <image:title>Renairon - Polkadot Stingray</image:title>
+      <image:caption>Lirik Renairon - Polkadot Stingray | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/yui-yui-no-uta.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://spice.eplus.jp/images/BPF3OHo1JhhaLELNgN3FJCAisvyLuRRMtNAxWvG4yS2oDkGhVz5AIUpjwbKLZcy8</image:loc>
+      <image:title>Yui Yui no Uta - ReoNa</image:title>
+      <image:caption>Lirik Yui Yui no Uta - ReoNa | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kimi-no-kawari.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.kfs.io/album/global/48289399,0v1/fit/500x500.jpg</image:loc>
+      <image:title>Kimi no kawari - Back Number</image:title>
+      <image:caption>Lirik Kimi no kawari - Back Number | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b273783ed3c2af46af7ab7c671c0</image:loc>
+      <image:title>Kowai Hanashi - Back number</image:title>
+      <image:caption>Lirik Kowai Hanashi - Back number | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kotoba-no-tsuzuki.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.ytimg.com/vi/HIytijrapTw/mqdefault.jpg</image:loc>
+      <image:title>Kotoba no tsuzuki - Rokudenashi</image:title>
+      <image:caption>Lirik Kotoba no tsuzuki - Rokudenashi | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/amanojaku.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://images.genius.com/3b25a060ee7aaf9eb591ab6e4c710795.563x563x1.jpg</image:loc>
+      <image:title>Amanojaku - 164</image:title>
+      <image:caption>Lirik Amanojaku - 164 | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/suiheisen.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://images.genius.com/2e1d9d1fcaaa9c0b2d9ee88e36066015.1000x1000x1.jpg</image:loc>
+      <image:title>Suiheisen - Back Number</image:title>
+      <image:caption>Lirik Suiheisen - Back Number | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/pretender.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b27378582014369e64b6596f30ad</image:loc>
+      <image:title>Pretender - Official HIGE DANdism</image:title>
+      <image:caption>Lirik Pretender - Official HIGE DANdism | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/stay-with-me.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtfjbXQ65hmZQ0A6c6PtwLU8ZQGvQB0kh2ag&s</image:loc>
+      <image:title>Stay with me - Back Number</image:title>
+      <image:caption>Lirik Stay with me - Back Number | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/magnus.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b273dedf1b7ae5312ee4874acf7f</image:loc>
+      <image:title>Magnus - ICO</image:title>
+      <image:caption>Lirik Magnus - ICO | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://cdn-images.dzcdn.net/images/cover/7c7cefd881f531c02c94d988f631dcb8/1900x1900-000000-80-0-0.jpg</image:loc>
+      <image:title>Yuigon - Centimillimental</image:title>
+      <image:caption>Lirik Yuigon - Centimillimental | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i1.sndcdn.com/artworks-000121515830-ifl6e0-t500x500.jpg</image:loc>
+      <image:title>Kokoronashi - Chouchou-P</image:title>
+      <image:caption>Lirik Kokoronashi - Chouchou-P | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/eien-no-akuruhi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.ytimg.com/vi/ZHAnZTVF_10/maxresdefault.jpg</image:loc>
+      <image:title>Eien no Akuruhi - Ado</image:title>
+      <image:caption>Lirik Eien no Akuruhi - Ado | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://images.genius.com/5a88caeaa0bb00b966f9abae8eb229f1.1000x1000x1.jpg</image:loc>
+      <image:title>Spiral - Longman</image:title>
+      <image:caption>Lirik Spiral - Longman | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-05-17</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b27377658cd1e9731710b19762a1</image:loc>
+      <image:title>Watagashi - Back Number</image:title>
+      <image:caption>Lirik Watagashi - Back Number | YumeSubs</image:caption>
+    </image:image>
+  </url>
 </urlset>
