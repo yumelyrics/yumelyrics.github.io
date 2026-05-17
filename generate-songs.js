@@ -487,6 +487,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .citem.is-admin{background:rgba(255,110,180,.04);border-color:rgba(255,110,180,.25);position:relative;overflow:hidden}
 .citem.is-admin::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.09;z-index:0;pointer-events:none}
 .citem.is-admin>*{position:relative;z-index:1}
+.citem.is-admin .cm-posted-img{position:relative;z-index:2}
 .admin-cm-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:linear-gradient(135deg,rgba(255,110,180,.1),rgba(191,95,255,.07));border-bottom:1px solid rgba(255,110,180,.15);margin:-0px;margin-bottom:.7rem;border-radius:2px 2px 0 0}
 .admin-cm-crown{font-size:.95rem}
 .admin-cm-name{font-size:.78rem;color:var(--accent);font-weight:700;font-family:var(--jp)}
@@ -1574,7 +1575,7 @@ function renderComment(id, c, replies){
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
       const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
       // Hanya tampilkan imgUrl dari http/https — skip base64 (terlalu besar untuk Firestore)
-      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
+      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" referrerpolicy="no-referrer">' : '';
       if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
       const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
       const rBannedBadge = r.isBanned ? (()=>{
@@ -1603,7 +1604,7 @@ function renderComment(id, c, replies){
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
   const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
-  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
+  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" referrerpolicy="no-referrer">' : '';
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
