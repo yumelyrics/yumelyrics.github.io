@@ -147,6 +147,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .reply-cancel-btn:hover{border-color:var(--accent2);color:var(--accent2)}
 .no-sharing{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 
+/* Link preview card */
+.link-preview{display:flex;gap:0;border:1px solid rgba(0,229,255,.15);background:rgba(0,229,255,.03);border-radius:3px;overflow:hidden;margin-bottom:.6rem;text-decoration:none;transition:border-color .2s,background .2s;max-width:100%}
+.link-preview:hover{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06)}
+.link-preview-thumb{width:120px;min-width:120px;height:68px;object-fit:cover;display:block;flex-shrink:0;background:#0d0c1a}
+.link-preview-thumb-wrap{width:120px;min-width:120px;height:68px;flex-shrink:0;background:#0d0c1a;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.link-preview-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.link-preview-play{position:absolute;width:28px;height:28px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.link-preview-play::after{content:'';border-left:9px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:2px}
+.link-preview-info{padding:.5rem .7rem;display:flex;flex-direction:column;justify-content:center;gap:.2rem;min-width:0;flex:1}
+.link-preview-site{font-size:.55rem;color:var(--accent2);letter-spacing:.12em;text-transform:uppercase}
+.link-preview-title{font-size:.75rem;color:var(--text);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.link-preview-url{font-size:.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,110,180,.2);border-radius:4px}
 @media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.page{padding:3rem 1.2rem 5rem}.row2{grid-template-columns:1fr}}
 @media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}}
@@ -336,6 +349,41 @@ onSnapshot(
   }
 );
 
+function getYoutubeId(url){
+  try {
+    const u = new URL(url);
+    if(u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('?')[0];
+    if(u.hostname.includes('youtube.com')) return u.searchParams.get('v');
+  } catch(e){}
+  return null;
+}
+
+function renderLinkPreview(url){
+  const ytId = getYoutubeId(url);
+  if(ytId){
+    const thumb = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+    return `<a class="link-preview" href="${escH(url)}" target="_blank" rel="noopener">
+      <div class="link-preview-thumb-wrap">
+        <img src="${thumb}" alt="thumbnail" loading="lazy" onerror="this.parentElement.style.background='#1a0a2e'">
+        <div class="link-preview-play"></div>
+      </div>
+      <div class="link-preview-info">
+        <div class="link-preview-site">YouTube</div>
+        <div class="link-preview-url">${escH(url.length>50?url.slice(0,50)+'…':url)}</div>
+      </div>
+    </a>`;
+  }
+  // Generic link preview
+  let hostname = url;
+  try { hostname = new URL(url).hostname.replace('www.',''); } catch(e){}
+  return `<a class="link-preview" href="${escH(url)}" target="_blank" rel="noopener">
+    <div class="link-preview-info" style="padding:.6rem .8rem">
+      <div class="link-preview-site">🔗 ${escH(hostname)}</div>
+      <div class="link-preview-url">${escH(url.length>60?url.slice(0,60)+'…':url)}</div>
+    </div>
+  </a>`;
+}
+
 function renderSharingCard(s){
   const adminReplyHtml = s.adminReply ? `
     <div class="sharing-admin-reply">
@@ -345,7 +393,7 @@ function renderSharingCard(s){
       </div>
       <div class="admin-reply-text">${escH(s.adminReply)}</div>
     </div>` : '';
-  const linkHtml = s.link ? `<a class="sharing-link" href="${escH(s.link)}" target="_blank">🔗 ${escH(s.link)}</a>` : '';
+  const linkHtml = s.link ? renderLinkPreview(s.link) : '';
   const replies = s._replies||[];
   const repliesHtml = replies.length ? `
     <div class="replies-thread" id="thread-${s.id}">
