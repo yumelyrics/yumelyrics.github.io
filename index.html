@@ -128,12 +128,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc:hover::before{opacity:1}
 /* padding-top trick: tinggi selalu = lebar, tidak pernah shift layout */
 .sc-img-wrap{width:100%;padding-top:100%;position:relative;overflow:hidden;flex-shrink:0;background:#0d0c1a}
-.sc-img-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0) scale(1);transform-origin:center;transition:transform .35s ease,opacity .3s ease;opacity:1}
-.sc-img-wrap img.lazy-img{opacity:0}
-.sc-img-wrap img.lazy-loaded{opacity:1}
-/* overlay gelap menggantikan filter animasi — jauh lebih ringan di GPU */
-.sc-img-wrap::after{content:'';position:absolute;inset:0;background:rgba(6,3,15,.4);transition:background .25s;pointer-events:none;z-index:1}
-.sc:hover .sc-img-wrap::after{background:rgba(6,3,15,.1)}
+.sc-img-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0) scale(1);transform-origin:center;transition:transform .35s ease}
 .sc:hover .sc-img-wrap img{transform:translateZ(0) scale(1.04)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:rgba(255,110,180,.5)}
@@ -484,8 +479,6 @@ function toast(m){
 let recOnly = false;
 let popOnly = false;
 
-// Cache gambar yang sudah dimuat
-const imgCache = new Set();
 
 function buildCard(s, i) {
   const div = document.createElement('div');
@@ -493,7 +486,7 @@ function buildCard(s, i) {
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
   const imgSrc = s.img || '';
-  const imgEl = imgCache.has(imgSrc) ? `<img src="${imgSrc}" alt="${s.titleJp}" loading="lazy" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">` : `<img src="" data-src="${imgSrc}" alt="${s.titleJp}" class="lazy-img" onerror="this.classList.remove('lazy-img');this.classList.add('lazy-loaded');this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  const imgEl = `<img src="${imgSrc||'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'}" alt="${s.titleJp}" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
   div.innerHTML = `
     <div class="sc-corner"></div>
     <div class="sc-img-wrap">${imgEl}</div>
@@ -579,7 +572,6 @@ function rc(filter='', animate=false){
       ? filtered.length + ' / ' + songs.length + ' lagu'
       : songs.length + ' lagu';
   }
-  initLazy();
 }
 
 function addRipple(btn, e) {
@@ -618,24 +610,7 @@ window.togglePop = (e) => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-// ── Lazy load images ──
-function initLazy(){
-  const imgs = document.querySelectorAll('img.lazy-img');
-  const obs = new IntersectionObserver((entries,o)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        const img = e.target;
-        const real = img.dataset.src;
-        if(real){
-          img.src = real;
-          img.onload = () => { imgCache.add(real); img.classList.remove('lazy-img'); img.classList.add('lazy-loaded'); delete img.dataset.src; };
-        }
-        o.unobserve(img);
-      }
-    });
-  },{rootMargin:'100px'});
-  imgs.forEach(img=>obs.observe(img));
-}
+// lazy load: pakai native loading="lazy"
 
 // ── Search ──
 window.onSearch = val => {
