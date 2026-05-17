@@ -2685,6 +2685,7 @@ async function main() {
   for(const f of oldFiles) fs.unlinkSync(path.join('lagu', f));
   console.log(`🗑  ${oldFiles.length} file lama dihapus`);
 
+  const today = new Date().toISOString().split('T')[0];
   const urls = [
     `  <url><loc>${BASE_URL}/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/index.html</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
