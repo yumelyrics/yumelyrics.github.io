@@ -866,6 +866,8 @@ import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, set
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
 const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -875,8 +877,9 @@ const _app = initializeApp({
   messagingSenderId:"1076202015626",
   appId:"1:1076202015626:web:ce89fb668eb6b2bd021673"
 });
-const db   = getFirestore(_app);
-const auth = getAuth(_app);
+const db       = getFirestore(_app);
+const auth     = getAuth(_app);
+const storage  = getStorage(_app);
 const provider = new GoogleAuthProvider();
 
 const SONG_ID = "${escHtml(songId)}";
@@ -1573,7 +1576,7 @@ function renderComment(id, c, replies){
       const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
       const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
       // Hanya tampilkan imgUrl dari http/https — skip base64 (terlalu besar untuk Firestore)
-      const rImgHtml = (r.imgUrl && r.imgUrl.startsWith('http')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
+      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy">' : '';
       if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
       const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
       const rBannedBadge = r.isBanned ? (()=>{
@@ -1602,7 +1605,7 @@ function renderComment(id, c, replies){
   }
   const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
   const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
-  const imgHtml = (c.imgUrl && c.imgUrl.startsWith('http')) ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
+  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy">' : '';
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
@@ -1953,8 +1956,18 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
   if(!t && !replyImg)return;
   try{
     const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
-    // Base64 image di Firestore bisa >1MB dan crash getDocs — skip imgUrl untuk reply
-    // TODO: upload ke Firebase Storage dulu, simpan URL-nya
+    // Upload foto reply ke Storage jika ada
+    let replyImgUrl = null;
+    const replyImgData = _replyImgMap[parentId] || null;
+    if (replyImgData && replyImgData.file) {
+      try {
+        toast('Mengupload foto...');
+        replyImgUrl = await uploadCommentPhoto(replyImgData.file, _currentUser.uid);
+      } catch(uploadErr) {
+        toast('Gagal upload foto. Coba lagi.');
+        return;
+      }
+    }
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId,
@@ -1962,7 +1975,7 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      imgUrl:null,
+      imgUrl:replyImgUrl,
       date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
@@ -2006,10 +2019,21 @@ window.postCm = async () => {
   if(rateLimitErr){ toast(rateLimitErr); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
-  if(!t && !_cmImgDataUrl)return;btn.disabled=true;
+  if(!t && !_cmImgFile)return;btn.disabled=true;
   const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
   try{
-    const safeImgUrl = (_cmImgDataUrl && _cmImgDataUrl.startsWith('data:image/')) ? _cmImgDataUrl : null;
+    // Upload foto ke Storage dulu, dapatkan URL publik
+    let imgUrl = null;
+    if (_cmImgFile) {
+      try {
+        toast('Mengupload foto...');
+        imgUrl = await uploadCommentPhoto(_cmImgFile, _currentUser.uid);
+      } catch(uploadErr) {
+        toast('Gagal upload foto. Coba lagi.');
+        btn.disabled = false;
+        return;
+      }
+    }
     await addDoc(collection(db,'comments'),{
       songId:SONG_ID,
       parentId:null,
@@ -2017,7 +2041,7 @@ window.postCm = async () => {
       uid:_currentUser.uid,
       photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
       text:t,
-      imgUrl:safeImgUrl,
+      imgUrl:imgUrl,
       date:fmtDate(new Date()),
       ts:Date.now(),
       isAdmin:_isAdmin
@@ -2040,36 +2064,55 @@ window.postCm = async () => {
 };
 
 // ── State foto komentar utama ──
-let _cmImgDataUrl = null;
+let _cmImgDataUrl = null;  // preview lokal (base64)
+let _cmImgFile    = null;  // file asli untuk upload
 // State foto per reply (key = parentId)
-const _replyImgMap = {};
+const _replyImgMap = {};   // { parentId: { dataUrl, file } }
 
-// Convert file ke base64 DataURL (max ~800px, compress)
+// Limit ukuran file: 2MB
+const IMG_MAX_BYTES = 2 * 1024 * 1024;
+// Resize preview lokal: max 800px sisi terpanjang
+const IMG_MAX_PX = 800;
+
+// Convert file ke base64 DataURL untuk preview lokal
 function fileToDataUrl(file, cb){
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 800;
       let w = img.width, h = img.height;
-      if(w > MAX || h > MAX){
-        if(w > h){ h = Math.round(h * MAX/w); w = MAX; }
-        else { w = Math.round(w * MAX/h); h = MAX; }
+      if(w > IMG_MAX_PX || h > IMG_MAX_PX){
+        if(w > h){ h = Math.round(h * IMG_MAX_PX/w); w = IMG_MAX_PX; }
+        else { w = Math.round(w * IMG_MAX_PX/h); h = IMG_MAX_PX; }
       }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      cb(canvas.toDataURL('image/jpeg', 0.8));
+      cb(canvas.toDataURL('image/jpeg', 0.82));
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
+// Upload file ke Firebase Storage, return download URL
+async function uploadCommentPhoto(file, uid){
+  const ext = file.type === 'image/png' ? 'png' : 'jpg';
+  const path = \`comment_photos/\${uid}/\${Date.now()}_\${Math.random().toString(36).slice(2)}.\${ext}\`;
+  const sRef = storageRef(storage, path);
+  const snap = await uploadBytes(sRef, file, { contentType: file.type });
+  return await getDownloadURL(snap.ref);
+}
+
 window.handleCmPhoto = input => {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 5*1024*1024) { toast('Foto max 5MB.'); return; }
+  if (file.size > IMG_MAX_BYTES) {
+    toast(\`Foto max \${IMG_MAX_BYTES/1024/1024}MB. Pilih foto yang lebih kecil.\`);
+    input.value = '';
+    return;
+  }
+  _cmImgFile = file;
   fileToDataUrl(file, dataUrl => {
     _cmImgDataUrl = dataUrl;
     const wrap = document.getElementById('cm-img-preview-wrap');
@@ -2082,6 +2125,7 @@ window.handleCmPhoto = input => {
 
 window.removeCmPhoto = () => {
   _cmImgDataUrl = null;
+  _cmImgFile    = null;
   const wrap = document.getElementById('cm-img-preview-wrap');
   const prev = document.getElementById('cm-img-preview');
   if(wrap) wrap.style.display = 'none';
@@ -2091,9 +2135,13 @@ window.removeCmPhoto = () => {
 window.handleReplyPhoto = (parentId, input) => {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 5*1024*1024) { toast('Foto max 5MB.'); return; }
+  if (file.size > IMG_MAX_BYTES) {
+    toast(\`Foto max \${IMG_MAX_BYTES/1024/1024}MB. Pilih foto yang lebih kecil.\`);
+    input.value = '';
+    return;
+  }
   fileToDataUrl(file, dataUrl => {
-    _replyImgMap[parentId] = dataUrl;
+    _replyImgMap[parentId] = { dataUrl, file };
     const wrap = document.getElementById('rp-img-preview-wrap-'+parentId);
     const prev = document.getElementById('rp-img-preview-'+parentId);
     if(prev) prev.src = dataUrl;
