@@ -1592,18 +1592,17 @@ window.addEventListener('resize', fixBg);
     <button id="chat-close" onclick="toggleChat()">✕</button>
   </div>
 
-  <!-- Gate: belum login — hanya muncul di atas input -->
-  <div id="chat-gate" style="display:none">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(0,229,255,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    <p>Login dulu untuk ikut ngobrol di grup chat bareng pengguna YumeSubs lainnya.</p>
-    <button id="chat-gate-btn" onclick="doLogin()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+  <!-- Messages (tampil untuk semua, termasuk guest) -->
+  <div id="chat-msgs"><div class="chat-loading">Memuat pesan...</div></div>
+
+  <!-- Gate login — tampil kalau belum login, di bawah pesan -->
+  <div id="chat-login-gate" style="display:none;flex-direction:column;align-items:center;gap:.5rem;padding:.75rem 1rem;text-align:center;border-top:1px solid rgba(0,229,255,.1)">
+    <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Login untuk ikut ngobrol 💬</p>
+    <button onclick="doLogin()" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.45rem 1rem;cursor:pointer;border-radius:2rem">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Login dengan Google
     </button>
   </div>
-
-  <!-- Messages (tampil untuk semua, termasuk guest) -->
-  <div id="chat-msgs"><div class="chat-loading">Memuat pesan...</div></div>
 
   <!-- Input (hidden until login) -->
   <div id="chat-inp-wrap">
@@ -2010,19 +2009,24 @@ async function loadBannedCache() {
 }
 
 function initGuestChat() {
-  document.getElementById('chat-msgs').style.display = 'flex';
+  const msgsEl = document.getElementById('chat-msgs');
+  msgsEl.style.display = 'flex';
   loadCustomRoleCache().catch(()=>{});
   loadBannedCache().catch(()=>{});
   const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
   _chatUnsub = onSnapshot(q, snap => {
     _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderMsgs(_lastMsgs);
-  }, () => {});
+    if (!_chatInited) scrollChatBottom(true);
+    _chatInited = true;
+  }, () => {
+    msgsEl.innerHTML = '<div class="chat-loading">Gagal memuat pesan.</div>';
+  });
 }
 
 function initChat(user) {
   _chatUser = user;
-  document.getElementById('chat-gate').style.display = 'none';
+  document.getElementById('chat-login-gate').style.display = 'none';
   document.getElementById('chat-msgs').style.display = 'flex';
   document.getElementById('chat-inp-wrap').classList.add('show');
 
@@ -2061,24 +2065,17 @@ function initChat(user) {
 
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
+    // Sembunyikan gate login, tampilkan input
+    document.getElementById('chat-login-gate').style.display = 'none';
     initChat(user);
   } else {
     _chatUser = null;
-    // Guest tetap bisa lihat pesan
-    document.getElementById('chat-gate').style.display = 'none';
+    // Tampilkan pesan tapi sembunyikan input, tampilkan gate login
+    document.getElementById('chat-login-gate').style.display = 'flex';
+    document.getElementById('chat-inp-wrap').classList.remove('show');
     document.getElementById('chat-msgs').style.display = 'flex';
-    // Tampilkan gate di area input (replace inp-wrap content)
-    const inpWrap = document.getElementById('chat-inp-wrap');
-    inpWrap.classList.add('show');
-    inpWrap.innerHTML = `<div id="chat-gate" style="flex-direction:column;align-items:center;gap:.5rem;padding:.75rem 1rem;text-align:center">
-      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Login untuk ikut ngobrol 💬</p>
-      <button id="chat-gate-btn" onclick="doLogin()" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-family:var(--en);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.45rem 1rem;cursor:pointer;border-radius:2rem">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        Login dengan Google
-      </button>
-    </div>`;
-    // Load pesan untuk guest (hanya kalau belum ada listener aktif)
-    if (!_chatUnsub) initGuestChat();
+    if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
+    initGuestChat();
   }
 });
 
