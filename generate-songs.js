@@ -1553,9 +1553,19 @@ async function _getCustomRole(crId){
 function _getRoleBadgeSong(commentCount, customRole){
   let role;
   if(customRole !== null && customRole !== undefined){
+    // Object langsung (dari roleName shortcut)
+    if(typeof customRole === 'object' && customRole.name){
+      const iconHtml = customRole.iconType === 'img' && customRole.iconImg
+        ? \`<img src="\${customRole.iconImg}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">\`
+        : (customRole.icon || '🎭');
+      const styleAttr = customRole.bgColor
+        ? \` style="background:\${customRole.bgColor};color:\${customRole.textColor||'#c4b0ff'};border:1px solid \${customRole.textColor||'#c4b0ff'}33"\`
+        : '';
+      return \`<span class="role-badge role-custom"\${styleAttr} title="\${customRole.name}">\${iconHtml} \${customRole.name}</span>\`;
+    }
     // CR: prefix = custom_roles collection (resolved async, fallback ke icon dulu)
     if(typeof customRole === 'string' && customRole.startsWith('CR:')){
-      // Return placeholder — akan di-replace async oleh _getRoleBadgeSongAsync
+      // Return placeholder — akan di-replace async oleh _resolveCustomRoleBadges
       return \`<span class="role-badge role-custom" data-cr-id="\${customRole.slice(3)}" title="Custom Role">🎨 ...</span>\`;
     }
     role = typeof customRole === 'number'
@@ -1600,7 +1610,17 @@ async function _getRoleBadgeForUser(uid){
       getDoc(doc(db,'user_roles',uid))
     ]);
     const cnt = songSnap.size + storySnap.size;
-    const custom = overSnap.exists() ? (overSnap.data().role ?? null) : null;
+    let custom = null;
+    if(overSnap.exists()){
+      const d = overSnap.data();
+      // Gunakan roleName (nama langsung) jika tersedia, fallback ke role ID
+      if(d.roleName){
+        custom = { id:'custom', icon: d.icon||'🎭', name: d.roleName, cls:'role-custom',
+                   bgColor: d.bgColor||null, textColor: d.textColor||null };
+      } else {
+        custom = d.role ?? null;
+      }
+    }
     const badge = _getRoleBadgeSong(cnt, custom);
     _roleCache[uid] = badge;
     return badge;
