@@ -1267,14 +1267,18 @@ async function loadAllCommenters(){
 }
 
 // ── SWITCH ROLE TAB ──
-window.switchRoleTab = (tab, btn) => {
+window.switchRoleTab = async (tab, btn) => {
   curRoleTab = tab;
   document.querySelectorAll('.roletab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('rolePanel-levels').style.display = tab==='levels' ? '' : 'none';
   document.getElementById('rolePanel-users').style.display  = tab==='users'  ? '' : 'none';
   document.getElementById('rolePanel-custom').style.display = tab==='custom' ? '' : 'none';
-  if(tab==='users') renderUserRoleList(allCommenters);
+  if(tab==='users'){
+    // Pastikan customRoles sudah loaded sebelum render supaya option CR: bisa tampil
+    if(!customRoles.length) await loadCustomRoles();
+    renderUserRoleList(allCommenters);
+  }
   if(tab==='custom') renderCustomRoleList();
 };
 
@@ -1341,9 +1345,14 @@ function renderUserRoleList(users){
     if(u.customRole !== null && u.customRole !== undefined){
       const v = String(u.customRole);
       const match = [...sel.options].find(o => o.value === v);
-      if(match) sel.value = v;
-      else if(!isNaN(v)) sel.value = v;
-      else sel.value = 'custom';
+      if(match){
+        sel.value = v;
+      } else if(!isNaN(v)){
+        // role level (angka)
+        const numMatch = [...sel.options].find(o => o.value === v);
+        if(numMatch) sel.value = v;
+      }
+      // Kalau tidak ketemu (misal customRoles belum load), biarkan default — jangan ubah ke 'custom'
     }
   });
 }
@@ -1658,6 +1667,8 @@ async function initRoleSystem(){
   await loadCustomRoles();
   await loadAllCommenters();
   renderRoleDefList();
+  // Re-render user list setelah custom roles loaded supaya dropdown option CR: bisa di-restore
+  if(allCommenters.length) renderUserRoleList(allCommenters);
 }
 
 async function loadBannedUsers(){
