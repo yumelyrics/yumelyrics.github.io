@@ -924,12 +924,37 @@ onAuthStateChanged(auth, async user => {
     }
 
     // Avatar — update elemen di dalam float-avatar-wrap
-    if(_customPhoto){
-      const _ph = document.getElementById('nav-avatar-ph');
-      if(_ph) _ph.outerHTML = '<img id="nav-avatar-img" class="nav-avatar" src="'+_customPhoto+'" alt="avatar" referrerpolicy="no-referrer" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)">';
+    // Pakai pendekatan swap src, bukan outerHTML, supaya element selalu ada
+    const avatarWrapEl = document.getElementById('float-avatar-wrap');
+    if (_customPhoto) {
+      // Cek apakah sudah ada img, kalau belum buat baru
+      let img = document.getElementById('nav-avatar-img');
+      if (!img) {
+        const ph = document.getElementById('nav-avatar-ph');
+        if (ph) {
+          img = document.createElement('img');
+          img.id = 'nav-avatar-img';
+          img.className = 'nav-avatar';
+          img.setAttribute('referrerpolicy', 'no-referrer');
+          img.setAttribute('alt', 'avatar');
+          img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)';
+          ph.replaceWith(img);
+        }
+      }
+      if (img) img.src = _customPhoto;
     } else {
-      const _ph = document.getElementById('nav-avatar-ph');
-      if(_ph) _ph.textContent = displayName[0].toUpperCase();
+      // Tidak ada foto — tampilkan inisial
+      let ph = document.getElementById('nav-avatar-ph');
+      // Kalau img sudah ada, ganti balik ke placeholder
+      const img = document.getElementById('nav-avatar-img');
+      if (img && !ph) {
+        ph = document.createElement('div');
+        ph.id = 'nav-avatar-ph';
+        ph.className = 'nav-avatar-placeholder';
+        ph.style.cssText = 'width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5);transition:transform .2s,box-shadow .2s';
+        img.replaceWith(ph);
+      }
+      if (ph) ph.textContent = displayName[0].toUpperCase();
     }
 
     loginBtn.style.display  = 'none';
@@ -1501,11 +1526,11 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // Cache custom roles dari Firestore
 const _customRoleCache = {}; // { [id]: { icon, name, cls } }
 let _customRoleCacheLoaded = false;
+const _pendingRoleFetch = new Set(); // IDs yang sedang di-fetch
 
 async function loadCustomRoleCache() {
   if (_customRoleCacheLoaded) return;
   try {
-    // Import getDocs & collection sudah tersedia dari scope chat module
     const snap = await getDocs(collection(_chatDb, 'custom_roles'));
     snap.forEach(d => {
       const data = d.data();
@@ -1518,7 +1543,32 @@ async function loadCustomRoleCache() {
     });
     _customRoleCacheLoaded = true;
   } catch(e) {
-    _customRoleCacheLoaded = true; // jangan retry terus
+    _customRoleCacheLoaded = true;
+  }
+}
+
+// Fetch satu custom role by ID, lalu re-render
+async function fetchCustomRoleById(roleId) {
+  if (_pendingRoleFetch.has(roleId)) return;
+  _pendingRoleFetch.add(roleId);
+  try {
+    const snap = await getDoc(doc(_chatDb, 'custom_roles', roleId));
+    if (snap.exists()) {
+      const data = snap.data();
+      _customRoleCache[roleId] = {
+        id: 'custom',
+        icon: data.icon || '🎭',
+        name: data.name || roleId,
+        cls: data.cls || 'role-custom'
+      };
+    } else {
+      // Tidak ada di Firestore — tandai supaya tidak fetch lagi
+      _customRoleCache[roleId] = null;
+    }
+    // Re-render pesan dengan data baru
+    if (_lastMsgs) renderMsgs(_lastMsgs);
+  } catch(e) {
+    _customRoleCache[roleId] = null;
   }
 }
 
@@ -1543,9 +1593,12 @@ function getChatRole(commentCount, isAdmin, customRole) {
     } else if (typeof customRole === 'string') {
       // Cek cache dulu (string ID seperti CR_xxx)
       if (_customRoleCache[customRole]) return _customRoleCache[customRole];
-      // Jika terlihat seperti ID acak (pola XX_angka atau panjang > 20), fallback ke role biasa
-      if (/^[A-Za-z]{1,4}_\d{5,}$/.test(customRole) || customRole.length > 20) {
-        // belum ter-cache / tidak ditemukan — fallback ke commentCount
+      if (_customRoleCache[customRole] === null) {
+        // Sudah dicoba fetch, tidak ada — fallback ke commentCount
+      } else if (/^[A-Za-z]{1,4}_\d{5,}$/.test(customRole) || customRole.length > 20) {
+        // Terlihat seperti ID — coba fetch on-demand
+        fetchCustomRoleById(customRole);
+        // Sementara fallback ke commentCount sampai fetch selesai
       } else {
         // String readable langsung (nama role custom pendek)
         return { id:'custom', icon:'🎭', name: customRole, cls:'role-custom' };
@@ -1685,7 +1738,7 @@ function initChat(user) {
 
     // Hitung unread
     if (!_chatOpen) {
-      const newMsgs = msgs.filter(m => {
+      const newMsgs = _lastMsgs.filter(m => {
         const t = m.ts?.toMillis ? m.ts.toMillis() : (m.ts||0);
         return t > _chatLastSeen && m.uid !== _chatUser?.uid;
       });
