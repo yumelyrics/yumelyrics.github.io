@@ -746,26 +746,30 @@ function getRoleBadgeHtmlIdx(commentCount, customRole){
 }
 
 async function resolveCustomRoleName(rawRole){
-  // Jika bukan string atau null, kembalikan apa adanya
   if(rawRole === null || rawRole === undefined) return null;
   if(typeof rawRole === 'number') return rawRole;
-  // Jika string terlihat seperti ID (mengandung CR_ atau hanya angka-huruf acak panjang),
-  // coba fetch nama display-nya dari koleksi custom_roles
   if(typeof rawRole === 'string'){
-    try {
-      const snap = await getDoc(doc(db,'custom_roles', rawRole));
-      if(snap.exists()){
-        const data = snap.data();
-        // Kembalikan object lengkap supaya icon & cls bisa dipakai
-        return {
-          id: 'custom',
-          icon: data.icon || '🎭',
-          name: data.name || rawRole,
-          cls: data.cls || 'role-custom'
-        };
-      }
-    } catch(e){}
-    // Fallback: pakai string apa adanya (kalau memang sudah nama readable)
+    // Coba fetch dari berbagai kemungkinan nama koleksi
+    const collections = ['custom_roles', 'role_config', 'roles', 'user_role_defs'];
+    for(const col of collections){
+      try {
+        const snap = await getDoc(doc(db, col, rawRole));
+        if(snap.exists()){
+          const data = snap.data();
+          const resolved = {
+            id: 'custom',
+            icon: data.icon || data.emoji || '🎭',
+            name: data.name || data.label || data.title || rawRole,
+            cls: data.cls || data.class || 'role-custom'
+          };
+          console.log('[role] resolved', rawRole, '→', resolved.name, 'from', col);
+          return resolved;
+        }
+      } catch(e){ console.warn('[role] fetch failed from', col, e.message); }
+    }
+    // Tidak ditemukan di manapun — log untuk debug
+    console.warn('[role] ID not found in any collection:', rawRole);
+    // Fallback: pakai string apa adanya
     return rawRole;
   }
   return rawRole;
@@ -785,7 +789,13 @@ async function loadAndShowUserRole(uid){
     ]);
     const commentCount = songSnap.size + storySnap.size;
     window._myCommentCount = commentCount;
-    const rawRole = overrideSnap.exists() ? (overrideSnap.data().role ?? null) : null;
+    // Coba berbagai kemungkinan nama field di dokumen user_roles
+    let rawRole = null;
+    if(overrideSnap.exists()){
+      const d = overrideSnap.data();
+      rawRole = d.role ?? d.customRole ?? d.custom_role ?? d.label ?? d.name ?? null;
+      console.log('[role] user_roles data:', d, '→ rawRole:', rawRole);
+    }
     // Resolve ID menjadi nama display yang sebenarnya
     const customRole = await resolveCustomRoleName(rawRole);
     window._myCustomRole = customRole;
@@ -901,13 +911,17 @@ onAuthStateChanged(auth, async user => {
   _currentUser = user;
   const loginBtn  = document.getElementById('float-login-btn');
   const avatarWrap= document.getElementById('float-avatar-wrap');
-  const avatarPh  = document.getElementById('nav-avatar-ph');
   const nudName   = document.getElementById('nud-name');
   const nudEmail  = document.getElementById('nud-email');
 
   if(user){
     _isAdmin = user.email === ADMIN_EMAIL;
-    // Ambil foto dari user_profiles
+
+    // Sembunyikan login, tampilkan avatar wrap dulu
+    loginBtn.style.display   = 'none';
+    avatarWrap.style.display = '';
+
+    // Ambil foto — coba dari user_profiles dulu, fallback ke Google photo
     _customPhoto = user.photoURL || null;
     try{
       const up = await getDoc(doc(db,'user_profiles',user.uid));
@@ -918,57 +932,51 @@ onAuthStateChanged(auth, async user => {
     nudName.textContent  = displayName;
     nudEmail.textContent = user.email||'';
 
+    // Update avatar di float-avatar-wrap
+    _updateAvatar(_customPhoto, displayName);
+
     // Load & tampilkan role di dropdown
     if(!_isAdmin){
       loadAndShowUserRole(user.uid);
     }
 
-    // Avatar — update elemen di dalam float-avatar-wrap
-    // Pakai pendekatan swap src, bukan outerHTML, supaya element selalu ada
-    const avatarWrapEl = document.getElementById('float-avatar-wrap');
-    if (_customPhoto) {
-      // Cek apakah sudah ada img, kalau belum buat baru
-      let img = document.getElementById('nav-avatar-img');
-      if (!img) {
-        const ph = document.getElementById('nav-avatar-ph');
-        if (ph) {
-          img = document.createElement('img');
-          img.id = 'nav-avatar-img';
-          img.className = 'nav-avatar';
-          img.setAttribute('referrerpolicy', 'no-referrer');
-          img.setAttribute('alt', 'avatar');
-          img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)';
-          ph.replaceWith(img);
-        }
-      }
-      if (img) img.src = _customPhoto;
-    } else {
-      // Tidak ada foto — tampilkan inisial
-      let ph = document.getElementById('nav-avatar-ph');
-      // Kalau img sudah ada, ganti balik ke placeholder
-      const img = document.getElementById('nav-avatar-img');
-      if (img && !ph) {
-        ph = document.createElement('div');
-        ph.id = 'nav-avatar-ph';
-        ph.className = 'nav-avatar-placeholder';
-        ph.style.cssText = 'width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5);transition:transform .2s,box-shadow .2s';
-        img.replaceWith(ph);
-      }
-      if (ph) ph.textContent = displayName[0].toUpperCase();
-    }
-
-    loginBtn.style.display  = 'none';
-    avatarWrap.style.display= '';
-
     startNotifListener(user.uid);
   } else {
     _isAdmin = false;
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-    loginBtn.style.display  = '';
-    avatarWrap.style.display= 'none';
+    loginBtn.style.display   = '';
+    avatarWrap.style.display = 'none';
     document.getElementById('notif-badge').classList.remove('show');
   }
 });
+
+function _updateAvatar(photoURL, displayName) {
+  const wrap = document.getElementById('float-avatar-wrap');
+  if (!wrap) return;
+  // Hapus semua child lama, render ulang bersih
+  const notifBadge = document.getElementById('notif-badge');
+  wrap.innerHTML = '';
+  if (photoURL) {
+    const img = document.createElement('img');
+    img.id = 'nav-avatar-img';
+    img.className = 'nav-avatar';
+    img.src = photoURL;
+    img.alt = 'avatar';
+    img.setAttribute('referrerpolicy', 'no-referrer');
+    img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)';
+    img.onerror = () => { _updateAvatar(null, displayName); };
+    wrap.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.id = 'nav-avatar-ph';
+    ph.className = 'nav-avatar-placeholder';
+    ph.style.cssText = 'width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5)';
+    ph.textContent = (displayName||'?')[0].toUpperCase();
+    wrap.appendChild(ph);
+  }
+  // Re-append notif badge (sudah ada di HTML, pindahkan kembali)
+  if (notifBadge) wrap.appendChild(notifBadge);
+}
 
 // ── Slug generator (sama dengan generate-songs.js) ──
 function toSlug(titleRo, docId) {
@@ -1551,25 +1559,27 @@ async function loadCustomRoleCache() {
 async function fetchCustomRoleById(roleId) {
   if (_pendingRoleFetch.has(roleId)) return;
   _pendingRoleFetch.add(roleId);
-  try {
-    const snap = await getDoc(doc(_chatDb, 'custom_roles', roleId));
-    if (snap.exists()) {
-      const data = snap.data();
-      _customRoleCache[roleId] = {
-        id: 'custom',
-        icon: data.icon || '🎭',
-        name: data.name || roleId,
-        cls: data.cls || 'role-custom'
-      };
-    } else {
-      // Tidak ada di Firestore — tandai supaya tidak fetch lagi
-      _customRoleCache[roleId] = null;
-    }
-    // Re-render pesan dengan data baru
-    if (_lastMsgs) renderMsgs(_lastMsgs);
-  } catch(e) {
-    _customRoleCache[roleId] = null;
+  const cols = ['custom_roles', 'role_config', 'roles', 'user_role_defs'];
+  for (const col of cols) {
+    try {
+      const snap = await getDoc(doc(_chatDb, col, roleId));
+      if (snap.exists()) {
+        const data = snap.data();
+        _customRoleCache[roleId] = {
+          id: 'custom',
+          icon: data.icon || data.emoji || '🎭',
+          name: data.name || data.label || data.title || roleId,
+          cls: data.cls || data.class || 'role-custom'
+        };
+        if (_lastMsgs) renderMsgs(_lastMsgs);
+        return;
+      }
+    } catch(e) {}
   }
+  // Tidak ditemukan di manapun — cache null supaya tidak retry
+  console.warn('[chat-role] not found in any collection:', roleId);
+  _customRoleCache[roleId] = null;
+  if (_lastMsgs) renderMsgs(_lastMsgs);
 }
 
 function getChatRole(commentCount, isAdmin, customRole) {
