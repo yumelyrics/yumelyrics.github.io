@@ -1366,12 +1366,26 @@ window.applyUserRole = async (uid, name) => {
     } else {
       // CR: prefix = custom role object id
       let parsedVal;
+      let roleName = null;
       if(roleVal.startsWith('CR:')){
         parsedVal = roleVal; // keep as string "CR:cr_xxxx"
+        // Cari nama role dari customRoles list
+        const crId = roleVal.replace(/^CR:/, '');
+        const crObj = customRoles.find(r => r.id === crId);
+        roleName = crObj ? crObj.name : null;
       } else {
         parsedVal = isNaN(roleVal) ? roleVal : parseInt(roleVal, 10);
+        // Kalau role level (angka), cari nama dari roleDefs
+        if(typeof parsedVal === 'number'){
+          const rd = roleDefs.find(r => r.id === parsedVal);
+          roleName = rd ? rd.name : null;
+        } else {
+          roleName = parsedVal; // custom string langsung
+        }
       }
-      await setDoc(doc(db,'user_roles',uid), { role: parsedVal, name, updatedAt: Date.now() });
+      const saveData = { role: parsedVal, userName: name, updatedAt: Date.now() };
+      if(roleName) saveData.roleName = roleName;
+      await setDoc(doc(db,'user_roles',uid), saveData);
       if(user) user.customRole = parsedVal;
       toast(`✓ Role ${name} diupdate.`);
     }
