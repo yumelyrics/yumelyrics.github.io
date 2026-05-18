@@ -2123,7 +2123,7 @@ window.markAllNotifsRead = async () => {
   }catch(e){}
 };
 
-async function deleteReadNotifs(){
+window.deleteReadNotifs = async function deleteReadNotifs(){
   if(!_currentUser) return;
   try{
     const snap=await getDocs(query(
