@@ -2095,10 +2095,14 @@ function renderMsgs(msgs) {
         btns += `<button class="chat-action-btn del" onclick="deleteMyMsg('${m.id}')" title="Hapus">🗑️</button>`;
       } else if (_amIAdmin) {
         btns += `<button class="chat-action-btn del" onclick="adminDeleteMsg('${m.id}')" title="Hapus (Admin)">🗑️</button>`;
-        btns += `<button class="chat-action-btn" onclick="adminBanFromMsg('${m.id}','${esc(m.name||'Anonim')}','${esc(m.uid||'')}','${esc(m.email||'')}')" title="Ban User">🚫</button>`;
+        if (!isAdmin) {
+          btns += `<button class="chat-action-btn" onclick="adminBanFromMsg('${m.id}','${esc(m.name||'Anonim')}','${esc(m.uid||'')}','${esc(m.email||'')}')" title="Ban User">🚫</button>`;
+        }
       } else {
-        // User lain bisa report (tapi tidak bisa report diri sendiri)
-        btns += `<button class="chat-action-btn" onclick="openReportModal('${m.id}','${esc(m.name||'Anonim')}','${esc((m.text||'').replace(/'/g,"\\'").substring(0,80))}','${esc(m.uid||'')}')" title="Laporkan">🚩</button>`;
+        // User biasa bisa report, tapi tidak bisa report pesan admin
+        if (!isAdmin) {
+          btns += `<button class="chat-action-btn" onclick="openReportModal('${m.id}','${esc(m.name||'Anonim')}','${esc((m.text||'').replace(/'/g,"\\'").substring(0,80))}','${esc(m.uid||'')}')" title="Laporkan">🚩</button>`;
+        }
       }
       if (_amIAdmin && isEdited && m.originalText) {
         btns += `<button class="chat-action-btn" onclick="toggleOrig('${m.id}')" title="Lihat riwayat edit">📋</button>`;

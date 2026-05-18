@@ -1981,6 +1981,7 @@ window.copyMsgId = (msgId) => {
   navigator.clipboard?.writeText(msgId).then(() => toast('ID pesan disalin!')).catch(() => toast('ID: ' + msgId));
 };
 
+</script>
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
 fixBg();
