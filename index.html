@@ -756,14 +756,17 @@ async function resolveCustomRoleName(rawRole){
         const snap = await getDoc(doc(db, col, rawRole));
         if(snap.exists()){
           const data = snap.data();
-          // Kalau dokumen ini adalah user_roles (berisi field role/customRole), ambil nested-nya
+          // Kalau dokumen ini adalah user_roles: cek apakah ada field name langsung
           if(col === 'user_roles'){
+            const directName = data.name || data.label || data.title || null;
+            if(directName){
+              return { id:'custom', icon: data.icon||data.emoji||'🎭', name: directName, cls: data.cls||data.class||'role-custom' };
+            }
             const nestedId = data.role ?? data.customRole ?? data.custom_role ?? null;
             if(nestedId && nestedId !== rawRole){
-              // Resolve nested ID rekursif (satu level)
               return await resolveCustomRoleName(nestedId);
             }
-            continue; // tidak ada role nested, skip
+            continue;
           }
           const resolved = {
             id: 'custom',
@@ -776,9 +779,7 @@ async function resolveCustomRoleName(rawRole){
         }
       } catch(e){ console.warn('[role] fetch failed from', col, e.message); }
     }
-    // Tidak ditemukan di manapun — log untuk debug
-    console.warn('[role] ID not found in any collection:', rawRole);
-    // Fallback: pakai string apa adanya
+    // Tidak ditemukan di manapun — fallback ke string apa adanya (mungkin sudah nama)
     return rawRole;
   }
   return rawRole;
@@ -800,13 +801,23 @@ async function loadAndShowUserRole(uid){
     window._myCommentCount = commentCount;
     // Coba berbagai kemungkinan nama field di dokumen user_roles
     let rawRole = null;
+    let customRole = null;
     if(overrideSnap.exists()){
       const d = overrideSnap.data();
-      rawRole = d.role ?? d.customRole ?? d.custom_role ?? d.label ?? d.name ?? null;
-      console.log('[role] user_roles data:', d, '→ rawRole:', rawRole);
+      console.log('[role] user_roles data:', d);
+      // Jika dokumen user_roles sudah punya field name/label langsung → pakai, tidak perlu fetch lagi
+      const directName = d.name || d.label || d.title || null;
+      const roleId     = d.role ?? d.customRole ?? d.custom_role ?? null;
+      if(directName){
+        customRole = { id:'custom', icon: d.icon||d.emoji||'🎭', name: directName, cls: d.cls||d.class||'role-custom' };
+        console.log('[role] resolved directly from user_roles →', customRole.name);
+      } else if(roleId) {
+        rawRole = roleId;
+        console.log('[role] rawRole:', rawRole);
+      }
     }
-    // Resolve ID menjadi nama display yang sebenarnya
-    const customRole = await resolveCustomRoleName(rawRole);
+    // Jika belum resolve, coba lewat ID
+    if(!customRole) customRole = await resolveCustomRoleName(rawRole);
     window._myCustomRole = customRole;
     nudRoleBadge.innerHTML = getRoleBadgeHtmlIdx(commentCount, customRole);
     nudRole.style.display = '';
@@ -1577,6 +1588,21 @@ async function fetchCustomRoleById(roleId) {
       const snap = await getDoc(doc(_chatDb, col, roleId));
       if (snap.exists()) {
         const data = snap.data();
+        // Kalau user_roles: gunakan name langsung jika ada, atau ikuti nested role
+        if (col === 'user_roles') {
+          const directName = data.name || data.label || data.title || null;
+          const nestedId   = data.role ?? data.customRole ?? data.custom_role ?? null;
+          if (directName) {
+            _customRoleCache[roleId] = { id:'custom', icon: data.icon||data.emoji||'🎭', name: directName, cls: data.cls||data.class||'role-custom' };
+            if (_lastMsgs) renderMsgs(_lastMsgs);
+            return;
+          }
+          if (nestedId && nestedId !== roleId) {
+            // Fetch nested ID (non-recursive, cukup satu level)
+            fetchCustomRoleById(nestedId);
+          }
+          continue;
+        }
         _customRoleCache[roleId] = {
           id: 'custom',
           icon: data.icon || data.emoji || '🎭',
@@ -1662,9 +1688,11 @@ function renderMsgs(msgs) {
     const avatarHtml = m.photoURL
       ? `<img class="chat-msg-avatar" src="${esc(m.photoURL)}" alt="" onerror="this.style.display='none'">`
       : `<div class="chat-msg-avatar-ph">${esc((m.name||'?')[0].toUpperCase())}</div>`;
-    const role = getChatRole(m.commentCount||0, isAdmin, m.customRole ?? null);
+    // Untuk pesan sendiri: gunakan window._myCustomRole sebagai fallback jika pesan lama tidak punya customRole
+    const effectiveCustomRole = m.customRole ?? (isMe ? (window._myCustomRole ?? null) : null);
+    const role = getChatRole(m.commentCount||0, isAdmin, effectiveCustomRole);
     const roleBadge = `<span class="role-badge ${role.cls}" style="font-size:.48rem;padding:.1rem .35rem">${role.icon} ${esc(role.name)}</span>`;
-    const metaHtml = `<div class="chat-msg-meta">${isMe?'':avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}</div>`;
+    const metaHtml = `<div class="chat-msg-meta">${avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}</div>`;
 
     // Reply preview (jika pesan ini adalah balasan)
     let replyPreview = '';
