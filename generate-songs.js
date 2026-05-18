@@ -702,6 +702,10 @@ body.gate-open #lyrView{padding-top:0}
 .ep-save:disabled{opacity:.4;cursor:not-allowed}
 .ep-cancel{background:none;border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.55rem .9rem;cursor:pointer;transition:all .2s;border-radius:2px}
 .ep-cancel:hover{border-color:var(--red);color:var(--red)}
+.ep-img-row{display:flex;align-items:center;gap:.55rem}
+.ep-img-btn{background:rgba(255,110,180,.08);border:1px solid rgba(255,110,180,.2);color:var(--accent);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;border-radius:2px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.ep-img-btn:hover{background:rgba(255,110,180,.15)}
+.ep-img-status{font-size:.62rem;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ── Copy Lyric Gate ── */
 #copy-gate{margin:1.5rem 0 .5rem;padding:1.2rem 1.4rem;border:1px solid rgba(201,169,110,.2);border-radius:6px;background:rgba(201,169,110,.03);display:flex;flex-direction:column;align-items:flex-start;gap:.7rem}
 #copy-gate-title{font-size:.88rem;color:var(--text);font-weight:500}
@@ -993,10 +997,15 @@ body.gate-open #lyrView{padding-top:0}
       <input class="ep-inp" id="ep-displayname" type="text" placeholder="Nama yang tampil di komentar">
     </div>
     <div class="ep-field">
-      <div class="ep-lbl">URL Avatar Custom (opsional)</div>
-      <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg">
+      <div class="ep-lbl">Foto Profil</div>
+      <div class="ep-img-row">
+        <button class="ep-img-btn" onclick="document.getElementById('ep-img-input').click()">📷 Upload Foto</button>
+        <span class="ep-img-status" id="ep-img-status">Atau isi URL di bawah</span>
+      </div>
+      <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
+      <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama & avatar akan tampil di komentar. Kosongkan URL avatar untuk pakai foto Google.</div>
+    <div class="ep-note">Nama & avatar akan tampil di komentar. Kosongkan untuk pakai foto Google.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -1659,10 +1668,31 @@ document.addEventListener('click', e => {
 });
 
 /* ── Edit Profile ── */
+let _epImgFile = null;
+
+window.handleEpImg = inp => {
+  const file = inp.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Foto max 5MB.'); inp.value = ''; return; }
+  _epImgFile = file;
+  document.getElementById('ep-img-status').textContent = '✅ ' + file.name;
+  document.getElementById('ep-photourl').value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const av = document.getElementById('ep-avatar-big');
+    if (av) av.outerHTML = \`<img class="ep-avatar-big" src="\${e.target.result}" alt="preview" referrerpolicy="no-referrer" id="ep-avatar-big">\`;
+  };
+  reader.readAsDataURL(file);
+  inp.value = '';
+};
+
 window.openEditProfile = async () => {
   if (!_currentUser) return;
   const modal = document.getElementById('editProfileModal');
   if (!modal) return;
+  _epImgFile = null;
+  const statusEl = document.getElementById('ep-img-status');
+  if (statusEl) statusEl.textContent = 'Atau isi URL di bawah';
   // Isi preview avatar
   const bigWrap = document.getElementById('ep-avatar-wrap-big');
   const bigAv = document.getElementById('ep-avatar-big');
@@ -1693,6 +1723,7 @@ window.openEditProfile = async () => {
 window.closeEditProfile = () => {
   const modal = document.getElementById('editProfileModal');
   if (modal) modal.classList.remove('open');
+  _epImgFile = null;
 };
 
 window.saveEditProfile = async () => {
@@ -1702,16 +1733,31 @@ window.saveEditProfile = async () => {
   const btn = document.querySelector('.ep-save');
   if (btn) btn.disabled = true;
   try {
-    const newPhoto = document.getElementById('ep-photourl').value.trim();
-    // Validasi URL kalau diisi
+    let newPhoto = document.getElementById('ep-photourl').value.trim();
+    // Upload ke ImgBB kalau ada file yang dipilih
+    if (_epImgFile) {
+      const statusEl = document.getElementById('ep-img-status');
+      if (statusEl) statusEl.textContent = 'Uploading...';
+      const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+      const fd = new FormData();
+      fd.append('image', _epImgFile);
+      const res = await fetch(\`https://api.imgbb.com/1/upload?key=\${IMGBB_KEY}\`, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!json.success) throw new Error('Upload foto gagal');
+      newPhoto = json.data.url;
+      if (statusEl) statusEl.textContent = '✅ Upload berhasil';
+    }
+    // Validasi URL kalau diisi manual
     if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
+    const finalPhoto = newPhoto || _currentUser.photoURL || null;
     // Firebase Auth: updateProfile
-    await updateProfile(_currentUser, { displayName: newName, photoURL: newPhoto || _currentUser.photoURL || null });
+    await updateProfile(_currentUser, { displayName: newName, photoURL: finalPhoto });
     // Simpan custom photoURL ke Firestore user_profiles
     await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
+    // Update custom photo URL lokal
+    if (newPhoto) _customPhotoURL = newPhoto;
     // Update floating avatar bubble
     const avatarWrap = document.getElementById('nav-avatar-wrap');
-    const finalPhoto = newPhoto || _currentUser.photoURL;
     if (finalPhoto) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
@@ -1731,6 +1777,7 @@ window.saveEditProfile = async () => {
         epAvBig.textContent = newName[0].toUpperCase();
       }
     }
+    _epImgFile = null;
     toast('Profil berhasil diperbarui! ✨');
     closeEditProfile();
   } catch(e) { toast('Gagal simpan: ' + (e.message || e.code)); }
@@ -2123,7 +2170,7 @@ window.markAllNotifsRead = async () => {
   }catch(e){}
 };
 
-window.deleteReadNotifs = async function deleteReadNotifs(){
+async function deleteReadNotifs(){
   if(!_currentUser) return;
   try{
     const snap=await getDocs(query(
