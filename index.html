@@ -1211,8 +1211,9 @@ window.addEventListener('resize', fixBg);
 
 <!-- ── FLOATING GROUP CHAT ── -->
 <style>
-#chat-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,255,.35);transition:transform .2s,box-shadow .2s,opacity .2s}
+#chat-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,255,.35);transition:transform .2s,box-shadow .2s,opacity .2s,pointer-events .2s}
 #chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,229,255,.5)}
+#chat-fab.hidden{opacity:0;pointer-events:none}
 #chat-fab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #chat-unread{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.52rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;pointer-events:none;line-height:1}
 #chat-unread.show{display:flex}
@@ -1372,7 +1373,7 @@ window.addEventListener('resize', fixBg);
 </div>
 
 <script type="module">
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc, doc, getDoc }
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc, doc, getDoc, getDocs }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -1394,6 +1395,7 @@ let _chatImgFile = null;
 let _chatUnreadCount = 0;
 let _chatLastSeen = Date.now();
 let _chatInited = false;
+let _lastMsgs = null;
 
 function isMobile() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1445,15 +1447,15 @@ window.toggleChat = () => {
     _chatUnreadCount = 0;
     updateUnreadBadge();
     setTimeout(() => scrollChatBottom(true), 80);
-    // Sembunyiin fab saat chat terbuka supaya ga nabrak tombol send
-    if (fab) fab.style.opacity = '0';
+    // Sembunyiin fab + matikan pointer-events saat chat terbuka
+    if (fab) fab.classList.add('hidden');
     // Jangan auto-focus di mobile supaya keyboard ga langsung kebuka
     if (!isMobile()) {
       document.getElementById('chat-inp').focus();
     }
   } else {
     // Munculin fab lagi
-    if (fab) fab.style.opacity = '1';
+    if (fab) fab.classList.remove('hidden');
     // Blur input saat chat ditutup (penting untuk Android)
     const inp = document.getElementById('chat-inp');
     if (inp) inp.blur();
@@ -1496,6 +1498,30 @@ function fmtDateSep(ts) {
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// Cache custom roles dari Firestore
+const _customRoleCache = {}; // { [id]: { icon, name, cls } }
+let _customRoleCacheLoaded = false;
+
+async function loadCustomRoleCache() {
+  if (_customRoleCacheLoaded) return;
+  try {
+    // Import getDocs & collection sudah tersedia dari scope chat module
+    const snap = await getDocs(collection(_chatDb, 'custom_roles'));
+    snap.forEach(d => {
+      const data = d.data();
+      _customRoleCache[d.id] = {
+        id: 'custom',
+        icon: data.icon || '🎭',
+        name: data.name || d.id,
+        cls: data.cls || 'role-custom'
+      };
+    });
+    _customRoleCacheLoaded = true;
+  } catch(e) {
+    _customRoleCacheLoaded = true; // jangan retry terus
+  }
+}
+
 function getChatRole(commentCount, isAdmin, customRole) {
   if (isAdmin) return { icon:'👑', name:'Admin', cls:'role-4' };
   const defs = typeof _roleDefs !== 'undefined' ? _roleDefs : [
@@ -1509,16 +1535,19 @@ function getChatRole(commentCount, isAdmin, customRole) {
     { id:7, icon:'💀', name:'Overlord', threshold:200, cls:'role-7' },
   ];
   if (customRole !== null && customRole !== undefined) {
-    // Sudah berupa object role yang di-resolve
+    // Sudah berupa object role yang di-resolve (misal dari window._myCustomRole)
     if (typeof customRole === 'object' && customRole.name) return customRole;
     if (typeof customRole === 'number') {
       const found = defs.find(r => r.id === customRole);
       if (found) return found;
     } else if (typeof customRole === 'string') {
-      // Jika terlihat seperti ID acak (pola CR_angka atau string panjang > 20 char), fallback ke role biasa
+      // Cek cache dulu (string ID seperti CR_xxx)
+      if (_customRoleCache[customRole]) return _customRoleCache[customRole];
+      // Jika terlihat seperti ID acak (pola XX_angka atau panjang > 20), fallback ke role biasa
       if (/^[A-Za-z]{1,4}_\d{5,}$/.test(customRole) || customRole.length > 20) {
-        // Data lama belum di-resolve — fallback ke role berdasarkan commentCount
+        // belum ter-cache / tidak ditemukan — fallback ke commentCount
       } else {
+        // String readable langsung (nama role custom pendek)
         return { id:'custom', icon:'🎭', name: customRole, cls:'role-custom' };
       }
     }
@@ -1642,11 +1671,17 @@ function initChat(user) {
   document.getElementById('chat-msgs').style.display = 'flex';
   document.getElementById('chat-inp-wrap').classList.add('show');
 
+  // Load cache custom roles sekali, lalu render ulang kalau ada perubahan
+  loadCustomRoleCache().then(() => {
+    // Kalau sudah ada pesan yang dirender sebelum cache siap, render ulang
+    if (_chatInited && _lastMsgs) renderMsgs(_lastMsgs);
+  });
+
   if (_chatUnsub) _chatUnsub();
   const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
   _chatUnsub = onSnapshot(q, snap => {
-    const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderMsgs(msgs);
+    _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMsgs(_lastMsgs);
 
     // Hitung unread
     if (!_chatOpen) {
@@ -1725,11 +1760,16 @@ window.sendChatMsg = async () => {
 
   try {
     const commentCount = window._myCommentCount || 0;
-    // Jika customRole adalah object (sudah di-resolve), simpan sebagai string nama saja
     const rawCustomRole = window._myCustomRole ?? null;
-    const customRole = (rawCustomRole && typeof rawCustomRole === 'object')
-      ? rawCustomRole  // Firestore bisa simpan object plain
-      : rawCustomRole;
+    // Simpan ke Firestore sebagai string nama saja (bukan object)
+    let customRole = null;
+    if (rawCustomRole !== null && rawCustomRole !== undefined) {
+      if (typeof rawCustomRole === 'object' && rawCustomRole.name) {
+        customRole = rawCustomRole.name; // simpan nama string saja
+      } else {
+        customRole = rawCustomRole;
+      }
+    }
     await addDoc(collection(_chatDb,'group_chat'), {
       uid: _chatUser.uid,
       name: _chatUser.displayName || 'Anonim',
