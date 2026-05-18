@@ -1175,7 +1175,7 @@ window.addEventListener('resize', fixBg);
 
 <!-- ── FLOATING GROUP CHAT ── -->
 <style>
-#chat-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,255,.35);transition:transform .2s,box-shadow .2s}
+#chat-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,255,.35);transition:transform .2s,box-shadow .2s,opacity .2s}
 #chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,229,255,.5)}
 #chat-fab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #chat-unread{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.52rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;pointer-events:none;line-height:1}
@@ -1312,16 +1312,21 @@ function isMobile() {
 window.toggleChat = () => {
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
+  const fab = document.getElementById('chat-fab');
   if (_chatOpen) {
     _chatLastSeen = Date.now();
     _chatUnreadCount = 0;
     updateUnreadBadge();
     setTimeout(() => scrollChatBottom(true), 80);
+    // Sembunyiin fab saat chat terbuka supaya ga nabrak tombol send
+    if (fab) fab.style.opacity = '0';
     // Jangan auto-focus di mobile supaya keyboard ga langsung kebuka
     if (!isMobile()) {
       document.getElementById('chat-inp').focus();
     }
   } else {
+    // Munculin fab lagi
+    if (fab) fab.style.opacity = '1';
     // Blur input saat chat ditutup (penting untuk Android)
     const inp = document.getElementById('chat-inp');
     if (inp) inp.blur();
