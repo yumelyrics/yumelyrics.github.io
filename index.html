@@ -1845,9 +1845,8 @@ onAuthStateChanged(_chatAuth, user => {
         Login dengan Google
       </button>
     </div>`;
-    // Load pesan untuk guest
+    // Load pesan untuk guest (hanya kalau belum ada listener aktif)
     if (!_chatUnsub) initGuestChat();
-    if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
   }
 });
 
