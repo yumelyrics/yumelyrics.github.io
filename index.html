@@ -731,7 +731,7 @@ function getRoleBadgeHtmlIdx(commentCount, customRole){
       role = _roleDefs.find(r=>r.id===customRole) || _roleDefs[0];
     } else if(typeof customRole === 'string'){
       // Jika terlihat seperti ID acak, fallback ke role biasa
-      if(/^[A-Za-z]{1,4}_\d{5,}$/.test(customRole) || customRole.length > 20){
+      if(/^[A-Za-z]{1,4}[_:][A-Za-z0-9_:]{3,}$/.test(customRole) || customRole.length > 20){
         role = null; // akan diisi oleh logic commentCount di bawah
       } else {
         role = { id:'custom', icon:'🎭', name: customRole, cls:'role-custom' };
@@ -750,12 +750,21 @@ async function resolveCustomRoleName(rawRole){
   if(typeof rawRole === 'number') return rawRole;
   if(typeof rawRole === 'string'){
     // Coba fetch dari berbagai kemungkinan nama koleksi
-    const collections = ['custom_roles', 'role_config', 'roles', 'user_role_defs'];
+    const collections = ['custom_roles', 'role_config', 'roles', 'user_role_defs', 'user_roles'];
     for(const col of collections){
       try {
         const snap = await getDoc(doc(db, col, rawRole));
         if(snap.exists()){
           const data = snap.data();
+          // Kalau dokumen ini adalah user_roles (berisi field role/customRole), ambil nested-nya
+          if(col === 'user_roles'){
+            const nestedId = data.role ?? data.customRole ?? data.custom_role ?? null;
+            if(nestedId && nestedId !== rawRole){
+              // Resolve nested ID rekursif (satu level)
+              return await resolveCustomRoleName(nestedId);
+            }
+            continue; // tidak ada role nested, skip
+          }
           const resolved = {
             id: 'custom',
             icon: data.icon || data.emoji || '🎭',
@@ -917,27 +926,30 @@ onAuthStateChanged(auth, async user => {
   if(user){
     _isAdmin = user.email === ADMIN_EMAIL;
 
-    // Sembunyikan login, tampilkan avatar wrap dulu
+    // Tampilkan UI dulu sebelum Firestore calls
     loginBtn.style.display   = 'none';
-    avatarWrap.style.display = '';
-
-    // Ambil foto — coba dari user_profiles dulu, fallback ke Google photo
-    _customPhoto = user.photoURL || null;
-    try{
-      const up = await getDoc(doc(db,'user_profiles',user.uid));
-      if(up.exists() && up.data().photoURL) _customPhoto = up.data().photoURL;
-    }catch(e){}
+    avatarWrap.style.display = 'flex';
 
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName||'User');
     nudName.textContent  = displayName;
     nudEmail.textContent = user.email||'';
 
-    // Update avatar di float-avatar-wrap
+    // Set foto dari Google dulu (langsung tampil)
+    _customPhoto = user.photoURL || null;
     _updateAvatar(_customPhoto, displayName);
 
-    // Load & tampilkan role di dropdown
+    // Kemudian coba ambil custom photo dari Firestore (non-blocking)
+    try{
+      const up = await getDoc(doc(db,'user_profiles',user.uid));
+      if(up.exists() && up.data().photoURL){
+        _customPhoto = up.data().photoURL;
+        _updateAvatar(_customPhoto, displayName);
+      }
+    }catch(e){}
+
+    // Load & tampilkan role di dropdown (non-blocking)
     if(!_isAdmin){
-      loadAndShowUserRole(user.uid);
+      loadAndShowUserRole(user.uid).catch(()=>{});
     }
 
     startNotifListener(user.uid);
@@ -1559,7 +1571,7 @@ async function loadCustomRoleCache() {
 async function fetchCustomRoleById(roleId) {
   if (_pendingRoleFetch.has(roleId)) return;
   _pendingRoleFetch.add(roleId);
-  const cols = ['custom_roles', 'role_config', 'roles', 'user_role_defs'];
+  const cols = ['custom_roles', 'role_config', 'roles', 'user_role_defs', 'user_roles'];
   for (const col of cols) {
     try {
       const snap = await getDoc(doc(_chatDb, col, roleId));
@@ -1605,7 +1617,7 @@ function getChatRole(commentCount, isAdmin, customRole) {
       if (_customRoleCache[customRole]) return _customRoleCache[customRole];
       if (_customRoleCache[customRole] === null) {
         // Sudah dicoba fetch, tidak ada — fallback ke commentCount
-      } else if (/^[A-Za-z]{1,4}_\d{5,}$/.test(customRole) || customRole.length > 20) {
+      } else if (/^[A-Za-z]{1,4}[_:][A-Za-z0-9_:]{3,}$/.test(customRole) || customRole.length > 20) {
         // Terlihat seperti ID — coba fetch on-demand
         fetchCustomRoleById(customRole);
         // Sementara fallback ke commentCount sampai fetch selesai
