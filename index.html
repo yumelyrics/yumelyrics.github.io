@@ -235,29 +235,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .report-submit-btn:hover{opacity:.85}
 .report-submit-btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ── BAN MODAL ── */
-#ban-modal-overlay{position:fixed;inset:0;z-index:1300;background:rgba(6,3,15,.93);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:1rem}
-#ban-modal-overlay.open{display:flex}
-.ban-modal{width:100%;max-width:380px;background:rgba(12,6,28,.99);border:1px solid rgba(255,165,0,.25);border-radius:14px;padding:1.6rem;display:flex;flex-direction:column;gap:1rem;animation:chatUp .18s ease}
-.ban-modal-title{font-size:.92rem;font-weight:700;color:#f5a623;letter-spacing:.04em;display:flex;align-items:center;gap:.5rem}
-.ban-modal-sub{font-size:.72rem;color:var(--muted);line-height:1.6;margin-top:-.3rem}
-.ban-modal-sub strong{color:var(--text)}
-.ban-reason-label{font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.35rem}
-.ban-reason-inp{background:rgba(255,255,255,.04);border:1px solid rgba(255,165,0,.2);color:var(--text);font-family:var(--en);font-size:.78rem;padding:.55rem .85rem;border-radius:8px;outline:none;width:100%;transition:border-color .2s}
-.ban-reason-inp:focus{border-color:rgba(255,165,0,.55)}
-.ban-reason-inp::placeholder{color:var(--muted)}
-.ban-dur-label{font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.45rem}
-.ban-dur-pills{display:flex;flex-wrap:wrap;gap:.4rem}
-.ban-dur-pill-m{background:none;border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.62rem;color:var(--muted);letter-spacing:.08em;padding:.32rem .72rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-transform:uppercase}
-.ban-dur-pill-m:hover{border-color:rgba(255,165,0,.45);color:#f5a623}
-.ban-dur-pill-m.sel{background:rgba(255,165,0,.15);border-color:#f5a623;color:#f5a623;font-weight:600}
-.ban-modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.2rem}
-.ban-cancel-btn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--muted);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer;border-radius:7px;transition:all .2s}
-.ban-cancel-btn:hover{border-color:var(--muted);color:var(--text)}
-.ban-submit-btn{background:linear-gradient(135deg,rgba(255,165,0,.9),rgba(255,100,50,.85));border:none;color:#fff;font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1.2rem;cursor:pointer;border-radius:7px;transition:opacity .2s;font-weight:600}
-.ban-submit-btn:hover{opacity:.85}
-.ban-submit-btn:disabled{opacity:.4;cursor:not-allowed}
-
 /* ── ADMIN REPORT BADGE IN DROPDOWN ── */
 #nud-report-section{padding:.4rem .8rem;border-top:1px solid rgba(255,255,255,.07);margin-top:.3rem}
 .nud-report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
@@ -1695,7 +1672,7 @@ window.addEventListener('resize', fixBg);
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       </button>
       <input id="chat-img-input" type="file" accept="image/*" onchange="handleChatImg(this)">
-      <textarea id="chat-inp" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="autoResize(this)" onfocus="this.removeAttribute('readonly');updateChatPlaceholder()" onblur="resetChatPlaceholder()" readonly></textarea>
+      <textarea id="chat-inp" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="autoResize(this)" onfocus="this.removeAttribute('readonly')" readonly></textarea>
       <button id="chat-send" onclick="sendChatMsg()" title="Kirim">
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
@@ -1719,32 +1696,6 @@ window.addEventListener('resize', fixBg);
     <div class="report-modal-actions">
       <button class="report-cancel-btn" onclick="closeReportModal()">Batal</button>
       <button class="report-submit-btn" id="report-submit-btn" onclick="submitReport()" disabled>Kirim Laporan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── BAN MODAL ── -->
-<div id="ban-modal-overlay">
-  <div class="ban-modal">
-    <div class="ban-modal-title">🚫 Ban User</div>
-    <div class="ban-modal-sub" id="ban-modal-sub">Pilih alasan dan durasi ban:</div>
-    <div>
-      <div class="ban-reason-label">Alasan Ban</div>
-      <input class="ban-reason-inp" id="ban-reason-inp" type="text" placeholder="Contoh: spam, toxic, dll. (opsional)">
-    </div>
-    <div>
-      <div class="ban-dur-label">Durasi Ban</div>
-      <div class="ban-dur-pills">
-        <button class="ban-dur-pill-m sel" data-dur="" onclick="selectBanDur(this,'')">♾ Permanen</button>
-        <button class="ban-dur-pill-m" data-dur="1h" onclick="selectBanDur(this,'1h')">1 Jam</button>
-        <button class="ban-dur-pill-m" data-dur="24h" onclick="selectBanDur(this,'24h')">24 Jam</button>
-        <button class="ban-dur-pill-m" data-dur="7d" onclick="selectBanDur(this,'7d')">7 Hari</button>
-        <button class="ban-dur-pill-m" data-dur="30d" onclick="selectBanDur(this,'30d')">30 Hari</button>
-      </div>
-    </div>
-    <div class="ban-modal-actions">
-      <button class="ban-cancel-btn" onclick="closeBanModal()">Batal</button>
-      <button class="ban-submit-btn" id="ban-submit-btn" onclick="executeBan()">🚫 Ban</button>
     </div>
   </div>
 </div>
@@ -2095,14 +2046,10 @@ function renderMsgs(msgs) {
         btns += `<button class="chat-action-btn del" onclick="deleteMyMsg('${m.id}')" title="Hapus">🗑️</button>`;
       } else if (_amIAdmin) {
         btns += `<button class="chat-action-btn del" onclick="adminDeleteMsg('${m.id}')" title="Hapus (Admin)">🗑️</button>`;
-        if (!isAdmin) {
-          btns += `<button class="chat-action-btn" onclick="adminBanFromMsg('${m.id}','${esc(m.name||'Anonim')}','${esc(m.uid||'')}','${esc(m.email||'')}')" title="Ban User">🚫</button>`;
-        }
+        btns += `<button class="chat-action-btn" onclick="adminBanFromMsg('${m.id}','${esc(m.name||'Anonim')}','${esc(m.uid||'')}','${esc(m.email||'')}')" title="Ban User">🚫</button>`;
       } else {
-        // User biasa bisa report, tapi tidak bisa report pesan admin
-        if (!isAdmin) {
-          btns += `<button class="chat-action-btn" onclick="openReportModal('${m.id}','${esc(m.name||'Anonim')}','${esc((m.text||'').replace(/'/g,"\\'").substring(0,80))}','${esc(m.uid||'')}')" title="Laporkan">🚩</button>`;
-        }
+        // User lain bisa report (tapi tidak bisa report diri sendiri)
+        btns += `<button class="chat-action-btn" onclick="openReportModal('${m.id}','${esc(m.name||'Anonim')}','${esc((m.text||'').replace(/'/g,"\\'").substring(0,80))}')" title="Laporkan">🚩</button>`;
       }
       if (_amIAdmin && isEdited && m.originalText) {
         btns += `<button class="chat-action-btn" onclick="toggleOrig('${m.id}')" title="Lihat riwayat edit">📋</button>`;
@@ -2276,10 +2223,12 @@ window.sendChatMsg = async () => {
   const _amIAdmin = ADMIN_EMAILS.includes(_chatUser?.email||'');
   if (_amIAdmin && t.startsWith('/banned ')) {
     const target = t.slice(8).trim();
-    if (!target) { toast('Tulis: /banned @nama atau /banned nama'); return; }
+    if (!target) { toast('Tulis: /banned @nama atau /banned uid:xxx'); return; }
+    btn.disabled = true;
+    await handleBanCommand(target);
     inp.value = '';
     inp.style.height = 'auto';
-    await handleBanCommand(target);
+    btn.disabled = false;
     return;
   }
 
@@ -2330,17 +2279,6 @@ window.sendChatMsg = async () => {
   if (!isMobile()) {
     inp.focus();
   }
-};
-
-window.updateChatPlaceholder = () => {
-  const inp = document.getElementById('chat-inp');
-  if (!inp) return;
-  const _amIAdmin = _chatUser && ADMIN_EMAILS.includes(_chatUser.email||'');
-  if (_amIAdmin) inp.placeholder = 'Tulis pesan... | Admin: /banned @nama';
-};
-window.resetChatPlaceholder = () => {
-  const inp = document.getElementById('chat-inp');
-  if (inp && !inp.value) inp.placeholder = 'Tulis pesan...';
 };
 
 window.chatKeydown = e => {
@@ -2499,89 +2437,35 @@ window.closeChatImg = () => {
   setTimeout(() => { if (img) img.src = ''; }, 200);
 };
 
-// ── BAN MODAL STATE ──
-let _banTarget = null; // { uid, name, email, msgId, isCommand }
-let _banDur = ''; // '' = permanen, '1h', '24h', '7d', '30d'
-
-window.selectBanDur = (btn, dur) => {
-  document.querySelectorAll('.ban-dur-pill-m').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-  _banDur = dur;
-};
-
-window.closeBanModal = () => {
-  document.getElementById('ban-modal-overlay').classList.remove('open');
-  _banTarget = null;
-  _banDur = '';
-  document.querySelectorAll('.ban-dur-pill-m').forEach((b,i)=>b.classList.toggle('sel',i===0));
-  document.getElementById('ban-reason-inp').value = '';
-};
-
-function openBanModal(uid, name, email, msgId, isCommand) {
-  _banTarget = { uid, name, email, msgId: msgId||null, isCommand: !!isCommand };
-  _banDur = '';
-  document.querySelectorAll('.ban-dur-pill-m').forEach((b,i)=>b.classList.toggle('sel',i===0));
-  document.getElementById('ban-reason-inp').value = '';
-  document.getElementById('ban-modal-sub').innerHTML = `Ban akun <strong>${esc(name)}</strong> dari grup chat?`;
-  document.getElementById('ban-modal-overlay').classList.add('open');
-}
-
-document.getElementById('ban-modal-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('ban-modal-overlay')) closeBanModal();
-});
-
-window.executeBan = async () => {
-  if (!_banTarget || !_chatUser) return;
-  const btn = document.getElementById('ban-submit-btn');
-  btn.disabled = true;
-  const reason = document.getElementById('ban-reason-inp').value.trim() || 'Dibanned oleh admin';
-  let bannedUntil = null;
-  if (_banDur) {
-    const match = _banDur.match(/^(\d+)(h|d)$/i);
-    if (match) {
-      const ms = parseInt(match[1]) * (match[2].toLowerCase() === 'h' ? 3600000 : 86400000);
-      bannedUntil = Date.now() + ms;
-    }
-  }
-  try {
-    const { setDoc, doc: fsDoc } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-    await setDoc(fsDoc(_chatDb, 'banned_users', _banTarget.uid), {
-      uid: _banTarget.uid,
-      name: _banTarget.name,
-      email: _banTarget.email || '',
-      reason,
-      bannedAt: Date.now(),
-      bannedUntil,
-      bannedBy: _chatUser.email,
-      triggerMsg: _banTarget.msgId,
-    });
-    _bannedUidsCache.add(_banTarget.uid);
-    if (_lastMsgs) renderMsgs(_lastMsgs);
-    // Jika dari perintah /banned, kirim notif sistem ke chat
-    if (_banTarget.isCommand) {
-      const durLabel = _banDur ? ` selama ${_banDur}` : ' secara permanen';
-      await addDoc(collection(_chatDb,'group_chat'), {
-        uid: _chatUser.uid, name: 'System', email: _chatUser.email,
-        photoURL: null, text: `🚫 ${_banTarget.name} telah dibanned${durLabel} oleh admin.`,
-        imgUrl: null, commentCount: 0, customRole: null, replyTo: null,
-        isSystem: true, ts: serverTimestamp()
-      });
-    }
-    toast(`✅ ${_banTarget.name} berhasil dibanned.`);
-    closeBanModal();
-  } catch(e) {
-    toast('Gagal ban: ' + (e.message||''));
-    btn.disabled = false;
-  }
-};
-
 // ── ADMIN BAN FROM MSG BUTTON ──
 window.adminBanFromMsg = async (msgId, name, uid, email) => {
   if (!_chatUser || !ADMIN_EMAILS.includes(_chatUser.email||'')) return;
-  openBanModal(uid, name, email, msgId, false);
+  const reason = prompt(`Ban "${name}"?\nMasukkan alasan ban (kosongkan = "Dibanned oleh admin"):`);
+  if (reason === null) return; // cancelled
+  const dur = prompt('Durasi ban:\n• Kosongkan = permanen\n• Contoh: 1h (1 jam), 1d (1 hari), 7d (7 hari), 30d (30 hari)');
+  if (dur === null) return;
+  let bannedUntil = null;
+  if (dur.trim()) {
+    const match = dur.trim().match(/^(\d+)(h|d)$/i);
+    if (!match) { toast('Format durasi tidak valid. Pakai contoh: 1h, 7d'); return; }
+    const ms = parseInt(match[1]) * (match[2].toLowerCase() === 'h' ? 3600000 : 86400000);
+    bannedUntil = Date.now() + ms;
+  }
+  try {
+    const { setDoc, doc: fsDoc, serverTimestamp: fsST } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+    await setDoc(fsDoc(_chatDb, 'banned_users', uid), {
+      uid, name, email,
+      reason: reason.trim() || 'Dibanned oleh admin',
+      bannedAt: Date.now(),
+      bannedUntil,
+      bannedBy: _chatUser.email,
+      triggerMsg: msgId,
+    });
+    _bannedUidsCache.add(uid);
+    if (_lastMsgs) renderMsgs(_lastMsgs);
+    toast(`✅ ${name} berhasil dibanned.`);
+  } catch(e) { toast('Gagal ban: ' + (e.message||'')); }
 };
-
-window.openBanModal = openBanModal;
 
 // ── /banned COMMAND HANDLER ──
 async function handleBanCommand(target) {
@@ -2604,17 +2488,46 @@ async function handleBanCommand(target) {
     return;
   }
 
-  // Buka ban modal untuk konfirmasi & pilih durasi
-  openBanModal(targetMsg.uid, targetMsg.name, targetMsg.email||'', null, true);
+  // Kirim notif sistem ke chat
+  try {
+    await addDoc(collection(_chatDb,'group_chat'), {
+      uid: _chatUser.uid,
+      name: 'System',
+      email: _chatUser.email,
+      photoURL: null,
+      text: `🚫 ${targetMsg.name} telah dibanned oleh admin.`,
+      imgUrl: null,
+      commentCount: 0,
+      customRole: null,
+      replyTo: null,
+      isSystem: true,
+      ts: serverTimestamp()
+    });
+    // Ban user
+    const { setDoc, doc: fsDoc } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+    await setDoc(fsDoc(_chatDb,'banned_users',targetMsg.uid), {
+      uid: targetMsg.uid,
+      name: targetMsg.name,
+      email: targetMsg.email||'',
+      reason: 'Dibanned via perintah /banned di grup chat',
+      bannedAt: Date.now(),
+      bannedUntil: null,
+      bannedBy: _chatUser.email,
+      triggerMsg: null,
+    });
+    _bannedUidsCache.add(targetMsg.uid);
+    if (_lastMsgs) renderMsgs(_lastMsgs);
+    toast(`✅ ${targetMsg.name} berhasil dibanned.`);
+  } catch(e) { toast('Gagal ban: ' + (e.message||'')); }
 }
 
 // ── REPORT MODAL ──
 let _reportTarget = null; // { msgId, name, text }
 let _reportReason = null;
 
-window.openReportModal = (msgId, name, text, uid) => {
+window.openReportModal = (msgId, name, text) => {
   if (!_chatUser) { toast('Login dulu untuk melaporkan.'); return; }
-  _reportTarget = { msgId, name, text, uid: uid||'' };
+  _reportTarget = { msgId, name, text };
   _reportReason = null;
   document.getElementById('report-modal-sub').textContent = `Laporkan pesan dari ${name}:`;
   document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('sel'));
@@ -2651,11 +2564,9 @@ window.submitReport = async () => {
   const btn = document.getElementById('report-submit-btn');
   btn.disabled = true;
   try {
-    const { addDoc: fsAdd, collection: fsCol, serverTimestamp: fsST } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-    await fsAdd(fsCol(_chatDb,'chat_reports'), {
+    await addDoc(collection(_chatDb,'chat_reports'), {
       msgId: _reportTarget.msgId,
       reportedName: _reportTarget.name,
-      reportedUid: _reportTarget.uid || '',
       msgPreview: _reportTarget.text.substring(0,120),
       reason: finalReason,
       reporterUid: _chatUser.uid,
