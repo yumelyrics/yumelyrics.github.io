@@ -209,6 +209,32 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .cm-reply-btn:hover{background:rgba(79,126,196,.1)}
 .cm-empty{font-size:.78rem;color:var(--muted);font-style:italic;padding:1rem 0}
 
+/* ── REPORT CARDS ── */
+.report-card{background:rgba(255,77,109,.03);border:1px solid rgba(255,77,109,.18);padding:1.1rem 1.2rem;transition:border-color .2s;border-radius:2px;display:flex;flex-direction:column;gap:.65rem;margin-bottom:.7rem}
+.report-card:hover{border-color:rgba(255,77,109,.35)}
+.report-card.resolved{background:rgba(52,211,153,.02);border-color:rgba(52,211,153,.18);opacity:.75}
+.report-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.report-card-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.report-type-badge{font-size:.54rem;color:var(--red);border:1px solid rgba(255,77,109,.4);padding:.14rem .5rem;border-radius:2rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.report-type-badge.resolved{color:#34d399;border-color:rgba(52,211,153,.35)}
+.report-card-date{font-size:.62rem;color:var(--muted)}
+.report-card-body{display:flex;flex-direction:column;gap:.3rem}
+.report-card-reason{font-size:.72rem;font-weight:600;color:var(--red);letter-spacing:.04em}
+.report-card-reported{font-size:.82rem;color:var(--text);font-weight:500}
+.report-card-msg{font-size:.78rem;color:var(--muted);line-height:1.6;padding:.45rem .75rem;border-left:2px solid rgba(255,77,109,.3);background:rgba(255,77,109,.04);font-style:italic;border-radius:0 4px 4px 0}
+.report-card-reporter{font-size:.65rem;color:var(--muted)}
+.report-card-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.report-act-ban{background:none;border:1px solid rgba(255,165,0,.4);color:#f5a623;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;cursor:pointer;transition:all .2s;border-radius:4px}
+.report-act-ban:hover{background:rgba(255,165,0,.1)}
+.report-act-dismiss{background:none;border:1px solid rgba(255,255,255,.12);color:var(--muted);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;cursor:pointer;transition:all .2s;border-radius:4px}
+.report-act-dismiss:hover{border-color:rgba(52,211,153,.4);color:#34d399}
+.report-act-goto{background:none;border:1px solid rgba(79,126,196,.3);color:var(--accent2);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;cursor:pointer;transition:all .2s;border-radius:4px;text-decoration:none;display:inline-flex;align-items:center}
+.report-act-goto:hover{background:rgba(79,126,196,.1)}
+.report-resolved-label{font-size:.6rem;color:#34d399;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .8rem;border:1px solid rgba(52,211,153,.25);border-radius:4px;display:inline-flex;align-items:center;gap:.3rem}
+
+@keyframes anchorFlash{0%,100%{background:rgba(255,77,109,.03)}25%,75%{background:rgba(255,77,109,.12)}}
+.highlight-anchor{animation:anchorFlash 1.2s ease 2}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
@@ -392,6 +418,23 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <button class="cmtab" onclick="switchCmTab('stories',this)">✦ Cerita</button>
     </div>
     <div class="cm-list" id="cmList"><div class="cm-empty">Memuat komentar...</div></div>
+  </div>
+
+  <!-- ── LAPORAN USER (CHAT REPORTS) ── -->
+  <div class="section-block" id="reports-section">
+    <div class="sblock-head">
+      <div class="sblock-info">
+        <div class="sblock-tit">🚨 Laporan Pesan Chat</div>
+        <div class="sblock-desc">Laporan pesan grup chat dari user. Tinjau dan eksekusi: ban user, hapus pesan, atau abaikan laporan.</div>
+      </div>
+      <div class="sblock-count" id="reportCountBadge">0 laporan</div>
+    </div>
+    <div class="ftabs" id="report-filter-tabs">
+      <button class="ftab on" onclick="filterReports('pending',this)">🔴 Pending</button>
+      <button class="ftab" onclick="filterReports('resolved',this)">✅ Selesai</button>
+      <button class="ftab" onclick="filterReports('all',this)">Semua</button>
+    </div>
+    <div class="cm-list" id="reportList"><div class="cm-empty">Memuat laporan...</div></div>
   </div>
 
   <!-- ── BANNED USERS ── -->
@@ -592,8 +635,11 @@ function toast(m){
 // ── ESCAPE HTML ──
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+let currentUser = null;
+
 // ── AUTH ──
 onAuthStateChanged(auth, async user => {
+  currentUser = user;
   if(user){
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display = 'block';
@@ -601,8 +647,10 @@ onAuthStateChanged(auth, async user => {
     await loadSongMap();
     loadCmAdmin('songs');
     loadBannedUsers();
+    loadChatReports();
     initRoleSystem();
   } else {
+    currentUser = null;
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display = 'none';
     if(unsubSubs){ unsubSubs(); unsubSubs = null; }
@@ -1716,7 +1764,132 @@ async function loadBannedUsers(){
     el.innerHTML = '<div class="cm-empty">Gagal memuat daftar banned.<br><small style="color:var(--muted);font-size:.65rem">' + (e.code||'') + ': ' + (e.message||'') + '</small><br><button class="cm-unban" style="margin-top:.5rem" onclick="loadBannedUsers()">&#x21BA; Coba Lagi</button></div>';
   }
 }
-</script>
+
+// ── LAPORAN USER (CHAT REPORTS) ──
+let _allReports = [];
+let _reportFilter = 'pending';
+
+async function loadChatReports() {
+  const el = document.getElementById('reportList');
+  if (!el) return;
+  try {
+    const snap = await getDocs(query(collection(db,'chat_reports'), orderBy('ts','desc')));
+    _allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderReports();
+    const badge = document.getElementById('reportCountBadge');
+    if (badge) badge.textContent = _allReports.filter(r=>r.status==='pending').length + ' laporan';
+  } catch(e) {
+    if (el) el.innerHTML = '<div class="cm-empty">Gagal memuat laporan: ' + (e.message||'') + '</div>';
+  }
+}
+
+function filterReports(status, btn) {
+  _reportFilter = status;
+  document.querySelectorAll('#report-filter-tabs .ftab').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  renderReports();
+}
+
+function renderReports() {
+  const el = document.getElementById('reportList');
+  if (!el) return;
+  const filtered = _reportFilter === 'all'
+    ? _allReports
+    : _allReports.filter(r => r.status === _reportFilter);
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="cm-empty">Tidak ada laporan${_reportFilter==='pending'?' aktif':_reportFilter==='resolved'?' yang selesai':''}.</div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(r => {
+    const ts = r.ts ? new Date(r.ts).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const isResolved = r.status === 'resolved';
+    const anchorId = 'report-' + r.id;
+    return `<div class="report-card${isResolved?' resolved':''}" id="${anchorId}">
+      <div class="report-card-head">
+        <div class="report-card-meta">
+          <span class="report-type-badge${isResolved?' resolved':''}">${isResolved?'✅ Selesai':'🔴 Pending'}</span>
+          <span style="font-size:.72rem;color:var(--text);font-weight:500">${escHtml(r.reason||'—')}</span>
+        </div>
+        <span class="report-card-date">${ts}</span>
+      </div>
+      <div class="report-card-body">
+        <div class="report-card-reported">👤 Dilaporkan: <strong>${escHtml(r.reportedName||'Unknown')}</strong></div>
+        <div class="report-card-msg">${escHtml(r.msgPreview||'(pesan tidak tersedia)')}</div>
+        <div class="report-card-reporter">📣 Pelapor: ${escHtml(r.reporterName||'Anonim')} (${escHtml(r.reporterEmail||'')})</div>
+        ${r.resolvedNote ? `<div style="font-size:.65rem;color:#34d399;margin-top:.1rem">✅ ${escHtml(r.resolvedNote)}</div>` : ''}
+      </div>
+      <div class="report-card-actions">
+        ${!isResolved ? `
+        <button class="report-act-ban" onclick="resolveReportBan('${r.id}','${escHtml(r.reportedName||'')}')">🚫 Ban User</button>
+        <button class="report-act-dismiss" onclick="resolveReportDismiss('${r.id}')">✓ Abaikan</button>
+        ` : `<span class="report-resolved-label">✅ Sudah ditangani</span>`}
+        <button class="report-act-goto" onclick="copyMsgId('${r.msgId||''}')">🔗 Salin ID Pesan</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Scroll to anchor if hash matches
+  const hash = window.location.hash.slice(1);
+  if (hash && document.getElementById(hash)) {
+    setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById(hash)?.classList.add('highlight-anchor');
+    }, 300);
+  }
+}
+
+window.resolveReportBan = async (reportId, reportedName) => {
+  const reason = prompt(`Ban "${reportedName}" karena laporan ini?\nAlasan ban:`);
+  if (reason === null) return;
+  try {
+    const rep = _allReports.find(r => r.id === reportId);
+    if (!rep) return;
+    // Create ban record (uid may not be in report — use name as fallback key)
+    const banUid = rep.reportedUid || ('report_' + reportId);
+    await setDoc(doc(db,'banned_users', banUid), {
+      uid: banUid,
+      name: rep.reportedName || 'Unknown',
+      email: rep.reportedEmail || '',
+      reason: reason.trim() || 'Dibanned berdasarkan laporan user',
+      bannedAt: Date.now(),
+      bannedUntil: null,
+      bannedBy: currentUser?.email || 'admin',
+      triggerMsg: rep.msgId || null,
+      fromReport: reportId,
+    });
+    await updateDoc(doc(db,'chat_reports',reportId), {
+      status: 'resolved',
+      resolvedAt: Date.now(),
+      resolvedBy: currentUser?.email || 'admin',
+      resolvedNote: 'User dibanned: ' + (reason.trim() || 'alasan admin'),
+    });
+    toast(`✅ ${reportedName} dibanned. Laporan selesai.`);
+    await loadChatReports();
+    await loadBannedUsers();
+  } catch(e) { toast('Gagal: ' + (e.message||'')); }
+};
+
+window.resolveReportDismiss = async (reportId) => {
+  if (!confirm('Abaikan laporan ini?')) return;
+  try {
+    await updateDoc(doc(db,'chat_reports',reportId), {
+      status: 'resolved',
+      resolvedAt: Date.now(),
+      resolvedBy: currentUser?.email || 'admin',
+      resolvedNote: 'Diabaikan oleh admin',
+    });
+    toast('✅ Laporan diabaikan.');
+    await loadChatReports();
+  } catch(e) { toast('Gagal: ' + (e.message||'')); }
+};
+
+window.copyMsgId = (msgId) => {
+  if (!msgId) { toast('ID pesan tidak tersedia.'); return; }
+  navigator.clipboard?.writeText(msgId).then(() => toast('ID pesan disalin!')).catch(() => toast('ID: ' + msgId));
+};
+
 <script>
 function fixBg(){var h=window.visualViewport?window.visualViewport.height:window.innerHeight;var w=window.visualViewport?window.visualViewport.width:window.innerWidth;var bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
 fixBg();
