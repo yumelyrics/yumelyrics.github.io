@@ -1180,7 +1180,7 @@ window.addEventListener('resize', fixBg);
 #chat-fab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #chat-unread{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.52rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;pointer-events:none;line-height:1}
 #chat-unread.show{display:flex}
-#chat-box{position:fixed;bottom:6.5rem;right:1.4rem;z-index:997;width:320px;height:min(440px,calc(100dvh - 10rem));background:rgba(8,4,18,.97);border:1px solid rgba(0,229,255,.2);border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);backdrop-filter:blur(20px);animation:chatUp .18s ease}
+#chat-box{position:fixed;bottom:6.5rem;right:1.4rem;z-index:997;width:320px;height:min(440px,calc(100dvh - 10rem));background:rgba(8,4,18,.97);border:1px solid rgba(0,229,255,.2);border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);backdrop-filter:blur(20px);animation:chatUp .18s ease;touch-action:pan-y;overscroll-behavior:contain}
 #chat-box.open{display:flex}
 @keyframes chatUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 #chat-hdr{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid rgba(0,229,255,.12);flex-shrink:0}
@@ -1190,7 +1190,7 @@ window.addEventListener('resize', fixBg);
 #chat-hdr-online{font-size:.62rem;color:var(--muted)}
 #chat-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0;line-height:1;transition:color .15s}
 #chat-close:hover{color:var(--text)}
-#chat-msgs{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.6rem;scroll-behavior:smooth}
+#chat-msgs{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.6rem;scroll-behavior:smooth;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #chat-msgs::-webkit-scrollbar{width:3px}
 #chat-msgs::-webkit-scrollbar-track{background:transparent}
 #chat-msgs::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:2px}
@@ -1205,7 +1205,14 @@ window.addEventListener('resize', fixBg);
 .chat-bubble{padding:.45rem .75rem;border-radius:12px;font-size:.78rem;color:var(--text);line-height:1.5;word-break:break-word;max-width:100%}
 .chat-msg.me .chat-bubble{background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.2);border-bottom-right-radius:4px}
 .chat-msg.them .chat-bubble{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-bottom-left-radius:4px}
-.chat-bubble-img{max-width:180px;max-height:140px;border-radius:8px;display:block;cursor:pointer;margin-top:.3rem;border:1px solid rgba(255,255,255,.1)}
+.chat-bubble-img{max-width:180px;max-height:140px;border-radius:8px;display:block;cursor:zoom-in;margin-top:.3rem;border:1px solid rgba(255,255,255,.1);transition:opacity .15s}
+.chat-bubble-img:hover{opacity:.85}
+#chat-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);animation:lbIn .15s ease}
+#chat-lightbox.open{display:flex}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+#chat-lightbox img{max-width:90vw;max-height:88dvh;border-radius:10px;box-shadow:0 8px 48px rgba(0,0,0,.7);object-fit:contain;user-select:none}
+#chat-lightbox-close{position:absolute;top:1rem;right:1.2rem;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:1.3rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background .15s}
+#chat-lightbox-close:hover{background:rgba(255,255,255,.22)}
 .chat-msg-time{font-size:.55rem;color:var(--muted);margin-top:.1rem}
 .chat-date-sep{align-self:center;font-size:.58rem;color:var(--muted);background:rgba(255,255,255,.04);padding:.2rem .7rem;border-radius:2rem;letter-spacing:.06em;margin:.3rem 0}
 #chat-gate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:1.5rem;text-align:center}
@@ -1230,6 +1237,25 @@ window.addEventListener('resize', fixBg);
 #chat-send svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 #chat-img-input{display:none}
 .chat-loading{font-size:.72rem;color:var(--muted);text-align:center;padding:1rem;font-style:italic}
+.chat-msg-actions{display:none;gap:.3rem;align-items:center;margin-top:.2rem}
+.chat-msg:hover .chat-msg-actions{display:flex}
+.chat-action-btn{background:none;border:none;cursor:pointer;padding:.2rem .4rem;border-radius:4px;font-size:.65rem;color:var(--muted);transition:color .15s,background .15s;line-height:1}
+.chat-action-btn:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.chat-action-btn.del:hover{color:#ff4d6d;background:rgba(255,77,109,.1)}
+.chat-edited-label{font-size:.52rem;color:var(--muted);font-style:italic;margin-left:.3rem;opacity:.7}
+.chat-deleted{opacity:.45;font-style:italic}
+.chat-deleted .chat-bubble{background:rgba(255,255,255,.03)!important;border-color:rgba(255,255,255,.05)!important;color:var(--muted)}
+.chat-edit-wrap{display:none;margin-top:.4rem}
+.chat-edit-wrap.show{display:flex;flex-direction:column;gap:.4rem}
+.chat-edit-inp{background:rgba(255,255,255,.07);border:1px solid rgba(0,229,255,.3);color:var(--text);font-family:var(--en);font-size:.78rem;padding:.4rem .65rem;border-radius:8px;outline:none;resize:none;width:100%;box-sizing:border-box;max-height:80px;overflow-y:auto;line-height:1.4}
+.chat-edit-inp:focus{border-color:rgba(0,229,255,.6)}
+.chat-edit-btns{display:flex;gap:.4rem;justify-content:flex-end}
+.chat-edit-save{background:linear-gradient(135deg,rgba(0,229,255,.8),rgba(191,95,255,.8));border:none;color:#fff;font-size:.65rem;padding:.3rem .75rem;border-radius:2rem;cursor:pointer;font-family:var(--en)}
+.chat-edit-cancel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--muted);font-size:.65rem;padding:.3rem .75rem;border-radius:2rem;cursor:pointer;font-family:var(--en)}
+.chat-orig-wrap{display:none;margin-top:.35rem;padding:.4rem .6rem;background:rgba(255,110,180,.05);border-left:2px solid rgba(255,110,180,.3);border-radius:0 6px 6px 0}
+.chat-orig-label{font-size:.5rem;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2rem}
+.chat-orig-text{font-size:.7rem;color:var(--muted);font-style:italic;line-height:1.4}
+.admin-msg-info{display:none}
 </style>
 
 <div id="chat-fab" onclick="toggleChat()" title="Grup Chat">
@@ -1281,8 +1307,14 @@ window.addEventListener('resize', fixBg);
   </div>
 </div>
 
+<!-- ── CHAT IMAGE LIGHTBOX ── -->
+<div id="chat-lightbox" onclick="closeChatImg()">
+  <button id="chat-lightbox-close" onclick="closeChatImg()" title="Tutup">✕</button>
+  <img id="chat-lightbox-img" src="" alt="preview" onclick="event.stopPropagation()">
+</div>
+
 <script type="module">
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp }
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, updateDoc, deleteDoc, doc, getDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -1308,6 +1340,43 @@ let _chatInited = false;
 function isMobile() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
+
+// ── PREVENT BODY SCROLL SAAT SCROLL DI DALAM CHAT ──
+(function() {
+  let _startY = 0;
+  document.addEventListener('touchstart', e => {
+    const chatMsgs = document.getElementById('chat-msgs');
+    if (chatMsgs && chatMsgs.contains(e.target)) {
+      _startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    const chatBox = document.getElementById('chat-box');
+    const chatMsgs = document.getElementById('chat-msgs');
+    if (!chatBox || !chatMsgs) return;
+
+    // Cek apakah touch ada di dalam chat-box
+    if (chatBox.contains(e.target)) {
+      const currentY = e.touches[0].clientY;
+      const deltaY = _startY - currentY;
+      const atTop = chatMsgs.scrollTop === 0;
+      const atBottom = chatMsgs.scrollTop + chatMsgs.clientHeight >= chatMsgs.scrollHeight - 1;
+
+      // Block propagasi ke body kecuali udah di ujung scroll
+      if (chatMsgs.contains(e.target)) {
+        if ((deltaY > 0 && atBottom) || (deltaY < 0 && atTop)) {
+          // Udah di ujung, tetap block supaya ga scroll body
+          e.preventDefault();
+        }
+        // Selama masih bisa scroll di dalam, biarkan
+      } else {
+        // Touch di bagian lain chat-box (header, input) — block scroll body
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+})();
 
 window.toggleChat = () => {
   _chatOpen = !_chatOpen;
@@ -1399,12 +1468,15 @@ function renderMsgs(msgs) {
   const el = document.getElementById('chat-msgs');
   if (!el) return;
   const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  const _amIAdmin = _chatUser && ADMIN_EMAILS.includes(_chatUser.email||'');
 
   let html = '';
   let lastDateStr = '';
   for (const m of msgs) {
     const isMe = _chatUser && m.uid === _chatUser.uid;
     const isAdmin = ADMIN_EMAILS.includes(m.email||'');
+    const isDeleted = !!m.deleted;
+    const isEdited = !!m.edited;
     const dateStr = fmtDateSep(m.ts);
     if (dateStr !== lastDateStr) {
       html += `<div class="chat-date-sep">${esc(dateStr)}</div>`;
@@ -1416,9 +1488,60 @@ function renderMsgs(msgs) {
     const role = getChatRole(m.commentCount||0, isAdmin, m.customRole ?? null);
     const roleBadge = `<span class="role-badge ${role.cls}" style="font-size:.48rem;padding:.1rem .35rem">${role.icon} ${esc(role.name)}</span>`;
     const metaHtml = `<div class="chat-msg-meta">${isMe?'':avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}</div>`;
-    const bubbleContent = (m.text ? `<div class="chat-bubble">${esc(m.text)}</div>` : '') +
-      (m.imgUrl ? `<img class="chat-bubble-img" src="${esc(m.imgUrl)}" onclick="window.open('${esc(m.imgUrl)}','_blank')" loading="lazy">` : '');
-    html += `<div class="chat-msg ${isMe?'me':'them'}">${metaHtml}${bubbleContent}<div class="chat-msg-time">${fmtTime(m.ts)}</div></div>`;
+
+    // Teks pesan — kalau dihapus, tampilkan placeholder
+    let bubbleText = '';
+    if (isDeleted) {
+      if (_amIAdmin) {
+        // Admin liat pesan asli dengan label
+        bubbleText = `<div class="chat-bubble chat-deleted">🗑️ <em>${esc(m.deletedText || m.text || '')}</em></div>
+          <div style="font-size:.5rem;color:#ff4d6d;margin-top:.1rem;opacity:.7">⚠️ Dihapus${m.deletedBy === m.uid ? ' oleh pengirim' : ' oleh admin'}</div>`;
+      } else {
+        bubbleText = `<div class="chat-bubble chat-deleted">🗑️ Pesan dihapus</div>`;
+      }
+    } else {
+      const editedLabel = isEdited ? `<span class="chat-edited-label">✏️ diedit</span>` : '';
+      bubbleText = m.text ? `<div class="chat-bubble">${esc(m.text)}${editedLabel}</div>` : '';
+    }
+
+    // Admin: tampilkan pesan sebelum edit
+    let origSection = '';
+    if (_amIAdmin && isEdited && m.originalText && !isDeleted) {
+      origSection = `<div class="chat-orig-wrap" id="orig-${m.id}">
+        <div class="chat-orig-label">Sebelum diedit</div>
+        <div class="chat-orig-text">${esc(m.originalText)}</div>
+      </div>`;
+    }
+
+    const bubbleContent = bubbleText +
+      (!isDeleted && m.imgUrl ? `<img class="chat-bubble-img" src="${esc(m.imgUrl)}" onclick="openChatImg('${esc(m.imgUrl)}')" loading="lazy">` : '');
+
+    // Action buttons
+    let actions = '';
+    if (!isDeleted) {
+      let btns = '';
+      if (isMe) {
+        btns += `<button class="chat-action-btn" onclick="startEditMsg('${m.id}')" title="Edit">✏️</button>`;
+        btns += `<button class="chat-action-btn del" onclick="deleteMyMsg('${m.id}')" title="Hapus">🗑️</button>`;
+      } else if (_amIAdmin) {
+        btns += `<button class="chat-action-btn del" onclick="adminDeleteMsg('${m.id}')" title="Hapus (Admin)">🗑️</button>`;
+      }
+      if (_amIAdmin && isEdited && m.originalText) {
+        btns += `<button class="chat-action-btn" onclick="toggleOrig('${m.id}')" title="Lihat riwayat edit">📋</button>`;
+      }
+      if (btns) actions = `<div class="chat-msg-actions">${btns}</div>`;
+    }
+
+    // Inline edit form (hanya untuk pesan sendiri)
+    const editForm = isMe && !isDeleted ? `<div class="chat-edit-wrap" id="edit-${m.id}">
+      <textarea class="chat-edit-inp" id="edit-inp-${m.id}" rows="1" onkeydown="editKeydown(event,'${m.id}')">${esc(m.text||'')}</textarea>
+      <div class="chat-edit-btns">
+        <button class="chat-edit-cancel" onclick="cancelEdit('${m.id}')">Batal</button>
+        <button class="chat-edit-save" onclick="saveEdit('${m.id}')">Simpan</button>
+      </div>
+    </div>` : '';
+
+    html += `<div class="chat-msg ${isMe?'me':'them'} ${isDeleted?'chat-deleted':''}" id="msg-${m.id}">${metaHtml}${bubbleContent}${origSection}${editForm}${actions}<div class="chat-msg-time">${fmtTime(m.ts)}</div></div>`;
   }
   el.innerHTML = html || '<div class="chat-loading">Belum ada pesan. Mulai ngobrol!</div>';
 
@@ -1539,6 +1662,138 @@ window.removeChatImg = () => {
   document.getElementById('chat-img-preview').src = '';
   document.getElementById('chat-img-preview-wrap').classList.remove('show');
 };
+
+// ── EDIT PESAN ──
+let _editingId = null;
+
+window.startEditMsg = (msgId) => {
+  // Tutup edit sebelumnya kalau ada
+  if (_editingId && _editingId !== msgId) cancelEdit(_editingId);
+  _editingId = msgId;
+  const wrap = document.getElementById('edit-' + msgId);
+  if (!wrap) return;
+  wrap.classList.add('show');
+  const inp = document.getElementById('edit-inp-' + msgId);
+  if (inp) {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 80) + 'px';
+    if (!isMobile()) inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+  }
+};
+
+window.cancelEdit = (msgId) => {
+  _editingId = null;
+  const wrap = document.getElementById('edit-' + msgId);
+  if (wrap) wrap.classList.remove('show');
+};
+
+window.editKeydown = (e, msgId) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msgId); }
+  if (e.key === 'Escape') cancelEdit(msgId);
+};
+
+window.saveEdit = async (msgId) => {
+  if (!_chatUser) return;
+  const inp = document.getElementById('edit-inp-' + msgId);
+  if (!inp) return;
+  const newText = inp.value.trim();
+  if (!newText) return;
+
+  // Ambil teks asli dari bubble (sebelum di-edit)
+  const bubble = document.querySelector('#msg-' + msgId + ' .chat-bubble');
+  // Kita simpan originalText saat pertama kali edit saja (cek dari Firestore via snapshot)
+  // Teks yang tampil di bubble sudah esc(), kita ambil dari textarea yang sudah terisi teks asli
+
+  try {
+    const msgRef = doc(_chatDb, 'group_chat', msgId);
+    // Ambil data sekarang dulu untuk simpan originalText (hanya pertama kali edit)
+    const snap = await getDoc(msgRef);
+    const data = snap.data();
+    const updateData = {
+      text: newText,
+      edited: true,
+      editedAt: serverTimestamp(),
+    };
+    // Simpan originalText hanya jika belum pernah diedit
+    if (!data.edited && !data.originalText) {
+      updateData.originalText = data.text || '';
+    }
+    await updateDoc(msgRef, updateData);
+    cancelEdit(msgId);
+  } catch(e) { console.error('[edit]', e); }
+};
+
+// ── HAPUS PESAN (user sendiri) ──
+window.deleteMyMsg = async (msgId) => {
+  if (!_chatUser) return;
+  if (!confirm('Hapus pesan ini?')) return;
+  try {
+    const msgRef = doc(_chatDb, 'group_chat', msgId);
+    const snap = await getDoc(msgRef);
+    const data = snap.data();
+    await updateDoc(msgRef, {
+      deleted: true,
+      deletedAt: serverTimestamp(),
+      deletedBy: _chatUser.uid,
+      deletedText: data.text || '',
+      text: '',
+      imgUrl: null,
+    });
+  } catch(e) { console.error('[delete]', e); }
+};
+
+// ── HAPUS PESAN (admin) ──
+window.adminDeleteMsg = async (msgId) => {
+  if (!_chatUser || !ADMIN_EMAILS.includes(_chatUser.email||'')) return;
+  if (!confirm('Hapus pesan ini sebagai admin?')) return;
+  try {
+    const msgRef = doc(_chatDb, 'group_chat', msgId);
+    const snap = await getDoc(msgRef);
+    const data = snap.data();
+    await updateDoc(msgRef, {
+      deleted: true,
+      deletedAt: serverTimestamp(),
+      deletedBy: _chatUser.uid,
+      deletedText: data.text || '',
+      text: '',
+      imgUrl: null,
+    });
+  } catch(e) { console.error('[admin-delete]', e); }
+};
+
+// ── TOGGLE RIWAYAT EDIT (admin) ──
+window.toggleOrig = (msgId) => {
+  const wrap = document.getElementById('orig-' + msgId);
+  if (!wrap) return;
+  const isShown = wrap.style.display === 'block';
+  wrap.style.display = isShown ? '' : 'block';
+};
+
+// ── CHAT IMAGE LIGHTBOX ──
+window.openChatImg = (url) => {
+  const lb = document.getElementById('chat-lightbox');
+  const img = document.getElementById('chat-lightbox-img');
+  if (!lb || !img) return;
+  img.src = url;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeChatImg = () => {
+  const lb = document.getElementById('chat-lightbox');
+  const img = document.getElementById('chat-lightbox-img');
+  if (!lb) return;
+  lb.classList.remove('open');
+  document.body.style.overflow = '';
+  // Delay clear src supaya animasi close ga kedip
+  setTimeout(() => { if (img) img.src = ''; }, 200);
+};
+
+// Tutup lightbox dengan tombol Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeChatImg();
+});
 </script>
 
 </body>
