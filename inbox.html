@@ -239,6 +239,28 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--accent);color:#07060f;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
 
+/* ── BAN MODAL (REPORT RESOLVE) ── */
+#inbox-ban-overlay{position:fixed;inset:0;z-index:500;background:rgba(5,13,26,.94);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:1rem}
+#inbox-ban-overlay.open{display:flex}
+.inbox-ban-modal{width:100%;max-width:380px;background:rgba(10,22,45,.99);border:1px solid rgba(255,165,0,.28);border-radius:12px;padding:1.6rem;display:flex;flex-direction:column;gap:1rem;animation:fu .18s ease}
+.ibm-title{font-size:.92rem;font-weight:700;color:#f5a623;display:flex;align-items:center;gap:.5rem}
+.ibm-sub{font-size:.72rem;color:var(--muted);line-height:1.6}
+.ibm-sub strong{color:var(--text)}
+.ibm-label{font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.35rem}
+.ibm-inp{background:rgba(255,255,255,.04);border:1px solid rgba(255,165,0,.2);color:var(--text);font-family:var(--en);font-size:.78rem;padding:.55rem .85rem;border-radius:8px;outline:none;width:100%;transition:border-color .2s}
+.ibm-inp:focus{border-color:rgba(255,165,0,.55)}
+.ibm-inp::placeholder{color:var(--muted)}
+.ibm-dur-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.35rem}
+.ibm-pill{background:none;border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.6rem;color:var(--muted);letter-spacing:.08em;padding:.3rem .72rem;cursor:pointer;border-radius:2rem;transition:all .2s;text-transform:uppercase}
+.ibm-pill:hover{border-color:rgba(255,165,0,.45);color:#f5a623}
+.ibm-pill.sel{background:rgba(255,165,0,.15);border-color:#f5a623;color:#f5a623;font-weight:600}
+.ibm-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.3rem}
+.ibm-cancel{background:none;border:1px solid rgba(255,255,255,.1);color:var(--muted);font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer;border-radius:7px;transition:all .2s}
+.ibm-cancel:hover{border-color:var(--muted);color:var(--text)}
+.ibm-ban{background:linear-gradient(135deg,rgba(255,165,0,.9),rgba(255,100,50,.85));border:none;color:#fff;font-family:var(--en);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1.2rem;cursor:pointer;border-radius:7px;transition:opacity .2s;font-weight:600}
+.ibm-ban:hover{opacity:.85}
+.ibm-ban:disabled{opacity:.4;cursor:not-allowed}
+
 /* ── LOGIN OVERLAY ── */
 #loginOverlay{position:fixed;inset:0;z-index:200;background:rgba(7,6,15,.97);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
 #loginOverlay.hide{display:none}
@@ -494,6 +516,32 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </div><!-- /wrap -->
 
 <div class="toast" id="toast"></div>
+
+<!-- ── BAN MODAL (dari laporan) ── -->
+<div id="inbox-ban-overlay">
+  <div class="inbox-ban-modal">
+    <div class="ibm-title">🚫 Ban User dari Laporan</div>
+    <div class="ibm-sub" id="ibm-sub">Pilih alasan dan durasi ban:</div>
+    <div>
+      <div class="ibm-label">Alasan Ban</div>
+      <input class="ibm-inp" id="ibm-reason" type="text" placeholder="Alasan ban (opsional)">
+    </div>
+    <div>
+      <div class="ibm-label">Durasi Ban</div>
+      <div class="ibm-dur-pills">
+        <button class="ibm-pill sel" data-dur="" onclick="ibmSelectDur(this,'')">♾ Permanen</button>
+        <button class="ibm-pill" data-dur="1h" onclick="ibmSelectDur(this,'1h')">1 Jam</button>
+        <button class="ibm-pill" data-dur="24h" onclick="ibmSelectDur(this,'24h')">24 Jam</button>
+        <button class="ibm-pill" data-dur="7d" onclick="ibmSelectDur(this,'7d')">7 Hari</button>
+        <button class="ibm-pill" data-dur="30d" onclick="ibmSelectDur(this,'30d')">30 Hari</button>
+      </div>
+    </div>
+    <div class="ibm-actions">
+      <button class="ibm-cancel" onclick="closeIbm()">Batal</button>
+      <button class="ibm-ban" id="ibm-ban-btn" onclick="executeIbm()">🚫 Ban & Selesaikan</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── CUSTOM ROLE MODAL ── -->
 <div class="cr-modal-overlay hide" id="crModalOverlay">
@@ -1840,35 +1888,78 @@ function renderReports() {
   }
 }
 
-window.resolveReportBan = async (reportId, reportedName) => {
-  const reason = prompt(`Ban "${reportedName}" karena laporan ini?\nAlasan ban:`);
-  if (reason === null) return;
+// ── BAN MODAL (inbox) ──
+let _ibmReportId = null;
+let _ibmReportedName = '';
+let _ibmDur = '';
+
+window.ibmSelectDur = (btn, dur) => {
+  document.querySelectorAll('.ibm-pill').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  _ibmDur = dur;
+};
+
+window.closeIbm = () => {
+  document.getElementById('inbox-ban-overlay').classList.remove('open');
+  _ibmReportId = null; _ibmReportedName = ''; _ibmDur = '';
+  document.querySelectorAll('.ibm-pill').forEach((b,i) => b.classList.toggle('sel', i===0));
+  document.getElementById('ibm-reason').value = '';
+};
+
+document.getElementById('inbox-ban-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('inbox-ban-overlay')) closeIbm();
+});
+
+window.executeIbm = async () => {
+  if (!_ibmReportId) return;
+  const btn = document.getElementById('ibm-ban-btn');
+  btn.disabled = true;
+  const reason = document.getElementById('ibm-reason').value.trim() || 'Dibanned berdasarkan laporan user';
+  let bannedUntil = null;
+  if (_ibmDur) {
+    const match = _ibmDur.match(/^(\d+)(h|d)$/i);
+    if (match) {
+      const ms = parseInt(match[1]) * (match[2].toLowerCase() === 'h' ? 3600000 : 86400000);
+      bannedUntil = Date.now() + ms;
+    }
+  }
   try {
-    const rep = _allReports.find(r => r.id === reportId);
-    if (!rep) return;
-    // Create ban record (uid may not be in report — use name as fallback key)
-    const banUid = rep.reportedUid || ('report_' + reportId);
+    const rep = _allReports.find(r => r.id === _ibmReportId);
+    if (!rep) { btn.disabled = false; return; }
+    const banUid = rep.reportedUid || ('report_' + _ibmReportId);
     await setDoc(doc(db,'banned_users', banUid), {
       uid: banUid,
       name: rep.reportedName || 'Unknown',
       email: rep.reportedEmail || '',
-      reason: reason.trim() || 'Dibanned berdasarkan laporan user',
+      reason,
       bannedAt: Date.now(),
-      bannedUntil: null,
+      bannedUntil,
       bannedBy: currentUser?.email || 'admin',
       triggerMsg: rep.msgId || null,
-      fromReport: reportId,
+      fromReport: _ibmReportId,
     });
-    await updateDoc(doc(db,'chat_reports',reportId), {
+    await updateDoc(doc(db,'chat_reports',_ibmReportId), {
       status: 'resolved',
       resolvedAt: Date.now(),
       resolvedBy: currentUser?.email || 'admin',
-      resolvedNote: 'User dibanned: ' + (reason.trim() || 'alasan admin'),
+      resolvedNote: 'User dibanned: ' + reason,
     });
-    toast(`✅ ${reportedName} dibanned. Laporan selesai.`);
+    toast(`✅ ${_ibmReportedName} dibanned. Laporan selesai.`);
+    closeIbm();
     await loadChatReports();
     await loadBannedUsers();
-  } catch(e) { toast('Gagal: ' + (e.message||'')); }
+  } catch(e) { toast('Gagal: ' + (e.message||'')); btn.disabled = false; }
+};
+
+window.resolveReportBan = async (reportId, reportedName) => {
+  _ibmReportId = reportId;
+  _ibmReportedName = reportedName;
+  _ibmDur = '';
+  document.querySelectorAll('.ibm-pill').forEach((b,i) => b.classList.toggle('sel', i===0));
+  document.getElementById('ibm-reason').value = '';
+  document.getElementById('ibm-sub').innerHTML = `Ban <strong>${escHtml(reportedName)}</strong> berdasarkan laporan ini?`;
+  document.getElementById('ibm-ban-btn').disabled = false;
+  document.getElementById('inbox-ban-overlay').classList.add('open');
 };
 
 window.resolveReportDismiss = async (reportId) => {
