@@ -1045,6 +1045,29 @@ const provider = new GoogleAuthProvider();
 const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
+// ── ADMIN NOTIF HELPER ──
+const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+async function notifyAdmins({ songId, songTitle, commenterName, commentText, isReply, parentName }) {
+  try {
+    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', ADMIN_EMAILS)));
+    if (snap.empty) return;
+    const fmtDate = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    const notifBase = {
+      type: isReply ? 'admin_reply' : 'admin_comment',
+      songId,
+      songTitle,
+      songSlug: location.pathname.replace('/lagu/','').replace('.html',''),
+      fromName: commenterName,
+      replyText: commentText.substring(0, 100),
+      parentName: parentName || null,
+      date: fmtDate(new Date()),
+      ts: Date.now(),
+      read: false
+    };
+    await Promise.all(snap.docs.map(d => addDoc(collection(db,'notifications'), { ...notifBase, toUid: d.id })));
+  } catch(e) {}
+}
+
 // ── REALTIME ONLINE COUNTER ──
 (function(){
   function getOnlineSessionId() {
@@ -2297,6 +2320,11 @@ window.postReply = async (parentId, srcTaId, mentionName) => {
       isAdmin:_isAdmin
     });
     await saveRateLimit(_currentUser.uid, 'reply');
+    if (!_isAdmin) {
+      const parentSnap2 = await getDoc(doc(db,'comments',parentId)).catch(()=>null);
+      const parentName = parentSnap2?.exists() ? (parentSnap2.data().name||'') : '';
+      notifyAdmins({ songId: SONG_ID, songTitle: document.querySelector('.lvt')?.textContent||SONG_ID, commenterName: repName, commentText: t, isReply: true, parentName });
+    }
     if(taEl) taEl.value='';
     removeReplyPhoto(parentId);
     // Tutup semua reply form yang terbuka di thread ini
@@ -2363,6 +2391,9 @@ window.postCm = async () => {
       isAdmin:_isAdmin
     });
     await saveRateLimit(_currentUser.uid, 'comment');
+    if (!_isAdmin) {
+      notifyAdmins({ songId: SONG_ID, songTitle: document.querySelector('.lvt')?.textContent||SONG_ID, commenterName: cmName, commentText: t, isReply: false });
+    }
     document.getElementById('cm-t').value='';
     removeCmPhoto();
     if (_isAdmin) {

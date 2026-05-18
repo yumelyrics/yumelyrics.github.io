@@ -750,6 +750,7 @@ async function loadAndShowUserRole(uid){
       getDoc(doc(db,'user_roles',uid))
     ]);
     const commentCount = songSnap.size + storySnap.size;
+    window._myCommentCount = commentCount;
     const customRole = overrideSnap.exists() ? (overrideSnap.data().role ?? null) : null;
     nudRoleBadge.innerHTML = getRoleBadgeHtmlIdx(commentCount, customRole);
     nudRole.style.display = '';
@@ -1025,6 +1026,26 @@ window.postReply = async parentId => {
   } catch(e){ toast('Gagal kirim.'); }
 };
 
+// ── ADMIN NOTIF HELPER ──
+const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+async function notifyAdmins({ songId, songTitle, commenterName, commentText }) {
+  try {
+    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', ADMIN_EMAILS)));
+    if (snap.empty) return;
+    const notifBase = {
+      type: 'admin_comment',
+      songId,
+      songTitle,
+      fromName: commenterName,
+      replyText: commentText.substring(0, 100),
+      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+      ts: Date.now(),
+      read: false
+    };
+    await Promise.all(snap.docs.map(d => addDoc(collection(db,'notifications'), { ...notifBase, toUid: d.id })));
+  } catch(e) {}
+}
+
 window.postCm = async () => {
   const n   = document.getElementById('cm-n').value.trim();
   const t   = document.getElementById('cm-t').value.trim();
@@ -1039,6 +1060,8 @@ window.postCm = async () => {
       ts: Date.now(), isAdmin: false
     });
     document.getElementById('cm-t').value = '';
+    const songTitle = songs.find(s=>s.id===cur)?.titleRo || songs.find(s=>s.id===cur)?.titleJp || cur;
+    notifyAdmins({ songId: cur, songTitle, commenterName: n||'Anonim', commentText: t });
     rcm(cur);
     toast('Komentar terkirim!');
   } catch(e){
@@ -1148,5 +1171,344 @@ window.addEventListener('resize', fixBg);
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
   Latihan Terjemah Lagu
 </a>
+
+<!-- ── FLOATING GROUP CHAT ── -->
+<style>
+#chat-fab{position:fixed;bottom:4.5rem;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,255,.35);transition:transform .2s,box-shadow .2s}
+#chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,229,255,.5)}
+#chat-fab svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#chat-unread{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.52rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;pointer-events:none;line-height:1}
+#chat-unread.show{display:flex}
+#chat-box{position:fixed;bottom:5.5rem;right:1.4rem;z-index:997;width:320px;height:440px;background:rgba(8,4,18,.97);border:1px solid rgba(0,229,255,.2);border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);backdrop-filter:blur(20px);animation:chatUp .18s ease}
+#chat-box.open{display:flex}
+@keyframes chatUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#chat-hdr{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid rgba(0,229,255,.12);flex-shrink:0}
+#chat-hdr-left{display:flex;align-items:center;gap:.5rem}
+.chat-hdr-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.7);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0}
+#chat-hdr-title{font-size:.75rem;font-weight:500;color:var(--text);letter-spacing:.05em}
+#chat-hdr-online{font-size:.62rem;color:var(--muted)}
+#chat-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0;line-height:1;transition:color .15s}
+#chat-close:hover{color:var(--text)}
+#chat-msgs{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.6rem;scroll-behavior:smooth}
+#chat-msgs::-webkit-scrollbar{width:3px}
+#chat-msgs::-webkit-scrollbar-track{background:transparent}
+#chat-msgs::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:2px}
+.chat-msg{display:flex;flex-direction:column;gap:.15rem;max-width:82%}
+.chat-msg.me{align-self:flex-end;align-items:flex-end}
+.chat-msg.them{align-self:flex-start;align-items:flex-start}
+.chat-msg-meta{display:flex;align-items:center;gap:.35rem}
+.chat-msg-avatar{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.chat-msg-avatar-ph{width:18px;height:18px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--accent);flex-shrink:0;font-weight:600}
+.chat-msg-name{font-size:.6rem;color:var(--muted);letter-spacing:.04em}
+.chat-msg-name.is-admin{color:var(--accent)}
+.chat-bubble{padding:.45rem .75rem;border-radius:12px;font-size:.78rem;color:var(--text);line-height:1.5;word-break:break-word;max-width:100%}
+.chat-msg.me .chat-bubble{background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.2);border-bottom-right-radius:4px}
+.chat-msg.them .chat-bubble{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-bottom-left-radius:4px}
+.chat-bubble-img{max-width:180px;max-height:140px;border-radius:8px;display:block;cursor:pointer;margin-top:.3rem;border:1px solid rgba(255,255,255,.1)}
+.chat-msg-time{font-size:.55rem;color:var(--muted);margin-top:.1rem}
+.chat-date-sep{align-self:center;font-size:.58rem;color:var(--muted);background:rgba(255,255,255,.04);padding:.2rem .7rem;border-radius:2rem;letter-spacing:.06em;margin:.3rem 0}
+#chat-gate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:1.5rem;text-align:center}
+#chat-gate p{font-size:.78rem;color:var(--muted);line-height:1.6}
+#chat-gate-btn{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-family:var(--en);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.55rem 1.2rem;cursor:pointer;border-radius:2rem}
+#chat-inp-wrap{display:none;border-top:1px solid rgba(0,229,255,.1);padding:.6rem .75rem;flex-shrink:0;flex-direction:column;gap:.5rem}
+#chat-inp-wrap.show{display:flex}
+#chat-img-preview-wrap{display:none;position:relative;width:fit-content}
+#chat-img-preview-wrap.show{display:block}
+#chat-img-preview{max-height:60px;border-radius:6px;border:1px solid rgba(0,229,255,.2)}
+#chat-img-remove{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;padding:0}
+#chat-inp-row{display:flex;align-items:center;gap:.5rem}
+#chat-inp{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(0,229,255,.15);color:var(--text);font-family:var(--en);font-size:.8rem;padding:.5rem .75rem;border-radius:2rem;outline:none;transition:border-color .2s;resize:none;max-height:80px;overflow-y:auto;line-height:1.4}
+#chat-inp::placeholder{color:var(--muted)}
+#chat-inp:focus{border-color:rgba(0,229,255,.4)}
+#chat-img-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:.3rem;transition:color .15s;flex-shrink:0}
+#chat-img-btn:hover{color:var(--accent2)}
+#chat-img-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#chat-send{background:linear-gradient(135deg,rgba(0,229,255,.8),rgba(191,95,255,.8));border:none;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .2s}
+#chat-send:hover{opacity:.85}
+#chat-send:disabled{opacity:.35;cursor:not-allowed}
+#chat-send svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#chat-img-input{display:none}
+.chat-loading{font-size:.72rem;color:var(--muted);text-align:center;padding:1rem;font-style:italic}
+</style>
+
+<div id="chat-fab" onclick="toggleChat()" title="Grup Chat">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <div id="chat-unread"></div>
+</div>
+
+<div id="chat-box">
+  <div id="chat-hdr">
+    <div id="chat-hdr-left">
+      <div class="chat-hdr-dot"></div>
+      <div>
+        <div id="chat-hdr-title">Grup Chat YumeSubs</div>
+        <div id="chat-hdr-online"></div>
+      </div>
+    </div>
+    <button id="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+
+  <!-- Gate: belum login -->
+  <div id="chat-gate">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(0,229,255,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <p>Login dulu untuk ikut ngobrol di grup chat bareng pengguna YumeSubs lainnya.</p>
+    <button id="chat-gate-btn" onclick="doLogin()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login dengan Google
+    </button>
+  </div>
+
+  <!-- Messages (hidden until login) -->
+  <div id="chat-msgs" style="display:none"><div class="chat-loading">Memuat pesan...</div></div>
+
+  <!-- Input (hidden until login) -->
+  <div id="chat-inp-wrap">
+    <div id="chat-img-preview-wrap">
+      <img id="chat-img-preview" src="" alt="preview">
+      <button id="chat-img-remove" onclick="removeChatImg()">✕</button>
+    </div>
+    <div id="chat-inp-row">
+      <button id="chat-img-btn" onclick="document.getElementById('chat-img-input').click()" title="Kirim gambar">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </button>
+      <input id="chat-img-input" type="file" accept="image/*" onchange="handleChatImg(this)">
+      <textarea id="chat-inp" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="autoResize(this)"></textarea>
+      <button id="chat-send" onclick="sendChatMsg()" title="Kirim">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { initializeApp, getApps }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
+const _chatApp = getApps()[0];
+const _chatDb  = getFirestore(_chatApp);
+const _chatAuth = getAuth(_chatApp);
+
+const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+const MSG_LIMIT = 80;
+
+let _chatUser = null;
+let _chatOpen = false;
+let _chatUnsub = null;
+let _chatImgFile = null;
+let _chatUnreadCount = 0;
+let _chatLastSeen = Date.now();
+let _chatInited = false;
+
+window.toggleChat = () => {
+  _chatOpen = !_chatOpen;
+  document.getElementById('chat-box').classList.toggle('open', _chatOpen);
+  if (_chatOpen) {
+    _chatLastSeen = Date.now();
+    _chatUnreadCount = 0;
+    updateUnreadBadge();
+    setTimeout(() => scrollChatBottom(true), 80);
+    document.getElementById('chat-inp').focus();
+  }
+};
+
+function updateUnreadBadge() {
+  const badge = document.getElementById('chat-unread');
+  if (_chatUnreadCount > 0 && !_chatOpen) {
+    badge.textContent = _chatUnreadCount > 9 ? '9+' : _chatUnreadCount;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function scrollChatBottom(force) {
+  const el = document.getElementById('chat-msgs');
+  if (!el) return;
+  if (force || el.scrollHeight - el.scrollTop - el.clientHeight < 120) {
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtDateSep(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return 'Hari ini';
+  const yest = new Date(); yest.setDate(yest.getDate()-1);
+  if (d.toDateString() === yest.toDateString()) return 'Kemarin';
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getChatRole(commentCount, isAdmin) {
+  if (isAdmin) return { icon:'👑', name:'Admin', cls:'role-4' };
+  const defs = typeof _roleDefs !== 'undefined' ? _roleDefs : [
+    { id:0, icon:'🌫️', name:'Wanderer', threshold:0, cls:'role-0' },
+    { id:1, icon:'🌿', name:'Scout', threshold:5, cls:'role-1' },
+    { id:2, icon:'🏹', name:'Ranger', threshold:15, cls:'role-2' },
+    { id:3, icon:'🔮', name:'Mystic', threshold:30, cls:'role-3' },
+    { id:4, icon:'⚔️', name:'Champion', threshold:50, cls:'role-4' },
+    { id:5, icon:'🔥', name:'Warlord', threshold:80, cls:'role-5' },
+    { id:6, icon:'✨', name:'Archmage', threshold:120, cls:'role-6' },
+    { id:7, icon:'💀', name:'Overlord', threshold:200, cls:'role-7' },
+  ];
+  let role = defs[0];
+  for (const r of defs) { if ((commentCount||0) >= r.threshold) role = r; else break; }
+  return role;
+}
+
+function renderMsgs(msgs) {
+  const el = document.getElementById('chat-msgs');
+  if (!el) return;
+  const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+
+  let html = '';
+  let lastDateStr = '';
+  for (const m of msgs) {
+    const isMe = _chatUser && m.uid === _chatUser.uid;
+    const isAdmin = ADMIN_EMAILS.includes(m.email||'');
+    const dateStr = fmtDateSep(m.ts);
+    if (dateStr !== lastDateStr) {
+      html += `<div class="chat-date-sep">${esc(dateStr)}</div>`;
+      lastDateStr = dateStr;
+    }
+    const avatarHtml = m.photoURL
+      ? `<img class="chat-msg-avatar" src="${esc(m.photoURL)}" alt="" onerror="this.style.display='none'">`
+      : `<div class="chat-msg-avatar-ph">${esc((m.name||'?')[0].toUpperCase())}</div>`;
+    const role = getChatRole(m.commentCount||0, isAdmin);
+    const roleBadge = `<span class="role-badge ${role.cls}" style="font-size:.48rem;padding:.1rem .35rem">${role.icon} ${esc(role.name)}</span>`;
+    const metaHtml = `<div class="chat-msg-meta">${isMe?'':avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}</div>`;
+    const bubbleContent = (m.text ? `<div class="chat-bubble">${esc(m.text)}</div>` : '') +
+      (m.imgUrl ? `<img class="chat-bubble-img" src="${esc(m.imgUrl)}" onclick="window.open('${esc(m.imgUrl)}','_blank')" loading="lazy">` : '');
+    html += `<div class="chat-msg ${isMe?'me':'them'}">${metaHtml}${bubbleContent}<div class="chat-msg-time">${fmtTime(m.ts)}</div></div>`;
+  }
+  el.innerHTML = html || '<div class="chat-loading">Belum ada pesan. Mulai ngobrol!</div>';
+
+  if (wasAtBottom || !_chatInited) scrollChatBottom(true);
+  _chatInited = true;
+}
+
+function initChat(user) {
+  _chatUser = user;
+  document.getElementById('chat-gate').style.display = 'none';
+  document.getElementById('chat-msgs').style.display = 'flex';
+  document.getElementById('chat-inp-wrap').classList.add('show');
+
+  if (_chatUnsub) _chatUnsub();
+  const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
+  _chatUnsub = onSnapshot(q, snap => {
+    const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMsgs(msgs);
+
+    // Hitung unread
+    if (!_chatOpen) {
+      const newMsgs = msgs.filter(m => {
+        const t = m.ts?.toMillis ? m.ts.toMillis() : (m.ts||0);
+        return t > _chatLastSeen && m.uid !== _chatUser?.uid;
+      });
+      _chatUnreadCount = newMsgs.length;
+      updateUnreadBadge();
+    }
+
+    // Update online count di header
+    const onlineEl = document.getElementById('online-count');
+    const count = onlineEl ? onlineEl.textContent : '—';
+    document.getElementById('chat-hdr-online').textContent = count + ' online';
+  }, () => {});
+}
+
+onAuthStateChanged(_chatAuth, user => {
+  if (user) {
+    initChat(user);
+  } else {
+    _chatUser = null;
+    document.getElementById('chat-gate').style.display = 'flex';
+    document.getElementById('chat-msgs').style.display = 'none';
+    document.getElementById('chat-inp-wrap').classList.remove('show');
+    if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
+  }
+});
+
+window.sendChatMsg = async () => {
+  if (!_chatUser) return;
+  const inp = document.getElementById('chat-inp');
+  const t = inp.value.trim();
+  const btn = document.getElementById('chat-send');
+  if (!t && !_chatImgFile) return;
+  btn.disabled = true;
+
+  let imgUrl = null;
+  if (_chatImgFile) {
+    try {
+      const fd = new FormData();
+      fd.append('image', _chatImgFile);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+      const json = await res.json();
+      imgUrl = json.data?.url || null;
+    } catch(e) {}
+  }
+
+  try {
+    const commentCount = window._myCommentCount || 0;
+    await addDoc(collection(_chatDb,'group_chat'), {
+      uid: _chatUser.uid,
+      name: _chatUser.displayName || 'Anonim',
+      email: _chatUser.email || '',
+      photoURL: _chatUser.photoURL || null,
+      text: t,
+      imgUrl,
+      commentCount,
+      ts: serverTimestamp()
+    });
+    inp.value = '';
+    inp.style.height = 'auto';
+    removeChatImg();
+  } catch(e) {}
+  btn.disabled = false;
+  inp.focus();
+};
+
+window.chatKeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
+};
+
+window.autoResize = el => {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+};
+
+window.handleChatImg = inp => {
+  const file = inp.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('Gambar maksimal 5MB.'); return; }
+  _chatImgFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('chat-img-preview').src = e.target.result;
+    document.getElementById('chat-img-preview-wrap').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+  inp.value = '';
+};
+
+window.removeChatImg = () => {
+  _chatImgFile = null;
+  document.getElementById('chat-img-preview').src = '';
+  document.getElementById('chat-img-preview-wrap').classList.remove('show');
+};
+</script>
+
 </body>
 </html>
