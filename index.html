@@ -704,6 +704,7 @@ function toast(m){
   t.textContent=m; t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),2800);
 }
+window.toast = toast;
 
 let recOnly = false;
 let popOnly = false;
@@ -1785,7 +1786,8 @@ window.toggleChat = () => {
     if (fab) fab.classList.add('hidden');
     // Jangan auto-focus di mobile supaya keyboard ga langsung kebuka
     if (!isMobile()) {
-      document.getElementById('chat-inp').focus();
+      const inp = document.getElementById('chat-inp');
+      if (inp) inp.focus();
     }
   } else {
     // Munculin fab lagi
@@ -2098,13 +2100,19 @@ function initGuestChat() {
   loadCustomRoleCache().catch(()=>{});
   loadBannedCache().catch(()=>{});
   const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
+  let gotData = false;
+  const fallbackTimer = setTimeout(() => {
+    if (!gotData) msgsEl.innerHTML = '<div class="chat-loading">Login untuk melihat pesan grup chat. 💬</div>';
+  }, 6000);
   _chatUnsub = onSnapshot(q, snap => {
+    gotData = true; clearTimeout(fallbackTimer);
     _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderMsgs(_lastMsgs);
     if (!_chatInited) scrollChatBottom(true);
     _chatInited = true;
   }, () => {
-    msgsEl.innerHTML = '<div class="chat-loading">Gagal memuat pesan.</div>';
+    gotData = true; clearTimeout(fallbackTimer);
+    msgsEl.innerHTML = '<div class="chat-loading">Login untuk melihat pesan grup chat. 💬</div>';
   });
 }
 
