@@ -293,6 +293,37 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .role-6{background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(191,95,255,.12));border:1px solid rgba(255,110,180,.45);color:#ffaadd;box-shadow:0 0 8px rgba(255,110,180,.2)}
 .role-7{background:linear-gradient(135deg,rgba(255,60,60,.1),rgba(255,120,60,.1));border:1px solid rgba(255,60,60,.4);color:#ff6060;box-shadow:0 0 10px rgba(255,60,60,.18)}
 .role-custom{background:rgba(191,95,255,.12);border:1px solid rgba(191,95,255,.4);color:#d4aaff;box-shadow:0 0 8px rgba(191,95,255,.18)}
+/* ── Edit Profil Modal ── */
+#editProfileModal{position:fixed;inset:0;z-index:300;background:rgba(6,3,15,.88);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+#editProfileModal.open{display:flex}
+.ep-box{width:100%;max-width:380px;padding:1.8rem;border:1px solid rgba(255,110,180,.2);background:rgba(10,6,20,.98);display:flex;flex-direction:column;gap:.9rem;margin:1rem;border-radius:4px}
+.ep-title{font-family:var(--jp);font-size:1rem;font-weight:800;color:var(--accent)}
+.ep-avatar-wrap{display:flex;align-items:center;gap:.9rem;padding:.65rem;background:rgba(255,110,180,.04);border:1px solid rgba(255,110,180,.1);border-radius:4px}
+.ep-avatar-big{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.3)}
+.ep-avatar-placeholder-big{width:46px;height:46px;border-radius:50%;background:rgba(255,110,180,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);border:2px solid rgba(255,110,180,.3);font-weight:700}
+.ep-info{display:flex;flex-direction:column;gap:.15rem}
+.ep-name{font-size:.85rem;color:var(--text);font-weight:500}
+.ep-email{font-size:.62rem;color:var(--muted)}
+.ep-field{display:flex;flex-direction:column;gap:.28rem}
+.ep-lbl{font-size:.53rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.ep-inp{background:rgba(255,255,255,.03);border:1px solid rgba(255,110,180,.15);color:var(--text);font-family:var(--en);font-size:.8rem;padding:.55rem .85rem;outline:none;transition:border-color .2s;border-radius:2px;width:100%;box-sizing:border-box}
+.ep-inp:focus{border-color:rgba(255,110,180,.4)}
+.ep-inp::placeholder{color:var(--muted)}
+.ep-note{font-size:.62rem;color:var(--muted);line-height:1.6}
+.ep-actions{display:flex;gap:.55rem;margin-top:.2rem}
+.ep-save{background:linear-gradient(135deg,rgba(255,110,180,.85),rgba(191,95,255,.85));border:none;font-family:var(--en);font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.55rem 1.1rem;cursor:pointer;font-weight:600;transition:opacity .2s;border-radius:2px;flex:1}
+.ep-save:hover{opacity:.82}.ep-save:disabled{opacity:.4;cursor:not-allowed}
+.ep-cancel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-family:var(--en);font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.55rem 1rem;cursor:pointer;border-radius:2px;transition:all .2s}
+.ep-cancel:hover{border-color:var(--red);color:var(--red)}
+.ep-img-row{display:flex;align-items:center;gap:.55rem}
+.ep-img-btn{background:rgba(255,110,180,.08);border:1px solid rgba(255,110,180,.2);color:var(--accent);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;border-radius:2px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.ep-img-btn:hover{background:rgba(255,110,180,.15)}
+.ep-img-status{font-size:.62rem;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── Ban badge & overlay di avatar ── */
+.float-avatar-banned #nav-avatar-ph,
+.float-avatar-banned #nav-avatar-img{border-color:var(--red)!important;box-shadow:0 4px 24px rgba(255,77,109,.4)!important}
+#nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid #06030f;display:none;align-items:center;justify-content:center;font-size:.62rem;z-index:5;pointer-events:none}
+.float-avatar-banned #nav-banned-overlay{display:flex}
 /* Role di profil dropdown */
 .nud-role{padding:.1rem .8rem .55rem;display:flex;align-items:center;gap:.4rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.3rem}
 .nud-role-label{font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
@@ -325,6 +356,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <span class="nud-role-label">Role</span>
     <span id="nud-role-badge"></span>
   </div>
+  <div id="nud-banned-notice" style="display:none;padding:.4rem .8rem;font-size:.7rem;color:var(--red);background:rgba(255,77,109,.06);border-radius:4px;margin:.2rem 0;line-height:1.5">🚫 Akunmu dibanned dari grup chat.</div>
+  <button class="nud-btn" id="nud-edit-profile-btn" onclick="openEditProfile();closeDropdown()" style="display:none">✏️ Edit Profil</button>
   <div class="nud-notif-header">
     <span class="nud-notif-title">🔔 Notifikasi</span>
     <div style="display:flex;gap:.5rem;align-items:center">
@@ -435,7 +468,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -486,7 +519,121 @@ const ADMIN_EMAIL = "khoirustsani143@gmail.com";
 let _currentUser  = null;
 let _isAdmin      = false;
 let _customPhoto  = null;
-let _unsubNotif   = null; // untuk unsubscribe realtime listener
+let _unsubNotif   = null;
+let _isBanned     = false;
+let _banReason    = '';
+let _banUntil     = undefined;
+const IMGBB_KEY   = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+
+// ── CEK STATUS BAN ──
+async function checkBanStatus(uid) {
+  try {
+    if (ADMIN_EMAILS_IDX.includes(_currentUser?.email)) return false;
+    const banDoc = await getDoc(doc(db, 'banned_users', uid));
+    if (banDoc.exists()) {
+      const data = banDoc.data();
+      if (data.bannedUntil !== null && data.bannedUntil !== undefined && Date.now() > data.bannedUntil) {
+        _banReason = ''; _banUntil = undefined; return false;
+      }
+      _banReason = data.reason || '';
+      _banUntil = data.bannedUntil !== undefined ? data.bannedUntil : null;
+      return true;
+    }
+    _banReason = ''; _banUntil = undefined; return false;
+  } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
+}
+
+const ADMIN_EMAILS_IDX = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+
+// ── EDIT PROFIL ──
+let _epImgFile = null;
+
+window.openEditProfile = async () => {
+  if (!_currentUser) return;
+  const modal = document.getElementById('editProfileModal');
+  if (!modal) return;
+  _epImgFile = null;
+  document.getElementById('ep-img-status').textContent = 'Atau isi URL di bawah';
+  const bigAv = document.getElementById('ep-avatar-big');
+  const photo = _customPhoto || _currentUser.photoURL;
+  if (photo) {
+    bigAv.outerHTML = `<img class="ep-avatar-big" src="${photo}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">`;
+  } else {
+    const ph = document.getElementById('ep-avatar-big');
+    if (ph) { ph.className = 'ep-avatar-placeholder-big'; ph.textContent = (_currentUser.displayName||'U')[0].toUpperCase(); }
+  }
+  document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '—';
+  document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
+  document.getElementById('ep-displayname').value = _currentUser.displayName || '';
+  try {
+    const snap = await getDoc(doc(db, 'user_profiles', _currentUser.uid));
+    document.getElementById('ep-photourl').value = (snap.exists() && snap.data().photoURL) ? snap.data().photoURL : '';
+  } catch(e) { document.getElementById('ep-photourl').value = ''; }
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
+};
+
+window.closeEditProfile = () => {
+  const modal = document.getElementById('editProfileModal');
+  if (modal) modal.classList.remove('open');
+  _epImgFile = null;
+};
+
+window.handleEpImg = inp => {
+  const file = inp.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Foto max 5MB.'); inp.value = ''; return; }
+  _epImgFile = file;
+  document.getElementById('ep-img-status').textContent = '✅ ' + file.name;
+  document.getElementById('ep-photourl').value = '';
+  // Preview lokal
+  const reader = new FileReader();
+  reader.onload = e => {
+    const av = document.getElementById('ep-avatar-big');
+    if (av) { av.outerHTML = `<img class="ep-avatar-big" src="${e.target.result}" alt="preview" id="ep-avatar-big">`; }
+  };
+  reader.readAsDataURL(file);
+  inp.value = '';
+};
+
+window.saveEditProfile = async () => {
+  if (!_currentUser) return;
+  const newName = document.getElementById('ep-displayname').value.trim();
+  if (!newName) { toast('Nama tidak boleh kosong.'); return; }
+  const btn = document.querySelector('.ep-save');
+  if (btn) btn.disabled = true;
+  try {
+    let newPhoto = document.getElementById('ep-photourl').value.trim();
+    // Upload ke ImgBB kalau ada file
+    if (_epImgFile) {
+      document.getElementById('ep-img-status').textContent = 'Uploading...';
+      const fd = new FormData();
+      fd.append('image', _epImgFile);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!json.success) throw new Error('Upload gagal');
+      newPhoto = json.data.url;
+      document.getElementById('ep-img-status').textContent = '✅ Upload berhasil';
+    }
+    if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
+    const finalPhoto = newPhoto || _currentUser.photoURL || null;
+    await updateProfile(_currentUser, { displayName: newName, photoURL: finalPhoto });
+    await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null, email: _currentUser.email || '' }, { merge: true });
+    _customPhoto = newPhoto || _customPhoto;
+    _updateAvatar(finalPhoto, newName);
+    const nudName = document.getElementById('nud-name');
+    if (nudName) nudName.textContent = newName;
+    toast('Profil berhasil diperbarui! ✨');
+    closeEditProfile();
+  } catch(e) { toast('Gagal simpan: ' + (e.message || '')); }
+  if (btn) btn.disabled = false;
+};
+
+// Tutup modal edit profil klik backdrop
+document.addEventListener('click', e => {
+  const modal = document.getElementById('editProfileModal');
+  if (modal && modal.classList.contains('open') && e.target === modal) closeEditProfile();
+});
 
 let songs = [];
 let cur   = null;
@@ -964,6 +1111,22 @@ onAuthStateChanged(auth, async user => {
       }
     }catch(e){}
 
+    // Tampilkan tombol edit profil (bukan admin)
+    const editBtn = document.getElementById('nud-edit-profile-btn');
+    if (editBtn && !_isAdmin) editBtn.style.display = '';
+
+    // Cek status ban
+    _isBanned = await checkBanStatus(user.uid);
+    const bannedNotice = document.getElementById('nud-banned-notice');
+    const floatWrap = document.getElementById('float-avatar-wrap');
+    if (_isBanned) {
+      if (bannedNotice) bannedNotice.style.display = 'block';
+      if (floatWrap) floatWrap.classList.add('float-avatar-banned');
+    } else {
+      if (bannedNotice) bannedNotice.style.display = 'none';
+      if (floatWrap) floatWrap.classList.remove('float-avatar-banned');
+    }
+
     // Load & tampilkan role di dropdown (non-blocking)
     if(!_isAdmin){
       loadAndShowUserRole(user.uid).catch(()=>{});
@@ -972,10 +1135,18 @@ onAuthStateChanged(auth, async user => {
     startNotifListener(user.uid);
   } else {
     _isAdmin = false;
+    _isBanned = false;
+    _banReason = '';
+    _banUntil = undefined;
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
     loginBtn.style.display   = '';
     avatarWrap.style.display = 'none';
     document.getElementById('notif-badge').classList.remove('show');
+    const editBtn = document.getElementById('nud-edit-profile-btn');
+    if (editBtn) editBtn.style.display = 'none';
+    const bannedNotice = document.getElementById('nud-banned-notice');
+    if (bannedNotice) bannedNotice.style.display = 'none';
+    document.getElementById('float-avatar-wrap').classList.remove('float-avatar-banned');
   }
 });
 
@@ -1261,6 +1432,39 @@ window.addEventListener('resize', fixBg);
 <div id="float-avatar-wrap" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:none;cursor:pointer" onclick="toggleDropdown()">
   <div class="nav-avatar-placeholder" id="nav-avatar-ph" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5);transition:transform .2s,box-shadow .2s"></div>
   <div id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #06030f;z-index:10;pointer-events:none;line-height:1"></div>
+  <div id="nav-banned-overlay" title="Akunmu dibanned">🚫</div>
+</div>
+
+<!-- ── EDIT PROFIL MODAL ── -->
+<div id="editProfileModal">
+  <div class="ep-box">
+    <div class="ep-title">Edit Profil</div>
+    <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
+      <div class="ep-avatar-placeholder-big" id="ep-avatar-big">?</div>
+      <div class="ep-info">
+        <div class="ep-name" id="ep-display-name-preview">—</div>
+        <div class="ep-email" id="ep-email-preview">—</div>
+      </div>
+    </div>
+    <div class="ep-field">
+      <div class="ep-lbl">Nama Tampilan</div>
+      <input class="ep-inp" id="ep-displayname" type="text" placeholder="Nama yang tampil di komentar">
+    </div>
+    <div class="ep-field">
+      <div class="ep-lbl">Foto Profil</div>
+      <div class="ep-img-row">
+        <button class="ep-img-btn" onclick="document.getElementById('ep-img-input').click()">📷 Upload Foto</button>
+        <span class="ep-img-status" id="ep-img-status">Atau isi URL di bawah</span>
+      </div>
+      <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
+      <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
+    </div>
+    <div class="ep-note">Nama & avatar akan tampil di komentar dan grup chat. Kosongkan untuk pakai foto Google.</div>
+    <div class="ep-actions">
+      <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
+      <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
+    </div>
+  </div>
 </div>
 <button id="float-login-btn" onclick="doLogin()" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;padding:.6rem 1.1rem;cursor:pointer;backdrop-filter:blur(12px);border-radius:2rem;box-shadow:0 4px 24px rgba(255,110,180,.35);transition:all .2s">
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
@@ -1706,7 +1910,12 @@ function renderMsgs(msgs) {
       ? `font-size:.48rem;padding:.1rem .35rem;background:${role.bgColor};color:${role.textColor||'#c4b0ff'};border:1px solid ${role.textColor||'#c4b0ff'}33`
       : `font-size:.48rem;padding:.1rem .35rem`;
     const roleBadge = `<span class="role-badge ${role.cls}" style="${roleStyle}">${role.icon} ${esc(role.name)}</span>`;
-    const metaHtml = `<div class="chat-msg-meta">${avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}</div>`;
+    // Badge banned — semua user bisa lihat
+    const isSenderBanned = _bannedUidsCache.has(m.uid);
+    const bannedBadge = isSenderBanned
+      ? `<span style="font-size:.46rem;color:var(--red);background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);padding:.1rem .35rem;border-radius:2rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle;margin-left:.2rem">🚫 banned</span>`
+      : '';
+    const metaHtml = `<div class="chat-msg-meta">${avatarHtml}<span class="chat-msg-name${isAdmin?' is-admin':''}">${esc(m.name||'Anonim')}</span>${roleBadge}${bannedBadge}</div>`;
 
     // Reply preview (jika pesan ini adalah balasan)
     let replyPreview = '';
@@ -1782,9 +1991,28 @@ function renderMsgs(msgs) {
   _chatInited = true;
 }
 
+// Cache banned users UIDs — dimuat sekali per sesi, hanya untuk admin
+const _bannedUidsCache = new Set();
+let _bannedCacheLoaded = false;
+
+async function loadBannedCache() {
+  if (_bannedCacheLoaded) return;
+  try {
+    const snap = await getDocs(collection(_chatDb, 'banned_users'));
+    snap.forEach(d => {
+      const data = d.data();
+      // Skip ban yang sudah expired
+      if (data.bannedUntil !== null && data.bannedUntil !== undefined && Date.now() > data.bannedUntil) return;
+      _bannedUidsCache.add(d.id);
+    });
+    _bannedCacheLoaded = true;
+  } catch(e) { _bannedCacheLoaded = true; }
+}
+
 function initGuestChat() {
   document.getElementById('chat-msgs').style.display = 'flex';
   loadCustomRoleCache().catch(()=>{});
+  loadBannedCache().catch(()=>{});
   const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
   _chatUnsub = onSnapshot(q, snap => {
     _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1800,8 +2028,12 @@ function initChat(user) {
 
   // Load cache custom roles sekali, lalu render ulang kalau ada perubahan
   loadCustomRoleCache().then(() => {
-    // Kalau sudah ada pesan yang dirender sebelum cache siap, render ulang
     if (_chatInited && _lastMsgs) renderMsgs(_lastMsgs);
+  });
+
+  // Load banned cache untuk semua user
+  loadBannedCache().then(() => {
+    if (_lastMsgs) renderMsgs(_lastMsgs);
   });
 
   if (_chatUnsub) _chatUnsub();
@@ -1879,6 +2111,24 @@ window.scrollToMsg = (msgId) => {
 
 window.sendChatMsg = async () => {
   if (!_chatUser) return;
+  // Cek ban realtime sebelum kirim
+  const amIBanned = await (async () => {
+    try {
+      const banDoc = await getDoc(doc(_chatDb, 'banned_users', _chatUser.uid));
+      if (!banDoc.exists()) return false;
+      const data = banDoc.data();
+      if (data.bannedUntil !== null && data.bannedUntil !== undefined && Date.now() > data.bannedUntil) return false;
+      return true;
+    } catch(e) { return false; }
+  })();
+  if (amIBanned) {
+    // Tampilkan pesan banned di area input
+    const inpWrap = document.getElementById('chat-inp-wrap');
+    const old = inpWrap.innerHTML;
+    inpWrap.innerHTML = `<div style="padding:.65rem 1rem;font-size:.75rem;color:var(--red);text-align:center;line-height:1.5">🚫 Akunmu dibanned dari grup chat. Tidak bisa kirim pesan.</div>`;
+    setTimeout(() => { inpWrap.innerHTML = old; }, 3000);
+    return;
+  }
   const inp = document.getElementById('chat-inp');
   const t = inp.value.trim();
   const btn = document.getElementById('chat-send');
