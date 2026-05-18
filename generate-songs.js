@@ -1046,10 +1046,10 @@ const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN NOTIF HELPER ──
-const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+const NOTIF_ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 async function notifyAdmins({ songId, songTitle, commenterName, commentText, isReply, parentName }) {
   try {
-    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', ADMIN_EMAILS)));
+    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', NOTIF_ADMIN_EMAILS)));
     if (snap.empty) return;
     const fmtDate = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
     const notifBase = {
