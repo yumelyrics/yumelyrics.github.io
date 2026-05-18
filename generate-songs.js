@@ -788,6 +788,7 @@ body.gate-open #lyrView{padding-top:0}
 #nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red) !important;box-shadow:0 2px 16px rgba(255,77,109,.35) !important}
 #nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid #06030f;display:none;align-items:center;justify-content:center;font-size:.6rem;z-index:5;pointer-events:none}
 #nav-avatar-bubble.is-banned #nav-banned-overlay{display:flex}
+@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
 </style>
 </head>
 <body>
@@ -841,6 +842,10 @@ body.gate-open #lyrView{padding-top:0}
       ${song.ytId ? `<div class="ytwrap"><div class="ytlb">Video</div><iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
       ${song.nicoId ? `<div class="ytwrap"><div class="ytlb">Niconico<\/div><img class="nicothumb" src="https:\/\/nicovideo.cdn.nimg.jp\/thumbnails\/${escHtml(song.nicoId.replace("sm",""))}\/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'"><a class="nicobtn" href="https:\/\/www.nicovideo.jp\/watch\/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"\/><\/svg>Tonton di Niconico<\/a><\/div>` : ''}
       ${song.sp ? `<a class="spbtn" href="${escHtml(song.sp)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>Dengarkan di Spotify</a>` : ''}
+      <div id="online-counter" style="display:inline-flex;align-items:center;gap:.45rem;margin:.8rem 0;font-size:.68rem;color:var(--muted);letter-spacing:.05em;font-family:var(--en)">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
+        <span id="online-count">—</span> orang lagi online sekarang
+      </div>
       <div class="thumbs-wrap" id="thumbs-wrap">
         <button class="thumbs-btn" id="thumbs-btn" aria-label="Suka lagu ini">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
@@ -1019,7 +1024,7 @@ body.gate-open #lyrView{padding-top:0}
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, setDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot }
+import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, setDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -1039,6 +1044,33 @@ const provider = new GoogleAuthProvider();
 
 const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
+
+// ── REALTIME ONLINE COUNTER ──
+(function(){
+  function getOnlineSessionId() {
+    let id = localStorage.getItem('ym_online_id');
+    if (!id) {
+      id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('ym_online_id', id);
+    }
+    return id;
+  }
+  const sessionId = getOnlineSessionId();
+  const sessionRef = doc(db, 'online_users', sessionId);
+  setDoc(sessionRef, { ts: serverTimestamp(), page: location.pathname }).catch(()=>{});
+  window.addEventListener('beforeunload', ()=>{ deleteDoc(sessionRef).catch(()=>{}); });
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden'){
+      deleteDoc(sessionRef).catch(()=>{});
+    } else {
+      setDoc(sessionRef, { ts: serverTimestamp(), page: location.pathname }).catch(()=>{});
+    }
+  });
+  onSnapshot(collection(db,'online_users'), snap=>{
+    const el = document.getElementById('online-count');
+    if(el) el.textContent = snap.size;
+  }, ()=>{});
+})();
 
 /* ── THUMBS (Suka) ── */
 // Visitor ID permanent untuk guest (tidak login)

@@ -150,6 +150,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #lyrView{display:none;padding:0 2.5rem 5rem}
 #lyrView.on{display:block;animation:fu .35s ease}
 @keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
 .lvback{display:flex;align-items:center;gap:1rem;padding:1.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
 .gbtn{background:none;border:1px solid rgba(255,110,180,.25);font-family:var(--en);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:.45rem 1rem;cursor:pointer;transition:all .2s;border-radius:2rem}
 .gbtn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 10px rgba(255,110,180,.15)}
@@ -349,6 +350,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <span>Request Lagu</span>
       <span class="req-btn-arr">→</span>
     </a>
+    <div id="online-counter" style="display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;font-size:.68rem;color:var(--muted);letter-spacing:.05em;font-family:var(--en)">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
+      <span id="online-count">—</span> orang lagi online sekarang
+    </div>
     </div>
   </div>
 
@@ -428,7 +433,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc }
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -446,6 +451,36 @@ const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+// ── REALTIME ONLINE COUNTER ──
+(function() {
+  function getOnlineSessionId() {
+    let id = localStorage.getItem('ym_online_id');
+    if (!id) {
+      id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('ym_online_id', id);
+    }
+    return id;
+  }
+  const sessionId = getOnlineSessionId();
+  const sessionRef = doc(db, 'online_users', sessionId);
+
+  setDoc(sessionRef, { ts: serverTimestamp(), page: location.pathname }).catch(() => {});
+
+  window.addEventListener('beforeunload', () => { deleteDoc(sessionRef).catch(() => {}); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      deleteDoc(sessionRef).catch(() => {});
+    } else {
+      setDoc(sessionRef, { ts: serverTimestamp(), page: location.pathname }).catch(() => {});
+    }
+  });
+
+  onSnapshot(collection(db, 'online_users'), snap => {
+    const el = document.getElementById('online-count');
+    if (el) el.textContent = snap.size;
+  }, () => {});
+})();
 
 const ADMIN_EMAIL = "khoirustsani143@gmail.com";
 let _currentUser  = null;
