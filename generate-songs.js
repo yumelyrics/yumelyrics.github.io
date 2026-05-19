@@ -328,9 +328,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-badge{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);padding:.3rem .75rem;border-radius:2rem;transition:all .2s;cursor:pointer;background:none}
 .nav-badge:hover{background:var(--gold);color:var(--ink)}
 
-/* ── LOGIN GATE (sticky bar) ── */
-#login-gate{position:sticky;top:60px;left:0;right:0;z-index:80;margin:0;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
+/* ── LOGIN GATE (fixed bar below nav) ── */
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
+/* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
+body.gate-open .hero{margin-top:44px}
+body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.7rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans)}
 #login-gate-sub{font-size:.64rem;color:var(--ash);line-height:1.5;max-width:380px;font-family:var(--serif);font-style:italic}
 .google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
@@ -731,8 +734,12 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .song-title-jp{font-size:2.2rem}
   .kanji-bg{font-size:10rem}
   .lyrics-section{grid-template-columns:1fr}
-  .lyrics-sidebar{position:static;height:auto;padding:2rem 1.5rem;border-right:none;border-bottom:1px solid rgba(10,8,18,.08);flex-direction:row;flex-wrap:wrap;gap:1.5rem}
-  .lyrics-main{padding:2.5rem 1.5rem 4rem}
+  .lyrics-sidebar{position:static;height:auto;padding:1.5rem;border-right:none;border-bottom:1px solid rgba(10,8,18,.08);flex-direction:column;gap:1.25rem}
+  .thumbs-block{display:flex;flex-direction:column;gap:.75rem}
+  .thumbs-btn{width:100%;box-sizing:border-box}
+  .spotify-btn{width:100%;box-sizing:border-box;justify-content:center}
+  .toggle-group{display:flex;flex-direction:column;gap:0}
+  .lyrics-main{padding:2rem 1.2rem 4rem}
   .ll-item{grid-template-columns:1fr}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
   .lyric-num{display:none}
@@ -743,14 +750,19 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .footer-links{flex-wrap:wrap;gap:2rem}
   .section-divider{padding:0 1.5rem}
   #login-gate{padding:.7rem 1.5rem}
+  body.gate-open .hero{margin-top:52px}
+  body.gate-open .lyrics-sidebar{top:116px;height:calc(100vh - 116px)}
+  .cmsec p{word-break:break-word;overflow-wrap:break-word}
 }
 @media(max-width:600px){
   .hero-text{padding:2.5rem 1.2rem}
   .hero-text::before{left:1.2rem}
-  .lyrics-main{padding:2rem 1.2rem 4rem}
+  .lyrics-sidebar{padding:1.2rem}
+  .lyrics-main{padding:1.5rem 1.2rem 4rem}
   .related-section-block{padding:2.5rem 1.2rem}
   .comments-section{padding:2.5rem 1.2rem}
   footer{padding:2rem 1.2rem}
+  .cmsec{word-break:break-word;overflow-wrap:break-word}
 }
 @media(max-width:380px){
   nav{padding:.8rem .9rem}
@@ -759,6 +771,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 </style>
 </head>
 <body>
+<script>(function(){ if(!localStorage.getItem('ym_uid_cached')) document.body.classList.add('gate-open'); })();</script>
 <div class="wrap">
 
 <!-- ── NAV ── -->
@@ -927,24 +940,13 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <button class="ctrl-pill" data-view="jp">Jepang</button>
       <button class="ctrl-pill" data-view="ro">Romaji</button>
       <button class="ctrl-pill" data-view="tr">Terjemahan</button>
-      <div class="ctrl-sep"></div>
-      <button class="ctrl-pill" id="ctrl-copy-btn" onclick="doCopyLyric()">Salin Lirik</button>
     </div>
 
     <div class="lyrics-container" id="ll">
       ${lyricsHTML}
     </div>
 
-    <!-- Copy Gate -->
-    <div id="copy-gate" style="display:none">
-      <div id="copy-gate-title">Salin Lirik</div>
-      <div id="copy-gate-sub">Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!</div>
-      <button id="copy-lyric-btn" onclick="doCopyLyric()" disabled>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        <span id="copy-btn-label">Komentar dulu untuk copy lirik</span>
-      </button>
-      <div class="copy-done-badge" id="copy-done-badge">✦ Lirik berhasil disalin</div>
-    </div>
+
 
     <!-- Tentang Lagu -->
     <div class="cmsec" style="margin-bottom:2rem">
@@ -1169,15 +1171,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   var mainCount = document.getElementById('thumbs-count');
   if(mainCount) observer.observe(mainCount, { childList: true, characterData: true, subtree: true });
-  // Show copy lyric button in ctrl bar if copy-gate unlocked
-  var copyGateObserver = new MutationObserver(function(){
-    var gate = document.getElementById('copy-gate');
-    var ctrlBtn = document.getElementById('ctrl-copy-btn');
-    if(!gate || !ctrlBtn) return;
-    ctrlBtn.style.display = gate.style.display === 'flex' ? '' : 'none';
-  });
-  var cg = document.getElementById('copy-gate');
-  if(cg) copyGateObserver.observe(cg, { attributes: true, attributeFilter: ['style'] });
+  // thumbs count sync (sidebar)
 });
 </script>
 <script>
