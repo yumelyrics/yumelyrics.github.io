@@ -806,16 +806,21 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   /* Online counter span full width */
   .lyrics-sidebar>div:last-child{grid-column:1/-1}
   /* Tombol suka & spotify: full width, tidak overflow keluar sidebar */
-  .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0}
+  .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0;overflow:hidden;box-sizing:border-box}
   .thumbs-btn{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
   .spotify-btn{width:100%;max-width:100%;box-sizing:border-box;display:flex;min-width:0}
-  .toggle-group{display:flex;flex-direction:column;gap:0}
+  .toggle-group{display:flex;flex-direction:column;gap:0;width:100%;overflow:hidden;box-sizing:border-box}
+  .toggle-item{min-width:0;overflow:hidden;box-sizing:border-box}
+  .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .toggle-switch{flex-shrink:0}
   /* Lyrics controls: wrap agar tidak terpotong */
   .lyrics-controls{flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;padding-bottom:1rem}
   .ctrl-pill{font-size:.55rem;padding:.3rem .7rem;white-space:nowrap}
   .lyrics-main{padding:2rem 1.2rem 4rem}
-  .ll-item{grid-template-columns:1fr}
-  .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
+  .ll-item{grid-template-columns:1fr;min-width:0}
+  .lyric-left{min-width:0}
+  .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06);min-width:0}
+  .ljp,.lro,.lid{max-width:100%;word-break:break-word}
   .lyric-num{display:none}
   /* About section: full visible, no overflow */
   .cmsec{overflow:visible;height:auto;max-height:none}
@@ -841,13 +846,16 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     grid-template-columns:1fr;
     padding:1rem 1.2rem;
     gap:1rem;
+    overflow:hidden;
   }
   .lyrics-sidebar>div:last-child{grid-column:1}
-  .thumbs-block{min-width:0;width:100%;overflow:hidden}
+  .thumbs-block{min-width:0;width:100%;overflow:hidden;box-sizing:border-box}
   .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   .spotify-btn{width:100%;box-sizing:border-box;min-width:0;display:flex;overflow:hidden}
-  .toggle-group{width:100%;overflow:visible}
-  .toggle-item{width:100%;box-sizing:border-box}
+  .toggle-group{width:100%;overflow:hidden;box-sizing:border-box}
+  .toggle-item{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
+  .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toggle-switch{flex-shrink:0}
   .sidebar-section-label{white-space:normal}
   .lyrics-main{padding:1.5rem 1.2rem 4rem}
   .ctrl-pill{font-size:.52rem;padding:.28rem .6rem}
@@ -1290,15 +1298,8 @@ document.addEventListener('DOMContentLoaded', function(){
       pill.classList.add('active');
     });
   });
-  // Sync sidebar thumbs count with hero count
-  var observer = new MutationObserver(function(){
-    var main = document.getElementById('thumbs-count');
-    var sb   = document.getElementById('thumbs-count-sb');
-    if(main && sb) sb.textContent = main.textContent;
-  });
-  var mainCount = document.getElementById('thumbs-count');
-  if(mainCount) observer.observe(mainCount, { childList: true, characterData: true, subtree: true });
-  // thumbs count sync (sidebar)
+  // thumbs-count-sb sudah di-update langsung oleh onSnapshot di loadThumb()
+  // MutationObserver dihapus agar tidak double-update count
 });
 </script>
 <script>
@@ -1445,8 +1446,9 @@ function loadThumb(){
     const tcEl = document.getElementById('thumbs-count');
     const tcSbEl = document.getElementById('thumbs-count-sb');
     const vcEl = document.getElementById('views-count');
+    // Update keduanya dari sumber yang sama (onSnapshot) — jangan dari observer terpisah
     if(tcEl) animateCount(tcEl, fmtNum(total));
-    if(tcSbEl) tcSbEl.textContent = fmtNum(total);
+    if(tcSbEl && tcSbEl.textContent !== fmtNum(total)) tcSbEl.textContent = fmtNum(total);
     if(vcEl) animateCount(vcEl, fmtNum(views));
   }, ()=>{});
 
