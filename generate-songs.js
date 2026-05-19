@@ -425,7 +425,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 [data-obf="1"] span[data-c]{white-space:pre}
-.lro.h,.lid.h{display:none!important}
+.lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06)}
 .lyric-num{position:absolute;left:-2.5rem;top:1.5rem;font-family:var(--serif);font-size:.72rem;font-weight:300;color:var(--smoke);letter-spacing:.05em}
@@ -1148,22 +1148,13 @@ document.addEventListener('DOMContentLoaded', function(){
   var pills = document.querySelectorAll('.ctrl-pill[data-view]');
   pills.forEach(function(pill){
     pill.addEventListener('click', function(){
+      var view = pill.dataset.view;
+      // Reset semua ke off dulu, lalu aktifkan sesuai view
+      var targets = {jp: view==='all'||view==='jp', ro: view==='all'||view==='ro', tr: view==='all'||view==='tr'};
+      // Paksa set state langsung lewat window supaya sync dengan sidebar
+      if(window._lyricSetView) window._lyricSetView(targets.jp, targets.ro, targets.tr);
       pills.forEach(function(p){ p.classList.remove('active'); });
       pill.classList.add('active');
-      var view = pill.dataset.view;
-      var showJp = (view==='all'||view==='jp');
-      var showRo = (view==='all'||view==='ro');
-      var showTr = (view==='all'||view==='tr');
-      document.querySelectorAll('.ljp').forEach(function(e){ e.style.display = showJp ? '' : 'none'; });
-      document.querySelectorAll('.lro').forEach(function(e){ e.style.display = showRo ? '' : 'none'; });
-      document.querySelectorAll('.lid').forEach(function(e){ e.style.display = showTr ? '' : 'none'; });
-      // Sync toggle-switch state
-      var swJp = document.getElementById('sw-jp');
-      var swRo = document.getElementById('tp-ro');
-      var swTr = document.getElementById('tp-tr');
-      if(swJp) swJp.classList.toggle('on', showJp);
-      if(swRo) swRo.classList.toggle('on', showRo);
-      if(swTr) swTr.classList.toggle('on', showTr);
     });
   });
   // Sync sidebar thumbs count with hero count
@@ -2090,29 +2081,29 @@ let sro=true, str=true;
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 
-let sjp=true;
-window.tl = type => {
-  if(type==='jp'){
-    sjp=!sjp;
-    document.getElementById('sw-jp').classList.toggle('on',sjp);
-    document.querySelectorAll('.ljp').forEach(e=>{
-      e.style.display=sjp?'':'none';
-    });
-  } else if(type==='ro'){
-    sro=!sro;
-    document.getElementById('tp-ro').classList.toggle('on',sro);
-    document.querySelectorAll('.lro').forEach(e=>{
-      e.classList.toggle('h',!sro);
-      if(sro) e.style.display='';
-    });
-  } else {
-    str=!str;
-    document.getElementById('tp-tr').classList.toggle('on',str);
-    document.querySelectorAll('.lid').forEach(e=>{
-      e.classList.toggle('h',!str);
-      if(str) e.style.display='';
-    });
-  }
+let sjp=true,sro=true,str=true;
+
+// Fungsi utama untuk set state tampilan lirik
+window._lyricSetView = function(showJp, showRo, showTr){
+  sjp=showJp; sro=showRo; str=showTr;
+  document.querySelectorAll('.ljp').forEach(function(e){ e.classList.toggle('h',!sjp); });
+  document.querySelectorAll('.lro').forEach(function(e){ e.classList.toggle('h',!sro); });
+  document.querySelectorAll('.lid').forEach(function(e){ e.classList.toggle('h',!str); });
+  var swJp=document.getElementById('sw-jp'),swRo=document.getElementById('tp-ro'),swTr=document.getElementById('tp-tr');
+  if(swJp) swJp.classList.toggle('on',sjp);
+  if(swRo) swRo.classList.toggle('on',sro);
+  if(swTr) swTr.classList.toggle('on',str);
+  // Sync pill active
+  var view=(sjp&&sro&&str)?'all':sjp&&!sro&&!str?'jp':!sjp&&sro&&!str?'ro':!sjp&&!sro&&str?'tr':null;
+  document.querySelectorAll('.ctrl-pill[data-view]').forEach(function(p){
+    p.classList.toggle('active',view!==null&&p.dataset.view===view);
+  });
+};
+
+window.tl = function(type){
+  if(type==='jp') window._lyricSetView(!sjp, sro, str);
+  else if(type==='ro') window._lyricSetView(sjp, !sro, str);
+  else window._lyricSetView(sjp, sro, !str);
 };
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
