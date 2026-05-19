@@ -2041,8 +2041,6 @@ window.doCopyLyric = async () => {
     toast('✓ Lirik berhasil di-copy!');
   });
 };
-let sro=true, str=true;
-
 
 
 /* ── Anti-Copy: scramble teks yang di-copy dari halaman ini ── */
