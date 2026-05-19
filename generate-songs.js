@@ -1869,13 +1869,36 @@ async function applyAuthState(user) {
 // Muat komentar segera saat halaman dibuka — tidak perlu tunggu auth selesai
 rcm();
 
+// ── REALTIME COPY GATE LISTENER ──
+let _unsubCopyGate = null;
+
+function startCopyGateListener(uid) {
+  if (_unsubCopyGate) { _unsubCopyGate(); _unsubCopyGate = null; }
+  const q = query(
+    collection(db, 'comments'),
+    where('songId', '==', SONG_ID),
+    where('uid', '==', uid),
+    where('parentId', '==', null),
+    limit(1)
+  );
+  _unsubCopyGate = onSnapshot(q, snap => {
+    const hasComment = !snap.empty;
+    if (_hasCommented !== hasComment) {
+      _hasCommented = hasComment;
+      updateCopyGate();
+    }
+  }, () => {});
+}
+
 onAuthStateChanged(auth, async (user) => {
   await applyAuthState(user);
   if(user){
     loadNotifs(user.uid);
     rcm();
+    if (!_isAdmin) startCopyGateListener(user.uid);
   } else {
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+    if(_unsubCopyGate){ _unsubCopyGate(); _unsubCopyGate=null; }
   }
 });
 
@@ -1906,6 +1929,7 @@ window.doLogin = async () => {
 
 window.doLogout = async () => {
   closeUserDropdown();
+  if(_unsubCopyGate){ _unsubCopyGate(); _unsubCopyGate=null; }
   await signOut(auth);
   const nr = document.getElementById('nud-role');
   if(nr) nr.style.display = 'none';
@@ -2920,10 +2944,6 @@ window.postCm = async () => {
     removeCmPhoto();
     if (_isAdmin) {
       toast('Komentar admin terkirim! 👑');
-    } else if (!_hasCommented) {
-      _hasCommented = true;
-      updateCopyGate();
-      toast('Komentar terkirim! 💬 Akses copy lirik sekarang terbuka.');
     } else {
       toast('Komentar terkirim! 💬');
     }
