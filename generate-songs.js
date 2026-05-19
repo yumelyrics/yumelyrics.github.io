@@ -337,11 +337,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link:hover{color:var(--ink)}
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
-/* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 1.5rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;min-width:0;box-sizing:border-box}
+/* ── LOGIN GATE (sticky bar below nav, same as nav) ── */
+#login-gate{position:sticky;top:61px;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
-/* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
-body.gate-open .hero{margin-top:44px}
+/* Saat login-gate visible (sticky), sudah in-flow — tidak perlu margin-top extra */
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #login-gate-sub{display:none}
