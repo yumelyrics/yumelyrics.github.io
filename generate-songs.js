@@ -441,7 +441,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:hidden;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
-[data-obf="1"] span[data-c]{white-space:normal;display:inline}
+[data-obf="1"] span[data-c]{white-space:nowrap;display:inline}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
