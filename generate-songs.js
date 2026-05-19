@@ -311,7 +311,8 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--ink)}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none;transition:var(--nm-transition)}
+nav{transition:var(--nm-transition)}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
 .wrap{position:relative;z-index:1}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
@@ -420,8 +421,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.15rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden}
-.lro{font-family:var(--serif);font-size:.88rem;color:var(--ash);font-style:italic;font-weight:300;line-height:1.6;overflow:hidden;max-height:5rem;visibility:hidden}
-.lid{font-size:.85rem;color:var(--rose);font-weight:400;line-height:1.65;overflow:hidden;max-height:5rem;visibility:hidden}
+.lro{font-family:var(--serif);font-size:.88rem;color:var(--ash);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem}
+.lid{font-size:.85rem;color:var(--rose);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 [data-obf="1"] span[data-c]{white-space:pre}
@@ -432,16 +433,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .lsep{display:none}
 
 /* ── THUMBS (sidebar) ── */
-.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid rgba(10,8,18,.15);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;font-family:var(--sans)}
+.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;font-family:var(--sans);color:var(--ink)}
 .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
 .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.1)}
 .thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
 @keyframes thumbpop{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-12deg)}100%{transform:scale(1.15)}}
-.thumbs-icon{font-size:.95rem;transition:transform .2s}
+.thumbs-icon{font-size:.95rem;transition:transform .2s;color:var(--ink)}
 .thumbs-btn:hover .thumbs-icon,.thumbs-btn.voted .thumbs-icon{transform:scale(1.15)}
 #thumbs-count{font-family:var(--serif);font-size:1.05rem;color:var(--ink)}
 #thumbs-label{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash);flex:1;text-align:right}
 .thumbs-wrap{display:none} /* hidden — sidebar version used instead */
+[data-theme="dark"] .thumbs-btn{border-color:rgba(232,226,217,.18);background:rgba(232,226,217,.03)}
+[data-theme="dark"] .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.1)}
+[data-theme="dark"] .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.14)}
 
 /* ── SPOTIFY & VIDEO ── */
 .spbtn,.spotify-btn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
@@ -817,8 +821,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     </div>
 
     <div class="hero-actions">
-      <a class="btn-primary" href="#lyrics">↓ Baca Lirik</a>
-      ${song.ytId ? `<button class="btn-ghost" onclick="document.getElementById('yt-section').style.display='block';document.getElementById('yt-section').scrollIntoView({behavior:'smooth'})">
+      <button class="btn-primary" onclick="window._scrollToLyrics()">↓ Baca Lirik</button>
+      ${song.ytId ? `<button class="btn-ghost" onclick="window._scrollToMV()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Tonton MV
       </button>` : ''}
@@ -1204,14 +1208,14 @@ document.addEventListener('DOMContentLoaded', function(){
   document.documentElement.setAttribute('data-theme', theme);
 
   window.toggleTheme = function(){
-    var current = document.documentElement.getAttribute('data-theme');
-    var next = current === 'dark' ? 'light' : 'dark';
-    // Matikan semua transisi sementara supaya switch instan dan tidak berat
-    document.documentElement.classList.add('no-transition');
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('ym_theme', next);
-    // Aktifkan kembali transisi setelah browser selesai repaint
-    requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('no-transition'); }); });
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if(isDark){
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('ym_theme','light');
+    } else {
+      document.documentElement.setAttribute('data-theme','dark');
+      localStorage.setItem('ym_theme','dark');
+    }
   };
 })();
 </script>
@@ -1300,34 +1304,57 @@ function getVisitorId(){
 }
 
 let _thumbVoted = false;
+let _unsubSongStats = null;
 
-async function loadThumb(){
-  try {
-    const songSnap = await getDoc(doc(db,'songs',SONG_ID));
-    const data = songSnap.exists() ? songSnap.data() : {};
+function fmtNum(n){ return n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n||0); }
+
+function loadThumb(){
+  // Realtime listener untuk suka & dibaca
+  if(_unsubSongStats) _unsubSongStats();
+  _unsubSongStats = onSnapshot(doc(db,'songs',SONG_ID), snap => {
+    const data = snap.exists() ? snap.data() : {};
     const total = data.thumbs || 0;
     const views = data.views || 0;
-    const fmtNum = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
-    // Update semua elemen count
     const tcEl = document.getElementById('thumbs-count');
     const tcSbEl = document.getElementById('thumbs-count-sb');
     const vcEl = document.getElementById('views-count');
-    if(tcEl) tcEl.textContent = fmtNum(total);
+    if(tcEl) animateCount(tcEl, fmtNum(total));
     if(tcSbEl) tcSbEl.textContent = fmtNum(total);
-    if(vcEl) vcEl.textContent = fmtNum(views);
+    if(vcEl) animateCount(vcEl, fmtNum(views));
+  }, ()=>{});
 
-    // Cek apakah sudah vote
-    const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
-    const voteSnap = await getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid));
+  // Cek status vote user (sekali saja)
+  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+  getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid)).then(voteSnap => {
     _thumbVoted = voteSnap.exists();
     const btn = document.getElementById('thumbs-btn');
-    if(_thumbVoted){
+    if(_thumbVoted && btn){
       btn.classList.add('voted');
-      document.getElementById('thumbs-label').textContent = 'Kamu sudah suka lagu ini';
-      const iconEl = btn ? btn.querySelector('.thumbs-icon') : null;
+      const lbl = document.getElementById('thumbs-label');
+      if(lbl) lbl.textContent = 'Kamu sudah suka lagu ini';
+      const iconEl = btn.querySelector('.thumbs-icon');
       if(iconEl) iconEl.textContent = '♥';
     }
-  } catch(e){}
+  }).catch(()=>{});
+}
+
+// Animasi angka count naik/turun dengan flip singkat
+function animateCount(el, newVal){
+  if(el.textContent === newVal || el.textContent === '…' || el.textContent === '—'){
+    el.textContent = newVal; return;
+  }
+  el.style.transition = 'transform .15s ease,opacity .15s ease';
+  el.style.transform = 'translateY(-6px)';
+  el.style.opacity = '0';
+  setTimeout(()=>{
+    el.textContent = newVal;
+    el.style.transform = 'translateY(6px)';
+    requestAnimationFrame(()=>{
+      el.style.transition = 'transform .2s cubic-bezier(.34,1.56,.64,1),opacity .2s ease';
+      el.style.transform = 'translateY(0)';
+      el.style.opacity = '1';
+    });
+  }, 150);
 }
 
 window.doThumb = async function(){
@@ -1379,6 +1406,17 @@ window.doThumb = async function(){
 };
 
 loadThumb();
+
+// Realtime comment count
+let _unsubCmCount = null;
+(function startCmCountListener(){
+  const q = query(collection(db,'comments'), where('songId','==',SONG_ID));
+  _unsubCmCount = onSnapshot(q, snap => {
+    const topCount = snap.docs.filter(d => !d.data().parentId).length;
+    const ccEl = document.getElementById('comment-count');
+    if(ccEl) animateCount(ccEl, fmtNum(topCount));
+  }, ()=>{});
+})();
 
 // Attach event listener thumbs lagu (lebih reliable dari inline onclick di module)
 document.getElementById('thumbs-btn')?.addEventListener('click', () => window.doThumb());
@@ -2076,6 +2114,45 @@ window.doCopyLyric = async () => {
     e.preventDefault();
   });
 })();
+
+// ── Smooth scroll dengan easing kustom ──
+window._smoothScrollTo = function(targetY, duration){
+  const startY = window.scrollY;
+  const dist = targetY - startY;
+  const start = performance.now();
+  function easeInOutCubic(t){ return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+  function step(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed/duration, 1);
+    window.scrollTo(0, startY + dist * easeInOutCubic(progress));
+    if(progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+};
+
+window._scrollToLyrics = function(){
+  const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
+  if(!target) return;
+  const y = target.getBoundingClientRect().top + window.scrollY - 80;
+  window._smoothScrollTo(y, 900);
+  // Animasi bounce pada arrow button
+  const btn = document.querySelector('.hero-actions .btn-primary');
+  if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
+};
+
+window._scrollToMV = function(){
+  const sec = document.getElementById('yt-section');
+  if(!sec) return;
+  sec.style.display = 'block';
+  // Fade in seksi MV dulu, baru scroll
+  sec.style.opacity = '0';
+  sec.style.transition = 'opacity .4s ease';
+  requestAnimationFrame(()=>{
+    sec.style.opacity = '1';
+    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+    setTimeout(()=> window._smoothScrollTo(y, 900), 50);
+  });
+};
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 
