@@ -311,7 +311,28 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
       <div class="fg"><div class="fl">Niconico ID (opsional)</div><input class="fi" id="f-nico" placeholder="sm12345678"></div>
       <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder=""></div>
-      <div class="fg" style="grid-column:1/-1"><div class="fl">URL Gambar Album</div><input class="fi" id="f-img" placeholder=""></div>
+      <div class="fg" style="grid-column:1/-1">
+        <div class="fl" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+          <span>Cover / Gambar Album</span>
+          <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil cover dari Spotify">🎵 Ambil dari Spotify</button>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap;margin-top:.4rem">
+          <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:.5rem">
+            <input class="fi" id="f-img" placeholder="https://... atau upload file di bawah" oninput="onImgUrlInput()">
+            <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+              <label for="cover-file-input" style="background:none;border:1px dashed rgba(255,110,180,.35);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.45rem .9rem;cursor:pointer;border-radius:2px;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem" onmouseover="this.style.borderColor='rgba(255,110,180,.7)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,110,180,.35)';this.style.color='var(--muted)'">
+                📁 Upload Foto Cover
+              </label>
+              <input type="file" id="cover-file-input" accept="image/*" style="display:none" onchange="handleCoverUpload(this)">
+              <span id="cover-upload-status" style="font-size:.62rem;color:var(--muted)"></span>
+            </div>
+          </div>
+          <div id="cover-preview-wrap" style="display:none;flex-shrink:0">
+            <img id="cover-preview-img" src="" alt="preview" style="width:80px;height:80px;object-fit:cover;border:1px solid var(--border);border-radius:3px;display:block">
+            <button type="button" onclick="clearCoverPreview()" style="background:none;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;padding:.2rem 0;width:100%;text-align:center" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕ hapus</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="fg" style="margin-bottom:1.4rem">
       <div class="fl">Deskripsi Indonesia (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— maks 1000 karakter, buat meta description</span></div>
@@ -970,6 +991,9 @@ window.saveSong = async () => {
 function clearForm(){
   ['f-jt','f-it','f-ar','f-ro','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('lrows').innerHTML='';
+  showCoverPreview('');
+  document.getElementById('cover-upload-status').textContent = '';
+  updateSpotifyBtn();
   addRow();
 }
 
@@ -986,6 +1010,9 @@ window.editSong = id => {
   document.getElementById('f-descid').value=s.descId||'';
   document.getElementById('f-descjp').value=s.descJp||'';
   document.getElementById('f-editid').value=s.id;
+  showCoverPreview(s.img||'');
+  document.getElementById('cover-upload-status').textContent = '';
+  updateSpotifyBtn();
   document.getElementById('lrows').innerHTML='';
   (s.lyrics||[]).forEach(l=>addRow(l.jp,l.ro,l.id,l.ans||''));
   document.getElementById('bsaveBtn').textContent='✓ Update Lagu';
@@ -1036,6 +1063,94 @@ function ra(){
 }
 
 addRow();
+
+// ── COVER UPLOAD ──
+const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+
+function showCoverPreview(url) {
+  const wrap = document.getElementById('cover-preview-wrap');
+  const img  = document.getElementById('cover-preview-img');
+  if (url) { img.src = url; wrap.style.display = 'block'; }
+  else { img.src = ''; wrap.style.display = 'none'; }
+}
+
+window.onImgUrlInput = () => {
+  const url = document.getElementById('f-img').value.trim();
+  showCoverPreview(url);
+  updateSpotifyBtn();
+};
+
+window.clearCoverPreview = () => {
+  document.getElementById('f-img').value = '';
+  showCoverPreview('');
+  document.getElementById('cover-upload-status').textContent = '';
+  updateSpotifyBtn();
+};
+
+window.handleCoverUpload = async (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('File terlalu besar! Maks 5MB.'); input.value = ''; return; }
+  const statusEl = document.getElementById('cover-upload-status');
+  statusEl.textContent = '⏳ Uploading...';
+  statusEl.style.color = 'var(--muted)';
+  try {
+    const fd = new FormData();
+    fd.append('image', file);
+    const res  = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+    const json = await res.json();
+    if (!json.success) throw new Error('Upload gagal');
+    const url = json.data.url;
+    document.getElementById('f-img').value = url;
+    showCoverPreview(url);
+    statusEl.textContent = '✅ Upload berhasil!';
+    statusEl.style.color = '#4caf7d';
+    updateSpotifyBtn();
+  } catch(e) {
+    statusEl.textContent = '❌ Gagal upload: ' + e.message;
+    statusEl.style.color = 'var(--red)';
+  }
+  input.value = '';
+};
+
+// Spotify cover fetch via oEmbed (tidak butuh API key)
+window.fetchSpotifyCover = async () => {
+  const spUrl = document.getElementById('f-sp').value.trim();
+  if (!spUrl) { toast('Isi URL Spotify dulu!'); return; }
+  const match = spUrl.match(/track\/([A-Za-z0-9]+)/);
+  if (!match) { toast('URL Spotify tidak valid (harus link /track/).'); return; }
+  const trackId = match[1];
+  const btn = document.getElementById('cover-sp-btn');
+  btn.textContent = '⏳ Mengambil...';
+  btn.disabled = true;
+  try {
+    const oembed = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${trackId}`);
+    if (!oembed.ok) throw new Error('oEmbed gagal (' + oembed.status + ')');
+    const data = await oembed.json();
+    const coverUrl = data.thumbnail_url;
+    if (!coverUrl) throw new Error('Cover tidak ditemukan');
+    document.getElementById('f-img').value = coverUrl;
+    showCoverPreview(coverUrl);
+    toast('✅ Cover berhasil diambil dari Spotify!');
+    document.getElementById('cover-upload-status').textContent = '(dari Spotify)';
+    document.getElementById('cover-upload-status').style.color = '#1DB954';
+    updateSpotifyBtn();
+  } catch(e) {
+    toast('Gagal ambil cover Spotify: ' + e.message);
+  }
+  btn.textContent = '🎵 Ambil dari Spotify';
+  btn.disabled = false;
+};
+
+function updateSpotifyBtn() {
+  const btn    = document.getElementById('cover-sp-btn');
+  const spUrl  = document.getElementById('f-sp').value.trim();
+  const imgUrl = document.getElementById('f-img').value.trim();
+  btn.style.display = (spUrl && !imgUrl) ? 'inline-flex' : 'none';
+}
+
+// Pantau field Spotify supaya tombol muncul/hilang
+document.getElementById('f-sp').addEventListener('input', updateSpotifyBtn);
 
 window.filterCatalog = (q) => {
   const clearBtn = document.getElementById('catalogSearchClear');
