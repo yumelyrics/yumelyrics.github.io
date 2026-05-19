@@ -101,6 +101,19 @@
 [data-theme="dark"] .ep-box{background:var(--cream)}
 [data-theme="dark"] #nav-user-dropdown{background:var(--cream)}
 [data-theme="dark"] body::before{opacity:.2}
+/* dark theme tambahan sesuai generate-songs.js */
+[data-theme="dark"] .cmi{color:var(--ink)}
+[data-theme="dark"] .hero-kanji{color:rgba(232,226,217,.06)}
+[data-theme="dark"] .sec-ln{background:rgba(232,226,217,.1)}
+[data-theme="dark"] .lvcov{filter:sepia(.08) contrast(1.02) brightness(.92)}
+[data-theme="dark"] .sc{background:var(--paper);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .sc:hover{border-color:var(--gold)}
+[data-theme="dark"] .song-grid .sc::before{background:rgba(212,169,110,.04)}
+[data-theme="dark"] .scjp{color:var(--ink)}
+[data-theme="dark"] .admin-reply-block::after{background:rgba(15,13,11,.7)}
+[data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
+[data-theme="dark"] footer{background:#070604}
+[data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 *{margin:0;padding:0;box-sizing:border-box;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:var(--ink)}
 body{background:var(--paper);color:var(--ink);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
@@ -145,14 +158,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* KARTU LAGU */
 .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;padding:0 3rem}
-.sc{background:var(--paper);border:1px solid var(--border);cursor:pointer;transition:border-color .25s,box-shadow .25s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:0;contain:content}
+.sc{background:var(--paper);border:1px solid var(--border);cursor:pointer;transition:border-color .25s,box-shadow .25s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:0}
 .sc::before{content:'';position:absolute;inset:0;background:rgba(201,169,110,.04);pointer-events:none;opacity:0;transition:opacity .25s;z-index:1}
 .sc:hover{border-color:var(--gold);box-shadow:10px 14px 0 rgba(10,8,18,.06)}
 .sc:hover::before{opacity:1}
 /* padding-top trick */
-.sc-img-wrap{width:100%;padding-top:100%;position:relative;overflow:hidden;flex-shrink:0;background:var(--cream);transition:transform .4s ease}
-.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.1) contrast(1.04)}
-.sc:hover .sc-img-wrap{transform:scale(1.04)}
+.sc-img-wrap{width:100%;padding-top:100%;position:relative;flex-shrink:0;background:var(--cream);overflow:hidden}
+.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.1) contrast(1.04);transform:scale(1);transition:transform .4s ease}
+.sc:hover .sc-img-wrap img{transform:scale(1.04)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:var(--gold)}
 .sc-corner::before{top:0;right:0;width:1px;height:14px}
@@ -173,7 +186,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #lyrView{display:none;padding:0 3rem 6rem;max-width:1200px;margin:0 auto}
 #lyrView.on{display:block;animation:fu .35s ease}
 @keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
+@keyframes onlineRing{0%{transform:scale(1);opacity:.8}70%{transform:scale(2.4);opacity:0}100%{transform:scale(2.4);opacity:0}}
 .lvback{display:flex;align-items:center;gap:1.2rem;padding:2.5rem 0 2rem;margin-bottom:2rem;border-bottom:1px solid var(--border)}
 .gbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.45rem 1rem;cursor:pointer;transition:all .2s;border-radius:0;font-weight:600;text-decoration:none}
 .gbtn:hover{border-color:var(--ink);color:var(--ink)}
@@ -367,6 +380,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .req-btn:hover .req-btn-arr{transform:translateX(4px)}
 .req-btn-icon{display:flex;align-items:center;flex-shrink:0}
 .req-btn-arr{transition:transform .25s;font-size:.85rem;margin-left:.1rem}
+/* ── HERO ACTION ROW ── */
+.hero-action-row{display:flex;align-items:center;gap:2rem;margin-top:1.5rem;flex-wrap:wrap}
+.hero-action-row .req-btn{margin-top:0}
+#online-counter{display:inline-flex;align-items:center;gap:.7rem}
+.online-dot-wrap{position:relative;width:6px;height:6px;flex-shrink:0}
+.online-dot-core{width:6px;height:6px;border-radius:50%;background:#22c55e}
+.online-dot-ring{position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(34,197,94,.35);animation:onlineRing 2.2s ease-out infinite}
+.online-text{display:flex;align-items:baseline;gap:.4rem}
+.online-num{font-family:var(--serif);font-size:1.15rem;font-weight:300;color:var(--ink);line-height:1;letter-spacing:-.01em}
+.online-sub{font-size:.48rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+@media(max-width:600px){
+  .hero-action-row{flex-direction:column;align-items:flex-start;gap:1rem}
+}
 .hero-kanji{position:absolute;right:3rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:5rem;font-weight:300;color:rgba(10,8,18,.06);line-height:1;pointer-events:none;user-select:none;z-index:1}
 [data-theme="dark"] .hero-kanji{color:rgba(232,226,217,.06)}
 @media(min-width:768px){.hero-kanji{font-size:8rem}}
@@ -531,16 +557,24 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="eyebrow">Terjemahan Lagu Jepang</div>
     <h1>Kata-kata yang<br>terasa seperti <em>mimpi</em></h1>
     <p>Lirik Jepang, romaji, dan terjemahan Indonesia. Biar lo nyanyi sambil ngerti maknanya.</p>
-    <a href="contact.html" class="req-btn">
-      <span class="req-btn-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-      </span>
-      <span>Request Lagu</span>
-      <span class="req-btn-arr">→</span>
-    </a>
-    <div id="online-counter" style="display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;font-size:.68rem;color:var(--ash);letter-spacing:.05em;font-family:var(--serif);font-style:italic">
-      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
-      <span id="online-count">—</span> orang lagi online sekarang
+    <div class="hero-action-row">
+      <a href="contact.html" class="req-btn">
+        <span class="req-btn-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </span>
+        <span>Request Lagu</span>
+        <span class="req-btn-arr">→</span>
+      </a>
+      <div id="online-counter">
+        <div class="online-dot-wrap">
+          <div class="online-dot-core"></div>
+          <div class="online-dot-ring"></div>
+        </div>
+        <div class="online-text">
+          <span id="online-count" class="online-num">—</span>
+          <span class="online-sub">sedang membaca</span>
+        </div>
+      </div>
     </div>
     </div>
   </div>
@@ -1672,7 +1706,8 @@ window.addEventListener('resize', fixBg);
 @keyframes chatUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 #chat-hdr{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--cream)}
 #chat-hdr-left{display:flex;align-items:center;gap:.5rem}
-.chat-hdr-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.7);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0}
+.chat-hdr-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;position:relative}
+.chat-hdr-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(34,197,94,.35);animation:onlineRing 2.2s ease-out infinite}
 #chat-hdr-title{font-size:.75rem;font-weight:700;color:var(--ink);letter-spacing:.08em;text-transform:uppercase;font-family:var(--en)}
 #chat-hdr-online{font-size:.62rem;color:var(--ash);font-family:var(--serif);font-style:italic}
 #chat-close{background:none;border:none;color:var(--ash);cursor:pointer;font-size:1rem;padding:0;line-height:1;transition:color .15s}

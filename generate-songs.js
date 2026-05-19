@@ -460,8 +460,14 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;margin-top:1rem;filter:sepia(.1)}
 
 /* ── ONLINE COUNTER ── */
-#online-counter{display:inline-flex;align-items:center;gap:.45rem;margin:.8rem 0;font-size:.68rem;color:var(--ash);letter-spacing:.05em;font-family:var(--sans)}
-@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
+/* ── ONLINE COUNTER ── */
+#online-counter{display:flex;flex-direction:column;gap:.35rem}
+.online-dot-row{display:flex;align-items:center;gap:.55rem}
+.online-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;position:relative}
+.online-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(34,197,94,.35);animation:onlineRing 2.2s ease-out infinite}
+@keyframes onlineRing{0%{transform:scale(1);opacity:.8}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}
+.online-num{font-family:var(--serif);font-size:1.6rem;font-weight:300;color:var(--ink);line-height:1;letter-spacing:-.01em}
+.online-sub{font-size:.48rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--smoke)}
 
 /* ── COPY GATE ── */
 #copy-gate{margin:1.5rem 0 .5rem;padding:1.3rem 1.5rem;border:1px solid var(--border);background:var(--mist);display:flex;flex-direction:column;align-items:flex-start;gap:.75rem;position:relative;overflow:hidden}
@@ -765,9 +771,12 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   footer{flex-direction:column;padding:2.5rem 1.5rem;gap:2rem}
   .footer-links{flex-wrap:wrap;gap:2rem}
   .section-divider{padding:0 1.5rem}
-  #login-gate{padding:.7rem 1.5rem}
-  body.gate-open .hero{margin-top:52px}
-  body.gate-open .lyrics-sidebar{top:116px;height:auto}
+  #login-gate{padding:.55rem 1.5rem;gap:.75rem;flex-wrap:nowrap}
+  #login-gate-sub{display:none}
+  #login-gate-title{font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  .google-btn{padding:.38rem .85rem;font-size:.55rem;flex-shrink:0;white-space:nowrap}
+  body.gate-open .hero{margin-top:38px}
+  body.gate-open .lyrics-sidebar{top:102px;height:auto}
 }
 @media(max-width:600px){
   .hero-text{padding:2.5rem 1.2rem}
@@ -956,10 +965,13 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     </div>
 
     <div>
-      <span class="sidebar-section-label">Online Sekarang</span>
+      <span class="sidebar-section-label">Sedang Membaca</span>
       <div id="online-counter">
-        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
-        <span id="online-count">—</span> orang
+        <div class="online-dot-row">
+          <div class="online-dot"></div>
+          <span class="online-num" id="online-count">—</span>
+        </div>
+        <span class="online-sub">pembaca aktif</span>
       </div>
     </div>
   </aside>
