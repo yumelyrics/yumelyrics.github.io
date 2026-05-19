@@ -54,7 +54,7 @@ function obfuscateLine(str) {
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0">' + innerSpans + '</span>';
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;white-space:nowrap;flex-shrink:0">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -435,15 +435,15 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
-.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
-.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
-.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
+.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;max-width:100%;min-width:0}
+.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
+.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;overflow-wrap:normal;word-break:normal;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:normal;display:inline}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
-.lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
+.lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem;min-width:0;max-width:100%}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
 .lyric-num{position:absolute;left:-2.5rem;top:1.5rem;font-family:var(--serif);font-size:.72rem;font-weight:300;color:var(--smoke);letter-spacing:.05em}
 .lsep{display:none}
@@ -817,6 +817,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .ll-item{grid-template-columns:1fr}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
   .lyric-num{display:none}
+  .ljp{font-size:1.05rem}
+  .lro{font-size:.88rem}
+  .lid{font-size:.88rem}
+  .obf-word{max-width:100%;overflow:hidden}
   /* About section: full visible, no overflow */
   .cmsec{overflow:visible;height:auto;max-height:none}
   .cmsec p{word-break:break-word;overflow-wrap:break-word;white-space:normal}
