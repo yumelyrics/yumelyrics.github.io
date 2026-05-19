@@ -54,7 +54,7 @@ function obfuscateLine(str) {
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0">' + innerSpans + '</span>';
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:break-word;word-break:break-all">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -403,7 +403,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .divider-ornament{font-family:var(--serif);font-size:.85rem;font-weight:300;font-style:italic;color:var(--ash);white-space:nowrap;letter-spacing:.1em}
 
 /* ── LYRICS SECTION ── */
-.lyrics-section{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+.lyrics-section{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh;overflow:hidden}
 .lyrics-sidebar{padding:4rem 2.5rem 4rem 3.5rem;border-right:1px solid rgba(10,8,18,.08);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:2.5rem}
 .sidebar-section-label{font-size:.58rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke);margin-bottom:1rem;display:block}
 .toggle-group{display:flex;flex-direction:column;gap:.35rem}
@@ -843,9 +843,12 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     gap:1rem;
   }
   .lyrics-sidebar>div:last-child{grid-column:1}
-  .thumbs-block{min-width:0;width:100%}
-  .thumbs-btn{width:100%;box-sizing:border-box;min-width:0}
-  .spotify-btn{width:100%;box-sizing:border-box;min-width:0;display:flex}
+  .thumbs-block{min-width:0;width:100%;overflow:hidden}
+  .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
+  .spotify-btn{width:100%;box-sizing:border-box;min-width:0;display:flex;overflow:hidden}
+  .toggle-group{width:100%;overflow:visible}
+  .toggle-item{width:100%;box-sizing:border-box}
+  .sidebar-section-label{white-space:normal}
   .lyrics-main{padding:1.5rem 1.2rem 4rem}
   .ctrl-pill{font-size:.52rem;padding:.28rem .6rem}
   .related-section-block{padding:2.5rem 1.2rem}
@@ -1489,7 +1492,6 @@ window.doThumb = async function(){
   const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
   const voteRef = doc(db,'song_thumbs',SONG_ID,'votes',uid);
   const songRef = doc(db,'songs',SONG_ID);
-  const countEl = document.getElementById('thumbs-count');
   const labelEl = document.getElementById('thumbs-label');
 
   try {
@@ -1500,12 +1502,9 @@ window.doThumb = async function(){
       _thumbVoted = true;
       btn.classList.add('voted','pop');
       setTimeout(()=>btn.classList.remove('pop'),400);
-      const newCount = (parseInt(countEl.textContent)||0) + 1;
-      countEl.textContent = newCount >= 1000 ? (newCount/1000).toFixed(1).replace(/\.0$/,'')+'k' : newCount;
-      const sb1 = document.getElementById('thumbs-count-sb');
-      if(sb1) sb1.textContent = countEl.textContent;
+      // JANGAN update count manual di sini — onSnapshot di loadThumb() sudah handle ini
+      // agar tidak double-update (manual +1 lalu onSnapshot trigger lagi → count naik 2x)
       labelEl.textContent = 'Kamu sudah suka lagu ini';
-      // Update icon ke hati penuh
       const iconEl = btn.querySelector('.thumbs-icon');
       if(iconEl) iconEl.textContent = '♥';
     } else {
@@ -1514,11 +1513,7 @@ window.doThumb = async function(){
       await updateDoc(songRef, { thumbs: increment(-1) });
       _thumbVoted = false;
       btn.classList.remove('voted');
-      const rawCount = parseInt(countEl.textContent)||1;
-      const newCount2 = Math.max(0, rawCount - 1);
-      countEl.textContent = newCount2 >= 1000 ? (newCount2/1000).toFixed(1).replace(/\.0$/,'')+'k' : newCount2;
-      const sb2 = document.getElementById('thumbs-count-sb');
-      if(sb2) sb2.textContent = countEl.textContent;
+      // JANGAN update count manual — biarkan onSnapshot yang sync dari Firestore
       labelEl.textContent = 'Suka lagu ini?';
       const iconEl2 = btn.querySelector('.thumbs-icon');
       if(iconEl2) iconEl2.textContent = '♡';
