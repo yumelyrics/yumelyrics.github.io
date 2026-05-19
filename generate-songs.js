@@ -337,10 +337,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link:hover{color:var(--ink)}
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
-/* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
+/* ── LOGIN GATE (sticky bar below nav) ── */
+#login-gate{position:sticky;top:0;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
-body.gate-open .hero{margin-top:44px}
+body.gate-open .hero{margin-top:0}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #login-gate-sub{display:none}
@@ -772,7 +772,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     padding:.5rem 1.2rem;
     gap:.6rem;
     flex-wrap:wrap;
-    top:58px;
   }
   #login-gate-title{
     font-size:.6rem;
@@ -783,7 +782,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   }
   #login-gate-sub{display:none}
   .google-btn{padding:.35rem .8rem;font-size:.55rem;flex-shrink:0;letter-spacing:.1em}
-  body.gate-open .hero{margin-top:42px}
+  body.gate-open .hero{margin-top:0}
   body.gate-open .lyrics-sidebar{top:106px;height:auto}
   .hero{grid-template-columns:1fr;min-height:auto}
   .hero::after{display:none}
@@ -830,7 +829,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   #login-gate-sub{display:none}
   #login-gate-title{font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
   .google-btn{padding:.38rem .85rem;font-size:.55rem;flex-shrink:0;white-space:nowrap}
-  body.gate-open .hero{margin-top:38px}
+  body.gate-open .hero{margin-top:0}
   body.gate-open .lyrics-sidebar{top:102px;height:auto}
 }
 @media(max-width:600px){
