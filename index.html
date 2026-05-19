@@ -116,7 +116,9 @@
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
 [data-theme="dark"] footer{background:#070604}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
-*{margin:0;padding:0;box-sizing:border-box;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
+*{margin:0;padding:0;box-sizing:border-box}
+/* Transisi tema hanya aktif saat toggle berlangsung */
+.theme-transitioning,.theme-transitioning *{transition:background-color .3s ease,border-color .3s ease,color .3s ease !important}
 html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:var(--ink)}
 body{background:var(--paper);color:var(--ink);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
@@ -154,6 +156,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nd-divider{height:1px;background:var(--border);margin:.2rem 0}
 #theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:var(--nm-transition),transform .2s;flex-shrink:0;position:relative;overflow:hidden}
 #theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
+@media(hover:none){#theme-toggle:hover{transform:none}}
 #theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s,transform .25s;position:absolute}
 #theme-toggle .icon-sun{opacity:1;transform:scale(1)}
 #theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
@@ -179,8 +182,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* KARTU LAGU */
 .song-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;padding:0 3rem}
-.sc{background:var(--paper);border:1px solid var(--border);cursor:pointer;transition:border-color .25s,box-shadow .25s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:0}
-.sc::before{content:'';position:absolute;inset:0;background:rgba(201,169,110,.04);pointer-events:none;opacity:0;transition:opacity .25s;z-index:1}
+.sc{background:var(--paper);border:1px solid var(--border);cursor:pointer;transition:border-color .25s,box-shadow .25s;overflow:hidden;display:flex;flex-direction:column;position:relative;border-radius:0}.sc::before{content:'';position:absolute;inset:0;background:rgba(201,169,110,.04);pointer-events:none;opacity:0;transition:opacity .25s;z-index:1}
 .sc:hover{border-color:var(--gold);box-shadow:10px 14px 0 rgba(10,8,18,.06)}
 .sc:hover::before{opacity:1}
 /* padding-top trick */
@@ -1622,14 +1624,22 @@ sv('cat');
   if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
 })();
 function toggleTheme(){
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  if(isDark){
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('ym_theme','light');
-  } else {
-    document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('ym_theme','dark');
-  }
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  // Aktifkan transisi di semua elemen sekaligus
+  root.classList.add('theme-transitioning');
+  // Ganti tema dalam 1 rAF agar body + kartu berubah di frame yg sama
+  requestAnimationFrame(function(){
+    if(isDark){
+      root.removeAttribute('data-theme');
+      localStorage.setItem('ym_theme','light');
+    } else {
+      root.setAttribute('data-theme','dark');
+      localStorage.setItem('ym_theme','dark');
+    }
+    // Lepas class setelah transisi selesai (300ms)
+    setTimeout(function(){ root.classList.remove('theme-transitioning'); }, 320);
+  });
 }
 
 function toggleNavMenu(){
