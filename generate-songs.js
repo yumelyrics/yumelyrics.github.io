@@ -54,7 +54,7 @@ function obfuscateLine(str) {
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:break-word;word-break:break-all">' + innerSpans + '</span>';
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:normal;word-break:normal;">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -1452,9 +1452,12 @@ function loadThumb(){
     if(vcEl) animateCount(vcEl, fmtNum(views));
   }, ()=>{});
 
-  // Cek status vote user (sekali saja)
+  // Cek status vote user (sekali saja) — skip kalau _thumbVoted sudah true (baru saja di-vote)
+  if(_thumbVoted) return;
   const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
   getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid)).then(voteSnap => {
+    // Jangan override kalau user sudah vote di antara async ini
+    if(_thumbVoted) return;
     _thumbVoted = voteSnap.exists();
     const btn = document.getElementById('thumbs-btn');
     if(_thumbVoted && btn){
@@ -2701,7 +2704,8 @@ async function sendNotif(toUid, toName, replyText, songSlug, songTitle){
 
 async function rcm(){
   const el=document.getElementById('cmlist');
-  el.innerHTML='<div class="nocm">Memuat komentar...</div>';
+  // Tampilkan loading hanya kalau list memang kosong (bukan saat refresh setelah komentar)
+  if(!el.querySelector('.citem')) el.innerHTML='<div class="nocm">Memuat komentar...</div>';
   try{
     let allDocs;
     try {
