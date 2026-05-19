@@ -554,15 +554,17 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .cm-mention{color:var(--rose);font-weight:500}
 .nocm{font-size:.82rem;color:var(--ash);font-style:italic;font-family:var(--serif);padding:1.5rem 0}
 .admin-badge{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--plum);padding:.12rem .42rem;font-weight:600}
-.admin-cm-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:rgba(201,169,110,.08);border-bottom:1px solid rgba(201,169,110,.15);margin-bottom:.7rem}
-.admin-cm-crown{font-size:.95rem}
-.admin-cm-name{font-size:.78rem;color:var(--rose);font-weight:700;font-family:var(--jp)}
-.admin-cm-badge{font-size:.52rem;color:var(--paper);background:var(--plum);padding:.15rem .5rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
-.admin-cm-date{font-size:.58rem;color:var(--ash);margin-left:auto}
+.admin-cm-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
+.admin-cm-crown{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,169,110,.25),rgba(124,77,110,.15));display:flex;align-items:center;justify-content:center;font-size:.95rem;border:1.5px solid rgba(201,169,110,.35);flex-shrink:0}
+.admin-cm-info{display:flex;flex-direction:column;gap:.2rem;flex:1}
+.admin-cm-name-row{display:flex;align-items:center;gap:.4rem}
+.admin-cm-name{font-size:.8rem;color:var(--rose);font-weight:700;font-family:var(--jp)}
+.admin-cm-badge{font-size:.45rem;color:var(--paper);background:var(--plum);padding:.12rem .45rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;border-radius:2px;line-height:1.5}
+.admin-cm-date{font-size:.58rem;color:var(--ash)}
 .reply-btn{background:none;border:none;font-family:var(--sans);font-size:.56rem;color:var(--smoke);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;padding:.2rem .4rem;transition:color .2s;font-weight:600}
 .reply-btn:hover{color:var(--rose)}
 .replies{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
-.ritem{padding:.7rem 1rem;border-left:2px solid var(--border);display:grid;grid-template-columns:30px 1fr;gap:1rem}
+.ritem{padding:.7rem 1rem;border-left:2px solid var(--border);display:flex;flex-direction:column;gap:.4rem}
 .ritem.is-admin{border-left-color:var(--gold);background:rgba(201,169,110,.04)}
 .admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;position:relative;overflow:hidden;isolation:isolate}
 .admin-reply-block::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.06;z-index:-1;pointer-events:none}
@@ -2221,10 +2223,14 @@ function renderComment(id, c, replies){
   if (isAdm) {
     return \`<div class="citem is-admin">
       <div class="admin-cm-header">
-        <div class="cm-avatar-crown">👑</div>
-        <span class="admin-cm-name">YumeSubs</span>
-        <span class="admin-cm-badge">Admin</span>
-        <span class="admin-cm-date">\${esc(c.date)}</span>
+        <div class="admin-cm-crown">👑</div>
+        <div class="admin-cm-info">
+          <div class="admin-cm-name-row">
+            <span class="admin-cm-name">YumeSubs</span>
+            <span class="admin-cm-badge">Admin</span>
+          </div>
+          <span class="admin-cm-date">\${esc(c.date)}</span>
+        </div>
         \${delBtn}
       </div>
       <div class="ctxt" style="padding:.1rem 0 .4rem">\${renderText(c.text)}\${imgHtml}</div>
