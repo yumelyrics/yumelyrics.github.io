@@ -37,12 +37,16 @@ function randNoise() {
 }
 function obfuscateLine(str) {
   if (!str) return '';
-  // Split per kata, obfuscate per kata, bungkus dalam span nowrap
-  // sehingga flex-wrap hanya terjadi antar kata, tidak di tengah kata
-  const words = str.split(' ');
-  return words.map((word, wi) => {
-    if (!word) return '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>';
-    const chars = [...word];
+  // Split by semua jenis whitespace termasuk fullwidth space U+3000
+  // Lirik Jepang sering pakai spasi fullwidth sebagai pemisah frasa
+  const tokens = str.split(/([ \t\u3000]+)/);
+  return tokens.map((token) => {
+    if (!token) return '';
+    // Kalau token adalah whitespace, render sebagai spasi visual
+    if (/^[ \t\u3000]+$/.test(token)) {
+      return '<span data-sp="1" style="display:inline;white-space:pre"> </span>';
+    }
+    const chars = [...token];
     const indices = chars.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -53,14 +57,9 @@ function obfuscateLine(str) {
       const noiseSpan = '<span aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
-    // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
-    // flex-shrink:0 agar kata tidak dipotong, tapi max-width:100% agar kata panjang wrap ke baris baru
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;flex-wrap:nowrap;">' + innerSpans + '</span>';
-    // Tambah spasi setelah kata (kecuali kata terakhir)
-    const spaceSpan = wi < words.length - 1
-      ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
-      : '';
-    return wordSpan + spaceSpan;
+    // flex-wrap:wrap + word-break:break-all agar karakter Jepang bisa turun baris
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-all;flex-wrap:wrap;">' + innerSpans + '</span>';
+    return wordSpan;
   }).join('');
 }
 
