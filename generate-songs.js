@@ -54,7 +54,8 @@ function obfuscateLine(str) {
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:normal;word-break:normal;">' + innerSpans + '</span>';
+    // flex-shrink:0 agar kata tidak dipotong, tapi max-width:100% agar kata panjang wrap ke baris baru
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;flex-wrap:wrap;">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -1452,20 +1453,26 @@ function loadThumb(){
     if(vcEl) animateCount(vcEl, fmtNum(views));
   }, ()=>{});
 
-  // Cek status vote user (sekali saja) — skip kalau _thumbVoted sudah true (baru saja di-vote)
-  if(_thumbVoted) return;
+  // Cek status vote user — selalu cek ulang dengan uid yang benar (visitor vs logged-in)
   const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
+  // Reset dulu supaya getDoc bisa override dengan state yang benar dari Firestore
+  _thumbVoted = false;
   getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid)).then(voteSnap => {
-    // Jangan override kalau user sudah vote di antara async ini
-    if(_thumbVoted) return;
     _thumbVoted = voteSnap.exists();
     const btn = document.getElementById('thumbs-btn');
-    if(_thumbVoted && btn){
+    if(!btn) return;
+    if(_thumbVoted){
       btn.classList.add('voted');
       const lbl = document.getElementById('thumbs-label');
       if(lbl) lbl.textContent = 'Kamu sudah suka lagu ini';
       const iconEl = btn.querySelector('.thumbs-icon');
       if(iconEl) iconEl.textContent = '♥';
+    } else {
+      btn.classList.remove('voted');
+      const lbl = document.getElementById('thumbs-label');
+      if(lbl) lbl.textContent = 'Suka lagu ini?';
+      const iconEl = btn.querySelector('.thumbs-icon');
+      if(iconEl) iconEl.textContent = '♡';
     }
   }).catch(()=>{});
 }
@@ -1914,9 +1921,20 @@ onAuthStateChanged(auth, async (user) => {
     loadNotifs(user.uid);
     rcm();
     if (!_isAdmin) startCopyGateListener(user.uid);
+    // Re-check status like dengan uid yang benar (bukan visitor ID lagi)
+    loadThumb();
   } else {
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
     if(_unsubCopyGate){ _unsubCopyGate(); _unsubCopyGate=null; }
+    // Reset state like saat logout supaya tidak terbalik
+    _thumbVoted = false;
+    const _thumbBtn = document.getElementById('thumbs-btn');
+    if(_thumbBtn){ _thumbBtn.classList.remove('voted'); }
+    const _thumbLbl = document.getElementById('thumbs-label');
+    if(_thumbLbl) _thumbLbl.textContent = 'Suka lagu ini?';
+    const _thumbIcon = _thumbBtn ? _thumbBtn.querySelector('.thumbs-icon') : null;
+    if(_thumbIcon) _thumbIcon.textContent = '\u2661';
+    loadThumb();
   }
 });
 
