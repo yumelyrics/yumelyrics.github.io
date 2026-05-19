@@ -335,7 +335,7 @@ body.gate-open .hero{margin-top:44px}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
 #login-gate-sub{font-size:.7rem;color:var(--ash);line-height:1.5;font-family:var(--serif);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
+.google-btn{display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1px solid var(--border);padding:.4rem 1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;flex-grow:0;margin-left:auto;position:relative;overflow:hidden}
 .google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
 .google-btn:hover::after{opacity:.08}
 .google-btn:hover{border-color:var(--gold);color:var(--ink)}
@@ -430,7 +430,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 [data-obf="1"] span[data-c]{white-space:pre;display:inline}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
-.lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06)}
+.lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
 .lyric-num{position:absolute;left:-2.5rem;top:1.5rem;font-family:var(--serif);font-size:.72rem;font-weight:300;color:var(--smoke);letter-spacing:.05em}
 .lsep{display:none}
 
