@@ -435,7 +435,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
-.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden;word-break:break-word;overflow-wrap:break-word}
+.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;max-width:100%;min-width:0}
 .lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
 .lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
@@ -443,7 +443,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 [data-obf="1"] span[data-c]{white-space:normal;display:inline}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
-.lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
+.lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem;min-width:0;max-width:100%}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
 .lyric-num{position:absolute;left:-2.5rem;top:1.5rem;font-family:var(--serif);font-size:.72rem;font-weight:300;color:var(--smoke);letter-spacing:.05em}
 .lsep{display:none}
@@ -817,6 +817,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .ll-item{grid-template-columns:1fr}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
   .lyric-num{display:none}
+  .ljp{font-size:1.05rem}
+  .lro{font-size:.88rem}
+  .lid{font-size:.88rem}
+  .obf-word{max-width:100%;overflow:hidden}
   /* About section: full visible, no overflow */
   .cmsec{overflow:visible;height:auto;max-height:none}
   .cmsec p{word-break:break-word;overflow-wrap:break-word;white-space:normal}
