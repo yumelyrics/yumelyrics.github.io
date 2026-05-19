@@ -328,13 +328,13 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
 /* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap;overflow:visible}
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 2rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:nowrap;overflow:visible;min-width:0}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 /* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
 body.gate-open .hero{margin-top:44px}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
-#login-gate-sub{font-size:.7rem;color:var(--ash);line-height:1.5;font-family:var(--serif);flex:1;min-width:0}
+#login-gate-sub{font-size:.7rem;color:var(--ash);line-height:1.5;font-family:var(--serif);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
 .google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
 .google-btn:hover::after{opacity:.08}
@@ -422,12 +422,12 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
-.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden}
-.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem}
-.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem}
+.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden;word-break:break-word;overflow-wrap:break-word}
+.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;word-break:break-word;overflow-wrap:break-word}
+.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;word-break:break-word;overflow-wrap:break-word}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
-[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
-[data-obf="1"] span[data-c]{white-space:pre}
+[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;word-break:break-word;overflow-wrap:break-word;align-content:flex-start}
+[data-obf="1"] span[data-c]{white-space:pre;display:inline}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06)}
