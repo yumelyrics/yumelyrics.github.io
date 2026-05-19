@@ -457,7 +457,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .thumbs-icon{font-size:.95rem;transition:transform .2s;color:var(--ink)}
 .thumbs-btn:hover .thumbs-icon,.thumbs-btn.voted .thumbs-icon{transform:scale(1.15)}
 #thumbs-count{font-family:var(--serif);font-size:1.05rem;color:var(--ink)}
-#thumbs-label{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash);flex:1;text-align:right}
+#thumbs-label{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash);flex:1;text-align:right;min-width:0;word-break:break-word}
 .thumbs-wrap{display:none} /* hidden — sidebar version used instead */
 [data-theme="dark"] .thumbs-btn{border-color:rgba(232,226,217,.18);background:rgba(232,226,217,.03)}
 [data-theme="dark"] .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.1)}
@@ -513,8 +513,8 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .rc-thumb,.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0;filter:sepia(.1)}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .rc-info,.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
-.rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
 .rc-artist,.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .rc-arr,.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;margin-top:.2rem;transition:all .2s;font-family:var(--serif)}
 .rc:hover .rc-arr,.related-card:hover .related-arr{color:var(--gold);transform:translateX(3px)}
@@ -995,18 +995,18 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         </div>
         <div class="toggle-item" onclick="tl('ro')">
           <span class="toggle-label">Romaji</span>
-          <div class="toggle-switch on" id="tp-ro"></div>
+          <div class="toggle-switch on" id="sw-ro"></div>
         </div>
         <div class="toggle-item" onclick="tl('tr')">
           <span class="toggle-label">Terjemahan</span>
-          <div class="toggle-switch on" id="tp-tr"></div>
+          <div class="toggle-switch on" id="sw-tr"></div>
         </div>
       </div>
     </div>
 
     <div class="thumbs-block">
       <span class="sidebar-section-label">Apresiasi</span>
-      <button class="thumbs-btn" id="thumbs-btn" aria-label="Suka lagu ini">
+      <button class="thumbs-btn" id="thumbs-btn" onclick="window.doThumb()" aria-label="Suka lagu ini">
         <span class="thumbs-icon">♡</span>
         <span id="thumbs-count-sb">…</span>
         <span id="thumbs-label">Suka lagu ini?</span>
@@ -2364,7 +2364,7 @@ window._lyricSetView = function(showJp, showRo, showTr){
   document.querySelectorAll('.ljp').forEach(function(e){ e.classList.toggle('h',!sjp); });
   document.querySelectorAll('.lro').forEach(function(e){ e.classList.toggle('h',!sro); });
   document.querySelectorAll('.lid').forEach(function(e){ e.classList.toggle('h',!str); });
-  var swJp=document.getElementById('sw-jp'),swRo=document.getElementById('tp-ro'),swTr=document.getElementById('tp-tr');
+  var swJp=document.getElementById('sw-jp'),swRo=document.getElementById('sw-ro'),swTr=document.getElementById('sw-tr');
   if(swJp) swJp.classList.toggle('on',sjp);
   if(swRo) swRo.classList.toggle('on',sro);
   if(swTr) swTr.classList.toggle('on',str);
