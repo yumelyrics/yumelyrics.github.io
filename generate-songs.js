@@ -320,7 +320,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 .no-transition,html.no-transition *{transition:none!important}
 input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
-html{scroll-behavior:smooth;background:var(--ink)}
+html{scroll-behavior:smooth;background:var(--ink);scrollbar-gutter:stable}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none;transition:var(--nm-transition)}
 nav{transition:var(--nm-transition)}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
@@ -337,10 +337,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link:hover{color:var(--ink)}
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
-/* ── LOGIN GATE (sticky bar below nav, same as nav) ── */
-#login-gate{position:sticky;top:61px;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
+/* ── LOGIN GATE (fixed bar below nav) ── */
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
-/* Saat login-gate visible (sticky), sudah in-flow — tidak perlu margin-top extra */
+body.gate-open .hero{margin-top:44px}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #login-gate-sub{display:none}
@@ -421,6 +421,9 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid rgba(10,8,18,.15);background:none;color:var(--ash);cursor:pointer;transition:all .18s;font-family:var(--sans)}
 .ctrl-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .ctrl-pill:hover:not(.active){border-color:var(--ink);color:var(--ink)}
+#copy-lyric-btn{display:none;align-items:center;gap:.4rem;border-color:rgba(201,169,110,.5);color:var(--gold)}
+#copy-lyric-btn:hover:not(:disabled){background:var(--gold);border-color:var(--gold);color:var(--ink)}
+#copy-lyric-btn:disabled{opacity:.35;cursor:not-allowed}
 .ctrl-sep{width:1px;height:20px;background:rgba(10,8,18,.1)}
 
 /* ── LYRICS LIST ── */
@@ -643,6 +646,24 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 /* ── TOAST ── */
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(10,8,18,.15)}
 .toast.on{opacity:1;transform:translateY(0)}
+
+/* ── LOGIN INFO TOAST ── */
+#login-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);z-index:1000;opacity:0;pointer-events:none;transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.34,1.56,.64,1);max-width:min(420px,calc(100vw - 2rem));width:100%}
+#login-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.lt-inner{background:var(--paper);border:1px solid var(--gold);box-shadow:0 8px 40px rgba(10,8,18,.18),0 0 0 1px rgba(201,169,110,.15);padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.85rem}
+.lt-icon{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);font-size:1rem;margin-top:.05rem}
+.lt-body{display:flex;flex-direction:column;gap:.2rem;flex:1;min-width:0}
+.lt-title{font-family:var(--serif);font-size:.82rem;font-weight:500;font-style:italic;color:var(--ink);line-height:1.3}
+.lt-desc{font-size:.65rem;color:var(--ash);line-height:1.6;font-family:var(--sans);font-weight:500;letter-spacing:.02em}
+.lt-desc strong{color:var(--gold);font-weight:700}
+.lt-bar{height:2px;background:linear-gradient(90deg,var(--gold),var(--rose));margin-top:.75rem;transform-origin:left;animation:none}
+.lt-bar.running{animation:ltbar 5s linear forwards}
+@keyframes ltbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+[data-theme="dark"] .lt-inner{background:var(--paper);border-color:rgba(201,169,110,.35)}
+@media(max-width:600px){
+  #login-toast{bottom:1.2rem;max-width:calc(100vw - 1.5rem)}
+  .lt-inner{padding:.85rem 1rem}
+}
 
 /* ── MODALS ── */
 #img-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(10,8,18,.85);display:none;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px)}
@@ -1011,6 +1032,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <button class="ctrl-pill" data-view="jp">Jepang</button>
       <button class="ctrl-pill" data-view="ro">Romaji</button>
       <button class="ctrl-pill" data-view="tr">Terjemahan</button>
+      <button class="ctrl-pill" id="copy-lyric-btn" onclick="doCopyLyric()" style="display:none;margin-left:auto" title="Copy semua lirik">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-.1em"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copy-btn-label">Copy</span>
+      </button>
     </div>
 
     <div class="lyrics-container" id="ll">
@@ -1174,6 +1199,17 @@ ${(()=>{
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
+<!-- ── Login Info Toast ── -->
+<div id="login-toast" role="status" aria-live="polite">
+  <div class="lt-inner">
+    <div class="lt-icon">✍️</div>
+    <div class="lt-body">
+      <div class="lt-title">Selamat datang! Satu langkah lagi...</div>
+      <div class="lt-desc">Tulis komentar untuk membuka fitur copy. <strong>Tombol copy</strong> akan muncul di sebelah tombol terjemah setelah kamu berkomentar.</div>
+      <div class="lt-bar" id="lt-bar"></div>
+    </div>
+  </div>
+</div>
 <!-- ── Lightbox ── -->
 <div id="img-lightbox" onclick="closeLightbox()">
   <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1545,6 +1581,7 @@ let _banUntil = undefined; // undefined = belum dicek, null = permanen, number =
 let _hasCommented = false;
 let _isAdmin = false;
 let _customPhotoURL = null;
+let _justLoggedIn = false; // flag: true hanya saat user baru saja login (bukan restore session)
 const ADMIN_EMAILS = ["khoirustsani143@gmail.com", "admin@yumesubs.com"];
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // backward compat
 
@@ -1657,27 +1694,33 @@ function updateCopyGate() {
   const btn  = document.getElementById('copy-lyric-btn');
   const label= document.getElementById('copy-btn-label');
   const sub  = document.getElementById('copy-gate-sub');
-  if (!gate) return;
-  if (!_currentUser) { gate.style.display = 'none'; return; }
-  gate.style.display = 'flex';
+  // Kontrol blok lama kalau masih ada
+  if (gate) {
+    if (!_currentUser) { gate.style.display = 'none'; }
+    else { gate.style.display = 'flex'; }
+  }
+  // Tombol copy pill di lyrics-controls
+  if (!btn) return;
+  if (!_currentUser) { btn.style.display = 'none'; return; }
   if (_isBanned) {
-    // Tampilkan pesan banned, sembunyikan tombol copy sama sekali
     btn.style.display = 'none';
-    const _cgEndStr = (_banUntil && _banUntil !== null) ? ' — ' + formatEndDate(_banUntil) : '';
-    const _cgCountdown = (_banUntil && _banUntil !== null) ? formatBanCountdown(_banUntil - Date.now()) : null;
-    const _cgDurHtml = (_banUntil === null || _banUntil === undefined)
-      ? ' <em>(permanen)</em>'
-      : (_cgCountdown ? \` (berakhir dalam <span class="ban-countdown-notice" data-banned-until="\${_banUntil}">\${_cgCountdown}</span>\${_cgEndStr})\` : '');
-    sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''}\${_cgDurHtml} Kamu tidak bisa meng-copy lirik.</span>\`;
+    if (sub) {
+      const _cgEndStr = (_banUntil && _banUntil !== null) ? ' — ' + formatEndDate(_banUntil) : '';
+      const _cgCountdown = (_banUntil && _banUntil !== null) ? formatBanCountdown(_banUntil - Date.now()) : null;
+      const _cgDurHtml = (_banUntil === null || _banUntil === undefined)
+        ? ' <em>(permanen)</em>'
+        : (_cgCountdown ? \` (berakhir dalam <span class="ban-countdown-notice" data-banned-until="\${_banUntil}">\${_cgCountdown}</span>\${_cgEndStr})\` : '');
+      sub.innerHTML = \`<span style="color:var(--red)">🚫 Akunmu telah <strong>dibanned</strong> oleh admin.\${_banReason ? ' Alasan: <em>' + _banReason + '</em>' : ''}\${_cgDurHtml} Kamu tidak bisa meng-copy lirik.</span>\`;
+    }
   } else if (_hasCommented) {
     btn.style.display = 'inline-flex';
     btn.disabled = false;
-    label.textContent = '📋 Copy Semua Lirik';
-    sub.textContent = 'Terima kasih sudah berkomentar! Kamu bisa meng-copy lirik ini.';
+    if (label) label.textContent = 'Copy';
+    if (sub) sub.textContent = 'Terima kasih sudah berkomentar! Kamu bisa meng-copy lirik ini.';
   } else {
-    // Sembunyikan tombol, tampilkan pesan instruksi saja
+    // Sudah login tapi belum komentar — sembunyikan tombol
     btn.style.display = 'none';
-    sub.textContent = 'Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!';
+    if (sub) sub.textContent = 'Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!';
   }
 }
 
@@ -1721,6 +1764,21 @@ async function applyAuthState(user) {
 
     // Update copy gate
     updateCopyGate();
+
+    // Tampilkan login info toast jika baru saja login (bukan restore session)
+    if (_justLoggedIn && !_hasCommented && !_isBanned) {
+      _justLoggedIn = false;
+      setTimeout(() => {
+        const lt  = document.getElementById('login-toast');
+        const bar = document.getElementById('lt-bar');
+        if (!lt) return;
+        lt.classList.add('on');
+        if (bar) { bar.classList.remove('running'); void bar.offsetWidth; bar.classList.add('running'); }
+        setTimeout(() => lt.classList.remove('on'), 5000);
+      }, 600);
+    } else {
+      _justLoggedIn = false;
+    }
 
     // Deteksi admin
     _isAdmin = ADMIN_EMAILS.includes(user.email);
@@ -1814,9 +1872,11 @@ getRedirectResult(auth).then(result => {
 }).catch(()=>{});
 
 window.doLogin = async () => {
+  _justLoggedIn = true;
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
+    _justLoggedIn = false;
     if (
       e.code === 'auth/popup-blocked' ||
       e.code === 'auth/operation-not-supported-in-this-environment' ||
