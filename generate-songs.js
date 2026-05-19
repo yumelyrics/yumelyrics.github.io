@@ -305,7 +305,9 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 /* ── Anti Reader Mode ── */
 .rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 .rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+/* Saat theme toggle aktif, matikan semua transisi sementara supaya tidak berat */
+.no-transition,html.no-transition *{transition:none!important}
 input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--ink)}
@@ -536,10 +538,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 
 /* ── COMMENT LIST ── */
 .cmlist{display:flex;flex-direction:column;gap:0}
-.citem{background:transparent;border:none;border-bottom:1px solid var(--border);padding:2rem 0;position:relative;display:grid;grid-template-columns:44px 1fr;gap:1.5rem}
+.citem{background:transparent;border:none;border-bottom:1px solid var(--border);padding:1.5rem 0;position:relative;display:flex;flex-direction:column;gap:.5rem}
 .citem::before{content:'';position:absolute;left:-1.5rem;top:0;bottom:0;width:1px;background:transparent;transition:background .2s}
 .citem:hover::before{background:rgba(201,169,110,.3)}
-.citem.is-admin{background:rgba(201,169,110,.04);border-color:rgba(201,169,110,.2);position:relative;overflow:hidden;isolation:isolate;padding:1.2rem}
+.citem.is-admin{background:rgba(201,169,110,.04);border-color:rgba(201,169,110,.2);position:relative;overflow:hidden;isolation:isolate;padding:1.2rem;display:flex;flex-direction:column;gap:.4rem}
 .citem.is-admin::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.04;z-index:-1;pointer-events:none}
 .citem.is-admin>*{position:relative}
 .chdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;gap:.5rem;flex-wrap:wrap}
@@ -1213,8 +1215,12 @@ document.addEventListener('DOMContentLoaded', function(){
   window.toggleTheme = function(){
     var current = document.documentElement.getAttribute('data-theme');
     var next = current === 'dark' ? 'light' : 'dark';
+    // Matikan semua transisi sementara supaya switch instan dan tidak berat
+    document.documentElement.classList.add('no-transition');
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('ym_theme', next);
+    // Aktifkan kembali transisi setelah browser selesai repaint
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('no-transition'); }); });
   };
 })();
 </script>
