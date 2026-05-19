@@ -409,7 +409,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 
 /* ── LYRICS MAIN ── */
 .lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
-.lyrics-controls{display:flex;align-items:center;gap:1rem;margin-bottom:3rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
+.lyrics-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1rem;margin-bottom:3rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid rgba(10,8,18,.15);background:none;color:var(--ash);cursor:pointer;transition:all .18s;font-family:var(--sans)}
 .ctrl-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .ctrl-pill:hover:not(.active){border-color:var(--ink);color:var(--ink)}
@@ -505,7 +505,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .related-list{display:none}
 
 /* ── ABOUT SECTION ── */
-.cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
+.cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
 
 /* ── COMMENTS SECTION ── */
@@ -733,16 +733,34 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .hero-visual{padding:2rem 1.5rem 3rem;border-top:1px solid rgba(10,8,18,.08)}
   .song-title-jp{font-size:2.2rem}
   .kanji-bg{font-size:10rem}
+  /* Sidebar jadi horizontal 2 kolom di atas lirik */
   .lyrics-section{grid-template-columns:1fr}
-  .lyrics-sidebar{position:static;height:auto;padding:1.5rem;border-right:none;border-bottom:1px solid rgba(10,8,18,.08);flex-direction:column;gap:1.25rem}
-  .thumbs-block{display:flex;flex-direction:column;gap:.75rem}
-  .thumbs-btn{width:100%;box-sizing:border-box}
-  .spotify-btn{width:100%;box-sizing:border-box;justify-content:center}
+  .lyrics-sidebar{
+    position:static;height:auto;
+    padding:1.2rem 1.5rem;
+    border-right:none;border-bottom:1px solid rgba(10,8,18,.08);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.2rem;
+    align-items:start;
+  }
+  /* Online counter span full width */
+  .lyrics-sidebar>div:last-child{grid-column:1/-1}
+  /* Tombol suka & spotify: tidak stretch, auto width */
+  .thumbs-block{display:flex;flex-direction:column;gap:.6rem}
+  .thumbs-btn{width:auto;max-width:100%;box-sizing:border-box}
+  .spotify-btn{width:auto;max-width:100%;box-sizing:border-box;display:inline-flex}
   .toggle-group{display:flex;flex-direction:column;gap:0}
+  /* Lyrics controls: wrap agar tidak terpotong */
+  .lyrics-controls{flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;padding-bottom:1rem}
+  .ctrl-pill{font-size:.55rem;padding:.3rem .7rem;white-space:nowrap}
   .lyrics-main{padding:2rem 1.2rem 4rem}
   .ll-item{grid-template-columns:1fr}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
   .lyric-num{display:none}
+  /* About section: full visible, no overflow */
+  .cmsec{overflow:visible;height:auto;max-height:none}
+  .cmsec p{word-break:break-word;overflow-wrap:break-word;white-space:normal}
   .related-grid{grid-template-columns:1fr}
   .comments-section,.related-section-block{padding:3rem 1.5rem}
   .comment-intro{grid-template-columns:1fr;gap:2rem}
@@ -751,22 +769,30 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .section-divider{padding:0 1.5rem}
   #login-gate{padding:.7rem 1.5rem}
   body.gate-open .hero{margin-top:52px}
-  body.gate-open .lyrics-sidebar{top:116px;height:calc(100vh - 116px)}
-  .cmsec p{word-break:break-word;overflow-wrap:break-word}
+  body.gate-open .lyrics-sidebar{top:116px;height:auto}
 }
 @media(max-width:600px){
   .hero-text{padding:2.5rem 1.2rem}
   .hero-text::before{left:1.2rem}
-  .lyrics-sidebar{padding:1.2rem}
+  /* Sidebar jadi 1 kolom di layar kecil */
+  .lyrics-sidebar{
+    grid-template-columns:1fr;
+    padding:1rem 1.2rem;
+    gap:1rem;
+  }
+  .lyrics-sidebar>div:last-child{grid-column:1}
   .lyrics-main{padding:1.5rem 1.2rem 4rem}
+  .ctrl-pill{font-size:.52rem;padding:.28rem .6rem}
   .related-section-block{padding:2.5rem 1.2rem}
   .comments-section{padding:2.5rem 1.2rem}
   footer{padding:2rem 1.2rem}
-  .cmsec{word-break:break-word;overflow-wrap:break-word}
+  .cmsec{overflow:visible;height:auto;max-height:none;word-break:break-word;overflow-wrap:break-word}
+  .cmtit{font-size:1.1rem}
 }
 @media(max-width:380px){
   nav{padding:.8rem .9rem}
   .nav-brand-en{display:none}
+  .ctrl-pill{font-size:.5rem;padding:.25rem .5rem}
 }
 </style>
 </head>
