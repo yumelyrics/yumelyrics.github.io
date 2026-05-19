@@ -328,7 +328,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
 /* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 2rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:nowrap;overflow:clip;min-width:0;box-sizing:border-box}
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 1.5rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;min-width:0;box-sizing:border-box}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 /* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
 body.gate-open .hero{margin-top:44px}
@@ -427,8 +427,8 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;word-break:break-word;overflow-wrap:break-word}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;word-break:break-word;overflow-wrap:break-word;align-content:flex-start}
-[data-obf="1"] span[data-c]{white-space:pre;display:inline}
-[data-obf="1"] span[data-sp]{white-space:pre;min-width:.3em;display:inline}
+[data-obf="1"] span[data-c]{white-space:normal;display:inline}
+[data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
@@ -1244,7 +1244,10 @@ document.addEventListener('DOMContentLoaded', function(){
       var spans = Array.from(line.querySelectorAll('span[data-c]'));
       if(!spans.length) return;
       line.style.cssText += ';display:inline-flex;flex-wrap:wrap;gap:0';
-      spans.forEach(function(s){ s.style.order = s.dataset.c; });
+      spans.forEach(function(s){
+        s.style.order = parseInt(s.dataset.c, 10);
+        if(s.dataset.sp) s.style.whiteSpace = 'pre';
+      });
     });
     document.body.classList.add('rdy');
   }
