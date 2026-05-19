@@ -41,7 +41,7 @@ function obfuscateLine(str) {
   // sehingga flex-wrap hanya terjadi antar kata, tidak di tengah kata
   const words = str.split(' ');
   return words.map((word, wi) => {
-    if (!word) return '<span data-c="' + wi + '" data-sp="1" style="display:inline;white-space:pre">\u00a0</span>';
+    if (!word) return '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>';
     const chars = [...word];
     const indices = chars.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
@@ -50,12 +50,12 @@ function obfuscateLine(str) {
     }
     const innerSpans = indices.map(origIdx => {
       const ch = chars[origIdx];
-      const noiseSpan = '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
+      const noiseSpan = '<span aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
       return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
     // flex-shrink:0 agar kata tidak dipotong, tapi max-width:100% agar kata panjang wrap ke baris baru
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow:hidden;overflow-wrap:break-word;word-break:break-word;flex-wrap:wrap;">' + innerSpans + '</span>';
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;flex-wrap:nowrap;">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -440,8 +440,8 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
 .lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
-[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:hidden;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
-[data-obf="1"] span[data-c]{white-space:nowrap;display:inline}
+[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:visible;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
+[data-obf="1"] span[data-c]{white-space:nowrap;display:inline;position:relative}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
@@ -1313,7 +1313,6 @@ document.addEventListener('DOMContentLoaded', function(){
         var spans = Array.from(word.querySelectorAll('span[data-c]'));
         if(!spans.length) return;
         spans.forEach(function(s){ s.style.order = parseInt(s.dataset.c, 10); });
-        word.style.cssText += ';display:inline-flex;flex-wrap:nowrap';
       });
     });
     document.body.classList.add('rdy');
