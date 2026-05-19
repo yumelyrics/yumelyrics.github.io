@@ -83,10 +83,12 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
 
   const lyricsHTML = lyrics.map(l =>
     '<div class="ll-item">' +
+    '<div class="lyric-left">' +
     '<div class="ljp" data-obf="1">' + obfuscateLine(l.jp||'') + '</div>' +
     (l.ro ? '<div class="lro" data-obf="1">' + obfuscateLine(l.ro) + '</div>' : '') +
-    (l.id ? '<div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div>' : '') +
-    '</div><div class="lsep"></div>'
+    '</div>' +
+    (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
+    '</div>'
   ).join('');
 
 
@@ -207,7 +209,6 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
 <meta name="content-language" content="id">
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
-<meta name="category" content="music, lyrics, japanese song, anime">
 <style>html{-webkit-text-size-adjust:100%}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -240,85 +241,60 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}">
 <meta property="og:type" content="music.song">
-<meta property="music:musician" content="${escHtml(artist)}">
-${anime ? `<meta property="music:album" content="${escHtml(anime)}">` : ""}
 <meta property="og:site_name" content="YumeSubs">
 <meta property="og:locale" content="id_ID">
-<meta property="og:locale:alternate" content="ja_JP">
 ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:secure_url" content="${escHtml(song.img)}">
 <meta property="og:image:alt" content="Cover ${escHtml(titleMain)} - ${escHtml(artist)}">
 <meta property="og:image:width" content="600">
-<meta property="og:image:height" content="600">
-<meta property="og:image:type" content="image/jpeg">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">
-<meta property="og:image:secure_url" content="${BASE_URL}/anime_icon.png">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
-<meta property="og:image:type" content="image/png">`}
-<meta property="article:author" content="YumeSubs">
-<meta property="article:publisher" content="${BASE_URL}">
-<meta property="article:section" content="Lirik Lagu Jepang">
-<meta property="article:tag" content="${escHtml(artist)}">
-<meta property="article:tag" content="${escHtml(titleMain)}">
-${anime ? `<meta property="article:tag" content="${escHtml(anime)}">` : ''}
-${animeEn ? `<meta property="article:tag" content="${escHtml(animeEn)}">` : ''}
-${songType ? `<meta property="article:tag" content="${escHtml(songType)}">` : ''}
-<meta property="article:tag" content="lirik jepang">
-<meta property="article:tag" content="terjemahan indonesia">
-<meta property="article:tag" content="romaji">
-<meta property="article:tag" content="anime">
+<meta property="og:image:height" content="600">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">`}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@YumeSubs">
-<meta name="twitter:creator" content="@YumeSubs">
 <meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
 <meta name="twitter:description" content="${escHtml(metaDesc)}">
-<meta name="twitter:label1" content="Artis">
-<meta name="twitter:data1" content="${escHtml(artist)}">
-<meta name="twitter:label2" content="Bahasa">
-<meta name="twitter:data2" content="Jepang + Terjemahan Indonesia">
-${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">
-<meta name="twitter:image:alt" content="Cover ${escHtml(titleMain)} - ${escHtml(artist)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">
-<meta name="twitter:image:alt" content="YumeSubs — Lirik Lagu Jepang">`}
-<meta name="twitter:domain" content="yumelyrics.my.id">
+${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
 <link rel="canonical" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}">
-<link rel="alternate" hreflang="ja" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
+/* ── TOKENS ── */
 :root{
   --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Syne',sans-serif;
+  --jp:'Noto Serif JP',serif;
   /* legacy aliases */
-  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);
-  --accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
-  /* night mode transition */
-  --nm-transition: background .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease;
+  --en:var(--sans);--bg:var(--paper);--text:var(--ink);--muted:var(--ash);
+  --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
+  --nm-transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease;
 }
 /* ── NIGHT MODE ── */
 [data-theme="dark"]{
   --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
   --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
-  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);
-  --red:#e05252;
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
-[data-theme="dark"] #bgwrap{background:var(--paper)}
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+[data-theme="dark"] .hero{background:var(--paper)}
+[data-theme="dark"] .hero-visual::before{background:radial-gradient(ellipse at 60% 40%,rgba(212,169,110,.08) 0%,transparent 65%)}
+[data-theme="dark"] .cover-img{filter:sepia(.15) contrast(1.05) brightness(.85)}
+[data-theme="dark"] .related-section{background:var(--cream)}
+[data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
+[data-theme="dark"] footer{background:#070604}
+[data-theme="dark"] #nav-user-dropdown{background:var(--cream)}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 [data-theme="dark"] .ep-box{background:var(--cream)}
-[data-theme="dark"] .lvcov{filter:sepia(.08) contrast(1.02) brightness(.92)}
-[data-theme="dark"] .rc{background:transparent}
-[data-theme="dark"] .rc:hover{background:rgba(201,169,110,.06)}
 [data-theme="dark"] .cmi{color:var(--ink)}
-[data-theme="dark"] #nav-user-dropdown{background:var(--cream)}
 [data-theme="dark"] body::before{opacity:.2}
-/* theme toggle button */
+[data-theme="dark"] .lyric-item:hover{background:rgba(201,169,110,.04)}
+/* ── theme toggle ── */
 #theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:var(--nm-transition),transform .2s;flex-shrink:0;position:relative;overflow:hidden}
 #theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
 #theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s,transform .25s;position:absolute}
@@ -326,144 +302,267 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">
 #theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
 [data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
 [data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1) rotate(0)}
-*{transition:background-color .3s ease,border-color .3s ease,color .2s ease}
 /* ── Anti Reader Mode ── */
 .rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 .rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
+input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--ink)}
-body{background:var(--paper);color:var(--ink);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
-input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
-.wrap{position:relative;z-index:2}
+.wrap{position:relative;z-index:1}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
+
 /* ── NAV ── */
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(245,240,234,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(10,8,18,.08);min-width:0;box-shadow:none}
-.nav-logo{display:flex;flex-direction:column;gap:.05rem;cursor:pointer;flex-shrink:0;min-width:0;text-decoration:none}
-.nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap;line-height:1;letter-spacing:.1em;text-shadow:none}
-.nlen{font-size:.55rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;line-height:1;font-weight:700}
-.nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
-.nb{background:none;border:none;font-family:var(--en);font-size:.68rem;color:var(--ash);letter-spacing:.2em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;border-radius:0;transition:color .2s;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;font-weight:600}
-.nb:hover{color:var(--ink);background:none}
-/* ── MAIN CONTENT AREA ── */
-#lyrView{padding:0 3rem 6rem;max-width:1200px;margin:0 auto}
-/* ── HERO BACK + HEADER ── */
-.lvback{display:flex;align-items:center;gap:1.2rem;padding:2.5rem 0 2rem;margin-bottom:2rem;border-bottom:1px solid rgba(10,8,18,.08)}
-.gbtn{background:none;border:1px solid rgba(10,8,18,.18);font-family:var(--en);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.45rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;border-radius:0;font-weight:600}
-.gbtn:hover{border-color:var(--ink);color:var(--ink)}
-.lvt{font-family:var(--jp);font-size:1.5rem;font-weight:400;color:var(--ink);letter-spacing:.05em}
-.lva{font-size:.62rem;color:var(--rose);letter-spacing:.2em;text-transform:uppercase;margin-top:.25rem;font-weight:700}
-/* ── SONG GRID (cover left, lyrics right) ── */
-.lvgrid{display:grid;grid-template-columns:280px 1fr;gap:4rem;align-items:start}
-/* ── COVER & META PANEL ── */
-.lvcov{width:100%;aspect-ratio:1;object-fit:cover;border:none;filter:sepia(.12) contrast(1.04);margin-bottom:1.5rem;display:block;box-shadow:10px 14px 0 rgba(10,8,18,.07),20px 28px 0 rgba(10,8,18,.04);border-radius:0}
-.lvmeta{font-family:var(--serif);font-size:.95rem;color:var(--ash);line-height:2.0;border-top:1px solid rgba(10,8,18,.1);padding-top:1rem;margin-bottom:1rem}
-.lvmeta b{color:var(--ink);font-weight:400}
-.ytlb{font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--en);font-weight:700}
-.ytwrap{margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(10,8,18,.08)}
-.ytframe{width:100%;aspect-ratio:16/9;border:1px solid rgba(10,8,18,.1);background:#000;display:block;border-radius:0}
-/* ── LYRIC CONTROLS ── */
-.lctrl{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
-.tpill{background:none;border:1px solid rgba(10,8,18,.15);font-family:var(--en);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.38rem .9rem;cursor:pointer;border-radius:0;transition:all .18s;font-weight:700}
-.tpill.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.tpill:hover:not(.on){border-color:var(--ink);color:var(--ink)}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
+.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
+.nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-link{font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--ink)}
+.nav-badge{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);padding:.3rem .75rem;border-radius:2rem;transition:all .2s;cursor:pointer;background:none}
+.nav-badge:hover{background:var(--gold);color:var(--ink)}
+
+/* ── LOGIN GATE (sticky bar) ── */
+#login-gate{position:sticky;top:60px;left:0;right:0;z-index:80;margin:0;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
+[data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
+#login-gate-title{font-size:.7rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans)}
+#login-gate-sub{font-size:.64rem;color:var(--ash);line-height:1.5;max-width:380px;font-family:var(--serif);font-style:italic}
+.google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
+.google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
+.google-btn:hover::after{opacity:.08}
+.google-btn:hover{border-color:var(--gold);color:var(--ink)}
+.google-btn svg{width:14px;height:14px;flex-shrink:0;position:relative;z-index:1}
+
+/* ── HERO ── */
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:88vh;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;left:50%;top:8%;bottom:8%;width:1px;background:linear-gradient(180deg,transparent,rgba(10,8,18,.12) 30%,rgba(10,8,18,.12) 70%,transparent)}
+.hero-text{display:flex;flex-direction:column;justify-content:center;padding:5rem 4rem 5rem 3.5rem;position:relative}
+.hero-text::before{content:'01';position:absolute;top:4rem;left:3.5rem;font-family:var(--serif);font-size:.75rem;font-weight:300;color:var(--smoke);letter-spacing:.3em}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:3.5rem;margin-top:1rem}
+.breadcrumb-sep{color:var(--smoke);font-size:.5rem}
+.breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}
+.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb span{color:var(--gold)}
+.song-type{font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
+.song-type::before{content:'';width:2rem;height:1px;background:var(--rose);display:block}
+.song-title-jp{font-family:var(--jp);font-size:3.2rem;font-weight:300;color:var(--ink);line-height:1.1;letter-spacing:.04em;margin-bottom:.5rem}
+.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;margin-bottom:.3rem}
+.song-title-id{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:2.5rem}
+.meta-row{display:flex;gap:2.5rem;margin-bottom:3rem}
+.meta-item{display:flex;flex-direction:column;gap:.3rem}
+.meta-label{font-size:.52rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+.meta-value{font-family:var(--serif);font-size:1.05rem;font-weight:400;color:var(--ink)}
+.meta-value a{color:inherit;text-decoration:none;border-bottom:1px solid var(--smoke);padding-bottom:.05rem;transition:border-color .2s}
+.meta-value a:hover{border-color:var(--gold)}
+.hero-actions{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.btn-primary{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;padding:.75rem 1.8rem;border-radius:0;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--gold);color:var(--ink)}
+.btn-ghost{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;background:none;color:var(--ash);border:1px solid rgba(10,8,18,.2);padding:.75rem 1.5rem;border-radius:0;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
+.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ── HERO VISUAL ── */
+.hero-visual{position:relative;display:flex;align-items:center;justify-content:center;padding:4rem 3.5rem 4rem 4rem;overflow:hidden}
+.hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
+.cover-wrap{position:relative;z-index:1}
+.cover-frame{width:320px;height:320px;position:relative}
+.cover-img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15) contrast(1.05);box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
+.corner{position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid}
+.corner-tl{top:-8px;left:-8px;border-width:1px 0 0 1px}
+.corner-tr{top:-8px;right:-8px;border-width:1px 1px 0 0}
+.corner-bl{bottom:-8px;left:-8px;border-width:0 0 1px 1px}
+.corner-br{bottom:-8px;right:-8px;border-width:0 1px 1px 0}
+.cover-stats{display:flex;gap:2rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(10,8,18,.1)}
+.stat{display:flex;flex-direction:column;gap:.25rem;text-align:center}
+.stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:var(--ink);line-height:1}
+.stat-lbl{font-size:.5rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+.kanji-bg{position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:14rem;font-weight:600;color:rgba(10,8,18,.03);line-height:1;pointer-events:none;user-select:none;z-index:0}
+[data-theme="dark"] .kanji-bg{color:rgba(232,226,217,.03)}
+
+/* ── DIVIDER ── */
+.section-divider{display:flex;align-items:center;gap:2rem;padding:0 3.5rem;margin:0}
+.divider-line{flex:1;height:1px;background:rgba(10,8,18,.1)}
+[data-theme="dark"] .divider-line{background:rgba(232,226,217,.1)}
+.divider-ornament{font-family:var(--serif);font-size:.85rem;font-weight:300;font-style:italic;color:var(--ash);white-space:nowrap;letter-spacing:.1em}
+
+/* ── LYRICS SECTION ── */
+.lyrics-section{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+.lyrics-sidebar{padding:4rem 2.5rem 4rem 3.5rem;border-right:1px solid rgba(10,8,18,.08);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:2.5rem}
+.sidebar-section-label{font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--smoke);margin-bottom:1rem;display:block}
+.toggle-group{display:flex;flex-direction:column;gap:.35rem}
+.toggle-item{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.4rem 0;border-bottom:1px solid rgba(10,8,18,.06)}
+.toggle-label{font-size:.72rem;font-weight:600;letter-spacing:.08em;color:var(--ash);transition:color .15s}
+.toggle-item:hover .toggle-label{color:var(--ink)}
+.toggle-switch{width:28px;height:16px;border-radius:8px;border:1.5px solid rgba(10,8,18,.2);background:transparent;position:relative;transition:all .2s;cursor:pointer}
+.toggle-switch.on{background:var(--gold);border-color:var(--gold)}
+.toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ash);transition:all .2s}
+.toggle-switch.on::after{left:14px;background:#fff}
+.thumbs-block{display:flex;flex-direction:column;gap:.75rem}
+
+/* ── LYRICS MAIN ── */
+.lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
+.lyrics-controls{display:flex;align-items:center;gap:1rem;margin-bottom:3rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
+.ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid rgba(10,8,18,.15);background:none;color:var(--ash);cursor:pointer;transition:all .18s;font-family:var(--sans)}
+.ctrl-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ctrl-pill:hover:not(.active){border-color:var(--ink);color:var(--ink)}
+.ctrl-sep{width:1px;height:20px;background:rgba(10,8,18,.1)}
+
 /* ── LYRICS LIST ── */
-.llines{display:flex;flex-direction:column;gap:0;margin-bottom:3rem;position:relative}
 #ll{position:relative}
 #ll::after{content:'';position:absolute;inset:0;z-index:10;pointer-events:all;-webkit-user-select:none;user-select:none;background:transparent}
-#lyrView{position:relative}
-#lyrView::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none}
-.ll-item{border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;transition:background .15s}
+.lyrics-container{display:flex;flex-direction:column;gap:0}
+.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;position:relative;transition:background .15s}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
-.ljp{font-family:var(--jp);font-size:1.15rem;font-weight:400;color:var(--ink);line-height:1.7;margin-bottom:.3rem;overflow:hidden;visibility:hidden}
+.ljp{font-family:var(--jp);font-size:1.15rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden}
 .lro{font-family:var(--serif);font-size:.88rem;color:var(--ash);font-style:italic;font-weight:300;line-height:1.6;overflow:hidden;max-height:5rem;visibility:hidden}
 .lid{font-size:.85rem;color:var(--rose);font-weight:400;line-height:1.65;overflow:hidden;max-height:5rem;visibility:hidden}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%}
 [data-obf="1"] span[data-c]{white-space:pre}
 .lro.h,.lid.h{display:none!important}
-.lsep{height:1px;background:linear-gradient(90deg,rgba(10,8,18,.08),transparent);margin:.4rem 0}
-/* ── RELATED SONGS ── */
-.related-section{margin-top:3rem;padding-top:2.5rem;border-top:1px solid rgba(10,8,18,.08)}
-.related-label{font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:1rem;font-family:var(--en);font-weight:700;display:block}
-.related-list{display:flex;flex-direction:column;gap:0;margin-bottom:2rem;border:1px solid rgba(10,8,18,.08);overflow:hidden}
-.rc{display:flex;align-items:center;gap:.85rem;text-decoration:none;padding:.7rem 1rem;border-bottom:1px solid rgba(10,8,18,.06);background:transparent;transition:all .15s;cursor:pointer}
-.rc:last-child{border-bottom:none}
-.rc:hover{background:rgba(201,169,110,.06);border-color:rgba(10,8,18,.12)}
-.rc-thumb{width:44px;height:44px;overflow:hidden;flex-shrink:0;background:var(--cream);position:relative}
-.rc-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.12)}
-.rc-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke)}
-.rc-info{min-width:0;flex:1}
-.rc-title{font-family:var(--jp);font-size:.85rem;font-weight:400;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
-.rc-artist{font-size:.55rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.rc-arr{font-family:var(--serif);font-size:.9rem;color:var(--smoke);flex-shrink:0;transition:all .15s}
-.rc:hover .rc-arr{color:var(--gold);transform:translateX(3px)}
-/* ── ABOUT & COMMENTS SECTION ── */
+.lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
+.lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06)}
+.lyric-num{position:absolute;left:-2.5rem;top:1.5rem;font-family:var(--serif);font-size:.72rem;font-weight:300;color:var(--smoke);letter-spacing:.05em}
+.lsep{display:none}
+
+/* ── THUMBS (sidebar) ── */
+.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid rgba(10,8,18,.15);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;font-family:var(--sans)}
+.thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
+.thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.1)}
+.thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes thumbpop{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-12deg)}100%{transform:scale(1.15)}}
+.thumbs-icon{font-size:.95rem;transition:transform .2s}
+.thumbs-btn:hover .thumbs-icon,.thumbs-btn.voted .thumbs-icon{transform:scale(1.15)}
+#thumbs-count{font-family:var(--serif);font-size:1.05rem;color:var(--ink)}
+#thumbs-label{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash);flex:1;text-align:right}
+.thumbs-wrap{display:none} /* hidden — sidebar version used instead */
+
+/* ── SPOTIFY & VIDEO ── */
+.spbtn,.spotify-btn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
+.spbtn:hover,.spotify-btn:hover{opacity:.87}
+.spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
+.spotify-dot{width:8px;height:8px;border-radius:50%;background:#000}
+.ytwrap{margin-top:2rem;display:none} /* video tetap tersedia di-DOM tapi sidebar menggantinya */
+.ytframe{width:100%;aspect-ratio:16/9;border:1px solid var(--border);background:#000;display:block}
+.nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);font-family:var(--sans);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:all .2s;margin-top:1rem}
+.nicobtn:hover{background:#333}
+.nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;margin-top:1rem;filter:sepia(.1)}
+
+/* ── ONLINE COUNTER ── */
+#online-counter{display:inline-flex;align-items:center;gap:.45rem;margin:.8rem 0;font-size:.68rem;color:var(--ash);letter-spacing:.05em;font-family:var(--sans)}
+@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
+
+/* ── COPY GATE ── */
+#copy-gate{margin:1.5rem 0 .5rem;padding:1.3rem 1.5rem;border:1px solid var(--border);background:var(--mist);display:flex;flex-direction:column;align-items:flex-start;gap:.75rem;position:relative;overflow:hidden}
+#copy-gate::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--gold);opacity:.6}
+#copy-gate-title{font-family:var(--serif);font-size:1rem;color:var(--ink);font-weight:300;font-style:italic}
+#copy-gate-sub{font-size:.72rem;color:var(--ash);line-height:1.65;font-family:var(--serif)}
+#copy-lyric-btn{display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1px solid var(--ink);font-family:var(--sans);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);padding:.6rem 1.4rem;cursor:pointer;font-weight:700;transition:all .22s;margin-top:.1rem;position:relative;overflow:hidden}
+#copy-lyric-btn::after{content:'';position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .22s ease;z-index:0}
+#copy-lyric-btn:hover::after{transform:scaleX(1)}
+#copy-lyric-btn:hover{color:var(--paper)}
+#copy-lyric-btn svg,#copy-lyric-btn span{position:relative;z-index:1}
+#copy-lyric-btn:disabled{opacity:.35;cursor:not-allowed}
+#copy-lyric-btn:disabled::after{display:none}
+.copy-done-badge{display:none;align-items:center;gap:.4rem;font-size:.68rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-family:var(--sans)}
+.copy-done-badge.show{display:flex}
+
+/* ── RELATED (preview style) ── */
+.related-section-block{background:var(--cream);border-top:1px solid rgba(10,8,18,.08);padding:5rem 3.5rem}
+[data-theme="dark"] .related-section-block{background:var(--cream)}
+.section-header{display:flex;align-items:baseline;gap:2rem;margin-bottom:3rem}
+.section-title{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink)}
+.section-subtitle{font-size:.58rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.rc,.related-card{display:flex;gap:1rem;align-items:flex-start;padding:1.25rem;border:1px solid rgba(10,8,18,.08);background:var(--paper);text-decoration:none;transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+.rc::before,.related-card::before{content:'';position:absolute;inset:0;background:rgba(201,169,110,.0);transition:background .2s}
+.rc:hover,.related-card:hover{border-color:rgba(10,8,18,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,8,18,.08)}
+.rc:hover::before,.related-card:hover::before{background:rgba(201,169,110,.04)}
+.rc-thumb,.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0;filter:sepia(.1)}
+.rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
+.rc-info,.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
+.rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-artist,.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
+.rc-arr,.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;margin-top:.2rem;transition:all .2s;font-family:var(--serif)}
+.rc:hover .rc-arr,.related-card:hover .related-arr{color:var(--gold);transform:translateX(3px)}
+/* related section label (old style in lyrics column) */
+.related-section{margin-top:0;padding:0}
+.related-label{display:none}
+.related-list{display:none}
+
+/* ── ABOUT SECTION ── */
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
+
+/* ── COMMENTS SECTION ── */
+.comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
+.comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
+.comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
+.comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
+.comment-form-area{display:flex;flex-direction:column;gap:.75rem;margin-top:1.5rem}
+/* comment input & form (reusing .cmi) */
 .cmform{display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem}
-/* ── Admin comment box ── */
 .cmform.is-admin-form{background:rgba(201,169,110,.04);border:1px solid rgba(201,169,110,.25);padding:1rem;position:relative;overflow:hidden;isolation:isolate}
 .cmform.is-admin-form::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.04;z-index:-1;pointer-events:none}
 .cmform.is-admin-form>*{position:relative}
-.cmform.is-admin-form .cmi{border-color:rgba(201,169,110,.3);background:rgba(245,240,234,.7)}
+.cmform.is-admin-form .cmi{border-color:rgba(201,169,110,.3)}
 .cmform.is-admin-form .cmi:focus{border-color:rgba(201,169,110,.6)}
 .admin-form-header{display:flex;align-items:center;gap:.6rem;padding:.4rem .7rem;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);margin-bottom:.4rem}
 .admin-crown{font-size:1rem;line-height:1}
 .admin-form-badge{font-size:.52rem;color:var(--paper);background:var(--plum);padding:.18rem .55rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
 .admin-form-name{font-size:.75rem;color:var(--rose);font-weight:600}
 .admin-form-sub{font-size:.6rem;color:var(--ash);margin-left:auto}
-/* admin comment card */
-.citem.is-admin{background:rgba(201,169,110,.04);border-color:rgba(201,169,110,.2);position:relative;overflow:hidden;isolation:isolate}
-.citem.is-admin::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.04;z-index:-1;pointer-events:none}
-.citem.is-admin>*{position:relative}
-.citem.is-admin .cm-posted-img{position:relative}
-.admin-cm-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:rgba(201,169,110,.08);border-bottom:1px solid rgba(201,169,110,.15);margin-bottom:.7rem}
-.admin-cm-crown{font-size:.95rem}
-.admin-cm-name{font-size:.78rem;color:var(--rose);font-weight:700;font-family:var(--jp)}
-.admin-cm-badge{font-size:.52rem;color:var(--paper);background:var(--plum);padding:.15rem .5rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
-.admin-cm-date{font-size:.58rem;color:var(--ash);margin-left:auto}
-.cmi{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--ink);font-family:var(--serif);font-size:.85rem;font-weight:300;font-style:italic;padding:.75rem 0;outline:none;resize:none;transition:border-color .2s;width:100%}
-.cmi::placeholder{color:var(--smoke);font-style:italic}
-.cmi:focus{border-color:var(--rose)}
-.cmrow{display:flex;gap:.6rem}
-.cmrow .cmi{flex:1}
-/* ── Submit button (Kirim Komentar) redesigned ── */
-.sbtn{background:transparent;border:1px solid var(--ink);font-family:var(--en);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);padding:.65rem 1.6rem;cursor:pointer;transition:all .22s;font-weight:700;position:relative;overflow:hidden}
+.cmi{background:transparent;border:none;border-bottom:1.5px solid rgba(10,8,18,.15);color:var(--ink);font-family:var(--sans);font-size:.85rem;color:var(--ink);padding:.75rem 0;outline:none;resize:none;transition:border-color .2s;width:100%}
+.cmi::placeholder{color:var(--smoke)}
+.cmi:focus{border-color:var(--ink)}
+[data-theme="dark"] .cmi{color:var(--ink)}
+.comment-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem}
+.comment-user{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash)}
+.sbtn{background:transparent;border:1px solid var(--ink);font-family:var(--sans);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);padding:.65rem 1.6rem;cursor:pointer;transition:all .22s;font-weight:700;position:relative;overflow:hidden}
 .sbtn::after{content:'';position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .22s ease;z-index:0}
 .sbtn:hover::after{transform:scaleX(1)}
 .sbtn:hover{color:var(--paper)}
 .sbtn>*{position:relative;z-index:1}
 .sbtn:disabled{opacity:.35;cursor:not-allowed}
 .sbtn:disabled::after{display:none}
-/* ── Comment list ── */
+/* login gate inside comments */
+#cm-login-gate{border:1px solid var(--border)!important;background:var(--mist)!important;display:flex;flex-direction:column;gap:.75rem}
+.cm-login-gate-hidden{display:none!important}
+
+/* ── COMMENT LIST ── */
 .cmlist{display:flex;flex-direction:column;gap:0}
-.citem{background:transparent;border:none;border-bottom:1px solid var(--border);padding:1.5rem 0;position:relative}
+.citem{background:transparent;border:none;border-bottom:1px solid var(--border);padding:2rem 0;position:relative;display:grid;grid-template-columns:44px 1fr;gap:1.5rem}
 .citem::before{content:'';position:absolute;left:-1.5rem;top:0;bottom:0;width:1px;background:transparent;transition:background .2s}
 .citem:hover::before{background:rgba(201,169,110,.3)}
-.citem.is-admin{background:rgba(201,169,110,.04);border-color:rgba(201,169,110,.2);padding:1.2rem;margin-bottom:.5rem}
+.citem.is-admin{background:rgba(201,169,110,.04);border-color:rgba(201,169,110,.2);position:relative;overflow:hidden;isolation:isolate;padding:1.2rem}
+.citem.is-admin::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.04;z-index:-1;pointer-events:none}
+.citem.is-admin>*{position:relative}
 .chdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;gap:.5rem;flex-wrap:wrap}
 .chdr-left{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.cname{font-size:.8rem;color:var(--ink);font-weight:600;font-family:var(--en);letter-spacing:.02em}
-/* ── Avatars — refined ── */
-.cm-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;filter:sepia(.05)}
-.cm-avatar-ph{width:30px;height:30px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:.85rem;color:var(--ash);border:1px solid var(--border);flex-shrink:0}
-.cm-avatar-crown{width:30px;height:30px;border-radius:50%;background:rgba(201,169,110,.15);display:flex;align-items:center;justify-content:center;font-size:.82rem;border:1.5px solid rgba(201,169,110,.3);flex-shrink:0}
-.ritem .cm-avatar,.ritem .cm-avatar-ph{width:24px;height:24px;font-size:.7rem}
-.cdate{font-size:.58rem;color:var(--smoke);font-family:var(--en);letter-spacing:.05em}
-.ctxt{font-size:.84rem;color:var(--ash);line-height:1.85;font-weight:300;font-family:var(--serif)}
+.cname{font-size:.78rem;font-weight:700;letter-spacing:.06em;color:var(--ink);font-family:var(--sans)}
+.cm-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid rgba(10,8,18,.1);flex-shrink:0;margin-top:.15rem;filter:sepia(.05)}
+.cm-avatar-ph{width:44px;height:44px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.1rem;color:var(--ash);flex-shrink:0}
+.cm-avatar-crown{width:44px;height:44px;border-radius:50%;background:rgba(201,169,110,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;border:1.5px solid rgba(201,169,110,.3);flex-shrink:0}
+.ritem .cm-avatar,.ritem .cm-avatar-ph,.ritem .cm-avatar-crown{width:30px;height:30px;font-size:.8rem}
+.cdate{font-size:.6rem;color:var(--smoke);font-family:var(--sans);letter-spacing:.05em}
+.ctxt{font-size:.88rem;color:var(--ash);line-height:1.8;font-weight:400}
 .cm-mention{color:var(--rose);font-weight:500}
 .nocm{font-size:.82rem;color:var(--ash);font-style:italic;font-family:var(--serif);padding:1.5rem 0}
-/* ── Admin badge ── */
 .admin-badge{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--plum);padding:.12rem .42rem;font-weight:600}
-/* ── Reply button ── */
-.reply-btn{background:none;border:none;font-family:var(--en);font-size:.56rem;color:var(--smoke);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;padding:.2rem .4rem;transition:color .2s;font-weight:600}
+.admin-cm-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;background:rgba(201,169,110,.08);border-bottom:1px solid rgba(201,169,110,.15);margin-bottom:.7rem}
+.admin-cm-crown{font-size:.95rem}
+.admin-cm-name{font-size:.78rem;color:var(--rose);font-weight:700;font-family:var(--jp)}
+.admin-cm-badge{font-size:.52rem;color:var(--paper);background:var(--plum);padding:.15rem .5rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.admin-cm-date{font-size:.58rem;color:var(--ash);margin-left:auto}
+.reply-btn{background:none;border:none;font-family:var(--sans);font-size:.56rem;color:var(--smoke);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;padding:.2rem .4rem;transition:color .2s;font-weight:600}
 .reply-btn:hover{color:var(--rose)}
-/* ── Reply threading ── */
 .replies{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
-.ritem{padding:.7rem 1rem;border-left:2px solid var(--border)}
+.ritem{padding:.7rem 1rem;border-left:2px solid var(--border);display:grid;grid-template-columns:30px 1fr;gap:1rem}
 .ritem.is-admin{border-left-color:var(--gold);background:rgba(201,169,110,.04)}
 .admin-reply-block{display:flex;align-items:flex-start;gap:.6rem;border:1px solid rgba(201,169,110,.2);padding:.6rem .85rem;margin-top:.4rem;position:relative;overflow:hidden;isolation:isolate}
 .admin-reply-block::before{content:'';position:absolute;inset:0;background:url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHVmOGEyb2EydmhzNWxhcTA4NmlxN3JsZjIxeXV2a3MwZDZuNXFjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yarJ7WfdKiAkE/giphy.gif') center/cover no-repeat;opacity:.06;z-index:-1;pointer-events:none}
@@ -473,123 +572,109 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .admin-badge-wrap .admin-badge{font-size:.52rem;color:var(--paper);background:var(--plum);padding:.15rem .5rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;white-space:nowrap}
 .admin-name{font-size:.6rem;color:var(--rose);white-space:nowrap}
 .admin-reply-text{font-size:.82rem;color:var(--ink);line-height:1.7;flex:1;font-family:var(--serif);font-weight:300}
-/* ── Reply form ── */
 .reply-form{margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border);display:none;flex-direction:column;gap:.5rem}
 .reply-form.open{display:flex}
 .reply-form .cmi{font-size:.78rem}
 .reply-row{display:flex;gap:.5rem}
 .reply-row .cmi{flex:1}
-.rbtn-cancel{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;color:var(--ash);padding:.4rem .8rem;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;font-weight:600}
+.rbtn-cancel{background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.58rem;color:var(--ash);padding:.4rem .8rem;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;font-weight:600}
 .rbtn-cancel:hover{border-color:var(--red);color:var(--red)}
-/* ── Login gate inside comment box ── */
-#cm-login-gate{border:1px solid var(--border)!important;border-radius:0!important;background:var(--mist)!important}
-.spbtn{display:inline-flex;align-items:center;gap:.5rem;background:#1DB954;border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#000;padding:.6rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:opacity .2s;margin-top:1rem}
-.spbtn:hover{opacity:.85}
-.spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
-.thumbs-wrap{display:flex;align-items:center;gap:.75rem;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(10,8,18,.08);position:relative;z-index:2}
-.thumbs-btn{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(10,8,18,.15);color:var(--ink);font-family:var(--en);font-size:.75rem;font-weight:600;letter-spacing:.04em;padding:.55rem 1rem;cursor:pointer;transition:all .2s;line-height:1}
-.thumbs-btn svg{width:15px;height:15px;flex-shrink:0;transition:transform .2s}
-.thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
-.thumbs-btn.voted{background:rgba(201,169,110,.1);border-color:var(--gold);color:var(--ink)}
-.thumbs-btn.voted svg{stroke:var(--gold);transform:scale(1.15)}
-.thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
-@keyframes thumbpop{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-12deg)}100%{transform:scale(1.15)}}
-.thumbs-label{font-size:.7rem;color:var(--ash);font-weight:600;letter-spacing:.06em}
+/* comment thumbs */
 .cm-thumbs{display:inline-flex;align-items:center;gap:.3rem;margin-top:.5rem}
-.cm-thumb-btn{display:inline-flex;align-items:center;gap:.28rem;background:none;border:1px solid rgba(10,8,18,.12);color:var(--ash);font-size:.68rem;font-family:var(--en);padding:.22rem .6rem;cursor:pointer;transition:all .18s;line-height:1}
+.cm-thumb-btn{display:inline-flex;align-items:center;gap:.28rem;background:none;border:1px solid rgba(10,8,18,.12);color:var(--ash);font-size:.68rem;font-family:var(--sans);padding:.22rem .6rem;cursor:pointer;transition:all .18s;line-height:1}
 .cm-thumb-btn svg{width:12px;height:12px;flex-shrink:0;transition:transform .18s}
 .cm-thumb-btn:hover{border-color:rgba(10,8,18,.3);color:var(--ink)}
 .cm-thumb-btn.voted{border-color:var(--rose);color:var(--rose);background:rgba(196,99,122,.06)}
 .cm-thumb-btn.voted svg{stroke:var(--rose);transform:scale(1.15)}
 .cm-thumb-btn.pop svg{animation:thumbpop .3s cubic-bezier(.34,1.56,.64,1)}
-.nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:all .2s;margin-top:1rem}
-.nicobtn:hover{background:#333}
-.nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid rgba(10,8,18,.1);display:block;margin-top:1rem;filter:sepia(.1)}
+/* photo in comment */
+.cm-img-preview-wrap{position:relative;display:inline-block;margin-top:.5rem}
+.cm-img-preview{max-width:180px;max-height:140px;object-fit:cover;display:block;cursor:pointer;transition:opacity .18s;border:1px solid var(--border)}
+.cm-img-preview:hover{opacity:.85}
+.cm-img-remove{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;font-weight:700}
+.cm-photo-btn{background:none;border:1px solid rgba(10,8,18,.15);color:var(--ash);font-size:.68rem;padding:.35rem .7rem;cursor:pointer;transition:color .15s,border-color .15s;font-family:var(--sans);letter-spacing:.06em;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem;font-weight:600}
+.cm-photo-btn:hover{color:var(--ink);border-color:var(--ink)}
+.cm-photo-input{display:none}
+.cm-posted-img{max-width:260px;max-height:200px;object-fit:cover;cursor:pointer;display:block;margin-top:.5rem;transition:opacity .18s;border:1px solid var(--border)}
+.cm-posted-img:hover{opacity:.85}
+.cm-delete-btn{background:none;border:none;font-size:.62rem;color:var(--red);cursor:pointer;padding:.2rem .4rem;opacity:.6;transition:opacity .18s;letter-spacing:.04em;font-family:var(--sans);display:inline-flex;align-items:center;gap:.2rem}
+.cm-delete-btn:hover{opacity:1;background:rgba(192,57,43,.06)}
+/* ban countdown */
+.ban-countdown-notice{color:var(--red);font-weight:600}
+
+/* ── FOOTER ── */
+footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:3rem}
+.footer-brand{display:flex;flex-direction:column;gap:.4rem}
+.footer-brand-jp{font-family:var(--jp);font-size:1.4rem;font-weight:300;color:var(--paper);letter-spacing:.08em}
+.footer-brand-tagline{font-size:.58rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,191,176,.4)}
+.footer-copy{font-size:.6rem;letter-spacing:.1em;color:rgba(200,191,176,.3);margin-top:1.5rem}
+.footer-links{display:flex;gap:2.5rem}
+.footer-col{display:flex;flex-direction:column;gap:.75rem}
+.footer-col-label{font-size:.5rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(200,191,176,.35);margin-bottom:.25rem}
+.footer-link{font-size:.72rem;color:rgba(200,191,176,.55);text-decoration:none;transition:color .2s;letter-spacing:.04em}
+.footer-link:hover{color:var(--gold)}
+
+/* ── TOAST ── */
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(10,8,18,.15)}
 .toast.on{opacity:1;transform:translateY(0)}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
-@media(max-width:900px){.lvgrid{grid-template-columns:1fr}}
-@media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
-@media(max-width:600px){nav{padding:.9rem 1.2rem;gap:.5rem}.nljp{font-size:.95rem}.nb{padding:.4rem .6rem;font-size:.6rem;letter-spacing:.1em}#lyrView{padding-left:1.2rem;padding-right:1.2rem}}
-@media(max-width:380px){nav{padding:.8rem .9rem}.nlen{display:none}.nb{padding:.35rem .5rem;font-size:.58rem}}
-/* ── Login Gate ── */
-#login-gate{position:sticky;top:60px;left:0;right:0;z-index:80;margin:0 -3rem 2rem;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
-[data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
-#login-gate-title{font-size:.7rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--en)}
-#login-gate-sub{font-size:.64rem;color:var(--ash);line-height:1.5;max-width:380px;font-family:var(--serif);font-style:italic}
-/* ── Google Login Button — redesigned to match site aesthetic ── */
-.google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--en);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
-.google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
-.google-btn:hover::after{opacity:.08}
-.google-btn:hover{border-color:var(--gold);color:var(--ink)}
-.google-btn svg{width:14px;height:14px;flex-shrink:0;position:relative;z-index:1}
-.google-btn span,.google-btn>*:not(svg){position:relative;z-index:1}
-body.gate-open #lyrView{padding-top:0}
-@media(max-width:600px){#login-gate{padding:.5rem 1.2rem;gap:.65rem;margin:0 -1.2rem 1.2rem}#login-gate-sub{display:none}}
-/* ── Copy Gate — redesigned ── */
-#copy-gate{margin:1.5rem 0 .5rem;padding:1.3rem 1.5rem;border:1px solid var(--border);background:var(--mist);display:flex;flex-direction:column;align-items:flex-start;gap:.75rem;position:relative;overflow:hidden}
-#copy-gate::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--gold);opacity:.6}
-#copy-gate-title{font-family:var(--serif);font-size:1rem;color:var(--ink);font-weight:300;font-style:italic}
-#copy-gate-sub{font-size:.72rem;color:var(--ash);line-height:1.65;font-family:var(--serif)}
-#copy-lyric-btn{display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1px solid var(--ink);font-family:var(--en);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);padding:.6rem 1.4rem;cursor:pointer;font-weight:700;transition:all .22s;margin-top:.1rem;position:relative;overflow:hidden}
-#copy-lyric-btn::after{content:'';position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .22s ease;z-index:0}
-#copy-lyric-btn:hover::after{transform:scaleX(1)}
-#copy-lyric-btn:hover{color:var(--paper)}
-#copy-lyric-btn svg,#copy-lyric-btn span{position:relative;z-index:1}
-#copy-lyric-btn:disabled{opacity:.35;cursor:not-allowed}
-#copy-lyric-btn:disabled::after{display:none}
-.copy-done-badge{display:none;align-items:center;gap:.4rem;font-size:.68rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-family:var(--en)}
-.copy-done-badge.show{display:flex}
-/* ── Edit Profile Modal ── */
+
+/* ── MODALS ── */
+#img-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(10,8,18,.85);display:none;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px)}
+#img-lightbox.open{display:flex}
+#img-lightbox img{max-width:90vw;max-height:88vh;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,.4);user-select:none}
+#img-lightbox-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;opacity:.7;transition:opacity .15s;z-index:10;line-height:1}
+#img-lightbox-close:hover{opacity:1}
 #editProfileModal{position:fixed;inset:0;z-index:300;background:rgba(10,8,18,.6);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
 #editProfileModal.open{display:flex}
-.ep-box{width:100%;max-width:380px;padding:2rem;border:1px solid rgba(10,8,18,.12);background:var(--paper);display:flex;flex-direction:column;gap:.9rem;margin:1rem;box-shadow:0 16px 48px rgba(10,8,18,.15)}
+.ep-box{width:100%;max-width:380px;padding:2rem;border:1px solid var(--border);background:var(--paper);display:flex;flex-direction:column;gap:.9rem;margin:1rem;box-shadow:0 16px 48px rgba(10,8,18,.15)}
 .ep-title{font-family:var(--jp);font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:.08em}
-.ep-avatar-wrap{display:flex;align-items:center;gap:.9rem;padding:.65rem;background:rgba(10,8,18,.03);border:1px solid rgba(10,8,18,.08)}
-.ep-avatar-big{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid rgba(10,8,18,.15)}
-.ep-avatar-placeholder-big{width:46px;height:46px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.2rem;color:var(--ash);border:1px solid rgba(10,8,18,.1)}
+.ep-avatar-wrap{display:flex;align-items:center;gap:.9rem;padding:.65rem;background:var(--mist);border:1px solid var(--border)}
+.ep-avatar-big{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+.ep-avatar-placeholder-big{width:46px;height:46px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.2rem;color:var(--ash);border:1px solid var(--border)}
 .ep-info{display:flex;flex-direction:column;gap:.15rem}
 .ep-name{font-size:.85rem;color:var(--ink);font-weight:500}
 .ep-email{font-size:.62rem;color:var(--ash)}
 .ep-field{display:flex;flex-direction:column;gap:.28rem}
 .ep-lbl{font-size:.52rem;color:var(--smoke);letter-spacing:.25em;text-transform:uppercase;font-weight:700}
-.ep-inp{background:transparent;border:none;border-bottom:1.5px solid rgba(10,8,18,.15);color:var(--ink);font-family:var(--en);font-size:.8rem;padding:.55rem 0;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box}
+.ep-inp{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--ink);font-family:var(--sans);font-size:.8rem;padding:.55rem 0;outline:none;transition:border-color .2s;width:100%}
 .ep-inp:focus{border-color:var(--ink)}
 .ep-inp::placeholder{color:var(--smoke)}
-.ep-note{font-size:.62rem;color:var(--ash);line-height:1.6}
+.ep-note{font-size:.62rem;color:var(--ash);line-height:1.6;font-family:var(--serif)}
 .ep-actions{display:flex;gap:.55rem;margin-top:.2rem}
-.ep-save{background:var(--ink);border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--paper);padding:.6rem 1.1rem;cursor:pointer;font-weight:700;transition:all .2s;flex:1}
+.ep-save{background:var(--ink);border:none;font-family:var(--sans);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--paper);padding:.6rem 1.1rem;cursor:pointer;font-weight:700;transition:all .2s;flex:1}
 .ep-save:hover{background:var(--gold);color:var(--ink)}
 .ep-save:disabled{opacity:.4;cursor:not-allowed}
-.ep-cancel{background:none;border:1px solid rgba(10,8,18,.15);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);padding:.55rem .9rem;cursor:pointer;transition:all .2s;font-weight:600}
+.ep-cancel{background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);padding:.55rem .9rem;cursor:pointer;transition:all .2s;font-weight:600}
 .ep-cancel:hover{border-color:var(--red);color:var(--red)}
 .ep-img-row{display:flex;align-items:center;gap:.55rem}
-.ep-img-btn{background:rgba(10,8,18,.04);border:1px solid rgba(10,8,18,.12);color:var(--ink);font-family:var(--en);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;font-weight:600}
+.ep-img-btn{background:var(--mist);border:1px solid var(--border);color:var(--ink);font-family:var(--sans);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;font-weight:600}
 .ep-img-btn:hover{background:rgba(10,8,18,.08)}
 .ep-img-status{font-size:.62rem;color:var(--ash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cm-login-gate-hidden{display:none}
-/* floating avatar bubble */
+
+/* ── FLOATING AVATAR BUBBLE ── */
 #nav-avatar-bubble{position:fixed;bottom:1.4rem;right:1.4rem;z-index:200;display:none;cursor:pointer;user-select:none}
 .nav-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(10,8,18,.2);object-fit:cover;box-shadow:0 2px 16px rgba(10,8,18,.15);transition:transform .18s,box-shadow .18s;display:block}
 .nav-avatar:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(10,8,18,.2)}
 .nav-avatar-placeholder{width:44px;height:44px;border-radius:50%;border:2px solid rgba(10,8,18,.2);background:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.05rem;color:var(--ash);box-shadow:0 2px 16px rgba(10,8,18,.1);transition:transform .18s,box-shadow .18s}
 .nav-avatar-placeholder:hover{transform:scale(1.07)}
-/* dropdown popup */
-#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:var(--paper);border:1px solid rgba(10,8,18,.12);padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(10,8,18,.12);animation:dropUp .15s ease}
+#nav-avatar-bubble.is-banned .nav-avatar,
+#nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red)!important}
+#nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid var(--paper);display:none;align-items:center;justify-content:center;font-size:.6rem;z-index:5;pointer-events:none}
+#nav-avatar-bubble.is-banned #nav-banned-overlay{display:flex}
+
+/* ── USER DROPDOWN ── */
+#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:var(--paper);border:1px solid var(--border);padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(10,8,18,.12);animation:dropUp .15s ease}
 @keyframes dropUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 #nav-user-dropdown.open{display:flex}
 .nud-name{font-size:.95rem;color:var(--ink);font-weight:600;padding:.4rem .8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.nud-email{font-size:.72rem;color:var(--ash);padding:0 .8rem .5rem;border-bottom:1px solid rgba(10,8,18,.08);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.nud-btn{background:none;border:none;font-family:var(--en);font-size:.72rem;color:var(--ash);cursor:pointer;padding:.6rem .8rem;text-align:left;letter-spacing:.08em;text-transform:uppercase;transition:color .18s,background .18s;width:100%;font-weight:600}
+.nud-email{font-size:.72rem;color:var(--ash);padding:0 .8rem .5rem;border-bottom:1px solid var(--border);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.nud-btn{background:none;border:none;font-family:var(--sans);font-size:.72rem;color:var(--ash);cursor:pointer;padding:.6rem .8rem;text-align:left;letter-spacing:.08em;text-transform:uppercase;transition:color .18s,background .18s;width:100%;font-weight:600}
 .nud-btn:hover{color:var(--ink);background:rgba(10,8,18,.04)}
 .nud-btn.logout{color:var(--red)}
 .nud-btn.logout:hover{background:rgba(192,57,43,.06)}
-.nav-user{display:none}
-.nav-user-name,.nav-logout{display:none}
-/* ── Notifikasi badge ── */
-#notif-badge{position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--paper);z-index:10;pointer-events:none;line-height:1}
-#notif-badge.show{display:flex}
-.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem .3rem;border-top:1px solid rgba(10,8,18,.08);margin-top:.3rem}
+.nud-role{padding:.1rem .8rem .55rem;display:flex;align-items:center;gap:.4rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
+.nud-role-label{font-size:.6rem;color:var(--ash);letter-spacing:.12em;text-transform:uppercase}
+.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem .3rem;border-top:1px solid var(--border);margin-top:.3rem}
 .nud-notif-title{font-size:.6rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;font-weight:700}
 .nud-notif-clear{background:none;border:none;font-size:.6rem;color:var(--ash);cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;transition:color .15s;font-weight:600}
 .nud-notif-clear:hover{color:var(--rose)}
@@ -600,10 +685,11 @@ body.gate-open #lyrView{padding-top:0}
 .nud-notif-from{font-size:.78rem;color:var(--rose);font-weight:600;margin-bottom:.2rem}
 .nud-notif-msg{font-size:.74rem;color:var(--ink);line-height:1.5;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nud-notif-meta{font-size:.66rem;color:var(--ash)}
-.nud-notif-empty{font-size:.75rem;color:var(--ash);font-style:italic;padding:.6rem .8rem}
-/* ── Role badge ── */
-.role-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;font-weight:700;padding:.15rem .48rem;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;white-space:nowrap;line-height:1.4;margin-left:.3rem}
-.role-0{background:rgba(140,130,120,.12);border:1px solid rgba(140,130,120,.3);color:var(--ash)}
+.nud-notif-empty{font-size:.76rem;color:var(--ash);font-style:italic;padding:.6rem .8rem;font-family:var(--serif)}
+
+/* ── ROLE BADGES ── */
+.role-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;font-weight:700;padding:.15rem .48rem;border-radius:0;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;white-space:nowrap;line-height:1.4}
+.role-0{background:var(--mist);border:1px solid var(--border);color:var(--ash)}
 .role-1{background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.28);color:#27ae60}
 .role-2{background:rgba(41,128,185,.08);border:1px solid rgba(41,128,185,.28);color:#2980b9}
 .role-3{background:rgba(124,77,110,.1);border:1px solid rgba(124,77,110,.3);color:var(--plum)}
@@ -612,54 +698,71 @@ body.gate-open #lyrView{padding-top:0}
 .role-6{background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.4);color:var(--gold)}
 .role-7{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.4);color:var(--red)}
 .role-custom{background:rgba(124,77,110,.12);border:1px solid rgba(124,77,110,.4);color:var(--plum)}
-.nud-role{padding:.1rem .8rem .55rem;display:flex;align-items:center;gap:.4rem;border-bottom:1px solid rgba(10,8,18,.08);margin-bottom:.3rem}
-.nud-role-label{font-size:.58rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
-/* ── Banned badge ── */
-.cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);padding:.1rem .38rem;font-weight:600;vertical-align:middle;margin-left:.3rem;flex-shrink:0}
-/* ── Foto komentar ── */
-.cm-img-preview-wrap{position:relative;display:inline-block;margin-top:.5rem}
-.cm-img-preview{max-width:180px;max-height:140px;object-fit:cover;display:block;cursor:pointer;transition:opacity .18s;border:1px solid rgba(10,8,18,.1)}
-.cm-img-preview:hover{opacity:.85}
-.cm-img-remove{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;font-weight:700}
-.cm-photo-btn{background:none;border:1px solid rgba(10,8,18,.15);color:var(--ash);font-size:.68rem;padding:.35rem .7rem;cursor:pointer;transition:color .15s,border-color .15s;font-family:var(--en);letter-spacing:.06em;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem;font-weight:600}
-.cm-photo-btn:hover{color:var(--ink);border-color:var(--ink)}
-.cm-photo-input{display:none}
-.cm-posted-img{max-width:260px;max-height:200px;object-fit:cover;cursor:pointer;display:block;margin-top:.5rem;transition:opacity .18s;border:1px solid rgba(10,8,18,.1)}
-.cm-posted-img:hover{opacity:.85}
-.cm-delete-btn{background:none;border:none;font-size:.62rem;color:var(--red);cursor:pointer;padding:.2rem .4rem;opacity:.6;transition:opacity .18s;letter-spacing:.04em;font-family:var(--en);display:inline-flex;align-items:center;gap:.2rem}
-.cm-delete-btn:hover{opacity:1;background:rgba(192,57,43,.06)}
-/* Modal foto besar */
-#img-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(10,8,18,.85);display:none;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px)}
-#img-lightbox.open{display:flex}
-#img-lightbox img{max-width:90vw;max-height:88vh;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,.4);user-select:none}
-#img-lightbox-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;opacity:.7;transition:opacity .15s;z-index:10;line-height:1}
-#img-lightbox-close:hover{opacity:1}
-/* ── Banned overlay ── */
-#nav-avatar-bubble.is-banned .nav-avatar,
-#nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red) !important}
-#nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid var(--paper);display:none;align-items:center;justify-content:center;font-size:.6rem;z-index:5;pointer-events:none}
-#nav-avatar-bubble.is-banned #nav-banned-overlay{display:flex}
-@keyframes onlinePulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,.6)}50%{opacity:.6;box-shadow:0 0 10px rgba(34,197,94,.9)}}
+.cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);padding:.1rem .38rem;font-weight:600;vertical-align:middle}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hero-text>*{animation:fadeUp .6s ease both}
+.hero-text .breadcrumb{animation-delay:.05s}
+.hero-text .song-type{animation-delay:.1s}
+.hero-text .song-title-jp{animation-delay:.15s}
+.hero-text .song-title-ro{animation-delay:.2s}
+.hero-text .song-title-id{animation-delay:.22s}
+.hero-text .meta-row{animation-delay:.28s}
+.hero-text .hero-actions{animation-delay:.35s}
+.hero-visual{animation:fadeUp .7s ease .2s both}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:1.2rem 1.5rem}
+  .hero{grid-template-columns:1fr;min-height:auto}
+  .hero::after{display:none}
+  .hero-text{padding:3rem 1.5rem}
+  .hero-text::before{left:1.5rem;top:2rem}
+  .hero-visual{padding:2rem 1.5rem 3rem;border-top:1px solid rgba(10,8,18,.08)}
+  .song-title-jp{font-size:2.2rem}
+  .kanji-bg{font-size:10rem}
+  .lyrics-section{grid-template-columns:1fr}
+  .lyrics-sidebar{position:static;height:auto;padding:2rem 1.5rem;border-right:none;border-bottom:1px solid rgba(10,8,18,.08);flex-direction:row;flex-wrap:wrap;gap:1.5rem}
+  .lyrics-main{padding:2.5rem 1.5rem 4rem}
+  .ll-item{grid-template-columns:1fr}
+  .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06)}
+  .lyric-num{display:none}
+  .related-grid{grid-template-columns:1fr}
+  .comments-section,.related-section-block{padding:3rem 1.5rem}
+  .comment-intro{grid-template-columns:1fr;gap:2rem}
+  footer{flex-direction:column;padding:2.5rem 1.5rem;gap:2rem}
+  .footer-links{flex-wrap:wrap;gap:2rem}
+  .section-divider{padding:0 1.5rem}
+  #login-gate{padding:.7rem 1.5rem}
+}
+@media(max-width:600px){
+  .hero-text{padding:2.5rem 1.2rem}
+  .hero-text::before{left:1.2rem}
+  .lyrics-main{padding:2rem 1.2rem 4rem}
+  .related-section-block{padding:2.5rem 1.2rem}
+  .comments-section{padding:2.5rem 1.2rem}
+  footer{padding:2rem 1.2rem}
+}
+@media(max-width:380px){
+  nav{padding:.8rem .9rem}
+  .nav-brand-en{display:none}
+}
 </style>
 </head>
 <body>
-<div id="bgwrap"></div>
-<style>
-#bgwrap{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;background:var(--paper)}
-@media(min-width:768px){
-  #bgwrap{background:var(--paper)}
-}
-</style>
 <div class="wrap">
+
+<!-- ── NAV ── -->
 <nav>
-  <a class="nav-logo" href="../index.html">
-    <span class="nljp">夢Lyrics</span>
-    <span class="nlen">YumeSubs</span>
+  <a class="nav-brand" href="../index.html">
+    <span class="nav-brand-jp">夢Lyrics</span>
+    <span class="nav-brand-en">YumeSubs</span>
   </a>
   <div class="nav-links">
-    <a class="nb" href="../index.html">Katalog</a>
-    <a class="nb" href="../stories.html">Cerita</a>
-    <a class="nb" href="../contact.html">Hubungi</a>
+    <a class="nav-link" href="../index.html">Katalog</a>
+    <a class="nav-link" href="../stories.html">Cerita</a>
+    <a class="nav-link" href="../contact.html">Hubungi</a>
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
       <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -668,139 +771,302 @@ body.gate-open #lyrView{padding-top:0}
   </div>
 </nav>
 
-<div id="lyrView">
-  <!-- Login Gate — sticky di bawah navbar, muncul sebelum konten jika belum login -->
-  <div id="login-gate">
-    <div id="login-gate-title">Login untuk copy lirik</div>
-    <div id="login-gate-sub">Lirik bisa dibaca tanpa login. Login dengan Google untuk copy lirik &amp; bergabung di kolom komentar</div>
-    <button class="google-btn" onclick="doLogin()">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Masuk dengan Google
-    </button>
-  </div>
-  <div class="lvback">
-    <a class="gbtn" href="../index.html">← Katalog</a>
-    <div>
-      <div class="lvt">${escHtml(titleDisplay)}</div>
-      <div class="lva">${escHtml(artist)}</div>
+<!-- ── LOGIN GATE ── -->
+<div id="login-gate">
+  <div id="login-gate-title">Login untuk copy lirik</div>
+  <div id="login-gate-sub">Lirik bisa dibaca tanpa login. Login dengan Google untuk copy lirik &amp; bergabung di kolom komentar</div>
+  <button class="google-btn" onclick="doLogin()">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    Masuk dengan Google
+  </button>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="breadcrumb">
+      <a href="../index.html">Beranda</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="../index.html">Katalog</a>
+      ${anime ? `<span class="breadcrumb-sep">›</span><span>${escHtml(anime)}</span>` : `<span class="breadcrumb-sep">›</span><span>${escHtml(titleMain)}</span>`}
+    </div>
+
+    ${(songType || anime) ? `<div class="song-type">${songType ? escHtml(songType.charAt(0).toUpperCase() + songType.slice(1)) : ''}${songType && anime ? ' — ' : ''}${anime ? escHtml(anime) : ''}</div>` : ''}
+
+    <div class="song-title-jp">${escHtml(titleDisplay)}</div>
+    ${titleRo ? `<div class="song-title-ro">${escHtml(titleRo)}</div>` : ''}
+    ${titleId ? `<div class="song-title-id">${escHtml(titleId)}</div>` : ''}
+
+    <div class="meta-row">
+      <div class="meta-item">
+        <span class="meta-label">Artis</span>
+        <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(artist)}">${escHtml(artist)}</a></span>
+      </div>
+      ${anime ? `<div class="meta-item">
+        <span class="meta-label">Anime</span>
+        <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(anime)}">${escHtml(anime)}</a></span>
+      </div>` : ''}
+      ${song.genre ? `<div class="meta-item">
+        <span class="meta-label">Genre</span>
+        <span class="meta-value">${escHtml(song.genre)}</span>
+      </div>` : ''}
+    </div>
+
+    <div class="hero-actions">
+      <a class="btn-primary" href="#lyrics">↓ Baca Lirik</a>
+      ${song.ytId ? `<button class="btn-ghost" onclick="document.getElementById('yt-section').style.display='block';document.getElementById('yt-section').scrollIntoView({behavior:'smooth'})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Tonton MV
+      </button>` : ''}
     </div>
   </div>
-  <div class="lvgrid">
-    <div>
-      ${song.img ? `<img class="lvcov" src="${escHtml(song.img)}" alt="Cover lagu ${escHtml(titleMain)} - ${escHtml(artist)} | Lirik dan terjemahan Indonesia di YumeSubs" loading="eager">` : ''}
-      <div class="lvmeta">
-        <b>${escHtml(titleDisplay)}</b>
-        ${titleRo ? `<div>${escHtml(titleRo)}</div>` : ''}
-        ${titleId ? `<div>${escHtml(titleId)}</div>` : ''}
-        <div style="color:var(--rose);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-top:.3rem">${escHtml(artist)}</div>
+
+  <div class="hero-visual">
+    <div class="kanji-bg">${escHtml((titleDisplay||'').charAt(0)||'音')}</div>
+    <div class="cover-wrap">
+      <div class="cover-frame">
+        ${song.img
+          ? `<img class="cover-img" src="${escHtml(song.img)}" alt="Cover ${escHtml(titleMain)} - ${escHtml(artist)}" loading="eager">`
+          : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
+              <defs>
+                <radialGradient id="g1" cx="40%" cy="35%">
+                  <stop offset="0%" stop-color="#7c3c55"/>
+                  <stop offset="50%" stop-color="#2d1535"/>
+                  <stop offset="100%" stop-color="#0d0818"/>
+                </radialGradient>
+              </defs>
+              <rect width="320" height="320" fill="url(#g1)"/>
+              <text x="160" y="175" font-family="serif" font-size="64" font-weight="300" fill="#c9a96e" opacity=".35" text-anchor="middle">${escHtml((titleDisplay||'').charAt(0)||'音')}</text>
+              <text x="160" y="230" font-family="sans-serif" font-size="9" letter-spacing="4" fill="#c9a96e" opacity=".45" text-anchor="middle">${escHtml(artist.toUpperCase())}</text>
+            </svg>`
+        }
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
       </div>
-      ${song.ytId ? `<div class="ytwrap"><div class="ytlb">Video</div><iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
-      ${song.nicoId ? `<div class="ytwrap"><div class="ytlb">Niconico<\/div><img class="nicothumb" src="https:\/\/nicovideo.cdn.nimg.jp\/thumbnails\/${escHtml(song.nicoId.replace("sm",""))}\/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'"><a class="nicobtn" href="https:\/\/www.nicovideo.jp\/watch\/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"\/><\/svg>Tonton di Niconico<\/a><\/div>` : ''}
-      ${song.sp ? `<a class="spbtn" href="${escHtml(song.sp)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>Dengarkan di Spotify</a>` : ''}
-      <div id="online-counter" style="display:inline-flex;align-items:center;gap:.45rem;margin:.8rem 0;font-size:.68rem;color:var(--ash);letter-spacing:.05em;font-family:var(--en)">
-        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
-        <span id="online-count">—</span> orang lagi online sekarang
-      </div>
-      <div class="thumbs-wrap" id="thumbs-wrap">
-        <button class="thumbs-btn" id="thumbs-btn" aria-label="Suka lagu ini">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-          <span id="thumbs-count">…</span>
-        </button>
-        <div class="thumbs-label" id="thumbs-label">Suka lagu ini?</div>
-      </div>
-    </div>
-    <div>
-      <div class="lctrl">
-        <button class="tpill on" id="tp-ro" onclick="tl('ro')">Romaji</button>
-        <button class="tpill on" id="tp-tr" onclick="tl('tr')">Terjemahan</button>
-      </div>
-      <div class="llines" id="ll">
-        ${lyricsHTML}
-      </div>
-      <!-- Copy Lyric Gate — muncul setelah login, tapi harus komentar dulu -->
-      <div id="copy-gate" style="display:none">
-        <div id="copy-gate-title">Salin Lirik</div>
-        <div id="copy-gate-sub" id="copy-gate-sub">Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!</div>
-        <button id="copy-lyric-btn" onclick="doCopyLyric()" disabled>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          <span id="copy-btn-label">Komentar dulu untuk copy lirik</span>
-        </button>
-        <div class="copy-done-badge" id="copy-done-badge">✦ Lirik berhasil disalin</div>
-      </div>
-      <div class="cmsec" style="margin-bottom:2rem">
-        <div class="cmtit" style="margin-bottom:.8rem">Tentang Lagu Ini</div>
-        <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
-          ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(anime)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia. YumeSubs menyediakan terjemahan lagu Jepang secara gratis untuk membantu kamu memahami arti dan makna dari lagu-lagu Jepang favorit.`}
-        </p>
-        ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
-      </div>
-      ${(()=>{
-  const shuffle = arr => [...arr].sort(()=>Math.random()-.5);
-  const card = r => `<a class="rc" href="${BASE_URL}/lagu/${r.slug}">
-    <div class="rc-thumb">${r.img ? `<img src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy" decoding="async">` : '<div class="rc-no-img">♪</div>'}</div>
-    <div class="rc-info">
-      <div class="rc-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
-      <div class="rc-artist">${escHtml(r.artist)}</div>
-    </div>
-    <div class="rc-arr">›</div>
-  </a>`;
-  const parts = [];
-  if(relatedByArtist.length){
-    const items = shuffle(relatedByArtist).slice(0,4).map(card).join('');
-    parts.push(`<div class="related-section">
-      <div class="related-label">Lagu lain dari ${escHtml(artist)}</div>
-      <div class="related-list">${items}</div>
-    </div>`);
-  }
-  if(relatedByAnime.length){
-    const items = shuffle(relatedByAnime).slice(0,4).map(card).join('');
-    parts.push(`<div class="related-section">
-      <div class="related-label">Lagu lain dari ${escHtml(anime)}</div>
-      <div class="related-list">${items}</div>
-    </div>`);
-  }
-  return parts.join('');
-})()}
-      <div class="cmsec">
-        <div class="cmtit">Komentar</div>
-        <!-- Login-gated comment form -->
-        <div id="cm-login-gate" class="cm-login-gate-hidden" style="margin-bottom:1.2rem;padding:1rem 1.2rem;border:1px solid var(--border);background:var(--mist);flex-direction:column;align-items:flex-start;gap:.7rem">
-          <div style="font-family:var(--serif);font-size:.9rem;color:var(--ink);font-weight:300;font-style:italic">Login untuk berkomentar</div>
-          <div style="font-size:.72rem;color:var(--ash);line-height:1.6;font-family:var(--serif)">Kamu perlu login dengan Google untuk menulis komentar. Gratis dan tanpa syarat.</div>
-          <button class="google-btn" onclick="doLogin()" style="font-size:.6rem;padding:.42rem .95rem">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Masuk dengan Google
-          </button>
+      <div class="cover-stats">
+        <div class="stat">
+          <div class="stat-num" id="thumbs-count">…</div>
+          <div class="stat-lbl">Suka</div>
         </div>
-        <div id="cm-form-wrap" style="display:none" class="cmform">
-          <div id="cm-banned-notice" style="display:none;padding:.75rem 1rem;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);border-radius:4px;font-size:.78rem;color:var(--red);line-height:1.6;margin-bottom:.5rem">
-            🚫 Akunmu telah <strong>dibanned</strong> dari komentar. Kamu tidak bisa mengirim komentar.
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;padding:.5rem .75rem;background:var(--mist);border:1px solid var(--border)">
-            <div id="cm-user-avatar-wrap"></div>
-            <span id="cm-user-display" style="font-size:.75rem;color:var(--rose);font-weight:600;font-family:var(--en)"></span>
-            <span style="font-size:.6rem;color:var(--ash);margin-left:auto;font-family:var(--serif);font-style:italic">Berkomentar sebagai akun Google</span>
-          </div>
-          <textarea class="cmi" id="cm-t" rows="3" placeholder="Bagikan kesan tentang lagu ini..."></textarea>
-          <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="handleCmPhoto(this)">
-          <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
-            <img id="cm-img-preview" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
-            <button class="cm-img-remove" onclick="removeCmPhoto()" title="Hapus foto">✕</button>
-          </div>
+        <div class="stat">
+          <div class="stat-num" id="views-count">—</div>
+          <div class="stat-lbl">Dibaca</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="comment-count">—</div>
+          <div class="stat-lbl">Komentar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DIVIDER ── -->
+<div class="section-divider" style="margin:2rem 0">
+  <div class="divider-line"></div>
+  <div class="divider-ornament">— Lirik Lengkap —</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ── LYRICS ── -->
+<section class="lyrics-section" id="lyrics">
+  <aside class="lyrics-sidebar">
+    <div>
+      <span class="sidebar-section-label">Tampilkan</span>
+      <div class="toggle-group">
+        <div class="toggle-item" onclick="tl('jp')">
+          <span class="toggle-label">Jepang (漢字)</span>
+          <div class="toggle-switch on" id="sw-jp"></div>
+        </div>
+        <div class="toggle-item" onclick="tl('ro')">
+          <span class="toggle-label">Romaji</span>
+          <div class="toggle-switch on" id="tp-ro"></div>
+        </div>
+        <div class="toggle-item" onclick="tl('tr')">
+          <span class="toggle-label">Terjemahan</span>
+          <div class="toggle-switch on" id="tp-tr"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="thumbs-block">
+      <span class="sidebar-section-label">Apresiasi</span>
+      <button class="thumbs-btn" id="thumbs-btn" aria-label="Suka lagu ini">
+        <span class="thumbs-icon">♡</span>
+        <span id="thumbs-count-sb">…</span>
+        <span id="thumbs-label">Suka lagu ini?</span>
+      </button>
+      ${song.sp ? `<a class="spotify-btn" href="${escHtml(song.sp)}" target="_blank" rel="noopener">
+        <div class="spotify-dot"></div>
+        Dengarkan di Spotify
+      </a>` : ''}
+    </div>
+
+    <div>
+      <span class="sidebar-section-label">Online Sekarang</span>
+      <div id="online-counter">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:onlinePulse 2s ease-in-out infinite;flex-shrink:0"></span>
+        <span id="online-count">—</span> orang
+      </div>
+    </div>
+  </aside>
+
+  <main class="lyrics-main">
+    <div class="lyrics-controls">
+      <button class="ctrl-pill active" data-view="all">Semua</button>
+      <button class="ctrl-pill" data-view="jp">Jepang</button>
+      <button class="ctrl-pill" data-view="ro">Romaji</button>
+      <button class="ctrl-pill" data-view="tr">Terjemahan</button>
+      <div class="ctrl-sep"></div>
+      <button class="ctrl-pill" id="ctrl-copy-btn" onclick="doCopyLyric()">Salin Lirik</button>
+    </div>
+
+    <div class="lyrics-container" id="ll">
+      ${lyricsHTML}
+    </div>
+
+    <!-- Copy Gate -->
+    <div id="copy-gate" style="display:none">
+      <div id="copy-gate-title">Salin Lirik</div>
+      <div id="copy-gate-sub">Tinggalkan komentar terlebih dahulu untuk membuka akses copy lirik lagu ini. Satu komentar sudah cukup!</div>
+      <button id="copy-lyric-btn" onclick="doCopyLyric()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        <span id="copy-btn-label">Komentar dulu untuk copy lirik</span>
+      </button>
+      <div class="copy-done-badge" id="copy-done-badge">✦ Lirik berhasil disalin</div>
+    </div>
+
+    <!-- Tentang Lagu -->
+    <div class="cmsec" style="margin-bottom:2rem">
+      <div class="cmtit">Tentang Lagu Ini</div>
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
+        ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(anime)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia.`}
+      </p>
+      ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
+    </div>
+
+    <!-- YT / Nico video -->
+    ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem;display:none">
+      <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Video</div>
+      <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>` : ''}
+    ${song.nicoId ? `<div style="margin-bottom:2rem">
+      <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Niconico</div>
+      <img class="nicothumb" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'">
+      <a class="nicobtn" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Tonton di Niconico</a>
+    </div>` : ''}
+
+  </main>
+</section>
+
+<!-- ── RELATED SONGS ── -->
+${(()=>{
+  const shuffle = arr => [...arr].sort(()=>Math.random()-.5);
+  const allRelated = [
+    ...shuffle(relatedByArtist).slice(0,3),
+    ...shuffle(relatedByAnime).filter(r => !relatedByArtist.find(a=>a.slug===r.slug)).slice(0,3-Math.min(relatedByArtist.length,3))
+  ].slice(0,6);
+
+  if(!allRelated.length) return '';
+
+  const artistLabel = relatedByArtist.length ? `dari ${escHtml(artist)}` : '';
+  const animeLabel  = relatedByAnime.length  ? `dari ${escHtml(anime)}`  : '';
+  const subtitle    = [artistLabel, animeLabel].filter(Boolean).join(' & ');
+
+  const cards = allRelated.map(r => `<a class="related-card" href="${BASE_URL}/lagu/${r.slug}">
+    ${r.img
+      ? `<img class="related-thumb" src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy">`
+      : `<div class="rc-no-img">♪</div>`}
+    <div class="related-info">
+      <div class="related-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
+      ${r.titleRo ? `<div class="related-ro">${escHtml(r.titleRo)}</div>` : ''}
+      <div class="related-artist">${escHtml(r.artist)}</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a>`).join('');
+
+  return `<section class="related-section-block">
+  <div class="section-header">
+    <div class="section-title">Lagu Lainnya</div>
+    ${subtitle ? `<div class="section-subtitle">${subtitle}</div>` : ''}
+  </div>
+  <div class="related-grid">${cards}</div>
+</section>`;
+})()}
+
+<!-- ── COMMENTS ── -->
+<section class="comments-section">
+  <div class="comment-intro">
+    <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
+    <div>
+      <p class="comment-desc">Bagikan pendapatmu, interpretasimu, atau momen yang membuat lagu ini bermakna bagimu.</p>
+      <!-- Login gate inside comments -->
+      <div id="cm-login-gate" class="cm-login-gate-hidden" style="margin-top:1.5rem;padding:1rem 1.2rem;border:1px solid var(--border);background:var(--mist);flex-direction:column;align-items:flex-start;gap:.7rem">
+        <div style="font-family:var(--serif);font-size:.9rem;color:var(--ink);font-weight:300;font-style:italic">Login untuk berkomentar</div>
+        <div style="font-size:.72rem;color:var(--ash);line-height:1.6;font-family:var(--serif)">Kamu perlu login dengan Google untuk menulis komentar. Gratis dan tanpa syarat.</div>
+        <button class="google-btn" onclick="doLogin()" style="font-size:.6rem;padding:.42rem .95rem">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Masuk dengan Google
+        </button>
+      </div>
+      <!-- Comment form -->
+      <div id="cm-form-wrap" style="display:none" class="cmform">
+        <div id="cm-banned-notice" style="display:none;padding:.75rem 1rem;border:1px solid rgba(255,77,109,.3);background:rgba(255,77,109,.06);font-size:.78rem;color:var(--red);line-height:1.6;margin-bottom:.5rem">
+          🚫 Akunmu telah <strong>dibanned</strong> dari komentar. Kamu tidak bisa mengirim komentar.
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;padding:.5rem .75rem;background:var(--mist);border:1px solid var(--border)">
+          <div id="cm-user-avatar-wrap"></div>
+          <span id="cm-user-display" style="font-size:.75rem;color:var(--rose);font-weight:600;font-family:var(--sans)"></span>
+          <span style="font-size:.6rem;color:var(--ash);margin-left:auto;font-family:var(--serif);font-style:italic">Berkomentar sebagai akun Google</span>
+        </div>
+        <textarea class="cmi" id="cm-t" rows="3" placeholder="Bagikan kesan tentang lagu ini..."></textarea>
+        <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="handleCmPhoto(this)">
+        <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
+          <img id="cm-img-preview" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
+          <button class="cm-img-remove" onclick="removeCmPhoto()" title="Hapus foto">✕</button>
+        </div>
+        <div class="comment-footer">
+          <span class="comment-user" id="cm-user-label">Login untuk berkomentar</span>
           <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-            <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim Komentar</button>
             <button class="cm-photo-btn" onclick="document.getElementById('cm-photo-input').click()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              Tambah Foto
+              Foto
             </button>
+            <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
           </div>
         </div>
-        <div class="cmlist" id="cmlist"><div class="nocm">Memuat komentar...</div></div>
       </div>
     </div>
   </div>
-</div>
-</div>
+
+  <div class="cmlist" id="cmlist"><div class="nocm">Memuat komentar...</div></div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-brand">
+    <div class="footer-brand-jp">夢Lyrics</div>
+    <div class="footer-brand-tagline">Lirik Jepang · Terjemahan Indonesia</div>
+    <div class="footer-copy">© 2025 YumeSubs — yumelyrics.my.id</div>
+  </div>
+  <div class="footer-links">
+    <div class="footer-col">
+      <span class="footer-col-label">Jelajahi</span>
+      <a class="footer-link" href="../index.html">Katalog Lengkap</a>
+      <a class="footer-link" href="../stories.html">Cerita</a>
+      <a class="footer-link" href="../contact.html">Hubungi</a>
+    </div>
+    <div class="footer-col">
+      <span class="footer-col-label">Tentang</span>
+      <a class="footer-link" href="../contact.html">Kontak</a>
+    </div>
+  </div>
+</footer>
+
+</div><!-- .wrap -->
+
 <!-- ── Floating Avatar Bubble ── -->
 <div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
   <div id="nav-avatar-wrap"></div>
@@ -827,7 +1093,7 @@ body.gate-open #lyrView{padding-top:0}
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
-<!-- ── Lightbox foto komentar ── -->
+<!-- ── Lightbox ── -->
 <div id="img-lightbox" onclick="closeLightbox()">
   <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="img-lightbox-img" src="" alt="foto komentar">
@@ -863,6 +1129,58 @@ body.gate-open #lyrView{padding-top:0}
     </div>
   </div>
 </div>
+<script>
+/* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
+document.addEventListener('DOMContentLoaded', function(){
+  // Generate nomor baris lirik otomatis seperti preview-lagu
+  var lineNum = 1;
+  document.querySelectorAll('.ll-item').forEach(function(item){
+    var numEl = document.createElement('div');
+    numEl.className = 'lyric-num';
+    numEl.textContent = String(lineNum++).padStart(2,'0');
+    item.appendChild(numEl);
+  });
+
+  var pills = document.querySelectorAll('.ctrl-pill[data-view]');
+  pills.forEach(function(pill){
+    pill.addEventListener('click', function(){
+      pills.forEach(function(p){ p.classList.remove('active'); });
+      pill.classList.add('active');
+      var view = pill.dataset.view;
+      var showJp = (view==='all'||view==='jp');
+      var showRo = (view==='all'||view==='ro');
+      var showTr = (view==='all'||view==='tr');
+      document.querySelectorAll('.ljp').forEach(function(e){ e.style.display = showJp ? '' : 'none'; });
+      document.querySelectorAll('.lro').forEach(function(e){ e.style.display = showRo ? '' : 'none'; });
+      document.querySelectorAll('.lid').forEach(function(e){ e.style.display = showTr ? '' : 'none'; });
+      // Sync toggle-switch state
+      var swJp = document.getElementById('sw-jp');
+      var swRo = document.getElementById('tp-ro');
+      var swTr = document.getElementById('tp-tr');
+      if(swJp) swJp.classList.toggle('on', showJp);
+      if(swRo) swRo.classList.toggle('on', showRo);
+      if(swTr) swTr.classList.toggle('on', showTr);
+    });
+  });
+  // Sync sidebar thumbs count with hero count
+  var observer = new MutationObserver(function(){
+    var main = document.getElementById('thumbs-count');
+    var sb   = document.getElementById('thumbs-count-sb');
+    if(main && sb) sb.textContent = main.textContent;
+  });
+  var mainCount = document.getElementById('thumbs-count');
+  if(mainCount) observer.observe(mainCount, { childList: true, characterData: true, subtree: true });
+  // Show copy lyric button in ctrl bar if copy-gate unlocked
+  var copyGateObserver = new MutationObserver(function(){
+    var gate = document.getElementById('copy-gate');
+    var ctrlBtn = document.getElementById('ctrl-copy-btn');
+    if(!gate || !ctrlBtn) return;
+    ctrlBtn.style.display = gate.style.display === 'flex' ? '' : 'none';
+  });
+  var cg = document.getElementById('copy-gate');
+  if(cg) copyGateObserver.observe(cg, { attributes: true, attributeFilter: ['style'] });
+});
+</script>
 <script>
 /* ── Restore urutan karakter lirik via CSS order — jalan SEGERA, tidak nunggu Firebase ── */
 (function(){
@@ -987,8 +1305,17 @@ let _thumbVoted = false;
 async function loadThumb(){
   try {
     const songSnap = await getDoc(doc(db,'songs',SONG_ID));
-    const total = songSnap.exists() ? (songSnap.data().thumbs || 0) : 0;
-    document.getElementById('thumbs-count').textContent = total;
+    const data = songSnap.exists() ? songSnap.data() : {};
+    const total = data.thumbs || 0;
+    const views = data.views || 0;
+    const fmtNum = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
+    // Update semua elemen count
+    const tcEl = document.getElementById('thumbs-count');
+    const tcSbEl = document.getElementById('thumbs-count-sb');
+    const vcEl = document.getElementById('views-count');
+    if(tcEl) tcEl.textContent = fmtNum(total);
+    if(tcSbEl) tcSbEl.textContent = fmtNum(total);
+    if(vcEl) vcEl.textContent = fmtNum(views);
 
     // Cek apakah sudah vote
     const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
@@ -998,6 +1325,8 @@ async function loadThumb(){
     if(_thumbVoted){
       btn.classList.add('voted');
       document.getElementById('thumbs-label').textContent = 'Kamu sudah suka lagu ini';
+      const iconEl = btn ? btn.querySelector('.thumbs-icon') : null;
+      if(iconEl) iconEl.textContent = '♥';
     }
   } catch(e){}
 }
@@ -1021,16 +1350,28 @@ window.doThumb = async function(){
       _thumbVoted = true;
       btn.classList.add('voted','pop');
       setTimeout(()=>btn.classList.remove('pop'),400);
-      countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
+      const newCount = (parseInt(countEl.textContent)||0) + 1;
+      countEl.textContent = newCount >= 1000 ? (newCount/1000).toFixed(1).replace(/\.0$/,'')+'k' : newCount;
+      const sb1 = document.getElementById('thumbs-count-sb');
+      if(sb1) sb1.textContent = countEl.textContent;
       labelEl.textContent = 'Kamu sudah suka lagu ini';
+      // Update icon ke hati penuh
+      const iconEl = btn.querySelector('.thumbs-icon');
+      if(iconEl) iconEl.textContent = '♥';
     } else {
       // Hapus vote (toggle)
       await deleteDoc(voteRef);
       await updateDoc(songRef, { thumbs: increment(-1) });
       _thumbVoted = false;
       btn.classList.remove('voted');
-      countEl.textContent = Math.max(0,(parseInt(countEl.textContent)||1) - 1);
+      const rawCount = parseInt(countEl.textContent)||1;
+      const newCount2 = Math.max(0, rawCount - 1);
+      countEl.textContent = newCount2 >= 1000 ? (newCount2/1000).toFixed(1).replace(/\.0$/,'')+'k' : newCount2;
+      const sb2 = document.getElementById('thumbs-count-sb');
+      if(sb2) sb2.textContent = countEl.textContent;
       labelEl.textContent = 'Suka lagu ini?';
+      const iconEl2 = btn.querySelector('.thumbs-icon');
+      if(iconEl2) iconEl2.textContent = '♡';
     }
   } catch(e){
     console.error('Thumb error',e);
@@ -1741,8 +2082,15 @@ let sro=true, str=true;
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 
+let sjp=true;
 window.tl = type => {
-  if(type==='ro'){
+  if(type==='jp'){
+    sjp=!sjp;
+    document.getElementById('sw-jp').classList.toggle('on',sjp);
+    document.querySelectorAll('.ljp').forEach(e=>{
+      e.style.display=sjp?'':'none';
+    });
+  } else if(type==='ro'){
     sro=!sro;
     document.getElementById('tp-ro').classList.toggle('on',sro);
     document.querySelectorAll('.lro').forEach(e=>{
@@ -2090,6 +2438,10 @@ async function rcm(){
       const allSnap=await getDocs(query(collection(db,'comments'),where('songId','==',SONG_ID)));
       allDocs=allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
     }
+    // Update comment count di hero stats
+    const ccEl = document.getElementById('comment-count');
+    const topCount = allDocs.filter(c => !c.parentId).length;
+    if(ccEl) ccEl.textContent = topCount >= 1000 ? (topCount/1000).toFixed(1).replace(/\.0$/,'')+'k' : topCount;
     if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
 
     // Fetch user_profiles semua uid unik — ambil foto & nama terbaru
