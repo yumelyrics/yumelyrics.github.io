@@ -325,15 +325,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-links{display:flex;gap:2rem;align-items:center}
 .nav-link{font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
 .nav-link:hover{color:var(--ink)}
+.nav-link-mobile{display:none} /* tampil hanya di mobile */
 
 /* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:nowrap;overflow:hidden}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 /* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
 body.gate-open .hero{margin-top:44px}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
-#login-gate-title{font-size:.7rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans)}
-#login-gate-sub{font-size:.64rem;color:var(--ash);line-height:1.5;max-width:380px;font-family:var(--serif);font-style:italic}
+#login-gate-title{font-size:.7rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
+#login-gate-sub{font-size:.64rem;color:var(--ash);line-height:1.5;font-family:var(--serif);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .google-btn{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid var(--border);padding:.45rem 1.1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.14em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden}
 .google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
 .google-btn:hover::after{opacity:.08}
@@ -730,6 +731,29 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   nav{padding:1.2rem 1.5rem}
+  /* Sembunyikan nav link desktop, tampilkan yg mobile-only */
+  .nav-link{display:none}
+  .nav-link-mobile{display:inline-flex}
+  #theme-toggle{flex-shrink:0}
+  .nav-links{gap:1rem}
+  /* Login gate mobile: 2 baris — baris 1: title + tombol, baris 2: tidak ada (simpan ruang) */
+  #login-gate{
+    padding:.5rem 1.2rem;
+    gap:.6rem;
+    flex-wrap:wrap;
+    top:58px;
+  }
+  #login-gate-title{
+    font-size:.6rem;
+    white-space:normal;
+    flex:1;
+    min-width:120px;
+    line-height:1.4;
+  }
+  #login-gate-sub{display:none}
+  .google-btn{padding:.35rem .8rem;font-size:.55rem;flex-shrink:0;letter-spacing:.1em}
+  body.gate-open .hero{margin-top:42px}
+  body.gate-open .lyrics-sidebar{top:106px;height:auto}
   .hero{grid-template-columns:1fr;min-height:auto}
   .hero::after{display:none}
   .hero-text{padding:3rem 1.5rem}
@@ -796,12 +820,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .cmsec{overflow:visible;height:auto;max-height:none;word-break:break-word;overflow-wrap:break-word}
   .cmtit{font-size:1.1rem}
 }
-@media(max-width:600px){
-  nav{padding:1rem 1.2rem}
-  .nav-link{display:none}
-  #theme-toggle{flex-shrink:0}
-  .nav-links{gap:1rem}
-}
 @media(max-width:380px){
   nav{padding:.8rem .9rem}
   .nav-brand-en{display:none}
@@ -823,6 +841,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <a class="nav-link" href="../index.html">Katalog</a>
     <a class="nav-link" href="../stories.html">Cerita</a>
     <a class="nav-link" href="../contact.html">Hubungi</a>
+    <a class="nav-link nav-link-mobile" href="../index.html">Katalog</a>
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
       <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
