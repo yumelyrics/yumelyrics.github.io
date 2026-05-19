@@ -55,7 +55,7 @@ function obfuscateLine(str) {
     }).join('');
     // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
     // flex-shrink:0 agar kata tidak dipotong, tapi max-width:100% agar kata panjang wrap ke baris baru
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;flex-wrap:wrap;">' + innerSpans + '</span>';
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow:hidden;overflow-wrap:break-word;word-break:break-word;flex-wrap:wrap;">' + innerSpans + '</span>';
     // Tambah spasi setelah kata (kecuali kata terakhir)
     const spaceSpan = wi < words.length - 1
       ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
@@ -440,7 +440,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
 .lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
-[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;overflow-wrap:normal;word-break:normal;align-content:flex-start}
+[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:hidden;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:normal;display:inline}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
@@ -821,7 +821,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .ll-item{grid-template-columns:1fr;min-width:0}
   .lyric-left{min-width:0}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06);min-width:0}
-  .ljp,.lro,.lid{max-width:100%;word-break:break-word}
+  .ljp,.lro,.lid{max-width:100%;width:100%;overflow:hidden;word-break:break-word;overflow-wrap:break-word}
   .lyric-num{display:none}
   /* About section: full visible, no overflow */
   .cmsec{overflow:visible;height:auto;max-height:none}
