@@ -48,7 +48,7 @@ function obfuscateLine(str) {
     const isSpace = ch === ' ';
     const noiseSpans = isSpace ? '' :
       '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
-    const spaceAttr = isSpace ? ' data-sp="1"' : '';
+    const spaceAttr = isSpace ? ' data-sp="1" style="white-space:pre;min-width:.3em"' : '';
     return '<span data-c="' + origIdx + '"' + spaceAttr + '>' + (isSpace ? ' ' : escHtml(ch)) + '</span>' + noiseSpans;
   }).join('');
 }
@@ -328,7 +328,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
 /* ── LOGIN GATE (fixed bar below nav) ── */
-#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 2rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:nowrap;overflow:visible;min-width:0}
+#login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.6rem 1.5rem .6rem 2rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:nowrap;overflow:hidden;min-width:0}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 /* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
 body.gate-open .hero{margin-top:44px}
@@ -428,6 +428,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;word-break:break-word;overflow-wrap:break-word;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:pre;display:inline}
+[data-obf="1"] span[data-sp]{white-space:pre;min-width:.3em;display:inline}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
