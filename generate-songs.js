@@ -37,19 +37,29 @@ function randNoise() {
 }
 function obfuscateLine(str) {
   if (!str) return '';
-  const chars = [...str];
-  const indices = chars.map((_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  return indices.map(origIdx => {
-    const ch = chars[origIdx];
-    const isSpace = ch === ' ';
-    const noiseSpans = isSpace ? '' :
-      '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
-    const spaceAttr = isSpace ? ' data-sp="1"' : '';
-    return '<span data-c="' + origIdx + '"' + spaceAttr + '>' + (isSpace ? '\u00a0' : escHtml(ch)) + '</span>' + noiseSpans;
+  // Split per kata, obfuscate per kata, bungkus dalam span nowrap
+  // sehingga flex-wrap hanya terjadi antar kata, tidak di tengah kata
+  const words = str.split(' ');
+  return words.map((word, wi) => {
+    if (!word) return '<span data-c="' + wi + '" data-sp="1" style="display:inline;white-space:pre">\u00a0</span>';
+    const chars = [...word];
+    const indices = chars.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    const innerSpans = indices.map(origIdx => {
+      const ch = chars[origIdx];
+      const noiseSpan = '<span aria-hidden="true" style="position:absolute;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
+      return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
+    }).join('');
+    // Bungkus satu kata dalam span inline-flex nowrap agar tidak dipotong di tengah
+    const wordSpan = '<span class="obf-word" style="display:inline-flex;white-space:nowrap;flex-shrink:0">' + innerSpans + '</span>';
+    // Tambah spasi setelah kata (kecuali kata terakhir)
+    const spaceSpan = wi < words.length - 1
+      ? '<span data-sp="1" style="display:inline;white-space:pre">\u00a0</span>'
+      : '';
+    return wordSpan + spaceSpan;
   }).join('');
 }
 
@@ -333,8 +343,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 /* Saat login-gate visible (fixed), push konten ke bawah agar tidak tertutup bar */
 body.gate-open .hero{margin-top:44px}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
-#login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex-shrink:0}
-#login-gate-sub{font-size:.7rem;color:var(--ash);line-height:1.5;font-family:var(--serif);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#login-gate-title{font-size:.75rem;color:var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;font-family:var(--sans);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#login-gate-sub{display:none}
 .google-btn{display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1px solid var(--border);padding:.4rem 1rem;font-family:var(--sans);font-size:.62rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .22s;white-space:nowrap;flex-shrink:0;flex-grow:0;position:relative;overflow:hidden}
 .google-btn::after{content:'';position:absolute;inset:0;background:var(--gold);opacity:0;transition:opacity .22s;z-index:0}
 .google-btn:hover::after{opacity:.08}
@@ -423,10 +433,10 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:hidden;visibility:hidden;word-break:break-word;overflow-wrap:break-word}
-.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;word-break:break-word;overflow-wrap:break-word}
-.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;word-break:break-word;overflow-wrap:break-word}
+.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
+.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
-[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;word-break:break-word;overflow-wrap:break-word;align-content:flex-start}
+[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;overflow-wrap:normal;word-break:normal;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:normal;display:inline}
 [data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
@@ -1241,12 +1251,12 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
   function restoreLines(){
     document.querySelectorAll('[data-obf="1"]').forEach(function(line){
-      var spans = Array.from(line.querySelectorAll('span[data-c]'));
-      if(!spans.length) return;
-      line.style.cssText += ';display:inline-flex;flex-wrap:wrap;gap:0';
-      spans.forEach(function(s){
-        s.style.order = parseInt(s.dataset.c, 10);
-        if(s.dataset.sp) s.style.whiteSpace = 'pre';
+      // Restore urutan karakter di dalam tiap .obf-word
+      line.querySelectorAll('.obf-word').forEach(function(word){
+        var spans = Array.from(word.querySelectorAll('span[data-c]'));
+        if(!spans.length) return;
+        spans.forEach(function(s){ s.style.order = parseInt(s.dataset.c, 10); });
+        word.style.cssText += ';display:inline-flex;flex-wrap:nowrap';
       });
     });
     document.body.classList.add('rdy');
@@ -2113,9 +2123,19 @@ window.doCopyLyric = async () => {
     const jp  = item.querySelector('.ljp');
     const ro  = item.querySelector('.lro');
     const lid = item.querySelector('.lid');
-    const jpText  = jp  ? Array.from(jp.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
-    const roText  = ro  ? Array.from(ro.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
-    const lidText = lid ? Array.from(lid.querySelectorAll('span[data-c]')).sort((a,b)=>+a.dataset.c - +b.dataset.c).map(s=>s.dataset.sp?'  ':s.textContent).join('').trim() : '';
+    function extractText(el) {
+      if (!el) return '';
+      // Reconstruct per kata: tiap .obf-word berisi span[data-c] yang diurutkan
+      const words = Array.from(el.querySelectorAll('.obf-word')).map(w =>
+        Array.from(w.querySelectorAll('span[data-c]'))
+          .sort((a,b) => +a.dataset.c - +b.dataset.c)
+          .map(s => s.textContent).join('')
+      );
+      return words.join(' ').trim();
+    }
+    const jpText  = extractText(jp);
+    const roText  = extractText(ro);
+    const lidText = extractText(lid);
     const parts = [jpText, roText, lidText].filter(Boolean);
     if (parts.length) lines.push(parts.join('\\n'));
   });
