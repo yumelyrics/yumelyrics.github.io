@@ -325,8 +325,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-links{display:flex;gap:2rem;align-items:center}
 .nav-link{font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
 .nav-link:hover{color:var(--ink)}
-.nav-badge{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);padding:.3rem .75rem;border-radius:2rem;transition:all .2s;cursor:pointer;background:none}
-.nav-badge:hover{background:var(--gold);color:var(--ink)}
 
 /* ── LOGIN GATE (fixed bar below nav) ── */
 #login-gate{position:fixed;top:61px;left:0;right:0;z-index:90;margin:0;padding:.7rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);text-align:left;display:flex;flex-direction:row;align-items:center;gap:1.2rem;flex-wrap:wrap}
@@ -788,6 +786,12 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   footer{padding:2rem 1.2rem}
   .cmsec{overflow:visible;height:auto;max-height:none;word-break:break-word;overflow-wrap:break-word}
   .cmtit{font-size:1.1rem}
+}
+@media(max-width:600px){
+  nav{padding:1rem 1.2rem}
+  .nav-link{display:none}
+  #theme-toggle{flex-shrink:0}
+  .nav-links{gap:1rem}
 }
 @media(max-width:380px){
   nav{padding:.8rem .9rem}
@@ -2137,14 +2141,23 @@ window.doCopyLyric = async () => {
 
 // ── Smooth scroll dengan easing kustom ──
 window._smoothScrollTo = function(targetY, duration){
+  // Di mobile, gunakan native smooth scroll jika tersedia dan jaraknya tidak terlalu jauh
+  const dist = Math.abs(targetY - window.scrollY);
+  const isMobile = window.innerWidth <= 900;
+  // Durasi adaptif: min 400ms, max 1400ms, proporsional dengan jarak
+  const adaptiveDuration = duration || Math.min(Math.max(dist * 0.5, 400), 1400);
+  if(isMobile && 'scrollBehavior' in document.documentElement.style){
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+    return;
+  }
   const startY = window.scrollY;
-  const dist = targetY - startY;
+  const d = targetY - startY;
   const start = performance.now();
-  function easeInOutCubic(t){ return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+  function easeOutQuart(t){ return 1 - Math.pow(1 - t, 4); }
   function step(now){
     const elapsed = now - start;
-    const progress = Math.min(elapsed/duration, 1);
-    window.scrollTo(0, startY + dist * easeInOutCubic(progress));
+    const progress = Math.min(elapsed / adaptiveDuration, 1);
+    window.scrollTo(0, startY + d * easeOutQuart(progress));
     if(progress < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
@@ -2154,8 +2167,7 @@ window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
   const y = target.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y, 900);
-  // Animasi bounce pada arrow button
+  window._smoothScrollTo(y);
   const btn = document.querySelector('.hero-actions .btn-primary');
   if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
 };
@@ -2164,13 +2176,12 @@ window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
   sec.style.display = 'block';
-  // Fade in seksi MV dulu, baru scroll
   sec.style.opacity = '0';
   sec.style.transition = 'opacity .4s ease';
   requestAnimationFrame(()=>{
     sec.style.opacity = '1';
     const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-    setTimeout(()=> window._smoothScrollTo(y, 900), 50);
+    setTimeout(()=> window._smoothScrollTo(y), 50);
   });
 };
 
