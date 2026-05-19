@@ -818,10 +818,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .lyrics-controls{flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;padding-bottom:1rem}
   .ctrl-pill{font-size:.55rem;padding:.3rem .7rem;white-space:nowrap}
   .lyrics-main{padding:2rem 1.2rem 4rem}
-  .ll-item{grid-template-columns:1fr;min-width:0}
-  .lyric-left{min-width:0}
+  .ll-item{grid-template-columns:1fr;min-width:0;overflow:visible}
+  .lyric-left{min-width:0;overflow:visible}
   .lyric-right{padding-left:0;border-left:none;padding-top:.75rem;border-top:1px solid rgba(10,8,18,.06);min-width:0}
-  .ljp,.lro,.lid{max-width:100%;width:100%;overflow:hidden;word-break:break-word;overflow-wrap:break-word}
+  .ljp,.lro,.lid{max-width:100%;width:100%;overflow:visible;word-break:break-word;overflow-wrap:break-word}
   .lyric-num{display:none}
   /* About section: full visible, no overflow */
   .cmsec{overflow:visible;height:auto;max-height:none}
