@@ -337,8 +337,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-link:hover{color:var(--ink)}
 .nav-link-mobile{display:none} /* tampil hanya di mobile */
 
-/* ── LOGIN GATE (sticky bar below nav) ── */
-#login-gate{position:sticky;top:0;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
+/* ── LOGIN GATE (fixed bar below nav) ── */
+#login-gate{position:fixed;top:0;left:0;right:0;z-index:90;margin:0;padding:.6rem 3rem;border:none;border-bottom:1px solid var(--border);background:rgba(237,231,220,.96);backdrop-filter:blur(20px);display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 body.gate-open .hero{margin-top:0}
 body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
@@ -1248,6 +1248,20 @@ ${(()=>{
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
 document.addEventListener('DOMContentLoaded', function(){
+  // Set login gate top = tinggi nav aktual, update saat resize
+  (function(){
+    var nav = document.querySelector('nav');
+    var gate = document.getElementById('login-gate');
+    if(!nav || !gate) return;
+    function syncGateTop(){
+      var h = nav.getBoundingClientRect().height;
+      gate.style.top = h + 'px';
+    }
+    syncGateTop();
+    window.addEventListener('resize', syncGateTop);
+    // Pantau perubahan nav (misal tema berubah)
+    new ResizeObserver(syncGateTop).observe(nav);
+  })();
   // Generate nomor baris lirik otomatis seperti preview-lagu
   var lineNum = 1;
   document.querySelectorAll('.ll-item').forEach(function(item){
