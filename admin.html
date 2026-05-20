@@ -1490,11 +1490,10 @@ window.fetchYoutubeCover = async () => {
 };
 
 function updateCoverBtns() {
-  const imgUrl = document.getElementById('f-img').value.trim();
   const spUrl  = document.getElementById('f-sp').value.trim();
   const ytId   = document.getElementById('f-yt').value.trim();
-  document.getElementById('cover-sp-btn').style.display = (spUrl && !imgUrl) ? 'inline-flex' : 'none';
-  document.getElementById('cover-yt-btn').style.display = (ytId  && !imgUrl) ? 'inline-flex' : 'none';
+  document.getElementById('cover-sp-btn').style.display = spUrl ? 'inline-flex' : 'none';
+  document.getElementById('cover-yt-btn').style.display = ytId  ? 'inline-flex' : 'none';
 }
 
 // Ganti updateSpotifyBtn lama → pakai updateCoverBtns
@@ -1524,11 +1523,14 @@ document.getElementById('f-sp').addEventListener('paste', async function(e){
   const pasted = (e.clipboardData||window.clipboardData).getData('text').trim();
   if(!pasted) return;
   setTimeout(async () => {
+    // set value manual karena paste event belum update value saat ini
+    document.getElementById('f-sp').value = pasted;
+    updateCoverBtns();
     const match = pasted.match(/track\/([A-Za-z0-9]+)/);
     if(!match) return;
     const trackId = match[1];
     const apiKey = ytKeyGet();
-    if(!apiKey){ toast('Isi YouTube API Key dulu biar auto-fill jalan!'); return; }
+    if(!apiKey){ toast('Isi YouTube API Key dulu biar auto-fill YT jalan!'); return; }
     toast('Ambil info Spotify...');
     try {
       const oembed = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${trackId}`);
@@ -1559,8 +1561,10 @@ document.getElementById('f-yt').addEventListener('paste', async function(e){
   const pasted = (e.clipboardData||window.clipboardData).getData('text').trim();
   if(!pasted) return;
   setTimeout(async () => {
+    document.getElementById('f-yt').value = pasted;
+    updateCoverBtns();
     const idMatch = pasted.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
-    if(!idMatch){ updateCoverBtns(); return; }
+    if(!idMatch){ return; }
     const videoId = idMatch[1];
     document.getElementById('f-yt').value = videoId;
     updateCoverBtns();
@@ -1580,6 +1584,7 @@ document.getElementById('f-yt').addEventListener('paste', async function(e){
 
 // Pantau field YouTube juga
 document.getElementById('f-yt').addEventListener('input', updateCoverBtns);
+document.getElementById('f-sp').addEventListener('input', updateCoverBtns);
 
 window.filterCatalog = (q) => {
   const clearBtn = document.getElementById('catalogSearchClear');
