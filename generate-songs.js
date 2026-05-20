@@ -432,16 +432,16 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 #ll::after{content:'';position:absolute;inset:0;z-index:10;pointer-events:all;-webkit-user-select:none;user-select:none;background:transparent}
 /* ── Admin mode: matikan semua proteksi copy ── */
 body.is-admin #ll::after{display:none}
-body.is-admin .ljp,body.is-admin .lro,body.is-admin .lid{-webkit-user-select:text;user-select:text}
+body.is-admin .ljp,body.is-admin .lro,body.is-admin .lid{-webkit-user-select:text!important;-moz-user-select:text!important;-ms-user-select:text!important;user-select:text!important}
 body.is-admin *{-webkit-user-select:text!important;user-select:text!important}
 .lyrics-container{display:flex;flex-direction:column;gap:0}
 .ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;position:relative;transition:background .15s}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
-.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
-.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
-.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%}
+.ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:visible;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:nowrap;display:inline;position:relative}
@@ -3320,6 +3320,13 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     ll.style.setProperty('-moz-user-select','none','important');
     ll.style.setProperty('-ms-user-select','none','important');
     ll.style.setProperty('user-select','none','important');
+    // Enforce langsung di elemen lirik
+    var lyricEls = ll.querySelectorAll('.ljp,.lro,.lid');
+    lyricEls.forEach(function(el){
+      el.style.setProperty('-webkit-user-select','none','important');
+      el.style.setProperty('-moz-user-select','none','important');
+      el.style.setProperty('user-select','none','important');
+    });
   }
   // Jalankan sekarang + polling
   enforceNoSelect();
