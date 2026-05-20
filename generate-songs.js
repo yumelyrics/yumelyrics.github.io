@@ -26,7 +26,35 @@ function toSlug(titleRo, titleJp, docId) {
 
 function toArtistSlug(name) {
   const s = String(name || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').substring(0, 60);
-  return s || 'artis';
+  return s || '';
+}
+
+function normalizeArtistKey(name) {
+  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function sanitizeArtistSlug(slug) {
+  return String(slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 60);
+}
+
+/** Slug artis: pakai field artistSlug di Firebase kalau ada, else dari nama. */
+function resolveArtistSlug(explicitSlug, artistName) {
+  const fromField = sanitizeArtistSlug(explicitSlug);
+  if (fromField) return fromField;
+  return toArtistSlug(artistName);
+}
+
+function allocateUniqueSlug(base, usedSet) {
+  let slug = base || 'artis';
+  if (!usedSet.has(slug)) {
+    usedSet.add(slug);
+    return slug;
+  }
+  let n = 2;
+  while (usedSet.has(`${base}-${n}`)) n++;
+  slug = `${base}-${n}`;
+  usedSet.add(slug);
+  return slug;
 }
 
 function escHtml(str) {
@@ -66,6 +94,108 @@ function obfuscateLine(str) {
     const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-all;flex-wrap:wrap;">' + innerSpans + '</span>';
     return wordSpan;
   }).join('');
+}
+
+function generateArtistIndexHTML(artists) {
+  const sorted = [...artists].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+  const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
+  const cards = sorted.map(a => `<a class="related-card" href="${escHtml(a.slug)}.html">
+    ${a.img
+      ? `<img class="related-thumb" src="${escHtml(a.img)}" alt="${escHtml(a.name)}" loading="lazy">`
+      : `<div class="rc-no-img">♪</div>`}
+    <div class="related-info">
+      <div class="related-title">${escHtml(a.name)}</div>
+      <div class="related-ro">${a.count} lagu</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a>`).join('');
+
+  const schema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Daftar Artis — YumeSubs',
+    description: `${sorted.length} artis, ${totalSongs} lagu lirik Jepang dengan terjemahan Indonesia.`,
+    url: `${BASE_URL}/artis/`,
+    inLanguage: 'id',
+    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
+  });
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="index, follow">
+<title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs</title>
+<meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.">
+<meta property="og:title" content="Daftar Artis | YumeSubs">
+<meta property="og:url" content="${BASE_URL}/artis/">
+<meta property="og:type" content="website">
+<link rel="canonical" href="${BASE_URL}/artis/">
+<link rel="icon" type="image/jpeg" href="../anime_icon.png">
+<script type="application/ld+json">${schema}</script>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--border:rgba(10,8,18,.1);--serif:'Lora',Georgia,serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif}
+[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--border:rgba(232,226,217,.1)}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh}
+.wrap{position:relative;z-index:1}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px)}
+.nav-brand{text-decoration:none}
+.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink)}
+.nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-link{font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);text-decoration:none}
+.nav-link:hover{color:var(--ink)}
+.artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic}
+.artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin-top:.6rem}
+.catalog{padding:2rem 3.5rem 5rem}
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.related-card{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border);text-decoration:none;color:inherit;transition:border-color .2s,background .2s}
+.related-card:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
+.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
+.rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--smoke);flex-shrink:0}
+.related-title{font-size:.88rem;font-weight:600}
+.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem}
+.related-arr{margin-left:auto;color:var(--gold)}
+footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3rem;flex-wrap:wrap}
+.footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
+.footer-link:hover{color:var(--gold)}
+@media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav,.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
+</style>
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a class="nav-brand" href="../index.html"><span class="nav-brand-jp">夢Lyrics</span><span class="nav-brand-en">YumeSubs</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="../index.html">Katalog</a>
+    <a class="nav-link" href="index.html">Artis</a>
+    <a class="nav-link" href="../stories.html">Cerita</a>
+    <a class="nav-link" href="../contact.html">Hubungi</a>
+  </div>
+</nav>
+<section class="artist-hero">
+  <h1 class="artist-title">Semua Artis</h1>
+  <div class="artist-count">${sorted.length} artis · ${totalSongs} lagu</div>
+</section>
+<section class="catalog">
+  <div class="related-grid">${cards}</div>
+</section>
+<footer>
+  <div>
+    <a class="footer-link" href="../index.html">← Katalog Lagu</a>
+    <a class="footer-link" href="../latihan.html">Latihan Terjemahan</a>
+    <a class="footer-link" href="../stories.html">Cerita</a>
+  </div>
+</footer>
+</div>
+</body>
+</html>`;
 }
 
 function generateArtistHTML(artistName, songs, artistSlug) {
@@ -180,6 +310,7 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
   </a>
   <div class="nav-links">
     <a class="nav-link" href="../index.html">Katalog</a>
+    <a class="nav-link" href="index.html">Artis</a>
     <a class="nav-link" href="../stories.html">Cerita</a>
     <a class="nav-link" href="../contact.html">Hubungi</a>
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle tema" aria-label="Toggle theme">
@@ -193,7 +324,7 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
   <div class="breadcrumb">
     <a href="../index.html">Beranda</a>
     <span class="breadcrumb-sep">›</span>
-    <a href="../index.html">Katalog</a>
+    <a href="index.html">Artis</a>
     <span class="breadcrumb-sep">›</span>
     <span>${escHtml(artistName)}</span>
   </div>
@@ -216,6 +347,8 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
   <div>
     <span class="footer-col-label">Jelajahi</span>
     <a class="footer-link" href="../index.html">Katalog Lengkap</a>
+    <a class="footer-link" href="index.html">Semua Artis</a>
+    <a class="footer-link" href="../latihan.html">Latihan Terjemahan</a>
     <a class="footer-link" href="../stories.html">Cerita</a>
     <a class="footer-link" href="../contact.html">Hubungi</a>
   </div>
@@ -1065,6 +1198,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   </a>
   <div class="nav-links">
     <a class="nav-link" href="../index.html">Katalog</a>
+    <a class="nav-link" href="../artis/index.html">Artis</a>
     <a class="nav-link" href="../stories.html">Cerita</a>
     <a class="nav-link" href="../contact.html">Hubungi</a>
     <a class="nav-link nav-link-mobile" href="../index.html">Katalog</a>
@@ -3668,10 +3802,11 @@ async function main() {
 
   const today = new Date().toISOString().split('T')[0];
   const urls = [
-    `  <url><loc>${BASE_URL}/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
-    `  <url><loc>${BASE_URL}/index.html</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/</loc><lastmod>${today}</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/latihan.html</loc><lastmod>${today}</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/stories.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/artis/</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>`,
   ];
   const slugMap = {};
 
@@ -3685,11 +3820,12 @@ async function main() {
     songMeta.push({song, slug:finalSlug});
   }
 
-  // Build lookup: artist -> songs, anime -> songs
+  // Build lookup: artist (normalized) -> songs, anime -> songs
   const byArtist = {};
+  const artistMeta = {};
   const byAnime  = {};
-  const artistSlugByName = {};
   const usedArtistSlugs = new Set();
+
   for(const {song, slug} of songMeta){
     const ref = {
       slug, img: song.img||'', artist: song.artist||'',
@@ -3699,16 +3835,18 @@ async function main() {
       anime: song.anime||'',
       animeId: song.animeId||'',
     };
-    if(song.artist){
-      if(!byArtist[song.artist]) byArtist[song.artist]=[];
-      byArtist[song.artist].push(ref);
-      if(!artistSlugByName[song.artist]){
-        let aSlug = toArtistSlug(song.artist);
-        let n = 2;
-        while(usedArtistSlugs.has(aSlug)) aSlug = `${toArtistSlug(song.artist)}-${n++}`;
-        usedArtistSlugs.add(aSlug);
-        artistSlugByName[song.artist] = aSlug;
+    const rawArtist = (song.artist || '').trim();
+    if(rawArtist){
+      const key = normalizeArtistKey(rawArtist);
+      if(!byArtist[key]) byArtist[key] = [];
+      byArtist[key].push(ref);
+      if(!artistMeta[key]){
+        artistMeta[key] = { displayName: rawArtist, spellings: {}, explicitSlug: '' };
       }
+      const meta = artistMeta[key];
+      meta.spellings[rawArtist] = (meta.spellings[rawArtist] || 0) + 1;
+      const explicit = sanitizeArtistSlug(song.artistSlug);
+      if(explicit) meta.explicitSlug = explicit;
     }
     if(song.anime){
       if(!byAnime[song.anime]) byAnime[song.anime]=[];
@@ -3716,28 +3854,50 @@ async function main() {
     }
   }
 
+  const artistSlugByKey = {};
+  for(const key of Object.keys(artistMeta)){
+    const meta = artistMeta[key];
+    const bestName = Object.entries(meta.spellings).sort((a, b) => b[1] - a[1])[0][0];
+    meta.displayName = bestName;
+    const base = resolveArtistSlug(meta.explicitSlug, meta.displayName) || 'artis';
+    meta.slug = allocateUniqueSlug(base, usedArtistSlugs);
+    artistSlugByKey[key] = meta.slug;
+  }
+
   if(!fs.existsSync('artis')) fs.mkdirSync('artis');
   const oldArtistFiles = fs.readdirSync('artis').filter(f => f.endsWith('.html'));
   for(const f of oldArtistFiles) fs.unlinkSync(path.join('artis', f));
+
+  const artistIndexList = [];
   console.log(`🎤 Generating ${Object.keys(byArtist).length} halaman artis...`);
-  for(const artistName of Object.keys(byArtist).sort()){
-    const aSlug = artistSlugByName[artistName];
-    const artistHtml = generateArtistHTML(artistName, byArtist[artistName], aSlug);
+  for(const key of Object.keys(byArtist).sort((a, b) => artistMeta[a].displayName.localeCompare(artistMeta[b].displayName, 'id'))){
+    const meta = artistMeta[key];
+    const aSlug = meta.slug;
+    const artistHtml = generateArtistHTML(meta.displayName, byArtist[key], aSlug);
     fs.writeFileSync(path.join('artis', `${aSlug}.html`), artistHtml, 'utf8');
-    console.log(`  ✓ artis/${aSlug}.html (${byArtist[artistName].length} lagu)`);
+    artistIndexList.push({
+      name: meta.displayName,
+      slug: aSlug,
+      count: byArtist[key].length,
+      img: byArtist[key][0]?.img || '',
+    });
+    console.log(`  ✓ artis/${aSlug}.html (${byArtist[key].length} lagu) — ${meta.displayName}`);
     urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
   }
 
+  fs.writeFileSync(path.join('artis', 'index.html'), generateArtistIndexHTML(artistIndexList), 'utf8');
+  console.log(`  ✓ artis/index.html (${artistIndexList.length} artis)`);
+
   for(const {song, slug: finalSlug} of songMeta){
-    // max 6 lagu terkait, exclude lagu itu sendiri
-    const relByArtist = song.artist
-      ? (byArtist[song.artist]||[]).filter(r=>r.slug!==finalSlug)
+    const artistKey = song.artist ? normalizeArtistKey(song.artist) : '';
+    const relByArtist = artistKey
+      ? (byArtist[artistKey]||[]).filter(r=>r.slug!==finalSlug)
       : [];
     const relByAnime = song.anime
       ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
       : [];
 
-    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,song.artist ? artistSlugByName[song.artist] : '');
+    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
     fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
     console.log(`  ✓ lagu/${finalSlug}.html`);
     const imgTag = song.img ? `
