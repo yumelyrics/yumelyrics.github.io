@@ -3235,66 +3235,86 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 })();
 </script>
 <script>
-/* ── YumeSubs Copy Protection (v2) ── */
+/* ── YumeSubs Copy Protection (v3) ── */
 (function(){
   const WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
-  const CHAR_LIMIT = 10;
 
-  function isInput(el){ const t=el&&el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
+  function isInput(el){ var t=el&&el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
 
-  /* 1. Blokir klik kanan — admin bebas */
+  /* 1. Blokir klik kanan seluruh halaman — admin bebas */
   document.addEventListener('contextmenu', function(e){
     if(window._isAdmin) return;
     e.preventDefault();
   });
 
-  /* 2. Blokir keyboard shortcut — admin bebas */
+  /* 2. Blokir keyboard shortcut — admin bebas
+     Tambahan: p (print), F12 (DevTools), F5+Ctrl (reload+view source),
+     i (Ctrl+I inspect), j (Ctrl+J console), Ctrl+Shift+I/J/C/K */
   document.addEventListener('keydown', function(e){
     if(window._isAdmin) return;
-    if((e.ctrlKey||e.metaKey) && ['a','c','u','s'].includes(e.key.toLowerCase())){
-      e.preventDefault();
+    var k = e.key.toLowerCase();
+    // Ctrl/Cmd kombinasi
+    if(e.ctrlKey||e.metaKey){
+      if(['a','c','u','s','p','i','j'].includes(k)) { e.preventDefault(); return; }
+      // Ctrl+Shift+I/J/C/K (DevTools)
+      if(e.shiftKey && ['i','j','c','k'].includes(k)) { e.preventDefault(); return; }
     }
+    // F12 & PrintScreen
+    if(k==='f12' || k==='printscreen') { e.preventDefault(); return; }
   });
 
-  /* 3. Intercept copy — potong di CHAR_LIMIT, tambah watermark — admin bebas */
+  /* 3. Blokir copy — langsung inject watermark saja, isi asli dibuang — admin bebas */
   document.addEventListener('copy', function(e){
     if(window._isAdmin) return;
-    const sel = window.getSelection().toString();
-    if(sel.length > CHAR_LIMIT){
-      const trimmed = sel.substring(0, CHAR_LIMIT);
-      e.clipboardData.setData('text/plain', trimmed + WATERMARK);
-      e.preventDefault();
-    }
+    e.clipboardData.setData('text/plain', WATERMARK);
+    e.preventDefault();
   });
 
-  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik — admin bebas */
+  /* 3b. Blokir cut juga */
+  document.addEventListener('cut', function(e){
+    if(window._isAdmin) return;
+    e.clipboardData.setData('text/plain', WATERMARK);
+    e.preventDefault();
+  });
+
+  /* 4. Blokir selectstart — seluruh halaman kecuali input/textarea — admin bebas */
   document.addEventListener('selectstart', function(e){
     if(window._isAdmin) return;
     if(isInput(e.target)) return;
-    var el = e.target;
-    while(el && el !== document.body){
-      if(el.id==='ll') { e.preventDefault(); return; }
-      el = el.parentElement;
-    }
+    e.preventDefault();
   });
 
-  /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi — admin bebas */
-  var touchTimer = null;
+  /* 5. Blokir drag teks (drag-select) — admin bebas */
+  document.addEventListener('dragstart', function(e){
+    if(window._isAdmin) return;
+    if(isInput(e.target)) return;
+    e.preventDefault();
+  });
+  document.addEventListener('drag', function(e){
+    if(window._isAdmin) return;
+    e.preventDefault();
+  });
+
+  /* 6. [MOBILE] Blokir long-press touch — langsung clear tanpa delay — admin bebas */
+  var _touchMoved = false;
   document.addEventListener('touchstart', function(e){
     if(window._isAdmin) return;
     if(isInput(e.target)) return;
-    touchTimer = setTimeout(function(){
+    _touchMoved = false;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(){
+    _touchMoved = true;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    if(window._isAdmin) return;
+    if(isInput(e.target)) return;
+    // Langsung hapus seleksi setelah tap/longpress
+    setTimeout(function(){
       if(window.getSelection) window.getSelection().removeAllRanges();
-    }, 300);
-  }, { passive: true });
-  document.addEventListener('touchend', function(){
-    if(touchTimer){ clearTimeout(touchTimer); touchTimer=null; }
-  }, { passive: true });
-  document.addEventListener('touchcancel', function(){
-    if(touchTimer){ clearTimeout(touchTimer); touchTimer=null; }
+    }, 0);
   }, { passive: true });
 
-  /* 6. [MOBILE] Kalau seleksi teks berhasil terbentuk, langsung clear — admin bebas */
+  /* 7. selectionchange — langsung clear semua seleksi di luar input — admin bebas */
   document.addEventListener('selectionchange', function(){
     if(window._isAdmin) return;
     var sel = window.getSelection();
@@ -3303,43 +3323,60 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     if(!node) return;
     var el = node.nodeType===3 ? node.parentElement : node;
     if(isInput(el)) return;
-    var txt = sel.toString();
-    if(txt.length > CHAR_LIMIT){
-      sel.removeAllRanges();
-    }
+    // Langsung clear tanpa batas CHAR_LIMIT
+    sel.removeAllRanges();
   });
 
-  /* 7. JS enforcement: paksa ulang user-select via style attribute tiap 1.2 detik
-     agar tidak bisa di-override hanya lewat DevTools CSS panel — admin bebas */
+  /* 8. enforceNoSelect — paksa user-select:none ke body + semua elemen lirik
+     via inline style (prioritas lebih tinggi dari stylesheet/DevTools) — admin bebas */
   function enforceNoSelect(){
     if(window._isAdmin) return;
-    var ll = document.getElementById('ll');
-    if(!ll) return;
-    // Inline style lebih prioritas dari semua stylesheet eksternal/DevTools
-    ll.style.setProperty('-webkit-user-select','none','important');
-    ll.style.setProperty('-moz-user-select','none','important');
-    ll.style.setProperty('-ms-user-select','none','important');
-    ll.style.setProperty('user-select','none','important');
-    // Enforce langsung di elemen lirik
-    var lyricEls = ll.querySelectorAll('.ljp,.lro,.lid');
-    lyricEls.forEach(function(el){
+    var targets = [document.body, document.getElementById('ll')].filter(Boolean);
+    // Tambah semua .ljp .lro .lid
+    var lyricEls = document.querySelectorAll('.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right');
+    lyricEls.forEach(function(el){ targets.push(el); });
+    targets.forEach(function(el){
       el.style.setProperty('-webkit-user-select','none','important');
       el.style.setProperty('-moz-user-select','none','important');
+      el.style.setProperty('-ms-user-select','none','important');
       el.style.setProperty('user-select','none','important');
     });
   }
-  // Jalankan sekarang + polling
   enforceNoSelect();
-  setInterval(enforceNoSelect, 1200);
+  setInterval(enforceNoSelect, 800);
 
-  /* 8. MutationObserver: kalau ada yang hapus/ubah style attribute pada #ll — reset */
+  /* 9. MutationObserver — pantau #ll + body, reset jika style/class diubah — admin bebas */
   (function(){
-    var ll = document.getElementById('ll');
-    if(!ll || !window.MutationObserver) return;
+    if(!window.MutationObserver) return;
     var obs = new MutationObserver(function(){
       if(!window._isAdmin) enforceNoSelect();
     });
-    obs.observe(ll, { attributes: true, attributeFilter: ['style','class'] });
+    var ll = document.getElementById('ll');
+    if(ll) obs.observe(ll, { attributes: true, attributeFilter: ['style','class'], subtree: true, childList: true });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['style','class'] });
+  })();
+
+  /* 10. Blokir window.print() override — admin bebas */
+  if(!window._isAdmin){
+    window.print = function(){ return false; };
+  }
+
+  /* 11. CSS injection via <style> tag — sebagai lapisan ganda — admin bebas */
+  (function(){
+    if(window._isAdmin) return;
+    var s = document.createElement('style');
+    s.id = 'yume-noselect';
+    s.textContent = 'body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}';
+    document.head.appendChild(s);
+    // Pastikan style tag ini tidak bisa dihapus via DOM manipulation
+    var headObs = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        m.removedNodes.forEach(function(n){
+          if(n.id==='yume-noselect') document.head.appendChild(s);
+        });
+      });
+    });
+    headObs.observe(document.head, { childList: true });
   })();
 
 })();
