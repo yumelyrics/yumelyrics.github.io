@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
+<!-- Init theme sebelum render untuk mencegah flash -->
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
@@ -36,7 +38,48 @@
   --glow-pink:rgba(196,99,122,.1);
   --glow-cyan:rgba(124,77,110,.08);
 }
-*{margin:0;padding:0;box-sizing:border-box}
+/* ── NIGHT MODE ── */
+[data-theme="dark"]{
+  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
+  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
+  --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--gold);--red:#e05252;
+}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+[data-theme="dark"] body::before{opacity:.18}
+[data-theme="dark"] .loginbox{background:var(--cream)}
+[data-theme="dark"] .fi{background:rgba(232,226,217,.04);border-bottom-color:rgba(232,226,217,.2);color:var(--ink)}
+[data-theme="dark"] textarea.fi{border-color:rgba(232,226,217,.15);background:rgba(232,226,217,.03)}
+[data-theme="dark"] .exitem{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .exitem:hover{border-color:rgba(232,226,217,.2)}
+[data-theme="dark"] .cat-table th{background:rgba(232,226,217,.04);color:var(--ash)}
+[data-theme="dark"] .cat-table td{border-bottom-color:rgba(232,226,217,.07)}
+[data-theme="dark"] .cat-table tbody tr:hover{background:rgba(232,226,217,.04)}
+[data-theme="dark"] .sub-card,[data-theme="dark"] .cm-item{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .edit-banner,[data-theme="dark"] .story-edit-banner{background:rgba(201,169,110,.07)}
+[data-theme="dark"] .loginbox{background:var(--cream);border-color:rgba(232,226,217,.12)}
+[data-theme="dark"] #loginOverlay{background:rgba(15,13,11,.98)}
+[data-theme="dark"] .adm-wrap > div:first-child{border-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .catalog-search-wrap{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .catalog-search-inp{color:var(--ink)}
+[data-theme="dark"] .sf-input,.sf-editor{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.12);color:var(--ink)}
+[data-theme="dark"] .slist-item{background:rgba(232,226,217,.02);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .tag-input-wrap{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.12)}
+[data-theme="dark"] .editor-toolbar{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+/* Theme toggle button */
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:border-color .2s,transform .2s;flex-shrink:0;position:relative;overflow:hidden;padding:0}
+#theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
+@media(hover:none){#theme-toggle:hover{transform:none}}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s,transform .25s;position:absolute}
+#theme-toggle .icon-sun{opacity:1;transform:scale(1)}
+#theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1) rotate(0)}
+[data-theme="dark"] #theme-toggle{border-color:rgba(232,226,217,.3)}
+[data-theme="dark"] #theme-toggle svg{stroke:rgba(232,226,217,.75)}
+
+*{margin:0;padding:0;box-sizing:border-box;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
 html{scroll-behavior:smooth;background:var(--ink)}
 body{color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;background:var(--paper);-webkit-touch-callout:none}
 /* grain overlay */
@@ -425,6 +468,10 @@ textarea.fi:focus{border-color:var(--gold)}
     <div class="nav-badge">Admin</div>
   </a>
   <div class="nav-right">
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
     <a class="nb" href="inbox.html" style="border-color:rgba(201,169,110,.3);color:var(--accent)">✉ Inbox</a>
     <a class="nb" href="index.html">← Beranda</a>
     <button class="logout-btn" id="logoutBtn" style="display:none" onclick="doLogout()">Logout</button>
@@ -1697,6 +1744,19 @@ document.addEventListener('copy', function(e) {
     e.preventDefault();
   }
 });
+</script>
+<script>
+// ── Theme Toggle ──
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if(isDark){
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('ym_theme','light');
+  } else {
+    document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('ym_theme','dark');
+  }
+}
 </script>
 </body>
 </html>
