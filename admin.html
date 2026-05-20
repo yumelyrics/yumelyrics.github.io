@@ -465,9 +465,9 @@ textarea.fi:focus{border-color:var(--gold)}
   <a class="nav-logo" href="index.html">
     <div class="nljp">夢字幕</div>
     <div class="nlen">YumeSubs</div>
-    <div class="nav-badge">Admin</div>
   </a>
   <div class="nav-right">
+    <div class="nav-badge" style="cursor:default">Admin</div>
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
       <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -499,16 +499,31 @@ textarea.fi:focus{border-color:var(--gold)}
   </a>
 
   <!-- TOKEN INPUT -->
-  <div style="background:rgba(10,8,18,.02);border:1px solid var(--border);padding:.9rem 1.2rem;max-width:800px;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
-    <div class="fg" style="flex:1;min-width:200px;margin:0">
-      <div class="fl">GitHub Personal Access Token</div>
-      <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
+  <div style="background:rgba(10,8,18,.02);border:1px solid var(--border);padding:1rem 1.2rem;max-width:800px;margin-bottom:1.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.5rem">
+      <div style="font-size:.58rem;font-weight:700;color:var(--smoke);letter-spacing:.22em;text-transform:uppercase">API Keys & Tokens</div>
+      <div style="display:flex;gap:.4rem">
+        <button onclick="toggleKeyVisibility()" id="key-toggle-btn" style="background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s">👁 Tampilkan</button>
+        <button onclick="clearAllKeys()" style="background:none;border:1px solid rgba(185,64,64,.25);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s">✕ Hapus Semua</button>
+      </div>
     </div>
-    <div class="fg" style="flex:1;min-width:200px;margin:0">
-      <div class="fl">YouTube Data API v3 Key <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— untuk auto-fill YT dari Spotify</span></div>
-      <input class="fi" id="yt-api-key-inp" type="password" placeholder="AIza...">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div class="fg" style="flex:1;min-width:200px;margin:0">
+        <div class="fl" style="display:flex;align-items:center;justify-content:space-between">
+          <span>GitHub Personal Access Token</span>
+          <span id="gh-key-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
+        </div>
+        <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
+      </div>
+      <div class="fg" style="flex:1;min-width:200px;margin:0">
+        <div class="fl" style="display:flex;align-items:center;justify-content:space-between">
+          <span>YouTube Data API v3 Key</span>
+          <span id="yt-key-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
+        </div>
+        <input class="fi" id="yt-api-key-inp" type="password" placeholder="AIza...">
+      </div>
     </div>
-    <div style="font-size:.6rem;color:var(--muted);line-height:1.6">GitHub: scope <code style="color:var(--accent2)">workflow</code>. YT Key: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">console.cloud.google.com</a>. Keduanya disimpen di browser.</div>
+    <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">GitHub: scope <code style="color:var(--accent2)">workflow</code> · YT Key: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → Enable YouTube Data API v3 → Create credentials → Public data · Keduanya disimpen lokal di browser.</div>
   </div>
 
   <!-- TAB NAV -->
@@ -1488,8 +1503,12 @@ function updateSpotifyBtn(){ updateCoverBtns(); }
 // ── YouTube API Key ──
 function ytKeyGet(){ return localStorage.getItem('yume_yt_key')||''; }
 function ytKeySet(k){ localStorage.setItem('yume_yt_key', k); }
-document.getElementById('yt-api-key-inp').addEventListener('input', function(){ ytKeySet(this.value.trim()); });
-(function(){ const k=ytKeyGet(); if(k) document.getElementById('yt-api-key-inp').value=k; })();
+document.getElementById('yt-api-key-inp').addEventListener('input', function(){
+  ytKeySet(this.value.trim());
+  updateKeyStatus();
+  updateAutofillBadges();
+});
+(function(){ const k=ytKeyGet(); if(k) document.getElementById('yt-api-key-inp').value=k; updateKeyStatus(); })();
 
 function updateAutofillBadges(){
   const hasKey = !!ytKeyGet();
@@ -1721,10 +1740,38 @@ let _pollTimers = {};
 function ghTokenGet(){ return localStorage.getItem('yume_gh_token')||''; }
 function ghTokenSet(t){ localStorage.setItem('yume_gh_token', t); }
 
+// ── Key visibility toggle ──
+let _keysVisible = false;
+window.toggleKeyVisibility = function(){
+  _keysVisible = !_keysVisible;
+  const type = _keysVisible ? 'text' : 'password';
+  document.getElementById('gh-token-inp').type = type;
+  document.getElementById('yt-api-key-inp').type = type;
+  document.getElementById('key-toggle-btn').textContent = _keysVisible ? '🙈 Sembunyikan' : '👁 Tampilkan';
+};
+
+window.clearAllKeys = function(){
+  if(!confirm('Hapus semua API key dari browser?')) return;
+  localStorage.removeItem('yume_gh_token');
+  localStorage.removeItem('yume_yt_key');
+  document.getElementById('gh-token-inp').value = '';
+  document.getElementById('yt-api-key-inp').value = '';
+  updateKeyStatus();
+  toast('Semua key dihapus.');
+};
+
+function updateKeyStatus(){
+  const ghEl = document.getElementById('gh-key-status');
+  const ytEl = document.getElementById('yt-key-status');
+  if(ghEl) ghEl.style.display = ghTokenGet() ? 'inline' : 'none';
+  if(ytEl) ytEl.style.display = ytKeyGet() ? 'inline' : 'none';
+}
+
 document.getElementById('gh-token-inp').addEventListener('input', function(){
   ghTokenSet(this.value.trim());
+  updateKeyStatus();
 });
-(function(){ const t=ghTokenGet(); if(t) document.getElementById('gh-token-inp').value=t; })();
+(function(){ const t=ghTokenGet(); if(t) document.getElementById('gh-token-inp').value=t; updateKeyStatus(); })();
 
 function ghHeaders(token){
   return { 'Authorization':'Bearer '+(token||ghTokenGet()), 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
