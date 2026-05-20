@@ -1611,7 +1611,7 @@ let _hasCommented = false;
 let _isAdmin = false;
 let _customPhotoURL = null;
 let _justLoggedIn = false; // flag: true hanya saat user baru saja login (bukan restore session)
-const ADMIN_EMAILS = ["khoirustsani143@gmail.com", "admin@yumesubs.com"];
+const ADMIN_EMAILS = ["khoirustsani143@gmail.com", "admin@yumesubs.com"]; // ✅ kedua email admin
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // backward compat
 
 // ── RATE LIMIT CONFIG ──
@@ -1734,6 +1734,16 @@ function updateCopyGate() {
     btn.title = 'Login dulu untuk copy lirik';
     return;
   }
+  // Admin: langsung bisa copy tanpa komentar
+  if (_isAdmin) {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = '';
+    btn.title = 'Copy semua lirik (Admin)';
+    if (label) label.textContent = 'Copy';
+    if (sub) sub.innerHTML = '<span style="color:var(--gold)">👑 Admin — copy tanpa perlu komentar.</span>';
+    return;
+  }
   if (_isBanned) {
     btn.disabled = true;
     btn.style.opacity = '.38';
@@ -1802,11 +1812,17 @@ async function applyAuthState(user) {
     if (cmBtn) cmBtn.disabled = _isBanned;
     if (_isBanned) startBanTicker(); // mulai ticker realtime untuk notice banned
 
-    // Update copy gate
+    // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
+    _isAdmin = ADMIN_EMAILS.includes(user.email);
+    window._isAdmin = _isAdmin;
+    if(_isAdmin) document.body.classList.add('is-admin');
+    else document.body.classList.remove('is-admin');
+
+    // Update copy gate (setelah _isAdmin sudah diset)
     updateCopyGate();
 
     // Tampilkan login info toast jika baru saja login (bukan restore session)
-    if (_justLoggedIn && !_hasCommented && !_isBanned) {
+    if (_justLoggedIn && !_hasCommented && !_isBanned && !_isAdmin) {
       _justLoggedIn = false;
       setTimeout(() => {
         const lt  = document.getElementById('login-toast');
@@ -1820,11 +1836,7 @@ async function applyAuthState(user) {
       _justLoggedIn = false;
     }
 
-    // Deteksi admin
-    _isAdmin = ADMIN_EMAILS.includes(user.email);
-    window._isAdmin = _isAdmin;
-    if(_isAdmin) document.body.classList.add('is-admin');
-    else document.body.classList.remove('is-admin');
+    // (admin detection already done above)
 
     // Load custom photoURL dari Firestore user_profiles
     _customPhotoURL = user.photoURL || null;
@@ -1904,11 +1916,12 @@ let _unsubCopyGate = null;
 
 function startCopyGateListener(uid) {
   if (_unsubCopyGate) { _unsubCopyGate(); _unsubCopyGate = null; }
+  // FIX: hapus filter parentId==null — konsisten dengan checkHasCommented
+  // sehingga copy langsung aktif setelah komentar apapun (komentar utama maupun reply)
   const q = query(
     collection(db, 'comments'),
     where('songId', '==', SONG_ID),
     where('uid', '==', uid),
-    where('parentId', '==', null),
     limit(1)
   );
   _unsubCopyGate = onSnapshot(q, snap => {
@@ -3221,12 +3234,12 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 })();
 </script>
 <script>
-/* ── YumeSubs Copy Protection ── */
+/* ── YumeSubs Copy Protection (v2) ── */
 (function(){
   const WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
   const CHAR_LIMIT = 10;
 
-  function isInput(el){ const t=el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
+  function isInput(el){ const t=el&&el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
 
   /* 1. Blokir klik kanan — admin bebas */
   document.addEventListener('contextmenu', function(e){
@@ -3289,12 +3302,37 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     if(!node) return;
     var el = node.nodeType===3 ? node.parentElement : node;
     if(isInput(el)) return;
-    /* Biarkan max CHAR_LIMIT karakter, sisanya di-clear */
     var txt = sel.toString();
     if(txt.length > CHAR_LIMIT){
       sel.removeAllRanges();
     }
   });
+
+  /* 7. JS enforcement: paksa ulang user-select via style attribute tiap 1.2 detik
+     agar tidak bisa di-override hanya lewat DevTools CSS panel — admin bebas */
+  function enforceNoSelect(){
+    if(window._isAdmin) return;
+    var ll = document.getElementById('ll');
+    if(!ll) return;
+    // Inline style lebih prioritas dari semua stylesheet eksternal/DevTools
+    ll.style.setProperty('-webkit-user-select','none','important');
+    ll.style.setProperty('-moz-user-select','none','important');
+    ll.style.setProperty('-ms-user-select','none','important');
+    ll.style.setProperty('user-select','none','important');
+  }
+  // Jalankan sekarang + polling
+  enforceNoSelect();
+  setInterval(enforceNoSelect, 1200);
+
+  /* 8. MutationObserver: kalau ada yang hapus/ubah style attribute pada #ll — reset */
+  (function(){
+    var ll = document.getElementById('ll');
+    if(!ll || !window.MutationObserver) return;
+    var obs = new MutationObserver(function(){
+      if(!window._isAdmin) enforceNoSelect();
+    });
+    obs.observe(ll, { attributes: true, attributeFilter: ['style','class'] });
+  })();
 
 })();
 </script>
