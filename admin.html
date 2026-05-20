@@ -1208,19 +1208,13 @@ window.generateRomaji = async () => {
 };
 
 // ── GENIUS LYRICS FETCH ──
-// Helper: coba beberapa CORS proxy secara berurutan sampai ada yang berhasil
+// Helper: ambil HTML halaman Genius lewat Cloudflare Worker
 async function fetchWithProxies(url){
-  // corsproxy.io: format baru pakai ?url=
-  const proxies = [
-    () => fetch('https://corsproxy.io/?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
-    () => fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
-    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
-  ];
-  let lastErr;
-  for(const fn of proxies){
-    try { return await fn(); } catch(e){ lastErr = e; }
-  }
-  throw new Error('Semua proxy gagal: ' + lastErr.message);
+  const WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  const proxyUrl = WORKER + '/fetch?url=' + encodeURIComponent(url);
+  const r = await fetch(proxyUrl);
+  if(!r.ok) throw new Error('Worker error: ' + r.status);
+  return r.text();
 }
 
 window.fetchGeniusLyrics = async () => {
@@ -2228,12 +2222,9 @@ function geniusFetchLyrics(url, fullTitle){
   var res = document.getElementById('gd-results');
   if(res) res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mengambil lirik dari ' + _escH(fullTitle) + '...</div>';
 
-  var p = Promise.reject(new Error('start'));
-  ['https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy?quest=','https://api.allorigins.win/raw?url='].forEach(function(base){
-    p = p.catch(function(){
-      return fetch(base + encodeURIComponent(url)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); });
-    });
-  });
+  var WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  var p = fetch(WORKER + '/fetch?url=' + encodeURIComponent(url))
+    .then(function(r){ if(!r.ok) throw new Error('Worker error: ' + r.status); return r.text(); });
 
   p.then(function(html){
     var parser = new DOMParser();
