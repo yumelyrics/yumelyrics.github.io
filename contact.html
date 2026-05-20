@@ -6,6 +6,8 @@
 <title>Hubungi Kami — YumeSubs</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <meta name="description" content="Bagikan pengalaman, saran, atau hubungi admin YumeSubs.">
+<!-- Init theme sebelum render untuk mencegah flash -->
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
@@ -28,8 +30,55 @@
   --text:   #0a0812;
   --muted:  #8c8278;
 }
+/* ── NIGHT MODE ── */
+[data-theme="dark"]{
+  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
+  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
+  --border:rgba(232,226,217,.1);--text:var(--ink);--muted:var(--ash);
+}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+[data-theme="dark"] body::before{opacity:.18}
+[data-theme="dark"] .sharing-card,[data-theme="dark"] .req-card{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .sharing-card:hover,[data-theme="dark"] .req-card:hover{background:rgba(232,226,217,.06);border-color:rgba(232,226,217,.2)}
+[data-theme="dark"] .fi{border-bottom-color:rgba(232,226,217,.2);color:var(--ink)}
+[data-theme="dark"] .fi::placeholder{color:var(--ash)}
+[data-theme="dark"] .tabs-wrap{background:rgba(15,13,11,.95)}
+[data-theme="dark"] .tab.on{color:var(--ink)}
+[data-theme="dark"] .reply-card{background:rgba(232,226,217,.04);border-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .reply-form-name,[data-theme="dark"] .reply-form-text{border-bottom-color:rgba(232,226,217,.15);color:var(--ink)}
+[data-theme="dark"] .reply-toggle-btn{border-color:rgba(232,226,217,.2);color:var(--ash)}
+[data-theme="dark"] .reply-toggle-btn:hover{border-color:rgba(232,226,217,.5);color:var(--ink)}
+[data-theme="dark"] .reply-cancel-btn{border-color:rgba(232,226,217,.2);color:var(--ash)}
+[data-theme="dark"] .admin-reply-block,[data-theme="dark"] .sharing-admin-reply{background:rgba(201,169,110,.07)}
+[data-theme="dark"] .replies-thread{border-top-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .reply-form{border-top-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .clink{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .clink:hover{background:rgba(232,226,217,.07);border-color:rgba(232,226,217,.2)}
+[data-theme="dark"] .link-preview{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+[data-theme="dark"] .link-preview:hover{background:rgba(232,226,217,.06)}
+[data-theme="dark"] .link-preview-thumb-wrap{background:var(--cream)}
+[data-theme="dark"] .sec-label{border-bottom-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .bsend{background:var(--ink);color:var(--paper)}
+[data-theme="dark"] .bsend:hover{background:var(--gold);color:var(--ink)}
+[data-theme="dark"] .page-header{border-bottom-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .tabs-wrap{border-bottom-color:rgba(232,226,217,.08)}
+[data-theme="dark"] nav{border-bottom-color:rgba(232,226,217,.08)}
+[data-theme="dark"] .nav-link{border-color:rgba(232,226,217,.2);color:var(--ash)}
+[data-theme="dark"] .nav-link:hover{border-color:var(--ash);color:var(--ink)}
+/* Theme toggle button */
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:border-color .2s,transform .2s;flex-shrink:0;position:relative;overflow:hidden;padding:0}
+#theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
+@media(hover:none){#theme-toggle:hover{transform:none}}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s,transform .25s;position:absolute}
+#theme-toggle .icon-sun{opacity:1;transform:scale(1)}
+#theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1) rotate(0)}
+[data-theme="dark"] #theme-toggle{border-color:rgba(232,226,217,.3)}
+[data-theme="dark"] #theme-toggle svg{stroke:rgba(232,226,217,.75)}
 
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;transition:background-color .3s ease,border-color .3s ease,color .2s ease}
 html{scroll-behavior:smooth;background:var(--ink)}
 body{
   background:var(--paper);color:var(--ink);
@@ -389,6 +438,10 @@ nav{
     <span class="nav-brand-en">YumeSubs</span>
   </a>
   <a class="nav-link" href="index.html">← Katalog</a>
+  <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle tema">
+    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 </nav>
 
 <!-- HEADER -->
@@ -413,11 +466,11 @@ nav{
   <div class="form-panel on" id="panel-sharing">
     <div class="fg">
       <div class="fl">Nama (opsional)</div>
-      <input class="fi" id="sh-name" placeholder="Anonim">
+      <input class="fi" id="sh-name" placeholder="">
     </div>
     <div class="fg">
       <div class="fl">Ceritain dong *</div>
-      <textarea class="fi" id="sh-text" rows="4" placeholder="Lagu ini nemenin gue pas... / Gue nemuin lagu bagus nih..."></textarea>
+      <textarea class="fi" id="sh-text" rows="4" placeholder=""></textarea>
     </div>
     <div class="fg">
       <div class="fl">Link (opsional)</div>
@@ -796,6 +849,19 @@ window.submitKontak = async () => {
     if(sel.toString().length>LIM)sel.removeAllRanges();
   });
 })();
+</script>
+<script>
+// ── Theme Toggle ──
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if(isDark){
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('ym_theme','light');
+  } else {
+    document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('ym_theme','dark');
+  }
+}
 </script>
 </body>
 </html>
