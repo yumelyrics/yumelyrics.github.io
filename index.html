@@ -458,8 +458,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     -webkit-tap-highlight-color:transparent;
   }
   #artistFilter{font-size:16px;min-height:42px;padding:.5rem .65rem}
-  .fbtn::after{left:50%;transform:translateX(-50%);width:0}
-  .fbtn.on::after{width:70%}
   .fbtn-indicator{margin-right:.2rem}
   .sc:hover .sc-img-wrap img{opacity:1}
   .sec-hd{flex-wrap:wrap;gap:.5rem;padding-top:.65rem;margin-bottom:.85rem}
@@ -567,10 +565,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   min-height:38px;padding:.45rem .5rem;text-align:center;
 }
 .fbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;border-radius:0}
-.fbtn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--ink);transition:width .25s ease}
+.fbtn::after{display:none}
+.fbtn-inner{display:inline-flex;align-items:center;justify-content:center;position:relative;padding-bottom:3px;max-width:100%}
+.fbtn-inner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:center;transition:transform .25s ease}
 .fbtn:hover{color:var(--ash)}
 .fbtn.on{color:var(--ink)}
-.fbtn.on::after{width:calc(100% - 1rem)}
+.fbtn.on .fbtn-inner::after{transform:scaleX(1)}
 [data-theme="dark"] .fbtn.on{color:var(--ink)}
 .fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
 .fbtn.on .fbtn-indicator{opacity:1}
@@ -880,9 +880,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div class="filter-row">
     <div class="filter-grid">
-      <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
-      <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
-      <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-indicator"></span>Favorit</button>
+      <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Rekomendasi</span></span></button>
+      <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Populer</span></span></button>
+      <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Favorit</span></span></button>
       <a href="artis/index.html" class="fbtn-artis-link">Semua Artis →</a>
     </div>
     <select id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
@@ -1387,6 +1387,10 @@ function rc(filter='', animate=false){
   }
 }
 
+function fbtnHtml(label) {
+  return '<span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">' + label + '</span></span>';
+}
+
 function addRipple(btn, e) {
   const r = document.createElement('span');
   r.className = 'fbtn-ripple';
@@ -1405,8 +1409,8 @@ window.toggleRec = (e) => {
   addRipple(recBtn, e);
   recBtn.classList.toggle('on', recOnly);
   popBtn.classList.remove('on');
-  recBtn.innerHTML = '<span class="fbtn-indicator"></span>' + (recOnly ? 'Semua Lagu' : 'Rekomendasi');
-  popBtn.innerHTML = '<span class="fbtn-indicator"></span>Populer';
+  recBtn.innerHTML = fbtnHtml(recOnly ? 'Semua Lagu' : 'Rekomendasi');
+  popBtn.innerHTML = fbtnHtml('Populer');
   rc(document.getElementById('searchInp').value, true);
 };
 
@@ -1431,9 +1435,9 @@ window.toggleFavFilter = (e) => {
   btn.classList.toggle('on', favOnly);
   recBtn.classList.remove('on');
   popBtn.classList.remove('on');
-  recBtn.innerHTML = '<span class="fbtn-indicator"></span>Rekomendasi';
-  popBtn.innerHTML = '<span class="fbtn-indicator"></span>Populer';
-  btn.innerHTML = '<span class="fbtn-indicator"></span>' + (favOnly ? 'Semua Lagu' : 'Favorit');
+  recBtn.innerHTML = fbtnHtml('Rekomendasi');
+  popBtn.innerHTML = fbtnHtml('Populer');
+  btn.innerHTML = fbtnHtml(favOnly ? 'Semua Lagu' : 'Favorit');
   if (favOnly && getFavs().length === 0) toast('Belum ada favorit — buka halaman lagu lalu ketuk ☆ Favorit');
   rc(document.getElementById('searchInp').value, true);
 };
@@ -1446,8 +1450,8 @@ window.togglePop = (e) => {
   addRipple(popBtn, e);
   popBtn.classList.toggle('on', popOnly);
   recBtn.classList.remove('on');
-  popBtn.innerHTML = '<span class="fbtn-indicator"></span>' + (popOnly ? 'Semua Lagu' : 'Populer');
-  recBtn.innerHTML = '<span class="fbtn-indicator"></span>Rekomendasi';
+  popBtn.innerHTML = fbtnHtml(popOnly ? 'Semua Lagu' : 'Populer');
+  recBtn.innerHTML = fbtnHtml('Rekomendasi');
   rc(document.getElementById('searchInp').value, true);
 };
 
