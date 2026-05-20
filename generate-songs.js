@@ -1068,7 +1068,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     </div>
 
     <!-- YT / Nico video -->
-    ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem;display:none">
+    ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem">
       <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Video</div>
       <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>` : ''}
@@ -2360,14 +2360,8 @@ window._scrollToLyrics = function(){
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  sec.style.display = 'block';
-  sec.style.opacity = '0';
-  sec.style.transition = 'opacity .4s ease';
-  requestAnimationFrame(()=>{
-    sec.style.opacity = '1';
-    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-    setTimeout(()=> window._smoothScrollTo(y), 50);
-  });
+  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+  window._smoothScrollTo(y);
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
