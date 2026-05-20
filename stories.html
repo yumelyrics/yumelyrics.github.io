@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <title>Cerita — YumeSubs</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap"></noscript>
 <style>
 /* ── TOKENS (Light Mode) ── */
 :root {
@@ -52,37 +53,38 @@
 }
 
 [data-theme="dark"] {
-  --bg:         #0a0812;
-  --paper:      #0a0812;
-  --cream:      #120f1c;
-  --ink:        #f0eaff;
-  --smoke:      #4a4060;
-  --ash:        #7a6a9a;
-  --bg-card:    rgba(255,255,255,.03);
-  --bg-card-hover: rgba(201,169,110,.06);
-  --border:     rgba(255,255,255,.08);
-  --border-hover: rgba(201,169,110,.35);
-  --text:       #f0eaff;
-  --muted:      #7a6a9a;
-  --faint:      #4a4060;
-  --gold:       #c9a96e;
+  --ink:        #e8e2d9;
+  --paper:      #0f0d0b;
+  --cream:      #1a1714;
+  --smoke:      #4a4540;
+  --ash:        #7a7068;
+  --gold:       #d4a96e;
   --gold2:      #e8c98a;
   --rose:       #d4758a;
-  --accent:     #d4758a;
-  --accent-alt: #c9a96e;
+  --bg:         var(--paper);
+  --bg-card:    rgba(232,226,217,.03);
+  --bg-card-hover: rgba(201,169,110,.06);
+  --border:     rgba(232,226,217,.1);
+  --border-hover: rgba(201,169,110,.35);
+  --text:       var(--ink);
+  --muted:      var(--ash);
+  --faint:      var(--smoke);
+  --accent:     var(--rose);
+  --accent-alt: var(--gold);
   --tag-curhat-c: #c084d4; --tag-curhat-b: rgba(192,132,212,.12);
   --tag-review-c: #6ecf92; --tag-review-b: rgba(110,207,146,.1);
   --tag-opini-c:  #7ab4f0; --tag-opini-b:  rgba(122,180,240,.1);
   --tag-random-c: #f0b484; --tag-random-b: rgba(240,180,132,.1);
-  --input-bg:   rgba(255,255,255,.04);
-  --input-border: rgba(255,255,255,.12);
-  --nav-bg:     rgba(10,8,18,.88);
-  --nav-border: rgba(255,255,255,.07);
-  --footer-bg:  #060410;
+  --input-bg:   rgba(232,226,217,.04);
+  --input-border: rgba(232,226,217,.12);
+  --nav-bg:     rgba(15,13,11,.92);
+  --nav-border: rgba(232,226,217,.1);
+  --footer-bg:  #070604;
   --footer-text: rgba(200,191,176,.45);
-  --grain-op:   .55;
-  --bg-main:    #0a0812;
+  --grain-op:   .18;
+  --bg-main:    var(--paper);
 }
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--bg-main)}
@@ -105,55 +107,34 @@ body::before{
   transition:opacity .3s;
 }
 
-/* Dark mode radial glow */
-[data-theme="dark"] body::after{
-  content:'';
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(124,77,110,.07) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(201,169,110,.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 60% 80%, rgba(196,99,122,.04) 0%, transparent 50%);
-}
-
 .wrap{position:relative;z-index:1}
 
-/* ── NAV ── */
-nav{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 3rem;height:62px;
-  border-bottom:1px solid var(--nav-border);
-  position:sticky;top:0;z-index:100;
-  background:var(--nav-bg);
-  backdrop-filter:blur(20px);
-  transition:background .3s, border-color .3s;
-  gap:1rem;
-}
-.nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none;flex-shrink:0}
-.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--gold);letter-spacing:.1em;line-height:1}
-.nav-brand-en{font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
-.nav-links{display:flex;gap:.15rem;align-items:center;flex-shrink:0}
-.nav-link{
-  font-size:.65rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--muted);text-decoration:none;
-  padding:.4rem .85rem;transition:color .2s, background .2s;
-  border-radius:2rem;
-}
-.nav-link:hover,.nav-link.on{color:var(--text);background:rgba(201,169,110,.08)}
-.nav-link.on{color:var(--gold)}
-
-/* Night/Light toggle */
-.theme-toggle{
-  display:flex;align-items:center;gap:.5rem;
-  background:none;border:1px solid var(--border);
-  padding:.35rem .7rem;cursor:pointer;
-  font-family:var(--sans);font-size:.58rem;font-weight:700;
-  letter-spacing:.15em;text-transform:uppercase;
-  color:var(--muted);transition:all .2s;flex-shrink:0;
-  border-radius:2rem;
-}
-.theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
-.theme-toggle-icon{font-size:.85rem;line-height:1;transition:transform .3s}
-[data-theme="dark"] .theme-toggle-icon{transform:rotate(180deg)}
+/* ── NAV (sama index.html) ── */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;min-width:0;background:rgba(245,240,234,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--nav-border);isolation:isolate;transition:background .3s,border-color .3s}
+[data-theme="dark"] nav{background:var(--nav-bg)}
+.nav-logo{display:flex;flex-direction:column;gap:.05rem;text-decoration:none;cursor:pointer;flex-shrink:0;min-width:0}
+.nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap;line-height:1;letter-spacing:.1em}
+.nlen{font-size:.55rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;line-height:1;font-weight:700}
+.nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
+#nav-menu-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;flex-direction:column;padding:0}
+#nav-menu-btn span{display:block;width:14px;height:1.5px;background:var(--ash);transition:transform .25s ease,opacity .2s ease,width .25s ease}
+#nav-menu-btn span:nth-child(2){margin:3px 0}
+#nav-menu-btn.open span:nth-child(1){transform:translateY(4.5px) rotate(45deg)}
+#nav-menu-btn.open span:nth-child(2){opacity:0;width:0}
+#nav-menu-btn.open span:nth-child(3){transform:translateY(-4.5px) rotate(-45deg)}
+#nav-dropdown{position:absolute;top:calc(100% + 1px);right:3rem;z-index:200;background:var(--paper);border:1px solid var(--border);display:none;flex-direction:column;min-width:160px;max-width:calc(100vw - 2rem);box-shadow:0 8px 32px rgba(10,8,18,.1)}
+[data-theme="dark"] #nav-dropdown{background:var(--cream)}
+#nav-dropdown.open{display:flex}
+.nd-item{font-family:var(--sans);font-size:.68rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;padding:.75rem 1.2rem;width:100%;font-weight:600;text-decoration:none;display:block;white-space:nowrap}
+.nd-item:hover,.nd-item.on{color:var(--ink);background:var(--cream)}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;position:relative;overflow:hidden;padding:0;flex-shrink:0}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute}
+#theme-toggle .icon-sun{opacity:1}
+#theme-toggle .icon-moon{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1}
+[data-theme="dark"] #theme-toggle{border-color:rgba(232,226,217,.3)}
+[data-theme="dark"] #theme-toggle svg{stroke:rgba(232,226,217,.75)}
 
 /* ── HERO ── */
 .hero{
@@ -488,10 +469,9 @@ footer{
   .section-divider{padding:0 1.5rem}
 }
 @media(max-width:600px){
-  nav{padding:0 1rem;height:54px}
-  .nav-brand-en{display:none}
-  .nav-link{font-size:.58rem;padding:.35rem .5rem;letter-spacing:.08em}
-  .theme-toggle span{display:none}
+  nav{padding:.85rem 1rem}
+  #nav-dropdown{right:1rem}
+  .nlen{display:none}
   .hero{padding:2.5rem 1rem 1.5rem}
   .filter-wrap{padding:0 1rem 1.5rem}
   .story-grid{padding:0 0 4rem}
@@ -501,7 +481,7 @@ footer{
   .toast{bottom:5rem;right:1rem;left:1rem;text-align:center}
 }
 @media(max-width:380px){
-  .nav-link.hide-xs{display:none}
+  #nav-dropdown{right:.85rem}
 }
 
 /* Copy protection */
@@ -512,20 +492,27 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 <body>
 <div class="wrap">
 <nav>
-  <a class="nav-brand" href="index.html">
-    <div class="nav-brand-jp">夢字幕</div>
-    <div class="nav-brand-en">YumeSubs</div>
+  <a class="nav-logo" href="index.html">
+    <div class="nljp">夢Lyrics</div>
+    <div class="nlen">YumeSubs</div>
   </a>
   <div class="nav-links">
-    <a class="nav-link hide-xs" href="index.html">Katalog</a>
-    <a class="nav-link hide-xs" href="resources.html">Resources</a>
-    <a class="nav-link on" href="stories.html">Cerita</a>
-    <a class="nav-link" href="contact.html">Hubungi</a>
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button id="nav-menu-btn" onclick="toggleNavMenu()" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-    <span class="theme-toggle-icon" id="themeIcon">☀</span>
-    <span id="themeLabel">Light</span>
-  </button>
+  <div id="nav-dropdown">
+    <a class="nd-item" href="index.html">Katalog</a>
+    <a class="nd-item" href="artis/index.html">Artis</a>
+    <a class="nd-item" href="resources.html">Resources</a>
+    <a class="nd-item on" href="stories.html">Cerita</a>
+    <a class="nd-item" href="contact.html">Hubungi</a>
+    <a class="nd-item" href="latihan.html">Latihan</a>
+  </div>
 </nav>
 
 <!-- LIST VIEW -->
@@ -595,25 +582,37 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 
 <!-- Theme toggle script -->
 <script>
-(function(){
-  const saved = localStorage.getItem('yume-theme') || 'light';
-  applyTheme(saved);
-})();
-
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  const icon = document.getElementById('themeIcon');
-  const label = document.getElementById('themeLabel');
-  if(icon) icon.textContent = t === 'dark' ? '☽' : '☀';
-  if(label) label.textContent = t === 'dark' ? 'Night' : 'Light';
-}
-
 function toggleTheme(){
-  const cur = document.documentElement.getAttribute('data-theme') || 'light';
-  const next = cur === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('yume-theme', next);
-  applyTheme(next);
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  if(isDark){
+    root.removeAttribute('data-theme');
+    localStorage.setItem('ym_theme','light');
+  } else {
+    root.setAttribute('data-theme','dark');
+    localStorage.setItem('ym_theme','dark');
+  }
 }
+function toggleNavMenu(){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open);
+}
+function closeNavMenu(){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  dd.classList.remove('open');
+  btn.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', function(e){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  if(!dd || !dd.classList.contains('open')) return;
+  if(!btn.contains(e.target) && !dd.contains(e.target)) closeNavMenu();
+});
 </script>
 
 <script type="module">

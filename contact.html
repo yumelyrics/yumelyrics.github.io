@@ -64,9 +64,8 @@
 [data-theme="dark"] .bsend:hover{background:var(--gold);color:var(--ink)}
 [data-theme="dark"] .page-header{border-bottom-color:rgba(232,226,217,.08)}
 [data-theme="dark"] .tabs-wrap{border-bottom-color:rgba(232,226,217,.08)}
-[data-theme="dark"] nav{border-bottom-color:rgba(232,226,217,.08)}
-[data-theme="dark"] .nav-link{border-color:rgba(232,226,217,.2);color:var(--ash)}
-[data-theme="dark"] .nav-link:hover{border-color:var(--ash);color:var(--ink)}
+[data-theme="dark"] #nav-menu-btn span{background:rgba(232,226,217,.75)}
+[data-theme="dark"] #nav-menu-btn.open span,[data-theme="dark"] #nav-menu-btn:hover span{background:var(--ink)}
 /* Theme toggle button */
 #theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:border-color .2s,transform .2s;flex-shrink:0;position:relative;overflow:hidden;padding:0}
 #theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
@@ -97,22 +96,23 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 
 .wrap{position:relative;z-index:1}
 
-/* ── NAV ── */
-nav{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);
-  position:sticky;top:0;z-index:100;
-  background:rgba(245,240,234,.92);backdrop-filter:blur(20px);
-}
-.nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
-.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
-.nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
-.nav-link{
-  font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--ash);text-decoration:none;padding:.4rem .85rem;
-  border:1px solid rgba(10,8,18,.15);transition:all .2s;
-}
-.nav-link:hover{color:var(--ink);border-color:var(--ink)}
+/* ── NAV (sama index.html) ── */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;min-width:0;background:rgba(245,240,234,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);isolation:isolate}
+.nav-logo{display:flex;flex-direction:column;gap:.05rem;text-decoration:none;cursor:pointer;flex-shrink:0;min-width:0}
+.nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap;line-height:1;letter-spacing:.1em}
+.nlen{font-size:.55rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;line-height:1;font-weight:700}
+.nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
+#nav-menu-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;flex-direction:column;padding:0}
+#nav-menu-btn span{display:block;width:14px;height:1.5px;background:var(--ash);transition:transform .25s ease,opacity .2s ease,width .25s ease}
+#nav-menu-btn span:nth-child(2){margin:3px 0}
+#nav-menu-btn.open span:nth-child(1){transform:translateY(4.5px) rotate(45deg)}
+#nav-menu-btn.open span:nth-child(2){opacity:0;width:0}
+#nav-menu-btn.open span:nth-child(3){transform:translateY(-4.5px) rotate(-45deg)}
+#nav-dropdown{position:absolute;top:calc(100% + 1px);right:3rem;z-index:200;background:var(--paper);border:1px solid var(--border);display:none;flex-direction:column;min-width:160px;max-width:calc(100vw - 2rem);box-shadow:0 8px 32px rgba(10,8,18,.1)}
+[data-theme="dark"] #nav-dropdown{background:var(--cream)}
+#nav-dropdown.open{display:flex}
+.nd-item{font-family:var(--sans);font-size:.68rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;padding:.75rem 1.2rem;width:100%;font-weight:600;text-decoration:none;display:block;white-space:nowrap}
+.nd-item:hover,.nd-item.on{color:var(--ink);background:var(--cream)}
 
 /* ── PAGE HEADER ── */
 .page-header{
@@ -336,7 +336,9 @@ nav{
 @media(max-width:700px){
   /* Nav */
   nav{padding:1rem 1.1rem}
-  .nav-brand-jp{font-size:.95rem}
+  nav{padding:.85rem 1rem}
+  #nav-dropdown{right:1rem}
+  .nljp{font-size:.95rem}
   .nav-link{font-size:.6rem;padding:.45rem .75rem;letter-spacing:.12em}
 
   /* Header */
@@ -434,16 +436,26 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <a class="nav-brand" href="index.html">
-    <span class="nav-brand-jp">夢字幕</span>
-    <span class="nav-brand-en">YumeSubs</span>
+  <a class="nav-logo" href="index.html">
+    <div class="nljp">夢Lyrics</div>
+    <div class="nlen">YumeSubs</div>
   </a>
-  <div style="display:flex;align-items:center;gap:1rem">
-    <a class="nav-link" href="index.html">← Katalog</a>
-    <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle tema">
-      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>
+  <div class="nav-links">
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
+    <button id="nav-menu-btn" onclick="toggleNavMenu()" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div id="nav-dropdown">
+    <a class="nd-item" href="index.html">Katalog</a>
+    <a class="nd-item" href="artis/index.html">Artis</a>
+    <a class="nd-item" href="resources.html">Resources</a>
+    <a class="nd-item" href="stories.html">Cerita</a>
+    <a class="nd-item on" href="contact.html">Hubungi</a>
+    <a class="nd-item" href="latihan.html">Latihan</a>
   </div>
 </nav>
 
@@ -865,6 +877,26 @@ function toggleTheme(){
     localStorage.setItem('ym_theme','dark');
   }
 }
+function toggleNavMenu(){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open);
+}
+function closeNavMenu(){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  dd.classList.remove('open');
+  btn.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', function(e){
+  const btn = document.getElementById('nav-menu-btn');
+  const dd  = document.getElementById('nav-dropdown');
+  if(!dd || !dd.classList.contains('open')) return;
+  if(!btn.contains(e.target) && !dd.contains(e.target)) closeNavMenu();
+});
 </script>
 </body>
 </html>
