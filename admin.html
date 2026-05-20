@@ -1144,64 +1144,31 @@ onSnapshot(
 );
 
 // ── KUROSHIRO ROMAJI GENERATOR ──
-// Pakai Kuroshiro (UMD) + KuromojiAnalyzer — kompatibel dengan non-module script
-let _kuroshiro = null;
-let _kuroReady = false;
-let _kuroLoading = false;
-
-async function initKuroshiro(){
-  if(_kuroReady) return true;
-  if(_kuroLoading){
-    await new Promise(res => { const t = setInterval(() => { if(!_kuroLoading){ clearInterval(t); res(); }}, 200); });
-    return _kuroReady;
-  }
-  _kuroLoading = true;
-  try {
-    if(typeof Kuroshiro === 'undefined'){
-      await loadScript('https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js');
-    }
-    if(typeof KuromojiAnalyzer === 'undefined'){
-      await loadScript('https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
-    }
-    const KuroshiroClass = (typeof Kuroshiro === 'function') ? Kuroshiro : Kuroshiro.default;
-    const KuromojiClass = (typeof KuromojiAnalyzer === 'function') ? KuromojiAnalyzer : KuromojiAnalyzer.default;
-    _kuroshiro = new KuroshiroClass();
-    await _kuroshiro.init(new KuromojiClass());
-    _kuroReady = true;
-    _kuroLoading = false;
-    return true;
-  } catch(e){
-    _kuroLoading = false;
-    toast('Gagal init Romaji engine: ' + e.message);
-    return false;
-  }
-}
-
+// Generate Romaji via Anthropic API (ringan, tidak perlu download dictionary)
 window.generateRomaji = async () => {
   const btn = document.getElementById('romaji-gen-btn');
   const raw = document.getElementById('bulkInput').value.trim();
   if(!raw){ toast('Bulk area kosong!'); return; }
   btn.disabled = true;
-  btn.textContent = '⏳ Load engine...';
-  toast('Inisialisasi mesin romaji...');
-  const ready = await initKuroshiro();
-  if(!ready){ btn.disabled = false; btn.textContent = '🈳 Generate Romaji'; return; }
   btn.textContent = '⏳ Generate...';
-  toast('Generate romaji...');
+  toast('Generate romaji via AI...');
   try {
     const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-    const results = [];
-    for(const para of paragraphs){
-      const lines = para.split('\n').map(l => l.trim()).filter(Boolean);
-      if(lines.length === 1){
-        const jp = lines[0];
-        const ro = await _kuroshiro.convert(jp, { to: 'romaji', romajiSystem: 'hepburn', mode: 'spaced' });
-        results.push(jp + '\n' + ro);
-      } else {
-        results.push(para);
-      }
-    }
-    document.getElementById('bulkInput').value = results.join('\n\n');
+    const prompt = `Konversi setiap baris teks Jepang berikut ke romaji Hepburn.\nFormat output: untuk setiap baris JP, tulis baris JP asli lalu baris romajinya di bawahnya. Pisahkan grup dengan baris kosong.\nJika suatu baris sudah romaji/latin, biarkan saja.\nJangan tambahkan penjelasan apapun, hanya output teks.\n\nInput:\n${paragraphs.join('\n\n')}`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const result = data.content && data.content[0] && data.content[0].text;
+    if(!result) throw new Error('Tidak ada response dari AI');
+    document.getElementById('bulkInput').value = result.trim();
     toast('✅ Romaji berhasil di-generate!');
   } catch(e){
     toast('Gagal generate romaji: ' + e.message);
