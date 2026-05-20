@@ -487,9 +487,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   footer{padding:2rem 1rem 1.5rem!important}
   .toast{left:1rem;right:1rem;bottom:max(5.5rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)))}
   #catView{padding-bottom:calc(5.5rem + env(safe-area-inset-bottom,0px))}
-  #chat-fab{bottom:max(1.5rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));width:48px;height:48px}
+  #float-login-btn,#float-avatar-wrap,#chat-fab{
+    bottom:max(1.5rem,env(safe-area-inset-bottom,0px));
+  }
+  #float-login-btn,#float-avatar-wrap{left:max(1rem,env(safe-area-inset-left,0px))}
+  #chat-fab{right:max(1rem,env(safe-area-inset-right,0px));width:48px;height:48px}
+  #float-avatar-wrap{width:48px;height:48px;padding:0;max-width:none}
+  #float-login-btn{min-height:48px;padding:0 .9rem;font-size:.58rem;max-width:46vw}
   #chat-box{bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(.75rem,env(safe-area-inset-right,0px));left:max(.75rem,env(safe-area-inset-left,0px));width:auto;height:min(55dvh,420px)}
-  #float-login-btn,#float-avatar-wrap{bottom:max(1rem,env(safe-area-inset-bottom,0px));left:max(1rem,env(safe-area-inset-left,0px));max-width:46vw;padding:.55rem .75rem;font-size:.58rem}
   #nav-user-dropdown{bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));left:max(1rem,env(safe-area-inset-left,0px));width:auto;max-width:calc(100vw - 2rem)}
   #nav-avatar-bubble{bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px))}
 }
@@ -688,7 +693,73 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .ep-img-btn:hover{background:rgba(10,8,18,.08)}
 .ep-img-status{font-size:.62rem;color:var(--ash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm-login-gate-hidden{display:none}
-/* floating avatar bubble */
+/* ── Floating pojok kiri/kanan: Login, Profil, Chat sejajar ── */
+#float-login-btn,#float-avatar-wrap,#chat-fab{
+  position:fixed;z-index:999;
+  bottom:max(1.5rem,env(safe-area-inset-bottom,0px));
+}
+#float-login-btn,#float-avatar-wrap{left:max(1.5rem,env(safe-area-inset-left,0px))}
+#chat-fab{
+  right:max(1.5rem,env(safe-area-inset-right,0px));left:auto;top:auto;
+  width:48px;height:48px;min-width:48px;min-height:48px;
+}
+#float-avatar-wrap{
+  width:48px;height:48px;min-width:48px;min-height:48px;margin:0;padding:0;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;box-sizing:border-box;overflow:visible;line-height:0;
+}
+#float-avatar-wrap.is-on{display:flex}
+#float-avatar-wrap .float-avatar-face,
+#float-avatar-wrap #nav-avatar-ph,
+#float-avatar-wrap #nav-avatar-img,
+#float-avatar-wrap .nav-avatar{
+  width:48px!important;height:48px!important;min-width:48px;min-height:48px;
+  max-width:48px;max-height:48px;border-radius:50%;box-sizing:border-box;
+  flex-shrink:0;margin:0;padding:0;
+  border:1px solid var(--border);
+  box-shadow:0 4px 20px rgba(10,8,18,.15);
+}
+#float-avatar-wrap #nav-avatar-ph,
+#float-avatar-wrap .nav-avatar-placeholder.float-avatar-face{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cream);font-size:1rem;font-weight:700;color:var(--ash);
+}
+#float-avatar-wrap #nav-avatar-img,
+#float-avatar-wrap .nav-avatar.float-avatar-face{
+  display:block;object-fit:cover;background:var(--cream);
+}
+#float-avatar-wrap .nav-avatar:hover,
+#float-avatar-wrap .nav-avatar-placeholder:hover{transform:none}
+#float-login-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  min-width:48px;min-height:48px;padding:0 1.1rem;margin:0;
+  background:var(--paper);border:1px solid var(--border);color:var(--ink);
+  font-family:var(--en);font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;
+  cursor:pointer;box-shadow:0 4px 20px rgba(10,8,18,.1);font-weight:700;
+  transition:color .2s,border-color .2s,background-color .2s,opacity .2s;
+  box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+}
+#float-login-btn:hover{background:var(--cream)}
+#float-avatar-wrap #notif-badge{
+  position:absolute;top:-4px;right:-4px;left:auto;
+  background:var(--rose);color:#fff;font-size:.55rem;font-weight:700;
+  min-width:18px;height:18px;border-radius:9px;display:none;
+  align-items:center;justify-content:center;padding:0 4px;
+  border:2px solid var(--paper);z-index:10;pointer-events:none;line-height:1;
+}
+#float-avatar-wrap #notif-badge.show{display:flex}
+#float-avatar-wrap #report-notif-badge{
+  position:absolute;top:-4px;right:-4px;left:auto;
+  background:var(--red);color:#fff;font-size:.5rem;font-weight:700;
+  min-width:16px;height:16px;border-radius:8px;display:none;
+  align-items:center;justify-content:center;padding:0 3px;
+  border:2px solid var(--paper);z-index:10;pointer-events:none;line-height:1;
+}
+#float-avatar-wrap #report-notif-badge.show{display:flex}
+#float-avatar-wrap #nav-banned-overlay{
+  position:absolute;bottom:-2px;right:-2px;left:auto;top:auto;
+}
+/* floating avatar bubble (legacy) */
 #nav-avatar-bubble{position:fixed;bottom:1.4rem;right:1.4rem;z-index:200;display:none;cursor:pointer;user-select:none}
 /* Ban badge */
 .float-avatar-banned #nav-avatar-ph,.float-avatar-banned #nav-avatar-img{border-color:var(--red)!important}
@@ -1679,8 +1750,8 @@ onAuthStateChanged(auth, async user => {
     _isAdmin = user.email === ADMIN_EMAIL;
 
     // Tampilkan UI dulu sebelum Firestore calls
-    loginBtn.style.display   = 'none';
-    avatarWrap.style.display = 'flex';
+    loginBtn.style.display = 'none';
+    avatarWrap.classList.add('is-on');
 
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName||'User');
     nudName.textContent  = displayName;
@@ -1729,8 +1800,8 @@ onAuthStateChanged(auth, async user => {
     _banReason = '';
     _banUntil = undefined;
     if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-    loginBtn.style.display   = '';
-    avatarWrap.style.display = 'none';
+    loginBtn.style.display = '';
+    avatarWrap.classList.remove('is-on');
     document.getElementById('notif-badge').classList.remove('show');
     const editBtn = document.getElementById('nud-edit-profile-btn');
     if (editBtn) editBtn.style.display = 'none';
@@ -1743,29 +1814,29 @@ onAuthStateChanged(auth, async user => {
 function _updateAvatar(photoURL, displayName) {
   const wrap = document.getElementById('float-avatar-wrap');
   if (!wrap) return;
-  // Hapus semua child lama, render ulang bersih
-  const notifBadge = document.getElementById('notif-badge');
+  const notifBadge = wrap.querySelector('#notif-badge');
+  const reportBadge = wrap.querySelector('#report-notif-badge');
+  const bannedOverlay = wrap.querySelector('#nav-banned-overlay');
   wrap.innerHTML = '';
   if (photoURL) {
     const img = document.createElement('img');
     img.id = 'nav-avatar-img';
-    img.className = 'nav-avatar';
+    img.className = 'nav-avatar float-avatar-face';
     img.src = photoURL;
     img.alt = 'avatar';
     img.setAttribute('referrerpolicy', 'no-referrer');
-    img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,110,180,.5);box-shadow:0 4px 24px rgba(255,110,180,.4)';
     img.onerror = () => { _updateAvatar(null, displayName); };
     wrap.appendChild(img);
   } else {
     const ph = document.createElement('div');
     ph.id = 'nav-avatar-ph';
-    ph.className = 'nav-avatar-placeholder';
-    ph.style.cssText = 'width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;box-shadow:0 4px 24px rgba(255,110,180,.4);border:2px solid rgba(255,110,180,.5)';
+    ph.className = 'nav-avatar-placeholder float-avatar-face';
     ph.textContent = (displayName||'?')[0].toUpperCase();
     wrap.appendChild(ph);
   }
-  // Re-append notif badge (sudah ada di HTML, pindahkan kembali)
   if (notifBadge) wrap.appendChild(notifBadge);
+  if (reportBadge) wrap.appendChild(reportBadge);
+  if (bannedOverlay) wrap.appendChild(bannedOverlay);
 }
 
 // ── Slug generator (sama dengan generate-songs.js) ──
@@ -2139,9 +2210,9 @@ window.addEventListener('resize', fixBg);
   });
 })();
 </script>
-<div id="float-avatar-wrap" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:none;cursor:pointer" onclick="toggleDropdown()">
-  <div class="nav-avatar-placeholder" id="nav-avatar-ph" style="width:44px;height:44px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:var(--ash);box-shadow:0 4px 24px rgba(10,8,18,.15);border:1px solid var(--border);transition:transform .2s"></div>
-  <div id="notif-badge" style="position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;font-size:.55rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--paper);z-index:10;pointer-events:none;line-height:1"></div>
+<div id="float-avatar-wrap" onclick="toggleDropdown()" aria-label="Profil">
+  <div class="nav-avatar-placeholder float-avatar-face" id="nav-avatar-ph"></div>
+  <div id="notif-badge"></div>
   <div id="report-notif-badge" title="Ada laporan baru">🚨</div>
   <div id="nav-banned-overlay" title="Akunmu dibanned">🚫</div>
 </div>
@@ -2177,13 +2248,13 @@ window.addEventListener('resize', fixBg);
     </div>
   </div>
 </div>
-<button id="float-login-btn" onclick="doLogin()" style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:999;display:inline-flex;align-items:center;gap:.5rem;background:var(--paper);border:1px solid var(--border);color:var(--ink);font-family:'Syne',sans-serif;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;padding:.6rem 1.1rem;cursor:pointer;box-shadow:0 4px 24px rgba(10,8,18,.1);font-weight:700;transition:color .2s,border-color .2s,background-color .2s,opacity .2s" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='var(--paper)'">
+<button id="float-login-btn" onclick="doLogin()" type="button">
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
   Login
 </button>
-<!-- ── FLOATING GROUP CHAT ── -->
+<!-- ── FLOATING GROUP CHAT (posisi di <head>; di sini hanya hover/ukuran) ── -->
 <style>
-#chat-fab{position:fixed;bottom:max(1.5rem,env(safe-area-inset-bottom,0px));right:max(1.5rem,env(safe-area-inset-right,0px));top:auto;z-index:999;width:44px;height:44px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(10,8,18,.2);transition:transform .2s,box-shadow .2s,opacity .2s,pointer-events .2s}
+#chat-fab{border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(10,8,18,.2);transition:transform .2s,box-shadow .2s,opacity .2s,pointer-events .2s;box-sizing:border-box}
 #chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(10,8,18,.3)}
 #chat-fab.hidden{opacity:0;pointer-events:none}
 #chat-fab svg{width:20px;height:20px;stroke:var(--paper);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
