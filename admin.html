@@ -1158,13 +1158,15 @@ async function initKuroshiro(){
   _kuroLoading = true;
   try {
     if(typeof Kuroshiro === 'undefined'){
-      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js');
+      await loadScript('https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js');
     }
     if(typeof KuromojiAnalyzer === 'undefined'){
-      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
+      await loadScript('https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
     }
-    _kuroshiro = new Kuroshiro();
-    await _kuroshiro.init(new KuromojiAnalyzer());
+    const KuroshiroClass = (typeof Kuroshiro === 'function') ? Kuroshiro : Kuroshiro.default;
+    const KuromojiClass = (typeof KuromojiAnalyzer === 'function') ? KuromojiAnalyzer : KuromojiAnalyzer.default;
+    _kuroshiro = new KuroshiroClass();
+    await _kuroshiro.init(new KuromojiClass());
     _kuroReady = true;
     _kuroLoading = false;
     return true;
