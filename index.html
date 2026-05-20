@@ -450,14 +450,43 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .hero-action-row{flex-direction:column;align-items:stretch;gap:.65rem;width:100%}
   .hero-action-row .req-btn{width:100%;justify-content:center;margin-top:0;min-height:44px;padding:.75rem 1rem}
   #online-counter{align-self:flex-start}
-  .continue-read{flex-direction:column;align-items:flex-start}
-  .continue-read-btn{width:100%;text-align:center;box-sizing:border-box}
+  .continue-read{flex-wrap:wrap}
+  .continue-read-btn{width:100%;text-align:center;box-sizing:border-box;margin-top:.25rem}
   .search-inp{font-size:16px;padding:.85rem 1rem .85rem 2.5rem;min-height:48px}
-  .filter-row{padding-top:.5rem;padding-bottom:1rem;gap:.4rem}
-  .fbtn{margin-right:.6rem;padding:.55rem .35rem .55rem 0;min-height:40px;-webkit-tap-highlight-color:transparent}
-  .artist-filter-wrap{width:100%;margin-left:0;margin-top:.25rem;flex-direction:column;align-items:stretch;gap:.5rem}
+  .filter-row{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:.4rem;
+    padding-top:.5rem;
+    padding-bottom:1rem;
+    align-items:stretch;
+  }
+  .fbtn{
+    margin-right:0;
+    padding:.55rem .35rem;
+    min-height:40px;
+    text-align:center;
+    font-size:.5rem;
+    letter-spacing:.14em;
+    width:100%;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .fbtn::after{left:50%;transform:translateX(-50%);width:0}
+  .fbtn.on::after{width:70%}
+  .fbtn-indicator{margin-right:.3rem}
+  .artist-filter-wrap{
+    grid-column:1/-1;
+    width:100%;
+    margin-left:0;
+    margin-top:.15rem;
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:.5rem;
+  }
   .artist-select{width:100%;max-width:100%;min-height:44px;font-size:16px}
-  .fbtn-artis{align-self:flex-start;min-height:40px;display:inline-flex;align-items:center}
+  .fbtn-artis{min-height:40px;display:inline-flex;align-items:center;white-space:nowrap;padding:.4rem 0}
   .sec-hd{flex-wrap:wrap;gap:.5rem;padding-top:.65rem;margin-bottom:.85rem}
   .sec-lb{font-size:.9rem;white-space:normal}
   .sec-ln{display:none}
@@ -483,8 +512,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   footer{padding:2rem 1rem 1.5rem!important}
   .toast{left:1rem;right:1rem;bottom:max(5.5rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)))}
   #catView{padding-bottom:calc(5.5rem + env(safe-area-inset-bottom,0px))}
-  #chat-fab{top:auto;bottom:calc(4.75rem + env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));width:48px;height:48px}
-  #chat-box{top:auto;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(.75rem,env(safe-area-inset-right,0px));left:max(.75rem,env(safe-area-inset-left,0px));width:auto;height:min(55dvh,420px)}
+  #chat-fab{bottom:max(1.5rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));width:48px;height:48px}
+  #chat-box{bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(.75rem,env(safe-area-inset-right,0px));left:max(.75rem,env(safe-area-inset-left,0px));width:auto;height:min(55dvh,420px)}
   #float-login-btn,#float-avatar-wrap{bottom:max(1rem,env(safe-area-inset-bottom,0px));left:max(1rem,env(safe-area-inset-left,0px));max-width:46vw;padding:.55rem .75rem;font-size:.58rem}
   #nav-user-dropdown{bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));left:max(1rem,env(safe-area-inset-left,0px));width:auto;max-width:calc(100vw - 2rem)}
   #nav-avatar-bubble{bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px))}
@@ -562,11 +591,18 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fbtn-artis:hover{color:var(--gold)}
 .hero-features{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:.5rem}
 .hero-feat{font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(201,169,110,.3);color:var(--gold);background:rgba(201,169,110,.06)}
-.continue-read{margin-top:1rem;padding:.85rem 1rem;border:1px solid var(--border);background:rgba(201,169,110,.08);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.continue-read a{font-size:.72rem;font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:.06em}
-.continue-read a:hover{color:var(--gold)}
-.continue-read-sub{font-size:.62rem;color:var(--ash);margin-top:.2rem}
-.continue-read-btn{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;background:var(--ink);color:var(--paper);text-decoration:none;white-space:nowrap}
+.continue-read{margin-top:1rem;padding:.75rem .85rem;border:1px solid var(--border);background:var(--cream);display:flex;align-items:center;gap:.75rem;flex-wrap:nowrap}
+.continue-read-cover{width:3.25rem;height:3.25rem;flex-shrink:0;border:1px solid var(--border);background:var(--mist);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.continue-read-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.continue-read-cover-ph{font-size:1.1rem;color:var(--smoke);line-height:1}
+.continue-read-body{flex:1;min-width:0}
+.continue-read-label{font-size:.52rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:.2rem}
+.continue-read-title{display:block;font-size:.82rem;font-weight:700;color:var(--ink)!important;text-decoration:none;letter-spacing:.03em;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continue-read-title:hover{color:var(--gold)!important}
+.continue-read-sub{font-size:.62rem;color:var(--ash);margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continue-read-btn{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.45rem .85rem;background:var(--ink);color:var(--paper)!important;text-decoration:none;white-space:nowrap;flex-shrink:0;border:1px solid var(--ink)}
+.continue-read-btn:hover{background:var(--gold);border-color:var(--gold);color:var(--ink)!important}
+[data-theme="dark"] .continue-read{background:var(--cream)}
 .scar-link{color:inherit;text-decoration:none;transition:color .2s}
 .scar-link:hover{color:var(--gold)}
 .footer-artists{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1rem}
@@ -1192,10 +1228,7 @@ function rc(filter='', animate=false){
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
   if(artistFilterKey) filtered = filtered.filter(s => normalizeArtistKey(s.artist) === artistFilterKey);
-  if(favOnly) {
-    const favSlugs = getFavSlugs();
-    filtered = filtered.filter(s => favSlugs.has(toSlug(s.titleRo, s.id)));
-  }
+  if(favOnly) filtered = filtered.filter(isSongFav);
 
   const grid = document.getElementById('songGrid');
 
@@ -1296,11 +1329,15 @@ window.toggleRec = (e) => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-function getFavSlugs() {
-  try {
-    const favs = JSON.parse(localStorage.getItem('ym_favs') || '[]');
-    return new Set(favs.map(f => f.slug));
-  } catch(e) { return new Set(); }
+function getFavs() {
+  try { return JSON.parse(localStorage.getItem('ym_favs') || '[]'); }
+  catch(e) { return []; }
+}
+function isSongFav(s) {
+  const favs = getFavs();
+  if (!favs.length) return false;
+  const slug = toSlug(s.titleRo, s.id);
+  return favs.some(f => f && (f.slug === slug || (f.id && f.id === s.id)));
 }
 
 window.toggleFavFilter = (e) => {
@@ -1316,7 +1353,7 @@ window.toggleFavFilter = (e) => {
   recBtn.innerHTML = '<span class="fbtn-indicator"></span>Rekomendasi';
   popBtn.innerHTML = '<span class="fbtn-indicator"></span>Populer';
   btn.innerHTML = '<span class="fbtn-indicator"></span>' + (favOnly ? 'Semua Lagu' : 'Favorit');
-  if (favOnly && getFavSlugs().size === 0) toast('Belum ada favorit — buka lagu lalu ketuk ☆ Favorit');
+  if (favOnly && getFavs().length === 0) toast('Belum ada favorit — buka halaman lagu lalu ketuk ☆ Favorit');
   rc(document.getElementById('searchInp').value, true);
 };
 
@@ -1893,6 +1930,7 @@ function showCachedSongs() {
     songs = cached;
     refreshArtistFilter();
     rc(document.getElementById('searchInp')?.value || '');
+    showContinueRead();
   } catch(e) {}
 }
 
@@ -1915,6 +1953,7 @@ function loadSongs() {
         localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
       } catch(e) {}
       rc(document.getElementById('searchInp').value||'');
+      showContinueRead();
     },
     err => {
       // Fallback tanpa orderBy
@@ -1934,6 +1973,7 @@ function loadSongs() {
           } catch(e) {}
           refreshArtistFilter();
           rc(document.getElementById('searchInp').value||'');
+      showContinueRead();
         },
         () => {
           grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
@@ -1947,21 +1987,38 @@ if(songs.length === 0) {
   const grid = document.getElementById('songGrid');
   grid.innerHTML = makeSkeleton(8);
 }
-(function showContinueRead() {
+function showContinueRead() {
   try {
     const raw = localStorage.getItem('ym_last_read');
-    if (!raw) return;
-    const last = JSON.parse(raw);
-    if (!last.slug || Date.now() - (last.ts || 0) > 7 * 24 * 60 * 60 * 1000) return;
     const box = document.getElementById('continue-read');
     if (!box) return;
+    if (!raw) { box.style.display = 'none'; return; }
+    const last = JSON.parse(raw);
+    if (!last.slug || Date.now() - (last.ts || 0) > 7 * 24 * 60 * 60 * 1000) {
+      box.style.display = 'none';
+      return;
+    }
+    let img = last.img || '';
+    if (!img && songs.length) {
+      const s = songs.find(x => x.id === last.id || toSlug(x.titleRo, x.id) === last.slug);
+      if (s && s.img) img = s.img;
+    }
+    const href = 'lagu/' + escCard(last.slug) + '.html';
+    const cover = img
+      ? '<img src="' + escCard(optimizeCardImg(img)) + '" alt="" width="52" height="52" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<span class=continue-read-cover-ph>♪</span>\'">'
+      : '<span class="continue-read-cover-ph">♪</span>';
     box.style.display = 'flex';
-    box.innerHTML = '<div><div style="font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)">Lanjutkan baca</div>' +
-      '<a href="/lagu/' + escCard(last.slug) + '.html">' + escCard(last.title || 'Lagu') + '</a>' +
-      '<div class="continue-read-sub">' + escCard(last.artist || '') + '</div></div>' +
-      '<a class="continue-read-btn" href="/lagu/' + escCard(last.slug) + '.html">Lanjut →</a>';
+    box.innerHTML =
+      '<div class="continue-read-cover">' + cover + '</div>' +
+      '<div class="continue-read-body">' +
+        '<div class="continue-read-label">Lanjutkan baca</div>' +
+        '<a class="continue-read-title" href="' + href + '">' + escCard(last.title || 'Lagu') + '</a>' +
+        '<div class="continue-read-sub">' + escCard(last.artist || '') + '</div>' +
+      '</div>' +
+      '<a class="continue-read-btn" href="' + href + '">Lanjut →</a>';
   } catch(e) {}
-})();
+}
+showContinueRead();
 
 showCachedSongs();
 loadSongs();
@@ -2113,13 +2170,13 @@ window.addEventListener('resize', fixBg);
 </button>
 <!-- ── FLOATING GROUP CHAT ── -->
 <style>
-#chat-fab{position:fixed;top:70px;right:1.4rem;z-index:998;width:44px;height:44px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(10,8,18,.2);transition:transform .2s,box-shadow .2s,opacity .2s,pointer-events .2s}
+#chat-fab{position:fixed;bottom:max(1.5rem,env(safe-area-inset-bottom,0px));right:max(1.5rem,env(safe-area-inset-right,0px));top:auto;z-index:999;width:44px;height:44px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(10,8,18,.2);transition:transform .2s,box-shadow .2s,opacity .2s,pointer-events .2s}
 #chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(10,8,18,.3)}
 #chat-fab.hidden{opacity:0;pointer-events:none}
 #chat-fab svg{width:20px;height:20px;stroke:var(--paper);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #chat-unread{position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;font-size:.52rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--paper);pointer-events:none;line-height:1}
 #chat-unread.show{display:flex}
-#chat-box{position:fixed;top:70px;right:1.4rem;z-index:997;width:min(320px,calc(100vw - 2.8rem));height:min(440px,calc(100dvh - 80px));background:var(--paper);border:1px solid var(--border);display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(10,8,18,.15);animation:chatDown .18s ease;touch-action:pan-y;overscroll-behavior:contain}
+#chat-box{position:fixed;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));right:max(1.5rem,env(safe-area-inset-right,0px));top:auto;left:auto;z-index:998;width:min(320px,calc(100vw - 2.8rem));height:min(440px,calc(100dvh - 6rem));background:var(--paper);border:1px solid var(--border);display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(10,8,18,.15);animation:chatUp .18s ease;touch-action:pan-y;overscroll-behavior:contain}
 #chat-box.open{display:flex}
 @keyframes chatDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes chatUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}

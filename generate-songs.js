@@ -1352,7 +1352,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         Latihan Terjemah
       </a>
-      <button class="btn-ghost" id="fav-btn" onclick="toggleFav()" type="button" title="Simpan ke favorit">☆ Favorit</button>
+      <button class="btn-ghost" id="fav-btn" type="button" title="Simpan ke favorit — lihat di Katalog → filter Favorit">☆ Favorit</button>
       ${song.ytId ? `<button class="btn-ghost" onclick="window._scrollToMV()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Tonton MV
@@ -1740,11 +1740,12 @@ document.addEventListener('DOMContentLoaded', function(){
   var SONG_ID = ${JSON.stringify(songId)};
   var SONG_TITLE = ${JSON.stringify(titleMain)};
   var SONG_ARTIST = ${JSON.stringify(artist)};
+  var SONG_IMG = ${JSON.stringify(song.img || '')};
   var LYRICS_PLAIN = ${JSON.stringify(lyricsPlain)};
 
   try {
     localStorage.setItem('ym_last_read', JSON.stringify({
-      slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST, ts: Date.now()
+      slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST, img: SONG_IMG, ts: Date.now()
     }));
   } catch(e) {}
 
@@ -1812,17 +1813,24 @@ document.addEventListener('DOMContentLoaded', function(){
     navigator.clipboard.writeText(text).then(function(){ toast('Baris disalin 📋'); }).catch(function(){ toast('Gagal menyalin'); });
   };
 
+  function favMatches(f) {
+    return f && (f.slug === SONG_SLUG || (f.id && f.id === SONG_ID));
+  }
+
   window.toggleFav = function() {
     var key = 'ym_favs';
     var favs = [];
     try { favs = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
-    var ix = favs.findIndex(function(f){ return f.slug === SONG_SLUG; });
+    var ix = favs.findIndex(favMatches);
     if (ix >= 0) {
       favs.splice(ix, 1);
-      toast('Dihapus dari favorit');
+      if (typeof toast === 'function') toast('Dihapus dari favorit');
     } else {
-      favs.unshift({ slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST, ts: Date.now() });
-      toast('Disimpan ke favorit ★');
+      favs.unshift({
+        slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST,
+        img: SONG_IMG, ts: Date.now()
+      });
+      if (typeof toast === 'function') toast('Disimpan ★ — buka Katalog → Favorit');
     }
     try { localStorage.setItem(key, JSON.stringify(favs.slice(0, 80))); } catch(e) {}
     updateFavBtn();
@@ -1833,7 +1841,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!btn) return;
     var favs = [];
     try { favs = JSON.parse(localStorage.getItem('ym_favs') || '[]'); } catch(e) {}
-    var on = favs.some(function(f){ return f.slug === SONG_SLUG; });
+    var on = favs.some(favMatches);
     btn.classList.toggle('on', on);
     btn.textContent = on ? '★ Favorit' : '☆ Favorit';
   }
@@ -1860,6 +1868,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function initYumeFeatures() {
     updateFavBtn();
+    var favBtn = document.getElementById('fav-btn');
+    if (favBtn && !favBtn.dataset.bound) {
+      favBtn.dataset.bound = '1';
+      favBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.toggleFav();
+      });
+    }
     document.querySelectorAll('.vocab-chip').forEach(function(chip) {
       chip.addEventListener('click', function(e) {
         e.stopPropagation();
