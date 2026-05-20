@@ -1230,67 +1230,113 @@ window.fetchGeniusLyrics = async () => {
   const titleId = document.getElementById('f-it').value.trim();
   const artist  = document.getElementById('f-ar').value.trim();
   if(!titleJp && !titleRo){ toast('Isi Judul Lagu dulu!'); return; }
-  toast('Searching Genius...');
 
-  // Genius hampir selalu pakai romaji/latin, bukan kanji
-  // Coba beberapa query: romaji+artis, judul ID+artis, lalu judul JP saja (last resort)
-  const queries = [];
-  if(titleRo) queries.push(titleRo + (artist ? ' ' + artist : ''));
-  if(titleId) queries.push(titleId + (artist ? ' ' + artist : ''));
-  if(titleJp) queries.push(titleJp + (artist ? ' ' + artist : ''));
-  if(titleRo && !artist) queries.push(titleRo);
-  if(titleJp && !artist) queries.push(titleJp);
+  // Buka dialog search Genius
+  showGeniusSearchDialog(titleJp, titleRo, titleId, artist, apiKey);
+};
 
-  async function searchGenius(query){
-    const q = encodeURIComponent(query);
+function showGeniusSearchDialog(titleJp, titleRo, titleId, artist, apiKey){
+  // Hapus dialog lama kalau ada
+  document.getElementById('genius-dialog')?.remove();
+
+  const defaultQuery = (titleRo || titleJp) + (artist ? ' ' + artist : '');
+  const overlay = document.createElement('div');
+  overlay.id = 'genius-dialog';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(10,8,18,.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:1rem';
+  overlay.innerHTML = `
+    <div style="background:var(--paper);border:1px solid var(--border);padding:2rem;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;gap:1rem;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div style="font-family:var(--serif);font-size:1.2rem;font-weight:300;font-style:italic">Cari di Genius</div>
+        <button onclick="document.getElementById('genius-dialog').remove()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--ash);padding:.2rem .5rem">✕</button>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <input id="gd-query" class="fi" value="${escHtml(defaultQuery)}" placeholder="Cari judul atau artis..." style="flex:1" onkeydown="if(event.key==='Enter')geniusSearch()">
+        <button onclick="geniusSearch()" class="bsave" style="flex:none;padding:.7rem 1.2rem">🔍 Cari</button>
+      </div>
+      <div style="font-size:.6rem;color:var(--muted)">Tip: kalau tidak ketemu, coba pakai judul romaji + nama artis, atau tambah kata "Romanized"</div>
+      <div id="gd-results" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:.5rem;min-height:60px">
+        <div style="font-size:.78rem;color:var(--muted);font-style:italic">Klik 🔍 Cari untuk mulai mencari...</div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  // Tutup kalau klik backdrop
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+  // Langsung search otomatis
+  geniusSearch();
+
+  window.geniusSearch = async () => {
+    const q = document.getElementById('gd-query').value.trim();
+    if(!q) return;
+    const res = document.getElementById('gd-results');
+    res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mencari...</div>';
     try {
-      const r = await fetch('https://api.genius.com/search?q=' + q, {
-        headers: { 'Authorization': 'Bearer ' + apiKey }
-      });
-      if(!r.ok) throw new Error(r.status);
-      return await r.json();
-    } catch(_){
-      const raw = await fetchWithProxies('https://api.genius.com/search?q=' + q + '&access_token=' + apiKey);
-      return JSON.parse(raw);
-    }
-  }
-
-  try {
-    let song = null;
-    let triedQueries = [];
-    for(const q of queries){
-      if(triedQueries.includes(q)) continue;
-      triedQueries.push(q);
+      let data;
       try {
-        const data = await searchGenius(q);
-        const hits = data.response && data.response.hits;
-        if(hits && hits.length){ song = hits[0].result; break; }
-      } catch(_){ /* coba query berikutnya */ }
+        const r = await fetch('https://api.genius.com/search?q=' + encodeURIComponent(q), {
+          headers: { 'Authorization': 'Bearer ' + apiKey }
+        });
+        if(!r.ok) throw new Error(r.status);
+        data = await r.json();
+      } catch(_){
+        const raw = await fetchWithProxies('https://api.genius.com/search?q=' + encodeURIComponent(q) + '&access_token=' + apiKey);
+        data = JSON.parse(raw);
+      }
+      const hits = data.response && data.response.hits;
+      if(!hits || !hits.length){
+        res.innerHTML = '<div style="font-size:.78rem;color:var(--muted);font-style:italic">Tidak ada hasil. Coba query lain.</div>';
+        return;
+      }
+      res.innerHTML = '';
+      hits.slice(0,8).forEach(h => {
+        const s = h.result;
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:.8rem;padding:.65rem .8rem;border:1px solid var(--border);cursor:pointer;transition:border-color .15s';
+        item.onmouseenter = () => item.style.borderColor = 'var(--gold)';
+        item.onmouseleave = () => item.style.borderColor = 'var(--border)';
+        item.innerHTML = `
+          <img src="${escHtml(s.song_art_image_thumbnail_url||'')}" onerror="this.style.display='none'" style="width:40px;height:40px;object-fit:cover;border-radius:3px;flex-shrink:0">
+          <div style="min-width:0;flex:1">
+            <div style="font-size:.82rem;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.title)}</div>
+            <div style="font-size:.68rem;color:var(--ash)">${escHtml(s.primary_artist && s.primary_artist.name || '')}</div>
+          </div>
+          <button class="bsave" style="flex:none;font-size:.58rem;padding:.4rem .8rem">Ambil</button>`;
+        item.querySelector('button').addEventListener('click', () => geniusFetchLyrics(s.url, s.full_title));
+        item.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') geniusFetchLyrics(s.url, s.full_title); });
+        res.appendChild(item);
+      });
+    } catch(e){
+      res.innerHTML = '<div style="font-size:.78rem;color:var(--red)">Gagal: ' + escHtml(e.message) + '</div>';
     }
-    if(!song) throw new Error('Lagu tidak ditemukan di Genius (dicoba: ' + triedQueries.map(q=>`"${q}"`).join(', ') + ')');
+  };
 
-    toast('Ditemukan: ' + song.full_title + ' — ambil lirik...');
-    const html = await fetchWithProxies(song.url);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const containers = doc.querySelectorAll('[data-lyrics-container]');
-    if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman Genius');
-    let lyrics = '';
-    containers.forEach(function(container) {
-      container.querySelectorAll('br').forEach(function(br){ br.replaceWith('\n'); });
-      container.querySelectorAll('a').forEach(function(a){ a.replaceWith(a.textContent); });
-      lyrics += container.textContent + '\n\n';
-    });
-    lyrics = lyrics.replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
-    if(!lyrics) throw new Error('Lirik kosong setelah parsing');
-    const lines = lyrics.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-    document.getElementById('bulkInput').value = lines.join('\n\n');
-    document.getElementById('bulkTransArea').style.display = 'none';
-    document.getElementById('bulkArea').style.display = 'flex';
-    toast('✅ ' + lines.length + ' baris lirik berhasil diambil dari Genius!');
-  } catch(err){
-    toast('Genius gagal: ' + err.message);
-  }
+  window.geniusFetchLyrics = async (url, fullTitle) => {
+    const res = document.getElementById('gd-results');
+    if(!res) return;
+    res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mengambil lirik dari ' + escHtml(fullTitle) + '...</div>';
+    try {
+      const html = await fetchWithProxies(url);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const containers = doc.querySelectorAll('[data-lyrics-container]');
+      if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman — Genius mungkin ubah strukturnya');
+      let lyrics = '';
+      containers.forEach(container => {
+        container.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        container.querySelectorAll('a').forEach(a => a.replaceWith(a.textContent));
+        lyrics += container.textContent + '\n\n';
+      });
+      lyrics = lyrics.replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+      if(!lyrics) throw new Error('Lirik kosong setelah parsing');
+      const lines = lyrics.split('\n').map(l => l.trim()).filter(Boolean);
+      document.getElementById('bulkInput').value = lines.join('\n\n');
+      document.getElementById('bulkTransArea').style.display = 'none';
+      document.getElementById('bulkArea').style.display = 'flex';
+      document.getElementById('genius-dialog').remove();
+      toast('✅ ' + lines.length + ' baris lirik berhasil diambil!');
+    } catch(e){
+      res.innerHTML = '<div style="font-size:.78rem;color:var(--red)">Gagal ambil lirik: ' + escHtml(e.message) + '</div>';
+    }
+  };
 };
 
 window.toggleBulk = (id) => {
