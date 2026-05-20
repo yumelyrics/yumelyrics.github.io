@@ -1225,36 +1225,56 @@ async function fetchWithProxies(url){
 window.fetchGeniusLyrics = async () => {
   const apiKey = geniusKeyGet();
   if(!apiKey){ toast('Isi Genius API Key dulu!'); return; }
-  const title  = document.getElementById('f-jt').value.trim();
-  const artist = document.getElementById('f-ar').value.trim();
-  if(!title){ toast('Isi Judul Lagu dulu!'); return; }
+  const titleJp = document.getElementById('f-jt').value.trim();
+  const titleRo = document.getElementById('f-ro').value.trim();
+  const titleId = document.getElementById('f-it').value.trim();
+  const artist  = document.getElementById('f-ar').value.trim();
+  if(!titleJp && !titleRo){ toast('Isi Judul Lagu dulu!'); return; }
   toast('Searching Genius...');
-  try {
-    const q = encodeURIComponent(title + (artist ? ' ' + artist : ''));
-    // Genius API: coba direct dulu, kalau CORS error fallback ke proxy
-    let searchData;
+
+  // Genius hampir selalu pakai romaji/latin, bukan kanji
+  // Coba beberapa query: romaji+artis, judul ID+artis, lalu judul JP saja (last resort)
+  const queries = [];
+  if(titleRo) queries.push(titleRo + (artist ? ' ' + artist : ''));
+  if(titleId) queries.push(titleId + (artist ? ' ' + artist : ''));
+  if(titleJp) queries.push(titleJp + (artist ? ' ' + artist : ''));
+  if(titleRo && !artist) queries.push(titleRo);
+  if(titleJp && !artist) queries.push(titleJp);
+
+  async function searchGenius(query){
+    const q = encodeURIComponent(query);
     try {
       const r = await fetch('https://api.genius.com/search?q=' + q, {
         headers: { 'Authorization': 'Bearer ' + apiKey }
       });
       if(!r.ok) throw new Error(r.status);
-      searchData = await r.json();
+      return await r.json();
     } catch(_){
-      // Fallback: proxy Genius API
       const raw = await fetchWithProxies('https://api.genius.com/search?q=' + q + '&access_token=' + apiKey);
-      searchData = JSON.parse(raw);
+      return JSON.parse(raw);
     }
-    const hits = searchData.response && searchData.response.hits;
-    if(!hits || !hits.length) throw new Error('Lagu tidak ditemukan di Genius');
-    const song = hits[0].result;
-    const songUrl = song.url;
+  }
+
+  try {
+    let song = null;
+    let triedQueries = [];
+    for(const q of queries){
+      if(triedQueries.includes(q)) continue;
+      triedQueries.push(q);
+      try {
+        const data = await searchGenius(q);
+        const hits = data.response && data.response.hits;
+        if(hits && hits.length){ song = hits[0].result; break; }
+      } catch(_){ /* coba query berikutnya */ }
+    }
+    if(!song) throw new Error('Lagu tidak ditemukan di Genius (dicoba: ' + triedQueries.map(q=>`"${q}"`).join(', ') + ')');
+
     toast('Ditemukan: ' + song.full_title + ' — ambil lirik...');
-    // Scrape halaman Genius via proxy (allorigins sudah block HTML, pakai chain proxy)
-    const html = await fetchWithProxies(songUrl);
+    const html = await fetchWithProxies(song.url);
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const containers = doc.querySelectorAll('[data-lyrics-container]');
-    if(!containers.length) throw new Error('Lirik tidak ditemukan — Genius mungkin ubah struktur HTML-nya');
+    if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman Genius');
     let lyrics = '';
     containers.forEach(function(container) {
       container.querySelectorAll('br').forEach(function(br){ br.replaceWith('\n'); });
@@ -1555,12 +1575,40 @@ function renderArtistSuggestions(items, inputVal){
   const box = document.getElementById('artist-suggestions');
   if(!items.length){ box.classList.remove('open'); box.innerHTML=''; return; }
   _artistFocusIdx = -1;
-  box.innerHTML = items.map(([name, count], i) => {
-    const hi = inputVal.trim()
-      ? name.replace(new RegExp('('+inputVal.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi'), '<mark style="background:rgba(201,169,110,.3);border-radius:2px;padding:0 1px">$1</mark>')
-      : escHtml(name);
-    return `<div class="artist-sug-item" data-name="${escHtml(name)}" onmousedown="pickArtist('${escHtml(name)}')">${hi}<span class="artist-sug-count">${count} lagu</span></div>`;
-  }).join('');
+  box.innerHTML = '';
+  items.forEach(([name, count]) => {
+    const div = document.createElement('div');
+    div.className = 'artist-sug-item';
+    // Simpan nama asli di dataset (aman dari escaping)
+    div.dataset.name = name;
+    // Highlight: build pakai DOM supaya tidak ada HTML injection
+    const q = inputVal.trim();
+    if(q){
+      const regex = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+      let last = 0;
+      const frag = document.createDocumentFragment();
+      let m;
+      while((m = regex.exec(name)) !== null){
+        if(m.index > last) frag.appendChild(document.createTextNode(name.slice(last, m.index)));
+        const mark = document.createElement('mark');
+        mark.style.cssText = 'background:rgba(201,169,110,.3);border-radius:2px;padding:0 1px';
+        mark.textContent = m[1];
+        frag.appendChild(mark);
+        last = regex.lastIndex;
+      }
+      if(last < name.length) frag.appendChild(document.createTextNode(name.slice(last)));
+      div.appendChild(frag);
+    } else {
+      div.textContent = name;
+    }
+    const cnt = document.createElement('span');
+    cnt.className = 'artist-sug-count';
+    cnt.textContent = count + ' lagu';
+    div.appendChild(cnt);
+    // Pakai mousedown supaya jalan sebelum blur
+    div.addEventListener('mousedown', (e) => { e.preventDefault(); pickArtist(name); });
+    box.appendChild(div);
+  });
   box.classList.add('open');
 }
 
@@ -1571,13 +1619,13 @@ window.onArtistInput = (inp) => {
 };
 
 window.closeArtistSuggestions = () => {
-  // Delay sedikit supaya onmousedown sempat kebaca
+  // 200ms: cukup lama supaya mousedown/click sempat jalan duluan sebelum blur nutup dropdown
   setTimeout(() => {
     const box = document.getElementById('artist-suggestions');
     box.classList.remove('open');
     box.innerHTML = '';
     _artistFocusIdx = -1;
-  }, 120);
+  }, 200);
 };
 
 window.pickArtist = (name) => {
