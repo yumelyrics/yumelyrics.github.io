@@ -504,7 +504,11 @@ textarea.fi:focus{border-color:var(--gold)}
       <div class="fl">GitHub Personal Access Token</div>
       <input class="fi" id="gh-token-inp" type="password" placeholder="github_pat_...">
     </div>
-    <div style="font-size:.6rem;color:var(--muted);line-height:1.6">Butuh scope <code style="color:var(--accent2)">workflow</code>. Disimpen di browser.</div>
+    <div class="fg" style="flex:1;min-width:200px;margin:0">
+      <div class="fl">YouTube Data API v3 Key <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— untuk auto-fill YT dari Spotify</span></div>
+      <input class="fi" id="yt-api-key-inp" type="password" placeholder="AIza...">
+    </div>
+    <div style="font-size:.6rem;color:var(--muted);line-height:1.6">GitHub: scope <code style="color:var(--accent2)">workflow</code>. YT Key: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">console.cloud.google.com</a>. Keduanya disimpen di browser.</div>
   </div>
 
   <!-- TAB NAV -->
@@ -522,9 +526,21 @@ textarea.fi:focus{border-color:var(--gold)}
       <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder=""></div>
       <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder=""></div>
       <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder=""></div>
-      <div class="fg"><div class="fl">YouTube Video ID</div><input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ"></div>
+      <div class="fg">
+        <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          <span>YouTube Video ID</span>
+          <span id="yt-autofill-badge" style="display:none;font-size:.52rem;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.25);color:#ff4444;padding:.1rem .4rem;border-radius:2rem;letter-spacing:.08em">⚡ paste URL = auto-fill</span>
+        </div>
+        <input class="fi" id="f-yt" placeholder="dQw4w9WgXcQ atau paste URL YouTube">
+      </div>
       <div class="fg"><div class="fl">Niconico ID (opsional)</div><input class="fi" id="f-nico" placeholder="sm12345678"></div>
-      <div class="fg"><div class="fl">Spotify URL (opsional)</div><input class="fi" id="f-sp" placeholder=""></div>
+      <div class="fg">
+        <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          <span>Spotify URL (opsional)</span>
+          <span id="sp-autofill-badge" style="display:none;font-size:.52rem;background:rgba(29,185,84,.08);border:1px solid rgba(29,185,84,.25);color:#1DB954;padding:.1rem .4rem;border-radius:2rem;letter-spacing:.08em">⚡ paste URL = auto-fill YT</span>
+        </div>
+        <input class="fi" id="f-sp" placeholder="https://open.spotify.com/track/...">
+      </div>
       <div class="fg" style="grid-column:1/-1">
         <div class="fl" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
           <span>Cover / Gambar Album</span>
@@ -1468,6 +1484,80 @@ function updateCoverBtns() {
 
 // Ganti updateSpotifyBtn lama → pakai updateCoverBtns
 function updateSpotifyBtn(){ updateCoverBtns(); }
+
+// ── YouTube API Key ──
+function ytKeyGet(){ return localStorage.getItem('yume_yt_key')||''; }
+function ytKeySet(k){ localStorage.setItem('yume_yt_key', k); }
+document.getElementById('yt-api-key-inp').addEventListener('input', function(){ ytKeySet(this.value.trim()); });
+(function(){ const k=ytKeyGet(); if(k) document.getElementById('yt-api-key-inp').value=k; })();
+
+function updateAutofillBadges(){
+  const hasKey = !!ytKeyGet();
+  const spBadge = document.getElementById('sp-autofill-badge');
+  const ytBadge = document.getElementById('yt-autofill-badge');
+  if(spBadge) spBadge.style.display = hasKey ? 'inline-flex' : 'none';
+  if(ytBadge) ytBadge.style.display = 'inline-flex';
+}
+updateAutofillBadges();
+
+// Auto-fill: paste Spotify URL -> search YouTube, isi f-yt
+document.getElementById('f-sp').addEventListener('paste', async function(e){
+  const pasted = (e.clipboardData||window.clipboardData).getData('text').trim();
+  if(!pasted) return;
+  setTimeout(async () => {
+    const match = pasted.match(/track\/([A-Za-z0-9]+)/);
+    if(!match) return;
+    const trackId = match[1];
+    const apiKey = ytKeyGet();
+    if(!apiKey){ toast('Isi YouTube API Key dulu biar auto-fill jalan!'); return; }
+    toast('Ambil info Spotify...');
+    try {
+      const oembed = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${trackId}`);
+      if(!oembed.ok) throw new Error('oEmbed gagal');
+      const data = await oembed.json();
+      const rawTitle = data.title || '';
+      const titleByArtist = rawTitle.split(' by ');
+      const songName = titleByArtist[0]?.trim() || rawTitle;
+      const artistName = titleByArtist[1]?.trim() || '';
+      if(!document.getElementById('f-jt').value && songName) document.getElementById('f-jt').value = songName;
+      if(!document.getElementById('f-ar').value && artistName) document.getElementById('f-ar').value = artistName;
+      toast(`Searching YouTube: ${songName} ${artistName}...`);
+      const q = encodeURIComponent(`${songName} ${artistName} official`);
+      const ytRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${apiKey}`);
+      if(!ytRes.ok) { const err = await ytRes.json(); throw new Error(err?.error?.message || ytRes.status); }
+      const ytData = await ytRes.json();
+      const videoId = ytData.items?.[0]?.id?.videoId;
+      if(!videoId) throw new Error('Video tidak ditemukan');
+      document.getElementById('f-yt').value = videoId;
+      updateCoverBtns();
+      toast(`Auto-fill YT: ${videoId}`);
+    } catch(err){ toast('Auto-fill gagal: ' + err.message); }
+  }, 50);
+});
+
+// Auto-fill: paste YouTube URL -> clean jadi video ID, ambil judul via oEmbed
+document.getElementById('f-yt').addEventListener('paste', async function(e){
+  const pasted = (e.clipboardData||window.clipboardData).getData('text').trim();
+  if(!pasted) return;
+  setTimeout(async () => {
+    const idMatch = pasted.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+    if(!idMatch){ updateCoverBtns(); return; }
+    const videoId = idMatch[1];
+    document.getElementById('f-yt').value = videoId;
+    updateCoverBtns();
+    toast(`YT ID: ${videoId}`);
+    try {
+      const ytOembed = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+      if(!ytOembed.ok) return;
+      const ytData = await ytOembed.json();
+      const videoTitle = ytData.title || '';
+      const channelName = ytData.author_name || '';
+      if(!document.getElementById('f-jt').value && videoTitle) document.getElementById('f-jt').value = videoTitle;
+      if(!document.getElementById('f-ar').value && channelName) document.getElementById('f-ar').value = channelName;
+      if(videoTitle) toast(`Info diisi: ${videoTitle}`);
+    } catch(err){ /* oEmbed bisa kena CORS, silent aja */ }
+  }, 50);
+});
 
 // Pantau field YouTube juga
 document.getElementById('f-yt').addEventListener('input', updateCoverBtns);
