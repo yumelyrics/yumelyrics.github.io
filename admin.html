@@ -2185,15 +2185,18 @@ function geniusDoSearch(){
   var apiKey = window._geniusApiKey || '';
   res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mencari...</div>';
 
-  var p = fetch('https://api.genius.com/search?q=' + encodeURIComponent(q), {
-    headers: { 'Authorization': 'Bearer ' + apiKey }
-  }).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); });
-
-  // proxy fallback chain
-  ['https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy?quest='].forEach(function(base){
+  // proxy chain: allorigins -> codetabs -> corsproxy (direct API call dihapus karena selalu CORS block)
+  var geniusUrl = 'https://api.genius.com/search?q=' + encodeURIComponent(q) + '&access_token=' + encodeURIComponent(apiKey);
+  var proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://corsproxy.io/?url='
+  ];
+  var p = Promise.reject(new Error('start'));
+  proxies.forEach(function(base){
     p = p.catch(function(){
-      return fetch(base + encodeURIComponent('https://api.genius.com/search?q=' + encodeURIComponent(q) + '&access_token=' + apiKey))
-        .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+      return fetch(base + encodeURIComponent(geniusUrl))
+        .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
         .then(function(t){ return JSON.parse(t); });
     });
   });
