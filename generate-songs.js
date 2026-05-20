@@ -430,6 +430,10 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 /* ── LYRICS LIST ── */
 #ll{position:relative}
 #ll::after{content:'';position:absolute;inset:0;z-index:10;pointer-events:all;-webkit-user-select:none;user-select:none;background:transparent}
+/* ── Admin mode: matikan semua proteksi copy ── */
+body.is-admin #ll::after{display:none}
+body.is-admin .ljp,body.is-admin .lro,body.is-admin .lid{-webkit-user-select:text;user-select:text}
+body.is-admin *{-webkit-user-select:text!important;user-select:text!important}
 .lyrics-container{display:flex;flex-direction:column;gap:0}
 .ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;position:relative;transition:background .15s}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
@@ -1819,6 +1823,8 @@ async function applyAuthState(user) {
     // Deteksi admin
     _isAdmin = ADMIN_EMAILS.includes(user.email);
     window._isAdmin = _isAdmin;
+    if(_isAdmin) document.body.classList.add('is-admin');
+    else document.body.classList.remove('is-admin');
 
     // Load custom photoURL dari Firestore user_profiles
     _customPhotoURL = user.photoURL || null;
