@@ -2185,29 +2185,13 @@ function geniusDoSearch(){
   var apiKey = window._geniusApiKey || '';
   res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mencari...</div>';
 
-  // Genius API blok CORS dari browser, harus via proxy
-  var geniusUrl = 'https://api.genius.com/search?q=' + encodeURIComponent(q) + '&access_token=' + encodeURIComponent(apiKey);
+  // Pakai Cloudflare Worker sebagai proxy — ganti URL di bawah setelah deploy worker
+  // Worker code: genius-proxy-worker.js
+  var WORKER_URL = window._geniusWorkerUrl || 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  var workerReqUrl = WORKER_URL + '?q=' + encodeURIComponent(q) + '&token=' + encodeURIComponent(apiKey);
 
-  function _tryProxySearch(proxyUrl){
-    return fetch(proxyUrl, { method: 'GET' })
-      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(function(t){
-        try {
-          var j = JSON.parse(t);
-          // allorigins /get wraps response in {contents:'...'}
-          if(j && typeof j.contents === 'string') return JSON.parse(j.contents);
-          return j;
-        } catch(e){ throw new Error('Parse error'); }
-      });
-  }
-
-  var p = Promise.reject(new Error('start'));
-  // allorigins /get (returns JSON wrapper) — paling stabil
-  p = p.catch(function(){ return _tryProxySearch('https://api.allorigins.win/get?url=' + encodeURIComponent(geniusUrl)); });
-  // thingproxy — fallback
-  p = p.catch(function(){ return _tryProxySearch('https://thingproxy.freeboard.io/fetch/' + geniusUrl); });
-  // codetabs — fallback
-  p = p.catch(function(){ return _tryProxySearch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(geniusUrl)); });
+  var p = fetch(workerReqUrl)
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 
   p.then(function(data){
     var hits = data.response && data.response.hits;
