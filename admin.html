@@ -1237,7 +1237,7 @@ window.fetchGeniusLyrics = async () => {
     const lines = lyrics.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
     const bulkText = lines.join('\n\n');
     document.getElementById('bulkInput').value = bulkText;
-    document.getElementById('bulkTransArea').style.display = 'none';
+    ['bulkTransArea'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
     document.getElementById('bulkArea').style.display = 'flex';
     toast('\u2705 ' + lines.length + ' baris lirik berhasil diambil dari Genius!');
   } catch(err){
@@ -1246,8 +1246,8 @@ window.fetchGeniusLyrics = async () => {
 };
 
 window.toggleBulk = (id) => {
-  ['bulkArea','bulkTransArea','geniusArea'].forEach(oid => {
-    if(oid !== id) document.getElementById(oid).style.display = 'none';
+  ['bulkArea','bulkTransArea'].forEach(oid => {
+    if(oid !== id) { const el=document.getElementById(oid); if(el) el.style.display = 'none'; }
   });
   const el = document.getElementById(id);
   el.style.display = el.style.display === 'none' ? 'flex' : 'none';
