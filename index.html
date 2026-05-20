@@ -451,12 +451,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   #online-counter{align-self:flex-start}
   .continue-read-cover{width:3.25rem;height:3.25rem}
   .search-inp{font-size:16px;padding:.85rem 1rem .85rem 2.5rem;min-height:48px}
-  .filter-scroll{padding:.3rem 1rem .55rem;gap:.32rem}
-  .fbtn,.fbtn-artis-link,.artist-select{
-    font-size:.5rem;letter-spacing:.12em;padding:.38rem .55rem;min-height:34px;
+  .filter-row{padding:.3rem 1rem .65rem}
+  .filter-grid{gap:.32rem;margin-bottom:.32rem}
+  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{
+    font-size:.52rem;letter-spacing:.1em;min-height:36px;padding:.4rem .35rem;
     -webkit-tap-highlight-color:transparent;
   }
-  .artist-select{min-width:7rem;max-width:8.5rem;font-size:14px}
+  #artistFilter{font-size:16px;min-height:42px;padding:.5rem .65rem}
   .fbtn::after{left:50%;transform:translateX(-50%);width:0}
   .fbtn.on::after{width:70%}
   .fbtn-indicator{margin-right:.2rem}
@@ -500,7 +501,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .scjp{font-size:.82rem}
   .hero h1 br{display:none}
   .hero h1{font-size:1.65rem}
-  .filter-scroll{gap:.28rem}
+  .filter-grid{gap:.28rem}
+  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{font-size:.5rem}
 }
 @media(max-width:380px){
   nav{padding:.75rem .85rem}
@@ -547,14 +549,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .pop-tag{color:var(--gold)}
 .pop-tag::before{background:var(--gold)}
 /* ── Filter Buttons ── */
-.filter-row{padding:0;margin-bottom:0;max-width:100%;overflow:hidden}
-.filter-scroll{
-  display:flex;flex-wrap:nowrap;align-items:center;gap:.4rem;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-  padding:.35rem 3rem .65rem;
+.filter-row{padding:.25rem 3rem .7rem;margin-bottom:0;max-width:100%}
+.filter-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.35rem;
+  margin-bottom:.35rem;
 }
-.filter-scroll::-webkit-scrollbar{display:none}
-.fbtn{background:none;border:1px solid transparent;font-family:var(--en);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;flex-shrink:0;border-radius:0}
+.filter-grid .fbtn,.filter-grid .fbtn-artis-link{
+  width:100%;margin:0;box-sizing:border-box;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:38px;padding:.45rem .5rem;text-align:center;
+}
+.fbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;border-radius:0}
 .fbtn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--ink);transition:width .25s ease}
 .fbtn:hover{color:var(--ash)}
 .fbtn.on{color:var(--ink)}
@@ -563,19 +570,24 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
 .fbtn.on .fbtn-indicator{opacity:1}
 .fbtn-ripple{display:none}
-.artist-select{
+#artistFilter{
   font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
-  color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.42rem .65rem;
-  cursor:pointer;min-width:8.5rem;max-width:11rem;flex-shrink:0;
+  color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.5rem .75rem;
+  cursor:pointer;width:100%;max-width:100%;min-height:40px;box-sizing:border-box;display:block;
 }
-.artist-select:focus{outline:none;border-color:var(--gold)}
+#artistFilter:focus{outline:none;border-color:var(--gold)}
 .fbtn-artis-link{
-  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ash);
-  text-decoration:none;white-space:nowrap;flex-shrink:0;padding:.42rem .7rem;
-  border:1px solid var(--border);background:var(--paper);transition:color .2s,border-color .2s;
-  font-family:var(--en);display:inline-flex;align-items:center;
+  font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ash);
+  text-decoration:none;background:var(--paper);transition:color .2s,border-color .2s,background .2s;
+  font-family:var(--en);
 }
-.fbtn-artis-link:hover{color:var(--ink);border-color:var(--gold)}
+.fbtn-artis-link:hover{color:var(--ink);border-color:var(--gold);background:rgba(201,169,110,.06)}
+@media(min-width:769px){
+  .filter-row{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1rem}
+  .filter-grid{display:contents;margin:0}
+  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{width:auto;min-height:auto;padding:.5rem 1rem .5rem 0;border-color:transparent}
+  #artistFilter{width:auto;min-width:9rem;max-width:12rem;margin-left:auto}
+}
 .hero-features{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:.5rem}
 .hero-feat{font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(201,169,110,.3);color:var(--gold);background:rgba(201,169,110,.06)}
 .continue-read{margin-top:1rem;padding:.7rem .8rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;align-items:stretch;gap:.55rem;max-width:100%;overflow:hidden;box-sizing:border-box}
@@ -796,15 +808,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
   </div>
   <div class="filter-row">
-    <div class="filter-scroll">
+    <div class="filter-grid">
       <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
       <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
       <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-indicator"></span>Favorit</button>
-      <select class="artist-select" id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
-        <option value="">Semua artis</option>
-      </select>
-      <a href="artis/index.html" class="fbtn-artis-link">Artis →</a>
+      <a href="artis/index.html" class="fbtn-artis-link">Semua Artis →</a>
     </div>
+    <select id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
+      <option value="">Semua artis</option>
+    </select>
   </div>
   <div class="sec-hd">
     <div class="sec-lb">Katalog Lagu</div>
