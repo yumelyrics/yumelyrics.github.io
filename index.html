@@ -192,13 +192,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc-img-wrap img{
   position:absolute;top:50%;left:50%;
   width:100%;height:100%;object-fit:cover;display:block;
-  filter:sepia(.1) contrast(1.04);
-  transform:translate(-50%,-50%) scale(1);
-  transition:transform .4s ease;
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
+  filter:sepia(.08) contrast(1.03);
+  transform:translate(-50%,-50%);
+  transition:opacity .2s ease,filter .2s ease;
+  image-rendering:auto;
 }
-.sc:hover .sc-img-wrap img{transform:translate(-50%,-50%) scale(1.06)}
+.sc:hover .sc-img-wrap img{opacity:.94}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:var(--gold)}
 .sc-corner::before{top:0;right:0;width:1px;height:14px}
@@ -452,36 +451,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   #online-counter{align-self:flex-start}
   .continue-read-cover{width:3.25rem;height:3.25rem}
   .search-inp{font-size:16px;padding:.85rem 1rem .85rem 2.5rem;min-height:48px}
-  .filter-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:.4rem;
-    padding-top:.5rem;
-    padding-bottom:.85rem;
-    align-items:stretch;
-  }
-  #recBtn{grid-column:1;grid-row:1}
-  #popBtn{grid-column:2;grid-row:1}
-  #favBtn{grid-column:1;grid-row:2}
-  .fbtn-artis-grid{grid-column:2;grid-row:2;display:inline-flex!important}
-  .fbtn-artis--desk{display:none!important}
-  #artistFilter{grid-column:1/-1;grid-row:3;width:100%;max-width:100%;margin-left:0;min-height:44px;font-size:16px}
-  .fbtn,.fbtn-artis-grid{
-    padding:.55rem .35rem;
-    min-height:42px;
-    text-align:center;
-    font-size:.52rem;
-    letter-spacing:.12em;
-    width:100%;
-    box-sizing:border-box;
+  .filter-scroll{padding:.3rem 1rem .55rem;gap:.32rem}
+  .fbtn,.fbtn-artis-link,.artist-select{
+    font-size:.5rem;letter-spacing:.12em;padding:.38rem .55rem;min-height:34px;
     -webkit-tap-highlight-color:transparent;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
   }
+  .artist-select{min-width:7rem;max-width:8.5rem;font-size:14px}
   .fbtn::after{left:50%;transform:translateX(-50%);width:0}
   .fbtn.on::after{width:70%}
-  .fbtn-indicator{margin-right:.25rem}
+  .fbtn-indicator{margin-right:.2rem}
+  .sc:hover .sc-img-wrap img{opacity:1}
   .sec-hd{flex-wrap:wrap;gap:.5rem;padding-top:.65rem;margin-bottom:.85rem}
   .sec-lb{font-size:.9rem;white-space:normal}
   .sec-ln{display:none}
@@ -521,8 +500,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .scjp{font-size:.82rem}
   .hero h1 br{display:none}
   .hero h1{font-size:1.65rem}
-  .filter-row{gap:.35rem}
-  .fbtn,.fbtn-artis-grid{font-size:.5rem}
+  .filter-scroll{gap:.28rem}
 }
 @media(max-width:380px){
   nav{padding:.75rem .85rem}
@@ -569,10 +547,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .pop-tag{color:var(--gold)}
 .pop-tag::before{background:var(--gold)}
 /* ── Filter Buttons ── */
-.filter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem 1rem;padding:.2rem 3rem 1rem;margin-bottom:0;max-width:100%}
-.fbtn-artis-grid{display:none}
-.fbtn-artis--desk{display:inline-flex}
-.fbtn{background:none;border:none;font-family:var(--en);font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);padding:.5rem 1rem .5rem 0;cursor:pointer;transition:color .2s;white-space:nowrap;position:relative;font-weight:700;margin-right:0}
+.filter-row{padding:0;margin-bottom:0;max-width:100%;overflow:hidden}
+.filter-scroll{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:.4rem;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:.35rem 3rem .65rem;
+}
+.filter-scroll::-webkit-scrollbar{display:none}
+.fbtn{background:none;border:1px solid transparent;font-family:var(--en);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;flex-shrink:0;border-radius:0}
 .fbtn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--ink);transition:width .25s ease}
 .fbtn:hover{color:var(--ash)}
 .fbtn.on{color:var(--ink)}
@@ -581,11 +563,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
 .fbtn.on .fbtn-indicator{opacity:1}
 .fbtn-ripple{display:none}
-.artist-select{font-family:var(--en);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.45rem .8rem;cursor:pointer;max-width:200px;min-width:0;margin-left:auto}
+.artist-select{
+  font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.42rem .65rem;
+  cursor:pointer;min-width:8.5rem;max-width:11rem;flex-shrink:0;
+}
 .artist-select:focus{outline:none;border-color:var(--gold)}
-.fbtn-artis,.fbtn-artis-grid{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--ash);text-decoration:none;white-space:nowrap;transition:color .2s,border-color .2s,background-color .2s;font-family:var(--en)}
-.fbtn-artis:hover,.fbtn-artis-grid:hover{color:var(--ink);border-color:var(--gold)}
-.fbtn-artis-grid{border:1px solid var(--border);background:var(--paper);padding:.5rem .65rem;justify-content:center;align-items:center;box-sizing:border-box}
+.fbtn-artis-link{
+  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ash);
+  text-decoration:none;white-space:nowrap;flex-shrink:0;padding:.42rem .7rem;
+  border:1px solid var(--border);background:var(--paper);transition:color .2s,border-color .2s;
+  font-family:var(--en);display:inline-flex;align-items:center;
+}
+.fbtn-artis-link:hover{color:var(--ink);border-color:var(--gold)}
 .hero-features{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:.5rem}
 .hero-feat{font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(201,169,110,.3);color:var(--gold);background:rgba(201,169,110,.06)}
 .continue-read{margin-top:1rem;padding:.7rem .8rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;align-items:stretch;gap:.55rem;max-width:100%;overflow:hidden;box-sizing:border-box}
@@ -806,14 +796,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
   </div>
   <div class="filter-row">
-    <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
-    <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
-    <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-indicator"></span>Favorit</button>
-    <a href="artis/index.html" class="fbtn-artis-grid">Semua Artis →</a>
-    <select class="artist-select" id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
-      <option value="">Semua artis</option>
-    </select>
-    <a href="artis/index.html" class="fbtn-artis fbtn-artis--desk">Semua Artis →</a>
+    <div class="filter-scroll">
+      <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
+      <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
+      <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-indicator"></span>Favorit</button>
+      <select class="artist-select" id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
+        <option value="">Semua artis</option>
+      </select>
+      <a href="artis/index.html" class="fbtn-artis-link">Artis →</a>
+    </div>
   </div>
   <div class="sec-hd">
     <div class="sec-lb">Katalog Lagu</div>
@@ -1191,9 +1182,11 @@ function buildCard(s, i) {
   div.className = 'sc';
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
-  const imgSrc = optimizeCardImg(s.img || '');
+  const imgSrc = hdImgUrl(s.img || '');
   const ph = 'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA';
-  const imgEl = `<img src="${escCard(imgSrc || ph)}" alt="${escCard(s.titleJp)}" width="400" height="400" loading="lazy" decoding="async" sizes="(max-width:600px) 50vw, 200px" onerror="this.src='${ph}'">`;
+  const imgEl = imgSrc
+    ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" width="210" height="210" loading="lazy" decoding="async" sizes="(max-width:768px) 72px, 210px" onerror="this.src='${ph}'">`
+    : `<img src="${ph}" alt="" width="210" height="210" loading="lazy" decoding="async">`;
   const aKey = normalizeArtistKey(s.artist);
   const aSlug = artistSlugByKey[aKey];
   const artistEl = aSlug && s.artist

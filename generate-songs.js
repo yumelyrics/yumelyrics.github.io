@@ -104,6 +104,41 @@ function renderText(str) {
   return escHtml(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g, '$1<span class="cm-mention">$2</span>');
 }
 
+/** CSS mobile untuk halaman artis (index + per-artis). */
+const ARTIST_MOBILE_CSS = `
+@media(max-width:768px){
+  nav{padding:.85rem 1rem;flex-wrap:wrap;gap:.5rem}
+  .nav-links{gap:.5rem;flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding-bottom:.1rem}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-link{font-size:.58rem;flex-shrink:0}
+  #theme-toggle{flex-shrink:0}
+  .artist-hero{padding:1.75rem 1rem 1rem}
+  .artist-title{font-size:1.6rem;line-height:1.2}
+  .artist-count{font-size:.55rem}
+  .artist-desc{font-size:.78rem;margin-top:.85rem}
+  .breadcrumb{font-size:.5rem;margin-bottom:.85rem;gap:.35rem}
+  .catalog{padding:1rem 1rem 3rem}
+  .section-title{font-size:1.3rem;margin-bottom:1rem}
+  .related-grid{grid-template-columns:1fr!important;gap:.4rem}
+  .related-card{
+    padding:.5rem .6rem;gap:.6rem;align-items:center;
+    transform:none!important;box-shadow:none!important;
+  }
+  .related-card:hover{transform:none;box-shadow:none;border-color:var(--gold)}
+  .related-thumb,.rc-no-img{width:3.4rem;height:3.4rem;min-width:3.4rem}
+  .related-info{min-width:0}
+  .related-title{font-size:.8rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .related-ro{font-size:.6rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .related-artist{font-size:.5rem}
+  .related-arr{display:none}
+  footer{flex-direction:column;padding:2rem 1rem;gap:1.25rem}
+}
+@media(max-width:480px){
+  .nav-brand-jp{font-size:.92rem}
+  .artist-title{font-size:1.4rem}
+}
+`;
+
 /** Kosa kata unik dari lirik + petunjuk dari terjemahan baris yang sama. */
 function buildVocabList(lyrics) {
   const map = new Map();
@@ -174,7 +209,7 @@ function generateArtistIndexHTML(artists) {
   const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
   const cards = sorted.map(a => `<a class="related-card" href="${escHtml(a.slug)}.html">
     ${a.img
-      ? imgTag(a.img, a.name, { cls: 'related-thumb', w: 52, h: 52 })
+      ? imgTag(a.img, a.name, { cls: 'related-thumb', w: 96, h: 96, hd: true, sizes: '56px' })
       : `<div class="rc-no-img">♪</div>`}
     <div class="related-info">
       <div class="related-title">${escHtml(a.name)}</div>
@@ -238,6 +273,7 @@ footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
 .footer-link:hover{color:var(--gold)}
 @media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav,.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
+${ARTIST_MOBILE_CSS}
 </style>
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 </head>
@@ -276,7 +312,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
   const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.`;
   const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
     ${r.img
-      ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 52, h: 52 })
+      ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 96, h: 96, hd: true, sizes: '56px' })
       : `<div class="rc-no-img">♪</div>`}
     <div class="related-info">
       <div class="related-title">${escHtml(r.titleDisplay || r.titleMain)}</div>
@@ -353,9 +389,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .catalog{padding:2rem 3.5rem 5rem}
 .section-title{font-family:var(--serif);font-size:2rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:2rem}
 .related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
-.related-card{display:flex;gap:1rem;align-items:flex-start;padding:1.25rem;border:1px solid var(--border);background:var(--paper);text-decoration:none;transition:all .2s}
-.related-card:hover{border-color:rgba(10,8,18,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,8,18,.08)}
-.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
+.related-card{display:flex;gap:1rem;align-items:flex-start;padding:1.25rem;border:1px solid var(--border);background:var(--paper);text-decoration:none;transition:border-color .2s,background .2s}
+.related-card:hover{border-color:var(--gold);background:rgba(201,169,110,.05)}
+.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0;image-rendering:auto}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .related-title{font-family:var(--jp);font-size:.92rem;color:var(--ink);line-height:1.35}
@@ -370,9 +406,9 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
 .footer-link:hover{color:var(--gold)}
 @media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav{padding:1rem 1.2rem}.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
-@media(max-width:560px){.related-grid{grid-template-columns:1fr}.nav-links{gap:1rem}}
+${ARTIST_MOBILE_CSS}
 </style>
-<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');window.toggleTheme=function(){var r=document.documentElement;var d=r.getAttribute('data-theme')==='dark';if(d){r.removeAttribute('data-theme');localStorage.setItem('ym_theme','light');}else{r.setAttribute('data-theme','dark');localStorage.setItem('ym_theme','dark');}}})()</script>
 </head>
 <body>
 <div class="wrap">
