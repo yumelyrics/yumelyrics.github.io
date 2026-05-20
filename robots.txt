@@ -1,32 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /admin/
-Crawl-delay: 1
-
-User-agent: Googlebot
-Allow: /
-Allow: /lagu/
-Crawl-delay: 0
-
-User-agent: Googlebot-Image
-Allow: /
-Allow: /lagu/
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: AhrefsBot
-Crawl-delay: 10
-
-User-agent: SemrushBot
-Crawl-delay: 10
-
-User-agent: MJ12bot
-Disallow: /
-
-User-agent: DotBot
-Disallow: /
 
 Sitemap: https://yumelyrics.my.id/sitemap.xml

@@ -34,6 +34,7 @@
 <meta name="twitter:description" content="Lirik lagu Jepang, romaji, dan terjemahan Indonesia lengkap. Back Number, Yorushika, Yoasobi, dan ratusan lainnya. Gratis di YumeSubs.">
 <meta name="twitter:image" content="https://yumelyrics.my.id/anime_icon.png">
 <link rel="canonical" href="https://yumelyrics.my.id">
+<link rel="sitemap" type="application/xml" href="https://yumelyrics.my.id/sitemap.xml">
 <link rel="alternate" hreflang="id" href="https://yumelyrics.my.id">
 <link rel="alternate" hreflang="x-default" href="https://yumelyrics.my.id">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -485,6 +486,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
 .fbtn.on .fbtn-indicator{opacity:1}
 .fbtn-ripple{display:none}
+.artist-filter-wrap{display:flex;align-items:center;margin-left:auto;gap:.8rem;flex-wrap:wrap}
+.artist-select{font-family:var(--en);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.45rem .8rem;cursor:pointer;max-width:200px}
+.artist-select:focus{outline:none;border-color:var(--gold)}
+.fbtn-artis{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--ash);text-decoration:none;white-space:nowrap;transition:color .2s}
+.fbtn-artis:hover{color:var(--gold)}
+.scar-link{color:inherit;text-decoration:none;transition:color .2s}
+.scar-link:hover{color:var(--gold)}
+.footer-artists{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1rem}
+.footer-artists a{font-size:.68rem;color:var(--ash);text-decoration:none;letter-spacing:.04em;transition:color .2s}
+.footer-artists a:hover{color:var(--gold)}
 
 /* ── Catalog Header ── */
 .sec-hd{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem;padding:1.5rem 3rem 0}
@@ -597,6 +608,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div id="nav-dropdown">
     <button class="nd-item on" id="nd-cat" onclick="sv('cat');closeNavMenu()">Katalog</button>
+    <a class="nd-item" href="artis/index.html">Artis</a>
     <a class="nd-item" href="resources.html">Resources</a>
     <a class="nd-item" href="stories.html">Cerita</a>
     <a class="nd-item" href="contact.html">Hubungi</a>
@@ -673,6 +685,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="filter-row">
     <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
     <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
+    <div class="artist-filter-wrap">
+      <select class="artist-select" id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
+        <option value="">Semua artis</option>
+      </select>
+      <a href="artis/index.html" class="fbtn-artis">Semua Artis →</a>
+    </div>
   </div>
   <div class="sec-hd">
     <div class="sec-lb">Katalog Lagu</div>
@@ -731,8 +749,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <div class="toast" id="toast"></div>
 <footer style="padding:3rem 3rem 2rem;border-top:1px solid var(--border);margin-top:2rem">
   <p style="font-size:.75rem;color:var(--ash);line-height:1.9;max-width:700px;font-family:var(--serif);font-style:italic">
-    <strong style="color:var(--ink);font-style:normal">YumeSubs</strong> adalah website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia. Temukan arti dan makna lagu dari artis seperti <strong style="color:var(--gold);font-style:normal">Back Number</strong>, <strong style="color:var(--gold);font-style:normal">Yorushika</strong>, <strong style="color:var(--gold);font-style:normal">Yoasobi</strong>, <strong style="color:var(--gold);font-style:normal">Ado</strong>, <strong style="color:var(--gold);font-style:normal">Fujii Kaze</strong>, <strong style="color:var(--gold);font-style:normal">Amazarashi</strong>, <strong style="color:var(--gold);font-style:normal">Vaundy</strong>, <strong style="color:var(--gold);font-style:normal">Kenshi Yonezu</strong>, <strong style="color:var(--gold);font-style:normal">Radwimps</strong>, <strong style="color:var(--gold);font-style:normal">Bump of Chicken</strong>, dan masih banyak lagi. Semua lirik tersedia lengkap dengan teks Jepang asli, romaji, dan terjemahan Indonesia — gratis.
+    <strong style="color:var(--ink);font-style:normal">YumeSubs</strong> adalah website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia. Jelajahi halaman artis untuk semua lagu per grup/idola, atau latihan terjemahan interaktif di <a href="latihan.html" style="color:var(--gold);text-decoration:none">Latihan</a>.
   </p>
+  <div class="footer-artists" id="footerArtists" aria-label="Artis populer"></div>
   <p style="font-size:.58rem;color:var(--smoke);margin-top:1.2rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700">© YumeSubs — yumelyrics.my.id</p>
 </footer>
 </div>
@@ -762,19 +781,6 @@ const provider = new GoogleAuthProvider();
 // Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
 // lalu otomatis update kalau ada perubahan di server.
 enableIndexedDbPersistence(db).catch(() => {});
-
-// ── INSTANT CACHE — tampilkan dari localStorage sebelum Firebase merespons ──
-(function showCachedSongs() {
-  try {
-    const raw = localStorage.getItem('ym_songs_cache');
-    if (!raw) return;
-    const cached = JSON.parse(raw);
-    if (!Array.isArray(cached) || !cached.length) return;
-    // Isi songs global sementara, render skeleton hilang langsung
-    songs = cached;
-    rc(document.getElementById('searchInp')?.value || '');
-  } catch(e) {}
-})();
 
 // ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
 (function() {
@@ -961,7 +967,83 @@ window.toast = toast;
 
 let recOnly = false;
 let popOnly = false;
+let artistFilterKey = '';
+let artistSlugByKey = {};
+let artistMetaList = [];
 
+function normalizeArtistKey(name) {
+  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+function sanitizeArtistSlug(slug) {
+  return String(slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 60);
+}
+function toArtistSlug(name) {
+  const s = String(name || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').substring(0, 60);
+  return s || '';
+}
+function resolveArtistSlug(explicitSlug, artistName) {
+  const fromField = sanitizeArtistSlug(explicitSlug);
+  if (fromField) return fromField;
+  return toArtistSlug(artistName);
+}
+function escCard(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function buildArtistMaps() {
+  const byKey = {};
+  const used = new Set();
+  for (const s of songs) {
+    const raw = (s.artist || '').trim();
+    if (!raw) continue;
+    const key = normalizeArtistKey(raw);
+    if (!byKey[key]) byKey[key] = { spellings: {}, explicitSlug: '', count: 0 };
+    byKey[key].spellings[raw] = (byKey[key].spellings[raw] || 0) + 1;
+    byKey[key].count++;
+    const ex = sanitizeArtistSlug(s.artistSlug);
+    if (ex) byKey[key].explicitSlug = ex;
+  }
+  artistSlugByKey = {};
+  artistMetaList = [];
+  const keys = Object.keys(byKey).sort((a, b) => {
+    const na = Object.entries(byKey[a].spellings).sort((x, y) => y[1] - x[1])[0][0];
+    const nb = Object.entries(byKey[b].spellings).sort((x, y) => y[1] - x[1])[0][0];
+    return na.localeCompare(nb, 'id');
+  });
+  for (const key of keys) {
+    const meta = byKey[key];
+    const displayName = Object.entries(meta.spellings).sort((a, b) => b[1] - a[1])[0][0];
+    const base = resolveArtistSlug(meta.explicitSlug, displayName) || 'artis';
+    let slug = base;
+    let n = 2;
+    while (used.has(slug)) slug = `${base}-${n++}`;
+    used.add(slug);
+    artistSlugByKey[key] = slug;
+    artistMetaList.push({ key, name: displayName, slug, count: meta.count });
+  }
+}
+
+function refreshArtistFilter() {
+  buildArtistMaps();
+  const sel = document.getElementById('artistFilter');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Semua artis</option>' +
+    artistMetaList.map(a => `<option value="${escCard(a.key)}">${escCard(a.name)} (${a.count})</option>`).join('');
+  if (prev && artistMetaList.some(a => a.key === prev)) sel.value = prev;
+  const foot = document.getElementById('footerArtists');
+  if (foot) {
+    const top = [...artistMetaList].sort((a, b) => b.count - a.count).slice(0, 12);
+    foot.innerHTML = top.map(a =>
+      `<a href="artis/${escCard(a.slug)}.html">${escCard(a.name)}</a>`
+    ).join('');
+  }
+}
+
+window.onArtistFilter = val => {
+  artistFilterKey = val || '';
+  rc(document.getElementById('searchInp').value, true);
+};
 
 function buildCard(s, i) {
   const div = document.createElement('div');
@@ -969,18 +1051,23 @@ function buildCard(s, i) {
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
   const imgSrc = s.img || '';
-  const imgEl = `<img src="${imgSrc||'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'}" alt="${s.titleJp}" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  const imgEl = `<img src="${imgSrc||'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'}" alt="${escCard(s.titleJp)}" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  const aKey = normalizeArtistKey(s.artist);
+  const aSlug = artistSlugByKey[aKey];
+  const artistEl = aSlug && s.artist
+    ? `<a class="scar scar-link" href="artis/${escCard(aSlug)}.html" onclick="event.stopPropagation()">${escCard(s.artist)}</a>`
+    : `<span class="scar">${escCard(s.artist)}</span>`;
   div.innerHTML = `
     <div class="sc-corner"></div>
     <div class="sc-img-wrap">${imgEl}</div>
     <div class="scb">
       <div class="scn">0${i+1}</div>
       ${s.recommended?`<div class="rec-tag">Rekomendasi Admin</div>`:''}
-      ${s.popularLabel?`<div class="rec-tag pop-tag">${s.popularLabel}</div>`:''}
-      <div class="scjp">${s.titleJp}</div>
-      ${s.titleRo?`<div class="scro">${s.titleRo}</div>`:''}
-      <div class="scid">${s.titleId||''}</div>
-      <div class="scf"><div class="scar">${s.artist}</div><div class="scarr">&#x2192;</div></div>
+      ${s.popularLabel?`<div class="rec-tag pop-tag">${escCard(s.popularLabel)}</div>`:''}
+      <div class="scjp">${escCard(s.titleJp)}</div>
+      ${s.titleRo?`<div class="scro">${escCard(s.titleRo)}</div>`:''}
+      <div class="scid">${escCard(s.titleId||'')}</div>
+      <div class="scf">${artistEl}<div class="scarr">&#x2192;</div></div>
     </div>`;
   return div;
 }
@@ -1003,6 +1090,7 @@ function rc(filter='', animate=false){
   let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
+  if(artistFilterKey) filtered = filtered.filter(s => normalizeArtistKey(s.artist) === artistFilterKey);
 
   const grid = document.getElementById('songGrid');
 
@@ -1074,7 +1162,7 @@ function rc(filter='', animate=false){
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
   const countEl = document.getElementById('songCount');
   if(countEl){
-    countEl.textContent = (q || recOnly || popOnly)
+    countEl.textContent = (q || recOnly || popOnly || artistFilterKey)
       ? filtered.length + ' / ' + songs.length + ' lagu'
       : songs.length + ' lagu';
   }
@@ -1092,7 +1180,7 @@ function addRipple(btn, e) {
 
 window.toggleRec = (e) => {
   recOnly = !recOnly;
-  if(recOnly) popOnly = false;
+  if(recOnly) { popOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; }
   const recBtn = document.getElementById('recBtn');
   const popBtn = document.getElementById('popBtn');
   addRipple(recBtn, e);
@@ -1105,7 +1193,7 @@ window.toggleRec = (e) => {
 
 window.togglePop = (e) => {
   popOnly = !popOnly;
-  if(popOnly) recOnly = false;
+  if(popOnly) { recOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; }
   const popBtn = document.getElementById('popBtn');
   const recBtn = document.getElementById('recBtn');
   addRipple(popBtn, e);
@@ -1664,6 +1752,19 @@ window.postCm = async () => {
   btn.disabled = false;
 };
 
+// ── INSTANT CACHE — tampilkan dari localStorage sebelum Firebase merespons ──
+function showCachedSongs() {
+  try {
+    const raw = localStorage.getItem('ym_songs_cache');
+    if (!raw) return;
+    const cached = JSON.parse(raw);
+    if (!Array.isArray(cached) || !cached.length) return;
+    songs = cached;
+    refreshArtistFilter();
+    rc(document.getElementById('searchInp')?.value || '');
+  } catch(e) {}
+}
+
 // ── Load songs — IndexedDB persistence + localStorage instant cache ──
 let _unsubSongs = null;
 function loadSongs() {
@@ -1673,12 +1774,11 @@ function loadSongs() {
     query(collection(db,'songs'), orderBy('order','desc')),
     snap => {
       songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-      // Simpan ke localStorage untuk tampilan instan di visit berikutnya
+      refreshArtistFilter();
       try {
-        // Simpan hanya field yang dibutuhkan untuk render kartu (hemat space)
         const slim = songs.map(s => ({
           id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
-          artist:s.artist, img:s.img, order:s.order,
+          artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
           recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
         }));
         localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
@@ -1696,11 +1796,12 @@ function loadSongs() {
           try {
             const slim = songs.map(s => ({
               id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
-              artist:s.artist, img:s.img, order:s.order,
+              artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
               recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
             }));
             localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
           } catch(e) {}
+          refreshArtistFilter();
           rc(document.getElementById('searchInp').value||'');
         },
         () => {
@@ -1715,6 +1816,7 @@ if(songs.length === 0) {
   const grid = document.getElementById('songGrid');
   grid.innerHTML = makeSkeleton(8);
 }
+showCachedSongs();
 loadSongs();
 
 sv('cat');
