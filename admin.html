@@ -569,6 +569,29 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
       </div>
       <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder=""></div>
       <div class="fg">
+        <div class="fl">Anime <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— judul asli / Jepang</span></div>
+        <input class="fi" id="f-anime" placeholder="Contoh: 君の名は。 / Kimi no Na wa.">
+      </div>
+      <div class="fg">
+        <div class="fl">Anime — Terjemahan Indonesia</div>
+        <input class="fi" id="f-anime-id" placeholder="Contoh: Nama Kamu.">
+      </div>
+      <div class="fg">
+        <div class="fl">Anime — Nama Inggris (opsional)</div>
+        <input class="fi" id="f-anime-en" placeholder="Contoh: Your Name.">
+      </div>
+      <div class="fg">
+        <div class="fl">Tipe Lagu</div>
+        <select class="fi" id="f-type">
+          <option value="">— Bukan OST / tidak tahu —</option>
+          <option value="opening">Opening (OP)</option>
+          <option value="ending">Ending (ED)</option>
+          <option value="insert">Insert Song</option>
+          <option value="ost">OST</option>
+        </select>
+      </div>
+      <div class="fg"><div class="fl">Genre (opsional)</div><input class="fi" id="f-genre" placeholder="J-Pop, Rock, dll."></div>
+      <div class="fg">
         <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           <span>YouTube Video ID</span>
           <span id="yt-autofill-badge" style="display:none;font-size:.52rem;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.25);color:#ff4444;padding:.1rem .4rem;border-radius:2rem;letter-spacing:.08em">⚡ paste URL = auto-fill</span>
@@ -1321,8 +1344,14 @@ window.saveSong = async () => {
   const sp=document.getElementById('f-sp').value.trim();
   const descid=document.getElementById('f-descid').value.trim();
   const descjp=document.getElementById('f-descjp').value.trim();
+  const anime=document.getElementById('f-anime').value.trim();
+  const animeId=document.getElementById('f-anime-id').value.trim();
+  const animeEn=document.getElementById('f-anime-en').value.trim();
+  const songType=document.getElementById('f-type').value.trim();
+  const genre=document.getElementById('f-genre').value.trim();
   const editId=document.getElementById('f-editid').value;
   if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
+  const songMeta = { anime, animeId, animeEn, type: songType, genre };
   const lyrics=[];
   document.querySelectorAll('#lrows .lrow').forEach(r=>{
     const jp=r.querySelector('.rjp').value.trim();
@@ -1335,12 +1364,12 @@ window.saveSong = async () => {
   btn.disabled=true;
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp});
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,...songMeta});
       toast('Lagu berhasil diupdate!');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,...songMeta});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
@@ -1349,7 +1378,8 @@ window.saveSong = async () => {
 };
 
 function clearForm(){
-  ['f-jt','f-it','f-ar','f-ro','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
+  ['f-jt','f-it','f-ar','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('f-type').value='';
   document.getElementById('lrows').innerHTML='';
   showCoverPreview('');
   document.getElementById('cover-upload-status').textContent = '';
@@ -1369,6 +1399,11 @@ window.editSong = id => {
   document.getElementById('f-sp').value=s.sp||'';
   document.getElementById('f-descid').value=s.descId||'';
   document.getElementById('f-descjp').value=s.descJp||'';
+  document.getElementById('f-anime').value=s.anime||'';
+  document.getElementById('f-anime-id').value=s.animeId||'';
+  document.getElementById('f-anime-en').value=s.animeEn||'';
+  document.getElementById('f-type').value=s.type||'';
+  document.getElementById('f-genre').value=s.genre||'';
   document.getElementById('f-editid').value=s.id;
   showCoverPreview(s.img||'');
   document.getElementById('cover-upload-status').textContent = '';
@@ -1431,7 +1466,7 @@ function renderCatalogTable(list, page){
         <div class="ct-romaji">${escHtml(s.titleRo||'')}</div>
         ${badges ? `<div style="margin-top:.25rem;display:flex;gap:.3rem;flex-wrap:wrap">${badges}</div>` : ''}
       </td>
-      <td class="ct-artist">${escHtml(s.artist||'')}${s.titleId?`<div style="font-size:.65rem;color:var(--smoke)">${escHtml(s.titleId)}</div>`:''}</td>
+      <td class="ct-artist">${escHtml(s.artist||'')}${s.anime?`<div style="font-size:.65rem;color:var(--plum);margin-top:.15rem">📺 ${escHtml(s.anime)}${s.animeId?` · ${escHtml(s.animeId)}`:''}${s.type?` · ${escHtml(s.type.toUpperCase())}`:''}</div>`:''}${s.titleId?`<div style="font-size:.65rem;color:var(--smoke)">${escHtml(s.titleId)}</div>`:''}</td>
       <td style="white-space:nowrap;font-size:.68rem;color:var(--ash)">👁 ${s.views||0}</td>
       <td>
         <div class="ct-actions">
@@ -1830,7 +1865,12 @@ window.filterCatalog = (q) => {
     (s.titleJp||'').toLowerCase().includes(ql) ||
     (s.titleRo||'').toLowerCase().includes(ql) ||
     (s.titleId||'').toLowerCase().includes(ql) ||
-    (s.artist||'').toLowerCase().includes(ql)
+    (s.artist||'').toLowerCase().includes(ql) ||
+    (s.anime||'').toLowerCase().includes(ql) ||
+    (s.animeId||'').toLowerCase().includes(ql) ||
+    (s.animeEn||'').toLowerCase().includes(ql) ||
+    (s.type||'').toLowerCase().includes(ql) ||
+    (s.genre||'').toLowerCase().includes(ql)
   );
   countEl.textContent = filtered.length + ' hasil';
   catalogFiltered = filtered;

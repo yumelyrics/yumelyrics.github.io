@@ -24,6 +24,11 @@ function toSlug(titleRo, titleJp, docId) {
   return docId;
 }
 
+function toArtistSlug(name) {
+  const s = String(name || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-').substring(0, 60);
+  return s || 'artis';
+}
+
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
@@ -63,13 +68,186 @@ function obfuscateLine(str) {
   }).join('');
 }
 
-function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
+function generateArtistHTML(artistName, songs, artistSlug) {
+  const count = songs.length;
+  const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.`;
+  const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
+    ${r.img
+      ? `<img class="related-thumb" src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy">`
+      : `<div class="rc-no-img">♪</div>`}
+    <div class="related-info">
+      <div class="related-title">${escHtml(r.titleDisplay || r.titleMain)}</div>
+      ${r.titleRo ? `<div class="related-ro">${escHtml(r.titleRo)}</div>` : ''}
+      ${r.anime ? `<div class="related-artist">${escHtml(r.animeId || r.anime)}</div>` : ''}
+    </div>
+    <div class="related-arr">→</div>
+  </a>`).join('');
+
+  const schema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `Lirik ${artistName} — YumeSubs`,
+    description: metaDesc,
+    url: `${BASE_URL}/artis/${artistSlug}.html`,
+    inLanguage: 'id',
+    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
+    mainEntity: {
+      '@type': 'MusicGroup',
+      name: artistName,
+      url: `${BASE_URL}/artis/${artistSlug}.html`,
+    },
+  });
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="index, follow">
+<title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeSubs</title>
+<meta name="description" content="${escHtml(metaDesc)}">
+<meta property="og:title" content="Lirik ${escHtml(artistName)} | YumeSubs">
+<meta property="og:description" content="${escHtml(metaDesc)}">
+<meta property="og:url" content="${BASE_URL}/artis/${artistSlug}.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YumeSubs">
+<link rel="canonical" href="${BASE_URL}/artis/${artistSlug}.html">
+<link rel="icon" type="image/jpeg" href="../anime_icon.png">
+<script type="application/ld+json">${schema}</script>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--plum:#7c4d6e;--border:rgba(10,8,18,.1);--serif:'Lora',Georgia,serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif;--nm-transition:background .35s ease,color .35s ease,border-color .35s ease}
+[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+[data-theme="dark"] footer{background:#070604}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--ink)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm-transition)}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
+.wrap{position:relative;z-index:1}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px);transition:var(--nm-transition)}
+.nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
+.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
+.nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-link{font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--ink)}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;position:absolute}
+#theme-toggle .icon-sun{opacity:1}
+#theme-toggle .icon-moon{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1}
+.artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:2rem;flex-wrap:wrap}
+.breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}
+.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb span{color:var(--gold)}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.1;margin-bottom:.6rem}
+.artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke)}
+.artist-desc{font-size:.85rem;color:var(--ash);line-height:1.75;max-width:520px;margin-top:1.2rem}
+.catalog{padding:2rem 3.5rem 5rem}
+.section-title{font-family:var(--serif);font-size:2rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:2rem}
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.related-card{display:flex;gap:1rem;align-items:flex-start;padding:1.25rem;border:1px solid var(--border);background:var(--paper);text-decoration:none;transition:all .2s}
+.related-card:hover{border-color:rgba(10,8,18,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,8,18,.08)}
+.related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
+.rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
+.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
+.related-title{font-family:var(--jp);font-size:.92rem;color:var(--ink);line-height:1.35}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash)}
+.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
+.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;font-family:var(--serif)}
+footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3rem;padding:3rem 3.5rem;border-top:1px solid var(--border);background:var(--cream)}
+.footer-brand-jp{font-family:var(--jp);font-size:1.1rem;font-weight:600;color:var(--ink)}
+.footer-brand-tagline{font-size:.58rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem}
+.footer-copy{font-size:.55rem;color:var(--smoke);margin-top:1rem}
+.footer-col-label{font-size:.52rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);display:block;margin-bottom:.6rem}
+.footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
+.footer-link:hover{color:var(--gold)}
+@media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav{padding:1rem 1.2rem}.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
+@media(max-width:560px){.related-grid{grid-template-columns:1fr}.nav-links{gap:1rem}}
+</style>
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a class="nav-brand" href="../index.html">
+    <span class="nav-brand-jp">夢Lyrics</span>
+    <span class="nav-brand-en">YumeSubs</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="../index.html">Katalog</a>
+    <a class="nav-link" href="../stories.html">Cerita</a>
+    <a class="nav-link" href="../contact.html">Hubungi</a>
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle tema" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<section class="artist-hero">
+  <div class="breadcrumb">
+    <a href="../index.html">Beranda</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="../index.html">Katalog</a>
+    <span class="breadcrumb-sep">›</span>
+    <span>${escHtml(artistName)}</span>
+  </div>
+  <h1 class="artist-title">${escHtml(artistName)}</h1>
+  <div class="artist-count">${count} lagu</div>
+  <p class="artist-desc">Semua lirik lagu ${escHtml(artistName)} dengan teks Jepang, romaji, dan terjemahan bahasa Indonesia.</p>
+</section>
+
+<section class="catalog">
+  <h2 class="section-title">Daftar Lagu</h2>
+  <div class="related-grid">${cards}</div>
+</section>
+
+<footer>
+  <div>
+    <div class="footer-brand-jp">夢Lyrics</div>
+    <div class="footer-brand-tagline">Lirik Jepang · Terjemahan Indonesia</div>
+    <div class="footer-copy">© 2025 YumeSubs — yumelyrics.my.id</div>
+  </div>
+  <div>
+    <span class="footer-col-label">Jelajahi</span>
+    <a class="footer-link" href="../index.html">Katalog Lengkap</a>
+    <a class="footer-link" href="../stories.html">Cerita</a>
+    <a class="footer-link" href="../contact.html">Hubungi</a>
+  </div>
+</footer>
+</div>
+<script>
+(function(){
+  var stored = localStorage.getItem('ym_theme');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = stored || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  window.toggleTheme = function(){
+    var root = document.documentElement;
+    var isDark = root.getAttribute('data-theme') === 'dark';
+    if(isDark){ root.removeAttribute('data-theme'); localStorage.setItem('ym_theme','light'); }
+    else { root.setAttribute('data-theme','dark'); localStorage.setItem('ym_theme','dark'); }
+  };
+})();
+</script>
+</body>
+</html>`;
+}
+
+function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistSlug='') {
   const titleDisplay = song.titleJp || '';
   const titleRo      = song.titleRo || '';
   const titleId      = song.titleId || '';
   const artist       = song.artist  || '';
   const anime        = song.anime   || '';
+  const animeId      = song.animeId || '';
   const animeEn      = song.animeEn || '';
+  const animeDisplay = animeId || anime;
   const songType     = song.type    || ''; // 'opening', 'ending', 'insert', 'ost'
   const lyrics       = song.lyrics  || [];
   const songId       = song.id;
@@ -84,7 +262,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
   if (descId) {
     metaDesc = descId.substring(0, 160);
   } else {
-    const animeCtx   = anime ? ` dari anime ${anime}` : '';
+    const animeCtx   = anime ? ` dari anime ${animeDisplay}` : '';
     const typeCtx    = songType ? ` (${songType})` : '';
     const titleIdCtx = titleId ? ` Artinya: "${titleId}".` : '';
     metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
@@ -109,15 +287,15 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
       "@context":"https://schema.org",
       "@type":"MusicComposition",
       "name": titleMain,
-      "alternateName": [titleDisplay, titleRo, titleId, anime, animeEn].filter(Boolean),
-      "composer":{"@type":"MusicGroup","name":artist,"url":`${BASE_URL}/index.html?q=${encodeURIComponent(artist)}`},
+      "alternateName": [titleDisplay, titleRo, titleId, anime, animeId, animeEn].filter(Boolean),
+      "composer":{"@type":"MusicGroup","name":artist,"url":artistSlug ? `${BASE_URL}/artis/${artistSlug}.html` : `${BASE_URL}/index.html?q=${encodeURIComponent(artist)}`},
       "lyricist":{"@type":"MusicGroup","name":artist},
       ...(song.genre ? {"genre": song.genre} : {}),
       "inLanguage":"ja",
       "description":metaDesc,
       "url":`${BASE_URL}/lagu/${slug}`,
       ...(songType ? {"musicCompositionForm": songType} : {}),
-      ...(anime ? {"isPartOf": {"@type":"TVSeries","name":anime,"alternateName":animeEn||undefined}} : {}),
+      ...(anime ? {"isPartOf": {"@type":"TVSeries","name":anime,...(animeId||animeEn?{alternateName:[animeId,animeEn].filter(Boolean)}:{})}} : {}),
       ...(song.img ? {"image":{"@type":"ImageObject","url":song.img,"width":600,"height":600}} : {}),
       ...(song.sp ? {"sameAs": Array.isArray(song.sp)?song.sp:[song.sp]} : {}),
       "recordedAs":{
@@ -189,9 +367,9 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
       "about":[
         {"@type":"Thing","name":titleMain},
         {"@type":"Thing","name":artist},
-        ...(anime ? [{"@type":"Thing","name":anime}] : [])
+        ...(anime ? [{"@type":"Thing","name":animeDisplay}] : [])
       ],
-      "keywords":[titleMain, artist, anime, "lirik jepang", "terjemahan indonesia", "romaji"].filter(Boolean).join(", "),
+      "keywords":[titleMain, artist, anime, animeId, animeEn, "lirik jepang", "terjemahan indonesia", "romaji"].filter(Boolean).join(", "),
       "articleSection":"Lirik Lagu Jepang",
       "isAccessibleForFree":true
     }
@@ -239,10 +417,11 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[]) {
   `${escHtml(titleMain)} terjemahan indonesia`,
   `${escHtml(artist)} lirik`,
   `${escHtml(artist)} ${escHtml(titleMain)}`,
-  anime ? `lirik ost ${escHtml(anime)}` : '',
+  anime ? `lirik ost ${escHtml(animeDisplay)}` : '',
   anime ? `${escHtml(anime)} ${escHtml(titleMain)}` : '',
+  animeId ? `${escHtml(animeId)} ost` : '',
   animeEn ? `${escHtml(animeEn)} ost` : '',
-  songType && anime ? `${songType} ${escHtml(anime)}` : '',
+  songType && anime ? `${songType} ${escHtml(animeDisplay)}` : '',
   'lirik lagu jepang terjemahan indonesia',
   'anime ost lirik',
   'YumeSubs',
@@ -914,10 +1093,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <a href="../index.html">Beranda</a>
       <span class="breadcrumb-sep">›</span>
       <a href="../index.html">Katalog</a>
-      ${anime ? `<span class="breadcrumb-sep">›</span><span>${escHtml(anime)}</span>` : `<span class="breadcrumb-sep">›</span><span>${escHtml(titleMain)}</span>`}
+      ${anime ? `<span class="breadcrumb-sep">›</span><span>${escHtml(animeDisplay)}</span>` : `<span class="breadcrumb-sep">›</span><span>${escHtml(titleMain)}</span>`}
     </div>
 
-    ${(songType || anime) ? `<div class="song-type">${songType ? escHtml(songType.charAt(0).toUpperCase() + songType.slice(1)) : ''}${songType && anime ? ' — ' : ''}${anime ? escHtml(anime) : ''}</div>` : ''}
+    ${(songType || anime) ? `<div class="song-type">${songType ? escHtml(songType.charAt(0).toUpperCase() + songType.slice(1)) : ''}${songType && anime ? ' — ' : ''}${anime ? escHtml(animeDisplay) : ''}${anime && animeEn && animeId !== animeEn ? `<span style="font-weight:400;color:var(--ash)"> (${escHtml(animeEn)})</span>` : ''}</div>` : ''}
+    ${anime && animeId && animeId !== animeDisplay ? `<div class="song-title-id" style="margin-top:-1.5rem;margin-bottom:2rem">${escHtml(anime)}</div>` : ''}
 
     <div class="song-title-jp">${escHtml(titleDisplay)}</div>
     ${titleRo ? `<div class="song-title-ro">${escHtml(titleRo)}</div>` : ''}
@@ -926,11 +1106,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="meta-row">
       <div class="meta-item">
         <span class="meta-label">Artis</span>
-        <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(artist)}">${escHtml(artist)}</a></span>
+        <span class="meta-value"><a href="${artistSlug ? `../artis/${artistSlug}.html` : `../index.html?q=${encodeURIComponent(artist)}`}">${escHtml(artist)}</a></span>
       </div>
       ${anime ? `<div class="meta-item">
         <span class="meta-label">Anime</span>
-        <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(anime)}">${escHtml(anime)}</a></span>
+        <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(anime)}">${escHtml(animeDisplay)}</a>${anime && animeId && anime !== animeId ? `<span style="display:block;font-size:.72rem;color:var(--ash);font-weight:400;margin-top:.15rem;font-family:var(--jp)">${escHtml(anime)}</span>` : ''}${animeEn && animeEn !== animeDisplay ? `<span style="display:block;font-size:.68rem;color:var(--smoke);margin-top:.1rem">${escHtml(animeEn)}</span>` : ''}</span>
       </div>` : ''}
       ${song.genre ? `<div class="meta-item">
         <span class="meta-label">Genre</span>
@@ -1064,7 +1244,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cmsec" style="margin-bottom:2rem">
       <div class="cmtit">Tentang Lagu Ini</div>
       <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
-        ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(anime)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia.`}
+        ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(animeDisplay)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}${animeId && anime !== animeId ? ` — <em style="color:var(--muted)">${escHtml(anime)}</em>` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia.`}
       </p>
       ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
     </div>
@@ -1094,7 +1274,7 @@ ${(()=>{
   if(!allRelated.length) return '';
 
   const artistLabel = relatedByArtist.length ? `dari ${escHtml(artist)}` : '';
-  const animeLabel  = relatedByAnime.length  ? `dari ${escHtml(anime)}`  : '';
+  const animeLabel  = relatedByAnime.length  ? `dari ${escHtml(animeDisplay)}`  : '';
   const subtitle    = [artistLabel, animeLabel].filter(Boolean).join(' & ');
 
   const cards = allRelated.map(r => `<a class="related-card" href="${BASE_URL}/lagu/${r.slug}">
@@ -1368,7 +1548,7 @@ const db       = getFirestore(_app);
 const auth     = getAuth(_app);
 const provider = new GoogleAuthProvider();
 
-const SONG_ID = "${escHtml(songId)}";
+const SONG_ID = ${JSON.stringify(songId)};
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN NOTIF HELPER ──
@@ -3249,7 +3429,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 <script>
 /* ── YumeSubs Copy Protection (v4) ── */
 (function(){
-  var WATERMARK = '\n\n© YumeSubs — yumelyrics.my.id';
+  var WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
 
   /* Admin check: murni via closure — tidak ada satupun property yang diekspose ke window.
      _verifiedAdmin hanya bisa diset lewat __yumeAuthBridge yang di-delete setelah dipakai
@@ -3508,20 +3688,44 @@ async function main() {
   // Build lookup: artist -> songs, anime -> songs
   const byArtist = {};
   const byAnime  = {};
+  const artistSlugByName = {};
+  const usedArtistSlugs = new Set();
   for(const {song, slug} of songMeta){
     const ref = {
       slug, img: song.img||'', artist: song.artist||'',
       titleMain: song.titleRo||song.titleJp||'',
       titleDisplay: song.titleJp||'',
+      titleRo: song.titleRo||'',
+      anime: song.anime||'',
+      animeId: song.animeId||'',
     };
     if(song.artist){
       if(!byArtist[song.artist]) byArtist[song.artist]=[];
       byArtist[song.artist].push(ref);
+      if(!artistSlugByName[song.artist]){
+        let aSlug = toArtistSlug(song.artist);
+        let n = 2;
+        while(usedArtistSlugs.has(aSlug)) aSlug = `${toArtistSlug(song.artist)}-${n++}`;
+        usedArtistSlugs.add(aSlug);
+        artistSlugByName[song.artist] = aSlug;
+      }
     }
     if(song.anime){
       if(!byAnime[song.anime]) byAnime[song.anime]=[];
       byAnime[song.anime].push(ref);
     }
+  }
+
+  if(!fs.existsSync('artis')) fs.mkdirSync('artis');
+  const oldArtistFiles = fs.readdirSync('artis').filter(f => f.endsWith('.html'));
+  for(const f of oldArtistFiles) fs.unlinkSync(path.join('artis', f));
+  console.log(`🎤 Generating ${Object.keys(byArtist).length} halaman artis...`);
+  for(const artistName of Object.keys(byArtist).sort()){
+    const aSlug = artistSlugByName[artistName];
+    const artistHtml = generateArtistHTML(artistName, byArtist[artistName], aSlug);
+    fs.writeFileSync(path.join('artis', `${aSlug}.html`), artistHtml, 'utf8');
+    console.log(`  ✓ artis/${aSlug}.html (${byArtist[artistName].length} lagu)`);
+    urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
   }
 
   for(const {song, slug: finalSlug} of songMeta){
@@ -3533,7 +3737,7 @@ async function main() {
       ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
       : [];
 
-    const html=generateHTML(song,finalSlug,relByArtist,relByAnime);
+    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,song.artist ? artistSlugByName[song.artist] : '');
     fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
     console.log(`  ✓ lagu/${finalSlug}.html`);
     const imgTag = song.img ? `
@@ -3547,7 +3751,7 @@ async function main() {
   }
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
-  console.log(`\n✅ Selesai! ${songs.length} halaman + sitemap.xml dibuat`);
+  console.log(`\n✅ Selesai! ${songs.length} lagu + ${Object.keys(byArtist).length} artis + sitemap.xml`);
   process.exit(0);
 }
 
