@@ -1144,8 +1144,7 @@ onSnapshot(
 );
 
 // ── KUROSHIRO ROMAJI GENERATOR ──
-// Pakai kuroshiro-browser: bundle Kuroshiro + Kuromoji all-in-one, didesain khusus untuk browser
-// CDN: jsDelivr (lebih stabil dari unpkg)
+// Pakai Kuroshiro (UMD) + KuromojiAnalyzer — kompatibel dengan non-module script
 let _kuroshiro = null;
 let _kuroReady = false;
 let _kuroLoading = false;
@@ -1158,12 +1157,14 @@ async function initKuroshiro(){
   }
   _kuroLoading = true;
   try {
-    // kuroshiro-browser = Kuroshiro + KuromojiAnalyzer sudah digabung jadi 1 file
-    if(typeof KuroshiroBrowser === 'undefined'){
-      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-browser@0.1.0/dist/kuroshiro-browser.min.js');
+    if(typeof Kuroshiro === 'undefined'){
+      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js');
     }
-    _kuroshiro = new KuroshiroBrowser();
-    await _kuroshiro.init();
+    if(typeof KuromojiAnalyzer === 'undefined'){
+      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
+    }
+    _kuroshiro = new Kuroshiro();
+    await _kuroshiro.init(new KuromojiAnalyzer());
     _kuroReady = true;
     _kuroLoading = false;
     return true;
