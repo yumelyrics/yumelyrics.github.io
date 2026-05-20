@@ -1200,20 +1200,28 @@ window.fetchGeniusLyrics = async () => {
   toast('Searching Genius...');
   try {
     const q = encodeURIComponent(title + ' ' + artist);
-    const searchRes = await fetch('https://corsproxy.io/?url=https://api.genius.com/search?q=' + q, {
-      headers: { 'Authorization': 'Bearer ' + apiKey }
+    // Genius API support CORS langsung dengan Authorization header
+    const searchRes = await fetch('https://api.genius.com/search?q=' + q, {
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'User-Agent': 'YumeSubs/1.0' }
+    }).catch(async () => {
+      // fallback ke allorigins proxy
+      return fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.genius.com/search?q=' + q + '&access_token=' + apiKey));
     });
     if(!searchRes.ok) throw new Error('Search gagal: ' + searchRes.status);
-    const searchData = await searchRes.json();
+    let searchData = await searchRes.json();
+    // allorigins wraps response in {contents: "..."}
+    if(searchData.contents) searchData = JSON.parse(searchData.contents);
     const hits = searchData.response && searchData.response.hits;
     if(!hits || !hits.length) throw new Error('Lagu tidak ditemukan di Genius');
     const song = hits[0].result;
     const songUrl = song.url;
     const songTitle = song.full_title;
     toast('Ditemukan: ' + songTitle + ' — ambil lirik...');
-    const pageRes = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(songUrl));
+    // Scrape halaman Genius via allorigins
+    const pageRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(songUrl));
     if(!pageRes.ok) throw new Error('Gagal buka halaman Genius');
-    const html = await pageRes.text();
+    const pageData = await pageRes.json();
+    const html = pageData.contents || '';
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const containers = doc.querySelectorAll('[data-lyrics-container]');
