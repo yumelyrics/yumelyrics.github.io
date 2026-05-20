@@ -1156,14 +1156,11 @@ window.generateRomaji = async () => {
     const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
     const prompt = `Konversi setiap baris teks Jepang berikut ke romaji Hepburn.\nFormat output: untuk setiap baris JP, tulis baris JP asli lalu baris romajinya di bawahnya. Pisahkan grup dengan baris kosong.\nJika suatu baris sudah romaji/latin, biarkan saja.\nJangan tambahkan penjelasan apapun, hanya output teks.\n\nInput:\n${paragraphs.join('\n\n')}`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+    const resp = await fetch(WORKER + '/romaji', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ lines: paragraphs })
     });
     const data = await resp.json();
     const result = data.content && data.content[0] && data.content[0].text;
