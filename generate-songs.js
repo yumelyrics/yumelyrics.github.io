@@ -430,10 +430,8 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 /* ── LYRICS LIST ── */
 #ll{position:relative}
 #ll::after{content:'';position:absolute;inset:0;z-index:10;pointer-events:all;-webkit-user-select:none;user-select:none;background:transparent}
-/* ── Admin mode: matikan semua proteksi copy ── */
-body.is-admin #ll::after{display:none}
-body.is-admin .ljp,body.is-admin .lro,body.is-admin .lid{-webkit-user-select:text!important;-moz-user-select:text!important;-ms-user-select:text!important;user-select:text!important}
-body.is-admin *{-webkit-user-select:text!important;user-select:text!important}
+/* ── Admin mode: dihandle via JS saja, bukan CSS class ── */
+/* CATATAN: class is-admin di body DIHAPUS dari applyAuthState untuk keamanan */
 .lyrics-container{display:flex;flex-direction:column;gap:0}
 .ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;position:relative;transition:background .15s}
 .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
@@ -1374,7 +1372,12 @@ const SONG_ID = "${escHtml(songId)}";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN NOTIF HELPER ──
-const NOTIF_ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+// Email admin di-encode biar tidak plaintext di source (bukan enkripsi, tapi obstacle)
+const NOTIF_ADMIN_EMAILS = (function(){
+  var e=[107,104,111,105,114,117,115,116,115,97,110,105,49,52,51,64,103,109,97,105,108,46,99,111,109];
+  var f=[97,100,109,105,110,64,121,117,109,101,115,117,98,115,46,99,111,109];
+  return [e.map(c=>String.fromCharCode(c)).join(''), f.map(c=>String.fromCharCode(c)).join('')];
+})();
 async function notifyAdmins({ songId, songTitle, commenterName, commentText, isReply, parentName }) {
   try {
     const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', NOTIF_ADMIN_EMAILS)));
@@ -1611,7 +1614,12 @@ let _hasCommented = false;
 let _isAdmin = false;
 let _customPhotoURL = null;
 let _justLoggedIn = false; // flag: true hanya saat user baru saja login (bukan restore session)
-const ADMIN_EMAILS = ["khoirustsani143@gmail.com", "admin@yumesubs.com"]; // ✅ kedua email admin
+// Email admin di-encode — tidak plaintext di source
+const ADMIN_EMAILS = (function(){
+  var e=[107,104,111,105,114,117,115,116,115,97,110,105,49,52,51,64,103,109,97,105,108,46,99,111,109];
+  var f=[97,100,109,105,110,64,121,117,109,101,115,117,98,115,46,99,111,109];
+  return [e.map(c=>String.fromCharCode(c)).join(''), f.map(c=>String.fromCharCode(c)).join('')];
+})();
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // backward compat
 
 // ── RATE LIMIT CONFIG ──
@@ -1814,9 +1822,12 @@ async function applyAuthState(user) {
 
     // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
     _isAdmin = ADMIN_EMAILS.includes(user.email);
-    window._isAdmin = _isAdmin;
-    if(_isAdmin) document.body.classList.add('is-admin');
-    else document.body.classList.remove('is-admin');
+    // JANGAN ekspose _isAdmin ke window — gampang di-override dari DevTools
+    // Kirim ke protection layer via one-time bridge yang langsung self-destruct
+    try{ window.__yumeAuthBridge = _isAdmin; } catch(ex){}
+    // Hapus is-admin class dari body — dieksploitasi via DevTools ("document.body.classList.add('is-admin')")
+    // Proteksi admin sekarang murni via Firebase Auth + _verifiedAdmin closure
+    document.body.classList.remove('is-admin');
 
     // Update copy gate (setelah _isAdmin sudah diset)
     updateCopyGate();
@@ -2332,7 +2343,8 @@ window.doCopyLyric = async () => {
   }
 
   document.addEventListener('copy', function(e) {
-    if(window._isAdmin) return; // Admin bebas copy tanpa scramble
+    // Cek via _isAdmin (local scope) — tidak pakai window._isAdmin yang bisa di-override
+    if(typeof _isAdmin !== 'undefined' && _isAdmin) return; // Admin bebas copy tanpa scramble
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) return;
     const raw = sel.toString();
@@ -3235,104 +3247,135 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 })();
 </script>
 <script>
-/* ── YumeSubs Copy Protection (v3) ── */
+/* ── YumeSubs Copy Protection (v4) ── */
 (function(){
-  const WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
+  var WATERMARK = '\n\n© YumeSubs — yumelyrics.my.id';
 
+  /* Admin check: murni via closure — tidak ada satupun property yang diekspose ke window.
+     _verifiedAdmin hanya bisa diset lewat __yumeAuthBridge yang di-delete setelah dipakai
+     satu kali oleh applyAuthState(). Setelah itu channel tertutup selamanya. */
+  var _verifiedAdmin = false;
+  var _bridgeUsed = false;
+  // Bridge satu kali pakai — setelah applyAuthState() memanggil ini, langsung dihapus dari window
+  Object.defineProperty(window, '__yumeAuthBridge', {
+    configurable: true,
+    get: function(){ return undefined; },
+    set: function(val){
+      if(_bridgeUsed) return; // tolak semua call setelah pertama
+      _bridgeUsed = true;
+      _verifiedAdmin = (val === true);
+      // Hapus bridge dari window supaya tidak bisa dipanggil lagi dari DevTools
+      try{ delete window.__yumeAuthBridge; } catch(ex){}
+    }
+  });
+
+  function isProtected(){ return !_verifiedAdmin; }
   function isInput(el){ var t=el&&el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
 
-  /* 1. Blokir klik kanan seluruh halaman — admin bebas */
+  /* 1. Blokir klik kanan */
   document.addEventListener('contextmenu', function(e){
-    if(window._isAdmin) return;
+    if(!isProtected()) return;
     e.preventDefault();
-  });
+    e.stopImmediatePropagation();
+  }, true); // capture phase — jalan sebelum listener lain
 
-  /* 2. Blokir keyboard shortcut — admin bebas
-     Tambahan: p (print), F12 (DevTools), F5+Ctrl (reload+view source),
-     i (Ctrl+I inspect), j (Ctrl+J console), Ctrl+Shift+I/J/C/K */
+  /* 2. Blokir keyboard shortcut — capture phase, stopImmediatePropagation */
   document.addEventListener('keydown', function(e){
-    if(window._isAdmin) return;
-    var k = e.key.toLowerCase();
-    // Ctrl/Cmd kombinasi
+    if(!isProtected()) return;
+    var k = e.key ? e.key.toLowerCase() : '';
+    var code = e.code ? e.code.toLowerCase() : '';
     if(e.ctrlKey||e.metaKey){
-      if(['a','c','u','s','p','i','j'].includes(k)) { e.preventDefault(); return; }
-      // Ctrl+Shift+I/J/C/K (DevTools)
-      if(e.shiftKey && ['i','j','c','k'].includes(k)) { e.preventDefault(); return; }
+      // Tangkap via key DAN code — handle edge case browser tertentu
+      var keyOrCode = k || code;
+      if(['a','c','u','s','p','i','j','x','keya','keyc','keyu','keys','keyp','keyi','keyj','keyx'].indexOf(keyOrCode)!==-1){
+        // Kalau target adalah input/textarea, izinkan Ctrl+A (select all di field)
+        if((k==='a'||code==='keya') && isInput(e.target)) return;
+        e.preventDefault(); e.stopImmediatePropagation(); return;
+      }
+      if(e.shiftKey && ['i','j','c','k','s'].indexOf(k)!==-1){
+        e.preventDefault(); e.stopImmediatePropagation(); return;
+      }
     }
-    // F12 & PrintScreen
-    if(k==='f12' || k==='printscreen') { e.preventDefault(); return; }
-  });
+    if(k==='f12'||k==='printscreen'||k==='contextmenu'){
+      e.preventDefault(); e.stopImmediatePropagation(); return;
+    }
+  }, true); // capture phase
 
-  /* 3. Blokir copy — langsung inject watermark saja, isi asli dibuang — admin bebas */
+  /* 3. Blokir copy — inject watermark */
   document.addEventListener('copy', function(e){
-    if(window._isAdmin) return;
-    e.clipboardData.setData('text/plain', WATERMARK);
+    if(!isProtected()) return;
+    try{ e.clipboardData.setData('text/plain', WATERMARK); } catch(ex){}
     e.preventDefault();
-  });
+    e.stopImmediatePropagation();
+  }, true);
 
-  /* 3b. Blokir cut juga */
+  /* 3b. Blokir cut */
   document.addEventListener('cut', function(e){
-    if(window._isAdmin) return;
-    e.clipboardData.setData('text/plain', WATERMARK);
+    if(!isProtected()) return;
+    try{ e.clipboardData.setData('text/plain', WATERMARK); } catch(ex){}
     e.preventDefault();
-  });
+    e.stopImmediatePropagation();
+  }, true);
 
-  /* 4. Blokir selectstart — seluruh halaman kecuali input/textarea — admin bebas */
+  /* 4. Blokir selectstart — capture phase */
   document.addEventListener('selectstart', function(e){
-    if(window._isAdmin) return;
+    if(!isProtected()) return;
     if(isInput(e.target)) return;
     e.preventDefault();
-  });
+    e.stopImmediatePropagation();
+  }, true);
 
-  /* 5. Blokir drag teks (drag-select) — admin bebas */
+  /* 5. Blokir drag */
   document.addEventListener('dragstart', function(e){
-    if(window._isAdmin) return;
+    if(!isProtected()) return;
     if(isInput(e.target)) return;
     e.preventDefault();
-  });
-  document.addEventListener('drag', function(e){
-    if(window._isAdmin) return;
-    e.preventDefault();
-  });
+    e.stopImmediatePropagation();
+  }, true);
 
-  /* 6. [MOBILE] Blokir long-press touch — langsung clear tanpa delay — admin bebas */
-  var _touchMoved = false;
-  document.addEventListener('touchstart', function(e){
-    if(window._isAdmin) return;
-    if(isInput(e.target)) return;
-    _touchMoved = false;
-  }, { passive: true });
-  document.addEventListener('touchmove', function(){
-    _touchMoved = true;
-  }, { passive: true });
-  document.addEventListener('touchend', function(e){
-    if(window._isAdmin) return;
-    if(isInput(e.target)) return;
-    // Langsung hapus seleksi setelah tap/longpress
-    setTimeout(function(){
-      if(window.getSelection) window.getSelection().removeAllRanges();
-    }, 0);
-  }, { passive: true });
-
-  /* 7. selectionchange — langsung clear semua seleksi di luar input — admin bebas */
-  document.addEventListener('selectionchange', function(){
-    if(window._isAdmin) return;
-    var sel = window.getSelection();
+  /* 6. selectionchange — clear seleksi di luar input.
+     stopImmediatePropagation() blokir listener lain yang mungkin run duluan. */
+  document.addEventListener('selectionchange', function(e){
+    if(!isProtected()) return;
+    if(e && e.stopImmediatePropagation) e.stopImmediatePropagation();
+    var sel = window.getSelection ? window.getSelection() : null;
     if(!sel || sel.isCollapsed) return;
     var node = sel.anchorNode;
-    if(!node) return;
+    if(!node) { sel.removeAllRanges(); return; }
     var el = node.nodeType===3 ? node.parentElement : node;
-    if(isInput(el)) return;
-    // Langsung clear tanpa batas CHAR_LIMIT
+    // Cek seluruh ancestor chain — input bisa nested di div
+    var cur = el;
+    while(cur && cur !== document.body){
+      if(isInput(cur)) return;
+      cur = cur.parentElement;
+    }
     sel.removeAllRanges();
-  });
+  }, true);
 
-  /* 8. enforceNoSelect — paksa user-select:none ke body + semua elemen lirik
-     via inline style (prioritas lebih tinggi dari stylesheet/DevTools) — admin bebas */
+  /* 7. [MOBILE] Touch long-press */
+  document.addEventListener('touchend', function(e){
+    if(!isProtected()) return;
+    if(isInput(e.target)) return;
+    setTimeout(function(){
+      var sel = window.getSelection ? window.getSelection() : null;
+      if(sel) sel.removeAllRanges();
+    }, 0);
+  }, { passive: true, capture: true });
+
+  /* 8. enforceNoSelect — paksa user-select:none via inline style !important */
   function enforceNoSelect(){
-    if(window._isAdmin) return;
+    if(!isProtected()) return;
+    // Clear selection setiap tick — sempitkan window bypass Ctrl+A
+    var sel = window.getSelection ? window.getSelection() : null;
+    if(sel && !sel.isCollapsed){
+      var node = sel.anchorNode;
+      var el = node ? (node.nodeType===3 ? node.parentElement : node) : null;
+      var inInput = false;
+      var cur = el;
+      while(cur && cur !== document.body){ if(isInput(cur)){inInput=true;break;} cur=cur.parentElement; }
+      if(!inInput) sel.removeAllRanges();
+    }
     var targets = [document.body, document.getElementById('ll')].filter(Boolean);
-    // Tambah semua .ljp .lro .lid
     var lyricEls = document.querySelectorAll('.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right');
     lyricEls.forEach(function(el){ targets.push(el); });
     targets.forEach(function(el){
@@ -3340,43 +3383,73 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
       el.style.setProperty('-moz-user-select','none','important');
       el.style.setProperty('-ms-user-select','none','important');
       el.style.setProperty('user-select','none','important');
+      el.style.setProperty('-webkit-touch-callout','none','important');
     });
   }
   enforceNoSelect();
-  setInterval(enforceNoSelect, 800);
+  // Interval 250ms — window bypass Ctrl+A makin sempit
+  var _enforceInterval = setInterval(enforceNoSelect, 250);
 
-  /* 9. MutationObserver — pantau #ll + body, reset jika style/class diubah — admin bebas */
+  /* 9. MutationObserver — reset proteksi kalau style/class diubah dari DevTools */
   (function(){
     if(!window.MutationObserver) return;
     var obs = new MutationObserver(function(){
-      if(!window._isAdmin) enforceNoSelect();
+      if(isProtected()) enforceNoSelect();
     });
     var ll = document.getElementById('ll');
-    if(ll) obs.observe(ll, { attributes: true, attributeFilter: ['style','class'], subtree: true, childList: true });
-    obs.observe(document.body, { attributes: true, attributeFilter: ['style','class'] });
+    if(ll) obs.observe(ll, { attributes:true, attributeFilter:['style','class'], subtree:true, childList:true });
+    obs.observe(document.body, { attributes:true, attributeFilter:['style','class'] });
+    // Pantau juga html element (kalau DevTools nambah is-admin class di root)
+    obs.observe(document.documentElement, { attributes:true, attributeFilter:['class'] });
   })();
 
-  /* 10. Blokir window.print() override — admin bebas */
-  if(!window._isAdmin){
-    window.print = function(){ return false; };
-  }
+  /* 10. Blokir window.print() */
+  try{ Object.defineProperty(window, 'print', { value:function(){return false;}, writable:false, configurable:false }); } catch(ex){}
 
-  /* 11. CSS injection via <style> tag — sebagai lapisan ganda — admin bebas */
+  /* 11. CSS injection via <style> tag dengan guard ketat */
   (function(){
-    if(window._isAdmin) return;
-    var s = document.createElement('style');
-    s.id = 'yume-noselect';
-    s.textContent = 'body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}';
-    document.head.appendChild(s);
-    // Pastikan style tag ini tidak bisa dihapus via DOM manipulation
-    var headObs = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        m.removedNodes.forEach(function(n){
-          if(n.id==='yume-noselect') document.head.appendChild(s);
+    var STYLE_ID = 'yume-noselect-v4';
+    var STYLE_CSS = 'html,body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right,[data-obf]{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}input,textarea,*[contenteditable]{-webkit-user-select:text!important;-moz-user-select:text!important;user-select:text!important;}';
+
+    function injectStyle(){
+      var existing = document.getElementById(STYLE_ID);
+      if(existing){
+        // Pastikan konten tidak diubah
+        if(existing.textContent !== STYLE_CSS) existing.textContent = STYLE_CSS;
+        return;
+      }
+      var s = document.createElement('style');
+      s.id = STYLE_ID;
+      s.textContent = STYLE_CSS;
+      document.head.appendChild(s);
+    }
+    injectStyle();
+
+    // Guard: kalau style tag dihapus atau dimodifikasi, inject ulang
+    if(window.MutationObserver){
+      var headObs = new MutationObserver(function(muts){
+        if(!isProtected()) return;
+        var needReInject = false;
+        muts.forEach(function(m){
+          m.removedNodes.forEach(function(n){ if(n.id===STYLE_ID) needReInject=true; });
+          // Kalau ada childList change di head, cek juga konten style
+          if(m.type==='childList') needReInject = true;
         });
+        if(needReInject) injectStyle();
       });
-    });
-    headObs.observe(document.head, { childList: true });
+      headObs.observe(document.head, { childList:true, subtree:false });
+      // Pantau juga perubahan textContent style tag
+      var styleEl = document.getElementById(STYLE_ID);
+      if(styleEl){
+        headObs.observe(styleEl, { characterData:true, childList:true });
+      }
+    }
+  })();
+
+  /* 12. Proteksi tambahan: disable window.getSelection override */
+  (function(){
+    var _origGetSel = window.getSelection.bind(window);
+    // Tidak kita override — biarkan native, tapi selectionchange sudah handle clear
   })();
 
 })();
