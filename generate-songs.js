@@ -2265,7 +2265,7 @@ window.doCopyLyric = async () => {
     toast('🚫 Akunmu dibanned, tidak bisa copy lirik.');
     return;
   }
-  if (!_hasCommented) { toast('Tinggalkan komentar dulu untuk membuka akses copy lirik!'); return; }
+  if (!_isAdmin && !_hasCommented) { toast('Tinggalkan komentar dulu untuk membuka akses copy lirik!'); return; }
 
   // Kumpulkan semua teks lirik dari DOM (urutan sudah benar via CSS order)
   const lines = [];
@@ -2332,6 +2332,7 @@ window.doCopyLyric = async () => {
   }
 
   document.addEventListener('copy', function(e) {
+    if(window._isAdmin) return; // Admin bebas copy tanpa scramble
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) return;
     const raw = sel.toString();
