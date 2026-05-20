@@ -454,6 +454,8 @@ textarea.fi:focus{border-color:var(--gold)}
 .adm-section{display:none}
 .adm-section.on{display:block}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
 <body>
 <div id="bgwrap"></div>
@@ -521,6 +523,13 @@ textarea.fi:focus{border-color:var(--gold)}
           <span id="yt-key-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
         </div>
         <input class="fi" id="yt-api-key-inp" type="password" placeholder="AIza...">
+      </div>
+      <div class="fg" style="flex:1;min-width:200px;margin:0">
+        <div class="fl" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Genius API Key <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— untuk ambil lirik</span></span>
+          <span id="genius-key-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
+        </div>
+        <input class="fi" id="genius-api-key-inp" type="password" placeholder="genius_token...">
       </div>
     </div>
     <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">GitHub: scope <code style="color:var(--accent2)">workflow</code> · YT Key: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → Enable YouTube Data API v3 → Create credentials → Public data · Keduanya disimpen lokal di browser.</div>
@@ -595,6 +604,7 @@ textarea.fi:focus{border-color:var(--gold)}
     <div class="fg full">
       <div class="lbhd"><div class="fl">Baris Lirik</div></div>
       <div style="margin-bottom:.8rem">
+        <button class="badd" style="border-color:rgba(255,204,0,.4);color:#ffcc00;margin-bottom:.6rem" onclick="fetchGeniusLyrics()">🎤 Ambil Lirik dari Genius</button>
         <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
         <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Jawaban Latihan</button>
         <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
@@ -610,8 +620,9 @@ textarea.fi:focus{border-color:var(--gold)}
         <div id="bulkArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(79,126,196,.06);border:1px solid rgba(79,126,196,.25);padding:.9rem">
           <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris. Format: baris 1 JP, baris 2 Romaji, baris 3 Terjemahan. Pisah paragraf dengan baris kosong. Support sampai 100+ baris.</div>
           <textarea class="fi" id="bulkInput" rows="8" placeholder="見上げれば痛みさえも　淡くほぐれてゆく&#10;Miagereba itami sae mo awaku hogrete yuku&#10;Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;散っていった恋も　枯れてしまった絆も&#10;Chitte itta koi mo karete shimatta kizuna mo&#10;Cinta yang udah pergi, ikatan yang udah layu"></textarea>
-          <div style="display:flex;gap:.5rem">
-            <button class="bsave" style="flex:1" onclick="parseBulk()">⚡ Generate Baris</button>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="bsave" style="flex:1;min-width:160px" onclick="parseBulk()">⚡ Generate Baris</button>
+            <button class="bsave" id="romaji-gen-btn" style="flex:1;min-width:160px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" onclick="generateRomaji()">🈳 Generate Romaji</button>
             <button class="bcancel" onclick="document.getElementById('bulkArea').style.display='none';document.getElementById('bulkInput').value=''">Tutup</button>
           </div>
         </div>
@@ -1113,8 +1124,180 @@ onSnapshot(
   err => console.error('stories listen error:', err)
 );
 
+// ── KUROSHIRO ROMAJI GENERATOR ──
+let _kuroshiro = null;
+let _kuroReady = false;
+let _kuroLoading = false;
+
+async function initKuroshiro(){
+  if(_kuroReady) return true;
+  if(_kuroLoading) {
+    // tunggu sampai selesai
+    await new Promise(res => { const t = setInterval(() => { if(!_kuroLoading){ clearInterval(t); res(); }}, 200); });
+    return _kuroReady;
+  }
+  _kuroLoading = true;
+  try {
+    _kuroshiro = new Kuroshiro();
+    await _kuroshiro.init(new KuroshiroAnalyzerKuromoji());
+    _kuroReady = true;
+    _kuroLoading = false;
+    return true;
+  } catch(e){
+    _kuroLoading = false;
+    toast('Gagal init Kuroshiro: ' + e.message);
+    return false;
+  }
+}
+
+window.generateRomaji = async () => {
+  const btn = document.getElementById('romaji-gen-btn');
+  const raw = document.getElementById('bulkInput').value.trim();
+  if(!raw){ toast('Bulk area kosong!'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Load engine...';
+  toast('Inisialisasi mesin romaji...');
+
+  const ready = await initKuroshiro();
+  if(!ready){ btn.disabled = false; btn.textContent = '🈳 Generate Romaji'; return; }
+
+  btn.textContent = '⏳ Generate...';
+  toast('Generate romaji...');
+
+  try {
+    // Deteksi apakah sudah format JP
+
+JP atau JP
+ROM
+ID
+    // Kalau paragraf cuma 1 baris = pure JP dari Genius, convert semua
+    // Kalau paragraf 2-3 baris = sudah ada romaji, skip
+    const paragraphs = raw.split(/
+\s*
+/).map(p => p.trim()).filter(Boolean);
+    const results = [];
+
+    for(const para of paragraphs){
+      const lines = para.split('
+').map(l => l.trim()).filter(Boolean);
+      if(lines.length === 1){
+        // 1 baris = JP only, generate romaji
+        const jp = lines[0];
+        const ro = await _kuroshiro.convert(jp, { mode: 'spaced', to: 'romaji', romajiSystem: 'hepburn' });
+        results.push(jp + '
+' + ro);
+      } else {
+        // sudah multi-baris, biarkan apa adanya
+        results.push(para);
+      }
+    }
+
+    document.getElementById('bulkInput').value = results.join('
+
+');
+    toast('✅ Romaji berhasil di-generate!');
+  } catch(e){
+    toast('Gagal generate romaji: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🈳 Generate Romaji';
+};
+
+// ── GENIUS LYRICS FETCH ──
+window.fetchGeniusLyrics = async () => {
+  const apiKey = geniusKeyGet();
+  if(!apiKey){ toast('Isi Genius API Key dulu!'); return; }
+
+  // Ambil judul + artis dari form
+  const title  = document.getElementById('f-jt').value.trim();
+  const artist = document.getElementById('f-ar').value.trim();
+  if(!title){ toast('Isi Judul Lagu dulu!'); return; }
+
+  toast('Searching Genius...');
+
+  try {
+    // Search via Genius API — butuh CORS proxy karena browser block direct fetch
+    const q = encodeURIComponent(`${title} ${artist}`);
+    const searchRes = await fetch(`https://corsproxy.io/?url=https://api.genius.com/search?q=${q}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    if(!searchRes.ok) throw new Error('Search gagal: ' + searchRes.status);
+    const searchData = await searchRes.json();
+
+    const hits = searchData.response?.hits;
+    if(!hits?.length) throw new Error('Lagu tidak ditemukan di Genius');
+
+    // Ambil hit pertama
+    const song = hits[0].result;
+    const songUrl = song.url;
+    const songTitle = song.full_title;
+
+    toast(`Ditemukan: ${songTitle} — ambil lirik...`);
+
+    // Scrape halaman Genius via proxy
+    const pageRes = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(songUrl)}`);
+    if(!pageRes.ok) throw new Error('Gagal buka halaman Genius');
+    const html = await pageRes.text();
+
+    // Parse lirik dari data-lyrics-container
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const containers = doc.querySelectorAll('[data-lyrics-container]');
+
+    if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman');
+
+    let lyrics = '';
+    containers.forEach(container => {
+      // Ganti <br> jadi newline
+      container.querySelectorAll('br').forEach(br => br.replaceWith('
+'));
+      // Skip elemen annotation (a.referent)
+      container.querySelectorAll('a.referent').forEach(a => {
+        a.replaceWith(a.textContent);
+      });
+      // Skip section headers [Verse], [Chorus] dll — tetap ikutkan sebagai konteks
+      lyrics += container.textContent + '
+
+';
+    });
+
+    // Bersihkan: hapus baris kosong berlebih, trim
+    lyrics = lyrics
+      .replace(/\[.*?\]/g, '')        // hapus [Verse 1], [Chorus] dll
+      .replace(/
+{3,}/g, '
+
+')     // max 2 newline berturut
+      .trim();
+
+    if(!lyrics) throw new Error('Lirik kosong setelah parsing');
+
+    // Format ke bulk: tiap baris jadi paragraf sendiri (JP only, 1 baris per paragraf)
+    const lines = lyrics.split('
+').map(l => l.trim()).filter(Boolean);
+    const bulkText = lines.join('
+
+');
+
+    // Masukin ke bulkInput dan buka panel
+    document.getElementById('bulkInput').value = bulkText;
+    ['bulkTransArea','geniusArea'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.display = 'none';
+    });
+    document.getElementById('bulkArea').style.display = 'flex';
+
+    toast(`✅ ${lines.length} baris lirik berhasil diambil dari Genius!`);
+
+  } catch(err){
+    toast('Genius gagal: ' + err.message);
+  }
+};
+
 window.toggleBulk = (id) => {
-  ['bulkArea','bulkTransArea'].forEach(oid => {
+  ['bulkArea','bulkTransArea','geniusArea'].forEach(oid => {
     if(oid !== id) document.getElementById(oid).style.display = 'none';
   });
   const el = document.getElementById(id);
@@ -1438,9 +1621,11 @@ window.fetchSpotifyCover = async () => {
     const data = await oembed.json();
     const coverUrl = data.thumbnail_url;
     if (!coverUrl) throw new Error('Cover tidak ditemukan');
-    document.getElementById('f-img').value = coverUrl;
-    showCoverPreview(coverUrl);
-    toast('✅ Cover berhasil diambil dari Spotify!');
+    // Upgrade resolusi: 300x300 (00004851) → 640x640 (0000b273)
+    const hdUrl = coverUrl.replace('ab67616d00004851', 'ab67616d0000b273');
+    document.getElementById('f-img').value = hdUrl;
+    showCoverPreview(hdUrl);
+    toast('✅ Cover HD berhasil diambil dari Spotify!');
     document.getElementById('cover-upload-status').textContent = '(dari Spotify)';
     document.getElementById('cover-upload-status').style.color = '#1DB954';
     updateSpotifyBtn();
@@ -1502,12 +1687,20 @@ function updateSpotifyBtn(){ updateCoverBtns(); }
 // ── YouTube API Key ──
 function ytKeyGet(){ return localStorage.getItem('yume_yt_key')||''; }
 function ytKeySet(k){ localStorage.setItem('yume_yt_key', k); }
+function geniusKeyGet(){ return localStorage.getItem('yume_genius_key')||''; }
+function geniusKeySet(k){ localStorage.setItem('yume_genius_key', k); }
 document.getElementById('yt-api-key-inp').addEventListener('input', function(){
   ytKeySet(this.value.trim());
   updateKeyStatus();
   updateAutofillBadges();
 });
 (function(){ const k=ytKeyGet(); if(k) document.getElementById('yt-api-key-inp').value=k; updateKeyStatus(); })();
+
+document.getElementById('genius-api-key-inp').addEventListener('input', function(){
+  geniusKeySet(this.value.trim());
+  updateKeyStatus();
+});
+(function(){ const k=geniusKeyGet(); if(k) document.getElementById('genius-api-key-inp').value=k; updateKeyStatus(); })();
 
 function updateAutofillBadges(){
   const hasKey = !!ytKeyGet();
@@ -1752,6 +1945,7 @@ window.toggleKeyVisibility = function(){
   const type = _keysVisible ? 'text' : 'password';
   document.getElementById('gh-token-inp').type = type;
   document.getElementById('yt-api-key-inp').type = type;
+  document.getElementById('genius-api-key-inp').type = type;
   document.getElementById('key-toggle-btn').textContent = _keysVisible ? '🙈 Sembunyikan' : '👁 Tampilkan';
 };
 
@@ -1759,8 +1953,10 @@ window.clearAllKeys = function(){
   if(!confirm('Hapus semua API key dari browser?')) return;
   localStorage.removeItem('yume_gh_token');
   localStorage.removeItem('yume_yt_key');
+  localStorage.removeItem('yume_genius_key');
   document.getElementById('gh-token-inp').value = '';
   document.getElementById('yt-api-key-inp').value = '';
+  document.getElementById('genius-api-key-inp').value = '';
   updateKeyStatus();
   toast('Semua key dihapus.');
 };
@@ -1768,8 +1964,10 @@ window.clearAllKeys = function(){
 function updateKeyStatus(){
   const ghEl = document.getElementById('gh-key-status');
   const ytEl = document.getElementById('yt-key-status');
+  const gnEl = document.getElementById('genius-key-status');
   if(ghEl) ghEl.style.display = ghTokenGet() ? 'inline' : 'none';
   if(ytEl) ytEl.style.display = ytKeyGet() ? 'inline' : 'none';
+  if(gnEl) gnEl.style.display = geniusKeyGet() ? 'inline' : 'none';
 }
 
 document.getElementById('gh-token-inp').addEventListener('input', function(){
