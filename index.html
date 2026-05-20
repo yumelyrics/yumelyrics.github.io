@@ -186,7 +186,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc:hover::before{opacity:1}
 /* padding-top trick */
 .sc-img-wrap{width:100%;padding-top:100%;position:relative;flex-shrink:0;background:var(--cream);overflow:hidden}
-.sc-img-wrap img{position:absolute;top:50%;left:50%;width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.1) contrast(1.04);transform:translate(-50%,-50%) scale(1);transition:transform .4s ease}
+.sc-img-wrap img{
+  position:absolute;top:50%;left:50%;
+  width:100%;height:100%;object-fit:cover;display:block;
+  filter:sepia(.1) contrast(1.04);
+  transform:translate(-50%,-50%) scale(1);
+  transition:transform .4s ease;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
 .sc:hover .sc-img-wrap img{transform:translate(-50%,-50%) scale(1.06)}
 .sc-corner{position:absolute;top:0;right:0;width:28px;height:28px;pointer-events:none;z-index:2}
 .sc-corner::before,.sc-corner::after{content:'';position:absolute;background:var(--gold)}
@@ -428,6 +437,36 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(max-width:600px){nav{padding:.9rem 1.2rem;gap:.5rem}.nljp{font-size:.95rem}.sec-hd,.song-grid,#lyrView,.filter-row{padding-left:1.2rem;padding-right:1.2rem}.search-wrap{padding-left:1.2rem;padding-right:1.2rem}.hero-inner{padding-left:1.2rem !important;padding-right:1.2rem !important}.song-grid{grid-template-columns:1fr 1fr;gap:.8rem}#nav-dropdown{right:1.2rem}}
 @media(max-width:380px){nav{padding:.8rem .9rem}.nlen{display:none}#nav-dropdown{right:.9rem}}
 
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{
+  0%{background-position:-600px 0}
+  100%{background-position:600px 0}
+}
+.sc-skel{
+  background:var(--paper);border:1px solid var(--border);
+  overflow:hidden;display:flex;flex-direction:column;pointer-events:none;
+}
+.sc-skel-img{
+  width:100%;padding-top:100%;position:relative;
+  background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
+  background-size:600px 100%;
+  animation:shimmer 1.4s infinite linear;
+  opacity:.4;
+}
+[data-theme="dark"] .sc-skel-img{opacity:.15}
+.sc-skel-body{padding:1.1rem;display:flex;flex-direction:column;gap:.55rem}
+.sc-skel-line{
+  height:.65rem;border-radius:0;
+  background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
+  background-size:600px 100%;
+  animation:shimmer 1.4s infinite linear;
+  opacity:.35;
+}
+[data-theme="dark"] .sc-skel-line{opacity:.12}
+.sc-skel-line.w80{width:80%}
+.sc-skel-line.w60{width:60%}
+.sc-skel-line.w45{width:45%}
+
 .spbtn{display:inline-flex;align-items:center;gap:.5rem;background:#1DB954;border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#000;padding:.6rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:opacity .2s;margin-top:1rem}
 .spbtn:hover{opacity:.85}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
@@ -640,7 +679,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div id="songCount" class="sec-count"></div>
     <div class="sec-ln"></div>
   </div>
-  <div class="song-grid" id="songGrid"><div class="loading-msg">Memuat lagu...</div></div>
+  <div class="song-grid" id="songGrid" aria-live="polite" aria-busy="true"></div>
   <div class="no-result" id="noResult" style="display:none">Gak ada lagu yang cocok.</div>
 </div>
 
@@ -700,7 +739,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp }
+import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, enableIndexedDbPersistence }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -718,6 +757,24 @@ const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+// ── OFFLINE PERSISTENCE — cache Firestore di IndexedDB ──
+// Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
+// lalu otomatis update kalau ada perubahan di server.
+enableIndexedDbPersistence(db).catch(() => {});
+
+// ── INSTANT CACHE — tampilkan dari localStorage sebelum Firebase merespons ──
+(function showCachedSongs() {
+  try {
+    const raw = localStorage.getItem('ym_songs_cache');
+    if (!raw) return;
+    const cached = JSON.parse(raw);
+    if (!Array.isArray(cached) || !cached.length) return;
+    // Isi songs global sementara, render skeleton hilang langsung
+    songs = cached;
+    rc(document.getElementById('searchInp')?.value || '');
+  } catch(e) {}
+})();
 
 // ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
 (function() {
@@ -928,6 +985,19 @@ function buildCard(s, i) {
   return div;
 }
 
+function makeSkeleton(n=8) {
+  return Array.from({length:n}, () =>
+    `<div class="sc-skel" aria-hidden="true">
+      <div class="sc-skel-img"></div>
+      <div class="sc-skel-body">
+        <div class="sc-skel-line w80"></div>
+        <div class="sc-skel-line w60"></div>
+        <div class="sc-skel-line w45"></div>
+      </div>
+    </div>`
+  ).join('');
+}
+
 function rc(filter='', animate=false){
   const q = filter.trim();
   let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
@@ -936,10 +1006,20 @@ function rc(filter='', animate=false){
 
   const grid = document.getElementById('songGrid');
 
-  // Hapus loading-msg sekali saja
-  grid.querySelectorAll('.loading-msg, .no-result-inline').forEach(el => el.remove());
+  // Kalau songs masih kosong sama sekali, tampilkan skeleton
+  if(songs.length === 0) {
+    if(!grid.querySelector('.sc-skel')) {
+      grid.innerHTML = makeSkeleton(8);
+      grid.setAttribute('aria-busy','true');
+    }
+    return;
+  }
+  grid.setAttribute('aria-busy','false');
 
-  const filteredIds = new Set(filtered.map(s=>s.id));
+  // Hapus skeleton kalau masih ada
+  grid.querySelectorAll('.sc-skel').forEach(el => el.remove());
+
+  // Kartu yang sudah ada di DOM
 
   // Kartu yang sudah ada di DOM
   const existing = new Map();
@@ -1584,7 +1664,7 @@ window.postCm = async () => {
   btn.disabled = false;
 };
 
-// ── Load songs — onSnapshot pakai cache Firestore (instan dari cache, update realtime) ──
+// ── Load songs — IndexedDB persistence + localStorage instant cache ──
 let _unsubSongs = null;
 function loadSongs() {
   const grid = document.getElementById('songGrid');
@@ -1593,6 +1673,16 @@ function loadSongs() {
     query(collection(db,'songs'), orderBy('order','desc')),
     snap => {
       songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      // Simpan ke localStorage untuk tampilan instan di visit berikutnya
+      try {
+        // Simpan hanya field yang dibutuhkan untuk render kartu (hemat space)
+        const slim = songs.map(s => ({
+          id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
+          artist:s.artist, img:s.img, order:s.order,
+          recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
+        }));
+        localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
+      } catch(e) {}
       rc(document.getElementById('searchInp').value||'');
     },
     err => {
@@ -1603,6 +1693,14 @@ function loadSongs() {
           songs = snap.docs
             .map(d=>({id:d.id, ...d.data()}))
             .sort((a,b)=>(b.order??0)-(a.order??0));
+          try {
+            const slim = songs.map(s => ({
+              id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
+              artist:s.artist, img:s.img, order:s.order,
+              recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
+            }));
+            localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
+          } catch(e) {}
           rc(document.getElementById('searchInp').value||'');
         },
         () => {
@@ -1611,6 +1709,11 @@ function loadSongs() {
       );
     }
   );
+}
+// Tampilkan skeleton segera kalau belum ada localStorage cache
+if(songs.length === 0) {
+  const grid = document.getElementById('songGrid');
+  grid.innerHTML = makeSkeleton(8);
 }
 loadSongs();
 
