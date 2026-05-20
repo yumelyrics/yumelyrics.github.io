@@ -454,8 +454,10 @@ textarea.fi:focus{border-color:var(--gold)}
 .adm-section{display:none}
 .adm-section.on{display:block}
 </style>
-<script src="https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-<script src="https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+<script>
+// Kuroshiro dimuat secara dinamis saat pertama kali dibutuhkan
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+</script>
 </head>
 <body>
 <div id="bgwrap"></div>
@@ -1137,6 +1139,12 @@ async function initKuroshiro(){
   }
   _kuroLoading = true;
   try {
+    if(typeof Kuroshiro === 'undefined'){
+      await loadScript('https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js');
+    }
+    if(typeof KuroshiroAnalyzerKuromoji === 'undefined'){
+      await loadScript('https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js');
+    }
     _kuroshiro = new Kuroshiro();
     await _kuroshiro.init(new KuroshiroAnalyzerKuromoji());
     _kuroReady = true;
@@ -1186,88 +1194,44 @@ window.generateRomaji = async () => {
 window.fetchGeniusLyrics = async () => {
   const apiKey = geniusKeyGet();
   if(!apiKey){ toast('Isi Genius API Key dulu!'); return; }
-
-  // Ambil judul + artis dari form
   const title  = document.getElementById('f-jt').value.trim();
   const artist = document.getElementById('f-ar').value.trim();
   if(!title){ toast('Isi Judul Lagu dulu!'); return; }
-
   toast('Searching Genius...');
-
   try {
-    // Search via Genius API — butuh CORS proxy karena browser block direct fetch
-    const q = encodeURIComponent(`${title} ${artist}`);
-    const searchRes = await fetch(`https://corsproxy.io/?url=https://api.genius.com/search?q=${q}`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
+    const q = encodeURIComponent(title + ' ' + artist);
+    const searchRes = await fetch('https://corsproxy.io/?url=https://api.genius.com/search?q=' + q, {
+      headers: { 'Authorization': 'Bearer ' + apiKey }
     });
     if(!searchRes.ok) throw new Error('Search gagal: ' + searchRes.status);
     const searchData = await searchRes.json();
-
-    const hits = searchData.response?.hits;
-    if(!hits?.length) throw new Error('Lagu tidak ditemukan di Genius');
-
-    // Ambil hit pertama
+    const hits = searchData.response && searchData.response.hits;
+    if(!hits || !hits.length) throw new Error('Lagu tidak ditemukan di Genius');
     const song = hits[0].result;
     const songUrl = song.url;
     const songTitle = song.full_title;
-
-    toast(`Ditemukan: ${songTitle} — ambil lirik...`);
-
-    // Scrape halaman Genius via proxy
-    const pageRes = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(songUrl)}`);
+    toast('Ditemukan: ' + songTitle + ' — ambil lirik...');
+    const pageRes = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(songUrl));
     if(!pageRes.ok) throw new Error('Gagal buka halaman Genius');
     const html = await pageRes.text();
-
-    // Parse lirik dari data-lyrics-container
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const containers = doc.querySelectorAll('[data-lyrics-container]');
-
     if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman');
-
     let lyrics = '';
-    containers.forEach(container => {
-      // Ganti <br> jadi newline
-      container.querySelectorAll('br').forEach(br => br.replaceWith('
-'));
-      // Skip elemen annotation (a.referent)
-      container.querySelectorAll('a.referent').forEach(a => {
-        a.replaceWith(a.textContent);
-      });
-      // Skip section headers [Verse], [Chorus] dll — tetap ikutkan sebagai konteks
-      lyrics += container.textContent + '
-
-';
+    containers.forEach(function(container) {
+      container.querySelectorAll('br').forEach(function(br){ br.replaceWith('\n'); });
+      container.querySelectorAll('a.referent').forEach(function(a){ a.replaceWith(a.textContent); });
+      lyrics += container.textContent + '\n\n';
     });
-
-    // Bersihkan: hapus baris kosong berlebih, trim
-    lyrics = lyrics
-      .replace(/\[.*?\]/g, '')        // hapus [Verse 1], [Chorus] dll
-      .replace(/
-{3,}/g, '
-
-')     // max 2 newline berturut
-      .trim();
-
+    lyrics = lyrics.replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
     if(!lyrics) throw new Error('Lirik kosong setelah parsing');
-
-    // Format ke bulk: tiap baris jadi paragraf sendiri (JP only, 1 baris per paragraf)
-    const lines = lyrics.split('
-').map(l => l.trim()).filter(Boolean);
-    const bulkText = lines.join('
-
-');
-
-    // Masukin ke bulkInput dan buka panel
+    const lines = lyrics.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    const bulkText = lines.join('\n\n');
     document.getElementById('bulkInput').value = bulkText;
-    ['bulkTransArea','geniusArea'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.style.display = 'none';
-    });
+    document.getElementById('bulkTransArea').style.display = 'none';
     document.getElementById('bulkArea').style.display = 'flex';
-
-    toast(`✅ ${lines.length} baris lirik berhasil diambil dari Genius!`);
-
+    toast('\u2705 ' + lines.length + ' baris lirik berhasil diambil dari Genius!');
   } catch(err){
     toast('Genius gagal: ' + err.message);
   }
