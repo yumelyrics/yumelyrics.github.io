@@ -454,8 +454,8 @@ textarea.fi:focus{border-color:var(--gold)}
 .adm-section{display:none}
 .adm-section.on{display:block}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+<script src="https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+<script src="https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
 <body>
 <div id="bgwrap"></div>
@@ -1131,8 +1131,7 @@ let _kuroLoading = false;
 
 async function initKuroshiro(){
   if(_kuroReady) return true;
-  if(_kuroLoading) {
-    // tunggu sampai selesai
+  if(_kuroLoading){
     await new Promise(res => { const t = setInterval(() => { if(!_kuroLoading){ clearInterval(t); res(); }}, 200); });
     return _kuroReady;
   }
@@ -1154,53 +1153,31 @@ window.generateRomaji = async () => {
   const btn = document.getElementById('romaji-gen-btn');
   const raw = document.getElementById('bulkInput').value.trim();
   if(!raw){ toast('Bulk area kosong!'); return; }
-
   btn.disabled = true;
   btn.textContent = '⏳ Load engine...';
   toast('Inisialisasi mesin romaji...');
-
   const ready = await initKuroshiro();
   if(!ready){ btn.disabled = false; btn.textContent = '🈳 Generate Romaji'; return; }
-
   btn.textContent = '⏳ Generate...';
   toast('Generate romaji...');
-
   try {
-    // Deteksi apakah sudah format JP
-
-JP atau JP
-ROM
-ID
-    // Kalau paragraf cuma 1 baris = pure JP dari Genius, convert semua
-    // Kalau paragraf 2-3 baris = sudah ada romaji, skip
-    const paragraphs = raw.split(/
-\s*
-/).map(p => p.trim()).filter(Boolean);
+    const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
     const results = [];
-
     for(const para of paragraphs){
-      const lines = para.split('
-').map(l => l.trim()).filter(Boolean);
+      const lines = para.split('\n').map(l => l.trim()).filter(Boolean);
       if(lines.length === 1){
-        // 1 baris = JP only, generate romaji
         const jp = lines[0];
         const ro = await _kuroshiro.convert(jp, { mode: 'spaced', to: 'romaji', romajiSystem: 'hepburn' });
-        results.push(jp + '
-' + ro);
+        results.push(jp + '\n' + ro);
       } else {
-        // sudah multi-baris, biarkan apa adanya
         results.push(para);
       }
     }
-
-    document.getElementById('bulkInput').value = results.join('
-
-');
+    document.getElementById('bulkInput').value = results.join('\n\n');
     toast('✅ Romaji berhasil di-generate!');
   } catch(e){
     toast('Gagal generate romaji: ' + e.message);
   }
-
   btn.disabled = false;
   btn.textContent = '🈳 Generate Romaji';
 };
