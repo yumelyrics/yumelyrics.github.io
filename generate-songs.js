@@ -1818,6 +1818,7 @@ async function applyAuthState(user) {
 
     // Deteksi admin
     _isAdmin = ADMIN_EMAILS.includes(user.email);
+    window._isAdmin = _isAdmin;
 
     // Load custom photoURL dari Firestore user_profiles
     _customPhotoURL = user.photoURL || null;
@@ -3221,18 +3222,23 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
   function isInput(el){ const t=el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
 
-  /* 1. Blokir klik kanan */
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  /* 1. Blokir klik kanan — admin bebas */
+  document.addEventListener('contextmenu', function(e){
+    if(window._isAdmin) return;
+    e.preventDefault();
+  });
 
-  /* 2. Blokir keyboard shortcut */
+  /* 2. Blokir keyboard shortcut — admin bebas */
   document.addEventListener('keydown', function(e){
+    if(window._isAdmin) return;
     if((e.ctrlKey||e.metaKey) && ['a','c','u','s'].includes(e.key.toLowerCase())){
       e.preventDefault();
     }
   });
 
-  /* 3. Intercept copy — potong di CHAR_LIMIT, tambah watermark */
+  /* 3. Intercept copy — potong di CHAR_LIMIT, tambah watermark — admin bebas */
   document.addEventListener('copy', function(e){
+    if(window._isAdmin) return;
     const sel = window.getSelection().toString();
     if(sel.length > CHAR_LIMIT){
       const trimmed = sel.substring(0, CHAR_LIMIT);
@@ -3241,8 +3247,9 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     }
   });
 
-  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik */
+  /* 4. Blokir selectstart (desktop) — hanya blokir di elemen lirik — admin bebas */
   document.addEventListener('selectstart', function(e){
+    if(window._isAdmin) return;
     if(isInput(e.target)) return;
     var el = e.target;
     while(el && el !== document.body){
@@ -3251,9 +3258,10 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     }
   });
 
-  /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi */
+  /* 5. [MOBILE] Blokir long-press touch yang memicu seleksi — admin bebas */
   var touchTimer = null;
   document.addEventListener('touchstart', function(e){
+    if(window._isAdmin) return;
     if(isInput(e.target)) return;
     touchTimer = setTimeout(function(){
       if(window.getSelection) window.getSelection().removeAllRanges();
@@ -3266,8 +3274,9 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     if(touchTimer){ clearTimeout(touchTimer); touchTimer=null; }
   }, { passive: true });
 
-  /* 6. [MOBILE] Kalau seleksi teks berhasil terbentuk, langsung clear */
+  /* 6. [MOBILE] Kalau seleksi teks berhasil terbentuk, langsung clear — admin bebas */
   document.addEventListener('selectionchange', function(){
+    if(window._isAdmin) return;
     var sel = window.getSelection();
     if(!sel || sel.isCollapsed) return;
     var node = sel.anchorNode;
