@@ -67,11 +67,20 @@ function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/** Perkecil URL gambar eksternal untuk mobile. */
-function optimizeImgUrl(url) {
+/** URL cover utama — pertahankan / naikkan resolusi (sama seperti admin HD). */
+function coverImgUrl(url) {
   if (!url || typeof url !== 'string') return url;
   let u = url.trim();
-  if (u.includes('img.youtube.com') && u.includes('maxresdefault')) u = u.replace('maxresdefault', 'mqdefault');
+  if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
+  if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
+  return u;
+}
+
+/** Thumbnail kecil (related) — boleh lebih ringan. */
+function thumbImgUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  let u = url.trim();
+  if (u.includes('img.youtube.com') && u.includes('maxresdefault')) u = u.replace('maxresdefault', 'hqdefault');
   if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '300x300');
   if (u.includes('mzstatic.com')) u = u.replace(/\/(\d+)x(\d+)(bb|cc)/, '/300x300$3');
   if (u.includes('spotifycdn.com/image/ab67616d0000b273')) u = u.replace('0000b273', '00001e02');
@@ -83,9 +92,10 @@ function imgTag(src, alt, opts = {}) {
   const w = opts.w || 52;
   const h = opts.h || 52;
   const eager = !!opts.eager;
-  const sizes = opts.sizes || `${w}px`;
+  const hd = !!opts.hd;
+  const sizes = opts.sizes || (hd ? '(max-width:600px) 100vw, 480px' : `${w}px`);
   if (!src) return '';
-  const u = optimizeImgUrl(src);
+  const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
   return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
 }
@@ -1365,7 +1375,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 320, h: 320, eager: true, sizes: '(max-width:600px) 100vw, 320px' })
+          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
