@@ -2,16 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://yumelyrics.my.id/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/index.html</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/</loc><lastmod>2026-05-20</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/latihan.html</loc><lastmod>2026-05-20</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/stories.html</loc><lastmod>2026-05-20</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/contact.html</loc><lastmod>2026-05-20</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/</loc><lastmod>2026-05-20</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/atsu-mizuno.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/back-number.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/back-number-2.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/centimillimental.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/chouchou-p.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/given.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
@@ -27,10 +27,10 @@
   <url><loc>https://yumelyrics.my.id/artis/rokudenashi.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/syh.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/yoacobi.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/p.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/artis-2.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/artis.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/artis-3.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/p.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/artis-2.html</loc><lastmod>2026-05-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/lagu/misut-bursukai.html</loc><lastmod>2026-05-20</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/72/10/65/721065ba-e620-35c5-fa90-7154c6afaed0/bigup11881687.jpg/600x600cc.webp</image:loc>
