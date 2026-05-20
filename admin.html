@@ -171,6 +171,16 @@ textarea.fi:focus{border-color:var(--gold)}
 .bdels{background:none;border:1px solid rgba(185,64,64,.25);color:var(--red);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .7rem;cursor:pointer;transition:all .2s}
 .bdels:hover{background:rgba(185,64,64,.08)}
 .empty-list{font-size:.82rem;color:var(--ash);font-style:italic;grid-column:1/-1;padding:.5rem 0}
+/* ── Artist Autocomplete ── */
+.artist-wrap{position:relative;width:100%}
+.artist-suggestions{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:50;background:var(--paper);border:1px solid rgba(10,8,18,.14);box-shadow:0 8px 24px rgba(10,8,18,.1);display:none;flex-direction:column;max-height:200px;overflow-y:auto}
+[data-theme="dark"] .artist-suggestions{background:var(--cream);border-color:rgba(232,226,217,.18);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.artist-suggestions.open{display:flex}
+.artist-sug-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;cursor:pointer;font-size:.82rem;color:var(--ink);border-bottom:1px solid rgba(10,8,18,.05);transition:background .15s;flex-shrink:0}
+[data-theme="dark"] .artist-sug-item{border-bottom-color:rgba(232,226,217,.06)}
+.artist-sug-item:last-child{border-bottom:none}
+.artist-sug-item:hover,.artist-sug-item.focused{background:rgba(201,169,110,.1)}
+.artist-sug-count{font-size:.58rem;color:var(--ash);margin-left:auto;flex-shrink:0;letter-spacing:.06em}
 .edit-banner{grid-column:1/-1;background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.3);border-left:3px solid var(--gold);padding:.7rem 1rem;font-size:.78rem;color:var(--gold);display:none;align-items:center;gap:.6rem;margin-bottom:.5rem}
 .edit-banner.on{display:flex}
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
@@ -550,7 +560,13 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <div class="song-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
       <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder=""></div>
       <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder=""></div>
-      <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder=""></div>
+      <div class="fg">
+        <div class="fl">Artis *</div>
+        <div class="artist-wrap">
+          <input class="fi" id="f-ar" placeholder="" autocomplete="off" oninput="onArtistInput(this)" onkeydown="onArtistKeydown(event)" onblur="closeArtistSuggestions()">
+          <div class="artist-suggestions" id="artist-suggestions"></div>
+        </div>
+      </div>
       <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder=""></div>
       <div class="fg">
         <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
@@ -1127,6 +1143,8 @@ onSnapshot(
 );
 
 // ── KUROSHIRO ROMAJI GENERATOR ──
+// Pakai kuroshiro-browser: bundle Kuroshiro + Kuromoji all-in-one, didesain khusus untuk browser
+// CDN: jsDelivr (lebih stabil dari unpkg)
 let _kuroshiro = null;
 let _kuroReady = false;
 let _kuroLoading = false;
@@ -1139,20 +1157,18 @@ async function initKuroshiro(){
   }
   _kuroLoading = true;
   try {
-    if(typeof Kuroshiro === 'undefined'){
-      await loadScript('https://unpkg.com/kuroshiro@1.2.0/dist/kuroshiro.min.js');
+    // kuroshiro-browser = Kuroshiro + KuromojiAnalyzer sudah digabung jadi 1 file
+    if(typeof KuroshiroBrowser === 'undefined'){
+      await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-browser@0.1.0/dist/kuroshiro-browser.min.js');
     }
-    if(typeof KuroshiroAnalyzerKuromoji === 'undefined'){
-      await loadScript('https://unpkg.com/kuroshiro-analyzer-kuromoji@1.1.2/dist/kuroshiro-analyzer-kuromoji.min.js');
-    }
-    _kuroshiro = new Kuroshiro();
-    await _kuroshiro.init(new KuroshiroAnalyzerKuromoji());
+    _kuroshiro = new KuroshiroBrowser();
+    await _kuroshiro.init();
     _kuroReady = true;
     _kuroLoading = false;
     return true;
   } catch(e){
     _kuroLoading = false;
-    toast('Gagal init Kuroshiro: ' + e.message);
+    toast('Gagal init Romaji engine: ' + e.message);
     return false;
   }
 }
@@ -1175,7 +1191,7 @@ window.generateRomaji = async () => {
       const lines = para.split('\n').map(l => l.trim()).filter(Boolean);
       if(lines.length === 1){
         const jp = lines[0];
-        const ro = await _kuroshiro.convert(jp, { mode: 'spaced', to: 'romaji', romajiSystem: 'hepburn' });
+        const ro = await _kuroshiro.convert(jp, { to: 'romaji', romajiSystem: 'hepburn', mode: 'spaced' });
         results.push(jp + '\n' + ro);
       } else {
         results.push(para);
@@ -1191,6 +1207,21 @@ window.generateRomaji = async () => {
 };
 
 // ── GENIUS LYRICS FETCH ──
+// Helper: coba beberapa CORS proxy secara berurutan sampai ada yang berhasil
+async function fetchWithProxies(url){
+  // corsproxy.io: format baru pakai ?url=
+  const proxies = [
+    () => fetch('https://corsproxy.io/?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
+    () => fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
+    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); }),
+  ];
+  let lastErr;
+  for(const fn of proxies){
+    try { return await fn(); } catch(e){ lastErr = e; }
+  }
+  throw new Error('Semua proxy gagal: ' + lastErr.message);
+}
+
 window.fetchGeniusLyrics = async () => {
   const apiKey = geniusKeyGet();
   if(!apiKey){ toast('Isi Genius API Key dulu!'); return; }
@@ -1199,47 +1230,44 @@ window.fetchGeniusLyrics = async () => {
   if(!title){ toast('Isi Judul Lagu dulu!'); return; }
   toast('Searching Genius...');
   try {
-    const q = encodeURIComponent(title + ' ' + artist);
-    // Genius API support CORS langsung dengan Authorization header
-    const searchRes = await fetch('https://api.genius.com/search?q=' + q, {
-      headers: { 'Authorization': 'Bearer ' + apiKey, 'User-Agent': 'YumeSubs/1.0' }
-    }).catch(async () => {
-      // fallback ke allorigins proxy
-      return fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.genius.com/search?q=' + q + '&access_token=' + apiKey));
-    });
-    if(!searchRes.ok) throw new Error('Search gagal: ' + searchRes.status);
-    let searchData = await searchRes.json();
-    // allorigins wraps response in {contents: "..."}
-    if(searchData.contents) searchData = JSON.parse(searchData.contents);
+    const q = encodeURIComponent(title + (artist ? ' ' + artist : ''));
+    // Genius API: coba direct dulu, kalau CORS error fallback ke proxy
+    let searchData;
+    try {
+      const r = await fetch('https://api.genius.com/search?q=' + q, {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      if(!r.ok) throw new Error(r.status);
+      searchData = await r.json();
+    } catch(_){
+      // Fallback: proxy Genius API
+      const raw = await fetchWithProxies('https://api.genius.com/search?q=' + q + '&access_token=' + apiKey);
+      searchData = JSON.parse(raw);
+    }
     const hits = searchData.response && searchData.response.hits;
     if(!hits || !hits.length) throw new Error('Lagu tidak ditemukan di Genius');
     const song = hits[0].result;
     const songUrl = song.url;
-    const songTitle = song.full_title;
-    toast('Ditemukan: ' + songTitle + ' — ambil lirik...');
-    // Scrape halaman Genius via allorigins
-    const pageRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(songUrl));
-    if(!pageRes.ok) throw new Error('Gagal buka halaman Genius');
-    const pageData = await pageRes.json();
-    const html = pageData.contents || '';
+    toast('Ditemukan: ' + song.full_title + ' — ambil lirik...');
+    // Scrape halaman Genius via proxy (allorigins sudah block HTML, pakai chain proxy)
+    const html = await fetchWithProxies(songUrl);
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const containers = doc.querySelectorAll('[data-lyrics-container]');
-    if(!containers.length) throw new Error('Lirik tidak ditemukan di halaman');
+    if(!containers.length) throw new Error('Lirik tidak ditemukan — Genius mungkin ubah struktur HTML-nya');
     let lyrics = '';
     containers.forEach(function(container) {
       container.querySelectorAll('br').forEach(function(br){ br.replaceWith('\n'); });
-      container.querySelectorAll('a.referent').forEach(function(a){ a.replaceWith(a.textContent); });
+      container.querySelectorAll('a').forEach(function(a){ a.replaceWith(a.textContent); });
       lyrics += container.textContent + '\n\n';
     });
     lyrics = lyrics.replace(/\[[^\]]*\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
     if(!lyrics) throw new Error('Lirik kosong setelah parsing');
     const lines = lyrics.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-    const bulkText = lines.join('\n\n');
-    document.getElementById('bulkInput').value = bulkText;
-    ['bulkTransArea'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+    document.getElementById('bulkInput').value = lines.join('\n\n');
+    document.getElementById('bulkTransArea').style.display = 'none';
     document.getElementById('bulkArea').style.display = 'flex';
-    toast('\u2705 ' + lines.length + ' baris lirik berhasil diambil dari Genius!');
+    toast('✅ ' + lines.length + ' baris lirik berhasil diambil dari Genius!');
   } catch(err){
     toast('Genius gagal: ' + err.message);
   }
@@ -1504,6 +1532,84 @@ function ra(){
 }
 
 addRow();
+
+// ── ARTIST AUTOCOMPLETE ──
+let _artistFocusIdx = -1;
+
+function getArtistSuggestions(query){
+  if(!songs.length) return [];
+  // Kumpulin semua artis unik dari songs yang sudah ada
+  const countMap = {};
+  songs.forEach(s => {
+    const a = (s.artist||'').trim();
+    if(a) countMap[a] = (countMap[a]||0) + 1;
+  });
+  const q = query.trim().toLowerCase();
+  return Object.entries(countMap)
+    .filter(([name]) => !q || name.toLowerCase().includes(q))
+    .sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])) // sort by count desc
+    .slice(0, 8); // max 8 rekomendasi
+}
+
+function renderArtistSuggestions(items, inputVal){
+  const box = document.getElementById('artist-suggestions');
+  if(!items.length){ box.classList.remove('open'); box.innerHTML=''; return; }
+  _artistFocusIdx = -1;
+  box.innerHTML = items.map(([name, count], i) => {
+    const hi = inputVal.trim()
+      ? name.replace(new RegExp('('+inputVal.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi'), '<mark style="background:rgba(201,169,110,.3);border-radius:2px;padding:0 1px">$1</mark>')
+      : escHtml(name);
+    return `<div class="artist-sug-item" data-name="${escHtml(name)}" onmousedown="pickArtist('${escHtml(name)}')">${hi}<span class="artist-sug-count">${count} lagu</span></div>`;
+  }).join('');
+  box.classList.add('open');
+}
+
+window.onArtistInput = (inp) => {
+  const val = inp.value;
+  const items = getArtistSuggestions(val);
+  renderArtistSuggestions(items, val);
+};
+
+window.closeArtistSuggestions = () => {
+  // Delay sedikit supaya onmousedown sempat kebaca
+  setTimeout(() => {
+    const box = document.getElementById('artist-suggestions');
+    box.classList.remove('open');
+    box.innerHTML = '';
+    _artistFocusIdx = -1;
+  }, 120);
+};
+
+window.pickArtist = (name) => {
+  document.getElementById('f-ar').value = name;
+  const box = document.getElementById('artist-suggestions');
+  box.classList.remove('open');
+  box.innerHTML = '';
+  _artistFocusIdx = -1;
+};
+
+window.onArtistKeydown = (e) => {
+  const box = document.getElementById('artist-suggestions');
+  if(!box.classList.contains('open')) return;
+  const items = box.querySelectorAll('.artist-sug-item');
+  if(!items.length) return;
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    _artistFocusIdx = Math.min(_artistFocusIdx+1, items.length-1);
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    _artistFocusIdx = Math.max(_artistFocusIdx-1, -1);
+  } else if(e.key === 'Enter' && _artistFocusIdx >= 0){
+    e.preventDefault();
+    pickArtist(items[_artistFocusIdx].dataset.name);
+    return;
+  } else if(e.key === 'Escape'){
+    closeArtistSuggestions();
+    return;
+  }
+  items.forEach((el,i) => el.classList.toggle('focused', i===_artistFocusIdx));
+  if(_artistFocusIdx >= 0) items[_artistFocusIdx].scrollIntoView({block:'nearest'});
+};
 
 // ── COVER UPLOAD ──
 const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
