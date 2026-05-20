@@ -46,7 +46,7 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 
 
 .wrap{position:relative;z-index:1}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;background:rgba(245,240,234,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(10,8,18,.08);min-width:0}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;background:rgba(245,240,234,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(10,8,18,.08);min-width:0;min-height:56px}
 .nav-logo{display:flex;flex-direction:column;gap:.05rem;text-decoration:none;flex-shrink:0;min-width:0}
 .nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em;line-height:1}
 .nlen{font-size:.55rem;font-weight:700;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;line-height:1}
@@ -86,6 +86,38 @@ textarea.fi:focus{border-color:var(--gold)}
 .divider{grid-column:1/-1;height:1px;background:rgba(10,8,18,.08);margin:1.5rem 0}
 .extit{font-size:.58rem;font-weight:700;color:var(--smoke);letter-spacing:.25em;text-transform:uppercase;margin-bottom:1rem;grid-column:1/-1}
 .exlist{display:flex;flex-direction:column;gap:.5rem;grid-column:1/-1}
+/* ── Catalog Table ── */
+.cat-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.cat-table th{font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);padding:.55rem .75rem;text-align:left;border-bottom:1.5px solid rgba(10,8,18,.1);white-space:nowrap;background:rgba(10,8,18,.02)}
+.cat-table td{padding:.6rem .75rem;border-bottom:1px solid rgba(10,8,18,.06);vertical-align:middle;color:var(--ink)}
+.cat-table tr:last-child td{border-bottom:none}
+.cat-table tbody tr{transition:background .15s}
+.cat-table tbody tr:hover{background:rgba(10,8,18,.03)}
+.cat-table .ct-cover{width:36px;height:36px;object-fit:cover;border-radius:3px;border:1px solid rgba(10,8,18,.08);filter:saturate(.75);display:block}
+.cat-table .ct-cover-ph{width:36px;height:36px;background:rgba(10,8,18,.06);border-radius:3px;display:block;flex-shrink:0}
+.ct-title{font-size:.82rem;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.ct-romaji{font-size:.68rem;color:var(--ash);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.ct-artist{font-size:.72rem;color:var(--ash);white-space:nowrap}
+.ct-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.55rem;font-weight:700;letter-spacing:.08em;padding:.15rem .45rem;border-radius:2rem;border:1px solid;white-space:nowrap}
+.ct-badge.rec{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.07)}
+.ct-badge.pop{color:#fb923c;border-color:rgba(251,146,60,.4);background:rgba(251,146,60,.07)}
+.ct-actions{display:flex;gap:.3rem;flex-wrap:nowrap}
+/* Pagination */
+.cat-pagination{display:flex;align-items:center;justify-content:space-between;padding:.7rem .1rem;margin-top:.5rem;flex-wrap:wrap;gap:.5rem}
+.cat-pages{display:flex;gap:.25rem;flex-wrap:wrap}
+.pg-btn{background:none;border:1px solid rgba(10,8,18,.12);font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.08em;color:var(--ash);width:28px;height:28px;cursor:pointer;transition:all .2s;border-radius:3px;padding:0}
+.pg-btn:hover{border-color:var(--gold);color:var(--gold)}
+.pg-btn.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.pg-prev,.pg-next{width:auto;padding:0 .6rem;font-size:.6rem}
+.pg-info{font-size:.62rem;color:var(--ash);letter-spacing:.06em}
+@media(max-width:768px){
+  .cat-table th:nth-child(4),.cat-table td:nth-child(4){display:none} /* sembunyikan views di mobile */
+  .ct-title{max-width:130px}
+  .ct-romaji{display:none}
+  .ct-actions{gap:.2rem}
+  .bedit,.bdels{font-size:.55rem;padding:.25rem .45rem}
+  .brec-s,.bpop-s{display:none} /* aksi sekunder sembunyi di mobile, bisa expand nanti */
+}
 .exitem{display:flex;align-items:center;justify-content:space-between;background:rgba(10,8,18,.03);border:1px solid rgba(10,8,18,.1);padding:.85rem 1rem;transition:border-color .2s}
 .exitem:hover{border-color:rgba(10,8,18,.2)}
 .exn{font-size:.84rem;color:var(--ink);font-weight:500}
@@ -156,9 +188,120 @@ textarea.fi:focus{border-color:var(--gold)}
 .bdel-sub:hover{background:rgba(201,110,110,.1)}
 .sub-empty{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15);border-radius:4px}
-@media(max-width:600px){nav{padding:0 1rem;gap:.5rem}.nljp{font-size:1.05rem}.nb{padding:.4rem .6rem;font-size:.62rem}.adm-wrap{padding:2rem 1.2rem 5rem}.admform{grid-template-columns:1fr}.lrow{grid-template-columns:1fr 1fr}.lrow .fi:nth-child(3){grid-column:1/-1}.lrow .fi:nth-child(4){grid-column:1/-1}}
-@media(max-width:380px){nav{padding:0 .75rem}.nlen{display:none}.nav-badge{display:none}}
-@media(max-width:768px){#sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}}
+.song-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem}
+
+/* ── MOBILE FRIENDLY ── */
+@media(max-width:768px){
+  #sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}
+
+  /* Nav */
+  nav{padding:.85rem 1rem;gap:.5rem;flex-wrap:nowrap}
+  .nav-logo{gap:.05rem}
+  .nljp{font-size:.95rem}
+  .nlen{font-size:.5rem;letter-spacing:.2em}
+  .nav-badge{font-size:.52rem;padding:.25rem .55rem}
+  .nav-right{gap:.6rem}
+  .nb{font-size:.58rem;letter-spacing:.1em;padding:.3rem 0}
+  .logout-btn{font-size:.55rem;padding:.25rem .6rem}
+
+  /* Main wrap */
+  .adm-wrap{padding:1.5rem 1rem 5rem}
+  .admtit{font-size:1.8rem!important}
+
+  /* Header bar */
+  .adm-wrap > div:first-child{flex-direction:column;align-items:flex-start!important;gap:.5rem}
+  .adm-wrap > div:first-child > div:last-child{display:none} /* hide kanji deco */
+
+  /* Inbox banner */
+  .adm-wrap > a[href="inbox.html"]{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .adm-wrap > a[href="inbox.html"] > span:last-child{font-size:.65rem}
+
+  /* Token input */
+  .adm-wrap > div[style*="gh-token"]{flex-direction:column;gap:.6rem}
+
+  /* Tab nav */
+  .adm-wrap > div[style*="adm-tab"]{gap:.2rem;overflow-x:auto;padding-bottom:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .adm-tab{font-size:.62rem;padding:.5rem .75rem;white-space:nowrap;flex-shrink:0}
+
+  /* Form grids → single column */
+  .admform{grid-template-columns:1fr}
+  .admform .fg.full{grid-column:1}
+  .form-actions{grid-column:1;flex-direction:column;gap:.6rem}
+  .form-actions .bsave,.form-actions .bcancel{width:100%;text-align:center}
+
+  /* Song form top grid */
+  .song-form-grid{grid-template-columns:1fr!important}
+
+  /* Lyric rows → stacked */
+  .lrow-hdr{display:none}
+  .lrow{grid-template-columns:1fr 1fr;gap:.4rem;padding:.7rem;background:rgba(10,8,18,.025);border:1px solid rgba(10,8,18,.07);border-radius:2px}
+  .lrow .fi:nth-child(1){grid-column:1/-1;font-size:.82rem}
+  .lrow .fi:nth-child(2){grid-column:1/-1;font-size:.82rem}
+  .lrow .fi:nth-child(3){grid-column:1/-1;font-size:.82rem}
+  .lrow .fi:nth-child(4){grid-column:1/-1;font-size:.82rem}
+  .lrows{gap:.8rem}
+  .bdel{width:100%;height:32px;grid-column:1/-1}
+
+  /* Story form */
+  .sf-row{grid-template-columns:1fr!important;gap:.8rem}
+  .story-actions{flex-direction:column;gap:.6rem}
+  .story-actions button{width:100%;text-align:center}
+  .sf-editor{min-height:200px}
+  .editor-toolbar{gap:.2rem}
+  .etool{font-size:.65rem;padding:.25rem .45rem}
+
+  /* Story list items */
+  .slist-item{flex-direction:column;align-items:flex-start;gap:.6rem}
+  .slist-btns{width:100%;display:flex;flex-wrap:wrap;gap:.35rem}
+  .slist-btns button{flex:1;min-width:60px;text-align:center;padding:.35rem .5rem}
+
+  /* Exlist items */
+  .exitem{flex-direction:column;align-items:flex-start;gap:.6rem}
+  .exitem-btns{width:100%;display:flex;gap:.4rem}
+  .bedit,.bdels{flex:1;text-align:center}
+
+  /* Resources form */
+  .cat-row{flex-direction:column;gap:.6rem}
+
+  /* Sub section cards */
+  .sub-card-head{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .sub-footer{flex-wrap:wrap}
+  .sub-card-head .exitem-btns{width:100%}
+
+  /* Comment section */
+  .cm-item-hdr{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .cm-item-actions{width:100%;display:flex;flex-wrap:wrap;gap:.4rem}
+  .cm-item-actions button{flex:1;text-align:center}
+  .cm-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
+  .cmtab{white-space:nowrap;flex-shrink:0}
+  .reply-actions{flex-direction:column;gap:.5rem}
+  .breply,.bcancel-reply{width:100%;text-align:center}
+
+  /* GH workflow buttons */
+  div[style*="gh-run-btn"],div[style*="gh-res-run-btn"],div[style*="gh-str-run-btn"]{flex-direction:column}
+
+  /* Login box */
+  .loginbox{padding:2rem 1.25rem;margin:1rem}
+
+  /* Toast */
+  .toast{bottom:1rem;right:1rem;left:1rem;right:1rem;text-align:center}
+
+  /* Sub tabs */
+  .sub-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding-bottom:.3rem}
+  .stab{white-space:nowrap;flex-shrink:0}
+}
+
+@media(max-width:400px){
+  .nlen{display:none}
+  .nav-badge{display:none}
+  nav{padding:.75rem .75rem}
+  .admtit{font-size:1.5rem!important}
+  .adm-wrap{padding:1.2rem .85rem 5rem}
+  .adm-tab{font-size:.58rem;padding:.45rem .6rem}
+  .etool{display:none}
+  .etool:nth-child(-n+3){display:inline-flex}
+  button[onclick*="togglePreview"]{display:inline-flex}
+}
 /* ── Story Editor ── */
 .story-section{margin-top:0;padding-top:0;border-top:none;max-width:800px;margin-left:auto;margin-right:auto}
 .story-tit{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
@@ -327,7 +470,7 @@ textarea.fi:focus{border-color:var(--gold)}
   <div id="sec-katalog" class="adm-section on">
     <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
     <input type="hidden" id="f-editid" value="">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
+    <div class="song-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
       <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder=""></div>
       <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder=""></div>
       <div class="fg"><div class="fl">Artis *</div><input class="fi" id="f-ar" placeholder=""></div>
@@ -338,7 +481,10 @@ textarea.fi:focus{border-color:var(--gold)}
       <div class="fg" style="grid-column:1/-1">
         <div class="fl" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
           <span>Cover / Gambar Album</span>
-          <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil cover dari Spotify">🎵 Ambil dari Spotify</button>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil cover dari Spotify">🎵 Ambil dari Spotify</button>
+            <button type="button" id="cover-yt-btn" onclick="fetchYoutubeCover()" style="background:none;border:1px solid rgba(255,0,0,.3);color:#ff4444;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil thumbnail dari YouTube">▶ Ambil dari YouTube</button>
+          </div>
         </div>
         <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap;margin-top:.4rem">
           <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:.5rem">
@@ -1062,28 +1208,89 @@ window.delSong = async id => {
   } catch(e){ toast('Gagal hapus: '+e.message); }
 };
 
-function ra(){
-  document.getElementById('songCount').textContent=songs.length;
-  if(!songs.length){
-    document.getElementById('exlist').innerHTML='<div class="empty-list">Belum ada lagu.</div>';
+// ── Catalog Pagination ──
+const PAGE_SIZE = 15;
+let catalogPage = 1;
+let catalogFiltered = null; // null = show all
+
+function renderCatalogTable(list, page){
+  const el = document.getElementById('exlist');
+  if(!list.length){
+    el.innerHTML='<div class="empty-list">Belum ada lagu.</div>';
     return;
   }
-  document.getElementById('exlist').innerHTML=songs.map(s=>`
-    <div class="exitem" style="flex-wrap:wrap;gap:.6rem">
-      ${s.img?`<img src="${s.img}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);filter:saturate(.7)" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;background:#1a1a2e;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)"></div>'}
-      <div style="flex:1;min-width:0">
-        <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
-        <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
-        <div class="views-badge">👁 ${s.views||0} views${s.popularLabel?' · 🔥 '+s.popularLabel:''}</div>
+  const totalPages = Math.ceil(list.length / PAGE_SIZE);
+  page = Math.max(1, Math.min(page, totalPages));
+  catalogPage = page;
+  const slice = list.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  const start = (page-1)*PAGE_SIZE + 1;
+  const end   = Math.min(page*PAGE_SIZE, list.length);
+
+  const rows = slice.map((s,i) => {
+    const cover = s.img
+      ? `<img class="ct-cover" src="${escHtml(s.img)}" alt="" onerror="this.style.display='none'">`
+      : `<div class="ct-cover-ph"></div>`;
+    const badges = [
+      s.recommended ? `<span class="ct-badge rec">★ Rekomen</span>` : '',
+      s.popularLabel ? `<span class="ct-badge pop">🔥 ${escHtml(s.popularLabel)}</span>` : ''
+    ].filter(Boolean).join(' ');
+    return `<tr>
+      <td style="width:44px;padding-right:.4rem">${cover}</td>
+      <td>
+        <div class="ct-title">${escHtml(s.titleJp)}</div>
+        <div class="ct-romaji">${escHtml(s.titleRo||'')}</div>
+        ${badges ? `<div style="margin-top:.25rem;display:flex;gap:.3rem;flex-wrap:wrap">${badges}</div>` : ''}
+      </td>
+      <td class="ct-artist">${escHtml(s.artist||'')}${s.titleId?`<div style="font-size:.65rem;color:var(--smoke)">${escHtml(s.titleId)}</div>`:''}</td>
+      <td style="white-space:nowrap;font-size:.68rem;color:var(--ash)">👁 ${s.views||0}</td>
+      <td>
+        <div class="ct-actions">
+          <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})" title="${s.recommended?'Batal Rekomen':'Set Rekomen'}">${s.recommended?'★':'☆'}</button>
+          <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')" title="${s.popularLabel?'Unset Populer':'Set Populer'}">🔥</button>
+          <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
+          <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Pagination buttons
+  const pgBtns = totalPages <= 1 ? '' : Array.from({length:totalPages},(_,i)=>
+    `<button class="pg-btn${i+1===page?' on':''}" onclick="goPage(${i+1})">${i+1}</button>`
+  ).join('');
+
+  el.innerHTML = `
+    <table class="cat-table">
+      <thead><tr>
+        <th></th>
+        <th>Lagu</th>
+        <th>Artis</th>
+        <th>Views</th>
+        <th>Aksi</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${totalPages > 1 ? `
+    <div class="cat-pagination">
+      <div class="pg-info">${start}–${end} dari ${list.length} lagu</div>
+      <div class="cat-pages">
+        <button class="pg-btn pg-prev" onclick="goPage(${page-1})" ${page===1?'disabled style="opacity:.35;cursor:default"':''}>← Prev</button>
+        ${pgBtns}
+        <button class="pg-btn pg-next" onclick="goPage(${page+1})" ${page===totalPages?'disabled style="opacity:.35;cursor:default"':''}>Next →</button>
       </div>
-      <div class="exitem-btns" style="flex-wrap:wrap">
-        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Batal Rekomen':'★ Rekomen Admin'}</button>
-        ${s.recommended?`<a href="index.html" target="_blank" rel="noopener" class="brec-s on" style="text-decoration:none;font-size:.58rem" title="Lihat di katalog">↗ Index</a>`:''}
-        <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')">${s.popularLabel?'🔥 Unpopuler':'🔥 Set Populer'}</button>
-        <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
-        <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
-      </div>
-    </div>`).join('');
+    </div>` : `<div class="pg-info" style="font-size:.62rem;color:var(--ash);padding:.5rem .1rem">${list.length} lagu total</div>`}
+  `;
+}
+
+window.goPage = (p) => {
+  const list = catalogFiltered !== null ? catalogFiltered : songs;
+  renderCatalogTable(list, p);
+};
+
+function ra(){
+  document.getElementById('songCount').textContent=songs.length;
+  catalogFiltered = null;
+  renderCatalogTable(songs, catalogPage);
 }
 
 addRow();
@@ -1166,23 +1373,67 @@ window.fetchSpotifyCover = async () => {
   btn.disabled = false;
 };
 
-function updateSpotifyBtn() {
-  const btn    = document.getElementById('cover-sp-btn');
-  const spUrl  = document.getElementById('f-sp').value.trim();
+// YouTube thumbnail fetch — langsung dari img.youtube.com, no API key needed
+window.fetchYoutubeCover = async () => {
+  const ytId = document.getElementById('f-yt').value.trim();
+  if (!ytId) { toast('Isi YouTube Video ID dulu!'); return; }
+  // Bersihkan kalau user paste full URL
+  const cleanId = ytId.replace(/.*(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11}).*/,'$1').slice(0,11);
+  const btn = document.getElementById('cover-yt-btn');
+  btn.textContent = '⏳ Mengambil...';
+  btn.disabled = true;
+  // Coba maxresdefault dulu, fallback ke hqdefault
+  const tryUrls = [
+    `https://img.youtube.com/vi/${cleanId}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${cleanId}/hqdefault.jpg`,
+  ];
+  let success = false;
+  for (const url of tryUrls) {
+    const ok = await new Promise(res => {
+      const img = new Image();
+      img.onload  = () => res(img.naturalWidth > 120); // 120px = placeholder YT
+      img.onerror = () => res(false);
+      img.src = url;
+    });
+    if (ok) {
+      document.getElementById('f-img').value = url;
+      showCoverPreview(url);
+      toast('✅ Thumbnail berhasil diambil dari YouTube!');
+      document.getElementById('cover-upload-status').textContent = '(dari YouTube)';
+      document.getElementById('cover-upload-status').style.color = '#ff4444';
+      success = true;
+      break;
+    }
+  }
+  if (!success) toast('Thumbnail tidak ditemukan — cek Video ID-nya.');
+  btn.textContent = '▶ Ambil dari YouTube';
+  btn.disabled = false;
+  updateCoverBtns();
+};
+
+function updateCoverBtns() {
   const imgUrl = document.getElementById('f-img').value.trim();
-  btn.style.display = (spUrl && !imgUrl) ? 'inline-flex' : 'none';
+  const spUrl  = document.getElementById('f-sp').value.trim();
+  const ytId   = document.getElementById('f-yt').value.trim();
+  document.getElementById('cover-sp-btn').style.display = (spUrl && !imgUrl) ? 'inline-flex' : 'none';
+  document.getElementById('cover-yt-btn').style.display = (ytId  && !imgUrl) ? 'inline-flex' : 'none';
 }
 
-// Pantau field Spotify supaya tombol muncul/hilang
-document.getElementById('f-sp').addEventListener('input', updateSpotifyBtn);
+// Ganti updateSpotifyBtn lama → pakai updateCoverBtns
+function updateSpotifyBtn(){ updateCoverBtns(); }
+
+// Pantau field YouTube juga
+document.getElementById('f-yt').addEventListener('input', updateCoverBtns);
 
 window.filterCatalog = (q) => {
   const clearBtn = document.getElementById('catalogSearchClear');
   const countEl = document.getElementById('catalogSearchCount');
   clearBtn.style.display = q ? 'block' : 'none';
+  document.getElementById('songCount').textContent = songs.length;
   if(!q.trim()){
     countEl.textContent = '';
-    ra();
+    catalogFiltered = null;
+    renderCatalogTable(songs, 1);
     return;
   }
   const ql = q.toLowerCase();
@@ -1193,34 +1444,17 @@ window.filterCatalog = (q) => {
     (s.artist||'').toLowerCase().includes(ql)
   );
   countEl.textContent = filtered.length + ' hasil';
-  document.getElementById('songCount').textContent = songs.length;
-  if(!filtered.length){
-    document.getElementById('exlist').innerHTML='<div class="empty-list">Tidak ada lagu yang cocok.</div>';
-    return;
-  }
-  document.getElementById('exlist').innerHTML=filtered.map(s=>`
-    <div class="exitem" style="flex-wrap:wrap;gap:.6rem">
-      ${s.img?`<img src="${s.img}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);filter:saturate(.7)" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;background:#1a1a2e;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)"></div>'}
-      <div style="flex:1;min-width:0">
-        <div class="exn">${s.titleJp}${s.titleRo?' <span style="color:var(--muted);font-size:.75rem;font-weight:300">— '+s.titleRo+'</span>':''}</div>
-        <div class="exar">${s.artist}${s.titleId?' · '+s.titleId:''}</div>
-        <div class="views-badge">👁 ${s.views||0} views${s.popularLabel?' · 🔥 '+s.popularLabel:''}</div>
-      </div>
-      <div class="exitem-btns" style="flex-wrap:wrap">
-        <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})">${s.recommended?'★ Batal Rekomen':'★ Rekomen Admin'}</button>
-        ${s.recommended?`<a href="index.html" target="_blank" rel="noopener" class="brec-s on" style="text-decoration:none;font-size:.58rem" title="Lihat di katalog">↗ Index</a>`:''}
-        <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')">${s.popularLabel?'🔥 Unpopuler':'🔥 Set Populer'}</button>
-        <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
-        <button class="bdels" onclick="delSong('${s.id}')">Hapus</button>
-      </div>
-    </div>`).join('');
+  catalogFiltered = filtered;
+  renderCatalogTable(filtered, 1);
 };
 
 window.clearCatalogSearch = () => {
   document.getElementById('catalogSearch').value = '';
   document.getElementById('catalogSearchClear').style.display = 'none';
   document.getElementById('catalogSearchCount').textContent = '';
-  ra();
+  catalogFiltered = null;
+  catalogPage = 1;
+  renderCatalogTable(songs, 1);
 };
 
 // Load komentar saat auth ready - handled by main onAuthStateChanged above
