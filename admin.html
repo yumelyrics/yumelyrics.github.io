@@ -2,14 +2,15 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <!-- Init theme sebelum render untuk mencegah flash -->
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap"></noscript>
 <style>
 :root{
   --ink:    #0a0812;
@@ -596,6 +597,10 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         </select>
       </div>
       <div class="fg"><div class="fl">Genre (opsional)</div><input class="fi" id="f-genre" placeholder="J-Pop, Rock, dll."></div>
+      <div class="fg">
+        <div class="fl">Mood / suasana <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— pisah koma</span></div>
+        <input class="fi" id="f-mood" placeholder="sedih, galau, romantis, semangat">
+      </div>
       <div class="fg">
         <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           <span>YouTube Video ID</span>
@@ -1355,9 +1360,10 @@ window.saveSong = async () => {
   const animeEn=document.getElementById('f-anime-en').value.trim();
   const songType=document.getElementById('f-type').value.trim();
   const genre=document.getElementById('f-genre').value.trim();
+  const mood=document.getElementById('f-mood').value.trim();
   const editId=document.getElementById('f-editid').value;
   if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
-  const songMeta = { anime, animeId, animeEn, type: songType, genre };
+  const songMeta = { anime, animeId, animeEn, type: songType, genre, mood };
   const lyrics=[];
   document.querySelectorAll('#lrows .lrow').forEach(r=>{
     const jp=r.querySelector('.rjp').value.trim();
@@ -1384,7 +1390,7 @@ window.saveSong = async () => {
 };
 
 function clearForm(){
-  ['f-jt','f-it','f-ar','f-artist-slug','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
+  ['f-jt','f-it','f-ar','f-artist-slug','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-mood','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f-type').value='';
   document.getElementById('lrows').innerHTML='';
   showCoverPreview('');
@@ -1411,6 +1417,7 @@ window.editSong = id => {
   document.getElementById('f-anime-en').value=s.animeEn||'';
   document.getElementById('f-type').value=s.type||'';
   document.getElementById('f-genre').value=s.genre||'';
+  document.getElementById('f-mood').value=s.mood||'';
   document.getElementById('f-editid').value=s.id;
   showCoverPreview(s.img||'');
   document.getElementById('cover-upload-status').textContent = '';

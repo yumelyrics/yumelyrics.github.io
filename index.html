@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>YumeSubs / YumeLyrics — Lirik & Terjemahan Lagu Jepang Indonesia Lengkap</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
@@ -75,14 +75,14 @@
 </script>
 
 <!-- Font dimuat async agar tidak blokir render awal -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap"></noscript>
 <style>
 :root{
   --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:Georgia,'Times New Roman',serif;
   /* legacy aliases untuk kompatibilitas script */
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);
   --accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
@@ -193,7 +193,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   filter:sepia(.1) contrast(1.04);
   transform:translate(-50%,-50%) scale(1);
   transition:transform .4s ease;
-  will-change:transform;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
 }
@@ -491,6 +490,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .artist-select:focus{outline:none;border-color:var(--gold)}
 .fbtn-artis{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--ash);text-decoration:none;white-space:nowrap;transition:color .2s}
 .fbtn-artis:hover{color:var(--gold)}
+.hero-features{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:.5rem}
+.hero-feat{font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(201,169,110,.3);color:var(--gold);background:rgba(201,169,110,.06)}
+.continue-read{margin-top:1rem;padding:.85rem 1rem;border:1px solid var(--border);background:rgba(201,169,110,.08);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.continue-read a{font-size:.72rem;font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:.06em}
+.continue-read a:hover{color:var(--gold)}
+.continue-read-sub{font-size:.62rem;color:var(--ash);margin-top:.2rem}
+.continue-read-btn{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.45rem .9rem;background:var(--ink);color:var(--paper);text-decoration:none;white-space:nowrap}
 .scar-link{color:inherit;text-decoration:none;transition:color .2s}
 .scar-link:hover{color:var(--gold)}
 .footer-artists{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1rem}
@@ -652,8 +658,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="hero-inner">
     <div class="eyebrow">Terjemahan Lagu Jepang</div>
     <h1>Kata-kata yang<br>terasa seperti <em>mimpi</em></h1>
-    <p>Lirik Jepang, romaji, dan terjemahan Indonesia. Biar lo nyanyi sambil ngerti maknanya.</p>
+    <p>Lirik Jepang, romaji, dan terjemahan Indonesia — plus mode belajar, kosa kata interaktif, dan latihan terjemah per baris.</p>
+    <div class="hero-features" aria-label="Fitur unik YumeSubs">
+      <span class="hero-feat">Mode uji ingatan</span>
+      <span class="hero-feat">Kosa kata interaktif</span>
+      <span class="hero-feat">Latihan terjemah</span>
+      <span class="hero-feat">Favorit & lanjut baca</span>
+    </div>
+    <div id="continue-read" class="continue-read" style="display:none"></div>
     <div class="hero-action-row">
+      <a href="latihan.html" class="req-btn" style="background:var(--cream);color:var(--ink);border-color:var(--border)">
+        <span class="req-btn-icon">✎</span>
+        <span>Latihan Terjemah</span>
+        <span class="req-btn-arr">→</span>
+      </a>
       <a href="contact.html" class="req-btn">
         <span class="req-btn-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -685,6 +703,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="filter-row">
     <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-indicator"></span>Rekomendasi</button>
     <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-indicator"></span>Populer</button>
+    <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-indicator"></span>Favorit</button>
     <div class="artist-filter-wrap">
       <select class="artist-select" id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
         <option value="">Semua artis</option>
@@ -792,7 +811,10 @@ enableIndexedDbPersistence(db).catch(() => {});
     }
     return id;
   }
-  // Tunda inisialisasi 2 detik agar tidak bersaing dengan render konten utama
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
+
+  const delay = matchMedia('(max-width:768px)').matches ? 6000 : 3000;
   setTimeout(() => {
     const sessionId = getOnlineSessionId();
     const sessionRef = doc(db, 'online_users', sessionId);
@@ -818,7 +840,7 @@ enableIndexedDbPersistence(db).catch(() => {});
       const el = document.getElementById('online-count');
       if (el) el.textContent = snap.size;
     }, () => {});
-  }, 2000);
+  }, delay);
 })();
 
 const ADMIN_EMAIL = "khoirustsani143@gmail.com";
@@ -967,6 +989,7 @@ window.toast = toast;
 
 let recOnly = false;
 let popOnly = false;
+let favOnly = false;
 let artistFilterKey = '';
 let artistSlugByKey = {};
 let artistMetaList = [];
@@ -1045,13 +1068,21 @@ window.onArtistFilter = val => {
   rc(document.getElementById('searchInp').value, true);
 };
 
+function optimizeCardImg(url) {
+  if (!url) return url;
+  if (url.includes('maxresdefault')) return url.replace('maxresdefault', 'mqdefault');
+  if (url.includes('genius.com') && /1000x\d+x\d/.test(url)) return url.replace(/1000x\d+x\d+[^/]*/, '300x300');
+  return url;
+}
+
 function buildCard(s, i) {
   const div = document.createElement('div');
   div.className = 'sc';
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
-  const imgSrc = s.img || '';
-  const imgEl = `<img src="${imgSrc||'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'}" alt="${escCard(s.titleJp)}" loading="lazy" decoding="async" onerror="this.src='https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA'">`;
+  const imgSrc = optimizeCardImg(s.img || '');
+  const ph = 'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA';
+  const imgEl = `<img src="${escCard(imgSrc || ph)}" alt="${escCard(s.titleJp)}" width="400" height="400" loading="lazy" decoding="async" sizes="(max-width:600px) 50vw, 200px" onerror="this.src='${ph}'">`;
   const aKey = normalizeArtistKey(s.artist);
   const aSlug = artistSlugByKey[aKey];
   const artistEl = aSlug && s.artist
@@ -1091,6 +1122,10 @@ function rc(filter='', animate=false){
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
   if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
   if(artistFilterKey) filtered = filtered.filter(s => normalizeArtistKey(s.artist) === artistFilterKey);
+  if(favOnly) {
+    const favSlugs = getFavSlugs();
+    filtered = filtered.filter(s => favSlugs.has(toSlug(s.titleRo, s.id)));
+  }
 
   const grid = document.getElementById('songGrid');
 
@@ -1162,7 +1197,7 @@ function rc(filter='', animate=false){
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
   const countEl = document.getElementById('songCount');
   if(countEl){
-    countEl.textContent = (q || recOnly || popOnly || artistFilterKey)
+    countEl.textContent = (q || recOnly || popOnly || artistFilterKey || favOnly)
       ? filtered.length + ' / ' + songs.length + ' lagu'
       : songs.length + ' lagu';
   }
@@ -1180,7 +1215,7 @@ function addRipple(btn, e) {
 
 window.toggleRec = (e) => {
   recOnly = !recOnly;
-  if(recOnly) { popOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; }
+  if(recOnly) { popOnly = false; favOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; document.getElementById('favBtn')?.classList.remove('on'); }
   const recBtn = document.getElementById('recBtn');
   const popBtn = document.getElementById('popBtn');
   addRipple(recBtn, e);
@@ -1191,9 +1226,33 @@ window.toggleRec = (e) => {
   rc(document.getElementById('searchInp').value, true);
 };
 
+function getFavSlugs() {
+  try {
+    const favs = JSON.parse(localStorage.getItem('ym_favs') || '[]');
+    return new Set(favs.map(f => f.slug));
+  } catch(e) { return new Set(); }
+}
+
+window.toggleFavFilter = (e) => {
+  favOnly = !favOnly;
+  if (favOnly) { recOnly = false; popOnly = false; artistFilterKey = ''; const af = document.getElementById('artistFilter'); if (af) af.value = ''; }
+  const btn = document.getElementById('favBtn');
+  const recBtn = document.getElementById('recBtn');
+  const popBtn = document.getElementById('popBtn');
+  if (e) addRipple(btn, e);
+  btn.classList.toggle('on', favOnly);
+  recBtn.classList.remove('on');
+  popBtn.classList.remove('on');
+  recBtn.innerHTML = '<span class="fbtn-indicator"></span>Rekomendasi';
+  popBtn.innerHTML = '<span class="fbtn-indicator"></span>Populer';
+  btn.innerHTML = '<span class="fbtn-indicator"></span>' + (favOnly ? 'Semua Lagu' : 'Favorit');
+  if (favOnly && getFavSlugs().size === 0) toast('Belum ada favorit — buka lagu lalu ketuk ☆ Favorit');
+  rc(document.getElementById('searchInp').value, true);
+};
+
 window.togglePop = (e) => {
   popOnly = !popOnly;
-  if(popOnly) { recOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; }
+  if(popOnly) { recOnly = false; favOnly = false; artistFilterKey = ''; document.getElementById('artistFilter').value = ''; document.getElementById('favBtn')?.classList.remove('on'); }
   const popBtn = document.getElementById('popBtn');
   const recBtn = document.getElementById('recBtn');
   addRipple(popBtn, e);
@@ -1544,7 +1603,9 @@ onAuthStateChanged(auth, async user => {
       loadAndShowUserRole(user.uid).catch(()=>{});
     }
 
-    startNotifListener(user.uid);
+    const startNotif = () => startNotifListener(user.uid);
+    if ('requestIdleCallback' in window) requestIdleCallback(startNotif, { timeout: 5000 });
+    else setTimeout(startNotif, 2500);
   } else {
     _isAdmin = false;
     _isBanned = false;
@@ -1816,6 +1877,22 @@ if(songs.length === 0) {
   const grid = document.getElementById('songGrid');
   grid.innerHTML = makeSkeleton(8);
 }
+(function showContinueRead() {
+  try {
+    const raw = localStorage.getItem('ym_last_read');
+    if (!raw) return;
+    const last = JSON.parse(raw);
+    if (!last.slug || Date.now() - (last.ts || 0) > 7 * 24 * 60 * 60 * 1000) return;
+    const box = document.getElementById('continue-read');
+    if (!box) return;
+    box.style.display = 'flex';
+    box.innerHTML = '<div><div style="font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)">Lanjutkan baca</div>' +
+      '<a href="/lagu/' + escCard(last.slug) + '.html">' + escCard(last.title || 'Lagu') + '</a>' +
+      '<div class="continue-read-sub">' + escCard(last.artist || '') + '</div></div>' +
+      '<a class="continue-read-btn" href="/lagu/' + escCard(last.slug) + '.html">Lanjut →</a>';
+  } catch(e) {}
+})();
+
 showCachedSongs();
 loadSongs();
 
@@ -2172,6 +2249,8 @@ let _chatUnreadCount = 0;
 let _chatLastSeen = Date.now();
 let _chatInited = false;
 let _lastMsgs = null;
+let _chatDeferredUser = null;
+let _chatModuleReady = false;
 
 function isMobile() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -2214,7 +2293,23 @@ function isMobile() {
   }, { passive: false });
 })();
 
+function bootChatListeners() {
+  if (_chatModuleReady) return;
+  _chatModuleReady = true;
+  const msgsEl = document.getElementById('chat-msgs');
+  if (msgsEl && !_chatInited) {
+    msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+  }
+  if (_chatDeferredUser) {
+    initChat(_chatDeferredUser);
+    _chatDeferredUser = null;
+  } else if (!_chatInited) {
+    initGuestChat();
+  }
+}
+
 window.toggleChat = () => {
+  if (!_chatModuleReady) bootChatListeners();
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
   const fab = document.getElementById('chat-fab');
@@ -2598,23 +2693,37 @@ function initChat(user) {
 
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
-    // Sembunyikan gate login, tampilkan input
     document.getElementById('chat-login-gate').style.display = 'none';
-    initChat(user);
-    // Admin: aktifkan report listener
+    _chatDeferredUser = user;
+    if (_chatModuleReady) initChat(user);
     if (ADMIN_EMAILS.includes(user.email||'')) {
-      _startReportListenerModule();
+      const runReport = () => _startReportListenerModule();
+      if ('requestIdleCallback' in window) requestIdleCallback(runReport, { timeout: 8000 });
+      else setTimeout(runReport, 4000);
     }
   } else {
     _chatUser = null;
-    // Tampilkan pesan tapi sembunyikan input, tampilkan gate login
+    _chatDeferredUser = null;
     document.getElementById('chat-login-gate').style.display = 'flex';
     document.getElementById('chat-inp-wrap').classList.remove('show');
     document.getElementById('chat-msgs').style.display = 'flex';
     if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
-    initGuestChat();
+    _chatInited = false;
+    document.getElementById('chat-msgs').innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat pesan 💬</div>';
   }
 });
+
+(function deferChatModule() {
+  const msgs = document.getElementById('chat-msgs');
+  if (msgs) msgs.innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat 💬</div>';
+  const idleBoot = () => {
+    if (!_chatModuleReady && (_chatDeferredUser || matchMedia('(hover:hover)').matches)) {
+      bootChatListeners();
+    }
+  };
+  if ('requestIdleCallback' in window) requestIdleCallback(idleBoot, { timeout: 15000 });
+  else setTimeout(idleBoot, 8000);
+})();
 
 // ── REPLY ──
 let _replyTo = null; // { id, name, text }

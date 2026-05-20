@@ -234,7 +234,8 @@
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=DM+Sans:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=DM+Sans:wght@400;500&display=swap"></noscript>
 <style>
 :root{--bg:#050d1a;--border:rgba(255,255,255,0.07);--accent:#c9a96e;--accent2:#4f7ec4;--text:#dde6f5;--muted:#5a6a82;--jp:'Shippori Mincho',serif;--en:'DM Sans',sans-serif;--red:#c96e6e;--green:#6ec98a;--yellow:#c9b96e}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -554,6 +555,11 @@ window.submitNama = () => {
   if (!val) { document.getElementById('inputNama').focus(); return; }
   playerName = val;
   document.getElementById('modalNama').style.display = 'none';
+  if (pendingSongId) {
+    const id = pendingSongId;
+    pendingSongId = null;
+    startLatihan(id);
+  }
 };
 
 document.getElementById('inputNama').addEventListener('keydown', e => {
@@ -614,6 +620,13 @@ async function renderLB() {
 }
 
 // ── Load semua lagu dari Firestore ──
+function toSlugLatihan(titleRo, docId) {
+  if (titleRo) {
+    return titleRo.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,60);
+  }
+  return docId;
+}
+
 async function loadSongs() {
   try {
     const snap = await getDocs(collection(db, 'songs'));
@@ -623,6 +636,16 @@ async function loadSongs() {
     renderLB();
     const countEl = document.getElementById('songCount');
     if(countEl) countEl.textContent = allSongs.length + ' lagu';
+    const params = new URLSearchParams(location.search);
+    const songId = params.get('song');
+    const slug = params.get('slug');
+    if (songId) {
+      const found = allSongs.find(s => s.id === songId);
+      if (found) setTimeout(() => startLatihan(found.id), 400);
+    } else if (slug) {
+      const found = allSongs.find(s => toSlugLatihan(s.titleRo, s.id) === slug);
+      if (found) setTimeout(() => startLatihan(found.id), 400);
+    }
   } catch(e) {
     document.getElementById('songGrid').innerHTML = '<div class="loading-txt">Gagal memuat katalog.</div>';
   }
@@ -666,6 +689,7 @@ window.filterSongs = () => {
 // ── Mulai latihan ──
 window.startLatihan = async (songId) => {
   if (!playerName) {
+    pendingSongId = songId;
     document.getElementById('modalNama').style.display = 'flex';
     toast('Masukkan namamu dulu 😊');
     return;

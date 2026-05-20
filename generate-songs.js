@@ -17,6 +17,12 @@ const firebaseConfig = {
 
 const BASE_URL = 'https://yumelyrics.my.id';
 
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap';
+const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+
 function toSlug(titleRo, titleJp, docId) {
   if (titleRo) {
     return titleRo.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,60);
@@ -60,8 +66,69 @@ function allocateUniqueSlug(base, usedSet) {
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+
+/** Perkecil URL gambar eksternal untuk mobile. */
+function optimizeImgUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  let u = url.trim();
+  if (u.includes('img.youtube.com') && u.includes('maxresdefault')) u = u.replace('maxresdefault', 'mqdefault');
+  if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '300x300');
+  if (u.includes('mzstatic.com')) u = u.replace(/\/(\d+)x(\d+)(bb|cc)/, '/300x300$3');
+  if (u.includes('spotifycdn.com/image/ab67616d0000b273')) u = u.replace('0000b273', '00001e02');
+  return u;
+}
+
+function imgTag(src, alt, opts = {}) {
+  const cls = opts.cls || 'related-thumb';
+  const w = opts.w || 52;
+  const h = opts.h || 52;
+  const eager = !!opts.eager;
+  const sizes = opts.sizes || `${w}px`;
+  if (!src) return '';
+  const u = optimizeImgUrl(src);
+  const fp = eager ? ' fetchpriority="high"' : '';
+  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
+}
+
 function renderText(str) {
   return escHtml(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g, '$1<span class="cm-mention">$2</span>');
+}
+
+/** Kosa kata unik dari lirik + petunjuk dari terjemahan baris yang sama. */
+function buildVocabList(lyrics) {
+  const map = new Map();
+  for (const l of lyrics) {
+    const hint = (l.id || '').trim();
+    const tokens = (l.jp || '').match(/[\u3040-\u30FF\u4E00-\u9FFFー]{2,}/g) || [];
+    for (const tok of tokens) {
+      if (tok.length < 2) continue;
+      if (!map.has(tok)) map.set(tok, { jp: tok, hint: hint.length > 72 ? hint.slice(0, 69) + '…' : hint });
+      else if (!map.get(tok).hint && hint) map.get(tok).hint = hint;
+    }
+  }
+  return [...map.values()].sort((a, b) => b.jp.length - a.jp.length).slice(0, 28);
+}
+
+function buildVocabPanelHTML(lyrics) {
+  const list = buildVocabList(lyrics);
+  if (!list.length) return '';
+  const chips = list.map(v =>
+    `<button type="button" class="vocab-chip" data-vocab="${escHtml(v.jp)}">` +
+    `<span class="vocab-jp">${escHtml(v.jp)}</span>` +
+    (v.hint ? `<span class="vocab-hint">${escHtml(v.hint)}</span>` : '') +
+    `</button>`
+  ).join('');
+  return `<div class="vocab-block">
+    <span class="sidebar-section-label">Kosa kata · ${list.length} kata</span>
+    <div class="vocab-chips">${chips}</div>
+    <p class="vocab-tip">Ketuk kata untuk sorot baris liriknya — ciri khas YumeSubs.</p>
+  </div>`;
+}
+
+function buildMoodChipsHTML(moodStr) {
+  const moods = String(moodStr || '').split(/[,，、]/).map(s => s.trim()).filter(Boolean).slice(0, 6);
+  if (!moods.length) return '';
+  return `<div class="mood-row">${moods.map(m => `<span class="mood-chip">${escHtml(m)}</span>`).join('')}</div>`;
 }
 
 const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -85,14 +152,10 @@ function obfuscateLine(str) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
-    const innerSpans = indices.map(origIdx => {
-      const ch = chars[origIdx];
-      const noiseSpan = '<span aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none">' + randNoise() + '</span>';
-      return '<span data-c="' + origIdx + '">' + escHtml(ch) + '</span>' + noiseSpan;
-    }).join('');
-    // flex-wrap:wrap + word-break:break-all agar karakter Jepang bisa turun baris
-    const wordSpan = '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-all;flex-wrap:wrap;">' + innerSpans + '</span>';
-    return wordSpan;
+    const innerSpans = indices.map(origIdx =>
+      '<span data-c="' + origIdx + '">' + escHtml(chars[origIdx]) + '</span>'
+    ).join('');
+    return '<span class="obf-word" style="display:inline-flex;flex-shrink:1;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;flex-wrap:wrap">' + innerSpans + '</span>';
   }).join('');
 }
 
@@ -101,7 +164,7 @@ function generateArtistIndexHTML(artists) {
   const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
   const cards = sorted.map(a => `<a class="related-card" href="${escHtml(a.slug)}.html">
     ${a.img
-      ? `<img class="related-thumb" src="${escHtml(a.img)}" alt="${escHtml(a.name)}" loading="lazy">`
+      ? imgTag(a.img, a.name, { cls: 'related-thumb', w: 52, h: 52 })
       : `<div class="rc-no-img">♪</div>`}
     <div class="related-info">
       <div class="related-title">${escHtml(a.name)}</div>
@@ -124,7 +187,7 @@ function generateArtistIndexHTML(artists) {
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
 <title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.">
@@ -134,9 +197,9 @@ function generateArtistIndexHTML(artists) {
 <link rel="canonical" href="${BASE_URL}/artis/">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+${FONT_HEAD}
 <style>
-:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--border:rgba(10,8,18,.1);--serif:'Lora',Georgia,serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif}
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--border:rgba(10,8,18,.1);--serif:Georgia,'Times New Roman',serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif}
 [data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--border:rgba(232,226,217,.1)}
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -203,7 +266,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
   const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.`;
   const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
     ${r.img
-      ? `<img class="related-thumb" src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy">`
+      ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 52, h: 52 })
       : `<div class="rc-no-img">♪</div>`}
     <div class="related-info">
       <div class="related-title">${escHtml(r.titleDisplay || r.titleMain)}</div>
@@ -232,7 +295,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
 <title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${escHtml(metaDesc)}">
@@ -244,9 +307,9 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <link rel="canonical" href="${BASE_URL}/artis/${artistSlug}.html">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+${FONT_HEAD}
 <style>
-:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--plum:#7c4d6e;--border:rgba(10,8,18,.1);--serif:'Lora',Georgia,serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif;--nm-transition:background .35s ease,color .35s ease,border-color .35s ease}
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--plum:#7c4d6e;--border:rgba(10,8,18,.1);--serif:Georgia,'Times New Roman',serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif;--nm-transition:background .35s ease,color .35s ease,border-color .35s ease}
 [data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
@@ -402,13 +465,18 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
   }
 
 
-  const lyricsHTML = lyrics.map(l =>
-    '<div class="ll-item">' +
+  const vocabPanelHTML = buildVocabPanelHTML(lyrics);
+  const moodChipsHTML = buildMoodChipsHTML(song.mood);
+  const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
+
+  const lyricsHTML = lyrics.map((l, i) =>
+    '<div class="ll-item" data-line="' + i + '">' +
     '<div class="lyric-left">' +
     '<div class="ljp" data-obf="1">' + obfuscateLine(l.jp||'') + '</div>' +
     (l.ro ? '<div class="lro" data-obf="1">' + obfuscateLine(l.ro) + '</div>' : '') +
     '</div>' +
     (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
+    '<button type="button" class="line-share-btn" onclick="shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
     '</div>'
   ).join('');
 
@@ -512,7 +580,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -580,14 +648,14 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+${FONT_HEAD}
 <style>
 /* ── TOKENS ── */
 :root{
   --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --serif:'Lora',Georgia,serif;
+  --serif:Georgia,'Times New Roman',serif;
   --sans:'Plus Jakarta Sans',sans-serif;
   --jp:'Noto Serif JP',serif;
   /* legacy aliases */
@@ -730,6 +798,35 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 
 /* ── LYRICS MAIN ── */
 .lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
+.mood-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:.5rem}
+.mood-chip{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .65rem;border:1px solid rgba(201,169,110,.35);color:var(--gold);background:rgba(201,169,110,.08)}
+.study-modes{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.study-btn{font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.38rem .55rem;border:1px solid var(--border);background:transparent;color:var(--ash);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.study-btn:hover{border-color:var(--gold);color:var(--ink)}
+.study-btn.on{background:rgba(201,169,110,.12);border-color:var(--gold);color:var(--ink)}
+.study-hint{font-size:.62rem;color:var(--ash);line-height:1.55;margin-top:.5rem;font-style:italic}
+.vocab-block{margin-top:.5rem}
+.vocab-chips{display:flex;flex-wrap:wrap;gap:.35rem;max-height:160px;overflow-y:auto;margin-top:.5rem;padding-right:.2rem}
+.vocab-chip{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;padding:.35rem .55rem;border:1px solid var(--border);background:var(--cream);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;max-width:100%}
+.vocab-chip:hover,.vocab-chip.on{border-color:var(--gold);background:rgba(201,169,110,.1)}
+.vocab-jp{font-family:var(--jp);font-size:.82rem;color:var(--ink);line-height:1.2}
+.vocab-hint{font-size:.58rem;color:var(--ash);line-height:1.35;font-style:italic;max-width:140px}
+.vocab-tip{font-size:.58rem;color:var(--smoke);margin-top:.45rem;line-height:1.45}
+.ll-item{position:relative}
+.line-share-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.75rem;padding:.25rem .4rem;transition:opacity .15s,color .15s}
+.ll-item:hover .line-share-btn{opacity:1}
+.line-share-btn:hover{color:var(--gold)}
+body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
+body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
+body.mode-quiz .ll-item{cursor:pointer}
+body.mode-karaoke .ll-item{opacity:.32;transition:opacity .2s}
+body.mode-karaoke .ll-item.karaoke-active{opacity:1}
+body.mode-karaoke .ll-item.karaoke-active .ljp{color:var(--gold)}
+body.mode-focus .ll-item{display:none}
+body.mode-focus .ll-item.focus-visible{display:grid}
+body.mode-focus .lyric-num{display:block}
+.ll-item.vocab-hit .ljp,.ll-item.vocab-hit .lid{outline:1px solid rgba(201,169,110,.45);outline-offset:3px}
+#fav-btn.on{color:var(--rose);border-color:rgba(196,99,122,.4)}
 .lyrics-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1rem;margin-bottom:3rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid rgba(10,8,18,.15);background:none;color:var(--ash);cursor:pointer;transition:all .18s;font-family:var(--sans)}
 .ctrl-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -1252,8 +1349,14 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       </div>` : ''}
     </div>
 
+    ${moodChipsHTML}
     <div class="hero-actions">
       <button class="btn-primary" onclick="window._scrollToLyrics()">↓ Baca Lirik</button>
+      <a class="btn-ghost" href="../latihan.html?song=${escHtml(songId)}&amp;slug=${escHtml(slug)}" style="text-decoration:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Latihan Terjemah
+      </a>
+      <button class="btn-ghost" id="fav-btn" onclick="toggleFav()" type="button" title="Simpan ke favorit">☆ Favorit</button>
       ${song.ytId ? `<button class="btn-ghost" onclick="window._scrollToMV()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Tonton MV
@@ -1266,7 +1369,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? `<img class="cover-img" src="${escHtml(song.img)}" alt="Cover ${escHtml(titleMain)} - ${escHtml(artist)}" loading="eager">`
+          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 320, h: 320, eager: true, sizes: '(max-width:600px) 100vw, 320px' })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
@@ -1331,6 +1434,19 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       </div>
     </div>
 
+    <div>
+      <span class="sidebar-section-label">Mode belajar</span>
+      <div class="study-modes">
+        <button type="button" class="study-btn on" data-mode="" onclick="setStudyMode('')">Normal</button>
+        <button type="button" class="study-btn" data-mode="quiz" onclick="setStudyMode('quiz')">Uji ingatan</button>
+        <button type="button" class="study-btn" data-mode="karaoke" onclick="setStudyMode('karaoke')">Karaoke</button>
+        <button type="button" class="study-btn" data-mode="focus" onclick="setStudyMode('focus')">Satu baris</button>
+      </div>
+      <p class="study-hint" id="study-hint">Mode normal — semua teks tampil.</p>
+    </div>
+
+    ${vocabPanelHTML}
+
     <div class="thumbs-block">
       <span class="sidebar-section-label">Apresiasi</span>
       <button class="thumbs-btn" id="thumbs-btn" onclick="window.doThumb()" aria-label="Suka lagu ini">
@@ -1362,6 +1478,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <button class="ctrl-pill" data-view="jp">Jepang</button>
       <button class="ctrl-pill" data-view="ro">Romaji</button>
       <button class="ctrl-pill" data-view="tr">Terjemahan</button>
+      <button class="ctrl-pill" id="focus-prev" type="button" onclick="focusStep(-1)" style="display:none">←</button>
+      <button class="ctrl-pill" id="focus-next" type="button" onclick="focusStep(1)" style="display:none">→</button>
       <button class="ctrl-pill" id="copy-lyric-btn" onclick="doCopyLyric()" style="margin-left:auto;opacity:.38;cursor:not-allowed" disabled title="Komen dulu untuk bisa copy lirik">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-.1em"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span id="copy-btn-label">Copy</span>
@@ -1413,7 +1531,7 @@ ${(()=>{
 
   const cards = allRelated.map(r => `<a class="related-card" href="${BASE_URL}/lagu/${r.slug}">
     ${r.img
-      ? `<img class="related-thumb" src="${escHtml(r.img)}" alt="${escHtml(r.titleMain)}" loading="lazy">`
+      ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 52, h: 52 })
       : `<div class="rc-no-img">♪</div>`}
     <div class="related-info">
       <div class="related-title">${escHtml(r.titleDisplay||r.titleMain)}</div>
@@ -1616,7 +1734,153 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   // thumbs-count-sb sudah di-update langsung oleh onSnapshot di loadThumb()
   // MutationObserver dihapus agar tidak double-update count
+
 });
+</script>
+<script>
+/* ── Fitur belajar YumeSubs: mode uji, karaoke, kosa kata, favorit ── */
+(function(){
+  var SONG_SLUG = ${JSON.stringify(slug)};
+  var SONG_ID = ${JSON.stringify(songId)};
+  var SONG_TITLE = ${JSON.stringify(titleMain)};
+  var SONG_ARTIST = ${JSON.stringify(artist)};
+  var LYRICS_PLAIN = ${JSON.stringify(lyricsPlain)};
+
+  try {
+    localStorage.setItem('ym_last_read', JSON.stringify({
+      slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST, ts: Date.now()
+    }));
+  } catch(e) {}
+
+  var studyMode = '';
+  var focusIdx = 0;
+
+  function getPlainLine(i) {
+    var l = LYRICS_PLAIN[i] || {};
+    return { jp: l.jp || '', ro: l.ro || '', id: l.id || '' };
+  }
+
+  window.setStudyMode = function(mode) {
+    studyMode = mode || '';
+    document.body.classList.remove('mode-quiz','mode-karaoke','mode-focus');
+    if (studyMode) document.body.classList.add('mode-' + studyMode);
+    document.querySelectorAll('.study-btn').forEach(function(b) {
+      b.classList.toggle('on', b.dataset.mode === studyMode);
+    });
+    var hint = document.getElementById('study-hint');
+    var fp = document.getElementById('focus-prev');
+    var fn = document.getElementById('focus-next');
+    if (hint) {
+      hint.textContent = studyMode === 'quiz' ? 'Ketuk baris untuk ungkap terjemahan — uji ingatanmu.'
+        : studyMode === 'karaoke' ? 'Ketuk baris yang sedang kamu nyanyikan.'
+        : studyMode === 'focus' ? 'Satu baris fokus — pakai ← → di atas.'
+        : 'Mode normal — semua teks tampil.';
+    }
+    if (fp) fp.style.display = studyMode === 'focus' ? '' : 'none';
+    if (fn) fn.style.display = studyMode === 'focus' ? '' : 'none';
+    document.querySelectorAll('.ll-item').forEach(function(el) {
+      el.classList.remove('revealed','karaoke-active','focus-visible','vocab-hit');
+    });
+    if (studyMode === 'focus') { focusIdx = 0; applyFocus(); }
+    if (studyMode === 'quiz') {
+      window._lyricSetView(true, true, true);
+      document.querySelectorAll('.lid').forEach(function(el){ el.classList.add('h'); });
+    } else if (studyMode !== 'focus') {
+      window._lyricSetView(true, true, true);
+    }
+  };
+
+  window.focusStep = function(d) {
+    var items = document.querySelectorAll('.ll-item');
+    if (!items.length) return;
+    focusIdx = Math.max(0, Math.min(items.length - 1, focusIdx + d));
+    applyFocus();
+  };
+
+  function applyFocus() {
+    document.querySelectorAll('.ll-item').forEach(function(el, i) {
+      el.classList.toggle('focus-visible', i === focusIdx);
+    });
+    var vis = document.querySelector('.ll-item.focus-visible');
+    if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  window.shareLine = function(i) {
+    var l = getPlainLine(i);
+    var text = (l.jp ? l.jp + '\\n' : '') + (l.ro ? l.ro + '\\n' : '') + (l.id ? l.id + '\\n' : '') +
+      '\\n— ' + SONG_TITLE + ' · ' + SONG_ARTIST + '\\n© YumeSubs yumelyrics.my.id';
+    if (navigator.share) {
+      navigator.share({ title: SONG_TITLE, text: text, url: location.href }).catch(function(){});
+      return;
+    }
+    navigator.clipboard.writeText(text).then(function(){ toast('Baris disalin 📋'); }).catch(function(){ toast('Gagal menyalin'); });
+  };
+
+  window.toggleFav = function() {
+    var key = 'ym_favs';
+    var favs = [];
+    try { favs = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+    var ix = favs.findIndex(function(f){ return f.slug === SONG_SLUG; });
+    if (ix >= 0) {
+      favs.splice(ix, 1);
+      toast('Dihapus dari favorit');
+    } else {
+      favs.unshift({ slug: SONG_SLUG, id: SONG_ID, title: SONG_TITLE, artist: SONG_ARTIST, ts: Date.now() });
+      toast('Disimpan ke favorit ★');
+    }
+    try { localStorage.setItem(key, JSON.stringify(favs.slice(0, 80))); } catch(e) {}
+    updateFavBtn();
+  };
+
+  function updateFavBtn() {
+    var btn = document.getElementById('fav-btn');
+    if (!btn) return;
+    var favs = [];
+    try { favs = JSON.parse(localStorage.getItem('ym_favs') || '[]'); } catch(e) {}
+    var on = favs.some(function(f){ return f.slug === SONG_SLUG; });
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '★ Favorit' : '☆ Favorit';
+  }
+
+  function highlightVocab(word) {
+    document.querySelectorAll('.vocab-chip').forEach(function(c) {
+      c.classList.toggle('on', c.dataset.vocab === word);
+    });
+    document.querySelectorAll('.ll-item').forEach(function(row) {
+      var jpEl = row.querySelector('.ljp');
+      var plain = jpEl ? jpEl.textContent : '';
+      row.classList.toggle('vocab-hit', word && plain.indexOf(word) >= 0);
+    });
+    var first = document.querySelector('.ll-item.vocab-hit');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function initYumeFeatures() {
+    updateFavBtn();
+    document.querySelectorAll('.vocab-chip').forEach(function(chip) {
+      chip.addEventListener('click', function(e) {
+        e.stopPropagation();
+        highlightVocab(chip.dataset.vocab);
+      });
+    });
+    document.querySelectorAll('.ll-item').forEach(function(row) {
+      row.addEventListener('click', function(e) {
+        if (e.target.closest('.line-share-btn')) return;
+        if (studyMode === 'quiz') {
+          row.classList.toggle('revealed');
+          var lid = row.querySelector('.lid');
+          if (lid) lid.classList.toggle('h', !row.classList.contains('revealed'));
+        } else if (studyMode === 'karaoke') {
+          document.querySelectorAll('.ll-item').forEach(function(r){ r.classList.remove('karaoke-active'); });
+          row.classList.add('karaoke-active');
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
+  else initYumeFeatures();
+})();
 </script>
 <script>
 /* ── Restore urutan karakter lirik via CSS order — jalan SEGERA, tidak nunggu Firebase ── */
