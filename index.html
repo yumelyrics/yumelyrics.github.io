@@ -1804,6 +1804,7 @@ window.deleteAllNotifs = async () => {
 // ── onAuthStateChanged ──
 let _authNullTimer = null;
 let _authUiGen = 0;
+let _authBusy = false;
 
 function applyAuthLoggedOutUI(){
   _currentUser = null;
@@ -1880,20 +1881,31 @@ async function applyAuthLoggedInUI(user, gen){
   else setTimeout(startNotif, 2500);
 }
 
+function scheduleAuthLoggedOutCheck(){
+  if(_authNullTimer) clearTimeout(_authNullTimer);
+  _authNullTimer = setTimeout(() => {
+    _authNullTimer = null;
+    if(auth.currentUser || _authBusy) {
+      if(_authBusy && !auth.currentUser) scheduleAuthLoggedOutCheck();
+      return;
+    }
+    setTimeout(() => {
+      if(auth.currentUser || _authBusy) return;
+      _authUiGen++;
+      applyAuthLoggedOutUI();
+    }, 400);
+  }, 900);
+}
+
 onAuthStateChanged(auth, user => {
   if(user){
     if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
     const gen = ++_authUiGen;
-    applyAuthLoggedInUI(user, gen).catch(e => console.warn('[auth]', e));
+    _authBusy = true;
+    applyAuthLoggedInUI(user, gen).catch(e => console.warn('[auth]', e)).finally(() => { _authBusy = false; });
     return;
   }
-  if(_authNullTimer) clearTimeout(_authNullTimer);
-  _authNullTimer = setTimeout(() => {
-    _authNullTimer = null;
-    if(auth.currentUser) return;
-    _authUiGen++;
-    applyAuthLoggedOutUI();
-  }, 500);
+  scheduleAuthLoggedOutCheck();
 });
 
 function _updateAvatar(photoURL, displayName) {

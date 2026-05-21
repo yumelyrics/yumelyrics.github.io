@@ -2829,6 +2829,7 @@ function updateCopyGate() {
 
 let _authNullTimer = null;
 let _authUiGen = 0;
+let _authBusy = false;
 
 async function applyAuthLoggedOut(){
   _currentUser = null;
@@ -2935,11 +2936,13 @@ async function applyAuthLoggedIn(user, gen){
     try {
       const upSnap = await getDoc(doc(db, 'user_profiles', user.uid));
       if (upSnap.exists() && upSnap.data().photoURL) _customPhotoURL = upSnap.data().photoURL;
-      if (upSnap.exists() && upSnap.data().displayName && !_isAdmin) {
-        // sync displayName dari Firestore kalau beda
-        if (upSnap.data().displayName !== user.displayName) {
-          await updateProfile(user, { displayName: upSnap.data().displayName });
-        }
+      // Jangan updateProfile saat login — memicu auth flicker (user=null) khusus akun biasa
+      if (upSnap.exists() && upSnap.data().displayName && !_isAdmin && upSnap.data().displayName !== user.displayName) {
+        const syncedDisplayName = upSnap.data().displayName;
+        setTimeout(() => {
+          if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
+          updateProfile(auth.currentUser, { displayName: syncedDisplayName }).catch(()=>{});
+        }, 2500);
       }
     } catch(e) {}
     if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
@@ -3020,29 +3023,40 @@ function afterAuthLoggedOutCleanup(){
   loadThumb();
 }
 
+function scheduleAuthLoggedOutCheck(){
+  if(_authNullTimer) clearTimeout(_authNullTimer);
+  _authNullTimer = setTimeout(() => {
+    _authNullTimer = null;
+    if(auth.currentUser || _authBusy) {
+      if(_authBusy && !auth.currentUser) scheduleAuthLoggedOutCheck();
+      return;
+    }
+    setTimeout(() => {
+      if(auth.currentUser || _authBusy) return;
+      _authUiGen++;
+      applyAuthLoggedOut().then(() => {
+        afterAuthLoggedOutCleanup();
+      }).catch(e => console.warn('[auth logout]', e));
+    }, 400);
+  }, 900);
+}
+
 onAuthStateChanged(auth, (user) => {
   if(user){
     if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
     const gen = ++_authUiGen;
     const uid = user.uid;
+    _authBusy = true;
     applyAuthLoggedIn(user, gen).then(() => {
       if(gen !== _authUiGen || auth.currentUser?.uid !== uid) return;
       loadNotifs(uid);
       rcm();
       if(!_isAdmin) startCopyGateListener(uid);
       loadThumb();
-    }).catch(e => console.warn('[auth]', e));
+    }).catch(e => console.warn('[auth]', e)).finally(() => { _authBusy = false; });
     return;
   }
-  if(_authNullTimer) clearTimeout(_authNullTimer);
-  _authNullTimer = setTimeout(() => {
-    _authNullTimer = null;
-    if(auth.currentUser) return;
-    _authUiGen++;
-    applyAuthLoggedOut().then(() => {
-      afterAuthLoggedOutCleanup();
-    }).catch(e => console.warn('[auth logout]', e));
-  }, 500);
+  scheduleAuthLoggedOutCheck();
 });
 
 /* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
