@@ -1636,8 +1636,18 @@ const PAGE_SIZE = 15;
 let catalogPage = 1;
 let catalogFiltered = null; // null = show all
 
+/** Katalog admin: paling banyak dibuka di atas (mudah pasang label populer). */
+function sortSongsByViewsDesc(list) {
+  return [...list].sort((a, b) => {
+    const dv = (b.views || 0) - (a.views || 0);
+    if (dv !== 0) return dv;
+    return (b.order ?? 0) - (a.order ?? 0);
+  });
+}
+
 function renderCatalogTable(list, page){
   const el = document.getElementById('exlist');
+  list = sortSongsByViewsDesc(list);
   if(!list.length){
     el.innerHTML='<div class="empty-list">Belum ada lagu.</div>';
     return;
@@ -1690,7 +1700,7 @@ function renderCatalogTable(list, page){
         <th></th>
         <th>Lagu</th>
         <th>Artis</th>
-        <th>Views</th>
+        <th title="Urut: paling banyak dibuka di atas">Views ↓</th>
         <th>Aksi</th>
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -1715,7 +1725,8 @@ window.goPage = (p) => {
 function ra(){
   document.getElementById('songCount').textContent=songs.length;
   catalogFiltered = null;
-  renderCatalogTable(songs, catalogPage);
+  catalogPage = 1;
+  renderCatalogTable(songs, 1);
 }
 
 addRow();
