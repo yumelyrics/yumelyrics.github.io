@@ -282,6 +282,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scid:empty{display:none;margin:0}
 [data-theme="dark"] .scro{color:#b0a898}
 [data-theme="dark"] .scid{color:var(--rose)}
+.sc-learn-row{display:flex;flex-wrap:wrap;gap:.3rem;margin:.2rem 0 .35rem}
+.sc-learn{font-size:.5rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .4rem;border:1px solid var(--border)}
+.sc-learn.jlpt{color:var(--gold);border-color:rgba(201,169,110,.35)}
+.sc-learn.diff-e{color:#2d7a4a;border-color:rgba(45,122,74,.3)}
+.sc-learn.diff-m{color:var(--dusk);border-color:rgba(107,91,122,.28)}
+.sc-learn.diff-h{color:var(--rose);border-color:rgba(196,99,122,.32)}
 .scf{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;gap:.65rem;flex-shrink:0}
 .scar{font-size:.58rem;color:var(--ash);letter-spacing:.14em;text-transform:uppercase;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scar-link{color:var(--ash);text-decoration:none;transition:color .2s}
@@ -914,6 +920,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div id="nav-dropdown">
     <button class="nd-item on" id="nd-cat" onclick="sv('cat');closeNavMenu()">Katalog</button>
     <a class="nd-item" href="artis/index.html">Artis</a>
+    <a class="nd-item" href="playlists.html">Setlist</a>
+    <a class="nd-item" href="kata/index.html">Glosarium</a>
     <a class="nd-item" href="resources.html">Resources</a>
     <a class="nd-item" href="stories.html">Cerita</a>
     <a class="nd-item" href="contact.html">Hubungi</a>
@@ -1473,6 +1481,17 @@ function songPreviewLine(s) {
   return t.length > 88 ? t.slice(0, 88) + '…' : t;
 }
 
+function learnMetaChipsHTML(s) {
+  const parts = [];
+  const jlpt = String(s.jlpt || '').trim().toUpperCase();
+  if (jlpt && /^N[1-5]$/.test(jlpt)) parts.push('<span class="sc-learn jlpt">' + escCard(jlpt) + '</span>');
+  const d = String(s.difficulty || '').toLowerCase();
+  if (d === 'easy' || d === 'mudah' || d === '1') parts.push('<span class="sc-learn diff-e">Mudah</span>');
+  else if (d === 'hard' || d === 'sulit' || d === '3') parts.push('<span class="sc-learn diff-h">Sulit</span>');
+  else if (d === 'medium' || d === 'sedang' || d === '2') parts.push('<span class="sc-learn diff-m">Sedang</span>');
+  return parts.length ? '<div class="sc-learn-row">' + parts.join('') + '</div>' : '';
+}
+
 function buildCard(s, i) {
   const div = document.createElement('div');
   div.className = 'sc';
@@ -1497,6 +1516,7 @@ function buildCard(s, i) {
       ${s.popularLabel?`<div class="rec-tag pop-tag">${escCard(s.popularLabel)}</div>`:''}
       ${preview ? `<div class="sc-preview">${escCard(preview)}</div>` : ''}
       <div class="scjp">${escCard(s.titleJp)}</div>
+      ${learnMetaChipsHTML(s)}
       ${s.titleRo?`<div class="scro">${escCard(s.titleRo)}</div>`:''}
       <div class="scid">${escCard(s.titleId||'')}</div>
       <div class="scf">${artistEl}<div class="scarr">&#x2192;</div></div>
@@ -1564,6 +1584,7 @@ function renderHeroFeatured() {
     '<div class="hero-featured-jp">' + escCard(pick.titleJp || '') + '</div>' +
     (pick.titleRo ? '<div class="hero-featured-ro">' + escCard(pick.titleRo) + '</div>' : '') +
     '<div class="hero-featured-artist">' + escCard(pick.artist || '') + '</div>' +
+    learnMetaChipsHTML(pick) +
     '<div class="hero-featured-cta">Buka lirik</div>';
   el.onclick = function(e) { e.preventDefault(); _os(pick.id); };
 }
@@ -2357,7 +2378,7 @@ function loadSongs() {
           id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
           artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
           recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
-          popularLabel:s.popularLabel, views:s.views
+          popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
         }));
         localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
       } catch(e) {}
@@ -2377,7 +2398,7 @@ function loadSongs() {
               id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
               artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
               recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
-          popularLabel:s.popularLabel, views:s.views
+          popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
             }));
             localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
           } catch(e) {}
@@ -2414,6 +2435,14 @@ function showContinueRead() {
       if (s && s.img) img = s.img;
     }
     const href = 'lagu/' + escCard(last.slug) + '.html';
+    let progNote = '';
+    try {
+      const prog = JSON.parse(localStorage.getItem('ym_prog_' + last.slug) || 'null');
+      if (prog && typeof prog.line === 'number' && prog.total > 0) {
+        const pct = Math.round(((prog.line + 1) / prog.total) * 100);
+        progNote = ' · ' + pct + '% dibaca';
+      }
+    } catch(e) {}
     const imgHd = hdImgUrl(img);
     const cover = imgHd
       ? '<img src="' + escCard(imgHd) + '" alt="" width="112" height="112" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<span class=continue-read-cover-ph>♪</span>\'">'
@@ -2425,7 +2454,7 @@ function showContinueRead() {
         '<div class="continue-read-body">' +
           '<div class="continue-read-label">Lanjutkan baca</div>' +
           '<div class="continue-read-title">' + escCard(last.title || 'Lagu') + '</div>' +
-          '<div class="continue-read-sub">' + escCard(last.artist || '') + '</div>' +
+          '<div class="continue-read-sub">' + escCard(last.artist || '') + escCard(progNote) + '</div>' +
         '</div>' +
       '</a>' +
       '<a class="continue-read-btn" href="' + href + '">Lanjut baca →</a>';

@@ -6,6 +6,15 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+let GRAMMAR_BROWSER_JS = '';
+try {
+  GRAMMAR_BROWSER_JS = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
+} catch (e) {
+  console.warn('⚠ ym-grammar-browser.js tidak ditemukan — panel tata bahasa dilewati.');
+}
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -233,6 +242,8 @@ function buildSiteNav(prefix, active) {
   <div id="nav-dropdown">
     <a class="nd-item${catOn}" href="${p}index.html">Katalog</a>
     <a class="nd-item${artOn}" href="${artHref}">Artis</a>
+    <a class="nd-item" href="${p}playlists.html">Setlist</a>
+    <a class="nd-item" href="${p}kata/index.html">Glosarium</a>
     <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
     <a class="nd-item" href="${p}contact.html">Hubungi</a>
@@ -311,6 +322,131 @@ function buildMoodChipsHTML(moodStr) {
   const moods = String(moodStr || '').split(/[,，、]/).map(s => s.trim()).filter(Boolean).slice(0, 6);
   if (!moods.length) return '';
   return `<div class="mood-row">${moods.map(m => `<span class="mood-chip">${escHtml(m)}</span>`).join('')}</div>`;
+}
+
+function buildLearnMetaHTML(song) {
+  const chips = [];
+  const jlpt = String(song.jlpt || '').trim().toUpperCase();
+  if (jlpt && /^N[1-5]$/.test(jlpt)) chips.push(`<span class="learn-chip jlpt">${escHtml(jlpt)}</span>`);
+  const d = String(song.difficulty || '').toLowerCase();
+  if (d === 'easy' || d === 'mudah' || d === '1') chips.push('<span class="learn-chip diff-easy">Mudah</span>');
+  else if (d === 'hard' || d === 'sulit' || d === '3') chips.push('<span class="learn-chip diff-hard">Sulit</span>');
+  else if (d === 'medium' || d === 'sedang' || d === '2') chips.push('<span class="learn-chip diff-med">Sedang</span>');
+  if (!chips.length) return '';
+  return `<div class="learn-meta-row">${chips.join('')}</div>`;
+}
+
+const GLOSSARY_TERM_DEFS = [
+  { slug: 'te-shimau', title: '〜てしまう', match: 'てしまう', desc: 'Menyelesaikan suatu aksi; sering ada nuansa "akhirnya (tanpa sengaja)" atau penyesalan ringan.' },
+  { slug: 'te-iru', title: '〜ている', match: 'ている', desc: 'Keadaan yang berlangsung atau hasil yang masih ada.' },
+  { slug: 'te-kuru', title: '〜てくる', match: 'てくる', desc: 'Perubahan yang berkembang menuju masa sekarang / ke arah pembicara.' },
+  { slug: 'tai', title: '〜たい', match: 'たい', desc: 'Menyatakan keinginan untuk melakukan sesuatu.' },
+  { slug: 'nai', title: '〜ない', match: 'ない', desc: 'Bentuk negatif dasar.' },
+  { slug: 'node', title: '〜ので', match: 'ので', desc: 'Menyatakan alasan — "karena".' },
+  { slug: 'noni', title: '〜のに', match: 'のに', desc: '"Meskipun / padahal" — kontras dengan ekspektasi.' },
+  { slug: 'wa', title: 'は', match: 'は', desc: 'Partikel topik: menandai apa yang sedang dibicarakan.' },
+  { slug: 'ga', title: 'が', match: 'が', desc: 'Partikel subjek: menonjolkan pelaku atau kontras.' },
+  { slug: 'wo', title: 'を', match: 'を', desc: 'Partikel objek langsung dari kata kerja.' },
+  { slug: 'ni', title: 'に', match: 'に', desc: 'Arah, waktu, atau tujuan.' },
+  { slug: 'de', title: 'で', match: 'で', desc: 'Tempat kejadian, alat, atau cara.' },
+];
+
+function buildGlossaryPages(songMeta, today) {
+  if (!fs.existsSync('kata')) fs.mkdirSync('kata');
+  const old = fs.readdirSync('kata').filter(f => f.endsWith('.html'));
+  for (const f of old) fs.unlinkSync(path.join('kata', f));
+
+  const index = {};
+  for (const term of GLOSSARY_TERM_DEFS) index[term.slug] = { term, examples: [] };
+
+  for (const { song, slug } of songMeta) {
+    (song.lyrics || []).forEach((line, i) => {
+      const jp = line.jp || '';
+      if (!jp) return;
+      for (const term of GLOSSARY_TERM_DEFS) {
+        if (!jp.includes(term.match)) continue;
+        const bucket = index[term.slug];
+        if (bucket.examples.length >= 6) continue;
+        const dup = bucket.examples.some(ex => ex.slug === slug && ex.line === i);
+        if (dup) continue;
+        bucket.examples.push({
+          slug,
+          line: i,
+          jp,
+          id: line.id || '',
+          ro: line.ro || '',
+          title: song.titleJp || song.titleRo || '',
+          artist: song.artist || '',
+        });
+      }
+    });
+  }
+
+  const cards = [];
+  const urls = [`  <url><loc>${BASE_URL}/kata/</loc><lastmod>${today}</lastmod><priority>0.7</priority></url>`];
+
+  for (const term of GLOSSARY_TERM_DEFS) {
+    const data = index[term.slug];
+    const exHtml = data.examples.length
+      ? data.examples.map(ex => `<a class="gloss-ex" href="../lagu/${escHtml(ex.slug)}.html">
+          <div class="gloss-ex-jp">${escHtml(ex.jp)}</div>
+          <div class="gloss-ex-meta">${escHtml(ex.title)} · ${escHtml(ex.artist)}</div>
+        </a>`).join('')
+      : '<p class="gloss-empty">Belum ada contoh di katalog — akan bertambah seiring generate.</p>';
+
+    const page = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(term.title)} — Glosarium | YumeSubs</title>
+<meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeSubs.">
+<link rel="canonical" href="${BASE_URL}/kata/${term.slug}.html">
+${FONT_HEAD}
+${THEME_BOOT_SCRIPT}
+<style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-family:var(--jp);font-size:2rem;font-weight:400;margin-bottom:.5rem}
+.gloss-desc{font-family:var(--serif);font-size:1rem;line-height:1.8;color:var(--ash);margin-bottom:2rem}
+.gloss-ex{display:block;padding:1rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit}
+.gloss-ex:hover{background:var(--sakura-dim)}
+.gloss-ex-jp{font-family:var(--jp);font-size:1rem}
+.gloss-ex-meta{font-size:.68rem;color:var(--ash);margin-top:.25rem}
+a.back{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold)}
+</style></head><body><div id="bgwrap"></div><div class="wrap">
+<a class="back" href="index.html">← Glosarium</a>
+<h1>${escHtml(term.title)}</h1>
+<p class="gloss-desc">${escHtml(term.desc)}</p>
+<h2 style="font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke);margin-bottom:1rem">Contoh dari lagu</h2>
+${exHtml}
+</div></body></html>`;
+    fs.writeFileSync(path.join('kata', `${term.slug}.html`), page, 'utf8');
+    urls.push(`  <url><loc>${BASE_URL}/kata/${term.slug}.html</loc><lastmod>${today}</lastmod><priority>0.55</priority></url>`);
+    if (data.examples.length) {
+      cards.push(`<a class="gloss-card" href="${term.slug}.html"><span class="gloss-card-jp">${escHtml(term.title)}</span><span class="gloss-card-n">${data.examples.length} contoh</span></a>`);
+    }
+  }
+
+  const indexHtml = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glosarium Tata Bahasa Jepang | YumeSubs</title>
+<meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.">
+<link rel="canonical" href="${BASE_URL}/kata/">
+${FONT_HEAD}
+${THEME_BOOT_SCRIPT}
+<style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:3rem 1.5rem}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-family:var(--serif);font-size:2.2rem;font-weight:300;margin-bottom:.5rem}
+.sub{color:var(--ash);margin-bottom:2rem;line-height:1.7}
+.gloss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem}
+.gloss-card{display:flex;flex-direction:column;padding:1rem;border:1px solid var(--border);text-decoration:none;color:inherit;transition:background .2s,border-color .2s}
+.gloss-card:hover{border-color:var(--gold);background:var(--sakura-dim)}
+.gloss-card-jp{font-family:var(--jp);font-size:1.1rem}
+.gloss-card-n{font-size:.58rem;color:var(--ash);margin-top:.35rem}
+</style></head><body><div id="bgwrap"></div><div class="wrap">
+<a href="../index.html" style="font-size:.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em">← Beranda</a>
+<h1>Glosarium 文法</h1>
+<p class="sub">Partikel dan pola yang sering muncul di lirik — dengan contoh langsung dari lagu di katalog.</p>
+<div class="gloss-grid">${cards.join('')}</div>
+</div></body></html>`;
+  fs.writeFileSync(path.join('kata', 'index.html'), indexHtml, 'utf8');
+  console.log(`  ✓ kata/index.html + ${GLOSSARY_TERM_DEFS.length} entri`);
+  return urls;
 }
 
 const NOISE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -596,6 +732,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 
   const vocabPanelHTML = buildVocabPanelHTML(lyrics);
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
+  const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
   const songSeedObj = {
     id: songId,
@@ -930,6 +1067,27 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .study-btn:hover{border-color:var(--gold);color:var(--ink)}
 .study-btn.on{background:rgba(201,169,110,.12);border-color:var(--gold);color:var(--ink)}
 .study-hint{font-size:.62rem;color:var(--ash);line-height:1.55;margin-top:.5rem;font-style:italic}
+.learn-meta-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem;margin-bottom:.25rem}
+.learn-chip{font-size:.56rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid var(--border)}
+.learn-chip.jlpt{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.08)}
+.learn-chip.diff-easy{color:#2d7a4a;border-color:rgba(45,122,74,.35);background:rgba(45,122,74,.08)}
+.learn-chip.diff-med{color:var(--dusk);border-color:rgba(107,91,122,.3);background:rgba(107,91,122,.08)}
+.learn-chip.diff-hard{color:var(--rose);border-color:rgba(196,99,122,.35);background:rgba(196,99,122,.1)}
+.grammar-panel,.progress-panel{margin-top:.5rem;padding-top:1rem;border-top:1px solid var(--border)}
+.grammar-hint{font-size:.62rem;color:var(--ash);line-height:1.5;margin-bottom:.65rem;font-style:italic}
+.grammar-jp-preview{font-family:var(--jp);font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:.5rem;padding:.5rem;background:var(--cream);border:1px solid var(--border)}
+.grammar-summary{font-size:.68rem;color:var(--ash);margin-bottom:.6rem;line-height:1.5}
+.grammar-list{display:flex;flex-direction:column;gap:.45rem;max-height:220px;overflow-y:auto}
+.grammar-item{padding:.45rem .5rem;border-left:2px solid var(--gold);background:var(--mist)}
+.grammar-item-char{font-family:var(--jp);font-size:.9rem;color:var(--rose);font-weight:600}
+.grammar-item-label{font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-top:.15rem}
+.grammar-item-desc{font-size:.62rem;color:var(--ash);line-height:1.45;margin-top:.12rem}
+.grammar-gloss-link{display:inline-block;margin-top:.5rem;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.grammar-gloss-link:hover{color:var(--rose)}
+.progress-bar{height:4px;background:var(--border);margin:.5rem 0 .4rem;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
+.progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
+.ll-item.grammar-active{outline:1px solid rgba(196,99,122,.35);outline-offset:2px;background:rgba(196,99,122,.06)!important}
 .vocab-block{margin-top:.5rem}
 .vocab-chips{display:flex;flex-wrap:wrap;gap:.35rem;max-height:160px;overflow-y:auto;margin-top:.5rem;padding-right:.2rem}
 .vocab-chip{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;padding:.35rem .55rem;border:1px solid var(--border);background:var(--cream);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;max-width:100%}
@@ -1532,6 +1690,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     </div>
 
     ${moodChipsHTML}
+    ${learnMetaHTML}
     <div class="hero-actions">
       <button class="btn-primary" onclick="window._scrollToLyrics()">↓ Baca Lirik</button>
       <button class="btn-ghost admin-edit-song-btn" id="admin-edit-song-btn" type="button" style="display:none" onclick="openSongEditModal()" title="Edit lagu (admin)">✏ Edit Lagu</button>
@@ -1626,6 +1785,21 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         <button type="button" class="study-btn" data-mode="focus" onclick="setStudyMode('focus')">Satu baris</button>
       </div>
       <p class="study-hint" id="study-hint">Mode normal — semua teks tampil.</p>
+    </div>
+
+    <div class="grammar-panel" id="grammar-panel">
+      <span class="sidebar-section-label">Tata bahasa · 文法</span>
+      <p class="grammar-hint">Ketuk baris lirik (mode normal) untuk analisis partikel.</p>
+      <div class="grammar-jp-preview" id="grammar-jp-preview">—</div>
+      <p class="grammar-summary" id="grammar-summary"></p>
+      <div class="grammar-list" id="grammar-list"></div>
+      <a class="grammar-gloss-link" id="grammar-gloss-link" href="../kata/index.html" style="display:none">Buka di glosarium →</a>
+    </div>
+
+    <div class="progress-panel" id="progress-panel">
+      <span class="sidebar-section-label">Progres baca</span>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <p class="progress-text" id="progress-text">Memuat…</p>
     </div>
 
     ${vocabPanelHTML}
@@ -1792,6 +1966,8 @@ ${(()=>{
     <div class="footer-col">
       <span class="footer-col-label">Jelajahi</span>
       <a class="footer-link" href="../index.html">Katalog Lengkap</a>
+      <a class="footer-link" href="../playlists.html">Setlist Belajar</a>
+      <a class="footer-link" href="../kata/index.html">Glosarium 文法</a>
       <a class="footer-link" href="../stories.html">Cerita</a>
       <a class="footer-link" href="../contact.html">Hubungi</a>
     </div>
@@ -1991,15 +2167,18 @@ document.addEventListener('DOMContentLoaded', function(){
 
 });
 </script>
+${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
 <script>
 /* ── Fitur belajar YumeSubs: mode uji, karaoke, kosa kata, favorit ── */
 (function(){
   var SONG_SLUG = ${JSON.stringify(slug)};
+  var PROG_KEY = 'ym_prog_' + SONG_SLUG;
   var SONG_ID = ${JSON.stringify(songId)};
   var SONG_TITLE = ${JSON.stringify(titleMain)};
   var SONG_ARTIST = ${JSON.stringify(artist)};
   var SONG_IMG = ${JSON.stringify(song.img || '')};
   var LYRICS_PLAIN = ${JSON.stringify(lyricsPlain)};
+  var TOTAL_LINES = LYRICS_PLAIN.length;
 
   try {
     localStorage.setItem('ym_last_read', JSON.stringify({
@@ -2058,6 +2237,8 @@ document.addEventListener('DOMContentLoaded', function(){
     });
     var vis = document.querySelector('.ll-item.focus-visible');
     if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    saveProgress(focusIdx);
+    if (studyMode === 'focus') showGrammarForLine(focusIdx);
   }
 
   window.shareLine = function(i) {
@@ -2104,6 +2285,91 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.textContent = on ? '★ Favorit' : '☆ Favorit';
   }
 
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROG_KEY) || 'null'); } catch(e) { return null; }
+  }
+
+  function saveProgress(lineIdx) {
+    if (lineIdx < 0 || TOTAL_LINES < 1) return;
+    var data = {
+      line: lineIdx,
+      mode: studyMode || 'normal',
+      total: TOTAL_LINES,
+      ts: Date.now()
+    };
+    try { localStorage.setItem(PROG_KEY, JSON.stringify(data)); } catch(e) {}
+    renderProgressUI(data);
+  }
+
+  function renderProgressUI(data) {
+    var fill = document.getElementById('progress-fill');
+    var text = document.getElementById('progress-text');
+    if (!fill || !text) return;
+    var line = (data && typeof data.line === 'number') ? data.line : -1;
+    var total = (data && data.total) ? data.total : TOTAL_LINES;
+    var pct = total > 0 && line >= 0 ? Math.round(((line + 1) / total) * 100) : 0;
+    fill.style.width = pct + '%';
+    if (line < 0) {
+      text.textContent = total ? 'Belum ada progres — ketuk baris saat belajar.' : '—';
+      return;
+    }
+    var modeLabel = (data && data.mode === 'quiz') ? 'Mode uji'
+      : (data.mode === 'karaoke') ? 'Mode karaoke'
+      : (data.mode === 'focus') ? 'Mode fokus' : 'Mode normal';
+    text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
+  }
+
+  function showGrammarForLine(idx) {
+    var panel = document.getElementById('grammar-panel');
+    if (!panel) return;
+    var plain = getPlainLine(idx);
+    var jp = plain.jp || '';
+    var preview = document.getElementById('grammar-jp-preview');
+    var summaryEl = document.getElementById('grammar-summary');
+    var listEl = document.getElementById('grammar-list');
+    var glossLink = document.getElementById('grammar-gloss-link');
+    if (preview) preview.textContent = jp || '—';
+    document.querySelectorAll('.ll-item').forEach(function(r) {
+      r.classList.toggle('grammar-active', parseInt(r.getAttribute('data-line'), 10) === idx);
+    });
+    if (!window.YumeGrammar || !jp) {
+      if (summaryEl) summaryEl.textContent = jp ? 'Analisis tata bahasa tidak tersedia.' : 'Pilih baris lirik.';
+      if (listEl) listEl.innerHTML = '';
+      if (glossLink) glossLink.style.display = 'none';
+      return;
+    }
+    var result = window.YumeGrammar.analyzeJapaneseGrammar(jp);
+    if (summaryEl) summaryEl.textContent = result.summary || '';
+    var html = '';
+    (result.phrases || []).forEach(function(p) {
+      html += '<div class="grammar-item"><div class="grammar-item-char">' + p.text + '</div>' +
+        '<div class="grammar-item-label">' + p.label + '</div>' +
+        '<div class="grammar-item-desc">' + p.desc + '</div></div>';
+    });
+    (result.particles || []).forEach(function(p) {
+      html += '<div class="grammar-item"><div class="grammar-item-char">' + p.char + '</div>' +
+        '<div class="grammar-item-label">' + p.label + '</div>' +
+        '<div class="grammar-item-desc">' + p.desc + '</div></div>';
+    });
+    if (listEl) listEl.innerHTML = html || '<p class="grammar-summary">Tidak ada partikel umum di baris ini.</p>';
+    if (glossLink) {
+      var slug = null;
+      if (jp.indexOf('てしまう') >= 0) slug = 'te-shimau';
+      else if (jp.indexOf('ている') >= 0) slug = 'te-iru';
+      else if (jp.indexOf('てくる') >= 0) slug = 'te-kuru';
+      else if (jp.indexOf('たい') >= 0) slug = 'tai';
+      else if (jp.indexOf('ので') >= 0) slug = 'node';
+      else if (jp.indexOf('のに') >= 0) slug = 'noni';
+      if (slug) {
+        glossLink.href = '../kata/' + slug + '.html';
+        glossLink.style.display = 'inline-block';
+      } else {
+        glossLink.style.display = 'none';
+      }
+    }
+    try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
+  }
+
   function highlightVocab(word) {
     document.querySelectorAll('.vocab-chip').forEach(function(c) {
       c.classList.toggle('on', c.dataset.vocab === word);
@@ -2125,6 +2391,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function initYumeFeatures() {
+    renderProgressUI(loadProgress());
     updateFavBtn();
     var favBtn = document.getElementById('fav-btn');
     if (favBtn && !favBtn.dataset.bound) {
@@ -2144,6 +2411,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.ll-item').forEach(function(row) {
       row.addEventListener('click', function(e) {
         if (e.target.closest('.line-share-btn')) return;
+        var idx = parseInt(row.getAttribute('data-line'), 10);
         if (studyMode === 'quiz') {
           row.classList.toggle('revealed');
           var lid = row.querySelector('.lid');
@@ -2152,9 +2420,16 @@ document.addEventListener('DOMContentLoaded', function(){
           document.querySelectorAll('.ll-item').forEach(function(r){ r.classList.remove('karaoke-active'); });
           row.classList.add('karaoke-active');
           row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (!studyMode || studyMode === 'focus') {
+          if (!isNaN(idx)) showGrammarForLine(idx);
         }
+        if (!isNaN(idx)) saveProgress(idx);
       });
     });
+    var saved = loadProgress();
+    if (saved && typeof saved.line === 'number' && saved.line >= 0 && (!studyMode || studyMode === 'normal')) {
+      showGrammarForLine(saved.line);
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
   else initYumeFeatures();
@@ -4773,8 +5048,12 @@ async function main() {
   </url>`);
   }
 
+  console.log('📖 Glosarium tata bahasa...');
+  const glossUrls = buildGlossaryPages(songMeta, today);
+  urls.push(...glossUrls);
+
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
-  console.log(`\n✅ Selesai! ${songs.length} lagu + ${Object.keys(byArtist).length} artis + sitemap.xml`);
+  console.log(`\n✅ Selesai! ${songs.length} lagu + ${Object.keys(byArtist).length} artis + glosarium + sitemap.xml`);
   process.exit(0);
 }
 

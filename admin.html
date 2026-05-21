@@ -456,6 +456,10 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .bhero-s:hover{border-color:rgba(196,99,122,.45);color:var(--rose)}
 .bhero-s.on{border-color:rgba(196,99,122,.55);color:var(--rose);background:rgba(196,99,122,.1)}
 .ct-badge.hero{background:rgba(196,99,122,.12);color:var(--rose);border:1px solid rgba(196,99,122,.25)}
+.ct-badge.jlpt{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.07)}
+.ct-badge.diff-e{color:#2d7a4a;border-color:rgba(45,122,74,.35);background:rgba(45,122,74,.08)}
+.ct-badge.diff-m{color:var(--plum);border-color:rgba(124,77,110,.3);background:rgba(124,77,110,.08)}
+.ct-badge.diff-h{color:var(--rose);border-color:rgba(196,99,122,.35);background:rgba(196,99,122,.1)}
 .bpop-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .bpop-s:hover{border-color:rgba(251,146,60,.5);color:#fb923c}
 .bpop-s.on{border-color:rgba(251,146,60,.6);color:#fb923c;background:rgba(251,146,60,.08)}
@@ -621,6 +625,26 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
       <div class="fg" style="grid-column:1/-1">
         <div class="fl">Mood</div>
         <input class="fi" id="f-mood" placeholder="sedih, galau, romantis">
+      </div>
+      <div class="fg">
+        <div class="fl">Level JLPT</div>
+        <select class="fi" id="f-jlpt">
+          <option value="">— Tidak ditandai —</option>
+          <option value="N5">N5</option>
+          <option value="N4">N4</option>
+          <option value="N3">N3</option>
+          <option value="N2">N2</option>
+          <option value="N1">N1</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="fl">Kesulitan</div>
+        <select class="fi" id="f-difficulty">
+          <option value="">— Tidak ditandai —</option>
+          <option value="easy">Mudah</option>
+          <option value="medium">Sedang</option>
+          <option value="hard">Sulit</option>
+        </select>
       </div>
     </div>
       </div>
@@ -1545,9 +1569,11 @@ window.saveSong = async () => {
   const songType=document.getElementById('f-type').value.trim();
   const genre=document.getElementById('f-genre').value.trim();
   const mood=document.getElementById('f-mood').value.trim();
+  const jlpt=document.getElementById('f-jlpt').value.trim();
+  const difficulty=document.getElementById('f-difficulty').value.trim();
   const editId=document.getElementById('f-editid').value;
   if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
-  const songMeta = { anime, animeId, animeEn, type: songType, genre, mood };
+  const songMeta = { anime, animeId, animeEn, type: songType, genre, mood, jlpt, difficulty };
   const lyrics=[];
   document.querySelectorAll('#lrows .lrow').forEach(r=>{
     const jp=r.querySelector('.rjp').value.trim();
@@ -1576,6 +1602,8 @@ window.saveSong = async () => {
 function clearForm(){
   ['f-jt','f-it','f-ar','f-artist-slug','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-mood','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f-type').value='';
+  document.getElementById('f-jlpt').value='';
+  document.getElementById('f-difficulty').value='';
   document.getElementById('lrows').innerHTML='';
   showCoverPreview('');
   document.getElementById('cover-upload-status').textContent = '';
@@ -1602,6 +1630,8 @@ window.editSong = id => {
   document.getElementById('f-type').value=s.type||'';
   document.getElementById('f-genre').value=s.genre||'';
   document.getElementById('f-mood').value=s.mood||'';
+  document.getElementById('f-jlpt').value=s.jlpt||'';
+  document.getElementById('f-difficulty').value=s.difficulty||'';
   document.getElementById('f-editid').value=s.id;
   showCoverPreview(s.img||'');
   document.getElementById('cover-upload-status').textContent = '';
@@ -1666,7 +1696,9 @@ function renderCatalogTable(list, page){
     const badges = [
       s.recommended ? `<span class="ct-badge rec">★ Rekomen</span>` : '',
       isHeroPinActive(s) ? `<span class="ct-badge hero">🌙 Beranda${heroPinHoursLeft(s) ? ' · ' + heroPinHoursLeft(s) + 'j' : ''}</span>` : '',
-      s.popularLabel ? `<span class="ct-badge pop">🔥 ${escHtml(s.popularLabel)}</span>` : ''
+      s.popularLabel ? `<span class="ct-badge pop">🔥 ${escHtml(s.popularLabel)}</span>` : '',
+      s.jlpt ? `<span class="ct-badge jlpt">${escHtml(s.jlpt)}</span>` : '',
+      s.difficulty === 'easy' ? '<span class="ct-badge diff-e">Mudah</span>' : s.difficulty === 'hard' ? '<span class="ct-badge diff-h">Sulit</span>' : s.difficulty === 'medium' ? '<span class="ct-badge diff-m">Sedang</span>' : ''
     ].filter(Boolean).join(' ');
     return `<tr>
       <td style="width:44px;padding-right:.4rem">${cover}</td>

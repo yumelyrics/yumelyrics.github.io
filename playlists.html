@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Setlist Belajar — YumeSubs</title>
+<meta name="description" content="Buat setlist lagu Jepang untuk belajar — bagikan link ke teman.">
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--sakura:#e8b4c8;--sakura-dim:rgba(232,180,200,.12);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Syne',sans-serif;--jp:'Noto Serif JP',serif;--border:rgba(10,8,18,.1)}
+[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height:100vh}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(245,240,234,.92);position:sticky;top:0;z-index:50}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+.nav-logo{text-decoration:none;color:inherit}
+.nljp{font-family:var(--jp);font-size:1rem;font-weight:600}
+.nlen{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
+.wrap{max-width:720px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:300;margin-bottom:.35rem}
+.sub{font-family:var(--serif);font-size:.95rem;color:var(--ash);line-height:1.7;margin-bottom:2rem}
+.card{border:1px solid var(--border);padding:1.25rem;margin-bottom:1.25rem;background:var(--cream)}
+.card h2{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin-bottom:1rem;font-weight:700}
+.fi{width:100%;border:none;border-bottom:1px solid var(--border);background:transparent;padding:.55rem 0;font-family:var(--sans);font-size:.85rem;color:var(--ink);margin-bottom:1rem}
+.fi:focus{outline:none;border-bottom-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--sakura-dim);border-color:var(--rose)}
+.pl-list{display:flex;flex-direction:column;gap:.75rem}
+.pl-item{border:1px solid var(--border);padding:1rem;background:var(--paper)}
+.pl-item h3{font-family:var(--serif);font-size:1.1rem;font-weight:400;margin-bottom:.25rem}
+.pl-meta{font-size:.62rem;color:var(--ash)}
+.pl-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.pl-songs{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.pl-song{display:flex;align-items:center;gap:.65rem;padding:.45rem 0;text-decoration:none;color:inherit}
+.pl-song:hover .pl-song-title{color:var(--rose)}
+.pl-song-thumb{width:40px;height:40px;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.pl-song-title{font-size:.78rem;font-weight:600}
+.pl-song-artist{font-size:.62rem;color:var(--ash)}
+.share-box{display:flex;gap:.5rem;align-items:center;margin-top:.5rem;flex-wrap:wrap}
+.share-inp{flex:1;min-width:180px;font-size:.68rem;padding:.4rem .5rem;border:1px solid var(--border);background:var(--paper);color:var(--ink)}
+.login-hint{padding:1rem;border:1px dashed var(--border);font-size:.78rem;color:var(--ash);line-height:1.6;margin-bottom:1.25rem}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:var(--paper);padding:.65rem 1.2rem;font-size:.72rem;z-index:999;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.empty{font-size:.78rem;color:var(--ash);font-style:italic}
+a.back{font-size:.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html"><div class="nljp">夢Lyrics</div><div class="nlen">YumeSubs</div></a>
+  <a class="btn btn-ghost" href="index.html">← Katalog</a>
+</nav>
+<div class="wrap">
+  <a class="back" href="index.html">← Beranda</a>
+  <h1>Setlist Belajar</h1>
+  <p class="sub">Kumpulkan lagu untuk sesi belajar — simpan di akun Google kamu dan bagikan link ke teman.</p>
+
+  <div id="login-hint" class="login-hint">
+    Login dengan Google untuk membuat dan mengelola setlist. Setlist publik tetap bisa dibuka lewat link tanpa login.
+    <div style="margin-top:.75rem"><button class="btn" type="button" id="login-btn">Masuk dengan Google</button></div>
+  </div>
+
+  <div id="editor" class="card" style="display:none">
+    <h2>Buat setlist baru</h2>
+    <input class="fi" id="pl-title" placeholder="Judul setlist (mis. Lagu galau N3)">
+    <input class="fi" id="pl-desc" placeholder="Deskripsi singkat (opsional)">
+    <p style="font-size:.68rem;color:var(--ash);margin-bottom:.75rem;line-height:1.5">Lagu ditambah dari <strong>Favorit</strong> di katalog (tombol ★ di halaman lagu). Minimal 1 lagu di favorit.</p>
+    <button class="btn" type="button" id="create-btn">Buat setlist</button>
+  </div>
+
+  <div id="mine-section" style="display:none">
+    <h2 style="font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin:2rem 0 1rem;font-weight:700">Setlist kamu</h2>
+    <div class="pl-list" id="mine-list"></div>
+  </div>
+
+  <div id="shared-section" style="display:none">
+    <h2 style="font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin:2rem 0 1rem;font-weight:700">Setlist dibagikan</h2>
+    <div class="pl-list" id="shared-view"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+  authDomain: "yumesubs7.firebaseapp.com",
+  projectId: "yumesubs7",
+  storageBucket: "yumesubs7.firebasestorage.app",
+  messagingSenderId: "1076202015626",
+  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function slugify(t) {
+  return String(t || 'setlist').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'setlist';
+}
+
+function getFavs() {
+  try { return JSON.parse(localStorage.getItem('ym_favs') || '[]'); } catch(e) { return []; }
+}
+
+function shareUrl(slug) {
+  const u = new URL(location.href);
+  u.searchParams.set('p', slug);
+  return u.toString();
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+function renderPlaylistCard(pl, container, opts = {}) {
+  const items = pl.items || [];
+  const songsHtml = items.map(it => {
+    const href = 'lagu/' + esc(it.slug) + '.html';
+    const img = it.img ? `<img class="pl-song-thumb" src="${esc(it.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
+    return `<a class="pl-song" href="${href}">${img}<div><div class="pl-song-title">${esc(it.title || it.slug)}</div><div class="pl-song-artist">${esc(it.artist || '')}</div></div></a>`;
+  }).join('') || '<p class="empty">Belum ada lagu.</p>';
+  const link = shareUrl(pl.slug);
+  const div = document.createElement('div');
+  div.className = 'pl-item';
+  div.innerHTML = `
+    <h3>${esc(pl.title)}</h3>
+    <div class="pl-meta">${items.length} lagu · ${pl.ownerName ? esc(pl.ownerName) : 'Anonim'}</div>
+    ${pl.desc ? `<p style="font-size:.75rem;color:var(--ash);margin-top:.35rem;line-height:1.5">${esc(pl.desc)}</p>` : ''}
+    <div class="share-box">
+      <input class="share-inp" readonly value="${esc(link)}">
+      <button class="btn btn-ghost" type="button" data-copy="${esc(link)}">Salin link</button>
+    </div>
+    ${opts.editable ? `<div class="pl-actions">
+      <button class="btn btn-ghost" type="button" data-sync="${pl.id}">+ Sync favorit</button>
+      <button class="btn btn-ghost" type="button" data-del="${pl.id}" style="color:var(--rose);border-color:var(--rose)">Hapus</button>
+    </div>` : ''}
+    <div class="pl-songs">${songsHtml}</div>`;
+  container.appendChild(div);
+  div.querySelector('[data-copy]')?.addEventListener('click', () => {
+    navigator.clipboard.writeText(link).then(() => toast('Link disalin')).catch(() => toast('Gagal menyalin'));
+  });
+  div.querySelector('[data-sync]')?.addEventListener('click', () => syncFavsToPlaylist(pl.id));
+  div.querySelector('[data-del]')?.addEventListener('click', () => deletePlaylist(pl.id));
+}
+
+async function loadSharedBySlug(slug) {
+  const q = query(collection(db, 'playlists'), where('slug', '==', slug), where('share', '==', true));
+  const snap = await getDocs(q);
+  const box = document.getElementById('shared-view');
+  const sec = document.getElementById('shared-section');
+  if (snap.empty) {
+    sec.style.display = 'block';
+    box.innerHTML = '<p class="empty">Setlist tidak ditemukan atau tidak publik.</p>';
+    return;
+  }
+  sec.style.display = 'block';
+  box.innerHTML = '';
+  snap.forEach(d => renderPlaylistCard({ id: d.id, ...d.data() }, box));
+}
+
+async function loadMine(uid) {
+  const q = query(collection(db, 'playlists'), where('ownerUid', '==', uid));
+  const snap = await getDocs(q);
+  const list = document.getElementById('mine-list');
+  const sec = document.getElementById('mine-section');
+  list.innerHTML = '';
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  rows.sort((a, b) => {
+    const ta = a.updatedAt && a.updatedAt.toMillis ? a.updatedAt.toMillis() : (a.updatedAt || 0);
+    const tb = b.updatedAt && b.updatedAt.toMillis ? b.updatedAt.toMillis() : (b.updatedAt || 0);
+    return tb - ta;
+  });
+  if (!rows.length) {
+    sec.style.display = 'block';
+    list.innerHTML = '<p class="empty">Belum ada setlist — buat yang pertama di atas.</p>';
+    return;
+  }
+  sec.style.display = 'block';
+  rows.forEach(pl => renderPlaylistCard(pl, list, { editable: true }));
+}
+
+async function createPlaylist() {
+  const user = auth.currentUser;
+  if (!user) { toast('Login dulu'); return; }
+  const title = document.getElementById('pl-title').value.trim();
+  if (!title) { toast('Judul wajib'); return; }
+  const favs = getFavs();
+  if (!favs.length) { toast('Tambah lagu ke Favorit (★) dulu'); return; }
+  const desc = document.getElementById('pl-desc').value.trim();
+  let base = slugify(title);
+  let slug = base;
+  let n = 0;
+  while (true) {
+    const ex = await getDocs(query(collection(db, 'playlists'), where('slug', '==', slug)));
+    if (ex.empty) break;
+    n++;
+    slug = base + '-' + n;
+  }
+  const items = favs.slice(0, 40).map(f => ({
+    slug: f.slug, songId: f.id || '', title: f.title || '', artist: f.artist || '', img: f.img || ''
+  }));
+  await addDoc(collection(db, 'playlists'), {
+    title, desc, slug, items, share: true,
+    ownerUid: user.uid,
+    ownerName: user.displayName || user.email || 'Pengguna',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  document.getElementById('pl-title').value = '';
+  document.getElementById('pl-desc').value = '';
+  toast('Setlist dibuat — salin link untuk dibagikan');
+  loadMine(user.uid);
+}
+
+async function syncFavsToPlaylist(id) {
+  const favs = getFavs();
+  if (!favs.length) { toast('Favorit kosong'); return; }
+  const items = favs.slice(0, 40).map(f => ({
+    slug: f.slug, songId: f.id || '', title: f.title || '', artist: f.artist || '', img: f.img || ''
+  }));
+  await updateDoc(doc(db, 'playlists', id), { items, updatedAt: serverTimestamp() });
+  toast('Setlist diperbarui dari favorit');
+  if (auth.currentUser) loadMine(auth.currentUser.uid);
+}
+
+async function deletePlaylist(id) {
+  if (!confirm('Hapus setlist ini?')) return;
+  await deleteDoc(doc(db, 'playlists', id));
+  toast('Setlist dihapus');
+  if (auth.currentUser) loadMine(auth.currentUser.uid);
+}
+
+document.getElementById('create-btn').addEventListener('click', createPlaylist);
+document.getElementById('login-btn').addEventListener('click', () => {
+  signInWithPopup(auth, provider).catch(() => signInWithRedirect(auth, provider));
+});
+
+const sharedSlug = new URLSearchParams(location.search).get('p');
+if (sharedSlug) loadSharedBySlug(sharedSlug);
+
+getRedirectResult(auth).catch(() => {});
+onAuthStateChanged(auth, user => {
+  const hint = document.getElementById('login-hint');
+  const editor = document.getElementById('editor');
+  if (user) {
+    hint.style.display = 'none';
+    editor.style.display = 'block';
+    loadMine(user.uid);
+  } else {
+    hint.style.display = 'block';
+    editor.style.display = 'none';
+    document.getElementById('mine-section').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
