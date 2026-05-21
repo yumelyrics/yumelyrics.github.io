@@ -41,19 +41,32 @@ jobs:
           fi
 
       - name: Purge Cloudflare cache (lagu & artis)
-        if: steps.push.outputs.changed == 'true' && secrets.CF_API_TOKEN != '' && secrets.CF_ZONE_ID != ''
+        if: steps.push.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
         run: |
-          curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ZONE_ID" ]; then
+            echo "⚠️ Lewati purge: isi GitHub Secrets CF_API_TOKEN + CF_ZONE_ID (Zone ID domain, bukan Account ID)."
+            exit 0
+          fi
+          resp=$(curl -sS -w "\n%{http_code}" -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data '{
-              "prefixes": [
-                "yumelyrics.my.id/lagu/",
-                "yumelyrics.my.id/artis/"
-              ],
+              "prefixes": ["yumelyrics.my.id/lagu/", "yumelyrics.my.id/artis/"],
               "files": [
                 "https://yumelyrics.my.id/sitemap.xml",
                 "https://yumelyrics.my.id/robots.txt"
               ]
-            }'
-          echo "✅ Cloudflare cache purged (lagu, artis, sitemap)."
+            }')
+          code=$(echo "$resp" | tail -n1)
+          body=$(echo "$resp" | sed '$d')
+          if [ "$code" = "200" ]; then
+            echo "✅ Cloudflare cache purged (lagu, artis, sitemap)."
+          else
+            echo "❌ Purge gagal (HTTP $code). Cek: Zone ID = dari halaman domain (bukan Account ID). Token = Cache Purge."
+            echo "$body"
+            exit 1
+          fi
