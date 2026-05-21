@@ -945,6 +945,21 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
+const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+function isAdminUser(user){
+  return !!(user && ADMIN_EMAILS.includes(user.email));
+}
+async function rejectNonAdmin(user){
+  if(!user || isAdminUser(user)) return false;
+  toast('Akun ini tidak punya akses admin.');
+  await signOut(auth);
+  document.getElementById('loginOverlay').classList.remove('hide');
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('l-err').textContent = 'Email ini bukan akun admin.';
+  if(unsubSongs){ unsubSongs(); unsubSongs = null; }
+  return true;
+}
+
 function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m;t.classList.add('on');
@@ -953,8 +968,9 @@ function toast(m){
 window._ymToast = toast;
 
 // Auth state listener
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if(user){
+    if(await rejectNonAdmin(user)) return;
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display='block';
     startListening();
@@ -981,6 +997,13 @@ window.doLogin = async () => {
   btn.disabled=true; err.textContent='';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
+    if(!isAdminUser(auth.currentUser)){
+      await signOut(auth);
+      err.textContent = 'Email ini bukan akun admin.';
+      document.getElementById('l-pw').value='';
+      btn.disabled=false;
+      return;
+    }
     document.getElementById('l-pw').value='';
   } catch(e){
     err.textContent = (e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')

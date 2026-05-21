@@ -2210,10 +2210,22 @@ const SONG_SEED = ${JSON.stringify(songSeedObj)};
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN: edit lagu di halaman ini ──
-function isVerifiedAdmin(){
-  return !!(_currentUser && ADMIN_EMAILS.includes(_currentUser.email));
+let _adminTokenVerified = false;
+async function refreshAdminTokenVerify(user){
+  _adminTokenVerified = false;
+  if(!user || !ADMIN_EMAILS.includes(user.email)) return;
+  try {
+    const tr = await user.getIdTokenResult(true);
+    const email = tr.claims.email || user.email || '';
+    _adminTokenVerified = ADMIN_EMAILS.includes(email);
+  } catch(e){
+    _adminTokenVerified = ADMIN_EMAILS.includes(user.email);
+  }
 }
-function updateAdminSongUI(){
+function isVerifiedAdmin(){
+  return !!(_currentUser && _adminTokenVerified);
+}
+async function updateAdminSongUI(){
   const btn = document.getElementById('admin-edit-song-btn');
   if(btn) btn.style.display = isVerifiedAdmin() ? 'inline-flex' : 'none';
 }
@@ -2247,6 +2259,7 @@ window.addSongEditLyricRow = function(jp='', ro='', id='', ans=''){
   wrap.appendChild(row);
 };
 window.openSongEditModal = async function(){
+  await refreshAdminTokenVerify(_currentUser);
   if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa mengedit lagu.'); return; }
   fillSongEditForm(SONG_SEED);
   try {
@@ -2267,6 +2280,7 @@ window.closeSongEditModal = function(){
   document.body.style.overflow = '';
 };
 window.saveSongEdit = async function(){
+  await refreshAdminTokenVerify(_currentUser);
   if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menyimpan.'); return; }
   const jt = document.getElementById('se-jt')?.value.trim();
   const ar = document.getElementById('se-ar')?.value.trim();
@@ -2305,7 +2319,12 @@ window.saveSongEdit = async function(){
     await updateDoc(doc(db,'songs', SONG_ID), payload);
     toast('Tersimpan di Firestore. Klik Generate HTML agar halaman publik terbarui.');
   } catch(e){
-    toast('Gagal simpan: ' + (e.message || e));
+    const code = e && (e.code || e.name || '');
+    if(code === 'permission-denied'){
+      toast('Ditolak server: hanya akun admin yang boleh mengubah lagu. (Firestore Rules)');
+    } else {
+      toast('Gagal simpan: ' + (e.message || e));
+    }
     if(btn) btn.disabled = false;
   }
 };
@@ -2361,6 +2380,7 @@ async function seGhPollRun(runId, token){
   } catch(e){ /* silent */ }
 }
 window.triggerSongPageGenerate = async function(){
+  await refreshAdminTokenVerify(_currentUser);
   if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menjalankan generate.'); return; }
   const inp = document.getElementById('se-gh-token-inp');
   const token = (inp && inp.value.trim()) || seGhTokenGet();
@@ -2847,6 +2867,8 @@ async function applyAuthState(user) {
 
     // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
     _isAdmin = ADMIN_EMAILS.includes(user.email);
+    await refreshAdminTokenVerify(user);
+    if(_isAdmin && !_adminTokenVerified) _isAdmin = false;
     // JANGAN ekspose _isAdmin ke window — gampang di-override dari DevTools
     // Kirim ke protection layer via one-time bridge yang langsung self-destruct
     try{ window.__yumeAuthBridge = _isAdmin; } catch(ex){}
@@ -2916,7 +2938,7 @@ async function applyAuthState(user) {
     document.getElementById('nud-email').textContent = user.email || '';
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     if(!_isAdmin) loadRateLimit(user.uid);
-    updateAdminSongUI();
+    await updateAdminSongUI();
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (_customPhotoURL) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
@@ -2926,8 +2948,9 @@ async function applyAuthState(user) {
     }
   } else {
     _isAdmin = false;
+    _adminTokenVerified = false;
     try{ window.__yumeAuthBridge = false; } catch(ex){}
-    updateAdminSongUI();
+    await updateAdminSongUI();
     closeSongEditModal();
     // Tampilkan floating gate login (tanpa blur terjemahan)
     gate.style.display = 'flex';

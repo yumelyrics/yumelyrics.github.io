@@ -770,7 +770,20 @@ let subFilter = 'all';
 let songMap = {};
 let curCmTab = 'songs';
 let unsubSubs = null;
-const ADMIN_EMAIL_INBOX = 'khoirustsani143@gmail.com';
+const ADMIN_EMAILS_INBOX = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+function isInboxAdmin(user){
+  return !!(user && ADMIN_EMAILS_INBOX.includes(user.email));
+}
+async function rejectNonAdminInbox(user){
+  if(!user || isInboxAdmin(user)) return false;
+  toast('Akun ini tidak punya akses inbox admin.');
+  await signOut(auth);
+  document.getElementById('loginOverlay').classList.remove('hide');
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('l-err').textContent = 'Email ini bukan akun admin.';
+  if(unsubSubs){ unsubSubs(); unsubSubs = null; }
+  return true;
+}
 let bannedMap = {}; // uid -> ban data
 
 // ── TOAST ──
@@ -789,6 +802,7 @@ let currentUser = null;
 onAuthStateChanged(auth, async user => {
   currentUser = user;
   if(user){
+    if(await rejectNonAdminInbox(user)) return;
     document.getElementById('loginOverlay').classList.add('hide');
     document.getElementById('logoutBtn').style.display = 'block';
     startListening();
@@ -814,6 +828,13 @@ window.doLogin = async () => {
   btn.disabled = true; err.textContent = 'Mencoba masuk...';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
+    if(!isInboxAdmin(auth.currentUser)){
+      await signOut(auth);
+      err.textContent = 'Email ini bukan akun admin.';
+      document.getElementById('l-pw').value = '';
+      btn.disabled = false;
+      return;
+    }
     document.getElementById('l-pw').value = '';
     err.textContent = '';
   } catch(e){
