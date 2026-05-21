@@ -208,6 +208,12 @@ textarea.fi:focus{border-color:var(--gold)}
 .login-btn:hover{background:var(--gold);color:var(--ink)}
 .login-btn:disabled{opacity:.45;cursor:not-allowed}
 .login-err{font-size:.75rem;color:var(--red);text-align:center;min-height:1rem;font-style:italic}
+.login-step-hidden{display:none!important}
+.login-step-note{font-size:.7rem;color:var(--ash);text-align:center;line-height:1.5}
+.login-back{background:none;border:none;color:var(--ash);font-family:var(--sans);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:.35rem 0;width:100%;text-align:center}
+.login-back:hover{color:var(--ink)}
+.login-inp{font-size:16px}
+@media(min-width:769px){.login-inp{font-size:.9rem}}
 .sub-section{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
 .sub-title{font-family:var(--jp);font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:.3rem}
 .sub-desc{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
@@ -908,17 +914,32 @@ Paragraf dipisah dengan enter 2x.
       <span class="nljp">夢字幕</span>
       <span class="nlen">Admin Panel</span>
     </div>
-    <div class="login-title">Masuk dulu</div>
-    <div class="login-fg">
-      <div class="login-lbl">Email</div>
-      <input class="login-inp" id="l-email" type="email" placeholder="admin@email.com" autocomplete="off">
+    <!-- Langkah 1: kata kunci (form email/password baru muncul jika benar) -->
+    <div id="login-gate-step">
+      <div class="login-title">Langkah 1 — Kata kunci</div>
+      <p class="login-step-note">Masukkan kata kunci admin untuk membuka form login.</p>
+      <div class="login-fg">
+        <div class="login-lbl">Kata kunci</div>
+        <input class="login-inp" id="l-gate" type="password" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')unlockAdminGate()">
+      </div>
+      <div class="login-err" id="l-gate-err"></div>
+      <button type="button" class="login-btn" id="gateBtn" onclick="unlockAdminGate()">Lanjut ke login</button>
     </div>
-    <div class="login-fg">
-      <div class="login-lbl">Password</div>
-      <input class="login-inp" id="l-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <!-- Langkah 2: email + password Firebase -->
+    <div id="login-cred-step" class="login-step-hidden">
+      <div class="login-title">Langkah 2 — Akun admin</div>
+      <div class="login-fg">
+        <div class="login-lbl">Email</div>
+        <input class="login-inp" id="l-email" type="email" placeholder="admin@email.com" autocomplete="off">
+      </div>
+      <div class="login-fg">
+        <div class="login-lbl">Password</div>
+        <input class="login-inp" id="l-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="login-err" id="l-err"></div>
+      <button type="button" class="login-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
+      <button type="button" class="login-back" onclick="resetAdminGate()">← Ganti kata kunci</button>
     </div>
-    <div class="login-err" id="l-err"></div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
   </div>
 </div>
 
@@ -946,6 +967,69 @@ let songs = [];
 let unsubSongs = null;
 
 const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
+// Ubah angka ASCII di bawah untuk mengganti kata kunci (contoh: "YumeAdmin" = Y,u,m,e,A,d,m,i,n)
+const ADMIN_GATE_CHARS = [89,117,109,101,65,100,109,105,110];
+function getAdminGateKey(){
+  return ADMIN_GATE_CHARS.map(c => String.fromCharCode(c)).join('');
+}
+function isGateKeyOk(input){
+  const a = String(input || '').trim();
+  const b = getAdminGateKey();
+  if(a.length !== b.length) return false;
+  let diff = 0;
+  for(let i = 0; i < a.length; i++) diff |= (a.charCodeAt(i) ^ b.charCodeAt(i));
+  return diff === 0;
+}
+function isAdminGateUnlocked(){
+  try { return sessionStorage.getItem(ADMIN_GATE_SESSION) === '1'; } catch(e) { return false; }
+}
+function showAdminLoginStep(step){
+  const gate = document.getElementById('login-gate-step');
+  const cred = document.getElementById('login-cred-step');
+  if(!gate || !cred) return;
+  const gateOpen = step === 'credentials';
+  gate.classList.toggle('login-step-hidden', gateOpen);
+  cred.classList.toggle('login-step-hidden', !gateOpen);
+  if(gateOpen){
+    setTimeout(() => document.getElementById('l-email')?.focus(), 80);
+  } else {
+    setTimeout(() => document.getElementById('l-gate')?.focus(), 80);
+  }
+}
+function initAdminLoginUI(){
+  if(isAdminGateUnlocked()) showAdminLoginStep('credentials');
+  else showAdminLoginStep('gate');
+}
+window.unlockAdminGate = function(){
+  const inp = document.getElementById('l-gate');
+  const err = document.getElementById('l-gate-err');
+  const btn = document.getElementById('gateBtn');
+  const val = inp ? inp.value : '';
+  if(!val){ if(err) err.textContent = 'Kata kunci wajib diisi.'; return; }
+  if(btn) btn.disabled = true;
+  if(err) err.textContent = '';
+  if(!isGateKeyOk(val)){
+    if(err) err.textContent = 'Kata kunci salah.';
+    if(inp){ inp.value = ''; inp.focus(); }
+    if(btn) btn.disabled = false;
+    return;
+  }
+  try { sessionStorage.setItem(ADMIN_GATE_SESSION, '1'); } catch(e){}
+  if(inp) inp.value = '';
+  showAdminLoginStep('credentials');
+  if(btn) btn.disabled = false;
+};
+window.resetAdminGate = function(){
+  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch(e){}
+  const ge = document.getElementById('l-gate-err');
+  const le = document.getElementById('l-err');
+  if(ge) ge.textContent = '';
+  if(le) le.textContent = '';
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-pw').value = '';
+  showAdminLoginStep('gate');
+};
 function isAdminUser(user){
   return !!(user && ADMIN_EMAILS.includes(user.email));
 }
@@ -956,9 +1040,11 @@ async function rejectNonAdmin(user){
   document.getElementById('loginOverlay').classList.remove('hide');
   document.getElementById('logoutBtn').style.display = 'none';
   document.getElementById('l-err').textContent = 'Email ini bukan akun admin.';
+  resetAdminGate();
   if(unsubSongs){ unsubSongs(); unsubSongs = null; }
   return true;
 }
+initAdminLoginUI();
 
 function toast(m){
   const t=document.getElementById('toast');
@@ -977,6 +1063,7 @@ onAuthStateChanged(auth, async user => {
   } else {
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display='none';
+    initAdminLoginUI();
     if(unsubSongs){ unsubSongs(); unsubSongs=null; }
   }
 });
@@ -989,10 +1076,15 @@ window.switchTab = (tab) => {
 };
 
 window.doLogin = async () => {
-  const email = document.getElementById('l-email').value.trim();
-  const pw    = document.getElementById('l-pw').value;
   const err   = document.getElementById('l-err');
   const btn   = document.getElementById('loginBtn');
+  if(!isAdminGateUnlocked()){
+    err.textContent = 'Selesaikan kata kunci admin terlebih dahulu.';
+    showAdminLoginStep('gate');
+    return;
+  }
+  const email = document.getElementById('l-email').value.trim();
+  const pw    = document.getElementById('l-pw').value;
   if(!email||!pw){ err.textContent='Email & password wajib diisi.'; return; }
   btn.disabled=true; err.textContent='';
   try {
@@ -1015,6 +1107,7 @@ window.doLogin = async () => {
 };
 
 window.doLogout = async () => {
+  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch(e){}
   await signOut(auth);
   window.location.href='index.html';
 };
