@@ -1520,8 +1520,18 @@ function featuredKickerLabel() {
   return 'Pilihan malam ini';
 }
 
+/** Acak dari seluruh katalog — sama sepanjang hari (WIB), kecuali admin pin 🌙. */
+function pickDailyFeaturedSong() {
+  if (!songs.length) return null;
+  const dayKey = new Date().toLocaleDateString('en-CA', { timeZone: FEATURED_KICKER_TZ });
+  let hash = 0;
+  for (let i = 0; i < dayKey.length; i++) hash = ((hash << 5) - hash + dayKey.charCodeAt(i)) | 0;
+  const idx = Math.abs(hash) % songs.length;
+  return songs[idx];
+}
+
 function heroFeaturedKickerFor(pick) {
-  if (!pick.heroFeatured && !pick.recommended) return 'Terbaru di katalog';
+  if (!pick) return 'Terbaru di katalog';
   return featuredKickerLabel();
 }
 
@@ -1532,7 +1542,7 @@ function renderHeroFeatured() {
     el.style.display = 'none';
     return;
   }
-  const pick = songs.find(s => s.heroFeatured) || songs.find(s => s.recommended) || songs[0];
+  const pick = songs.find(s => s.heroFeatured) || pickDailyFeaturedSong() || songs[0];
   const slug = toSlug(pick.titleRo, pick.id);
   const href = 'lagu/' + escCard(slug) + '.html';
   const img = hdImgUrl(pick.img || '');
