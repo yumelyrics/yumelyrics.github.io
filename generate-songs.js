@@ -1,5 +1,6 @@
-// generate-songs.js
+// generate-songs.js — v2026-05-21 (夢の夜 · Syne + Cormorant + sakura bgwrap)
 // Jalankan via GitHub Actions — ambil data Firebase, generate HTML per lagu + sitemap.xml
+// Cek baris 20: harus ada "Cormorant" di FONT_URL (bukan Plus Jakarta)
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
