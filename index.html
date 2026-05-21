@@ -1705,7 +1705,8 @@ window.toggleDropdown = () => {
 };
 function _outsideClick(e){
   const dd = document.getElementById('nav-user-dropdown');
-  const av = document.getElementById('nav-avatar-wrap');
+  const av = document.getElementById('float-avatar-wrap');
+  if(!dd || !av) return;
   if(!dd.contains(e.target) && !av.contains(e.target)){
     dd.classList.remove('open');
     document.removeEventListener('click', _outsideClick);
@@ -1801,80 +1802,98 @@ window.deleteAllNotifs = async () => {
 };
 
 // ── onAuthStateChanged ──
-onAuthStateChanged(auth, async user => {
+let _authNullTimer = null;
+let _authUiGen = 0;
+
+function applyAuthLoggedOutUI(){
+  _currentUser = null;
+  _customPhoto = null;
+  try { window.__yumeCustomPhoto = null; } catch(e){}
+  _isAdmin = false;
+  _isBanned = false;
+  _banReason = '';
+  _banUntil = undefined;
+  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+  const loginBtn = document.getElementById('float-login-btn');
+  const avatarWrap = document.getElementById('float-avatar-wrap');
+  if(loginBtn) loginBtn.style.display = '';
+  if(avatarWrap) avatarWrap.classList.remove('is-on');
+  const badge = document.getElementById('notif-badge');
+  if(badge) badge.classList.remove('show');
+  const editBtn = document.getElementById('nud-edit-profile-btn');
+  if(editBtn) editBtn.style.display = 'none';
+  const bannedNotice = document.getElementById('nud-banned-notice');
+  if(bannedNotice) bannedNotice.style.display = 'none';
+  const floatWrap = document.getElementById('float-avatar-wrap');
+  if(floatWrap) floatWrap.classList.remove('float-avatar-banned');
+  closeDropdown();
+}
+
+async function applyAuthLoggedInUI(user, gen){
   _currentUser = user;
-  const loginBtn  = document.getElementById('float-login-btn');
-  const avatarWrap= document.getElementById('float-avatar-wrap');
-  const nudName   = document.getElementById('nud-name');
-  const nudEmail  = document.getElementById('nud-email');
+  _isAdmin = ADMIN_EMAILS_IDX.includes(user.email || '');
+  const loginBtn = document.getElementById('float-login-btn');
+  const avatarWrap = document.getElementById('float-avatar-wrap');
+  const nudName = document.getElementById('nud-name');
+  const nudEmail = document.getElementById('nud-email');
+  if(loginBtn) loginBtn.style.display = 'none';
+  if(avatarWrap) avatarWrap.classList.add('is-on');
 
-  if(user){
-    _isAdmin = user.email === ADMIN_EMAIL;
+  const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'User');
+  if(nudName) nudName.textContent = displayName;
+  if(nudEmail) nudEmail.textContent = user.email || '';
 
-    // Tampilkan UI dulu sebelum Firestore calls
-    loginBtn.style.display = 'none';
-    avatarWrap.classList.add('is-on');
+  _customPhoto = user.photoURL || null;
+  try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
+  _updateAvatar(_customPhoto, displayName);
 
-    const displayName = _isAdmin ? 'YumeSubs' : (user.displayName||'User');
-    nudName.textContent  = displayName;
-    nudEmail.textContent = user.email||'';
+  try {
+    const up = await getDoc(doc(db, 'user_profiles', user.uid));
+    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(up.exists() && up.data().photoURL){
+      _customPhoto = up.data().photoURL;
+      try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
+      _updateAvatar(_customPhoto, displayName);
+    }
+  } catch(e){}
 
-    // Set foto dari Google dulu (langsung tampil)
-    _customPhoto = user.photoURL || null;
-    try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
-    _updateAvatar(_customPhoto, displayName);
+  const editBtn = document.getElementById('nud-edit-profile-btn');
+  if(editBtn && !_isAdmin) editBtn.style.display = '';
 
-    // Kemudian coba ambil custom photo dari Firestore (non-blocking)
-    try{
-      const up = await getDoc(doc(db,'user_profiles',user.uid));
-      if(up.exists() && up.data().photoURL){
-        _customPhoto = up.data().photoURL;
-        try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
-        _updateAvatar(_customPhoto, displayName);
-      }
-    }catch(e){}
-
-    // Tampilkan tombol edit profil (bukan admin)
-    const editBtn = document.getElementById('nud-edit-profile-btn');
-    if (editBtn && !_isAdmin) editBtn.style.display = '';
-
-    // Cek status ban
+  try {
     _isBanned = await checkBanStatus(user.uid);
+    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
     const bannedNotice = document.getElementById('nud-banned-notice');
     const floatWrap = document.getElementById('float-avatar-wrap');
-    if (_isBanned) {
-      if (bannedNotice) bannedNotice.style.display = 'block';
-      if (floatWrap) floatWrap.classList.add('float-avatar-banned');
+    if(_isBanned){
+      if(bannedNotice) bannedNotice.style.display = 'block';
+      if(floatWrap) floatWrap.classList.add('float-avatar-banned');
     } else {
-      if (bannedNotice) bannedNotice.style.display = 'none';
-      if (floatWrap) floatWrap.classList.remove('float-avatar-banned');
+      if(bannedNotice) bannedNotice.style.display = 'none';
+      if(floatWrap) floatWrap.classList.remove('float-avatar-banned');
     }
+  } catch(e){}
 
-    // Load & tampilkan role di dropdown (non-blocking)
-    if(!_isAdmin){
-      loadAndShowUserRole(user.uid).catch(()=>{});
-    }
+  if(!_isAdmin) loadAndShowUserRole(user.uid).catch(()=>{});
+  const startNotif = () => { if(auth.currentUser?.uid === user.uid) startNotifListener(user.uid); };
+  if('requestIdleCallback' in window) requestIdleCallback(startNotif, { timeout: 5000 });
+  else setTimeout(startNotif, 2500);
+}
 
-    const startNotif = () => startNotifListener(user.uid);
-    if ('requestIdleCallback' in window) requestIdleCallback(startNotif, { timeout: 5000 });
-    else setTimeout(startNotif, 2500);
-  } else {
-    _customPhoto = null;
-    try { window.__yumeCustomPhoto = null; } catch(e){}
-    _isAdmin = false;
-    _isBanned = false;
-    _banReason = '';
-    _banUntil = undefined;
-    if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-    loginBtn.style.display = '';
-    avatarWrap.classList.remove('is-on');
-    document.getElementById('notif-badge').classList.remove('show');
-    const editBtn = document.getElementById('nud-edit-profile-btn');
-    if (editBtn) editBtn.style.display = 'none';
-    const bannedNotice = document.getElementById('nud-banned-notice');
-    if (bannedNotice) bannedNotice.style.display = 'none';
-    document.getElementById('float-avatar-wrap').classList.remove('float-avatar-banned');
+onAuthStateChanged(auth, user => {
+  if(user){
+    if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
+    const gen = ++_authUiGen;
+    applyAuthLoggedInUI(user, gen).catch(e => console.warn('[auth]', e));
+    return;
   }
+  if(_authNullTimer) clearTimeout(_authNullTimer);
+  _authNullTimer = setTimeout(() => {
+    _authNullTimer = null;
+    if(auth.currentUser) return;
+    _authUiGen++;
+    applyAuthLoggedOutUI();
+  }, 500);
 });
 
 function _updateAvatar(photoURL, displayName) {
