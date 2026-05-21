@@ -2827,7 +2827,39 @@ function updateCopyGate() {
   }
 }
 
-async function applyAuthState(user) {
+let _authNullTimer = null;
+let _authUiGen = 0;
+
+async function applyAuthLoggedOut(){
+  _currentUser = null;
+  const gate   = document.getElementById('login-gate');
+  const navSlot= document.getElementById('nav-user-slot');
+  const cmLoginGate = document.getElementById('cm-login-gate');
+  const cmFormWrap  = document.getElementById('cm-form-wrap');
+  _isAdmin = false;
+  _adminTokenVerified = false;
+  try{ window.__yumeAuthBridge = false; } catch(ex){}
+  await updateAdminSongUI();
+  closeSongEditModal();
+  if(gate) gate.style.display = 'flex';
+  document.body.classList.add('gate-open');
+  if(navSlot) navSlot.style.display = 'none';
+  const bubbleEl = document.getElementById('nav-avatar-bubble');
+  if (bubbleEl) bubbleEl.style.display = 'none';
+  closeUserDropdown();
+  _hasCommented = false;
+  _isBanned = false;
+  _banReason = '';
+  _banUntil = undefined;
+  updateCopyGate();
+  if(cmLoginGate){
+    cmLoginGate.classList.remove('cm-login-gate-hidden');
+    cmLoginGate.style.display = 'flex';
+  }
+  if(cmFormWrap) cmFormWrap.style.display = 'none';
+}
+
+async function applyAuthLoggedIn(user, gen){
   _currentUser = user;
   const gate   = document.getElementById('login-gate');
   const navSlot= document.getElementById('nav-user-slot');
@@ -2844,6 +2876,7 @@ async function applyAuthState(user) {
       checkBanStatus(user.uid),
       checkHasCommented(user.uid)
     ]);
+    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
 
     // Tampilkan form komentar (tapi notice banned jika kena ban)
     cmLoginGate.classList.add('cm-login-gate-hidden');
@@ -2868,6 +2901,7 @@ async function applyAuthState(user) {
     // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
     _isAdmin = ADMIN_EMAILS.includes(user.email);
     await refreshAdminTokenVerify(user);
+    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
     if(_isAdmin && !_adminTokenVerified) _isAdmin = false;
     // JANGAN ekspose _isAdmin ke window — gampang di-override dari DevTools
     // Kirim ke protection layer via one-time bridge yang langsung self-destruct
@@ -2908,6 +2942,7 @@ async function applyAuthState(user) {
         }
       }
     } catch(e) {}
+    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
 
     // Isi nama user di form komentar
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
@@ -2944,29 +2979,6 @@ async function applyAuthState(user) {
       'nav-avatar',
       'nav-avatar-placeholder'
     );
-  } else {
-    _isAdmin = false;
-    _adminTokenVerified = false;
-    try{ window.__yumeAuthBridge = false; } catch(ex){}
-    await updateAdminSongUI();
-    closeSongEditModal();
-    // Tampilkan floating gate login (tanpa blur terjemahan)
-    gate.style.display = 'flex';
-    document.body.classList.add('gate-open');
-    navSlot.style.display = 'none';
-    const bubbleEl = document.getElementById('nav-avatar-bubble');
-    if (bubbleEl) bubbleEl.style.display = 'none';
-    closeUserDropdown();
-    _hasCommented = false;
-    _isBanned = false;
-    _banReason = '';
-    _banUntil = undefined;
-    updateCopyGate();
-
-    // Tampilkan login gate komentar
-    cmLoginGate.classList.remove('cm-login-gate-hidden');
-    cmLoginGate.style.display = 'flex';
-    cmFormWrap.style.display  = 'none';
   }
 }
 
@@ -2995,27 +3007,42 @@ function startCopyGateListener(uid) {
   }, () => {});
 }
 
-onAuthStateChanged(auth, async (user) => {
-  await applyAuthState(user);
+function afterAuthLoggedOutCleanup(){
+  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
+  if(_unsubCopyGate){ _unsubCopyGate(); _unsubCopyGate=null; }
+  _thumbVoted = false;
+  const _thumbBtn = document.getElementById('thumbs-btn');
+  if(_thumbBtn){ _thumbBtn.classList.remove('voted'); }
+  const _thumbLbl = document.getElementById('thumbs-label');
+  if(_thumbLbl) _thumbLbl.textContent = 'Suka lagu ini?';
+  const _thumbIcon = _thumbBtn ? _thumbBtn.querySelector('.thumbs-icon') : null;
+  if(_thumbIcon) _thumbIcon.textContent = '\u2661';
+  loadThumb();
+}
+
+onAuthStateChanged(auth, (user) => {
   if(user){
-    loadNotifs(user.uid);
-    rcm();
-    if (!_isAdmin) startCopyGateListener(user.uid);
-    // Re-check status like dengan uid yang benar (bukan visitor ID lagi)
-    loadThumb();
-  } else {
-    if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-    if(_unsubCopyGate){ _unsubCopyGate(); _unsubCopyGate=null; }
-    // Reset state like saat logout supaya tidak terbalik
-    _thumbVoted = false;
-    const _thumbBtn = document.getElementById('thumbs-btn');
-    if(_thumbBtn){ _thumbBtn.classList.remove('voted'); }
-    const _thumbLbl = document.getElementById('thumbs-label');
-    if(_thumbLbl) _thumbLbl.textContent = 'Suka lagu ini?';
-    const _thumbIcon = _thumbBtn ? _thumbBtn.querySelector('.thumbs-icon') : null;
-    if(_thumbIcon) _thumbIcon.textContent = '\u2661';
-    loadThumb();
+    if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
+    const gen = ++_authUiGen;
+    const uid = user.uid;
+    applyAuthLoggedIn(user, gen).then(() => {
+      if(gen !== _authUiGen || auth.currentUser?.uid !== uid) return;
+      loadNotifs(uid);
+      rcm();
+      if(!_isAdmin) startCopyGateListener(uid);
+      loadThumb();
+    }).catch(e => console.warn('[auth]', e));
+    return;
   }
+  if(_authNullTimer) clearTimeout(_authNullTimer);
+  _authNullTimer = setTimeout(() => {
+    _authNullTimer = null;
+    if(auth.currentUser) return;
+    _authUiGen++;
+    applyAuthLoggedOut().then(() => {
+      afterAuthLoggedOutCleanup();
+    }).catch(e => console.warn('[auth logout]', e));
+  }, 500);
 });
 
 /* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
