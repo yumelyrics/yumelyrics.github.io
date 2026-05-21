@@ -1138,7 +1138,12 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .progress-bar{height:4px;background:var(--border);margin:.5rem 0 .4rem;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
 .progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
-.ll-item{position:relative}
+.ll-item{position:relative;pointer-events:none}
+.line-actions{pointer-events:auto;position:relative;z-index:4}
+.lyric-left,.lyric-right,.ljp,.lro,.lid{pointer-events:none;-webkit-tap-highlight-color:transparent}
+body.mode-quiz .ll-item,body.mode-karaoke .ll-item{pointer-events:auto}
+body.mode-quiz .lyric-left,body.mode-quiz .lyric-right,body.mode-quiz .ljp,body.mode-quiz .lid,
+body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .ljp,body.mode-karaoke .lid{pointer-events:auto}
 .line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
 .line-bunpou-btn{font-family:var(--jp);font-size:.72rem;font-weight:600;line-height:1;letter-spacing:.06em;padding:.32rem .5rem;border:1px solid rgba(201,169,110,.45);background:linear-gradient(165deg,var(--paper) 0%,var(--cream) 100%);color:var(--ink);cursor:pointer;box-shadow:0 2px 12px rgba(10,8,18,.06);transition:transform .2s,border-color .2s,box-shadow .2s,color .2s,background .2s}
 .line-bunpou-btn:hover{border-color:var(--gold);color:var(--rose);transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,99,122,.15)}
@@ -1236,7 +1241,7 @@ body:not(.mode-quiz):not(.mode-karaoke) .ll-item{cursor:default}
 /* CATATAN: class is-admin di body DIHAPUS dari applyAuthState untuk keamanan */
 .lyrics-container{display:flex;flex-direction:column;gap:0}
 .ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s}
-.ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 2.75rem 1.5rem 1rem}
+body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 2.75rem 1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
@@ -2089,17 +2094,6 @@ ${(()=>{
       <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
       <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
       <p class="bunpou-summary" id="bunpou-summary"></p>
-      <p class="bunpou-legend">
-        Setiap item punya label jenis — supaya tahu ini <strong>partikel</strong> atau <strong>pola tata bahasa</strong>, bukan kosakata biasa.
-        <span class="bunpou-legend-grid">
-          <span class="bunpou-legend-item"><b>Partikel</b> は・が・を</span>
-          <span class="bunpou-legend-item"><b>Pola</b> ている・わけ</span>
-          <span class="bunpou-legend-item"><b>Bentuk</b> たい・ない</span>
-          <span class="bunpou-legend-item"><b>Sopan</b> です・ます</span>
-          <span class="bunpou-legend-item"><b>Penghubung</b> けど・ので</span>
-          <span class="bunpou-legend-item"><b>Ekspresi</b> もう・本当</span>
-        </span>
-      </p>
       <div class="bunpou-list" id="bunpou-list"></div>
       <div class="bunpou-foot">
         <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
@@ -2468,14 +2462,14 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     var listEl = document.getElementById('bunpou-list');
     var glossLink = document.getElementById('bunpou-gloss-link');
     if (lineTag) lineTag.textContent = 'Baris ' + (idx + 1) + ' · ' + SONG_TITLE;
-    if (preview) preview.textContent = jp || '—';
+    if (preview) preview.textContent = jp || plain.ro || '—';
     document.querySelectorAll('.ll-item').forEach(function(r) {
       r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
     });
     saveProgress(idx);
     var lvBox = document.getElementById('bunpou-levels');
-    if (!jp) {
-      if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks Jepang.';
+    if (!jp && !(plain.ro || '').trim()) {
+      if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks untuk dianalisis.';
       if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
       if (glossLink) glossLink.style.display = 'none';
       if (lvBox) lvBox.innerHTML = '';
@@ -2485,7 +2479,7 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       if (glossLink) glossLink.style.display = 'none';
       if (lvBox) lvBox.innerHTML = '';
     } else {
-      var result = window.YumeGrammar.analyzeJapaneseGrammar(jp);
+      var result = window.YumeGrammar.analyzeJapaneseGrammar(jp, plain.ro || '');
       if (summaryEl) summaryEl.textContent = result.summary || '';
       if (lvBox) {
         var lvHtml = '';
@@ -2570,10 +2564,9 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
 
     document.querySelectorAll('.ll-item').forEach(function(row) {
       row.addEventListener('click', function(e) {
+        if (studyMode !== 'quiz' && studyMode !== 'karaoke') return;
         if (e.target.closest('.line-actions')) return;
-        if (studyMode === 'quiz' || studyMode === 'karaoke') {
-          handleLinePick(row, parseInt(row.getAttribute('data-line'), 10));
-        }
+        handleLinePick(row, parseInt(row.getAttribute('data-line'), 10));
       });
     });
 
