@@ -2921,10 +2921,8 @@ async function applyAuthState(user) {
       cmAvatarWrap.innerHTML = \`<span style="font-size:1.1rem">👑</span>\`;
       const cmUserInfo = cmAvatarWrap.parentElement;
       cmUserInfo.innerHTML = \`<div class="admin-form-header"><span class="admin-crown">👑</span><span class="admin-form-badge">Admin</span><span class="admin-form-name">YumeSubs</span><span class="admin-form-sub">Berkomentar sebagai Admin</span></div>\`;
-    } else if (user.photoURL) {
-      cmAvatarWrap.innerHTML = \`<img style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,110,180,.3)" src="\${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
     } else {
-      cmAvatarWrap.innerHTML = \`<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,110,180,.2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--accent)">\${displayName[0].toUpperCase()}</div>\`;
+      updateCmUserAvatar(displayName);
     }
 
     // Tampilkan floating avatar bubble
@@ -2939,13 +2937,13 @@ async function applyAuthState(user) {
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     if(!_isAdmin) loadRateLimit(user.uid);
     await updateAdminSongUI();
-    const avatarWrap = document.getElementById('nav-avatar-wrap');
-    if (_customPhotoURL) {
-      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
-    } else {
-      const initial = (user.displayName||'U')[0].toUpperCase();
-      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
-    }
+    renderAvatarEl(
+      document.getElementById('nav-avatar-wrap'),
+      _customPhotoURL || user.photoURL,
+      displayName,
+      'nav-avatar',
+      'nav-avatar-placeholder'
+    );
   } else {
     _isAdmin = false;
     _adminTokenVerified = false;
@@ -3198,6 +3196,61 @@ document.addEventListener('click', e => {
 /* ── Edit Profile ── */
 let _epImgFile = null;
 
+function imgbbDirectUrl(json){
+  const d = json && json.data;
+  if(!d) return '';
+  return d.display_url || (d.image && d.image.url) || d.url || '';
+}
+
+function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
+  if(!wrap) return;
+  const initial = (displayName||'U')[0].toUpperCase();
+  wrap.innerHTML = '';
+  const url = String(photoURL||'').trim();
+  if(url && !url.startsWith('data:') && /^https?:\\/\\//i.test(url)){
+    const img = document.createElement('img');
+    img.className = imgClass;
+    img.src = url;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.decoding = 'async';
+    img.onerror = function(){
+      wrap.innerHTML = '';
+      const ph = document.createElement('div');
+      ph.className = phClass;
+      ph.textContent = initial;
+      wrap.appendChild(ph);
+    };
+    wrap.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = phClass;
+    ph.textContent = initial;
+    wrap.appendChild(ph);
+  }
+}
+
+function updateCmUserAvatar(displayName){
+  const cmAvatarWrap = document.getElementById('cm-user-avatar-wrap');
+  if(!cmAvatarWrap || _isAdmin) return;
+  const photo = _customPhotoURL || (_currentUser && _currentUser.photoURL);
+  const name = displayName || (_currentUser && _currentUser.displayName) || 'Anonim';
+  if(photo){
+    cmAvatarWrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.style.cssText = 'width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(201,169,110,.35)';
+    img.src = photo;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = function(){
+      cmAvatarWrap.innerHTML = '<div style="width:22px;height:22px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--ash)">'+name[0].toUpperCase()+'</div>';
+    };
+    cmAvatarWrap.appendChild(img);
+  } else {
+    cmAvatarWrap.innerHTML = '<div style="width:22px;height:22px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--ash)">'+name[0].toUpperCase()+'</div>';
+  }
+}
+
 window.handleEpImg = inp => {
   const file = inp.files[0];
   if (!file) return;
@@ -3221,29 +3274,27 @@ window.openEditProfile = async () => {
   _epImgFile = null;
   const statusEl = document.getElementById('ep-img-status');
   if (statusEl) statusEl.textContent = 'Atau isi URL di bawah';
-  // Isi preview avatar
-  const bigWrap = document.getElementById('ep-avatar-wrap-big');
-  const bigAv = document.getElementById('ep-avatar-big');
-  if (_currentUser.photoURL) {
-    bigWrap.querySelector('.ep-avatar-placeholder-big') && (bigWrap.querySelector('.ep-avatar-placeholder-big').outerHTML = \`<img class="ep-avatar-big" src="\${_currentUser.photoURL}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`);
-    const img = document.getElementById('ep-avatar-big');
-    if(img && img.tagName==='IMG') img.src = _currentUser.photoURL;
-  } else {
-    const initial = (_currentUser.displayName||'U')[0].toUpperCase();
-    const ph = document.getElementById('ep-avatar-big');
-    if(ph) ph.textContent = initial;
-  }
+  let photoPreview = _customPhotoURL || _currentUser.photoURL || '';
   document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '(nama tidak ada)';
   document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
   document.getElementById('ep-displayname').value = _currentUser.displayName || (_isAdmin ? 'YumeSubs' : '');
-  // Load custom avatar dari Firestore kalau ada
   try {
     const userSnap = await getDoc(doc(db, 'user_profiles', _currentUser.uid));
     const customPhoto = userSnap.exists() ? (userSnap.data().photoURL || '') : '';
+    if(customPhoto) photoPreview = customPhoto;
     document.getElementById('ep-photourl').value = customPhoto || '';
   } catch(e) {
     document.getElementById('ep-photourl').value = '';
   }
+  const bigWrap = document.getElementById('ep-avatar-wrap-big');
+  let bigSlot = document.getElementById('ep-avatar-big');
+  if(!bigSlot){
+    bigSlot = document.createElement('div');
+    bigSlot.id = 'ep-avatar-big';
+    bigSlot.className = 'ep-avatar-placeholder-big';
+    bigWrap.insertBefore(bigSlot, bigWrap.querySelector('.ep-info'));
+  }
+  renderAvatarEl(bigSlot, photoPreview, _currentUser.displayName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
   modal.classList.add('open');
   setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
 };
@@ -3272,39 +3323,23 @@ window.saveEditProfile = async () => {
       const res = await fetch(\`https://api.imgbb.com/1/upload?key=\${IMGBB_KEY}\`, { method: 'POST', body: fd });
       const json = await res.json();
       if (!json.success) throw new Error('Upload foto gagal');
-      newPhoto = json.data.url;
+      newPhoto = imgbbDirectUrl(json);
+      if (!newPhoto) throw new Error('URL foto tidak valid dari ImgBB');
       if (statusEl) statusEl.textContent = '✅ Upload berhasil';
     }
-    // Validasi URL kalau diisi manual
-    if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
+    if (newPhoto && !/^https?:\\/\\//i.test(newPhoto)) { toast('URL avatar harus link gambar (https://...)'); if(btn) btn.disabled=false; return; }
     const finalPhoto = newPhoto || _currentUser.photoURL || null;
-    // Firebase Auth: updateProfile
     await updateProfile(_currentUser, { displayName: newName, photoURL: finalPhoto });
-    // Simpan custom photoURL ke Firestore user_profiles
     await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
-    // Update custom photo URL lokal
-    if (newPhoto) _customPhotoURL = newPhoto;
-    // Update floating avatar bubble
-    const avatarWrap = document.getElementById('nav-avatar-wrap');
-    if (finalPhoto) {
-      avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer">\`;
-    } else {
-      avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${newName[0].toUpperCase()}</div>\`;
-    }
-    // Update preview modal
+    _customPhotoURL = newPhoto || null;
+    renderAvatarEl(document.getElementById('nav-avatar-wrap'), finalPhoto, newName, 'nav-avatar', 'nav-avatar-placeholder');
     const nudName = document.getElementById('nud-name');
     const epPrev  = document.getElementById('ep-display-name-preview');
     if (nudName) nudName.textContent = newName;
     if (epPrev)  epPrev.textContent  = newName;
-    // Update preview avatar di modal
-    const epAvBig = document.getElementById('ep-avatar-big');
-    if (epAvBig) {
-      if (finalPhoto) {
-        epAvBig.outerHTML = \`<img class="ep-avatar-big" src="\${finalPhoto}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">\`;
-      } else {
-        epAvBig.textContent = newName[0].toUpperCase();
-      }
-    }
+    const epSlot = document.getElementById('ep-avatar-big');
+    if (epSlot) renderAvatarEl(epSlot, finalPhoto, newName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
+    updateCmUserAvatar(newName);
     _epImgFile = null;
     toast('Profil berhasil diperbarui! ✨');
     closeEditProfile();
@@ -4115,7 +4150,7 @@ async function uploadCommentPhoto(file, uid){
   });
   const json = await res.json();
   if (!json.success) throw new Error('ImgBB upload failed');
-  return json.data.url;
+  return imgbbDirectUrl(json);
 }
 
 window.handleCmPhoto = input => {
