@@ -1695,8 +1695,213 @@
     ['に届けてくれてありがとう', 'Ni todokete kurete arigatou', 'Terima kasih sudah antar.', 'ni-todokete-arigatou', 'N3', 'pola'],
   ];
 
+  /** Batch 5 — slang · internet · dialek (関西・東北・九州・沖縄・ネット) */
+  const PHRASES_SLANG = [
+    ['ちゃうねん', 'Chau nen', 'Bukan gitu (Kansai).', 'chau-nen', 'N4', 'slang'],
+    ['せやろ', 'Seyaro', 'Kan gitu (Kansai).', 'seyaro', 'N4', 'slang'],
+    ['ほんまや', 'Honmaya', 'Benar banget (Kansai).', 'honmaya', 'N4', 'slang'],
+    ['めっちゃ', 'Meccha', 'Sangat (Kansai).', 'meccha', 'N4', 'slang'],
+    ['あかん', 'Akan', 'Tidak boleh (Kansai).', 'akan', 'N4', 'slang'],
+    ['おおきに', 'Ookini', 'Terima kasih (Kansai).', 'ookini', 'N4', 'slang'],
+    ['なんでやねん', 'Nande yanen', 'Kenapa sih! (Kansai).', 'nande-yanen', 'N4', 'slang'],
+    ['ばり', 'Bari', 'Sangat (Kyushu).', 'bari-kyushu', 'N4', 'slang'],
+    ['ばってん', 'Batten', 'Tapi (Kyushu).', 'batten', 'N4', 'slang'],
+    ['だっぺ', 'Dappe', 'Kan? (Tohoku).', 'dappe', 'N4', 'slang'],
+    ['なまら', 'Namara', 'Sangat (Tohoku).', 'namara', 'N4', 'slang'],
+    ['じゃけん', 'Jaken', 'Jadi (Hiroshima).', 'jaken', 'N4', 'slang'],
+    ['はいさい', 'Haisai', 'Halo (Okinawa).', 'haisai', 'N4', 'slang'],
+    ['めんそーれ', 'Mensoore', 'Selamat datang (Okinawa).', 'mensoore', 'N4', 'slang'],
+    ['だるい', 'Darui', 'Males / capek.', 'darui', 'N4', 'slang'],
+    ['しんどい', 'Shindoi', 'Capek / berat.', 'shindoi', 'N4', 'slang'],
+    ['えぐい', 'Egui', 'Ekstrem / gila.', 'egui', 'N4', 'slang'],
+    ['ガチ', 'Gachi', 'Serius / asli.', 'gachi', 'N4', 'slang'],
+    ['マジ', 'Maji', 'Serius?', 'maji', 'N4', 'slang'],
+    ['それな', 'Sore na', 'Setuju banget.', 'sore-na', 'N4', 'slang'],
+    ['わかりみ', 'Wakarimi', 'Relate.', 'wakarimi', 'N4', 'slang'],
+    ['エモい', 'Emoi', 'Emosional.', 'emoi', 'N4', 'slang'],
+    ['尊い', 'Toutoi', 'Precious (net).', 'toutoi-net', 'N4', 'slang'],
+    ['ぴえん', 'Pien', 'Menangis (net).', 'pien', 'N4', 'slang'],
+    ['草', 'Kusa', 'Lucu (net).', 'kusa-net', 'N4', 'slang'],
+    ['www', 'www', 'Tertawa (net).', 'www', 'N4', 'slang'],
+    ['しか勝たん', 'Shika katan', 'Yang terbaik.', 'shika-katan', 'N4', 'slang'],
+    ['じゃん', 'Jan', 'Kan (kasual).', 'jan', 'N4', 'slang'],
+    ['じゃね', 'Jane', 'Bukan (kasual).', 'jane', 'N4', 'slang'],
+    ['っす', 'Ssu', 'Desu (kasual).', 'ssu', 'N4', 'slang'],
+    ['ってか', 'Tteka', 'Maksudnya.', 'tteka', 'N4', 'slang'],
+    ['な感じ', 'Na kanji', 'Vibe-nya.', 'na-kanji', 'N4', 'slang'],
+    ['推し', 'Oshi', 'Favorit.', 'oshi', 'N4', 'slang'],
+    ['推し活', 'Oshikatsu', 'Fandom.', 'oshikatsu', 'N4', 'slang'],
+    ['詰んだ', 'Tsunda', 'Game over.', 'tsunda', 'N4', 'slang'],
+    ['バズった', 'Bazutta', 'Viral.', 'bazutta', 'N4', 'slang'],
+    ['て草', 'Te kusa', 'Lucu banget.', 'te-kusa', 'N4', 'slang'],
+    ['神曲', 'Kami kyoku', 'Lagu legendaris.', 'kami-kyoku', 'N4', 'slang'],
+    ['歌ってみた', 'Utatte mita', 'Cover nyanyi.', 'utatte-mita', 'N4', 'slang'],
+    ['サビ', 'Sabi', 'Reff.', 'sabi', 'N4', 'slang'],
+    ['刺さる', 'Sasaru', 'Menusuk hati.', 'sasaru-slang', 'N4', 'slang'],
+    ['してんじゃん', 'Shiten jan', 'Sedang kan.', 'shiten-jan', 'N4', 'slang'],
+    ['しとく', 'Shitoku', 'Lakukan dulu.', 'shitoku', 'N4', 'slang'],
+    ['やん', 'Yan', 'Bukan? (Kansai).', 'yan', 'N4', 'slang'],
+    ['やねん', 'Yanen', 'Bukan (Kansai).', 'yanen', 'N4', 'slang'],
+    ['あざす', 'Azasu', 'Thanks.', 'azasu', 'N4', 'slang'],
+    ['おつ', 'Otsu', 'Good job.', 'otsu', 'N4', 'slang'],
+    ['やばい', 'Yabai', 'Gawat / keren.', 'yabai', 'N4', 'slang'],
+    ['ウケる', 'Ukeru', 'Lucu banget.', 'ukeru', 'N4', 'slang'],
+    ['キモい', 'Kimoi', 'Jijik.', 'kimoi', 'N4', 'slang'],
+    ['うざい', 'Uzai', 'Menyebalkan.', 'uzai', 'N4', 'slang'],
+    ['てぇてぇ', 'Teetee', 'Imut banget.', 'teetee', 'N4', 'slang'],
+    ['あつ', 'Atsu', 'Keren.', 'atsu', 'N4', 'slang'],
+    ['無双', 'Musou', 'Tak terkalahkan.', 'musou', 'N4', 'slang'],
+    ['最強じゃん', 'Saikyou jan', 'OP kan.', 'saikyou-jan', 'N4', 'slang'],
+    ['付き合って', 'Tsukiatte', 'Jadian yuk.', 'tsukiatte', 'N4', 'slang'],
+    ['片思い', 'Kataomoi', 'Cinta sepihak.', 'kataomoi', 'N4', 'slang'],
+    ['両思い', 'Ryouomoi', 'Saling suka.', 'ryouomoi', 'N4', 'slang'],
+    ['フラれた', 'Furareta', 'Ditolak.', 'furareta', 'N4', 'slang'],
+    ['高評価して', 'Kouhyouka shite', 'Like dong.', 'kouhyouka-shite', 'N4', 'slang'],
+    ['チャンネル登録', 'Channeru touroku', 'Subscribe.', 'channeru-touroku', 'N4', 'slang'],
+    ['ネタバレ', 'Netabare', 'Spoiler.', 'netabare', 'N4', 'slang'],
+    ['デジャヴュ', 'Dejavu', 'Deja vu.', 'dejavu-alt', 'N4', 'slang'],
+    ['サンキュー', 'Sankyuu', 'Thank you.', 'sankyuu', 'N4', 'slang'],
+    ['ノーウェイ', 'Nou wei', 'No way.', 'nou-wei', 'N4', 'slang'],
+    ['ナイス', 'Naisu', 'Nice.', 'naisu', 'N4', 'slang'],
+    ['ラブしてる', 'Rabu shiteru', 'Love you.', 'rabu-shiteru', 'N4', 'slang'],
+    ['ヒット曲', 'Hitto kyoku', 'Lagu hit.', 'hitto-kyoku', 'N4', 'slang'],
+    ['フェス', 'Fesu', 'Festival.', 'fesu', 'N4', 'slang'],
+    ['アンコール', 'Ankooru', 'Encore.', 'ankooru', 'N4', 'slang'],
+    ['リピート', 'Ripito', 'Repeat.', 'ripito', 'N4', 'slang'],
+    ['トレンド', 'Torendo', 'Trending.', 'torendo', 'N4', 'slang'],
+    ['伸びてる', 'Nobiteru', 'Lagi naik.', 'nobiteru', 'N4', 'slang'],
+    ['沼った', 'Numatta', 'Masuk fandom.', 'numatta', 'N4', 'slang'],
+    ['ドハマり', 'Dohamari', 'Ketagihan.', 'dohamari', 'N4', 'slang'],
+    ['尊すぎ', 'Tousugi', 'Terlalu precious.', 'tousugi', 'N4', 'slang'],
+    ['かわいすぎ', 'Kawaisugi', 'Terlalu imut.', 'kawaisugi', 'N4', 'slang'],
+    ['好きすぎ', 'Sukisugi', 'Terlalu suka.', 'sukisugi', 'N4', 'slang'],
+    ['無理じゃん', 'Muri jan', 'Mustahil kan.', 'muri-jan', 'N4', 'slang'],
+    ['無理ゲー', 'Muri gee', 'Mustahil.', 'muri-gee', 'N4', 'slang'],
+    ['秒で', 'Byou de', 'Sekejap.', 'byou-de', 'N4', 'slang'],
+    ['泣ける', 'Nakeru', 'Bikin nangis.', 'nakeru-slang', 'N4', 'slang'],
+    ['わろた', 'Warota', 'LOL.', 'warota', 'N4', 'slang'],
+    ['すぎワロタ', 'Sugi warota', 'Lucu banget.', 'sugi-warota', 'N4', 'slang'],
+    ['インスタ映え', 'Insuta bae', 'Instagramable.', 'insuta-bae', 'N4', 'slang'],
+    ['タピる', 'Tapiru', 'Bubble tea.', 'tapiru', 'N4', 'slang'],
+    ['映える', 'Baeru', 'Fotogenik.', 'baeru', 'N4', 'slang'],
+    ['中二病', 'Chuunibyou', 'Edgy phase.', 'chuunibyou', 'N4', 'slang'],
+    ['黒歴史', 'Kuro rekishi', 'Masa memalukan.', 'kuro-rekishi', 'N4', 'slang'],
+    ['オタク', 'Otaku', 'Fans berat.', 'otaku', 'N4', 'slang'],
+    ['コスる', 'Kosuru', 'Cosplay.', 'kosuru', 'N4', 'slang'],
+    ['神席', 'Kamizeki', 'Kursi terbaik.', 'kamizeki', 'N4', 'slang'],
+    ['落選した', 'Rakusen shita', 'Tidak dapat tiket.', 'rakusen-shita', 'N4', 'slang'],
+    ['レベチ', 'Rebechi', 'Level beda.', 'rebechi', 'N4', 'slang'],
+    ['次元が違う', 'Jigen ga chigau', 'Dimensi lain.', 'jigen-chigau', 'N4', 'slang'],
+    ['存在が尊い', 'Sonzai ga toutoi', 'Keberadaannya precious.', 'sonzai-ga-toutoi', 'N4', 'slang'],
+    ['詞が刺さる', 'Kotoba ga sasaru', 'Lirik menusuk.', 'kotoba-sasaru', 'N4', 'slang'],
+    ['沁みる', 'Shimiru', 'Meresap.', 'shimiru', 'N4', 'slang'],
+    ['余韻', 'Yoin', 'Afterglow.', 'yoin', 'N4', 'slang'],
+    ['おめぇ', 'Omee', 'Kamu (kasual).', 'omee', 'N4', 'slang'],
+    ['てめぇ', 'Temee', 'Kamu (kasar).', 'temee', 'N4', 'slang'],
+    ['あんた', 'Anta', 'Kamu (dialek).', 'anta', 'N4', 'slang'],
+    ['おら', 'Ora', 'Aku (kasual).', 'ora', 'N4', 'slang'],
+    ['わし', 'Washi', 'Aku (dialek).', 'washi', 'N4', 'slang'],
+    ['とる', 'Toru', 'Sedang (Kansai).', 'toru-kansai', 'N4', 'slang'],
+    ['へん', 'Hen', 'Tidak (Kansai).', 'hen-kansai', 'N4', 'slang'],
+    ['知らん', 'Shiran', 'Tidak tahu (Kansai).', 'shiran', 'N4', 'slang'],
+    ['しゃあない', 'Shaanai', 'Sudahlah.', 'shaanai', 'N4', 'slang'],
+    ['どない', 'Donai', 'Bagaimana (Kansai).', 'donai', 'N4', 'slang'],
+    ['うちら', 'Uchira', 'Kita (Kansai).', 'uchira', 'N4', 'slang'],
+    ['けん', 'Ken', 'Karena (Kyushu).', 'ken-kyushu', 'N4', 'slang'],
+    ['よかろうもん', 'Yokaroumon', 'Semoga baik (Kyushu).', 'yokaroumon', 'N4', 'slang'],
+    ['んだべ', 'Ndabe', 'Kan? (Tohoku).', 'ndabe', 'N4', 'slang'],
+    ['すげえ', 'Sugee', 'Keren (kasual).', 'sugee', 'N4', 'slang'],
+    ['しゃっこい', 'Shakkoi', 'Keren (Hokkaido).', 'shakkoi', 'N4', 'slang'],
+    ['でーじ', 'Deeji', 'Sangat (Okinawa).', 'deeji', 'N4', 'slang'],
+    ['わっさい', 'Wassai', 'Selamat tinggal (Okinawa).', 'wassai', 'N4', 'slang'],
+    ['炎上', 'Enjou', 'Heboh negatif.', 'enjou', 'N4', 'slang'],
+    ['スベった', 'Subetta', 'Cringe.', 'subetta', 'N4', 'slang'],
+    ['ウケない', 'Ukenai', 'Tidak lucu.', 'ukenai', 'N4', 'slang'],
+    ['ガチ恋', 'Gachikoi', 'Cinta serius.', 'gachikoi', 'N4', 'slang'],
+    ['夢女', 'Yumewo', 'Fangirl.', 'yumewo', 'N4', 'slang'],
+    ['腐女子', 'Fujoshi', 'Fangirl BL.', 'fujoshi', 'N4', 'slang'],
+    ['箱推し', 'Hakooshi', 'Suka semua member.', 'hakooshi', 'N4', 'slang'],
+    ['単推し', 'Tanoshi', 'Satu favorit.', 'tanoshi', 'N4', 'slang'],
+    ['推せる', 'Oseru', 'Layak difavoritkan.', 'oseru', 'N4', 'slang'],
+    ['オタ活', 'Otakatsu', 'Aktivitas fandom.', 'otakatsu', 'N4', 'slang'],
+    ['リアコ', 'Riako', 'Crush idol.', 'riako', 'N4', 'slang'],
+    ['限界オタク', 'Genkai otaku', 'Otak limit.', 'genkai-otaku', 'N4', 'slang'],
+    ['オワタ', 'Owata', 'Tamat (net).', 'owata', 'N4', 'slang'],
+    ['これこれ', 'Kore kore', 'Ini dia.', 'kore-kore', 'N4', 'slang'],
+    ['わかる', 'Wakaru', 'Relate.', 'wakaru-slang', 'N4', 'slang'],
+    ['わかりみ深い', 'Wakarimi fukai', 'Sangat relate.', 'wakarimi-fukai', 'N4', 'slang'],
+    ['エモすぎ', 'Emosugi', 'Terlalu emosional.', 'emosugi', 'N4', 'slang'],
+    ['キモかわ', 'Kimokawa', 'Jijik tapi lucu.', 'kimokawa', 'N4', 'slang'],
+    ['ぱおん', 'Paon', 'Hancur (net).', 'paon', 'N4', 'slang'],
+    ['草生える', 'Kusa haeru', 'Sangat lucu.', 'kusa-haeru', 'N4', 'slang'],
+    ['（笑）', '(Warai)', 'LOL.', 'warai-kakko', 'N4', 'slang'],
+    ['に決まってる', 'Ni kimatteru', 'Pasti.', 'ni-kimatteru', 'N4', 'slang'],
+    ['でしかない', 'De shikanai', 'Hanya ini.', 'de-shikanai', 'N4', 'slang'],
+    ['無理ぽ', 'Muri po', 'Kayak mustahil.', 'muri-po', 'N4', 'slang'],
+    ['飯テロ', 'Meshi tero', 'Foto makan menggoda.', 'meshi-tero', 'N4', 'slang'],
+    ['よきよき', 'Yoki yoki', 'Sangat bagus.', 'yoki-yoki', 'N4', 'slang'],
+    ['すこすこ', 'Sukosuko', 'Suka banget.', 'sukosuko', 'N4', 'slang'],
+    ['りー', 'Rii', 'LOL singkat.', 'rii-net', 'N4', 'slang'],
+    ['じゃんけ', 'Janke', 'Kan gitu.', 'janke', 'N4', 'slang'],
+    ['じゃーん', 'Jaan', 'Nah kan.', 'jaan', 'N4', 'slang'],
+    ['じゃねぇ', 'Janee', 'Bukan sih.', 'janee-alt', 'N4', 'slang'],
+    ['っしょ', 'Sho', 'Yuk.', 'sho', 'N4', 'slang'],
+    ['なんだわ', 'Nandawa', 'Lho begini.', 'nandawa', 'N4', 'slang'],
+    ['でしょ', 'Desho', 'Kan?', 'desho', 'N4', 'slang'],
+    ['でしょーん', 'Deshoon', 'Kan banget.', 'deshoon', 'N4', 'slang'],
+    ['だっぺな', 'Dappen a', 'Kan? (Tohoku).', 'dappe-na', 'N4', 'slang'],
+    ['だべな', 'Dabena', 'Kan? (Tohoku).', 'dabena', 'N4', 'slang'],
+    ['てぇ', 'Tee', 'Te (aksen).', 'tee', 'N4', 'slang'],
+    ['俺様', 'Oresama', 'Aku (sombong).', 'oresama', 'N4', 'slang'],
+    ['お前ら', 'Omaera', 'Kalian.', 'omaera', 'N4', 'slang'],
+    ['神ってる', 'Kamitteru', 'Dewa banget.', 'kamitteru', 'N4', 'slang'],
+    ['布教', 'Fukyou', 'Sebarkan.', 'fukyou', 'N4', 'slang'],
+    ['沼', 'Numa', 'Fandom dalam.', 'numa', 'N4', 'slang'],
+    ['ハマる', 'Hamaru', 'Ketagihan.', 'hamaru', 'N4', 'slang'],
+    ['重すぎ', 'Omosugi', 'Terlalu berat.', 'omosugi', 'N4', 'slang'],
+    ['失恋', 'Shitsuren', 'Patah hati.', 'shitsuren', 'N4', 'slang'],
+    ['復縁', 'Fukuen', 'Balikan.', 'fukuen', 'N4', 'slang'],
+    ['宇宙一', 'Uchuichi', 'Terbaik di semesta.', 'uchuichi', 'N4', 'slang'],
+    ['伝説の', 'Densetsu no', 'Legendaris.', 'densetsu-no', 'N4', 'slang'],
+    ['痛い奴', 'Itai yatsu', 'Orang cringe.', 'itai-yatsu', 'N4', 'slang'],
+    ['オタクっぽい', 'Otakuppoi', 'Kayak otaku.', 'otakuppoi', 'N4', 'slang'],
+    ['現場行く', 'Genba iku', 'Ke event.', 'genba-iku', 'N4', 'slang'],
+    ['遠征', 'Ensei', 'Perjalanan fan.', 'ensei', 'N4', 'slang'],
+    ['倍率高い', 'Bairitsu takai', 'Sulit dapat tiket.', 'bairitsu-takai', 'N4', 'slang'],
+    ['転売', 'Tenbai', 'Resale.', 'tenbai', 'N4', 'slang'],
+    ['尊死', 'Toushi', 'Terlalu precious.', 'toushi', 'N4', 'slang'],
+    ['かわいくて尊い', 'Kawaikute toutoi', 'Imut & precious.', 'kawaikute-toutoi', 'N4', 'slang'],
+    ['天才すぎ', 'Tensai sugi', 'Terlalu jenius.', 'tensai-sugi', 'N4', 'slang'],
+    ['ビジュ良し', 'Biju yoshi', 'Visual bagus.', 'biju-yoshi', 'N4', 'slang'],
+    ['アニソン', 'Anison', 'Lagu anime.', 'anison', 'N4', 'slang'],
+    ['ワンマン', 'Wanman', 'Solo live.', 'wanman', 'N4', 'slang'],
+    ['対バン', 'Tai ban', 'Lineup bentrok.', 'taiban', 'N4', 'slang'],
+    ['盛り上がれ', 'Moriagare', 'Meriahkan!', 'moriagare', 'N4', 'slang'],
+    ['ラブソング', 'Rabu songu', 'Lagu cinta.', 'rabu-songu', 'N4', 'slang'],
+    ['バラード', 'Barado', 'Balada.', 'barado', 'N4', 'slang'],
+    ['ラップ', 'Rappu', 'Rap.', 'rappu', 'N4', 'slang'],
+    ['グサッと', 'Gusatto', 'Tusuk perasaan.', 'gusatto', 'N4', 'slang'],
+    ['サブスク', 'Sabusuku', 'Streaming.', 'sabusuku', 'N4', 'slang'],
+    ['バズってる', 'Bazutteru', 'Lagi viral.', 'bazutteru', 'N4', 'slang'],
+    ['コメ欄', 'Kome ran', 'Kolom komentar.', 'kome-ran', 'N4', 'slang'],
+    ['荒らし', 'Arashi', 'Troll.', 'arashi-net', 'N4', 'slang'],
+    ['してん', 'Shiten', 'Sedang (kontraksi).', 'shiten', 'N4', 'slang'],
+    ['やってんじゃん', 'Yatten jan', 'Lagi kan.', 'yatten-jan', 'N4', 'slang'],
+    ['見とく', 'Mitoku', 'Lihat dulu.', 'mitoku', 'N4', 'slang'],
+    ['言っとけ', 'Itoke', 'Bilang.', 'itoke', 'N4', 'slang'],
+    ['知っとけ', 'Shitoke', 'Ingat.', 'shitoke-know', 'N4', 'slang'],
+    ['やろか', 'Yaroka', 'Mungkin (Kansai).', 'yaroka', 'N4', 'slang'],
+    ['OK', 'OK', 'Oke.', 'ok', 'N4', 'slang'],
+    ['ファイト', 'Faito', 'Semangat!', 'faito', 'N4', 'slang'],
+    ['グッジョブ', 'Gujjobu', 'Good job.', 'gujjobu', 'N4', 'slang'],
+    ['かっこいいじゃん', 'Kakkoii jan', 'Keren kan.', 'kakkoii-jan', 'N4', 'slang'],
+    ['イケメン', 'Ikemen', 'Cakep.', 'ikemen', 'N4', 'slang'],
+    ['死ぬほど好き', 'Shinu hodo suki', 'Suka mati-matan.', 'shinu-hodo-suki', 'N4', 'slang'],
+  ];
+
   const KIND_LABELS = {
     partikel: 'Partikel',
+    slang: 'Slang · internet · dialek',
     pola: 'Pola tata bahasa',
     bentuk: 'Bentuk kata (verba / sifat)',
     sopan: 'Bentuk sopan (です・ます)',
@@ -1704,7 +1909,7 @@
     ekspresi: 'Kata keterangan / ekspresi',
   };
 
-  const KIND_ORDER = ['partikel', 'penghubung', 'sopan', 'bentuk', 'pola', 'ekspresi'];
+  const KIND_ORDER = ['partikel', 'penghubung', 'sopan', 'bentuk', 'pola', 'ekspresi', 'slang'];
 
   function inferKind(match) {
     const m = String(match);
@@ -1773,7 +1978,7 @@
   }
 
   const PHRASES = dedupePhrases(
-    [...PHRASES_RAW, ...PHRASES_MORE, ...PHRASES_EXTRA, ...PHRASES_MEGA].map(normalizeRow)
+    [...PHRASES_RAW, ...PHRASES_MORE, ...PHRASES_EXTRA, ...PHRASES_MEGA, ...PHRASES_SLANG].map(normalizeRow)
   ).sort((a, b) => b[0].length - a[0].length);
 
   const LEVEL_ORDER = { N1: 1, N2: 2, N3: 3, N4: 4, N5: 5 };
@@ -1796,15 +2001,112 @@
     };
   }
 
+  const HIRAGANA = /[\u3040-\u309F]/;
+  const KATAKANA = /[\u30A0-\u30FF]/;
+  const KANA = /[\u3040-\u30FF]/;
+  const KANJI = /[\u4E00-\u9FFF]/;
+  const BOUND = /[\s\u3000、。！？．，．.!?,…「」『』（）()\[\]{}<>「」：:；;／/\\|｜\-–—]/;
+
+  /** Partikel dari baris romaji (wa/ga/wo terpisah), bukan dari huruf di tengah kosakata */
+  const ROM_PARTICLES = {
+    wa: ['は', 'Partikel topik (wa)', 'Menandai topik kalimat.', 'wa', 'N5'],
+    ga: ['が', 'Partikel subjek (ga)', 'Menonjolkan subjek.', 'ga', 'N5'],
+    wo: ['を', 'Partikel objek (wo)', 'Objek langsung verba.', 'wo', 'N5'],
+    o: ['を', 'Partikel objek (o)', 'Objek (romaji o).', 'wo', 'N5'],
+    ni: ['に', 'Partikel に (ni)', 'Arah, waktu, tujuan.', 'ni', 'N5'],
+    de: ['で', 'Partikel で (de)', 'Tempat, alat, cara.', 'de', 'N5'],
+    to: ['と', 'Partikel と (to)', 'Dan, bersama.', 'to', 'N5'],
+    mo: ['も', 'Partikel も (mo)', 'Juga.', 'mo', 'N5'],
+    ka: ['か', 'Partikel か (ka)', 'Pertanyaan.', 'ka', 'N5'],
+    ne: ['ね', 'Partikel ね (ne)', 'Konfirmasi.', 'ne', 'N5'],
+    yo: ['よ', 'Partikel よ (yo)', 'Penegas info.', 'yo', 'N5'],
+    no: ['の', 'Partikel の (no)', 'Milik / penghubung.', 'no', 'N5'],
+    kara: ['から', 'Partikel から', 'Dari / karena.', 'kara', 'N5'],
+    made: ['まで', 'Partikel まで', 'Sampai.', 'made', 'N5'],
+    yori: ['より', 'Partikel より', 'Daripada.', 'yori', 'N5'],
+    dake: ['だけ', 'Partikel だけ', 'Hanya.', 'dake', 'N5'],
+    shika: ['しか', 'Partikel しか', 'Hanya (+ neg).', 'shika', 'N5'],
+    demo: ['でも', 'Partikel でも', 'Bahkan / meski.', 'demo-part', 'N4'],
+    kedo: ['けど', 'Penghubung けど', 'Tapi.', 'kedo', 'N4'],
+    keredomo: ['けれども', 'Penghubung けれども', 'Namun.', 'keredomo', 'N3'],
+    node: ['ので', 'Penghubung ので', 'Karena.', 'node', 'N4'],
+    noni: ['のに', 'Penghubung のに', 'Padahal.', 'noni', 'N4'],
+    tte: ['って', 'Partikel って', 'Topik kasual.', 'tte', 'N4'],
+    nante: ['なんて', 'Partikel なんて', 'Semacam.', 'nante-part', 'N4'],
+    nanka: ['なんか', 'Partikel なんか', 'Semacam.', 'nanka', 'N4'],
+    bakari: ['ばかり', 'Partikel ばかり', 'Hanya / baru.', 'bakari', 'N4'],
+    kurai: ['くらい', 'Partikel くらい', 'Sekitar.', 'kurai-part', 'N4'],
+    gurai: ['ぐらい', 'Partikel ぐらい', 'Sekitar.', 'kurai-g-part', 'N4'],
+    sae: ['さえ', 'Partikel さえ', 'Bahkan.', 'sae-part', 'N2'],
+    koso: ['こそ', 'Partikel こそ', 'Penekanan.', 'koso-part', 'N2'],
+    sura: ['すら', 'Partikel すら', 'Bahkan.', 'sura-part', 'N2'],
+    hodo: ['ほど', 'Partikel ほど', 'Tingkat.', 'hodo-part', 'N4'],
+    ya: ['や', 'Partikel や', 'Dan (contoh).', 'ya', 'N5'],
+    e: ['へ', 'Partikel へ (e)', 'Menuju.', 'e', 'N5'],
+    he: ['へ', 'Partikel へ (he)', 'Menuju.', 'e', 'N5'],
+  };
+
+  function isKanaChar(ch) {
+    return KANA.test(ch);
+  }
+
+  /** Hindari か di わかって, の di tengah kata, dll. */
   function isParticleContext(text, i, ch) {
     const prev = text[i - 1] || '';
     const next = text[i + 1] || '';
-    if (ch === 'は' && /[わハは]$/.test(text.slice(Math.max(0, i - 4), i))) return false;
+    if (ch.length > 1) return true;
+    if (ch === 'は' && /[わワわ]$/.test(text.slice(Math.max(0, i - 4), i))) return false;
     if (ch === 'が' && SKIP_PARTICLE_IN.test(prev)) return false;
     if (ch === 'の' && /[0-9０-９]/.test(next)) return false;
-    if (ch.length > 1) return true;
-    if (/[\u3040-\u30FF\u4E00-\u9FFF]/.test(prev) || /[\u3040-\u30FF\u4E00-\u9FFF]/.test(next)) return true;
-    return 'はをにでのとがの'.includes(ch);
+    if (prev === 'っ' || next === 'っ') return false;
+    if (/[ゃゅょぁぃぅぇぉャュョァィゥェォ]/.test(prev) || /[ゃゅょぁぃぅぇぉャュョァィゥェォ]/.test(next)) {
+      return false;
+    }
+    if (isKanaChar(prev) && isKanaChar(next)) return false;
+    if (KATAKANA.test(prev) && isKanaChar(next)) return false;
+    if (ch === 'か' && isKanaChar(next)) return false;
+    if (ch === 'に' && isKanaChar(prev) && isKanaChar(next)) return false;
+    const prevBound = !prev || BOUND.test(prev) || KANJI.test(prev);
+    const nextBound = !next || BOUND.test(next) || KANJI.test(next);
+    if (!next && 'かねよわ'.includes(ch)) return true;
+    if (!prev && 'はがを'.includes(ch)) return true;
+    if (prevBound && nextBound) return 'はがをにでのともかのへや'.includes(ch);
+    if (KANJI.test(prev) && nextBound) return 'はがをにでのと'.includes(ch);
+    if (prevBound && KANJI.test(next)) return 'はがをにでのと'.includes(ch);
+    return false;
+  }
+
+  function collectRomajiParticles(ro, items, seenKeys) {
+    if (!ro || !String(ro).trim()) return;
+    const raw = String(ro).toLowerCase();
+    const tokens = raw.match(/[a-zāīūēōâêîôûäëöü]+(?:'[a-z]+)?/gi) || [];
+    const used = new Set();
+    for (const tok of tokens) {
+      const t = tok.toLowerCase();
+      if (used.has(t) || t.length > 14) continue;
+      const meta = ROM_PARTICLES[t];
+      if (!meta) continue;
+      used.add(t);
+      const key = 'ro:' + t;
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      items.push(makeItem(meta[0], meta[1], meta[2], meta[4], 'partikel', meta[3]));
+    }
+  }
+
+  function collectJapaneseParticles(text, items, usedSpan, seenKeys) {
+    const chars = [...text];
+    for (let i = 0; i < chars.length; i++) {
+      if (usedSpan.has('c' + i)) continue;
+      const ch = chars[i];
+      const meta = PARTICLES[ch];
+      if (!meta || !isParticleContext(text, i, ch)) continue;
+      const key = 'jp:' + i + ':' + ch;
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      usedSpan.add('c' + i);
+      items.push(makeItem(ch, meta[0], meta[1], meta[3], 'partikel', meta[2]));
+    }
   }
 
   function collectLevels(items) {
@@ -1836,15 +2138,18 @@
     return groups;
   }
 
-  function analyzeJapaneseGrammar(jp) {
-    if (!jp || !String(jp).trim()) {
+  function analyzeJapaneseGrammar(jp, ro) {
+    const text = jp ? String(jp).trim() : '';
+    const romaji = ro ? String(ro).trim() : '';
+    if (!text && !romaji) {
       return { summary: 'Baris kosong.', particles: [], phrases: [], items: [], levels: [], groups: {} };
     }
-    const text = String(jp).trim();
     const items = [];
     const usedSpan = new Set();
+    const seenParticleKeys = new Set();
 
     for (const [ph, label, desc, gloss, level, kind] of PHRASES) {
+      if (!text) continue;
       let start = 0;
       while (start < text.length) {
         const ix = text.indexOf(ph, start);
@@ -1853,19 +2158,19 @@
         if (!usedSpan.has(key)) {
           usedSpan.add(key);
           for (let k = ix; k < ix + ph.length; k++) usedSpan.add('c' + k);
-          items.push(makeItem(ph, label, desc, level, kind, gloss));
+          const knd = kind || inferKind(ph);
+          if (knd !== 'partikel') {
+            items.push(makeItem(ph, label, desc, level, knd, gloss));
+          }
         }
         start = ix + ph.length;
       }
     }
 
-    const chars = [...text];
-    for (let i = 0; i < chars.length; i++) {
-      if (usedSpan.has('c' + i)) continue;
-      const ch = chars[i];
-      const meta = PARTICLES[ch];
-      if (!meta || !isParticleContext(text, i, ch)) continue;
-      items.push(makeItem(ch, meta[0], meta[1], meta[3], 'partikel', meta[2]));
+    if (romaji) {
+      collectRomajiParticles(romaji, items, seenParticleKeys);
+    } else if (text) {
+      collectJapaneseParticles(text, items, usedSpan, seenParticleKeys);
     }
 
     items.sort((a, b) => {
