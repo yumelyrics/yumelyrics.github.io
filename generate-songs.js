@@ -341,6 +341,74 @@ const GLOSSARY_TERM_DEFS = [
   { slug: 'no', title: 'の', match: 'の', desc: 'N5 · Kepemilikan / penghubung.' },
   { slug: 'mo', title: 'も', match: 'も', desc: 'N5 · Juga.' },
   { slug: 'te', title: '〜て', match: 'て', desc: 'N5 · Penghubung て-form.' },
+  { slug: 'te-oku', title: '〜ておく', match: 'ておく', desc: 'N4 · Melakukan dulu (persiapan).' },
+  { slug: 'te-aru', title: '〜てある', match: 'てある', desc: 'N4 · Sudah dilakukan (hasil terlihat).' },
+  { slug: 'te-miru', title: '〜てみる', match: 'てみる', desc: 'N4 · Mencoba melakukan.' },
+  { slug: 'te-kureru', title: '〜てくれる', match: 'てくれる', desc: 'N4 · Orang lain melakukan untukku.' },
+  { slug: 'te-hoshii', title: '〜てほしい', match: 'てほしい', desc: 'N4 · Ingin orang lain melakukan.' },
+  { slug: 'you-ni-suru', title: '〜ようにする', match: 'ようにする', desc: 'N4 · Berusaha supaya.' },
+  { slug: 'you-ni-naru', title: '〜ようになる', match: 'ようになる', desc: 'N4 · Mulai bisa / berubah jadi.' },
+  { slug: 'kamo', title: '〜かもしれない', match: 'かもしれない', desc: 'N4 · Mungkin.' },
+  { slug: 'rashii', title: '〜らしい', match: 'らしい', desc: 'N4 · Konon / rupanya (dengar).' },
+  { slug: 'you-da', title: '〜ようだ', match: 'ようだ', desc: 'N4 · Sepertinya (bukti).' },
+  { slug: 'mitai-da', title: '〜みたい', match: 'みたい', desc: 'N4 · Seperti / kayak.' },
+  { slug: 'sou-da-rumor', title: '〜そうだ', match: 'そうだ', desc: 'N4 · Konon (mendengar).' },
+  { slug: 'sou-ni', title: '〜そうに', match: 'そうに', desc: 'N4 · Kelihatan akan (tampak).' },
+  { slug: 'ni-totte', title: '〜にとって', match: 'にとって', desc: 'N4 · Bagi (sudut pandang).' },
+  { slug: 'ni-tsuite', title: '〜について', match: 'について', desc: 'N4 · Tentang.' },
+  { slug: 'ni-yotte', title: '〜によって', match: 'によって', desc: 'N4 · Oleh / tergantung.' },
+  { slug: 'hou-ga-ii', title: '〜ほうがいい', match: 'ほうがいい', desc: 'N4 · Lebih baik (sebaiknya).' },
+  { slug: 'ba', title: '〜ば', match: 'ば', desc: 'N4 · Jika (kondisi).' },
+  { slug: 'reba', title: '〜れば', match: 'れば', desc: 'N4 · Jika (kondisi).' },
+  { slug: 'nagara', title: '〜ながら', match: 'ながら', desc: 'N4 · Sambil melakukan.' },
+  { slug: 'darou', title: '〜だろう', match: 'だろう', desc: 'N4 · Mungkin / kan.' },
+  { slug: 'deshou', title: '〜でしょう', match: 'でしょう', desc: 'N4 · Mungkin (sopan).' },
+  { slug: 'kedo', title: '〜けど', match: 'けど', desc: 'N4 · Tapi (kasual).' },
+  { slug: 'shikashi', title: 'しかし', match: 'しかし', desc: 'N4 · Namun.' },
+  { slug: 'dakara', title: 'だから', match: 'だから', desc: 'N4 · Jadi / makanya.' },
+  { slug: 'ni-chigainai', title: '〜に違いない', match: 'に違いない', desc: 'N3 · Pasti / tidak diragukan.' },
+  { slug: 'wake-dewa-nai', title: '〜わけではない', match: 'わけではない', desc: 'N3 · Bukan berarti…' },
+  { slug: 'wake-ga-nai', title: '〜わけがない', match: 'わけがない', desc: 'N3 · Tidak mungkin.' },
+  { slug: 'wake-da', title: '〜わけだ', match: 'わけだ', desc: 'N3 · Jadi beginilah.' },
+  { slug: 'zu-ni-irarenai', title: '〜ずにはいられない', match: 'ずにはいられない', desc: 'N3 · Tak bisa tidak.' },
+  { slug: 'koto-ni-suru', title: '〜ことにする', match: 'ことにする', desc: 'N3 · Memutuskan untuk.' },
+  { slug: 'koto-ga-aru', title: '〜ことがある', match: 'ことがある', desc: 'N3 · Kadang-kadang.' },
+  { slug: 'koto-ga-dekiru', title: '〜ことができる', match: 'ことができる', desc: 'N3 · Bisa / mampu.' },
+  { slug: 'you-ni-shite-iru', title: '〜ようにしている', match: 'ようにしている', desc: 'N3 · Berusaha (kebiasaan).' },
+  { slug: 'mono-da', title: '〜ものだ', match: 'ものだ', desc: 'N3 · Biasanya / nostalgia.' },
+  { slug: 'mono-dewa-nai', title: '〜ものではない', match: 'ものではない', desc: 'N3 · Sebaiknya tidak.' },
+  { slug: 'koto-da', title: '〜ことだ', match: 'ことだ', desc: 'N3 · Sebaiknya / harusnya.' },
+  { slug: 'dake-de-naku', title: '〜だけでなく', match: 'だけでなく', desc: 'N3 · Tidak hanya… tetapi juga.' },
+  { slug: 'dokoro-ka', title: '〜どころか', match: 'どころか', desc: 'N3 · Malah sebaliknya.' },
+  { slug: 'ni-suginai', title: '〜に過ぎない', match: 'に過ぎない', desc: 'N3 · Hanya sekadar.' },
+  { slug: 'to-wa-kagiranai', title: '〜とは限らない', match: 'とは限らない', desc: 'N3 · Belum tentu.' },
+  { slug: 'ni-tsurete', title: '〜につれて', match: 'につれて', desc: 'N3 · Seiring dengan.' },
+  { slug: 'ka-no-you-da', title: '〜かのようだ', match: 'かのようだ', desc: 'N3 · Seolah-olah.' },
+  { slug: 'ki-ga-suru', title: '〜気がする', match: '気がする', desc: 'N3 · Merasa seperti.' },
+  { slug: 'bakari-da', title: '〜ばかりだ', match: 'ばかりだ', desc: 'N2 · Terus / hanya.' },
+  { slug: 'koto-ni-natte-iru', title: '〜ことになっている', match: 'ことになっている', desc: 'N2 · Aturan / kebiasaan.' },
+  { slug: 'koto-ni-natta', title: '〜ことになった', match: 'ことになった', desc: 'N2 · Diputuskan.' },
+  { slug: 'te-tamaranai', title: '〜てたまらない', match: 'てたまらない', desc: 'N2 · Sangat (perasaan).' },
+  { slug: 'ni-shite-wa', title: '〜にしては', match: 'にしては', desc: 'N2 · Untuk… (luar biasa).' },
+  { slug: 'ni-oite', title: '〜において', match: 'において', desc: 'N2 · Di (formal).' },
+  { slug: 'ni-kanshite', title: '〜に関して', match: 'に関して', desc: 'N2 · Mengenai.' },
+  { slug: 'ni-taishite', title: '〜に対して', match: 'に対して', desc: 'N2 · Terhadap.' },
+  { slug: 'ni-yoru-to', title: '〜によると', match: 'によると', desc: 'N2 · Menurut (sumber).' },
+  { slug: 'ni-motozuite', title: '〜に基づいて', match: 'に基づいて', desc: 'N2 · Berdasarkan.' },
+  { slug: 'ni-oujite', title: '〜に応じて', match: 'に応じて', desc: 'N2 · Sesuai kondisi.' },
+  { slug: 'to-iu-yori', title: '〜というより', match: 'というより', desc: 'N2 · Lebih tepatnya.' },
+  { slug: 'to-itte-mo', title: '〜といっても', match: 'といっても', desc: 'N2 · Meski disebut.' },
+  { slug: 'mono-no', title: '〜ものの', match: 'ものの', desc: 'N2 · Meski… tetapi.' },
+  { slug: 'dake-atte', title: '〜だけあって', match: 'だけあって', desc: 'N2 · Sesuai reputasi.' },
+  { slug: 'koso', title: '〜こそ', match: 'こそ', desc: 'N2 · Penekanan "justru".' },
+  { slug: 'sae', title: '〜さえ', match: 'さえ', desc: 'N2 · Bahkan.' },
+  { slug: 'ppoi', title: '〜っぽい', match: 'っぽい', desc: 'N2 · Kecenderungan / seperti.' },
+  { slug: 'zaru-wo-enai', title: '〜ざるを得ない', match: 'ざるを得ない', desc: 'N1 · Terpaksa.' },
+  { slug: 'to-wa-ie', title: '〜とはいえ', match: 'とはいえ', desc: 'N1 · Meski demikian.' },
+  { slug: 'ni-hoka-naranai', title: '〜にほかならない', match: 'にほかならない', desc: 'N1 · Tidak lain adalah.' },
+  { slug: 'bakari-ka', title: '〜ばかりか', match: 'ばかりか', desc: 'N1 · Tidak hanya… bahkan.' },
+  { slug: 'kara-ni-wa', title: '〜からには', match: 'からには', desc: 'N1 · Karena sudah… wajib.' },
+  { slug: 'tsutsu-aru', title: '〜つつある', match: 'つつある', desc: 'N1 · Sedang berlangsung (perubahan).' },
 ];
 
 function buildGlossaryPages(songMeta, today) {
@@ -433,7 +501,7 @@ h1{font-family:var(--serif);font-size:2.2rem;font-weight:300;margin-bottom:.5rem
 </style></head><body><div id="bgwrap"></div><div class="wrap">
 <a href="../index.html" style="font-size:.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em">← Beranda</a>
 <h1>Glosarium 文法</h1>
-<p class="sub">Partikel dan pola yang sering muncul di lirik — dengan contoh langsung dari lagu di katalog.</p>
+<p class="sub">Pola bunpou JLPT N5–N1 yang sering muncul di lirik — dengan contoh langsung dari lagu di katalog.</p>
 <div class="gloss-grid">${cards.join('')}</div>
 </div></body></html>`;
   fs.writeFileSync(path.join('kata', 'index.html'), indexHtml, 'utf8');
@@ -1097,11 +1165,35 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink);padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
 .bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
 .bunpou-list{display:flex;flex-direction:column;gap:.55rem}
-.bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s}
+.bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.55;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
+.bunpou-legend strong{color:var(--ink);font-weight:600}
+.bunpou-group-title{font-size:.54rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin:1rem 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.bunpou-group-title:first-child{margin-top:0}
+.bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s;margin-bottom:.45rem}
 .bunpou-item:hover{border-color:rgba(201,169,110,.5);background:rgba(201,169,110,.06)}
+.bunpou-item-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem;flex-wrap:wrap}
+.bunpou-item-type{font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border:1px solid}
+.bunpou-item--partikel .bunpou-item-type{color:var(--rose);border-color:rgba(196,99,122,.4);background:rgba(196,99,122,.08)}
+.bunpou-item--pola .bunpou-item-type{color:var(--plum);border-color:rgba(124,77,110,.35);background:rgba(124,77,110,.06)}
+.bunpou-item--bentuk .bunpou-item-type{color:#3d5a80;border-color:rgba(61,90,128,.35);background:rgba(61,90,128,.06)}
+.bunpou-item--sopan .bunpou-item-type{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.08)}
+.bunpou-item--penghubung .bunpou-item-type{color:#2d6a5a;border-color:rgba(45,106,90,.35);background:rgba(45,106,90,.08)}
+.bunpou-item--ekspresi .bunpou-item-type{color:var(--ash);border-color:var(--border);background:var(--paper)}
 .bunpou-item-char{font-family:var(--jp);font-size:1rem;color:var(--rose);font-weight:600}
-.bunpou-item-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-top:.2rem}
-.bunpou-item-n5{font-size:.5rem;color:var(--gold);letter-spacing:.08em;margin-left:.3rem}
+.bunpou-item-label{font-size:.58rem;font-weight:600;letter-spacing:.06em;color:var(--ink);margin-top:.15rem}
+.bunpou-levels{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.bunpou-lv-chip{font-size:.5rem;font-weight:700;letter-spacing:.1em;padding:.12rem .4rem;border:1px solid}
+.bunpou-lv-chip.n5{color:var(--gold);border-color:rgba(201,169,110,.45);background:rgba(201,169,110,.08)}
+.bunpou-lv-chip.n4{color:#2d6a5a;border-color:rgba(45,106,90,.4);background:rgba(45,106,90,.08)}
+.bunpou-lv-chip.n3{color:#3d5a80;border-color:rgba(61,90,128,.4);background:rgba(61,90,128,.08)}
+.bunpou-lv-chip.n2{color:var(--plum);border-color:rgba(124,77,110,.4);background:rgba(124,77,110,.08)}
+.bunpou-lv-chip.n1{color:var(--rose);border-color:rgba(196,99,122,.45);background:rgba(196,99,122,.1)}
+.bunpou-item-lvl{font-size:.48rem;font-weight:700;letter-spacing:.08em;margin-left:.35rem;padding:.1rem .32rem;border:1px solid;vertical-align:middle}
+.bunpou-item-lvl.n5{color:var(--gold);border-color:rgba(201,169,110,.4)}
+.bunpou-item-lvl.n4{color:#2d6a5a;border-color:rgba(45,106,90,.35)}
+.bunpou-item-lvl.n3{color:#3d5a80;border-color:rgba(61,90,128,.35)}
+.bunpou-item-lvl.n2{color:var(--plum);border-color:rgba(124,77,110,.35)}
+.bunpou-item-lvl.n1{color:var(--rose);border-color:rgba(196,99,122,.4)}
 .bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
 .bunpou-foot{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
 .bunpou-gloss{display:inline-flex;align-items:center;gap:.35rem;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none}
@@ -1987,12 +2079,14 @@ ${(()=>{
     <button type="button" class="bunpou-close" onclick="closeBunpouPopup()" aria-label="Tutup">×</button>
     <div class="bunpou-head">
       <span class="bunpou-kanji" id="bunpou-title">文法</span>
-      <span class="bunpou-sub">Bunpou · JLPT N5</span>
+      <span class="bunpou-sub">Bunpou · JLPT N5–N1</span>
+      <div class="bunpou-levels" id="bunpou-levels"></div>
     </div>
     <div class="bunpou-body">
       <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
       <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
       <p class="bunpou-summary" id="bunpou-summary"></p>
+      <p class="bunpou-legend"><strong>Partikel</strong> = penanda (は・が・を…) · <strong>Pola</strong> = susunan tata bahasa · <strong>Bentuk</strong> = akhiran verba/sifat · <strong>Sopan</strong> = です/ます · <strong>Penghubung</strong> = tapi/karena · <strong>Ekspresi</strong> = kata sifat perasaan/waktu</p>
       <div class="bunpou-list" id="bunpou-list"></div>
       <div class="bunpou-foot">
         <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
@@ -2366,26 +2460,57 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
     });
     saveProgress(idx);
+    var lvBox = document.getElementById('bunpou-levels');
     if (!jp) {
       if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks Jepang.';
       if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
       if (glossLink) glossLink.style.display = 'none';
+      if (lvBox) lvBox.innerHTML = '';
     } else if (!window.YumeGrammar) {
       if (summaryEl) summaryEl.textContent = 'Modul bunpou belum dimuat — generate ulang halaman lagu.';
       if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Pastikan ym-grammar-browser.js ada di repo.</p>';
       if (glossLink) glossLink.style.display = 'none';
+      if (lvBox) lvBox.innerHTML = '';
     } else {
       var result = window.YumeGrammar.analyzeJapaneseGrammar(jp);
       if (summaryEl) summaryEl.textContent = result.summary || '';
-      var html = '';
-      function itemHtml(main, label, desc) {
-        return '<div class="bunpou-item"><div class="bunpou-item-char">' + main + '</div>' +
-          '<div class="bunpou-item-label">' + label + '<span class="bunpou-item-n5">N5</span></div>' +
-          '<div class="bunpou-item-desc">' + desc + '</div></div>';
+      if (lvBox) {
+        var lvHtml = '';
+        (result.levels || []).forEach(function(l) {
+          var c = (l || 'N5').toLowerCase();
+          lvHtml += '<span class="bunpou-lv-chip ' + c + '">' + l + '</span>';
+        });
+        lvBox.innerHTML = lvHtml || '<span class="bunpou-lv-chip n5">N5</span>';
       }
-      (result.phrases || []).forEach(function(p) { html += itemHtml(p.text, p.label, p.desc); });
-      (result.particles || []).forEach(function(p) { html += itemHtml(p.char, p.label, p.desc); });
-      if (listEl) listEl.innerHTML = html || '<p class="bunpou-empty">N5 · Tidak ada pola umum di baris ini.</p>';
+      var html = '';
+      function itemHtml(it) {
+        var c = (it.level || 'N5').toLowerCase();
+        var k = (it.kind || 'pola');
+        return '<div class="bunpou-item bunpou-item--' + k + '">' +
+          '<div class="bunpou-item-top">' +
+          '<span class="bunpou-item-type">' + (it.kindLabel || 'Pola tata bahasa') + '</span>' +
+          '<span class="bunpou-item-lvl ' + c + '">' + (it.level || 'N5') + '</span></div>' +
+          '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
+          '<div class="bunpou-item-label">' + (it.label || '') + '</div>' +
+          '<div class="bunpou-item-desc">' + (it.desc || '') + '</div></div>';
+      }
+      var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
+        ? window.YumeGrammar.KIND_ORDER
+        : ['partikel','penghubung','sopan','bentuk','pola','ekspresi'];
+      var groups = result.groups || {};
+      var hasGroup = false;
+      order.forEach(function(k) {
+        var arr = groups[k] || [];
+        if (!arr.length) return;
+        hasGroup = true;
+        var title = (window.YumeGrammar && window.YumeGrammar.KIND_LABELS && window.YumeGrammar.KIND_LABELS[k]) || k;
+        html += '<div class="bunpou-group-title">' + title + '</div>';
+        arr.forEach(function(it) { html += itemHtml(it); });
+      });
+      if (!hasGroup && result.items && result.items.length) {
+        result.items.forEach(function(it) { html += itemHtml(it); });
+      }
+      if (listEl) listEl.innerHTML = html || '<p class="bunpou-empty">Tidak ada bunpou N5–N1 yang terdeteksi di baris ini.</p>';
       if (glossLink) {
         var slug = null;
         var all = (result.phrases || []).concat(result.particles || []);
@@ -2393,7 +2518,7 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
           if (all[gi].glossSlug) { slug = all[gi].glossSlug; break; }
         }
         glossLink.href = slug ? '../kata/' + slug + '.html' : '../kata/index.html';
-        glossLink.textContent = slug ? 'Glosarium · ' + slug.replace(/-/g, ' ') + ' →' : 'Glosarium N5 →';
+        glossLink.textContent = slug ? 'Glosarium · ' + slug.replace(/-/g, ' ') + ' →' : 'Glosarium bunpou →';
         glossLink.style.display = 'inline-flex';
       }
     }
