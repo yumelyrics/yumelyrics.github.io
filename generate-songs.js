@@ -287,37 +287,6 @@ const ARTIST_MOBILE_CSS = `
 }
 `;
 
-/** Kosa kata unik dari lirik + petunjuk dari terjemahan baris yang sama. */
-function buildVocabList(lyrics) {
-  const map = new Map();
-  for (const l of lyrics) {
-    const hint = (l.id || '').trim();
-    const tokens = (l.jp || '').match(/[\u3040-\u30FF\u4E00-\u9FFFー]{2,}/g) || [];
-    for (const tok of tokens) {
-      if (tok.length < 2) continue;
-      if (!map.has(tok)) map.set(tok, { jp: tok, hint: hint.length > 72 ? hint.slice(0, 69) + '…' : hint });
-      else if (!map.get(tok).hint && hint) map.get(tok).hint = hint;
-    }
-  }
-  return [...map.values()].sort((a, b) => b.jp.length - a.jp.length).slice(0, 28);
-}
-
-function buildVocabPanelHTML(lyrics) {
-  const list = buildVocabList(lyrics);
-  if (!list.length) return '';
-  const chips = list.map(v =>
-    `<button type="button" class="vocab-chip" data-vocab="${escHtml(v.jp)}">` +
-    `<span class="vocab-jp">${escHtml(v.jp)}</span>` +
-    (v.hint ? `<span class="vocab-hint">${escHtml(v.hint)}</span>` : '') +
-    `</button>`
-  ).join('');
-  return `<div class="vocab-block">
-    <span class="sidebar-section-label">Kosa kata · ${list.length} kata</span>
-    <div class="vocab-chips">${chips}</div>
-    <p class="vocab-tip">Ketuk kata untuk sorot baris liriknya — ciri khas YumeSubs.</p>
-  </div>`;
-}
-
 function buildMoodChipsHTML(moodStr) {
   const moods = String(moodStr || '').split(/[,，、]/).map(s => s.trim()).filter(Boolean).slice(0, 6);
   if (!moods.length) return '';
@@ -337,18 +306,41 @@ function buildLearnMetaHTML(song) {
 }
 
 const GLOSSARY_TERM_DEFS = [
-  { slug: 'te-shimau', title: '〜てしまう', match: 'てしまう', desc: 'Menyelesaikan suatu aksi; sering ada nuansa "akhirnya (tanpa sengaja)" atau penyesalan ringan.' },
-  { slug: 'te-iru', title: '〜ている', match: 'ている', desc: 'Keadaan yang berlangsung atau hasil yang masih ada.' },
-  { slug: 'te-kuru', title: '〜てくる', match: 'てくる', desc: 'Perubahan yang berkembang menuju masa sekarang / ke arah pembicara.' },
-  { slug: 'tai', title: '〜たい', match: 'たい', desc: 'Menyatakan keinginan untuk melakukan sesuatu.' },
-  { slug: 'nai', title: '〜ない', match: 'ない', desc: 'Bentuk negatif dasar.' },
-  { slug: 'node', title: '〜ので', match: 'ので', desc: 'Menyatakan alasan — "karena".' },
-  { slug: 'noni', title: '〜のに', match: 'のに', desc: '"Meskipun / padahal" — kontras dengan ekspektasi.' },
-  { slug: 'wa', title: 'は', match: 'は', desc: 'Partikel topik: menandai apa yang sedang dibicarakan.' },
-  { slug: 'ga', title: 'が', match: 'が', desc: 'Partikel subjek: menonjolkan pelaku atau kontras.' },
-  { slug: 'wo', title: 'を', match: 'を', desc: 'Partikel objek langsung dari kata kerja.' },
-  { slug: 'ni', title: 'に', match: 'に', desc: 'Arah, waktu, atau tujuan.' },
-  { slug: 'de', title: 'で', match: 'で', desc: 'Tempat kejadian, alat, atau cara.' },
+  { slug: 'te-shimau', title: '〜てしまう', match: 'てしまう', desc: 'N5 · Menyelesaikan aksi; sering ada nuansa "akhirnya" atau penyesalan ringan.' },
+  { slug: 'te-iru', title: '〜ている', match: 'ている', desc: 'N5 · Keadaan berlangsung atau hasil masih ada.' },
+  { slug: 'te-kuru', title: '〜てくる', match: 'てくる', desc: 'N5 · Perubahan menuju pembicara / masa sekarang.' },
+  { slug: 'te-kudasai', title: '〜てください', match: 'てください', desc: 'N5 · Permintaan sopan: tolong lakukan.' },
+  { slug: 'tai', title: '〜たい', match: 'たい', desc: 'N5 · Ingin melakukan sesuatu.' },
+  { slug: 'masu', title: '〜ます', match: 'ます', desc: 'N5 · Bentuk sopan (sekarang / kebiasaan).' },
+  { slug: 'mashita', title: '〜ました', match: 'ました', desc: 'N5 · Bentuk sopan lampau.' },
+  { slug: 'masen', title: '〜ません', match: 'ません', desc: 'N5 · Negatif sopan.' },
+  { slug: 'desu', title: '〜です', match: 'です', desc: 'N5 · Kopula sopan (adalah).' },
+  { slug: 'deshita', title: '〜でした', match: 'でした', desc: 'N5 · Kopula sopan lampau.' },
+  { slug: 'nai', title: '〜ない', match: 'ない', desc: 'N5 · Negatif dasar (kasual).' },
+  { slug: 'ta', title: '〜た', match: 'た', desc: 'N5 · Bentuk lampau (-ta).' },
+  { slug: 'node', title: '〜ので', match: 'ので', desc: 'N5 · Karena (alasannya).' },
+  { slug: 'noni', title: '〜のに', match: 'のに', desc: 'N5 · Padahal / meskipun.' },
+  { slug: 'kara', title: '〜から', match: 'から', desc: 'N5 · Dari; karena.' },
+  { slug: 'made', title: '〜まで', match: 'まで', desc: 'N5 · Sampai.' },
+  { slug: 'dake', title: '〜だけ', match: 'だけ', desc: 'N5 · Hanya / sebanyak.' },
+  { slug: 'to-omou', title: '〜と思う', match: 'と思う', desc: 'N5 · Saya pikir / merasa.' },
+  { slug: 'you-ni', title: '〜ように', match: 'ように', desc: 'N5 · Agar / supaya / seperti.' },
+  { slug: 'ni-naru', title: '〜になる', match: 'になる', desc: 'N5 · Menjadi.' },
+  { slug: 'ga-aru', title: '〜がある', match: 'がある', desc: 'N5 · Ada (benda).' },
+  { slug: 'ga-iru', title: '〜がいる', match: 'がいる', desc: 'N5 · Ada (makhluk hidup).' },
+  { slug: 'arimasu', title: '〜あります', match: 'あります', desc: 'N5 · Ada (sopan).' },
+  { slug: 'imasu', title: '〜います', match: 'います', desc: 'N5 · Ada orang/hewan (sopan).' },
+  { slug: 'tara', title: '〜たら', match: 'たら', desc: 'N5 · Jika / ketika (kondisi).' },
+  { slug: 'mashou', title: '〜ましょう', match: 'ましょう', desc: 'N5 · Ajakan sopan.' },
+  { slug: 'wa', title: 'は', match: 'は', desc: 'N5 · Partikel topik.' },
+  { slug: 'ga', title: 'が', match: 'が', desc: 'N5 · Partikel subjek.' },
+  { slug: 'wo', title: 'を', match: 'を', desc: 'N5 · Partikel objek.' },
+  { slug: 'ni', title: 'に', match: 'に', desc: 'N5 · Arah, waktu, tujuan.' },
+  { slug: 'de', title: 'で', match: 'で', desc: 'N5 · Tempat, alat, cara.' },
+  { slug: 'to', title: 'と', match: 'と', desc: 'N5 · Dan, bersama, kutipan.' },
+  { slug: 'no', title: 'の', match: 'の', desc: 'N5 · Kepemilikan / penghubung.' },
+  { slug: 'mo', title: 'も', match: 'も', desc: 'N5 · Juga.' },
+  { slug: 'te', title: '〜て', match: 'て', desc: 'N5 · Penghubung て-form.' },
 ];
 
 function buildGlossaryPages(songMeta, today) {
@@ -730,7 +722,6 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
   }
 
 
-  const vocabPanelHTML = buildVocabPanelHTML(lyrics);
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
@@ -758,8 +749,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
     (l.ro ? '<div class="lro" data-obf="1">' + obfuscateLine(l.ro) + '</div>' : '') +
     '</div>' +
     (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
-    '<button type="button" class="line-share-btn" onclick="shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
-    '</div>'
+    '<div class="line-actions">' +
+    '<button type="button" class="line-bunpou-btn" onclick="event.stopPropagation();openBunpouPopup(' + i + ')" title="Bunpou · tata bahasa baris ini" aria-label="Bunpou baris ' + (i + 1) + '">文法</button>' +
+    '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
+    '</div></div>'
   ).join('');
 
 
@@ -1073,32 +1066,51 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .learn-chip.diff-easy{color:#2d7a4a;border-color:rgba(45,122,74,.35);background:rgba(45,122,74,.08)}
 .learn-chip.diff-med{color:var(--dusk);border-color:rgba(107,91,122,.3);background:rgba(107,91,122,.08)}
 .learn-chip.diff-hard{color:var(--rose);border-color:rgba(196,99,122,.35);background:rgba(196,99,122,.1)}
-.grammar-panel,.progress-panel{margin-top:.5rem;padding-top:1rem;border-top:1px solid var(--border)}
-.grammar-hint{font-size:.62rem;color:var(--ash);line-height:1.5;margin-bottom:.65rem;font-style:italic}
-.grammar-jp-preview{font-family:var(--jp);font-size:.95rem;color:var(--ink);line-height:1.45;margin-bottom:.5rem;padding:.5rem;background:var(--cream);border:1px solid var(--border)}
-.grammar-summary{font-size:.68rem;color:var(--ash);margin-bottom:.6rem;line-height:1.5}
-.grammar-list{display:flex;flex-direction:column;gap:.45rem;max-height:220px;overflow-y:auto}
-.grammar-item{padding:.45rem .5rem;border-left:2px solid var(--gold);background:var(--mist)}
-.grammar-item-char{font-family:var(--jp);font-size:.9rem;color:var(--rose);font-weight:600}
-.grammar-item-label{font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-top:.15rem}
-.grammar-item-desc{font-size:.62rem;color:var(--ash);line-height:1.45;margin-top:.12rem}
-.grammar-gloss-link{display:inline-block;margin-top:.5rem;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-decoration:none}
-.grammar-gloss-link:hover{color:var(--rose)}
+.progress-panel{margin-top:.5rem;padding-top:1rem;border-top:1px solid var(--border)}
 .progress-bar{height:4px;background:var(--border);margin:.5rem 0 .4rem;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
 .progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
-.ll-item.grammar-active{outline:1px solid rgba(196,99,122,.35);outline-offset:2px;background:rgba(196,99,122,.06)!important}
-.vocab-block{margin-top:.5rem}
-.vocab-chips{display:flex;flex-wrap:wrap;gap:.35rem;max-height:160px;overflow-y:auto;margin-top:.5rem;padding-right:.2rem}
-.vocab-chip{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;padding:.35rem .55rem;border:1px solid var(--border);background:var(--cream);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;max-width:100%}
-.vocab-chip:hover,.vocab-chip.on{border-color:var(--gold);background:rgba(201,169,110,.1)}
-.vocab-jp{font-family:var(--jp);font-size:.82rem;color:var(--ink);line-height:1.2}
-.vocab-hint{font-size:.58rem;color:var(--ash);line-height:1.35;font-style:italic;max-width:140px}
-.vocab-tip{font-size:.58rem;color:var(--smoke);margin-top:.45rem;line-height:1.45}
 .ll-item{position:relative}
-.line-share-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.75rem;padding:.25rem .4rem;transition:opacity .15s,color .15s}
+.line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
+.line-bunpou-btn{font-family:var(--jp);font-size:.72rem;font-weight:600;line-height:1;letter-spacing:.06em;padding:.32rem .5rem;border:1px solid rgba(201,169,110,.45);background:linear-gradient(165deg,var(--paper) 0%,var(--cream) 100%);color:var(--ink);cursor:pointer;box-shadow:0 2px 12px rgba(10,8,18,.06);transition:transform .2s,border-color .2s,box-shadow .2s,color .2s,background .2s}
+.line-bunpou-btn:hover{border-color:var(--gold);color:var(--rose);transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,99,122,.15)}
+.line-bunpou-btn:active{transform:translateY(0)}
+.ll-item.bunpou-line-active .line-bunpou-btn{border-color:var(--rose);background:rgba(196,99,122,.08);color:var(--rose)}
+.line-share-btn{opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.7rem;padding:.15rem .35rem;transition:opacity .15s,color .15s}
 .ll-item:hover .line-share-btn{opacity:1}
 .line-share-btn:hover{color:var(--gold)}
+@media(max-width:768px){.line-actions{top:.4rem;right:.2rem}.line-share-btn{opacity:.55}}
+/* ── Popup Bunpou ── */
+.bunpou-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility .28s}
+.bunpou-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.bunpou-modal{position:relative;width:min(440px,calc(100vw - 2rem));max-height:min(82vh,640px);overflow:hidden;display:flex;flex-direction:column;background:var(--paper);border:1px solid rgba(201,169,110,.35);box-shadow:0 24px 80px rgba(10,8,18,.22),0 0 0 1px rgba(232,180,200,.12) inset;transform:translateY(16px) scale(.97);opacity:0;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .28s ease}
+.bunpou-overlay.is-open .bunpou-modal{transform:translateY(0) scale(1);opacity:1}
+.bunpou-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sakura),var(--gold),var(--rose));opacity:.85}
+.bunpou-modal::after{content:'夢';position:absolute;right:-.5rem;top:2.5rem;font-family:var(--jp);font-size:5.5rem;font-weight:600;color:rgba(196,99,122,.05);pointer-events:none;line-height:1}
+.bunpou-close{position:absolute;top:.65rem;right:.65rem;z-index:2;width:2rem;height:2rem;border:1px solid var(--border);background:var(--cream);color:var(--ash);font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.bunpou-close:hover{border-color:var(--rose);color:var(--rose);background:var(--paper);transform:rotate(90deg)}
+.bunpou-head{padding:1.35rem 3rem 1rem 1.35rem;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(232,180,200,.08) 0%,transparent 100%)}
+.bunpou-kanji{display:block;font-family:var(--jp);font-size:1.75rem;font-weight:600;color:var(--ink);line-height:1.1}
+.bunpou-sub{display:block;font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:.35rem}
+.bunpou-body{padding:1.1rem 1.35rem 1.35rem;overflow-y:auto;flex:1}
+.bunpou-line-tag{font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);margin-bottom:.65rem}
+.bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink);padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
+.bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
+.bunpou-list{display:flex;flex-direction:column;gap:.55rem}
+.bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s}
+.bunpou-item:hover{border-color:rgba(201,169,110,.5);background:rgba(201,169,110,.06)}
+.bunpou-item-char{font-family:var(--jp);font-size:1rem;color:var(--rose);font-weight:600}
+.bunpou-item-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-top:.2rem}
+.bunpou-item-n5{font-size:.5rem;color:var(--gold);letter-spacing:.08em;margin-left:.3rem}
+.bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
+.bunpou-foot{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
+.bunpou-gloss{display:inline-flex;align-items:center;gap:.35rem;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.bunpou-gloss:hover{color:var(--rose)}
+.bunpou-empty{font-size:.75rem;color:var(--ash);font-style:italic;line-height:1.6}
+body.bunpou-open{overflow:hidden}
+[data-theme="dark"] .bunpou-overlay{background:rgba(0,0,0,.65)}
+[data-theme="dark"] .bunpou-modal{box-shadow:0 28px 90px rgba(0,0,0,.55)}
+[data-theme="dark"] .line-bunpou-btn{background:linear-gradient(165deg,var(--cream) 0%,#14110f 100%);border-color:rgba(212,169,110,.35)}
 body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
 body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
 body.mode-quiz .ll-item{cursor:pointer}
@@ -1108,7 +1120,6 @@ body.mode-karaoke .ll-item.karaoke-active .ljp{color:var(--gold)}
 body.mode-focus .ll-item{display:none}
 body.mode-focus .ll-item.focus-visible{display:grid}
 body.mode-focus .lyric-num{display:block}
-.ll-item.vocab-hit .ljp,.ll-item.vocab-hit .lid{outline:1px solid rgba(201,169,110,.45);outline-offset:3px}
 #fav-btn.on{color:var(--rose);border-color:rgba(196,99,122,.4)}
 .lyrics-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1rem;margin-bottom:3rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid rgba(10,8,18,.15);background:none;color:var(--ash);cursor:pointer;transition:all .18s;font-family:var(--sans)}
@@ -1124,12 +1135,13 @@ body.mode-focus .lyric-num{display:block}
 
 /* ── LYRICS LIST ── */
 #ll{position:relative}
-#ll::after{content:'';position:absolute;inset:0;z-index:10;pointer-events:all;-webkit-user-select:none;user-select:none;background:transparent}
+#ll::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;-webkit-user-select:none;user-select:none;background:transparent}
+body:not(.mode-quiz):not(.mode-karaoke) .ll-item{cursor:default}
 /* ── Admin mode: dihandle via JS saja, bukan CSS class ── */
 /* CATATAN: class is-admin di body DIHAPUS dari applyAuthState untuk keamanan */
 .lyrics-container{display:flex;flex-direction:column;gap:0}
-.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 0;position:relative;transition:background .15s}
-.ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 1rem}
+.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s}
+.ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 2.75rem 1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
@@ -1787,22 +1799,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <p class="study-hint" id="study-hint">Mode normal — semua teks tampil.</p>
     </div>
 
-    <div class="grammar-panel" id="grammar-panel">
-      <span class="sidebar-section-label">Tata bahasa · 文法</span>
-      <p class="grammar-hint">Ketuk baris lirik (mode normal) untuk analisis partikel.</p>
-      <div class="grammar-jp-preview" id="grammar-jp-preview">—</div>
-      <p class="grammar-summary" id="grammar-summary"></p>
-      <div class="grammar-list" id="grammar-list"></div>
-      <a class="grammar-gloss-link" id="grammar-gloss-link" href="../kata/index.html" style="display:none">Buka di glosarium →</a>
-    </div>
-
     <div class="progress-panel" id="progress-panel">
       <span class="sidebar-section-label">Progres baca</span>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
       <p class="progress-text" id="progress-text">Memuat…</p>
     </div>
-
-    ${vocabPanelHTML}
 
     <div class="thumbs-block">
       <span class="sidebar-section-label">Apresiasi</span>
@@ -1979,6 +1980,26 @@ ${(()=>{
 </footer>
 
 </div><!-- .wrap -->
+
+<!-- ── Popup Bunpou (文法) ── -->
+<div id="bunpou-overlay" class="bunpou-overlay" aria-hidden="true" onclick="if(event.target===this)closeBunpouPopup()">
+  <div class="bunpou-modal" role="dialog" aria-modal="true" aria-labelledby="bunpou-title">
+    <button type="button" class="bunpou-close" onclick="closeBunpouPopup()" aria-label="Tutup">×</button>
+    <div class="bunpou-head">
+      <span class="bunpou-kanji" id="bunpou-title">文法</span>
+      <span class="bunpou-sub">Bunpou · JLPT N5</span>
+    </div>
+    <div class="bunpou-body">
+      <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
+      <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
+      <p class="bunpou-summary" id="bunpou-summary"></p>
+      <div class="bunpou-list" id="bunpou-list"></div>
+      <div class="bunpou-foot">
+        <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Floating Avatar Bubble ── -->
 <div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
@@ -2169,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
 <script>
-/* ── Fitur belajar YumeSubs: mode uji, karaoke, kosa kata, favorit ── */
+/* ── Fitur belajar YumeSubs: mode uji, karaoke, tata bahasa, favorit ── */
 (function(){
   var SONG_SLUG = ${JSON.stringify(slug)};
   var PROG_KEY = 'ym_prog_' + SONG_SLUG;
@@ -2213,7 +2234,7 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     if (fp) fp.style.display = studyMode === 'focus' ? '' : 'none';
     if (fn) fn.style.display = studyMode === 'focus' ? '' : 'none';
     document.querySelectorAll('.ll-item').forEach(function(el) {
-      el.classList.remove('revealed','karaoke-active','focus-visible','vocab-hit');
+      el.classList.remove('revealed','karaoke-active','focus-visible');
     });
     if (studyMode === 'focus') { focusIdx = 0; applyFocus(); }
     if (studyMode === 'quiz') {
@@ -2238,7 +2259,6 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     var vis = document.querySelector('.ll-item.focus-visible');
     if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
     saveProgress(focusIdx);
-    if (studyMode === 'focus') showGrammarForLine(focusIdx);
   }
 
   window.shareLine = function(i) {
@@ -2319,76 +2339,69 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
   }
 
-  function showGrammarForLine(idx) {
-    var panel = document.getElementById('grammar-panel');
-    if (!panel) return;
+  window.closeBunpouPopup = function() {
+    var overlay = document.getElementById('bunpou-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('bunpou-open');
+    document.querySelectorAll('.ll-item').forEach(function(r) {
+      r.classList.remove('bunpou-line-active');
+    });
+  };
+
+  window.openBunpouPopup = function(idx) {
+    var overlay = document.getElementById('bunpou-overlay');
+    if (!overlay) return;
     var plain = getPlainLine(idx);
     var jp = plain.jp || '';
-    var preview = document.getElementById('grammar-jp-preview');
-    var summaryEl = document.getElementById('grammar-summary');
-    var listEl = document.getElementById('grammar-list');
-    var glossLink = document.getElementById('grammar-gloss-link');
+    var lineTag = document.getElementById('bunpou-line-num');
+    var preview = document.getElementById('bunpou-jp-preview');
+    var summaryEl = document.getElementById('bunpou-summary');
+    var listEl = document.getElementById('bunpou-list');
+    var glossLink = document.getElementById('bunpou-gloss-link');
+    if (lineTag) lineTag.textContent = 'Baris ' + (idx + 1) + ' · ' + SONG_TITLE;
     if (preview) preview.textContent = jp || '—';
     document.querySelectorAll('.ll-item').forEach(function(r) {
-      r.classList.toggle('grammar-active', parseInt(r.getAttribute('data-line'), 10) === idx);
+      r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
     });
-    if (!window.YumeGrammar || !jp) {
-      if (summaryEl) summaryEl.textContent = jp ? 'Analisis tata bahasa tidak tersedia.' : 'Pilih baris lirik.';
-      if (listEl) listEl.innerHTML = '';
+    saveProgress(idx);
+    if (!jp) {
+      if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks Jepang.';
+      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
       if (glossLink) glossLink.style.display = 'none';
-      return;
-    }
-    var result = window.YumeGrammar.analyzeJapaneseGrammar(jp);
-    if (summaryEl) summaryEl.textContent = result.summary || '';
-    var html = '';
-    (result.phrases || []).forEach(function(p) {
-      html += '<div class="grammar-item"><div class="grammar-item-char">' + p.text + '</div>' +
-        '<div class="grammar-item-label">' + p.label + '</div>' +
-        '<div class="grammar-item-desc">' + p.desc + '</div></div>';
-    });
-    (result.particles || []).forEach(function(p) {
-      html += '<div class="grammar-item"><div class="grammar-item-char">' + p.char + '</div>' +
-        '<div class="grammar-item-label">' + p.label + '</div>' +
-        '<div class="grammar-item-desc">' + p.desc + '</div></div>';
-    });
-    if (listEl) listEl.innerHTML = html || '<p class="grammar-summary">Tidak ada partikel umum di baris ini.</p>';
-    if (glossLink) {
-      var slug = null;
-      if (jp.indexOf('てしまう') >= 0) slug = 'te-shimau';
-      else if (jp.indexOf('ている') >= 0) slug = 'te-iru';
-      else if (jp.indexOf('てくる') >= 0) slug = 'te-kuru';
-      else if (jp.indexOf('たい') >= 0) slug = 'tai';
-      else if (jp.indexOf('ので') >= 0) slug = 'node';
-      else if (jp.indexOf('のに') >= 0) slug = 'noni';
-      if (slug) {
-        glossLink.href = '../kata/' + slug + '.html';
-        glossLink.style.display = 'inline-block';
-      } else {
-        glossLink.style.display = 'none';
+    } else if (!window.YumeGrammar) {
+      if (summaryEl) summaryEl.textContent = 'Modul bunpou belum dimuat — generate ulang halaman lagu.';
+      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Pastikan ym-grammar-browser.js ada di repo.</p>';
+      if (glossLink) glossLink.style.display = 'none';
+    } else {
+      var result = window.YumeGrammar.analyzeJapaneseGrammar(jp);
+      if (summaryEl) summaryEl.textContent = result.summary || '';
+      var html = '';
+      function itemHtml(main, label, desc) {
+        return '<div class="bunpou-item"><div class="bunpou-item-char">' + main + '</div>' +
+          '<div class="bunpou-item-label">' + label + '<span class="bunpou-item-n5">N5</span></div>' +
+          '<div class="bunpou-item-desc">' + desc + '</div></div>';
+      }
+      (result.phrases || []).forEach(function(p) { html += itemHtml(p.text, p.label, p.desc); });
+      (result.particles || []).forEach(function(p) { html += itemHtml(p.char, p.label, p.desc); });
+      if (listEl) listEl.innerHTML = html || '<p class="bunpou-empty">N5 · Tidak ada pola umum di baris ini.</p>';
+      if (glossLink) {
+        var slug = null;
+        var all = (result.phrases || []).concat(result.particles || []);
+        for (var gi = 0; gi < all.length; gi++) {
+          if (all[gi].glossSlug) { slug = all[gi].glossSlug; break; }
+        }
+        glossLink.href = slug ? '../kata/' + slug + '.html' : '../kata/index.html';
+        glossLink.textContent = slug ? 'Glosarium · ' + slug.replace(/-/g, ' ') + ' →' : 'Glosarium N5 →';
+        glossLink.style.display = 'inline-flex';
       }
     }
-    try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
-  }
-
-  function highlightVocab(word) {
-    document.querySelectorAll('.vocab-chip').forEach(function(c) {
-      c.classList.toggle('on', c.dataset.vocab === word);
-    });
-    var first = null;
-    document.querySelectorAll('.ll-item').forEach(function(row) {
-      var idx = parseInt(row.getAttribute('data-line'), 10);
-      if (isNaN(idx)) return;
-      var plain = getPlainLine(idx).jp || '';
-      var hit = !!(word && plain.indexOf(word) >= 0);
-      row.classList.toggle('vocab-hit', hit);
-      if (hit && !first) first = row;
-    });
-    if (first) {
-      requestAnimationFrame(function() {
-        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    }
-  }
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('bunpou-open');
+    try { overlay.querySelector('.bunpou-close').focus(); } catch(e) {}
+  };
 
   function initYumeFeatures() {
     renderProgressUI(loadProgress());
@@ -2402,33 +2415,34 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
         window.toggleFav();
       });
     }
-    document.querySelectorAll('.vocab-chip').forEach(function(chip) {
-      chip.addEventListener('click', function(e) {
-        e.stopPropagation();
-        highlightVocab(chip.dataset.vocab);
-      });
-    });
+    function handleLinePick(row, idx) {
+      if (isNaN(idx)) return;
+      if (studyMode === 'quiz') {
+        row.classList.toggle('revealed');
+        var lid = row.querySelector('.lid');
+        if (lid) lid.classList.toggle('h', !row.classList.contains('revealed'));
+      } else if (studyMode === 'karaoke') {
+        document.querySelectorAll('.ll-item').forEach(function(r){ r.classList.remove('karaoke-active'); });
+        row.classList.add('karaoke-active');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      saveProgress(idx);
+    }
+
     document.querySelectorAll('.ll-item').forEach(function(row) {
       row.addEventListener('click', function(e) {
-        if (e.target.closest('.line-share-btn')) return;
-        var idx = parseInt(row.getAttribute('data-line'), 10);
-        if (studyMode === 'quiz') {
-          row.classList.toggle('revealed');
-          var lid = row.querySelector('.lid');
-          if (lid) lid.classList.toggle('h', !row.classList.contains('revealed'));
-        } else if (studyMode === 'karaoke') {
-          document.querySelectorAll('.ll-item').forEach(function(r){ r.classList.remove('karaoke-active'); });
-          row.classList.add('karaoke-active');
-          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (!studyMode || studyMode === 'focus') {
-          if (!isNaN(idx)) showGrammarForLine(idx);
+        if (e.target.closest('.line-actions')) return;
+        if (studyMode === 'quiz' || studyMode === 'karaoke') {
+          handleLinePick(row, parseInt(row.getAttribute('data-line'), 10));
         }
-        if (!isNaN(idx)) saveProgress(idx);
       });
     });
-    var saved = loadProgress();
-    if (saved && typeof saved.line === 'number' && saved.line >= 0 && (!studyMode || studyMode === 'normal')) {
-      showGrammarForLine(saved.line);
+
+    if (!document.body.dataset.bunpouEsc) {
+      document.body.dataset.bunpouEsc = '1';
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeBunpouPopup();
+      });
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
