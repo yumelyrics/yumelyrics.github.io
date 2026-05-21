@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PREVIEW — Halaman Lagu (generate-songs.js) | YumeSubs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
+  --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
+  --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
+  --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
+  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --sans:var(--en);
+  --nm-transition:background .35s ease,color .35s ease,border-color .35s ease;
+}
+[data-theme="dark"]{
+  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
+  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
+  --dusk:#9a8ab8;--sakura:#c49ab8;--sakura-dim:rgba(212,169,110,.08);
+  --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
+}
+[data-theme="dark"] #bgwrap{
+  background:
+    radial-gradient(ellipse 90% 55% at 12% -5%, rgba(154,138,184,.22) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(201,169,110,.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(196,99,122,.1) 0%, transparent 55%),
+    var(--paper);
+}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
+  radial-gradient(ellipse 85% 50% at 8% -8%, rgba(232,180,200,.2) 0%, transparent 58%),
+  radial-gradient(ellipse 55% 40% at 92% 12%, rgba(201,169,110,.12) 0%, transparent 52%),
+  radial-gradient(ellipse 50% 35% at 50% 105%, rgba(107,91,122,.09) 0%, transparent 55%),
+  var(--paper)}
+#bgwrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;opacity:.2}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
+[data-theme="dark"] body::before{opacity:.22}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;transition:var(--nm-transition)}
+.wrap{position:relative;z-index:1}
+.preview-bar{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(90deg,var(--rose),var(--plum));
+  color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:.55rem 1rem;display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.preview-bar button{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;font-family:var(--sans);font-size:.58rem;padding:.35rem .75rem;cursor:pointer;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.preview-bar button:hover{background:rgba(255,255,255,.28)}
+body{padding-top:2.5rem}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid var(--border);position:sticky;top:2.5rem;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+.nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
+.nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
+.nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
+.nav-links{display:flex;gap:1.5rem;align-items:center}
+.nav-link{font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);text-decoration:none}
+.nav-link:hover{color:var(--ink)}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;position:relative}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;position:absolute}
+#theme-toggle .icon-sun{opacity:1}
+#theme-toggle .icon-moon{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1}
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:75vh;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;left:50%;top:8%;bottom:8%;width:1px;background:linear-gradient(180deg,transparent,var(--border) 30%,var(--border) 70%,transparent)}
+.hero-text{display:flex;flex-direction:column;justify-content:center;padding:4rem 3rem 4rem 3.5rem}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:2.5rem}
+.breadcrumb span{color:var(--gold)}
+.song-type{font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+.song-type::before{content:'';width:2rem;height:1px;background:var(--rose)}
+.song-title-jp{font-family:var(--jp);font-size:clamp(2rem,4vw,3.2rem);font-weight:300;color:var(--ink);line-height:1.15;margin-bottom:.5rem}
+.song-title-ro{font-family:var(--serif);font-size:1.45rem;font-weight:300;font-style:italic;color:var(--ash);margin-bottom:.3rem}
+.song-title-id{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:2rem}
+.meta-row{display:flex;gap:2rem;margin-bottom:2rem;flex-wrap:wrap}
+.meta-label{font-size:.52rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+.meta-value{font-family:var(--serif);font-size:1.05rem;color:var(--ink)}
+.mood-chip{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .65rem;border:1px solid rgba(201,169,110,.35);color:var(--gold);background:rgba(201,169,110,.08);margin-right:.35rem}
+.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+.btn-primary{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;padding:.75rem 1.8rem;cursor:pointer}
+.btn-primary:hover{background:var(--gold);color:var(--ink)}
+.btn-ghost{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;background:none;color:var(--ash);border:1px solid var(--border);padding:.75rem 1.5rem;cursor:pointer}
+.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+.hero-visual{position:relative;display:flex;align-items:center;justify-content:center;padding:3rem}
+.hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 55% 35%,rgba(232,180,200,.14) 0%,transparent 55%),radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
+.cover-frame{width:280px;height:280px;position:relative;z-index:1}
+.cover-img{width:100%;height:100%;object-fit:cover;filter:sepia(.12) contrast(1.05);box-shadow:12px 16px 0 rgba(10,8,18,.08)}
+.corner{position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid}
+.corner-tl{top:-8px;left:-8px;border-width:1px 0 0 1px}
+.corner-tr{top:-8px;right:-8px;border-width:1px 1px 0 0}
+.corner-bl{bottom:-8px;left:-8px;border-width:0 0 1px 1px}
+.corner-br{bottom:-8px;right:-8px;border-width:0 1px 1px 0}
+.cover-stats{display:flex;gap:2rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);justify-content:center}
+.stat-num{font-family:var(--serif);font-size:1.4rem;font-weight:300}
+.stat-lbl{font-size:.5rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
+.kanji-bg{position:absolute;right:1rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:10rem;font-weight:300;color:rgba(196,99,122,.06);pointer-events:none}
+.section-divider{display:flex;align-items:center;gap:2rem;padding:0 3.5rem}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-ornament{font-family:var(--serif);font-size:.85rem;font-style:italic;color:var(--ash)}
+.lyrics-section{display:grid;grid-template-columns:200px 1fr}
+.lyrics-sidebar{padding:3rem 2rem 3rem 3.5rem;border-right:1px solid var(--border)}
+.sidebar-section-label{font-size:.58rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke);margin-bottom:.75rem;display:block}
+.toggle-item{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--ash)}
+.lyrics-main{padding:3rem 3.5rem 5rem}
+.lyrics-controls{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.ctrl-pill{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.38rem .9rem;border:1px solid var(--border);background:none;color:var(--ash);cursor:pointer;font-family:var(--sans)}
+.ctrl-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);padding:1.25rem 0}
+.ljp{font-family:var(--jp);font-size:1.15rem;line-height:1.7;color:var(--ink)}
+.lro{font-family:var(--serif);font-size:.9rem;font-style:italic;color:var(--gold);line-height:1.75}
+.lid{font-size:.88rem;color:var(--plum);line-height:1.75}
+footer{padding:2.5rem 3.5rem;border-top:1px solid var(--border);background:var(--cream);font-size:.72rem;color:var(--ash)}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;min-height:auto}
+  .hero::after{display:none}
+  .hero-visual{padding:2rem 2rem 3rem}
+  .lyrics-section{grid-template-columns:1fr}
+  .lyrics-sidebar{display:none}
+  nav{padding:1rem}
+  .hero-text{padding:2rem 1rem}
+  .lyrics-main{padding:2rem 1rem 4rem}
+}
+</style>
+</head>
+<body class="rdy">
+<div class="preview-bar">
+  <span>Preview halaman lagu — belum di-upload · generate-songs.js</span>
+  <button type="button" onclick="toggleTheme()">Toggle dark / light</button>
+  <button type="button" onclick="window.open('index.html','_blank')">Buka index.html</button>
+</div>
+<div id="bgwrap"></div>
+<div class="wrap">
+<nav>
+  <a class="nav-brand" href="#">
+    <span class="nav-brand-jp">夢Lyrics</span>
+    <span class="nav-brand-en">YumeSubs</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#">Katalog</a>
+    <a class="nav-link" href="#">Artis</a>
+    <a class="nav-link" href="#">Cerita</a>
+    <button id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-text">
+    <div class="breadcrumb">
+      <span>Beranda</span> › <span>Katalog</span> › <span>夜に駆ける</span>
+    </div>
+    <div class="song-type">J-Pop</div>
+    <h1 class="song-title-jp">夜に駆ける</h1>
+    <div class="song-title-ro">Yoru ni Kakeru</div>
+    <div class="song-title-id">Berlari di Malam Hari</div>
+    <div class="meta-row">
+      <div><span class="meta-label">Artis</span><br><span class="meta-value">YOASOBI</span></div>
+      <div><span class="meta-label">Genre</span><br><span class="meta-value">J-Pop</span></div>
+    </div>
+    <div>
+      <span class="mood-chip">Nostalgia</span>
+      <span class="mood-chip">Malam</span>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-primary" type="button">↓ Baca Lirik</button>
+      <button class="btn-ghost" type="button">☆ Favorit</button>
+      <button class="btn-ghost" type="button">Latihan Terjemah</button>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="kanji-bg">夜</div>
+    <div>
+      <div class="cover-frame">
+        <img class="cover-img" src="https://placehold.co/560x560/1a1714/c9a96e?text=YOASOBI" alt="Cover preview" width="280" height="280">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+      </div>
+      <div class="cover-stats">
+        <div><div class="stat-num">128</div><div class="stat-lbl">Suka</div></div>
+        <div><div class="stat-num">4.2k</div><div class="stat-lbl">Dibaca</div></div>
+        <div><div class="stat-num">24</div><div class="stat-lbl">Komentar</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider">
+  <div class="divider-line"></div>
+  <div class="divider-ornament">— 歌詞 · lirik —</div>
+  <div class="divider-line"></div>
+</div>
+
+<section class="lyrics-section">
+  <aside class="lyrics-sidebar">
+    <div>
+      <span class="sidebar-section-label">Tampilan</span>
+      <div class="toggle-item"><span>Romaji</span><span>ON</span></div>
+      <div class="toggle-item"><span>Terjemahan</span><span>ON</span></div>
+    </div>
+    <div>
+      <span class="sidebar-section-label">Mode</span>
+      <div class="toggle-item"><span>Uji ingatan</span><span>—</span></div>
+      <div class="toggle-item"><span>Karaoke</span><span>—</span></div>
+    </div>
+  </aside>
+  <div class="lyrics-main">
+    <div class="lyrics-controls">
+      <button class="ctrl-pill active" type="button">Semua</button>
+      <button class="ctrl-pill" type="button">JP saja</button>
+      <button class="ctrl-pill" type="button">Salin lirik</button>
+    </div>
+    <div class="lyrics-container">
+      <div class="ll-item">
+        <div class="ljp">もう一回、もう一回！</div>
+        <div>
+          <div class="lro">Mou ikkai, mou ikkai!</div>
+          <div class="lid">Sekali lagi, sekali lagi!</div>
+        </div>
+      </div>
+      <div class="ll-item">
+        <div class="ljp">言葉にできない</div>
+        <div>
+          <div class="lro">Kotoba ni dekinai</div>
+          <div class="lid">Tak bisa diucapkan dengan kata</div>
+        </div>
+      </div>
+      <div class="ll-item">
+        <div class="ljp">夜に駆ける</div>
+        <div>
+          <div class="lro">Yoru ni kakeru</div>
+          <div class="lid">Berlari di malam hari</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>YumeSubs</strong> — Preview lokal. Setelah OK, upload <code>generate-songs.js</code> lalu jalankan <strong>Generate Song Pages</strong>.
+</footer>
+</div>
+<script>
+function toggleTheme(){
+  const r=document.documentElement;
+  const d=r.getAttribute('data-theme')==='dark';
+  if(d){r.removeAttribute('data-theme');localStorage.setItem('ym_theme','light');}
+  else{r.setAttribute('data-theme','dark');localStorage.setItem('ym_theme','dark');}
+}
+</script>
+</body>
+</html>

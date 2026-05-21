@@ -17,11 +17,51 @@ const firebaseConfig = {
 
 const BASE_URL = 'https://yumelyrics.my.id';
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+
+const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
+
+/** Token + latar — selaras dengan index.html (夢の夜 · sakura dusk). */
+const CSS_TOKENS = `
+:root{
+  --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
+  --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
+  --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
+  --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
+  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --sans:var(--en);
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
+  --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
+  --nm-transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease;
+}
+[data-theme="dark"]{
+  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
+  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
+  --dusk:#9a8ab8;--sakura:#c49ab8;--sakura-dim:rgba(212,169,110,.08);
+  --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
+}
+[data-theme="dark"] #bgwrap{
+  background:
+    radial-gradient(ellipse 90% 55% at 12% -5%, rgba(154,138,184,.22) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(201,169,110,.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(196,99,122,.1) 0%, transparent 55%),
+    var(--paper);
+}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
+  radial-gradient(ellipse 85% 50% at 8% -8%, rgba(232,180,200,.2) 0%, transparent 58%),
+  radial-gradient(ellipse 55% 40% at 92% 12%, rgba(201,169,110,.12) 0%, transparent 52%),
+  radial-gradient(ellipse 50% 35% at 50% 105%, rgba(107,91,122,.09) 0%, transparent 55%),
+  var(--paper)}
+#bgwrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;opacity:.2;pointer-events:none}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
+[data-theme="dark"] body::before{opacity:.22}
+.wrap{position:relative;z-index:1}
+`;
 
 function toSlug(titleRo, titleJp, docId) {
   if (titleRo) {
@@ -339,13 +379,14 @@ function generateArtistIndexHTML(artists) {
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
+${THEME_BOOT_SCRIPT}
 <style>
-:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--border:rgba(10,8,18,.1);--serif:Georgia,'Times New Roman',serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif}
-[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--border:rgba(232,226,217,.1)}
-[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+${CSS_TOKENS}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh}
-.wrap{position:relative;z-index:1}
+html{scroll-behavior:smooth;background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm-transition)}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 ${SITE_NAV_CSS}
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
 .artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic}
@@ -367,6 +408,7 @@ ${ARTIST_MOBILE_CSS}
 </style>
 </head>
 <body>
+<div id="bgwrap"></div>
 <div class="wrap">
 ${buildSiteNav('../', 'artis')}
 <section class="artist-hero">
@@ -436,17 +478,15 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
+${THEME_BOOT_SCRIPT}
 <style>
-:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--plum:#7c4d6e;--border:rgba(10,8,18,.1);--serif:Georgia,'Times New Roman',serif;--sans:'Plus Jakarta Sans',sans-serif;--jp:'Noto Serif JP',serif;--nm-transition:background .35s ease,color .35s ease,border-color .35s ease}
-[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
-[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
-[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
-[data-theme="dark"] footer{background:#070604}
+${CSS_TOKENS}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--paper)}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm-transition)}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
-.wrap{position:relative;z-index:1}
+[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+[data-theme="dark"] footer{background:#070604}
 ${SITE_NAV_CSS}
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
 .breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:2rem;flex-wrap:wrap}
@@ -480,6 +520,7 @@ ${ARTIST_MOBILE_CSS}
 </style>
 </head>
 <body>
+<div id="bgwrap"></div>
 <div class="wrap">
 ${buildSiteNav('../', 'artis')}
 
@@ -683,6 +724,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+${THEME_BOOT_SCRIPT}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -753,30 +795,12 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
 <style>
-/* ── TOKENS ── */
-:root{
-  --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
-  --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
-  --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --serif:Georgia,'Times New Roman',serif;
-  --sans:'Plus Jakarta Sans',sans-serif;
-  --jp:'Noto Serif JP',serif;
-  /* legacy aliases */
-  --en:var(--sans);--bg:var(--paper);--text:var(--ink);--muted:var(--ash);
-  --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
-  --nm-transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease;
-}
-/* ── NIGHT MODE ── */
-[data-theme="dark"]{
-  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
-  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--plum:#9a6a8a;
-  --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
-  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
-}
+${CSS_TOKENS}
+/* ── NIGHT MODE (halaman lagu) ── */
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 [data-theme="dark"] .hero{background:var(--paper)}
-[data-theme="dark"] .hero-visual::before{background:radial-gradient(ellipse at 60% 40%,rgba(212,169,110,.08) 0%,transparent 65%)}
+[data-theme="dark"] .hero-visual::before{background:radial-gradient(ellipse at 60% 40%,rgba(232,180,200,.1) 0%,transparent 60%),radial-gradient(ellipse at 60% 40%,rgba(212,169,110,.08) 0%,transparent 65%)}
 [data-theme="dark"] .cover-img{filter:sepia(.15) contrast(1.05) brightness(.85)}
 [data-theme="dark"] .related-section{background:var(--cream)}
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
@@ -785,8 +809,8 @@ ${FONT_HEAD}
 [data-theme="dark"] #login-gate{background:rgba(18,15,12,.96)}
 [data-theme="dark"] .ep-box{background:var(--cream)}
 [data-theme="dark"] .cmi{color:var(--ink)}
-[data-theme="dark"] body::before{opacity:.2}
 [data-theme="dark"] .lyric-item:hover{background:rgba(201,169,110,.04)}
+[data-theme="dark"] .kanji-bg{color:rgba(212,169,110,.06)}
 /* ── theme toggle ── */
 #theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:var(--nm-transition),transform .2s;flex-shrink:0;position:relative;overflow:hidden}
 #theme-toggle:hover{border-color:var(--ash);transform:rotate(15deg)}
@@ -807,8 +831,6 @@ html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--paper);scrollbar-gutter:stable}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none;transition:var(--nm-transition)}
 nav{transition:var(--nm-transition)}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.45}
-.wrap{position:relative;z-index:1}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
 
 /* ── NAV ── */
@@ -863,7 +885,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 
 /* ── HERO VISUAL ── */
 .hero-visual{position:relative;display:flex;align-items:center;justify-content:center;padding:4rem 3.5rem 4rem 4rem;overflow:hidden}
-.hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
+.hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 55% 35%,rgba(232,180,200,.14) 0%,transparent 55%),radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
 .cover-wrap{position:relative;z-index:1}
 .cover-frame{width:320px;height:320px;position:relative}
 .cover-img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15) contrast(1.05);box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
@@ -876,8 +898,7 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .stat{display:flex;flex-direction:column;gap:.25rem;text-align:center}
 .stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:var(--ink);line-height:1}
 .stat-lbl{font-size:.5rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
-.kanji-bg{position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:14rem;font-weight:600;color:rgba(10,8,18,.03);line-height:1;pointer-events:none;user-select:none;z-index:0}
-[data-theme="dark"] .kanji-bg{color:rgba(232,226,217,.03)}
+.kanji-bg{position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:14rem;font-weight:600;color:rgba(196,99,122,.05);line-height:1;pointer-events:none;user-select:none;z-index:0}
 
 /* ── DIVIDER ── */
 .section-divider{display:flex;align-items:center;gap:2rem;padding:0 3.5rem;margin:0}
@@ -1444,6 +1465,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 </head>
 <body>
 <script>(function(){ if(!localStorage.getItem('ym_uid_cached')) document.body.classList.add('gate-open'); })();</script>
+<div id="bgwrap"></div>
 <div class="wrap">
 
 <!-- ── NAV ── -->
