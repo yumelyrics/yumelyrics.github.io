@@ -1470,14 +1470,21 @@ window.clearSearch = () => {
 
 // ── View switcher ──
 window.sv = v => {
-  document.getElementById('catView').style.display  = v==='cat'?'block':'none';
+  const cat = document.getElementById('catView');
+  if (cat) cat.style.display = v === 'cat' ? 'block' : 'none';
   const lv = document.getElementById('lyrView');
-  lv.style.display = v==='lyr'?'block':'none';
-  lv.classList.toggle('on', v==='lyr');
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  if(v==='cat') document.getElementById('nb-cat').classList.add('on');
-  if(v!=='lyr') document.getElementById('ytf').src='';
-  window.scrollTo({top:0,behavior:'smooth'});
+  if (lv) {
+    lv.style.display = v === 'lyr' ? 'block' : 'none';
+    lv.classList.toggle('on', v === 'lyr');
+  }
+  document.querySelectorAll('.nd-item').forEach(b => b.classList.remove('on'));
+  if (v === 'cat') {
+    const nd = document.getElementById('nd-cat');
+    if (nd) nd.classList.add('on');
+  }
+  const ytf = document.getElementById('ytf');
+  if (v !== 'lyr' && ytf) ytf.src = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 
@@ -2509,15 +2516,23 @@ function isMobile() {
   }, { passive: false });
 })();
 
+function getChatAuthUser() {
+  return _chatAuth.currentUser || _chatDeferredUser || null;
+}
+
 function bootChatListeners() {
-  if (_chatModuleReady) return;
+  const loggedIn = getChatAuthUser();
+  if (_chatModuleReady) {
+    if (loggedIn && !_chatUser) initChat(loggedIn);
+    return;
+  }
   _chatModuleReady = true;
   const msgsEl = document.getElementById('chat-msgs');
   if (msgsEl && !_chatInited) {
     msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
   }
-  if (_chatDeferredUser) {
-    initChat(_chatDeferredUser);
+  if (loggedIn) {
+    initChat(loggedIn);
     _chatDeferredUser = null;
   } else if (!_chatInited) {
     initGuestChat();
@@ -2526,6 +2541,10 @@ function bootChatListeners() {
 
 window.toggleChat = () => {
   if (!_chatModuleReady) bootChatListeners();
+  else {
+    const u = getChatAuthUser();
+    if (u && !_chatUser) initChat(u);
+  }
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
   const fab = document.getElementById('chat-fab');
@@ -2907,8 +2926,11 @@ function initChat(user) {
   }, () => {});
 }
 
+let _chatAuthNullTimer = null;
+
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
+    if (_chatAuthNullTimer) { clearTimeout(_chatAuthNullTimer); _chatAuthNullTimer = null; }
     document.getElementById('chat-login-gate').style.display = 'none';
     _chatDeferredUser = user;
     if (_chatModuleReady) initChat(user);
@@ -2918,14 +2940,22 @@ onAuthStateChanged(_chatAuth, user => {
       else setTimeout(runReport, 4000);
     }
   } else {
-    _chatUser = null;
-    _chatDeferredUser = null;
-    document.getElementById('chat-login-gate').style.display = 'flex';
-    document.getElementById('chat-inp-wrap').classList.remove('show');
-    document.getElementById('chat-msgs').style.display = 'flex';
-    if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
-    _chatInited = false;
-    document.getElementById('chat-msgs').innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat pesan 💬</div>';
+    // Firebase kadang emit null sebentar saat refresh token — jangan langsung reset UI
+    if (_chatAuthNullTimer) clearTimeout(_chatAuthNullTimer);
+    _chatAuthNullTimer = setTimeout(() => {
+      _chatAuthNullTimer = null;
+      if (_chatAuth.currentUser) return;
+      _chatUser = null;
+      _chatDeferredUser = null;
+      document.getElementById('chat-login-gate').style.display = 'flex';
+      document.getElementById('chat-inp-wrap').classList.remove('show');
+      document.getElementById('chat-msgs').style.display = 'flex';
+      if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
+      _chatInited = false;
+      if (!_chatOpen) {
+        document.getElementById('chat-msgs').innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat pesan 💬</div>';
+      }
+    }, 450);
   }
 });
 
@@ -2933,7 +2963,7 @@ onAuthStateChanged(_chatAuth, user => {
   const msgs = document.getElementById('chat-msgs');
   if (msgs) msgs.innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat 💬</div>';
   const idleBoot = () => {
-    if (!_chatModuleReady && (_chatDeferredUser || matchMedia('(hover:hover)').matches)) {
+    if (!_chatModuleReady && (getChatAuthUser() || matchMedia('(hover:hover)').matches)) {
       bootChatListeners();
     }
   };
