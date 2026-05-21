@@ -590,9 +590,13 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
   </div>
   <div class="dcm-sec">
     <div class="dcm-tit">Komentar</div>
-    <div class="dcm-form">
+    <div id="st-cm-login" class="dcm-form" style="display:none;text-align:center;padding:1rem 0">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Login dulu untuk berkomentar di cerita ini.</p>
+      <button type="button" class="sbtn" onclick="storySignIn()">Login dengan Google</button>
+    </div>
+    <div class="dcm-form" id="st-cm-form">
       <div class="cmrow">
-        <input class="cmi" id="cm-n" placeholder="Nama lo (opsional)">
+        <input class="cmi" id="cm-n" placeholder="Nama" readonly style="opacity:.85">
         <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
       </div>
       <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis sesuatu..."></textarea>
@@ -646,8 +650,10 @@ document.addEventListener('click', function(e){
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, getDocs, where }
+import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, setDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -660,10 +666,72 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+const STORY_ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 
 let stories = [];
 let curStory = null;
 let activeFilter = 'all';
+let _storyUser = null;
+let _storyIsAdmin = false;
+
+function storyIsAdminEmail(email){
+  return STORY_ADMIN_EMAILS.includes(email || '');
+}
+
+function updateStoryCommentUI(){
+  const login = document.getElementById('st-cm-login');
+  const form = document.getElementById('st-cm-form');
+  const nameInp = document.getElementById('cm-n');
+  if(!login || !form) return;
+  if(_storyUser){
+    login.style.display = 'none';
+    form.style.display = 'flex';
+    form.style.flexDirection = 'column';
+    if(nameInp){
+      nameInp.value = _storyIsAdmin ? 'YumeSubs' : (_storyUser.displayName || 'Kamu');
+    }
+  } else {
+    login.style.display = 'block';
+    form.style.display = 'none';
+  }
+}
+
+window.storySignIn = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+    toast('Login berhasil!');
+  } catch(e){
+    if(e?.code !== 'auth/popup-closed-by-user') toast('Login gagal.');
+  }
+};
+
+onAuthStateChanged(auth, user => {
+  _storyUser = user;
+  _storyIsAdmin = user && storyIsAdminEmail(user.email);
+  updateStoryCommentUI();
+});
+
+async function saveStoryRateLimit(uid, kind){
+  const data = kind === 'reply' ? { lastReply: Date.now() } : { lastComment: Date.now() };
+  await setDoc(doc(db, 'comment_ratelimit', uid), data, { merge: true });
+}
+
+function storyCommentPayload(text, parentId){
+  const name = _storyIsAdmin ? 'YumeSubs' : (_storyUser.displayName || 'Kamu');
+  return {
+    storyId: curStory,
+    parentId: parentId || null,
+    uid: _storyUser.uid,
+    name,
+    text,
+    date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+    ts: Date.now(),
+    isAdmin: _storyIsAdmin
+  };
+}
 
 function toast(m){
   const t=document.getElementById('toast');
@@ -789,6 +857,7 @@ window.openStory = id => {
   document.getElementById('listView').style.display='none';
   const dv = document.getElementById('detailView');
   dv.style.display='block'; dv.classList.add('on');
+  updateStoryCommentUI();
   window.scrollTo({top:0,behavior:'smooth'});
   loadCm(id);
 };
@@ -867,38 +936,34 @@ window.toggleRepForm = id => {
 };
 
 window.postReply = async parentId => {
+  if(!_storyUser){ toast('Login dulu untuk membalas.'); return; }
   const t=document.getElementById('srt-'+parentId).value.trim();
   if(!t||!curStory) return;
-  const n=document.getElementById('srn-'+parentId).value.trim();
   try {
-    await addDoc(collection(db,'story_comments'),{
-      storyId:curStory, parentId,
-      name:n||'Anonim', text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now(), isAdmin:false
-    });
+    await addDoc(collection(db,'story_comments'), storyCommentPayload(t, parentId));
+    await saveStoryRateLimit(_storyUser.uid, 'reply');
     toast('Balasan terkirim!');
     loadCm(curStory);
-  } catch(e){ toast('Gagal kirim.'); }
+  } catch(e){
+    toast(e?.code === 'permission-denied' ? 'Ditolak server (login/ban?).' : 'Gagal kirim.');
+  }
 };
 
 window.postCm = async () => {
-  const n=document.getElementById('cm-n').value.trim();
+  if(!_storyUser){ toast('Login dulu untuk berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
   if(!t||!curStory) return;
   btn.disabled=true;
   try {
-    await addDoc(collection(db,'story_comments'),{
-      storyId:curStory, parentId:null,
-      name:n||'Anonim', text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now(), isAdmin:false
-    });
+    await addDoc(collection(db,'story_comments'), storyCommentPayload(t, null));
+    await saveStoryRateLimit(_storyUser.uid, 'comment');
     document.getElementById('cm-t').value='';
     toast('Komentar terkirim!');
     loadCm(curStory);
-  } catch(e){ toast('Gagal kirim.'); }
+  } catch(e){
+    toast(e?.code === 'permission-denied' ? 'Ditolak server (login/ban?).' : 'Gagal kirim.');
+  }
   btn.disabled=false;
 };
 
