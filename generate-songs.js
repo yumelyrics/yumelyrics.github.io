@@ -1295,11 +1295,27 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .se-save:disabled{opacity:.45;cursor:not-allowed}
 .se-cancel{background:none;border:1px solid var(--border);color:var(--ash);font-family:var(--sans);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
 .se-cancel:hover{border-color:var(--red);color:var(--red)}
+.se-gen{flex:1;min-width:140px;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.4);color:var(--gold);font-family:var(--sans);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
+.se-gen:hover{background:rgba(201,169,110,.22);border-color:var(--gold)}
+.se-gen:disabled{opacity:.45;cursor:not-allowed}
+.se-foot-main{display:flex;gap:.5rem;flex-wrap:wrap;width:100%}
+.se-gh-status{display:none;align-items:center;gap:.55rem;width:100%;font-size:.72rem;color:var(--ash);flex-wrap:wrap;padding:.35rem 0 0}
+.se-gh-status.on{display:flex}
+.se-gh-dot{width:8px;height:8px;border-radius:50%;background:var(--ash);flex-shrink:0}
+.se-gh-dot.blink{animation:seGhBlink 1s infinite}
+@keyframes seGhBlink{0%,100%{opacity:1}50%{opacity:.35}}
+.se-gh-link{color:var(--gold);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(201,169,110,.35);padding:.2rem .55rem;border-radius:6px}
+.se-gh-link:hover{border-color:var(--gold)}
+.se-gh-token{margin-top:.35rem;width:100%}
+.se-gh-token summary{font-size:.62rem;color:var(--ash);cursor:pointer;letter-spacing:.06em}
+.se-gh-token-inp{margin-top:.45rem;width:100%;background:rgba(10,8,18,.03);border:1px solid var(--border);border-radius:8px;color:var(--ink);font-family:var(--sans);font-size:.8rem;padding:.55rem .65rem}
+[data-theme="dark"] .se-gh-token-inp{background:rgba(232,226,217,.04)}
 @media(max-width:768px){
   .se-grid,.se-lrow{grid-template-columns:1fr}
   .se-body{max-height:none}
   .se-foot{flex-direction:column}
-  .se-save,.se-cancel{width:100%}
+  .se-foot-main{flex-direction:column}
+  .se-save,.se-gen,.se-cancel{width:100%}
 }
 
 /* ── ANIMATIONS ── */
@@ -1891,8 +1907,21 @@ ${(()=>{
       <button type="button" class="se-add-row" onclick="addSongEditLyricRow()">+ Tambah baris</button>
     </div>
     <div class="se-foot">
-      <button type="button" class="se-save" id="se-save-btn" onclick="saveSongEdit()">Simpan perubahan</button>
-      <button type="button" class="se-cancel" onclick="closeSongEditModal()">Batal</button>
+      <div class="se-foot-main">
+        <button type="button" class="se-save" id="se-save-btn" onclick="saveSongEdit()">Simpan perubahan</button>
+        <button type="button" class="se-gen" id="se-gen-btn" onclick="triggerSongPageGenerate()">▶ Generate HTML</button>
+        <button type="button" class="se-cancel" onclick="closeSongEditModal()">Batal</button>
+      </div>
+      <div class="se-gh-status" id="se-gh-status">
+        <span class="se-gh-dot" id="se-gh-dot"></span>
+        <span id="se-gh-text">—</span>
+        <a class="se-gh-link" id="se-gh-actions-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener">↗ GitHub Actions</a>
+        <a class="se-gh-link" id="se-gh-result-link" href="https://yumelyrics.my.id/lagu/" target="_blank" rel="noopener" style="display:none">↗ Lihat hasil</a>
+      </div>
+      <details class="se-gh-token">
+        <summary>Token GitHub (sama dengan admin, disimpan di browser)</summary>
+        <input class="se-gh-token-inp" id="se-gh-token-inp" type="password" placeholder="github_pat_... (kosongkan jika sudah diisi di admin)" autocomplete="off">
+      </details>
     </div>
   </div>
 </div>
@@ -2224,6 +2253,12 @@ window.openSongEditModal = async function(){
     const snap = await getDoc(doc(db,'songs', SONG_ID));
     if(snap.exists()) fillSongEditForm({ ...SONG_SEED, ...snap.data(), id: SONG_ID });
   } catch(e){ console.warn('load song for edit', e); }
+  const ghInp = document.getElementById('se-gh-token-inp');
+  if(ghInp && !ghInp._bound){
+    ghInp._bound = true;
+    ghInp.addEventListener('input', function(){ seGhTokenSet(this.value.trim()); });
+  }
+  if(ghInp) ghInp.value = seGhTokenGet();
   document.getElementById('songEditOverlay')?.classList.add('open');
   document.body.style.overflow = 'hidden';
 };
@@ -2268,11 +2303,96 @@ window.saveSongEdit = async function(){
   if(btn) btn.disabled = true;
   try {
     await updateDoc(doc(db,'songs', SONG_ID), payload);
-    toast('Tersimpan di Firestore. Jalankan Generate Song Pages di admin agar HTML publik terbarui.');
-    closeSongEditModal();
+    toast('Tersimpan di Firestore. Klik Generate HTML agar halaman publik terbarui.');
   } catch(e){
     toast('Gagal simpan: ' + (e.message || e));
     if(btn) btn.disabled = false;
+  }
+};
+
+// ── ADMIN: trigger GitHub generate-pages (sama key token dengan admin.html) ──
+const SE_GH_OWNER = 'yumelyrics';
+const SE_GH_REPO = 'yumelyrics.github.io';
+const SE_GH_WORKFLOW = 'generate-pages.yml';
+const SE_GH_DOT = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
+let _seGhPollTimer = null;
+function seGhTokenGet(){ return localStorage.getItem('yume_gh_token') || ''; }
+function seGhTokenSet(t){ if(t) localStorage.setItem('yume_gh_token', t); else localStorage.removeItem('yume_gh_token'); }
+function seGhHeaders(token){
+  return { Authorization:'Bearer '+(token||seGhTokenGet()), Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+}
+function seGhSetStatus(visible, conclusion, text){
+  const box = document.getElementById('se-gh-status');
+  const dot = document.getElementById('se-gh-dot');
+  const txt = document.getElementById('se-gh-text');
+  const res = document.getElementById('se-gh-result-link');
+  if(!box) return;
+  box.classList.toggle('on', !!visible);
+  if(!visible) return;
+  if(dot){
+    dot.style.background = SE_GH_DOT[conclusion] || 'var(--ash)';
+    dot.classList.toggle('blink', conclusion === 'in_progress' || conclusion === 'queued');
+  }
+  if(txt) txt.textContent = text || '';
+  if(res) res.style.display = conclusion === 'success' ? 'inline-flex' : 'none';
+}
+async function seGhLatestRunId(token){
+  const r = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/workflows/'+SE_GH_WORKFLOW+'/runs?per_page=1', { headers: seGhHeaders(token) });
+  if(!r.ok) return null;
+  const d = await r.json();
+  return d.workflow_runs?.[0]?.id || null;
+}
+async function seGhPollRun(runId, token){
+  clearTimeout(_seGhPollTimer);
+  try {
+    const r = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/runs/'+runId, { headers: seGhHeaders(token) });
+    if(!r.ok) return;
+    const run = await r.json();
+    if(run.status !== 'completed'){
+      const label = run.status === 'in_progress' ? 'Generate sedang berjalan...' : 'Antri di GitHub...';
+      seGhSetStatus(true, run.status, label);
+      _seGhPollTimer = setTimeout(() => seGhPollRun(runId, token), 6000);
+    } else {
+      const labels = { success:'Selesai! HTML lagu di-generate ulang.', failure:'Workflow gagal — cek log di GitHub.', cancelled:'Workflow dibatalkan.', skipped:'Workflow dilewati.' };
+      seGhSetStatus(true, run.conclusion, labels[run.conclusion] || run.conclusion);
+      const btn = document.getElementById('se-gen-btn');
+      if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
+    }
+  } catch(e){ /* silent */ }
+}
+window.triggerSongPageGenerate = async function(){
+  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menjalankan generate.'); return; }
+  const inp = document.getElementById('se-gh-token-inp');
+  const token = (inp && inp.value.trim()) || seGhTokenGet();
+  if(!token){ toast('Isi token GitHub di modal atau di admin (API Keys).'); if(inp) inp.focus(); return; }
+  seGhTokenSet(token);
+  const btn = document.getElementById('se-gen-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Mengirim...'; }
+  seGhSetStatus(true, 'queued', 'Mengirim trigger ke GitHub...');
+  try {
+    const res = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/workflows/'+SE_GH_WORKFLOW+'/dispatches', {
+      method: 'POST',
+      headers: { ...seGhHeaders(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' })
+    });
+    if(res.status === 204){
+      toast('Generate Song Pages di-trigger!');
+      seGhSetStatus(true, 'queued', 'Antri, menunggu runner GitHub...');
+      setTimeout(async () => {
+        const runId = await seGhLatestRunId(token);
+        if(runId) seGhPollRun(runId, token);
+        else seGhSetStatus(true, 'queued', 'Run diantri — pantau di GitHub Actions.');
+      }, 3500);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast('Gagal trigger: ' + (err.message || res.status));
+      seGhSetStatus(false);
+      if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
+    }
+  } catch(e){
+    toast('Error: ' + (e.message || e));
+    seGhSetStatus(false);
+    if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
   }
 };
 
