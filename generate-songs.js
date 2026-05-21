@@ -1165,8 +1165,11 @@ body.gate-open .lyrics-sidebar{top:108px;height:calc(100vh - 108px)}
 .bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink);padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
 .bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
 .bunpou-list{display:flex;flex-direction:column;gap:.55rem}
-.bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.55;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
+.bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.6;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
 .bunpou-legend strong{color:var(--ink);font-weight:600}
+.bunpou-legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.35rem .5rem;margin-top:.45rem}
+.bunpou-legend-item{font-size:.54rem;color:var(--smoke);line-height:1.4}
+.bunpou-legend-item b{color:var(--ink);font-weight:700}
 .bunpou-group-title{font-size:.54rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin:1rem 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
 .bunpou-group-title:first-child{margin-top:0}
 .bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s;margin-bottom:.45rem}
@@ -2079,14 +2082,24 @@ ${(()=>{
     <button type="button" class="bunpou-close" onclick="closeBunpouPopup()" aria-label="Tutup">×</button>
     <div class="bunpou-head">
       <span class="bunpou-kanji" id="bunpou-title">文法</span>
-      <span class="bunpou-sub">Bunpou · JLPT N5–N1</span>
+      <span class="bunpou-sub">Bunpou · JLPT N5–N1 · label jenis</span>
       <div class="bunpou-levels" id="bunpou-levels"></div>
     </div>
     <div class="bunpou-body">
       <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
       <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
       <p class="bunpou-summary" id="bunpou-summary"></p>
-      <p class="bunpou-legend"><strong>Partikel</strong> = penanda (は・が・を…) · <strong>Pola</strong> = susunan tata bahasa · <strong>Bentuk</strong> = akhiran verba/sifat · <strong>Sopan</strong> = です/ます · <strong>Penghubung</strong> = tapi/karena · <strong>Ekspresi</strong> = kata sifat perasaan/waktu</p>
+      <p class="bunpou-legend">
+        Setiap item punya label jenis — supaya tahu ini <strong>partikel</strong> atau <strong>pola tata bahasa</strong>, bukan kosakata biasa.
+        <span class="bunpou-legend-grid">
+          <span class="bunpou-legend-item"><b>Partikel</b> は・が・を</span>
+          <span class="bunpou-legend-item"><b>Pola</b> ている・わけ</span>
+          <span class="bunpou-legend-item"><b>Bentuk</b> たい・ない</span>
+          <span class="bunpou-legend-item"><b>Sopan</b> です・ます</span>
+          <span class="bunpou-legend-item"><b>Penghubung</b> けど・ので</span>
+          <span class="bunpou-legend-item"><b>Ekspresi</b> もう・本当</span>
+        </span>
+      </p>
       <div class="bunpou-list" id="bunpou-list"></div>
       <div class="bunpou-foot">
         <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
@@ -2486,12 +2499,13 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       function itemHtml(it) {
         var c = (it.level || 'N5').toLowerCase();
         var k = (it.kind || 'pola');
+        var kindLabel = it.kindLabel || 'Pola tata bahasa';
         return '<div class="bunpou-item bunpou-item--' + k + '">' +
           '<div class="bunpou-item-top">' +
-          '<span class="bunpou-item-type">' + (it.kindLabel || 'Pola tata bahasa') + '</span>' +
-          '<span class="bunpou-item-lvl ' + c + '">' + (it.level || 'N5') + '</span></div>' +
+          '<span class="bunpou-item-type" title="Jenis bunpou">' + kindLabel + '</span>' +
+          '<span class="bunpou-item-lvl ' + c + '" title="Level JLPT">' + (it.level || 'N5') + '</span></div>' +
           '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
-          '<div class="bunpou-item-label">' + (it.label || '') + '</div>' +
+          '<div class="bunpou-item-label">' + (it.label || '') + ' · <em style="font-style:normal;color:var(--smoke);font-size:.58rem">' + kindLabel + '</em></div>' +
           '<div class="bunpou-item-desc">' + (it.desc || '') + '</div></div>';
       }
       var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
