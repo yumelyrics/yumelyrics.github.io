@@ -47,12 +47,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #nav-dropdown.open{display:flex}
 .nd-item{background:none;border:none;font-family:var(--sans);font-size:.68rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;padding:.75rem 1.2rem;cursor:pointer;text-align:left;width:100%;font-weight:600;text-decoration:none;display:block;white-space:nowrap}
 .nd-item:hover,.nd-item.on{color:var(--ink);background:var(--cream)}
-#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden}
-#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute}
-#theme-toggle .icon-sun{opacity:1}
-#theme-toggle .icon-moon{opacity:0}
-[data-theme="dark"] #theme-toggle .icon-sun{opacity:0}
-[data-theme="dark"] #theme-toggle .icon-moon{opacity:1}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden;padding:0}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute;transition:opacity .25s,transform .25s}
+#theme-toggle .icon-sun{opacity:1;transform:scale(1)}
+#theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
+[data-theme="dark"] #theme-toggle{border-color:rgba(232,226,217,.35)}
+[data-theme="dark"] #theme-toggle svg{stroke:rgba(232,226,217,.75)}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1)}
 
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
 .breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:2rem;flex-wrap:wrap}
@@ -117,7 +119,6 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
 }
 
 </style>
-<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');window.toggleTheme=function(){var r=document.documentElement;var d=r.getAttribute('data-theme')==='dark';if(d){r.removeAttribute('data-theme');localStorage.setItem('ym_theme','light');}else{r.setAttribute('data-theme','dark');localStorage.setItem('ym_theme','dark');}}})()</script>
 </head>
 <body>
 <div class="wrap">
@@ -138,6 +139,7 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
   <div id="nav-dropdown">
     <a class="nd-item" href="../index.html">Katalog</a>
     <a class="nd-item on" href="index.html">Artis</a>
+    <a class="nd-item" href="../resources.html">Resources</a>
     <a class="nd-item" href="../stories.html">Cerita</a>
     <a class="nd-item" href="../contact.html">Hubungi</a>
   </div>
@@ -211,19 +213,18 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
 </div>
 <script>
 (function(){
-  var stored = localStorage.getItem('ym_theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var theme = stored || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-  window.toggleTheme = function(){
-    var root = document.documentElement;
-    var isDark = root.getAttribute('data-theme') === 'dark';
-    if(isDark){ root.removeAttribute('data-theme'); localStorage.setItem('ym_theme','light'); }
-    else { root.setAttribute('data-theme','dark'); localStorage.setItem('ym_theme','dark'); }
+  if(localStorage.getItem('ym_theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+  window.toggleTheme=function(){
+    var r=document.documentElement;
+    if(r.getAttribute('data-theme')==='dark'){
+      r.removeAttribute('data-theme');
+      localStorage.setItem('ym_theme','light');
+    } else {
+      r.setAttribute('data-theme','dark');
+      localStorage.setItem('ym_theme','dark');
+    }
   };
 })();
-</script>
-<script>
 function toggleNavMenu(){
   var btn=document.getElementById('nav-menu-btn');
   var dd=document.getElementById('nav-dropdown');
