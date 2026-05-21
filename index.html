@@ -1054,27 +1054,73 @@ const ADMIN_EMAILS_IDX = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 // ── EDIT PROFIL ──
 let _epImgFile = null;
 
+function imgbbDirectUrl(json){
+  const d = json && json.data;
+  if(!d) return '';
+  return d.display_url || (d.image && d.image.url) || d.url || '';
+}
+
+function isDirectImageUrl(url){
+  const u = String(url||'').trim();
+  if(!/^https?:\/\//i.test(u)) return false;
+  if(/^https?:\/\/ibb\.co\//i.test(u) && !/i\.ibb\.co/i.test(u)) return false;
+  return true;
+}
+
+function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
+  if(!wrap) return;
+  const initial = (displayName||'U')[0].toUpperCase();
+  wrap.innerHTML = '';
+  const url = String(photoURL||'').trim();
+  if(url && !url.startsWith('data:') && isDirectImageUrl(url)){
+    const img = document.createElement('img');
+    img.className = imgClass;
+    img.src = url;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.decoding = 'async';
+    img.onerror = function(){
+      wrap.innerHTML = '';
+      const ph = document.createElement('div');
+      ph.className = phClass;
+      ph.textContent = initial;
+      wrap.appendChild(ph);
+    };
+    wrap.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = phClass;
+    ph.textContent = initial;
+    wrap.appendChild(ph);
+  }
+}
+
 window.openEditProfile = async () => {
   if (!_currentUser) return;
   const modal = document.getElementById('editProfileModal');
   if (!modal) return;
   _epImgFile = null;
   document.getElementById('ep-img-status').textContent = 'Atau isi URL di bawah';
-  const bigAv = document.getElementById('ep-avatar-big');
-  const photo = _customPhoto || _currentUser.photoURL;
-  if (photo) {
-    bigAv.outerHTML = `<img class="ep-avatar-big" src="${photo}" alt="avatar" referrerpolicy="no-referrer" id="ep-avatar-big">`;
-  } else {
-    const ph = document.getElementById('ep-avatar-big');
-    if (ph) { ph.className = 'ep-avatar-placeholder-big'; ph.textContent = (_currentUser.displayName||'U')[0].toUpperCase(); }
-  }
+  let photoPreview = _customPhoto || _currentUser.photoURL || '';
   document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '—';
   document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
   document.getElementById('ep-displayname').value = _currentUser.displayName || '';
   try {
     const snap = await getDoc(doc(db, 'user_profiles', _currentUser.uid));
-    document.getElementById('ep-photourl').value = (snap.exists() && snap.data().photoURL) ? snap.data().photoURL : '';
+    const customPhoto = (snap.exists() && snap.data().photoURL) ? snap.data().photoURL : '';
+    if(customPhoto) photoPreview = customPhoto;
+    document.getElementById('ep-photourl').value = customPhoto || '';
   } catch(e) { document.getElementById('ep-photourl').value = ''; }
+  const bigWrap = document.getElementById('ep-avatar-wrap-big');
+  let bigSlot = document.getElementById('ep-avatar-big');
+  if(!bigSlot){
+    bigSlot = document.createElement('div');
+    bigSlot.id = 'ep-avatar-big';
+    bigSlot.className = 'ep-avatar-placeholder-big';
+    const epInfo = bigWrap && bigWrap.querySelector('.ep-info');
+    if(bigWrap) bigWrap.insertBefore(bigSlot, epInfo || null);
+  }
+  renderAvatarEl(bigSlot, photoPreview, _currentUser.displayName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
   modal.classList.add('open');
   setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
 };
@@ -1096,7 +1142,7 @@ window.handleEpImg = inp => {
   const reader = new FileReader();
   reader.onload = e => {
     const av = document.getElementById('ep-avatar-big');
-    if (av) { av.outerHTML = `<img class="ep-avatar-big" src="${e.target.result}" alt="preview" id="ep-avatar-big">`; }
+    if (av) { av.outerHTML = `<img class="ep-avatar-big" src="${e.target.result}" alt="" id="ep-avatar-big">`; }
   };
   reader.readAsDataURL(file);
   inp.value = '';
@@ -1118,15 +1164,20 @@ window.saveEditProfile = async () => {
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
       const json = await res.json();
       if (!json.success) throw new Error('Upload gagal');
-      newPhoto = json.data.url;
+      newPhoto = imgbbDirectUrl(json);
+      if (!newPhoto) throw new Error('URL foto tidak valid dari ImgBB');
       document.getElementById('ep-img-status').textContent = '✅ Upload berhasil';
     }
-    if (newPhoto && !newPhoto.startsWith('http')) { toast('URL avatar harus diawali https://'); if(btn) btn.disabled=false; return; }
-    const finalPhoto = newPhoto || _currentUser.photoURL || null;
+    if (newPhoto && !isDirectImageUrl(newPhoto)) { toast('URL harus link gambar langsung (mis. https://i.ibb.co/...)'); if(btn) btn.disabled=false; return; }
+    const finalPhoto = newPhoto || (_customPhoto && isDirectImageUrl(_customPhoto) ? _customPhoto : null) || (_currentUser.photoURL && isDirectImageUrl(_currentUser.photoURL) ? _currentUser.photoURL : null);
     await updateProfile(_currentUser, { displayName: newName, photoURL: finalPhoto });
     await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null, email: _currentUser.email || '' }, { merge: true });
-    _customPhoto = newPhoto || _customPhoto;
+    _customPhoto = newPhoto || null;
+    try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
+    try { await _currentUser.reload(); } catch(e){}
     _updateAvatar(finalPhoto, newName);
+    const epSlot = document.getElementById('ep-avatar-big');
+    if (epSlot) renderAvatarEl(epSlot, finalPhoto, newName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
     const nudName = document.getElementById('nud-name');
     if (nudName) nudName.textContent = newName;
     toast('Profil berhasil diperbarui! ✨');
@@ -1770,6 +1821,7 @@ onAuthStateChanged(auth, async user => {
 
     // Set foto dari Google dulu (langsung tampil)
     _customPhoto = user.photoURL || null;
+    try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
     _updateAvatar(_customPhoto, displayName);
 
     // Kemudian coba ambil custom photo dari Firestore (non-blocking)
@@ -1777,6 +1829,7 @@ onAuthStateChanged(auth, async user => {
       const up = await getDoc(doc(db,'user_profiles',user.uid));
       if(up.exists() && up.data().photoURL){
         _customPhoto = up.data().photoURL;
+        try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
         _updateAvatar(_customPhoto, displayName);
       }
     }catch(e){}
@@ -1806,6 +1859,8 @@ onAuthStateChanged(auth, async user => {
     if ('requestIdleCallback' in window) requestIdleCallback(startNotif, { timeout: 5000 });
     else setTimeout(startNotif, 2500);
   } else {
+    _customPhoto = null;
+    try { window.__yumeCustomPhoto = null; } catch(e){}
     _isAdmin = false;
     _isBanned = false;
     _banReason = '';
@@ -1829,13 +1884,15 @@ function _updateAvatar(photoURL, displayName) {
   const reportBadge = wrap.querySelector('#report-notif-badge');
   const bannedOverlay = wrap.querySelector('#nav-banned-overlay');
   wrap.innerHTML = '';
-  if (photoURL) {
+  const url = (photoURL && isDirectImageUrl(photoURL)) ? photoURL : null;
+  if (url) {
     const img = document.createElement('img');
     img.id = 'nav-avatar-img';
     img.className = 'nav-avatar float-avatar-face';
-    img.src = photoURL;
-    img.alt = 'avatar';
-    img.setAttribute('referrerpolicy', 'no-referrer');
+    img.src = url;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.decoding = 'async';
     img.onerror = () => { _updateAvatar(null, displayName); };
     wrap.appendChild(img);
   } else {
@@ -2464,6 +2521,26 @@ const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
 const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 const MSG_LIMIT = 80;
 
+function imgbbDirectUrl(json){
+  const d = json && json.data;
+  if(!d) return '';
+  return d.display_url || (d.image && d.image.url) || d.url || '';
+}
+
+function isDirectImageUrl(url){
+  const u = String(url||'').trim();
+  if(!/^https?:\/\//i.test(u)) return false;
+  if(/^https?:\/\/ibb\.co\//i.test(u) && !/i\.ibb\.co/i.test(u)) return false;
+  return true;
+}
+
+function chatProfilePhoto(){
+  const custom = typeof window !== 'undefined' ? window.__yumeCustomPhoto : null;
+  if(custom && isDirectImageUrl(custom)) return custom;
+  if(_chatUser?.photoURL && isDirectImageUrl(_chatUser.photoURL)) return _chatUser.photoURL;
+  return null;
+}
+
 let _chatUser = null;
 let _chatOpen = false;
 let _chatUnsub = null;
@@ -2752,8 +2829,8 @@ function renderMsgs(msgs) {
       html += `<div class="chat-date-sep">${esc(dateStr)}</div>`;
       lastDateStr = dateStr;
     }
-    const avatarHtml = m.photoURL
-      ? `<img class="chat-msg-avatar" src="${esc(m.photoURL)}" alt="" onerror="this.style.display='none'">`
+    const avatarHtml = (m.photoURL && isDirectImageUrl(m.photoURL))
+      ? `<img class="chat-msg-avatar" src="${esc(m.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='flex'"><div class="chat-msg-avatar-ph" style="display:none">${esc((m.name||'?')[0].toUpperCase())}</div>`
       : `<div class="chat-msg-avatar-ph">${esc((m.name||'?')[0].toUpperCase())}</div>`;
     // Untuk pesan sendiri: gunakan window._myCustomRole sebagai fallback jika pesan lama tidak punya customRole
     const effectiveCustomRole = m.customRole ?? (isMe ? (window._myCustomRole ?? null) : null);
@@ -3045,7 +3122,7 @@ window.sendChatMsg = async () => {
       fd.append('image', _chatImgFile);
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
       const json = await res.json();
-      imgUrl = json.data?.url || null;
+      imgUrl = imgbbDirectUrl(json) || null;
     } catch(e) {}
   }
 
@@ -3065,7 +3142,7 @@ window.sendChatMsg = async () => {
       uid: _chatUser.uid,
       name: _chatUser.displayName || 'Anonim',
       email: _chatUser.email || '',
-      photoURL: _chatUser.photoURL || null,
+      photoURL: chatProfilePhoto(),
       text: t,
       imgUrl,
       commentCount,
