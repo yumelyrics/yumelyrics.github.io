@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>YumeSubs</title>
+<!-- Redirect secepat mungkin — URL acak / typo tidak menampilkan halaman error hosting -->
+<script>
+(function () {
+  var home = '/index.html';
+  var p = (location.pathname || '/').toLowerCase();
+  if (p === '/' || p === '/index.html') return;
+  /* Probe bot umum — tetap redirect ke index, tanpa pesan error */
+  var bad = /\.(git|env|sql|bak|log|yml|yaml|json|md|cjs|js\.map)$|\/wp-|\/wordpress|\/\.well-known\/(?!assetlinks)|\/node_modules\/|\/\.git\/|\/package\.json|\/composer\.json/;
+  if (bad.test(p)) { location.replace(home); return; }
+  location.replace(home);
+})();
+</script>
+<meta http-equiv="refresh" content="0;url=/index.html">
+<style>
+  html, body { margin: 0; min-height: 100vh; background: #f5f0ea; }
+</style>
+</head>
+<body>
+<p style="font-family: system-ui, sans-serif; font-size: .85rem; color: #8c8278; text-align: center; padding: 3rem 1rem;">
+  Memuat… <a href="/index.html">Klik di sini</a> jika tidak otomatis.
+</p>
+</body>
+</html>
