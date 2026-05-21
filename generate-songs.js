@@ -123,15 +123,30 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #nav-dropdown.open{display:flex}
 .nd-item{background:none;border:none;font-family:var(--sans);font-size:.68rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;padding:.75rem 1.2rem;cursor:pointer;text-align:left;width:100%;font-weight:600;text-decoration:none;display:block;white-space:nowrap}
 .nd-item:hover,.nd-item.on{color:var(--ink);background:var(--cream)}
-#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden}
-#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute}
-#theme-toggle .icon-sun{opacity:1}
-#theme-toggle .icon-moon{opacity:0}
-[data-theme="dark"] #theme-toggle .icon-sun{opacity:0}
-[data-theme="dark"] #theme-toggle .icon-moon{opacity:1}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden;padding:0}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute;transition:opacity .25s,transform .25s}
+#theme-toggle .icon-sun{opacity:1;transform:scale(1)}
+#theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
+[data-theme="dark"] #theme-toggle{border-color:rgba(232,226,217,.35)}
+[data-theme="dark"] #theme-toggle svg{stroke:rgba(232,226,217,.75)}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1)}
 `;
 
 const SITE_NAV_SCRIPT = `<script>
+(function(){
+  if(localStorage.getItem('ym_theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+  window.toggleTheme=function(){
+    var r=document.documentElement;
+    if(r.getAttribute('data-theme')==='dark'){
+      r.removeAttribute('data-theme');
+      localStorage.setItem('ym_theme','light');
+    } else {
+      r.setAttribute('data-theme','dark');
+      localStorage.setItem('ym_theme','dark');
+    }
+  };
+})();
 function toggleNavMenu(){
   var btn=document.getElementById('nav-menu-btn');
   var dd=document.getElementById('nav-dropdown');
@@ -177,6 +192,7 @@ function buildSiteNav(prefix, active) {
   <div id="nav-dropdown">
     <a class="nd-item${catOn}" href="${p}index.html">Katalog</a>
     <a class="nd-item${artOn}" href="${artHref}">Artis</a>
+    <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
     <a class="nd-item" href="${p}contact.html">Hubungi</a>
   </div>
@@ -349,7 +365,6 @@ footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3
 @media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav,.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
 ${ARTIST_MOBILE_CSS}
 </style>
-<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 </head>
 <body>
 <div class="wrap">
@@ -463,7 +478,6 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3re
 @media(max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr)}nav{padding:1rem 1.2rem}.artist-hero,.catalog,footer{padding-left:1.2rem;padding-right:1.2rem}}
 ${ARTIST_MOBILE_CSS}
 </style>
-<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');window.toggleTheme=function(){var r=document.documentElement;var d=r.getAttribute('data-theme')==='dark';if(d){r.removeAttribute('data-theme');localStorage.setItem('ym_theme','light');}else{r.setAttribute('data-theme','dark');localStorage.setItem('ym_theme','dark');}}})()</script>
 </head>
 <body>
 <div class="wrap">
@@ -503,20 +517,6 @@ ${buildSiteNav('../', 'artis')}
   </div>
 </footer>
 </div>
-<script>
-(function(){
-  var stored = localStorage.getItem('ym_theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var theme = stored || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-  window.toggleTheme = function(){
-    var root = document.documentElement;
-    var isDark = root.getAttribute('data-theme') === 'dark';
-    if(isDark){ root.removeAttribute('data-theme'); localStorage.setItem('ym_theme','light'); }
-    else { root.setAttribute('data-theme','dark'); localStorage.setItem('ym_theme','dark'); }
-  };
-})();
-</script>
 ${SITE_NAV_SCRIPT}
 </body>
 </html>`;
@@ -555,6 +555,22 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
   const vocabPanelHTML = buildVocabPanelHTML(lyrics);
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
+  const songSeedObj = {
+    id: songId,
+    titleJp: titleDisplay,
+    titleRo, titleId, artist,
+    artistSlug: song.artistSlug || '',
+    ytId: song.ytId || '',
+    nicoId: song.nicoId || '',
+    img: song.img || '',
+    sp: song.sp || '',
+    descId, descJp,
+    anime, animeId, animeEn,
+    type: songType,
+    genre: song.genre || '',
+    mood: song.mood || '',
+    lyrics: lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '', ans: l.ans || '' }))
+  };
 
   const lyricsHTML = lyrics.map((l, i) =>
     '<div class="ll-item" data-line="' + i + '">' +
@@ -1242,6 +1258,50 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .role-custom{background:rgba(124,77,110,.12);border:1px solid rgba(124,77,110,.4);color:var(--plum)}
 .cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);padding:.1rem .38rem;font-weight:600;vertical-align:middle}
 
+/* ── ADMIN INLINE EDIT (halaman lagu) ── */
+.admin-edit-song-btn{border-color:rgba(201,169,110,.45)!important;color:var(--gold)!important}
+.admin-edit-song-btn:hover{background:rgba(201,169,110,.1)!important;border-color:var(--gold)!important}
+#songEditOverlay{position:fixed;inset:0;z-index:450;background:rgba(10,8,18,.55);backdrop-filter:blur(10px);display:none;align-items:flex-start;justify-content:center;padding:1rem;padding-top:max(1rem,env(safe-area-inset-top));padding-bottom:max(1rem,env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+#songEditOverlay.open{display:flex}
+.se-modal{width:100%;max-width:720px;background:var(--paper);border:1px solid var(--border);box-shadow:0 24px 80px rgba(10,8,18,.18);margin:auto 0;animation:fadeUp .25s ease}
+[data-theme="dark"] .se-modal{background:var(--cream);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.se-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.15rem 1.25rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--paper);z-index:2}
+[data-theme="dark"] .se-head{background:var(--cream)}
+.se-tit{font-family:var(--serif);font-size:1.15rem;font-style:italic;color:var(--ink)}
+.se-sub{font-size:.68rem;color:var(--ash);margin-top:.25rem;line-height:1.5}
+.se-close{background:none;border:1px solid var(--border);color:var(--ash);font-size:1rem;width:36px;height:36px;cursor:pointer;flex-shrink:0;border-radius:8px}
+.se-close:hover{border-color:var(--red);color:var(--red)}
+.se-body{padding:1.15rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem;max-height:calc(100dvh - 8rem);overflow-y:auto}
+.se-sec{font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.15rem}
+.se-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.se-field{display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.se-field.full{grid-column:1/-1}
+.se-lbl{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash)}
+.se-inp,.se-ta{background:rgba(10,8,18,.03);border:1px solid var(--border);border-radius:8px;color:var(--ink);font-family:var(--sans);font-size:.85rem;padding:.65rem .75rem;outline:none;width:100%;transition:border-color .2s}
+[data-theme="dark"] .se-inp,[data-theme="dark"] .se-ta{background:rgba(232,226,217,.04)}
+.se-inp:focus,.se-ta:focus{border-color:var(--gold)}
+.se-ta{resize:vertical;min-height:4.5rem;line-height:1.55}
+.se-lyrics{display:flex;flex-direction:column;gap:.55rem}
+.se-lrow{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding:.65rem .65rem .65rem 2.5rem;background:var(--cream);border:1px solid var(--border);border-radius:8px;position:relative}
+[data-theme="dark"] .se-lrow{background:rgba(232,226,217,.03)}
+.se-lrow .se-inp{font-size:.8rem}
+.se-lrow-del{position:absolute;top:.4rem;right:.4rem;width:30px;height:30px;border:1px solid rgba(185,64,64,.3);background:var(--paper);color:var(--red);border-radius:6px;cursor:pointer;font-size:.85rem;line-height:1}
+.se-add-row{background:none;border:1px dashed var(--border);color:var(--ash);font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.55rem;cursor:pointer;border-radius:8px;width:100%}
+.se-add-row:hover{border-color:var(--gold);color:var(--gold)}
+.se-foot{display:flex;gap:.5rem;padding:1rem 1.25rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--paper);flex-wrap:wrap}
+[data-theme="dark"] .se-foot{background:var(--cream)}
+.se-save{flex:1;min-width:140px;background:var(--ink);border:none;color:var(--paper);font-family:var(--sans);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
+.se-save:hover{background:var(--gold);color:var(--ink)}
+.se-save:disabled{opacity:.45;cursor:not-allowed}
+.se-cancel{background:none;border:1px solid var(--border);color:var(--ash);font-family:var(--sans);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
+.se-cancel:hover{border-color:var(--red);color:var(--red)}
+@media(max-width:768px){
+  .se-grid,.se-lrow{grid-template-columns:1fr}
+  .se-body{max-height:none}
+  .se-foot{flex-direction:column}
+  .se-save,.se-cancel{width:100%}
+}
+
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 .hero-text>*{animation:fadeUp .6s ease both}
@@ -1435,6 +1495,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     ${moodChipsHTML}
     <div class="hero-actions">
       <button class="btn-primary" onclick="window._scrollToLyrics()">↓ Baca Lirik</button>
+      <button class="btn-ghost admin-edit-song-btn" id="admin-edit-song-btn" type="button" style="display:none" onclick="openSongEditModal()" title="Edit lagu (admin)">✏ Edit Lagu</button>
       <a class="btn-ghost" href="../latihan.html?song=${escHtml(songId)}&amp;slug=${escHtml(slug)}" style="text-decoration:none">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         Latihan Terjemah
@@ -1777,6 +1838,64 @@ ${(()=>{
     </div>
   </div>
 </div>
+<!-- ── Admin: edit lagu di halaman ini ── -->
+<div id="songEditOverlay" onclick="if(event.target===this)closeSongEditModal()">
+  <div class="se-modal" role="dialog" aria-labelledby="se-modal-title">
+    <div class="se-head">
+      <div>
+        <div class="se-tit" id="se-modal-title">Edit Lagu</div>
+        <div class="se-sub">Simpan = update Firestore. Agar lirik &amp; SEO di file HTML publik ikut baru, jalankan <strong>Generate Song Pages</strong> (sama seperti di admin) lalu deploy.</div>
+      </div>
+      <button type="button" class="se-close" onclick="closeSongEditModal()" aria-label="Tutup">✕</button>
+    </div>
+    <div class="se-body">
+      <div class="se-sec">Info utama</div>
+      <div class="se-grid">
+        <div class="se-field"><label class="se-lbl" for="se-jt">Judul Jepang *</label><input class="se-inp" id="se-jt" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-it">Judul Indonesia</label><input class="se-inp" id="se-it" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-ar">Artis *</label><input class="se-inp" id="se-ar" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-ro">Romaji</label><input class="se-inp" id="se-ro" type="text"></div>
+        <div class="se-field full"><label class="se-lbl" for="se-artist-slug">Slug artis</label><input class="se-inp" id="se-artist-slug" type="text" placeholder="kosongkan = otomatis"></div>
+      </div>
+      <div class="se-sec">Anime &amp; tag</div>
+      <div class="se-grid">
+        <div class="se-field"><label class="se-lbl" for="se-anime">Anime (JP)</label><input class="se-inp" id="se-anime" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-anime-id">Anime (ID)</label><input class="se-inp" id="se-anime-id" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-anime-en">Anime (EN)</label><input class="se-inp" id="se-anime-en" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-type">Tipe</label>
+          <select class="se-inp" id="se-type">
+            <option value="">— Bukan OST —</option>
+            <option value="opening">Opening</option>
+            <option value="ending">Ending</option>
+            <option value="insert">Insert</option>
+            <option value="ost">OST</option>
+          </select>
+        </div>
+        <div class="se-field"><label class="se-lbl" for="se-genre">Genre</label><input class="se-inp" id="se-genre" type="text"></div>
+        <div class="se-field full"><label class="se-lbl" for="se-mood">Mood (pisah koma)</label><input class="se-inp" id="se-mood" type="text"></div>
+      </div>
+      <div class="se-sec">Media</div>
+      <div class="se-grid">
+        <div class="se-field"><label class="se-lbl" for="se-yt">YouTube ID</label><input class="se-inp" id="se-yt" type="text"></div>
+        <div class="se-field"><label class="se-lbl" for="se-nico">Niconico ID</label><input class="se-inp" id="se-nico" type="text"></div>
+        <div class="se-field full"><label class="se-lbl" for="se-sp">Spotify URL</label><input class="se-inp" id="se-sp" type="url"></div>
+        <div class="se-field full"><label class="se-lbl" for="se-img">Cover URL</label><input class="se-inp" id="se-img" type="url"></div>
+      </div>
+      <div class="se-sec">SEO</div>
+      <div class="se-grid">
+        <div class="se-field full"><label class="se-lbl" for="se-descid">Deskripsi ID</label><textarea class="se-ta" id="se-descid" rows="3"></textarea></div>
+        <div class="se-field full"><label class="se-lbl" for="se-descjp">Deskripsi JP</label><textarea class="se-ta" id="se-descjp" rows="3"></textarea></div>
+      </div>
+      <div class="se-sec">Baris lirik</div>
+      <div class="se-lyrics" id="se-lyrics"></div>
+      <button type="button" class="se-add-row" onclick="addSongEditLyricRow()">+ Tambah baris</button>
+    </div>
+    <div class="se-foot">
+      <button type="button" class="se-save" id="se-save-btn" onclick="saveSongEdit()">Simpan perubahan</button>
+      <button type="button" class="se-cancel" onclick="closeSongEditModal()">Batal</button>
+    </div>
+  </div>
+</div>
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
 document.addEventListener('DOMContentLoaded', function(){
@@ -2058,7 +2177,104 @@ const auth     = getAuth(_app);
 const provider = new GoogleAuthProvider();
 
 const SONG_ID = ${JSON.stringify(songId)};
+const SONG_SEED = ${JSON.stringify(songSeedObj)};
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
+
+// ── ADMIN: edit lagu di halaman ini ──
+function isVerifiedAdmin(){
+  return !!(_currentUser && ADMIN_EMAILS.includes(_currentUser.email));
+}
+function updateAdminSongUI(){
+  const btn = document.getElementById('admin-edit-song-btn');
+  if(btn) btn.style.display = isVerifiedAdmin() ? 'inline-flex' : 'none';
+}
+function escSongEdit(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fillSongEditForm(data){
+  const d = data || SONG_SEED;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v ?? ''; };
+  set('se-jt', d.titleJp); set('se-it', d.titleId); set('se-ar', d.artist);
+  set('se-ro', d.titleRo); set('se-artist-slug', d.artistSlug);
+  set('se-anime', d.anime); set('se-anime-id', d.animeId); set('se-anime-en', d.animeEn);
+  set('se-type', d.type); set('se-genre', d.genre); set('se-mood', d.mood);
+  set('se-yt', d.ytId); set('se-nico', d.nicoId); set('se-sp', d.sp); set('se-img', d.img);
+  set('se-descid', d.descId); set('se-descjp', d.descJp);
+  const wrap = document.getElementById('se-lyrics');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  (d.lyrics || []).forEach(l => addSongEditLyricRow(l.jp, l.ro, l.id, l.ans));
+  if(!wrap.children.length) addSongEditLyricRow();
+}
+window.addSongEditLyricRow = function(jp='', ro='', id='', ans=''){
+  const wrap = document.getElementById('se-lyrics');
+  if(!wrap) return;
+  const row = document.createElement('div');
+  row.className = 'se-lrow';
+  row.innerHTML =
+    '<button type="button" class="se-lrow-del" onclick="this.parentElement.remove()" title="Hapus baris">✕</button>' +
+    '<input class="se-inp se-ljp" placeholder="Jepang" value="'+escSongEdit(jp)+'">' +
+    '<input class="se-inp se-lro" placeholder="Romaji" value="'+escSongEdit(ro)+'">' +
+    '<input class="se-inp se-lid" placeholder="Terjemahan" value="'+escSongEdit(id)+'">' +
+    '<input class="se-inp se-lans" placeholder="Jawaban latihan (opsional)" value="'+escSongEdit(ans)+'">';
+  wrap.appendChild(row);
+};
+window.openSongEditModal = async function(){
+  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa mengedit lagu.'); return; }
+  fillSongEditForm(SONG_SEED);
+  try {
+    const snap = await getDoc(doc(db,'songs', SONG_ID));
+    if(snap.exists()) fillSongEditForm({ ...SONG_SEED, ...snap.data(), id: SONG_ID });
+  } catch(e){ console.warn('load song for edit', e); }
+  document.getElementById('songEditOverlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeSongEditModal = function(){
+  document.getElementById('songEditOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+};
+window.saveSongEdit = async function(){
+  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menyimpan.'); return; }
+  const jt = document.getElementById('se-jt')?.value.trim();
+  const ar = document.getElementById('se-ar')?.value.trim();
+  if(!jt || !ar){ toast('Judul JP & artis wajib diisi.'); return; }
+  const lyrics = [];
+  document.querySelectorAll('#se-lyrics .se-lrow').forEach(r=>{
+    const jp = r.querySelector('.se-ljp')?.value.trim() || '';
+    const ro = r.querySelector('.se-lro')?.value.trim() || '';
+    const id = r.querySelector('.se-lid')?.value.trim() || '';
+    const ans = r.querySelector('.se-lans')?.value.trim() || '';
+    if(jp) lyrics.push({ jp, ro, id, ans });
+  });
+  const payload = {
+    titleJp: jt,
+    titleId: document.getElementById('se-it')?.value.trim() || '',
+    artist: ar,
+    artistSlug: document.getElementById('se-artist-slug')?.value.trim() || '',
+    titleRo: document.getElementById('se-ro')?.value.trim() || '',
+    ytId: document.getElementById('se-yt')?.value.trim() || '',
+    nicoId: document.getElementById('se-nico')?.value.trim() || '',
+    img: document.getElementById('se-img')?.value.trim() || '',
+    sp: document.getElementById('se-sp')?.value.trim() || '',
+    descId: document.getElementById('se-descid')?.value.trim() || '',
+    descJp: document.getElementById('se-descjp')?.value.trim() || '',
+    anime: document.getElementById('se-anime')?.value.trim() || '',
+    animeId: document.getElementById('se-anime-id')?.value.trim() || '',
+    animeEn: document.getElementById('se-anime-en')?.value.trim() || '',
+    type: document.getElementById('se-type')?.value.trim() || '',
+    genre: document.getElementById('se-genre')?.value.trim() || '',
+    mood: document.getElementById('se-mood')?.value.trim() || '',
+    lyrics
+  };
+  const btn = document.getElementById('se-save-btn');
+  if(btn) btn.disabled = true;
+  try {
+    await updateDoc(doc(db,'songs', SONG_ID), payload);
+    toast('Tersimpan di Firestore. Jalankan Generate Song Pages di admin agar HTML publik terbarui.');
+    closeSongEditModal();
+  } catch(e){
+    toast('Gagal simpan: ' + (e.message || e));
+    if(btn) btn.disabled = false;
+  }
+};
 
 // ── ADMIN NOTIF HELPER ──
 // Email admin di-encode biar tidak plaintext di source (bukan enkripsi, tapi obstacle)
@@ -2580,6 +2796,7 @@ async function applyAuthState(user) {
     document.getElementById('nud-email').textContent = user.email || '';
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     if(!_isAdmin) loadRateLimit(user.uid);
+    updateAdminSongUI();
     const avatarWrap = document.getElementById('nav-avatar-wrap');
     if (_customPhotoURL) {
       avatarWrap.innerHTML = \`<img class="nav-avatar" src="\${_customPhotoURL}" alt="avatar" referrerpolicy="no-referrer">\`;
@@ -2588,6 +2805,10 @@ async function applyAuthState(user) {
       avatarWrap.innerHTML = \`<div class="nav-avatar-placeholder">\${initial}</div>\`;
     }
   } else {
+    _isAdmin = false;
+    try{ window.__yumeAuthBridge = false; } catch(ex){}
+    updateAdminSongUI();
+    closeSongEditModal();
     // Tampilkan floating gate login (tanpa blur terjemahan)
     gate.style.display = 'flex';
     document.body.classList.add('gate-open');
