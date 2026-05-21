@@ -243,118 +243,103 @@ textarea.fi:focus{border-color:var(--gold)}
 .sub-empty{font-size:.8rem;color:var(--muted);font-style:italic;padding:.5rem 0}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15);border-radius:4px}
 .song-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem}
+.fi select,.fi option{font-family:var(--sans);color:var(--ink)}
+.fg-hint{font-size:.58rem;color:var(--muted);margin-top:.35rem;line-height:1.5}
+
+/* ── Form UX: simpel & mobile ── */
+.form-card{background:var(--cream);border:1px solid rgba(10,8,18,.08);border-radius:12px;padding:1.25rem 1.35rem;margin-bottom:1.25rem}
+[data-theme="dark"] .form-card{background:rgba(232,226,217,.03);border-color:rgba(232,226,217,.1)}
+.form-card-title{font-size:.62rem;font-weight:700;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.form-card-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.form-card-hint{font-size:.72rem;color:var(--ash);margin:-.5rem 0 1rem;line-height:1.5}
+.keys-panel,.form-advanced,.lyric-tools,.form-meta-panel{border:1px solid rgba(10,8,18,.1);border-radius:12px;margin-bottom:1.25rem;background:rgba(10,8,18,.02);overflow:hidden}
+[data-theme="dark"] .keys-panel,[data-theme="dark"] .form-advanced,[data-theme="dark"] .lyric-tools,[data-theme="dark"] .form-meta-panel{border-color:rgba(232,226,217,.12);background:rgba(232,226,217,.02)}
+.keys-panel>summary,.form-advanced>summary,.lyric-tools>summary,.form-meta-panel>summary{list-style:none;cursor:pointer;padding:.9rem 1.1rem;font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash);display:flex;align-items:center;justify-content:space-between;gap:.5rem;user-select:none;-webkit-tap-highlight-color:transparent}
+.keys-panel>summary::-webkit-details-marker,.form-advanced>summary::-webkit-details-marker,.lyric-tools>summary::-webkit-details-marker,.form-meta-panel>summary::-webkit-details-marker{display:none}
+.keys-panel>summary::after,.form-advanced>summary::after,.lyric-tools>summary::after,.form-meta-panel>summary::after{content:'▼';font-size:.55rem;opacity:.5;transition:transform .2s}
+.keys-panel[open]>summary::after,.form-advanced[open]>summary::after,.lyric-tools[open]>summary::after,.form-meta-panel[open]>summary::after{transform:rotate(180deg)}
+.keys-panel .keys-body,.form-advanced .advanced-body,.form-meta-panel .meta-body{padding:0 1.1rem 1.1rem}
+.lyric-tools .tools-body{padding:0 1.1rem .85rem;display:flex;flex-direction:column;gap:.45rem}
+.lyric-tools .badd{margin-bottom:0!important}
+.adm-tabs-wrap{display:flex;gap:.35rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.adm-tabs-wrap::-webkit-scrollbar{display:none}
+.adm-tab{border-radius:8px 8px 0 0;min-height:44px;display:inline-flex;align-items:center;flex-shrink:0}
+.inbox-card{display:flex;align-items:center;justify-content:space-between;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.25);border-radius:12px;padding:.95rem 1.15rem;text-decoration:none;margin-bottom:1.25rem;gap:.75rem;transition:background .2s}
+.inbox-card:hover{background:rgba(201,169,110,.1)}
+.page-header{padding-bottom:1.5rem;margin-bottom:1.25rem;border-bottom:1px solid rgba(10,8,18,.08)}
+.page-header-deco{font-family:var(--jp);font-size:4rem;font-weight:600;color:rgba(10,8,18,.04);line-height:1;user-select:none}
+.fi{border-radius:8px;padding:.75rem .85rem!important;border:1.5px solid rgba(10,8,18,.12)!important;border-bottom:1.5px solid rgba(10,8,18,.12)!important;background:rgba(10,8,18,.025)!important;font-size:1rem}
+textarea.fi{min-height:5rem;line-height:1.55}
+.fg .fl{color:var(--ash)}
+.badd,.bsave,.bcancel,.login-btn{border-radius:8px}
+.badd,.bsave,.login-btn{min-height:48px}
+.cover-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
+.cover-actions button{border-radius:2rem!important;min-height:36px;padding:.35rem .75rem!important}
+.sticky-form-bar{position:relative;padding:1.25rem 0 .5rem;margin-top:.75rem}
 
 /* ── MOBILE FRIENDLY ── */
 @media(max-width:768px){
   #sitebg{background-image:none!important;background:#0a1628!important;filter:none!important}
+  nav{padding:.75rem 1rem;padding-top:max(.75rem,env(safe-area-inset-top))}
+  .nljp{font-size:.9rem}
+  .nav-right{gap:.45rem}
+  .nb{font-size:.55rem}
+  #theme-toggle{width:40px;height:40px}
 
-  /* Nav */
-  nav{padding:.85rem 1rem;gap:.5rem;flex-wrap:nowrap}
-  .nav-logo{gap:.05rem}
-  .nljp{font-size:.95rem}
-  .nlen{font-size:.5rem;letter-spacing:.2em}
-  .nav-badge{font-size:.52rem;padding:.25rem .55rem}
-  .nav-right{gap:.6rem}
-  .nb{font-size:.58rem;letter-spacing:.1em;padding:.3rem 0}
-  .logout-btn{font-size:.55rem;padding:.25rem .6rem}
+  .adm-wrap{padding:1.25rem 1rem calc(6.5rem + env(safe-area-inset-bottom));max-width:100%}
+  .admtit{font-size:1.65rem!important}
+  .page-header{flex-direction:column!important;align-items:flex-start!important}
+  .page-header-deco{display:none}
+  .inbox-card{flex-direction:column;align-items:flex-start}
 
-  /* Main wrap */
-  .adm-wrap{padding:1.5rem 1rem 5rem}
-  .admtit{font-size:1.8rem!important}
+  .keys-panel .keys-body>div[style*="flex"]{flex-direction:column!important;gap:.75rem!important}
+  .keys-panel .fg{min-width:0!important;width:100%}
+  .adm-tabs-wrap .adm-tab{font-size:.6rem;padding:.55rem .85rem;flex:1;justify-content:center}
+  .form-card{padding:1rem}
+  .song-form-grid{grid-template-columns:1fr!important;gap:1rem!important;margin-bottom:0!important}
+  .fi,select.fi{font-size:16px!important}
+  .cover-actions{width:100%}
+  .cover-actions button{flex:1;text-align:center}
 
-  /* Header bar */
-  .adm-wrap > div:first-child{flex-direction:column;align-items:flex-start!important;gap:.5rem}
-  .adm-wrap > div:first-child > div:last-child{display:none} /* hide kanji deco */
+  .form-actions{flex-direction:column}
+  .form-actions .bsave,.form-actions .bcancel{width:100%}
+  .sticky-form-bar{position:fixed;left:0;right:0;bottom:0;padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid rgba(10,8,18,.1);box-shadow:0 -8px 24px rgba(10,8,18,.08);z-index:90}
+  [data-theme="dark"] .sticky-form-bar{box-shadow:0 -8px 24px rgba(0,0,0,.25)}
 
-  /* Inbox banner */
-  .adm-wrap > a[href="inbox.html"]{flex-direction:column;align-items:flex-start;gap:.5rem}
-  .adm-wrap > a[href="inbox.html"] > span:last-child{font-size:.65rem}
-
-  /* Token input */
-  .adm-wrap > div[style*="gh-token"]{flex-direction:column;gap:.6rem}
-
-  /* Tab nav */
-  .adm-wrap > div[style*="adm-tab"]{gap:.2rem;overflow-x:auto;padding-bottom:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .adm-tab{font-size:.62rem;padding:.5rem .75rem;white-space:nowrap;flex-shrink:0}
-
-  /* Form grids → single column */
-  .admform{grid-template-columns:1fr}
-  .admform .fg.full{grid-column:1}
-  .form-actions{grid-column:1;flex-direction:column;gap:.6rem}
-  .form-actions .bsave,.form-actions .bcancel{width:100%;text-align:center}
-
-  /* Song form top grid */
-  .song-form-grid{grid-template-columns:1fr!important}
-
-  /* Lyric rows → stacked */
   .lrow-hdr{display:none}
-  .lrow{grid-template-columns:1fr 1fr;gap:.4rem;padding:.7rem;background:rgba(10,8,18,.025);border:1px solid rgba(10,8,18,.07);border-radius:2px}
-  .lrow .fi:nth-child(1){grid-column:1/-1;font-size:.82rem}
-  .lrow .fi:nth-child(2){grid-column:1/-1;font-size:.82rem}
-  .lrow .fi:nth-child(3){grid-column:1/-1;font-size:.82rem}
-  .lrow .fi:nth-child(4){grid-column:1/-1;font-size:.82rem}
-  .lrows{gap:.8rem}
-  .bdel{width:100%;height:32px;grid-column:1/-1}
+  .lrow{grid-template-columns:1fr;gap:.45rem;padding:.85rem .85rem .85rem 2.75rem;background:var(--paper);border:1px solid rgba(10,8,18,.1);border-radius:10px;position:relative}
+  [data-theme="dark"] .lrow{background:var(--cream)}
+  .lrow .fi{grid-column:1/-1}
+  .lrow .bdel{position:absolute;top:.5rem;right:.5rem;width:36px;height:36px;border-radius:8px}
+  .lrows{gap:.65rem}
 
-  /* Story form */
-  .sf-row{grid-template-columns:1fr!important;gap:.8rem}
-  .story-actions{flex-direction:column;gap:.6rem}
-  .story-actions button{width:100%;text-align:center}
-  .sf-editor{min-height:200px}
-  .editor-toolbar{gap:.2rem}
-  .etool{font-size:.65rem;padding:.25rem .45rem}
+  .sf-row{grid-template-columns:1fr!important}
+  .story-actions{flex-direction:column}
+  .story-actions button{width:100%}
+  .sf-editor{min-height:180px;font-size:16px}
+  .editor-toolbar{overflow-x:auto;flex-wrap:nowrap}
+  .etool{flex-shrink:0;min-width:40px;min-height:40px}
 
-  /* Story list items */
-  .slist-item{flex-direction:column;align-items:flex-start;gap:.6rem}
-  .slist-btns{width:100%;display:flex;flex-wrap:wrap;gap:.35rem}
-  .slist-btns button{flex:1;min-width:60px;text-align:center;padding:.35rem .5rem}
+  .slist-item,.exitem{flex-direction:column;align-items:stretch}
+  .slist-btns,.exitem-btns{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;width:100%}
+  .cat-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .cat-row{flex-direction:column}
+  .cm-item-actions,.reply-actions{flex-direction:column;width:100%}
+  .cm-item-actions button,.breply,.bcancel-reply{width:100%;min-height:44px}
+  .cm-tabs,.sub-tabs{overflow-x:auto;flex-wrap:nowrap}
 
-  /* Exlist items */
-  .exitem{flex-direction:column;align-items:flex-start;gap:.6rem}
-  .exitem-btns{width:100%;display:flex;gap:.4rem}
-  .bedit,.bdels{flex:1;text-align:center}
-
-  /* Resources form */
-  .cat-row{flex-direction:column;gap:.6rem}
-
-  /* Sub section cards */
-  .sub-card-head{flex-direction:column;align-items:flex-start;gap:.5rem}
-  .sub-footer{flex-wrap:wrap}
-  .sub-card-head .exitem-btns{width:100%}
-
-  /* Comment section */
-  .cm-item-hdr{flex-direction:column;align-items:flex-start;gap:.5rem}
-  .cm-item-actions{width:100%;display:flex;flex-wrap:wrap;gap:.4rem}
-  .cm-item-actions button{flex:1;text-align:center}
-  .cm-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
-  .cmtab{white-space:nowrap;flex-shrink:0}
-  .reply-actions{flex-direction:column;gap:.5rem}
-  .breply,.bcancel-reply{width:100%;text-align:center}
-
-  /* GH workflow buttons */
-  div[style*="gh-run-btn"],div[style*="gh-res-run-btn"],div[style*="gh-str-run-btn"]{flex-direction:column}
-
-  /* Login box */
-  .loginbox{padding:2rem 1.25rem;margin:1rem}
-
-  /* Toast */
-  .toast{bottom:1rem;right:1rem;left:1rem;right:1rem;text-align:center}
-
-  /* Sub tabs */
-  .sub-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding-bottom:.3rem}
-  .stab{white-space:nowrap;flex-shrink:0}
+  .loginbox{padding:1.75rem 1.15rem;width:calc(100% - 1.5rem)}
+  .login-inp{font-size:16px}
+  .toast{bottom:calc(5rem + env(safe-area-inset-bottom));left:1rem;right:1rem;text-align:center}
+  .catalog-search-inp{font-size:16px}
+  div[style*="gh-run-btn"]{flex-direction:column;width:100%}
+  div[style*="gh-run-btn"] .bsave,div[style*="gh-run-btn"] a{width:100%}
 }
 
 @media(max-width:400px){
   .nlen{display:none}
-  .nav-badge{display:none}
-  nav{padding:.75rem .75rem}
-  .admtit{font-size:1.5rem!important}
-  .adm-wrap{padding:1.2rem .85rem 5rem}
-  .adm-tab{font-size:.58rem;padding:.45rem .6rem}
-  .etool{display:none}
-  .etool:nth-child(-n+3){display:inline-flex}
-  button[onclick*="togglePreview"]{display:inline-flex}
+  nav{padding:.65rem .75rem}
+  .admtit{font-size:1.45rem!important}
 }
 /* ── Story Editor ── */
 .story-section{margin-top:0;padding-top:0;border-top:none;max-width:800px;margin-left:auto;margin-right:auto}
@@ -494,33 +479,31 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
 </nav>
 
 <div class="adm-wrap">
-  <div style="padding-bottom:2rem;margin-bottom:2rem;border-bottom:1px solid rgba(10,8,18,.08);display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+  <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem">
     <div>
       <div style="font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem"><span style="display:block;width:2rem;height:1px;background:var(--rose)"></span>Panel Admin</div>
-      <div class="admtit" style="font-size:2.6rem;margin-bottom:.4rem">Form Admin</div>
-      <div class="admsub">Tambah, edit, atau hapus lagu. Data tersimpan ke Firestore.</div>
+      <div class="admtit" style="font-size:2.2rem;margin-bottom:.35rem">Form Admin</div>
+      <div class="admsub">Isi data lagu langkah demi langkah — enak di HP maupun desktop.</div>
     </div>
-    <div style="font-family:var(--jp);font-size:5rem;font-weight:600;color:rgba(10,8,18,.04);line-height:1;user-select:none">管</div>
+    <div class="page-header-deco">管</div>
   </div>
-  <a href="inbox.html" style="display:flex;align-items:center;justify-content:space-between;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.25);padding:.9rem 1.1rem;text-decoration:none;margin-bottom:1.8rem;transition:background .2s;max-width:800px" onmouseover="this.style.background='rgba(201,169,110,.1)'" onmouseout="this.style.background='rgba(201,169,110,.06)'">
-    <div style="display:flex;align-items:center;gap:.8rem">
-      <span style="font-size:1.1rem">✉</span>
-      <div>
-        <div style="font-size:.8rem;color:var(--accent);font-weight:500;letter-spacing:.05em">Pesan Masuk & Moderasi Komentar</div>
-        <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">Lihat request lagu, sharing, kontak, dan komentar pengunjung</div>
+  <a href="inbox.html" class="inbox-card">
+    <div style="display:flex;align-items:center;gap:.8rem;min-width:0">
+      <span style="font-size:1.1rem;flex-shrink:0">✉</span>
+      <div style="min-width:0">
+        <div style="font-size:.8rem;color:var(--accent);font-weight:500">Pesan Masuk & Komentar</div>
+        <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">Request lagu, sharing, kontak</div>
       </div>
     </div>
-    <span style="font-size:.72rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap">Buka Inbox →</span>
+    <span style="font-size:.72rem;color:var(--accent);white-space:nowrap;flex-shrink:0">Buka →</span>
   </a>
 
-  <!-- TOKEN INPUT -->
-  <div style="background:rgba(10,8,18,.02);border:1px solid var(--border);padding:1rem 1.2rem;max-width:800px;margin-bottom:1.5rem">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.5rem">
-      <div style="font-size:.58rem;font-weight:700;color:var(--smoke);letter-spacing:.22em;text-transform:uppercase">API Keys & Tokens</div>
-      <div style="display:flex;gap:.4rem">
-        <button onclick="toggleKeyVisibility()" id="key-toggle-btn" style="background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s">👁 Tampilkan</button>
-        <button onclick="clearAllKeys()" style="background:none;border:1px solid rgba(185,64,64,.25);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s">✕ Hapus Semua</button>
-      </div>
+  <details class="keys-panel">
+    <summary>🔑 API Keys & Tokens</summary>
+    <div class="keys-body">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:.7rem;flex-wrap:wrap;gap:.4rem">
+        <button onclick="toggleKeyVisibility()" id="key-toggle-btn" style="background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.35rem .75rem;cursor:pointer;border-radius:2rem;min-height:36px">👁 Tampilkan</button>
+        <button onclick="clearAllKeys()" style="background:none;border:1px solid rgba(185,64,64,.25);font-family:var(--sans);font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);padding:.35rem .75rem;cursor:pointer;border-radius:2rem;min-height:36px">✕ Hapus</button>
     </div>
     <div style="display:flex;gap:1rem;flex-wrap:wrap">
       <div class="fg" style="flex:1;min-width:200px;margin:0">
@@ -545,11 +528,11 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         <input class="fi" id="genius-api-key-inp" type="password" placeholder="genius_token...">
       </div>
     </div>
-    <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">GitHub: scope <code style="color:var(--accent2)">workflow</code> · YT Key: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → Enable YouTube Data API v3 → Create credentials → Public data · Keduanya disimpen lokal di browser.</div>
-  </div>
+    <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">Disimpan lokal di browser. GitHub: <code style="color:var(--accent2)">workflow</code> · YT: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud</a></div>
+    </div>
+  </details>
 
-  <!-- TAB NAV -->
-  <div style="display:flex;gap:.4rem;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:0;max-width:800px">
+  <div class="adm-tabs-wrap">
     <button class="adm-tab on" id="tab-katalog" onclick="switchTab('katalog')">🎵 Katalog</button>
     <button class="adm-tab" id="tab-cerita" onclick="switchTab('cerita')">📝 Cerita</button>
     <button class="adm-tab" id="tab-resources" onclick="switchTab('resources')">🔧 Resources</button>
@@ -558,49 +541,68 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
   <div id="sec-katalog" class="adm-section on">
     <div class="edit-banner" id="editBanner">✏️ <strong style="font-weight:500">Mode Edit</strong> — Ubah data lagu lalu klik Update.</div>
     <input type="hidden" id="f-editid" value="">
-    <div class="song-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
-      <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder=""></div>
-      <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder=""></div>
+
+    <section class="form-card">
+      <div class="form-card-title">1 · Info Lagu</div>
+      <p class="form-card-hint">Judul & artis dulu. Field * wajib diisi.</p>
+    <div class="song-form-grid" style="margin-bottom:0">
+      <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="例: 夜に駆ける"></div>
+      <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder="Contoh: Berlari di Malam"></div>
       <div class="fg">
         <div class="fl">Artis *</div>
         <div class="artist-wrap">
-          <input class="fi" id="f-ar" placeholder="" autocomplete="off" oninput="onArtistInput(this)" onkeydown="onArtistKeydown(event)" onblur="closeArtistSuggestions()">
+          <input class="fi" id="f-ar" placeholder="Nama artis / grup" autocomplete="off" oninput="onArtistInput(this)" onkeydown="onArtistKeydown(event)" onblur="closeArtistSuggestions()">
           <div class="artist-suggestions" id="artist-suggestions"></div>
         </div>
       </div>
-      <div class="fg">
-        <div class="fl">Slug Artis <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional, untuk URL /artis/</span></div>
-        <input class="fi" id="f-artist-slug" placeholder="Contoh: yoasobi, back-number, syh">
-        <div style="font-size:.58rem;color:var(--muted);margin-top:.35rem;line-height:1.5">Kosongkan = otomatis dari nama. Isi manual untuk artis Jepang (mis. 164 → slug <code>164</code>, クリープハイプ → <code>creepy-nuts</code>).</div>
+      <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Romaji judul"></div>
+    </div>
+    </section>
+
+    <details class="form-meta-panel">
+      <summary>🎬 Slug, anime & tag <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.58rem;color:var(--muted)">— opsional</span></summary>
+      <div class="meta-body">
+    <div class="song-form-grid" style="margin-bottom:0">
+      <div class="fg" style="grid-column:1/-1">
+        <div class="fl">Slug Artis</div>
+        <input class="fi" id="f-artist-slug" placeholder="yoasobi, back-number, 164">
+        <p class="fg-hint">Kosongkan = otomatis dari nama artis.</p>
       </div>
-      <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder=""></div>
       <div class="fg">
-        <div class="fl">Anime <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— judul asli / Jepang</span></div>
-        <input class="fi" id="f-anime" placeholder="Contoh: 君の名は。 / Kimi no Na wa.">
+        <div class="fl">Anime (JP)</div>
+        <input class="fi" id="f-anime" placeholder="君の名は。">
       </div>
       <div class="fg">
-        <div class="fl">Anime — Terjemahan Indonesia</div>
-        <input class="fi" id="f-anime-id" placeholder="Contoh: Nama Kamu.">
+        <div class="fl">Anime (ID)</div>
+        <input class="fi" id="f-anime-id" placeholder="Nama Kamu.">
       </div>
       <div class="fg">
-        <div class="fl">Anime — Nama Inggris (opsional)</div>
-        <input class="fi" id="f-anime-en" placeholder="Contoh: Your Name.">
+        <div class="fl">Anime (EN)</div>
+        <input class="fi" id="f-anime-en" placeholder="Your Name.">
       </div>
       <div class="fg">
         <div class="fl">Tipe Lagu</div>
         <select class="fi" id="f-type">
-          <option value="">— Bukan OST / tidak tahu —</option>
+          <option value="">— Bukan OST —</option>
           <option value="opening">Opening (OP)</option>
           <option value="ending">Ending (ED)</option>
           <option value="insert">Insert Song</option>
           <option value="ost">OST</option>
         </select>
       </div>
-      <div class="fg"><div class="fl">Genre (opsional)</div><input class="fi" id="f-genre" placeholder="J-Pop, Rock, dll."></div>
-      <div class="fg">
-        <div class="fl">Mood / suasana <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— pisah koma</span></div>
-        <input class="fi" id="f-mood" placeholder="sedih, galau, romantis, semangat">
+      <div class="fg"><div class="fl">Genre</div><input class="fi" id="f-genre" placeholder="J-Pop, Rock"></div>
+      <div class="fg" style="grid-column:1/-1">
+        <div class="fl">Mood</div>
+        <input class="fi" id="f-mood" placeholder="sedih, galau, romantis">
       </div>
+    </div>
+      </div>
+    </details>
+
+    <section class="form-card">
+      <div class="form-card-title">2 · Media & Cover</div>
+      <p class="form-card-hint">Paste link YouTube/Spotify — banyak field terisi otomatis.</p>
+    <div class="song-form-grid" style="margin-bottom:0">
       <div class="fg">
         <div class="fl" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           <span>YouTube Video ID</span>
@@ -617,12 +619,10 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         <input class="fi" id="f-sp" placeholder="https://open.spotify.com/track/...">
       </div>
       <div class="fg" style="grid-column:1/-1">
-        <div class="fl" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
-          <span>Cover / Gambar Album</span>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-            <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil cover dari Spotify">🎵 Ambil dari Spotify</button>
-            <button type="button" id="cover-yt-btn" onclick="fetchYoutubeCover()" style="background:none;border:1px solid rgba(255,0,0,.3);color:#ff4444;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .65rem;cursor:pointer;border-radius:2rem;transition:all .2s;display:none" title="Ambil thumbnail dari YouTube">▶ Ambil dari YouTube</button>
-          </div>
+        <div class="fl">Cover / Gambar Album</div>
+        <div class="cover-actions">
+            <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:none" title="Ambil cover dari Spotify">🎵 Spotify</button>
+            <button type="button" id="cover-yt-btn" onclick="fetchYoutubeCover()" style="background:none;border:1px solid rgba(255,0,0,.3);color:#ff4444;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:none" title="Ambil thumbnail dari YouTube">▶ YouTube</button>
         </div>
         <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap;margin-top:.4rem">
           <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:.5rem">
@@ -642,24 +642,36 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         </div>
       </div>
     </div>
-    <div class="fg" style="margin-bottom:1.4rem">
-      <div class="fl">Deskripsi Indonesia (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— maks 1000 karakter, buat meta description</span></div>
-      <textarea class="fi" id="f-descid" rows="3" maxlength="1000000" placeholder=""></textarea>
-      <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Yang nongol di hasil Google. Kosongkan = pakai deskripsi otomatis.</div>
+    </section>
+
+    <details class="form-advanced">
+      <summary>📄 Deskripsi SEO <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.58rem;color:var(--muted)">— opsional</span></summary>
+      <div class="advanced-body">
+    <div class="fg" style="margin-bottom:1rem">
+      <div class="fl">Deskripsi Indonesia</div>
+      <textarea class="fi" id="f-descid" rows="3" maxlength="1000000" placeholder="Untuk Google — kosongkan = otomatis"></textarea>
     </div>
-    <div class="fg" style="margin-bottom:1.4rem">
-      <div class="fl">Deskripsi Jepang (SEO) <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional, untuk pengunjung JP</span></div>
-      <textarea class="fi" id="f-descjp" rows="3" maxlength="1000000" placeholder=""></textarea>
-      <div style="font-size:.6rem;color:var(--muted);margin-top:.3rem">Kalau diisi, tampil di bawah deskripsi ID di halaman lagu.</div>
+    <div class="fg">
+      <div class="fl">Deskripsi Jepang</div>
+      <textarea class="fi" id="f-descjp" rows="3" maxlength="1000000" placeholder="Opsional, untuk pengunjung JP"></textarea>
     </div>
-    <div class="fg full">
-      <div class="lbhd"><div class="fl">Baris Lirik</div></div>
-      <div style="margin-bottom:.8rem">
-        <button class="badd" style="border-color:rgba(255,204,0,.4);color:#ffcc00;margin-bottom:.6rem" onclick="fetchGeniusLyrics()">🎤 Ambil Lirik dari Genius</button>
-        <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2);margin-bottom:.6rem" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk Lirik (JP / ROM / ID)</button>
-        <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent);margin-bottom:.6rem" onclick="toggleBulk('bulkTransArea')">🈯 Paste Bulk Jawaban Latihan</button>
-        <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red);margin-bottom:.6rem" onclick="undoToBulk()">↩ Undo Baris → Bulk</button>
-        <button class="badd" style="border-color:rgba(201,169,110,.3);color:var(--accent);margin-bottom:.6rem" onclick="undoTransToBulk()">↩ Undo Jawaban Latihan → Bulk</button>
+      </div>
+    </details>
+
+    <section class="form-card lyric-main-card">
+      <div class="form-card-title">3 · Baris Lirik</div>
+      <p class="form-card-hint">Tambah manual di bawah, atau buka alat impor.</p>
+      <details class="lyric-tools">
+        <summary>⚡ Alat impor & bulk lirik</summary>
+        <div class="tools-body">
+        <button class="badd" style="border-color:rgba(255,204,0,.4);color:#ffcc00" onclick="fetchGeniusLyrics()">🎤 Ambil dari Genius</button>
+        <button class="badd" style="border-color:rgba(79,126,196,.4);color:var(--accent2)" onclick="toggleBulk('bulkArea')">⚡ Paste Bulk (JP / ROM / ID)</button>
+        <button class="badd" style="border-color:rgba(201,169,110,.4);color:var(--accent)" onclick="toggleBulk('bulkTransArea')">🈯 Bulk Jawaban Latihan</button>
+        <button class="badd" style="border-color:rgba(201,110,110,.3);color:var(--red)" onclick="undoToBulk()">↩ Undo → Bulk</button>
+        <button class="badd" style="border-color:rgba(201,169,110,.3);color:var(--accent)" onclick="undoTransToBulk()">↩ Undo Latihan → Bulk</button>
+        </div>
+      </details>
+      <div style="margin-top:.5rem;margin-bottom:.8rem">
         <div id="bulkTransArea" style="display:none;flex-direction:column;gap:.5rem;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.25);padding:.9rem;margin-bottom:.6rem">
           <div style="font-size:.62rem;color:var(--muted);letter-spacing:.1em">Tiap paragraf = 1 baris jawaban latihan. Pisah dengan baris kosong. Akan mengisi kolom <strong style="color:var(--accent2)">Jawaban Latihan</strong> (bukan Terjemahan) di baris yang sudah ada secara urut — edit lagu dulu biar JP & ROM ke-load.</div>
           <textarea class="fi" id="bulkTransInput" rows="8" placeholder="Nengok ke langit, bahkan sakit itu perlahan mencair&#10;&#10;Cinta yang udah pergi, ikatan yang udah layu&#10;&#10;Semuanya terbawa angin musim semi"></textarea>
@@ -681,10 +693,12 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
       <div class="lrow-hdr"><div class="fl">Jepang</div><div class="fl">Romaji</div><div class="fl">Terjemahan ID</div><div class="fl">Jawaban Latihan <span style="color:var(--accent2);font-size:.55rem;letter-spacing:.05em;text-transform:none">(opsional, kalau terjemahan ngalir)</span></div><div></div></div>
       <div class="lrows" id="lrows"></div>
       <button class="badd" onclick="addRow()">+ Tambah Baris Manual</button>
-    </div>
-    <div class="form-actions">
+    </section>
+    <div class="sticky-form-bar">
+    <div class="form-actions" style="display:flex;gap:.7rem;margin:0">
       <button class="bsave" id="bsaveBtn" onclick="saveSong()">Simpan Lagu ke Katalog</button>
       <button class="bcancel" id="bcancelBtn" style="display:none" onclick="cancelEdit()">✕ Batal Edit</button>
+    </div>
     </div>
     <div style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
       <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Song Pages</button>
