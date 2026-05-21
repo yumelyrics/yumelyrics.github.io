@@ -200,26 +200,29 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 /* ── STORY GRID ── */
 .story-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:1.5px;
+  grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));
+  gap:1.5rem;
   padding:0 3rem 6rem;
-  border-top:1px solid var(--border);
-  background:var(--border);
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
 }
-.story-grid > *{background:var(--bg)}
+.story-grid > *{min-width:0}
 
 .scard{
   background:var(--bg);
+  border:1px solid var(--border);
   cursor:pointer;
-  transition:background .2s;
+  transition:background .2s,border-color .2s;
   overflow:hidden;
   display:flex;flex-direction:column;
   text-decoration:none;
   color:inherit;
+  box-sizing:border-box;
 }
-.scard:hover{background:var(--bg-card-hover)}
+.scard:hover{background:var(--bg-card-hover);border-color:var(--gold)}
 
-.scard-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;filter:sepia(.1) contrast(1.02);transition:filter .3s}
+.scard-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;filter:sepia(.1) contrast(1.02);transition:filter .3s;flex-shrink:0}
 .scard:hover .scard-img{filter:sepia(.05) contrast(1.05)}
 
 .scard-body{padding:1.5rem;flex:1;display:flex;flex-direction:column}
@@ -461,10 +464,33 @@ footer{
   .hero{padding:3rem 1.5rem 2rem}
   .hero::before{display:none}
   .filter-wrap{padding:0 1.5rem 2rem}
-  .story-grid{padding:0 0 5rem;grid-template-columns:1fr;gap:1px}
+  .story-grid{padding:0 1.5rem 5rem;grid-template-columns:1fr;gap:.75rem}
   #detailView{padding:0 1.5rem 5rem}
   footer{padding:2.5rem 1.5rem;flex-direction:column;gap:2rem}
   .section-divider{padding:0 1.5rem}
+}
+@media(max-width:768px){
+  /* Katalog kompak seperti index.html */
+  .story-grid{padding:0 1rem 4rem;gap:.45rem}
+  .scard{flex-direction:row;align-items:stretch}
+  .scard-img{
+    width:4.1rem;min-width:4.1rem;max-width:4.1rem;
+    aspect-ratio:1/1;min-height:4.1rem;height:auto;align-self:stretch;
+  }
+  .scard-body{padding:.5rem .6rem;min-width:0;justify-content:center}
+  .scard-tags{margin-bottom:.3rem;gap:.25rem}
+  .scard-tags .stag-pill{font-size:.46rem;padding:.1rem .38rem;letter-spacing:.08em}
+  .pin-badge,.verified-badge{font-size:.46rem;padding:.1rem .4rem;margin-bottom:.2rem}
+  .scard-title{
+    font-size:.86rem;line-height:1.25;margin-bottom:.1rem;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .scard-excerpt{
+    font-size:.6rem;line-height:1.35;-webkit-line-clamp:2;margin-bottom:0;
+  }
+  .scard-footer{margin-top:.25rem;padding-top:.35rem}
+  .scard-date{font-size:.52rem}
+  .scard-arrow{display:none}
 }
 @media(max-width:600px){
   nav{padding:.85rem 1rem}
@@ -472,11 +498,16 @@ footer{
   .nlen{display:none}
   .hero{padding:2.5rem 1rem 1.5rem}
   .filter-wrap{padding:0 1rem 1.5rem}
-  .story-grid{padding:0 0 4rem}
   #detailView{padding:0 1rem 4rem}
   footer{padding:2rem 1rem}
   .footer-links{gap:1.5rem}
   .toast{bottom:5rem;right:1rem;left:1rem;text-align:center}
+}
+@media(max-width:480px){
+  .story-grid{gap:.4rem}
+  .scard-img{width:3.6rem;min-width:3.6rem;max-width:3.6rem;min-height:3.6rem}
+  .scard-body{padding:.45rem .55rem}
+  .scard-title{font-size:.82rem}
 }
 @media(max-width:380px){
   #nav-dropdown{right:.85rem}
