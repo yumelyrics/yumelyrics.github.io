@@ -1288,20 +1288,36 @@ window.toggleRec = async (id, isRec) => {
   } catch(e){ toast('Gagal: '+e.message); }
 };
 
-/** Satu lagu di beranda (kartu "Pilihan malam ini") — ganti kapan saja dari admin. */
+const FEATURED_PIN_HOURS = 24;
+
+function isHeroPinActive(s) {
+  if (!s || !s.heroFeatured) return false;
+  if (!s.heroFeaturedUntil) return true;
+  return Date.now() < s.heroFeaturedUntil;
+}
+
+function heroPinHoursLeft(s) {
+  if (!isHeroPinActive(s) || !s.heroFeaturedUntil) return null;
+  return Math.max(1, Math.ceil((s.heroFeaturedUntil - Date.now()) / 3600000));
+}
+
+/** Pin beranda — berlaku FEATURED_PIN_HOURS jam, lalu beranda ganti acak sendiri. */
 window.toggleHeroFeatured = async (id, isOn) => {
   try {
     if (isOn) {
-      await updateDoc(doc(db,'songs',id),{ heroFeatured: false });
-      toast('Pilihan malam ini dicabut dari beranda.');
+      await updateDoc(doc(db,'songs',id),{ heroFeatured: false, heroFeaturedUntil: null });
+      toast('Pin beranda dicabut.');
       return;
     }
+    const until = Date.now() + FEATURED_PIN_HOURS * 60 * 60 * 1000;
     const prev = await getDocs(query(collection(db,'songs'), where('heroFeatured','==',true)));
     const batch = writeBatch(db);
-    prev.docs.forEach(d => { if (d.id !== id) batch.update(d.ref, { heroFeatured: false }); });
-    batch.update(doc(db,'songs',id), { heroFeatured: true });
+    prev.docs.forEach(d => {
+      if (d.id !== id) batch.update(d.ref, { heroFeatured: false, heroFeaturedUntil: null });
+    });
+    batch.update(doc(db,'songs',id), { heroFeatured: true, heroFeaturedUntil: until });
     await batch.commit();
-    toast('🌙 Lagu ini tampil sebagai Pilihan malam ini di beranda.');
+    toast('🌙 Dipin ' + FEATURED_PIN_HOURS + ' jam di beranda — habis itu ganti acak lagi.');
   } catch(e){ toast('Gagal: '+e.message); }
 };
 
@@ -1639,7 +1655,7 @@ function renderCatalogTable(list, page){
       : `<div class="ct-cover-ph"></div>`;
     const badges = [
       s.recommended ? `<span class="ct-badge rec">★ Rekomen</span>` : '',
-      s.heroFeatured ? `<span class="ct-badge hero">🌙 Malam ini</span>` : '',
+      isHeroPinActive(s) ? `<span class="ct-badge hero">🌙 Beranda${heroPinHoursLeft(s) ? ' · ' + heroPinHoursLeft(s) + 'j' : ''}</span>` : '',
       s.popularLabel ? `<span class="ct-badge pop">🔥 ${escHtml(s.popularLabel)}</span>` : ''
     ].filter(Boolean).join(' ');
     return `<tr>
@@ -1653,7 +1669,7 @@ function renderCatalogTable(list, page){
       <td style="white-space:nowrap;font-size:.68rem;color:var(--ash)">👁 ${s.views||0}</td>
       <td>
         <div class="ct-actions">
-          <button class="bhero-s${s.heroFeatured?' on':''}" onclick="toggleHeroFeatured('${s.id}',${!!s.heroFeatured})" title="${s.heroFeatured?'Batal Pilihan Malam Ini':'Jadikan Pilihan Malam Ini (beranda)'}">${s.heroFeatured?'🌙':'☾'}</button>
+          <button class="bhero-s${isHeroPinActive(s)?' on':''}" onclick="toggleHeroFeatured('${s.id}',${!!isHeroPinActive(s)})" title="${isHeroPinActive(s)?'Cabut pin ('+FEATURED_PIN_HOURS+' jam)':'Pin di beranda '+FEATURED_PIN_HOURS+' jam (lalu ganti acak)'}">${isHeroPinActive(s)?'🌙':'☾'}</button>
           <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})" title="${s.recommended?'Batal Rekomen':'Set Rekomen'}">${s.recommended?'★':'☆'}</button>
           <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')" title="${s.popularLabel?'Unset Populer':'Set Populer'}">🔥</button>
           <button class="bedit" onclick="editSong('${s.id}')">Edit</button>
