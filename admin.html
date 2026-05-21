@@ -167,7 +167,8 @@ textarea.fi:focus{border-color:var(--gold)}
   .ct-romaji{display:none}
   .ct-actions{gap:.2rem}
   .bedit,.bdels{font-size:.55rem;padding:.25rem .45rem}
-  .brec-s,.bpop-s{display:none} /* aksi sekunder sembunyi di mobile, bisa expand nanti */
+  .brec-s,.bpop-s{display:none} /* aksi sekunder sembunyi di mobile */
+  .bhero-s{display:inline-block} /* pilihan beranda tetap bisa diubah dari HP */
 }
 .exitem{display:flex;align-items:center;justify-content:space-between;background:rgba(10,8,18,.03);border:1px solid rgba(10,8,18,.1);padding:.85rem 1rem;transition:border-color .2s}
 .exitem:hover{border-color:rgba(10,8,18,.2)}
@@ -451,6 +452,10 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .brec-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .brec-s:hover{border-color:rgba(201,169,110,.5);color:var(--accent)}
 .brec-s.on{border-color:rgba(201,169,110,.6);color:var(--accent);background:rgba(201,169,110,.08)}
+.bhero-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.08em;padding:.3rem .55rem;cursor:pointer;transition:all .2s}
+.bhero-s:hover{border-color:rgba(196,99,122,.45);color:var(--rose)}
+.bhero-s.on{border-color:rgba(196,99,122,.55);color:var(--rose);background:rgba(196,99,122,.1)}
+.ct-badge.hero{background:rgba(196,99,122,.12);color:var(--rose);border:1px solid rgba(196,99,122,.25)}
 .bpop-s{background:none;border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;cursor:pointer;transition:all .2s}
 .bpop-s:hover{border-color:rgba(251,146,60,.5);color:#fb923c}
 .bpop-s.on{border-color:rgba(251,146,60,.6);color:#fb923c;background:rgba(251,146,60,.08)}
@@ -949,7 +954,7 @@ Paragraf dipisah dengan enter 2x.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, where }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, where, writeBatch }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1280,6 +1285,23 @@ window.toggleRec = async (id, isRec) => {
   try {
     await updateDoc(doc(db,'songs',id),{ recommended: !isRec });
     toast(isRec ? 'Rekomendasi dicabut.' : '★ Lagu dijadiin rekomendasi!');
+  } catch(e){ toast('Gagal: '+e.message); }
+};
+
+/** Satu lagu di beranda (kartu "Pilihan malam ini") — ganti kapan saja dari admin. */
+window.toggleHeroFeatured = async (id, isOn) => {
+  try {
+    if (isOn) {
+      await updateDoc(doc(db,'songs',id),{ heroFeatured: false });
+      toast('Pilihan malam ini dicabut dari beranda.');
+      return;
+    }
+    const prev = await getDocs(query(collection(db,'songs'), where('heroFeatured','==',true)));
+    const batch = writeBatch(db);
+    prev.docs.forEach(d => { if (d.id !== id) batch.update(d.ref, { heroFeatured: false }); });
+    batch.update(doc(db,'songs',id), { heroFeatured: true });
+    await batch.commit();
+    toast('🌙 Lagu ini tampil sebagai Pilihan malam ini di beranda.');
   } catch(e){ toast('Gagal: '+e.message); }
 };
 
@@ -1617,6 +1639,7 @@ function renderCatalogTable(list, page){
       : `<div class="ct-cover-ph"></div>`;
     const badges = [
       s.recommended ? `<span class="ct-badge rec">★ Rekomen</span>` : '',
+      s.heroFeatured ? `<span class="ct-badge hero">🌙 Malam ini</span>` : '',
       s.popularLabel ? `<span class="ct-badge pop">🔥 ${escHtml(s.popularLabel)}</span>` : ''
     ].filter(Boolean).join(' ');
     return `<tr>
@@ -1630,6 +1653,7 @@ function renderCatalogTable(list, page){
       <td style="white-space:nowrap;font-size:.68rem;color:var(--ash)">👁 ${s.views||0}</td>
       <td>
         <div class="ct-actions">
+          <button class="bhero-s${s.heroFeatured?' on':''}" onclick="toggleHeroFeatured('${s.id}',${!!s.heroFeatured})" title="${s.heroFeatured?'Batal Pilihan Malam Ini':'Jadikan Pilihan Malam Ini (beranda)'}">${s.heroFeatured?'🌙':'☾'}</button>
           <button class="brec-s${s.recommended?' on':''}" onclick="toggleRec('${s.id}',${!!s.recommended})" title="${s.recommended?'Batal Rekomen':'Set Rekomen'}">${s.recommended?'★':'☆'}</button>
           <button class="bpop-s${s.popularLabel?' on':''}" onclick="togglePopLabel('${s.id}','${s.popularLabel||''}')" title="${s.popularLabel?'Unset Populer':'Set Populer'}">🔥</button>
           <button class="bedit" onclick="editSong('${s.id}')">Edit</button>

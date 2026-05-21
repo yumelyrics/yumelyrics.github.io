@@ -1504,6 +1504,27 @@ function buildCard(s, i) {
   return div;
 }
 
+/** Label kartu pilihan — mengikuti jam WIB (ubah batas di bawah). */
+const FEATURED_KICKER_TZ = 'Asia/Jakarta';
+const FEATURED_DAY_START = 6;   // 06:00 → "Pilihan hari ini"
+const FEATURED_NIGHT_START = 18; // 18:00 → "Pilihan malam ini"
+
+function hourInFeaturedTz() {
+  const h = new Date().toLocaleString('en-US', { timeZone: FEATURED_KICKER_TZ, hour: 'numeric', hour12: false });
+  return parseInt(h, 10) || 0;
+}
+
+function featuredKickerLabel() {
+  const h = hourInFeaturedTz();
+  if (h >= FEATURED_DAY_START && h < FEATURED_NIGHT_START) return 'Pilihan hari ini';
+  return 'Pilihan malam ini';
+}
+
+function heroFeaturedKickerFor(pick) {
+  if (!pick.heroFeatured && !pick.recommended) return 'Terbaru di katalog';
+  return featuredKickerLabel();
+}
+
 function renderHeroFeatured() {
   const el = document.getElementById('heroFeatured');
   if (!el) return;
@@ -1511,7 +1532,7 @@ function renderHeroFeatured() {
     el.style.display = 'none';
     return;
   }
-  const pick = songs.find(s => s.recommended) || songs[0];
+  const pick = songs.find(s => s.heroFeatured) || songs.find(s => s.recommended) || songs[0];
   const slug = toSlug(pick.titleRo, pick.id);
   const href = 'lagu/' + escCard(slug) + '.html';
   const img = hdImgUrl(pick.img || '');
@@ -1519,7 +1540,7 @@ function renderHeroFeatured() {
   el.href = href;
   el.style.display = 'flex';
   el.innerHTML =
-    '<div class="hero-featured-kicker">' + (pick.recommended ? 'Pilihan malam ini' : 'Terbaru di katalog') + '</div>' +
+    '<div class="hero-featured-kicker">' + escCard(heroFeaturedKickerFor(pick)) + '</div>' +
     (img ? '<img class="hero-featured-cover" src="' + escCard(img) + '" alt="" width="280" height="280" loading="eager" decoding="async" onerror="this.style.display=\'none\'">' : '') +
     '<div class="hero-featured-jp">' + escCard(pick.titleJp || '') + '</div>' +
     (pick.titleRo ? '<div class="hero-featured-ro">' + escCard(pick.titleRo) + '</div>' : '') +
@@ -2316,7 +2337,7 @@ function loadSongs() {
         const slim = songs.map(s => ({
           id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
           artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
-          recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
+          recommended:s.recommended, heroFeatured:s.heroFeatured, popularLabel:s.popularLabel, views:s.views
         }));
         localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
       } catch(e) {}
@@ -2335,7 +2356,7 @@ function loadSongs() {
             const slim = songs.map(s => ({
               id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
               artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
-              recommended:s.recommended, popularLabel:s.popularLabel, views:s.views
+              recommended:s.recommended, heroFeatured:s.heroFeatured, popularLabel:s.popularLabel, views:s.views
             }));
             localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
           } catch(e) {}
@@ -2407,6 +2428,19 @@ showContinueRead();
 
 showCachedSongs();
 loadSongs();
+
+(function initFeaturedKickerClock(){
+  let lastLabel = featuredKickerLabel();
+  setInterval(function(){
+    const next = featuredKickerLabel();
+    if (next === lastLabel) return;
+    lastLabel = next;
+    if (songs.length) renderHeroFeatured();
+  }, 60000);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && songs.length) renderHeroFeatured();
+  });
+})();
 
 sv('cat');
 </script>
