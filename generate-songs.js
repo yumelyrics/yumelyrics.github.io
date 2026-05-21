@@ -2830,6 +2830,7 @@ function updateCopyGate() {
 let _authNullTimer = null;
 let _authUiGen = 0;
 let _authBusy = false;
+let _lastAuthUserAt = 0;
 
 async function applyAuthLoggedOut(){
   _currentUser = null;
@@ -2860,31 +2861,71 @@ async function applyAuthLoggedOut(){
   if(cmFormWrap) cmFormWrap.style.display = 'none';
 }
 
-async function applyAuthLoggedIn(user, gen){
+function applyAuthLoggedInUISync(user){
   _currentUser = user;
-  const gate   = document.getElementById('login-gate');
-  const navSlot= document.getElementById('nav-user-slot');
+  _isAdmin = ADMIN_EMAILS.includes(user.email);
+  const gate = document.getElementById('login-gate');
+  const cmLoginGate = document.getElementById('cm-login-gate');
+  const cmFormWrap = document.getElementById('cm-form-wrap');
+  const bubble = document.getElementById('nav-avatar-bubble');
+  if(gate) gate.style.display = 'none';
+  document.body.classList.remove('gate-open');
+  if(cmLoginGate){
+    cmLoginGate.classList.add('cm-login-gate-hidden');
+    cmLoginGate.style.display = 'none';
+  }
+  if(cmFormWrap) cmFormWrap.style.display = 'flex';
+  if(bubble) bubble.style.display = 'block';
+  const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
+  const nudName = document.getElementById('nud-name');
+  const nudEmail = document.getElementById('nud-email');
+  if(nudName) nudName.textContent = user.displayName || 'Kamu';
+  if(nudEmail) nudEmail.textContent = user.email || '';
+  _customPhotoURL = user.photoURL || null;
+  renderAvatarEl(
+    document.getElementById('nav-avatar-wrap'),
+    _customPhotoURL,
+    displayName,
+    'nav-avatar',
+    'nav-avatar-placeholder'
+  );
+  const cmUserDisplay = document.getElementById('cm-user-display');
+  if(cmUserDisplay) cmUserDisplay.textContent = displayName;
+  if(_isAdmin){
+    const cmForm = document.getElementById('cm-form-wrap');
+    if(cmForm) cmForm.classList.add('is-admin-form');
+    const cmAvatarWrap = document.getElementById('cm-user-avatar-wrap');
+    if(cmAvatarWrap){
+      const cmUserInfo = cmAvatarWrap.parentElement;
+      if(cmUserInfo) cmUserInfo.innerHTML = '<div class="admin-form-header"><span class="admin-crown">👑</span><span class="admin-form-badge">Admin</span><span class="admin-form-name">YumeSubs</span><span class="admin-form-sub">Berkomentar sebagai Admin</span></div>';
+    }
+  } else {
+    updateCmUserAvatar(displayName);
+  }
+}
+
+async function applyAuthLoggedIn(user, gen){
+  applyAuthLoggedInUISync(user);
+
   const cmLoginGate = document.getElementById('cm-login-gate');
   const cmFormWrap  = document.getElementById('cm-form-wrap');
 
   if (user) {
-    // Sembunyikan floating gate
-    gate.style.display = 'none';
-    document.body.classList.remove('gate-open');
-
     // Cek status ban & sudah komentar
     [_isBanned, _hasCommented] = await Promise.all([
       checkBanStatus(user.uid),
       checkHasCommented(user.uid)
     ]);
-    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
 
     // Tampilkan form komentar (tapi notice banned jika kena ban)
-    cmLoginGate.classList.add('cm-login-gate-hidden');
-    cmLoginGate.style.display = 'none';
-    cmFormWrap.style.display  = 'flex';
+    if(cmLoginGate){
+      cmLoginGate.classList.add('cm-login-gate-hidden');
+      cmLoginGate.style.display = 'none';
+    }
+    if(cmFormWrap) cmFormWrap.style.display = 'flex';
     const bannedNotice = document.getElementById('cm-banned-notice');
-    if (_isBanned) {
+    if (_isBanned && bannedNotice) {
       bannedNotice.style.display = 'block';
       const _asEndStr = (_banUntil && _banUntil !== null) ? ' — ' + formatEndDate(_banUntil) : '';
       const _asCountdown = (_banUntil && _banUntil !== null) ? formatBanCountdown(_banUntil - Date.now()) : null;
@@ -2892,7 +2933,7 @@ async function applyAuthLoggedIn(user, gen){
         ? ' <em style="color:var(--muted)">(permanen)</em>'
         : (_asCountdown ? \` <em style="color:var(--muted)">(berakhir dalam <span class="ban-countdown-notice" data-banned-until="\${_banUntil}">\${_asCountdown}</span>\${_asEndStr})</em>\` : '');
       bannedNotice.innerHTML = \`🚫 Akunmu telah <strong>dibanned</strong> dari komentar oleh admin.\${_banReason ? ' Alasan: <em style="color:inherit">' + _banReason.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</em>' : ''}\${_asDurHtml} Kamu tidak bisa mengirim komentar.\`;
-    } else {
+    } else if(bannedNotice) {
       bannedNotice.style.display = 'none';
     }
     const cmBtn = document.getElementById('cm-btn');
@@ -2902,7 +2943,7 @@ async function applyAuthLoggedIn(user, gen){
     // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
     _isAdmin = ADMIN_EMAILS.includes(user.email);
     await refreshAdminTokenVerify(user);
-    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
     if(_isAdmin && !_adminTokenVerified) _isAdmin = false;
     // JANGAN ekspose _isAdmin ke window — gampang di-override dari DevTools
     // Kirim ke protection layer via one-time bridge yang langsung self-destruct
@@ -2945,43 +2986,24 @@ async function applyAuthLoggedIn(user, gen){
         }, 2500);
       }
     } catch(e) {}
-    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
 
-    // Isi nama user di form komentar
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
-    document.getElementById('cm-user-display').textContent = displayName;
-    const cmAvatarWrap = document.getElementById('cm-user-avatar-wrap');
-
-    if (_isAdmin) {
-      // Admin: header khusus + form styling
-      const cmForm = document.getElementById('cm-form-wrap');
-      if (cmForm) cmForm.classList.add('is-admin-form');
-      cmAvatarWrap.innerHTML = \`<span style="font-size:1.1rem">👑</span>\`;
-      const cmUserInfo = cmAvatarWrap.parentElement;
-      cmUserInfo.innerHTML = \`<div class="admin-form-header"><span class="admin-crown">👑</span><span class="admin-form-badge">Admin</span><span class="admin-form-name">YumeSubs</span><span class="admin-form-sub">Berkomentar sebagai Admin</span></div>\`;
-    } else {
-      updateCmUserAvatar(displayName);
-    }
-
-    // Tampilkan floating avatar bubble
     const bubble = document.getElementById('nav-avatar-bubble');
-    if (bubble) {
-      bubble.style.display = 'block';
-      // Tandai bubble dengan class is-banned kalau kena ban
-      bubble.classList.toggle('is-banned', _isBanned);
+    if(bubble) bubble.classList.toggle('is-banned', _isBanned);
+    if(_customPhotoURL){
+      renderAvatarEl(
+        document.getElementById('nav-avatar-wrap'),
+        _customPhotoURL,
+        displayName,
+        'nav-avatar',
+        'nav-avatar-placeholder'
+      );
+      if(!_isAdmin) updateCmUserAvatar(displayName);
     }
-    document.getElementById('nud-name').textContent = user.displayName || 'Kamu';
-    document.getElementById('nud-email').textContent = user.email || '';
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     if(!_isAdmin) loadRateLimit(user.uid);
     await updateAdminSongUI();
-    renderAvatarEl(
-      document.getElementById('nav-avatar-wrap'),
-      _customPhotoURL || user.photoURL,
-      displayName,
-      'nav-avatar',
-      'nav-avatar-placeholder'
-    );
   }
 }
 
@@ -3027,28 +3049,30 @@ function scheduleAuthLoggedOutCheck(){
   if(_authNullTimer) clearTimeout(_authNullTimer);
   _authNullTimer = setTimeout(() => {
     _authNullTimer = null;
-    if(auth.currentUser || _authBusy) {
-      if(_authBusy && !auth.currentUser) scheduleAuthLoggedOutCheck();
+    if(auth.currentUser) return;
+    if(Date.now() - _lastAuthUserAt < 3000) return;
+    if(_authBusy){
+      scheduleAuthLoggedOutCheck();
       return;
     }
     setTimeout(() => {
-      if(auth.currentUser || _authBusy) return;
-      _authUiGen++;
+      if(auth.currentUser) return;
+      if(Date.now() - _lastAuthUserAt < 3000) return;
       applyAuthLoggedOut().then(() => {
         afterAuthLoggedOutCleanup();
       }).catch(e => console.warn('[auth logout]', e));
-    }, 400);
-  }, 900);
+    }, 500);
+  }, 1200);
 }
 
 onAuthStateChanged(auth, (user) => {
   if(user){
+    _lastAuthUserAt = Date.now();
     if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
-    const gen = ++_authUiGen;
     const uid = user.uid;
     _authBusy = true;
-    applyAuthLoggedIn(user, gen).then(() => {
-      if(gen !== _authUiGen || auth.currentUser?.uid !== uid) return;
+    applyAuthLoggedIn(user, 0).then(() => {
+      if(!auth.currentUser || auth.currentUser.uid !== uid) return;
       loadNotifs(uid);
       rcm();
       if(!_isAdmin) startCopyGateListener(uid);

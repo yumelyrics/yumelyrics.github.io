@@ -1805,6 +1805,7 @@ window.deleteAllNotifs = async () => {
 let _authNullTimer = null;
 let _authUiGen = 0;
 let _authBusy = false;
+let _lastAuthUserAt = 0;
 
 function applyAuthLoggedOutUI(){
   _currentUser = null;
@@ -1837,20 +1838,20 @@ async function applyAuthLoggedInUI(user, gen){
   const avatarWrap = document.getElementById('float-avatar-wrap');
   const nudName = document.getElementById('nud-name');
   const nudEmail = document.getElementById('nud-email');
+  const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'User');
   if(loginBtn) loginBtn.style.display = 'none';
   if(avatarWrap) avatarWrap.classList.add('is-on');
-
-  const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'User');
   if(nudName) nudName.textContent = displayName;
   if(nudEmail) nudEmail.textContent = user.email || '';
-
   _customPhoto = user.photoURL || null;
   try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
   _updateAvatar(_customPhoto, displayName);
+  const editBtn = document.getElementById('nud-edit-profile-btn');
+  if(editBtn && !_isAdmin) editBtn.style.display = '';
 
   try {
     const up = await getDoc(doc(db, 'user_profiles', user.uid));
-    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
     if(up.exists() && up.data().photoURL){
       _customPhoto = up.data().photoURL;
       try { window.__yumeCustomPhoto = _customPhoto; } catch(e){}
@@ -1858,12 +1859,9 @@ async function applyAuthLoggedInUI(user, gen){
     }
   } catch(e){}
 
-  const editBtn = document.getElementById('nud-edit-profile-btn');
-  if(editBtn && !_isAdmin) editBtn.style.display = '';
-
   try {
     _isBanned = await checkBanStatus(user.uid);
-    if(gen !== _authUiGen || auth.currentUser?.uid !== user.uid) return;
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
     const bannedNotice = document.getElementById('nud-banned-notice');
     const floatWrap = document.getElementById('float-avatar-wrap');
     if(_isBanned){
@@ -1885,24 +1883,26 @@ function scheduleAuthLoggedOutCheck(){
   if(_authNullTimer) clearTimeout(_authNullTimer);
   _authNullTimer = setTimeout(() => {
     _authNullTimer = null;
-    if(auth.currentUser || _authBusy) {
-      if(_authBusy && !auth.currentUser) scheduleAuthLoggedOutCheck();
+    if(auth.currentUser) return;
+    if(Date.now() - _lastAuthUserAt < 3000) return;
+    if(_authBusy){
+      scheduleAuthLoggedOutCheck();
       return;
     }
     setTimeout(() => {
-      if(auth.currentUser || _authBusy) return;
-      _authUiGen++;
+      if(auth.currentUser) return;
+      if(Date.now() - _lastAuthUserAt < 3000) return;
       applyAuthLoggedOutUI();
-    }, 400);
-  }, 900);
+    }, 500);
+  }, 1200);
 }
 
 onAuthStateChanged(auth, user => {
   if(user){
+    _lastAuthUserAt = Date.now();
     if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
-    const gen = ++_authUiGen;
     _authBusy = true;
-    applyAuthLoggedInUI(user, gen).catch(e => console.warn('[auth]', e)).finally(() => { _authBusy = false; });
+    applyAuthLoggedInUI(user, 0).catch(e => console.warn('[auth]', e)).finally(() => { _authBusy = false; });
     return;
   }
   scheduleAuthLoggedOutCheck();
