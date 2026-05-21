@@ -9,11 +9,33 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import { buildJlptPhrasesInject, buildJlptSourceInject } from './jlpt-phrase-builder.js';
+
+function loadGrammarBrowserJs() {
+  let grammar = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
+  const jlptSrc = buildJlptSourceInject();
+  if (jlptSrc !== "''") {
+    grammar = grammar.replace("/*JLPT_BUNPOU_SOURCE*/''", jlptSrc);
+    const rows = (jlptSrc.match(/\\\\n/g) || jlptSrc.match(/\\n/g) || []).length;
+    console.log('✓ JLPT bunpou source injected (~' + Math.max(0, rows) + ' baris teks)');
+  } else {
+    const jlptInject = buildJlptPhrasesInject();
+    if (jlptInject !== '[]') {
+      grammar = grammar.replace('/*JLPT_PHRASES_INJECT*/[]', jlptInject);
+      console.log('✓ JLPT bunpou array:', (jlptInject.match(/\n/g) || []).length + 1, 'baris');
+    } else {
+      console.warn('⚠ JLPT no BUNPOU.txt tidak ditemukan — PHRASES_JLPT kosong.');
+    }
+  }
+  return grammar;
+}
+
 let GRAMMAR_BROWSER_JS = '';
 try {
-  GRAMMAR_BROWSER_JS = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
+  GRAMMAR_BROWSER_JS = loadGrammarBrowserJs();
 } catch (e) {
-  console.warn('⚠ ym-grammar-browser.js tidak ditemukan — panel tata bahasa dilewati.');
+  console.warn('⚠ ym-grammar-browser.js tidak ditemukan — panel tata bahasa dilewati.', e.message);
 }
 
 const firebaseConfig = {
