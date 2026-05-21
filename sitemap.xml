@@ -297,4 +297,18 @@
       <image:caption>Lirik Marutsuke - Given | YumeSubs</image:caption>
     </image:image>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/uragawa-no-sonzai.html</loc><lastmod>2026-05-21</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024fbb59991e745559ccd8ab7b</image:loc>
+      <image:title>Uragawa no Sonzai - Given</image:title>
+      <image:caption>Lirik Uragawa no Sonzai - Given | YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/yoru-ga-akeru.html</loc><lastmod>2026-05-21</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
+      <image:title>Yoru ga Akeru - Given</image:title>
+      <image:caption>Lirik Yoru ga Akeru - Given | YumeSubs</image:caption>
+    </image:image>
+  </url>
 </urlset>
