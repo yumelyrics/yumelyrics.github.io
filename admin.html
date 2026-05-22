@@ -1003,8 +1003,11 @@ const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bf
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+// false = tanpa Cloud Functions (gratis). true = setelah deploy verifyAdminGate + Blaze plan
+const GATE_USE_SERVER = false;
 const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
 const GATE_CLIENT_ID_KEY = 'yume_gate_client_id';
+// Hash untuk: YumeSubs#G8te2026 — ganti hash jika ganti kata kunci (lihat SECURITY-SETUP.md)
 const GATE_LOCK_KEY = 'yume_gate_lock_until';
 const LOGIN_LOCK_KEY = 'yume_login_lock_until';
 const GATE_ATTEMPTS_KEY = 'yume_gate_attempts';
@@ -1158,29 +1161,46 @@ window.unlockAdminGate = async function(){
   if(btn) btn.disabled = true;
   if(err) err.textContent = '';
   let gateOk = false;
-  try {
-    const data = await verifyGateOnServer(val);
-    if (data.locked) {
-      _gateLockUntil = data.lockUntil || Date.now() + (data.retrySec || 1800) * 1000;
-      setStoredLock(GATE_LOCK_KEY, _gateLockUntil);
-      if (err) err.textContent = data.retrySec
-        ? 'Terlalu banyak percobaan. Tunggu ' + data.retrySec + ' detik.'
-        : 'Terlalu banyak percobaan. Terkunci 30 menit.';
-      if (inp) { inp.value = ''; inp.focus(); }
-      if (btn) btn.disabled = false;
-      return;
+  if (GATE_USE_SERVER) {
+    try {
+      const data = await verifyGateOnServer(val);
+      if (data.locked) {
+        _gateLockUntil = data.lockUntil || Date.now() + (data.retrySec || 1800) * 1000;
+        setStoredLock(GATE_LOCK_KEY, _gateLockUntil);
+        if (err) err.textContent = data.retrySec
+          ? 'Terlalu banyak percobaan. Tunggu ' + data.retrySec + ' detik.'
+          : 'Terlalu banyak percobaan. Terkunci 30 menit.';
+        if (inp) { inp.value = ''; inp.focus(); }
+        if (btn) btn.disabled = false;
+        return;
+      }
+      if (data.ok) gateOk = true;
+      else if (err) {
+        err.textContent = data.attemptsLeft != null
+          ? 'Kata kunci salah. Sisa percobaan: ' + data.attemptsLeft
+          : 'Kata kunci salah.';
+      }
+    } catch (e) {
+      if (await isGateKeyOk(val)) gateOk = true;
+      else if (err) err.textContent = 'Kata kunci salah.';
     }
-    if (data.ok) gateOk = true;
-    else if (err) {
-      err.textContent = data.attemptsLeft != null
-        ? 'Kata kunci salah. Sisa percobaan: ' + data.attemptsLeft
-        : 'Kata kunci salah.';
-    }
-  } catch (e) {
+  } else {
     if (await isGateKeyOk(val)) {
       gateOk = true;
-      if (err) err.textContent = 'Verifikasi server offline — mode cadangan aktif.';
-    } else if (err) err.textContent = 'Kata kunci salah (server offline).';
+    } else {
+      _gateAttempts++;
+      setStoredAttempts(GATE_ATTEMPTS_KEY, _gateAttempts);
+      if (_gateAttempts >= GATE_MAX_ATTEMPTS) {
+        _gateLockUntil = Date.now() + GATE_LOCKOUT_MS;
+        setStoredLock(GATE_LOCK_KEY, _gateLockUntil);
+        _gateAttempts = 0;
+        setStoredAttempts(GATE_ATTEMPTS_KEY, 0);
+        if (err) err.textContent = 'Terlalu banyak percobaan. Terkunci 30 menit.';
+      } else {
+        const left = GATE_MAX_ATTEMPTS - _gateAttempts;
+        if (err) err.textContent = 'Kata kunci salah. Sisa percobaan: ' + left;
+      }
+    }
   }
   if (!gateOk) {
     if (inp) { inp.value = ''; inp.focus(); }
