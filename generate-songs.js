@@ -2762,6 +2762,21 @@ const _app = initializeApp({
 const db       = getFirestore(_app);
 const auth     = getAuth(_app);
 const provider = new GoogleAuthProvider();
+const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+async function uploadPhotoViaWorker(file) {
+  if (!_currentUser) throw new Error('Login dulu');
+  const fd = new FormData();
+  fd.append('image', file);
+  const token = await _currentUser.getIdToken();
+  const res = await fetch(UPLOAD_WORKER + '/upload-img', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token },
+    body: fd
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error('Upload gagal');
+  return imgbbDirectUrl(json);
+}
 
 const SONG_ID = ${JSON.stringify(songId)};
 const SONG_SEED = ${JSON.stringify(songSeedObj)};
@@ -3937,18 +3952,11 @@ window.saveEditProfile = async () => {
   if (btn) btn.disabled = true;
   try {
     let newPhoto = document.getElementById('ep-photourl').value.trim();
-    // Upload ke ImgBB kalau ada file yang dipilih
     if (_epImgFile) {
       const statusEl = document.getElementById('ep-img-status');
       if (statusEl) statusEl.textContent = 'Uploading...';
-      const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
-      const fd = new FormData();
-      fd.append('image', _epImgFile);
-      const res = await fetch(\`https://api.imgbb.com/1/upload?key=\${IMGBB_KEY}\`, { method: 'POST', body: fd });
-      const json = await res.json();
-      if (!json.success) throw new Error('Upload foto gagal');
-      newPhoto = imgbbDirectUrl(json);
-      if (!newPhoto) throw new Error('URL foto tidak valid dari ImgBB');
+      newPhoto = await uploadPhotoViaWorker(_epImgFile);
+      if (!newPhoto) throw new Error('URL foto tidak valid');
       if (statusEl) statusEl.textContent = '✅ Upload berhasil';
     }
     if (newPhoto && !/^https?:\\/\\//i.test(newPhoto)) { toast('URL avatar harus link gambar (https://...)'); if(btn) btn.disabled=false; return; }
@@ -4763,18 +4771,9 @@ function fileToDataUrl(file, cb){
   reader.readAsDataURL(file);
 }
 
-// Upload foto ke ImgBB, return URL publik
+// Upload foto via Cloudflare Worker (kunci ImgBB di server)
 async function uploadCommentPhoto(file, uid){
-  const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch(\`https://api.imgbb.com/1/upload?key=\${IMGBB_KEY}\`, {
-    method: 'POST',
-    body: formData
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error('ImgBB upload failed');
-  return imgbbDirectUrl(json);
+  return uploadPhotoViaWorker(file);
 }
 
 window.handleCmPhoto = input => {

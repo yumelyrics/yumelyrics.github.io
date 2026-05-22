@@ -1140,6 +1140,24 @@ const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
+const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+window.UPLOAD_WORKER = UPLOAD_WORKER;
+
+async function uploadPhotoViaWorker(file, authUser) {
+  const user = authUser || _currentUser || auth.currentUser;
+  if (!user) throw new Error('Login dulu');
+  const fd = new FormData();
+  fd.append('image', file);
+  const token = await user.getIdToken();
+  const res = await fetch(UPLOAD_WORKER + '/upload-img', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token },
+    body: fd
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Upload gagal');
+  return imgbbDirectUrl(json);
+}
 
 // ── OFFLINE PERSISTENCE — cache Firestore di IndexedDB ──
 // Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
@@ -1196,7 +1214,6 @@ let _unsubNotif   = null;
 let _isBanned     = false;
 let _banReason    = '';
 let _banUntil     = undefined;
-const IMGBB_KEY   = 'ccd1f5ec9faeb81ce9e207e83f63e285';
 
 // ── CEK STATUS BAN ──
 async function checkBanStatus(uid) {
@@ -1323,16 +1340,10 @@ window.saveEditProfile = async () => {
   if (btn) btn.disabled = true;
   try {
     let newPhoto = document.getElementById('ep-photourl').value.trim();
-    // Upload ke ImgBB kalau ada file
     if (_epImgFile) {
       document.getElementById('ep-img-status').textContent = 'Uploading...';
-      const fd = new FormData();
-      fd.append('image', _epImgFile);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
-      const json = await res.json();
-      if (!json.success) throw new Error('Upload gagal');
-      newPhoto = imgbbDirectUrl(json);
-      if (!newPhoto) throw new Error('URL foto tidak valid dari ImgBB');
+      newPhoto = await uploadPhotoViaWorker(_epImgFile);
+      if (!newPhoto) throw new Error('URL foto tidak valid');
       document.getElementById('ep-img-status').textContent = '✅ Upload berhasil';
     }
     if (newPhoto && !isDirectImageUrl(newPhoto)) { toast('URL harus link gambar langsung (mis. https://i.ibb.co/...)'); if(btn) btn.disabled=false; return; }
@@ -2840,8 +2851,7 @@ import { initializeApp, getApps }
 const _chatApp = getApps()[0];
 const _chatDb  = getFirestore(_chatApp);
 const _chatAuth = getAuth(_chatApp);
-
-const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+const UPLOAD_WORKER_CHAT = window.UPLOAD_WORKER || 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
 const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 const MSG_LIMIT = 80;
 
@@ -3442,12 +3452,20 @@ window.sendChatMsg = async () => {
   let imgUrl = null;
   if (_chatImgFile) {
     try {
+      const u = getChatAuthUser();
+      if (!u) throw new Error('Login dulu');
       const fd = new FormData();
       fd.append('image', _chatImgFile);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+      const token = await u.getIdToken();
+      const res = await fetch(UPLOAD_WORKER_CHAT + '/upload-img', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: fd
+      });
       const json = await res.json();
+      if (!json.success) throw new Error('Upload gagal');
       imgUrl = imgbbDirectUrl(json) || null;
-    } catch(e) {}
+    } catch(e) { toast('Gagal upload gambar chat.'); btn.disabled = false; return; }
   }
 
   try {
