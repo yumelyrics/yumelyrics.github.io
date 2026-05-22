@@ -772,7 +772,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, where, setDoc, getDoc }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, getDoc, where, setDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -793,7 +793,7 @@ let subFilter = 'all';
 let songMap = {};
 let curCmTab = 'songs';
 let unsubSubs = null;
-const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
@@ -1033,7 +1033,11 @@ async function isInboxAdmin(user){
   if(!user) return false;
   try {
     const token = await user.getIdTokenResult(true);
-    return token.claims.admin === true;
+    if (token.claims.admin === true) return true;
+  } catch(e) {}
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists();
   } catch(e) { return false; }
 }
 async function rejectNonAdminInbox(user){
@@ -1042,8 +1046,8 @@ async function rejectNonAdminInbox(user){
   await signOut(auth);
   document.getElementById('loginOverlay').classList.remove('hide');
   document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('l-err').textContent = 'Email ini bukan akun admin.';
-  resetAdminGate();
+  document.getElementById('l-err').textContent = 'Akun belum admin. Set claim admin:true atau dokumen admins/{uid}, lalu login ulang.';
+  showAdminLoginStep('credentials');
   if(unsubSubs){ unsubSubs(); unsubSubs = null; }
   return true;
 }
