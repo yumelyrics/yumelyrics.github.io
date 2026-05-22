@@ -50,62 +50,7 @@
     .sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem; }
     .sub strong { color: var(--accent); font-weight: 600; }
 
-    /* ── Settings toggle ── */
-    .settings-toggle {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: var(--muted);
-      background: none; border: none; cursor: pointer;
-      padding: 0.35rem 0; margin-top: 1rem;
-      transition: color 0.15s;
-    }
-    .settings-toggle:hover { color: var(--text); }
-    .settings-toggle .arrow { transition: transform 0.2s; font-style: normal; }
-    .settings-toggle.open .arrow { transform: rotate(90deg); }
 
-    /* ── Settings panel ── */
-    .settings-panel {
-      overflow: hidden; max-height: 0;
-      transition: max-height 0.3s ease, opacity 0.2s;
-      opacity: 0;
-    }
-    .settings-panel.open { max-height: 600px; opacity: 1; }
-    .settings-inner {
-      margin-top: 0.75rem; padding: 1.1rem 1.15rem;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-    .settings-inner p {
-      font-size: 0.78rem; color: var(--muted); margin-bottom: 0.9rem;
-      line-height: 1.55;
-    }
-    .settings-inner p a { color: var(--accent); text-decoration: none; }
-    .settings-inner p a:hover { text-decoration: underline; }
-    .settings-inner p strong { color: var(--text); }
-    .field-row { display: flex; flex-direction: column; gap: 0.65rem; }
-    .field { display: flex; flex-direction: column; gap: 0.3rem; }
-    .field label {
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em;
-      text-transform: uppercase; color: var(--muted);
-    }
-    .field input {
-      width: 100%; padding: 0.65rem 0.9rem;
-      background: var(--card2); border: 1px solid var(--border);
-      color: var(--text); font-family: 'Syne', monospace; font-size: 0.82rem;
-      border-radius: 6px; transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .field input:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
-    }
-    .field input::placeholder { color: var(--muted); opacity: 0.6; }
-    .settings-actions { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
-    .api-status { font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
-    .api-status.ok { color: var(--accent); }
-    .api-status.err { color: var(--err); }
-
-    /* ── Divider ── */
-    .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
     /* ── Input area ── */
     label.main-label {
@@ -143,6 +88,26 @@
       border: 1px solid var(--border);
     }
     .btn-sec:hover:not(:disabled) { border-color: var(--border-hover); }
+
+    /* ── Examples ── */
+    .examples {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 0.4rem; margin-top: 0.65rem;
+    }
+    .ex-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--muted); margin-right: 0.1rem;
+    }
+    .ex-chip {
+      font-family: inherit; font-size: 0.75rem; font-weight: 400;
+      letter-spacing: 0; text-transform: none;
+      padding: 0.3rem 0.7rem; border-radius: 999px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .ex-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .ex-chip:active { transform: scale(0.97); }
 
     /* ── Status ── */
     .status {
@@ -226,14 +191,6 @@
     .note li { margin-bottom: 0.25rem; }
     .note a { color: var(--accent); text-decoration: none; }
 
-    /* ── File warning ── */
-    .warn-file {
-      display: none; margin-bottom: 1rem; padding: 0.85rem 1rem;
-      background: var(--err-dim); border: 1px solid rgba(232,93,111,0.35);
-      border-radius: 8px; font-size: 0.77rem; color: #f0b4bc;
-    }
-    .warn-file.show { display: block; }
-    .warn-file code { font-size: 0.85em; color: var(--text); }
 
     /* ── Toast ── */
     .toast {
@@ -251,11 +208,6 @@
 <body>
 <div class="wrap">
 
-  <!-- File protocol warning -->
-  <div class="warn-file" id="warnFile">
-    <strong>Dibuka via file://</strong> — browser blokir request internet dari sini.<br>
-    Jalankan lewat server lokal atau upload ke hosting HTTPS.
-  </div>
 
   <!-- Header -->
   <div class="header">
@@ -270,49 +222,23 @@
     <p class="sub">Paste <strong>link lagu Spotify</strong> atau ketik <strong>Artis - Judul</strong>. Lirik muncul kalau tersedia di database publik (berkorelasi dengan lagu yang ada liriknya di Spotify).</p>
   </div>
 
-  <!-- Settings toggle -->
-  <button class="settings-toggle" id="settingsToggle" type="button">
-    <span class="arrow">▶</span> Pengaturan Spotify API
-  </button>
-  <div class="settings-panel" id="settingsPanel">
-    <div class="settings-inner">
-      <p>
-        Masukkan <strong>Client ID</strong> dan <strong>Client Secret</strong> dari Spotify untuk mendapatkan metadata lagu yang lebih akurat (judul, artis, album art).<br><br>
-        ⚠️ <strong>Catatan penting:</strong> Spotify API resmi <em>tidak menyediakan endpoint lirik</em>. Lirik tetap diambil dari <a href="https://lrclib.net" target="_blank">LRCLIB</a> — database publik yang korelasinya baik dengan katalog Spotify.<br><br>
-        Cara dapet credentials:
-        1. Buka <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a><br>
-        2. Login → <strong>Create App</strong><br>
-        3. Isi nama app (bebas) → centang <em>Web API</em> → Create<br>
-        4. Masuk ke Settings → copy <strong>Client ID</strong> dan <strong>Client Secret</strong><br>
-        5. Paste di bawah, klik Simpan.
-      </p>
-      <div class="field-row">
-        <div class="field">
-          <label for="inputClientId">Client ID</label>
-          <input type="text" id="inputClientId" placeholder="32-karakter hex, contoh: a1b2c3d4e5f6...">
-        </div>
-        <div class="field">
-          <label for="inputClientSecret">Client Secret</label>
-          <input type="password" id="inputClientSecret" placeholder="••••••••••••••••">
-        </div>
-      </div>
-      <div class="settings-actions">
-        <button type="button" class="btn-go" id="btnSaveCreds">Simpan & Test</button>
-        <button type="button" class="btn-sec" id="btnClearCreds">Hapus</button>
-      </div>
-      <p class="api-status" id="apiStatus"></p>
-    </div>
-  </div>
 
-  <hr class="divider">
 
   <!-- Main input -->
   <label class="main-label" for="paste">Tempel di sini</label>
-  <textarea id="paste" placeholder="https://open.spotify.com/track/…&#10;atau: Yoasobi - 夜に駆ける"></textarea>
+  <textarea id="paste" placeholder="Paste link atau ketik Artis - Judul..."></textarea>
 
   <div class="row">
     <button type="button" class="btn-go" id="btnGo">Ambil lirik</button>
     <button type="button" class="btn-sec" id="btnClear">Bersihkan</button>
+  </div>
+
+  <div class="examples">
+    <span class="ex-label">Contoh:</span>
+    <button type="button" class="ex-chip" onclick="fillExample('https://open.spotify.com/track/1YVuXOCjN1GkGYqZ8RCcF3?si=ea81511e32164370')">Link Spotify</button>
+    <button type="button" class="ex-chip" onclick="fillExample('Yoasobi - 夜に駆ける')">Yoasobi - 夜に駆ける</button>
+    <button type="button" class="ex-chip" onclick="fillExample('Ado - 唱')">Ado - 唱</button>
+    <button type="button" class="ex-chip" onclick="fillExample('Taylor Swift - Cruel Summer')">Taylor Swift - Cruel Summer</button>
   </div>
   <p class="status" id="status"></p>
 
@@ -358,124 +284,39 @@
 <script>
   const $ = id => document.getElementById(id);
 
-  /* ─── State ─── */
-  const IS_FILE = location.protocol === 'file:';
-  let spotifyToken = null;
-  let tokenExpiry = 0;
-
-  /* ─── Init ─── */
-  if (IS_FILE) $('warnFile').classList.add('show');
-  loadSavedCreds();
-
-  /* ─── Settings panel ─── */
-  $('settingsToggle').addEventListener('click', () => {
-    const toggle = $('settingsToggle');
-    const panel = $('settingsPanel');
-    const open = panel.classList.toggle('open');
-    toggle.classList.toggle('open', open);
-  });
-
-  function loadSavedCreds() {
-    try {
-      const id = localStorage.getItem('sp_client_id');
-      const sec = localStorage.getItem('sp_client_secret');
-      if (id) $('inputClientId').value = id;
-      if (sec) $('inputClientSecret').value = sec;
-      if (id && sec) setApiStatus('Credentials tersimpan. Klik "Simpan & Test" untuk verifikasi.', '');
-    } catch {}
+  function fillExample(text) {
+    $('paste').value = text;
+    $('paste').focus();
   }
 
-  $('btnSaveCreds').addEventListener('click', async () => {
-    const id = $('inputClientId').value.trim();
-    const sec = $('inputClientSecret').value.trim();
-    if (!id || !sec) { setApiStatus('Isi Client ID dan Client Secret dulu.', 'err'); return; }
-    setApiStatus('Menguji koneksi ke Spotify...', '');
-    $('btnSaveCreds').disabled = true;
-    try {
-      const token = await fetchSpotifyToken(id, sec);
-      if (token) {
-        localStorage.setItem('sp_client_id', id);
-        localStorage.setItem('sp_client_secret', sec);
-        spotifyToken = token;
-        tokenExpiry = Date.now() + 3500 * 1000;
-        setApiStatus('✓ Berhasil! Spotify API siap digunakan.', 'ok');
-      } else {
-        setApiStatus('✗ Token tidak didapat. Cek Client ID / Secret.', 'err');
-      }
-    } catch (e) {
-      setApiStatus('✗ Gagal: ' + e.message, 'err');
-    } finally {
-      $('btnSaveCreds').disabled = false;
-    }
-  });
+  /*
+   * Keamanan: Client Secret hanya di Cloudflare Worker (folder spotify-lirik-worker).
+   * Setelah deploy, isi URL worker di bawah. Kosongkan = pakai oEmbed saja.
+   */
+  const SPOTIFY_WORKER_URL = 'https://spotify-lirik-proxy.khoirustsani143.workers.dev'; // contoh: 'https://spotify-lirik-proxy.NAMA.workers.dev'
 
-  $('btnClearCreds').addEventListener('click', () => {
-    try { localStorage.removeItem('sp_client_id'); localStorage.removeItem('sp_client_secret'); } catch {}
-    $('inputClientId').value = '';
-    $('inputClientSecret').value = '';
-    spotifyToken = null; tokenExpiry = 0;
-    setApiStatus('Credentials dihapus.', '');
-  });
-
-  function setApiStatus(msg, type) {
-    const el = $('apiStatus');
-    el.textContent = msg;
-    el.className = 'api-status' + (type ? ' ' + type : '');
-  }
-
-  /* ─── Spotify Auth ─── */
-  async function fetchSpotifyToken(clientId, clientSecret) {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
-      },
-      body: 'grant_type=client_credentials'
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    return data.access_token || null;
-  }
-
-  async function getSpotifyToken() {
-    if (spotifyToken && Date.now() < tokenExpiry) return spotifyToken;
-    let id, sec;
-    try { id = localStorage.getItem('sp_client_id'); sec = localStorage.getItem('sp_client_secret'); } catch {}
-    if (!id || !sec) return null;
-    try {
-      const token = await fetchSpotifyToken(id, sec);
-      if (token) { spotifyToken = token; tokenExpiry = Date.now() + 3500 * 1000; }
-      return token;
-    } catch { return null; }
-  }
-
-  /* ─── Spotify Track API ─── */
   function extractTrackId(url) {
     const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/([a-zA-Z0-9]+)/i);
     return m ? m[1] : null;
   }
 
-  async function getTrackViaAPI(trackId) {
-    const token = await getSpotifyToken();
-    if (!token) return null;
+  async function getTrackViaWorker(trackId) {
+    const base = (SPOTIFY_WORKER_URL || '').replace(/\/$/, '');
+    if (!base) return null;
     try {
-      const res = await fetch('https://api.spotify.com/v1/tracks/' + trackId, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
+      const data = await fetchJson(base + '/track/' + trackId, true);
+      if (!data || data.error) return null;
       return {
-        title: data.name,
-        artist: (data.artists || []).map(a => a.name).join(', '),
-        album: data.album?.name || '',
-        artUrl: data.album?.images?.[0]?.url || null,
-        source: 'Spotify API'
+        title: data.title,
+        artist: data.artist,
+        album: data.album || '',
+        artUrl: data.artUrl || null,
+        source: data.source || 'Spotify API',
       };
     } catch { return null; }
   }
 
-  /* ─── Spotify oEmbed fallback ─── */
+  /* ─── Spotify oEmbed (fallback, tanpa secret) ─── */
   async function getTrackViaOEmbed(url) {
     const oembed = 'https://open.spotify.com/oembed?url=' + encodeURIComponent(url);
     const data = await fetchJson(oembed);
@@ -491,13 +332,10 @@
   }
 
   /* ─── Fetch helpers ─── */
-  async function fetchJson(url) {
+  async function fetchJson(url, directOnly) {
     const headers = { Accept: 'application/json' };
-    const attempts = IS_FILE
-      ? [
-          () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
-          () => fetch('https://corsproxy.io/?' + encodeURIComponent(url), { headers }),
-        ]
+    const attempts = directOnly
+      ? [() => fetch(url, { headers })]
       : [
           () => fetch(url, { headers }),
           () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
@@ -510,7 +348,6 @@
         return await res.json();
       } catch (e) { lastErr = e; }
     }
-    if (IS_FILE) throw new Error('NetworkError: buka lewat http:// bukan file://');
     throw new Error(lastErr?.message || 'Gagal mengambil data.');
   }
 
@@ -650,18 +487,13 @@
       if (spotifyUrl) {
         const cleanUrl = spotifyUrl.split('?')[0];
         const trackId = extractTrackId(cleanUrl);
-
-        // Try Spotify API first
-        if (trackId) {
-          setStatus('Mengambil info lagu dari Spotify API...', 'loading');
-          const apiResult = await getTrackViaAPI(trackId);
-          if (apiResult) {
-            track = apiResult;
-          } else {
-            setStatus('Mengambil info lagu (oEmbed)...', 'loading');
-            track = await getTrackViaOEmbed(cleanUrl);
-          }
-        } else {
+        if (trackId && SPOTIFY_WORKER_URL) {
+          setStatus('Mengambil info lagu (server aman)...', 'loading');
+          const viaWorker = await getTrackViaWorker(trackId);
+          if (viaWorker) track = viaWorker;
+        }
+        if (!track.title) {
+          setStatus('Mengambil info lagu dari Spotify...', 'loading');
           track = await getTrackViaOEmbed(cleanUrl);
         }
       } else {
