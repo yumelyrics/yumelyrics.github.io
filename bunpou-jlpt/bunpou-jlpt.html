@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Katalog Bunpou JLPT N5–N1 — YumeSubs</title>
+<meta name="description" content="Daftar lengkap bunpou JLPT N5–N1 dengan arti Indonesia — sumber deteksi 文法 di YumeLyrics.">
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--mist:#f0ebe3;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--sakura-dim:rgba(232,180,200,.12);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Syne',sans-serif;--jp:'Noto Serif JP',serif;--border:rgba(10,8,18,.1);--plum:#7c4d6e}
+[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--mist:#14110f;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height:100vh}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(245,240,234,.92);position:sticky;top:0;z-index:50;gap:1rem;flex-wrap:wrap}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+.nav-logo{text-decoration:none;color:inherit}
+.nljp{font-family:var(--jp);font-size:1rem;font-weight:600}
+.nlen{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
+.nav-links{display:flex;gap:.5rem;flex-wrap:wrap}
+.nav-links a{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-decoration:none;padding:.4rem .6rem;border:1px solid var(--border)}
+.nav-links a:hover{border-color:var(--gold);background:var(--sakura-dim)}
+.wrap{max-width:820px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:300;margin-bottom:.35rem}
+.sub{font-family:var(--serif);font-size:.95rem;color:var(--ash);line-height:1.7;margin-bottom:1.25rem}
+.stats{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;font-size:.68rem;color:var(--ash)}
+.stat{padding:.25rem .55rem;border:1px solid var(--border);background:var(--cream)}
+.toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;align-items:center;position:sticky;top:4.2rem;z-index:40;background:var(--paper);padding:.75rem 0;border-bottom:1px solid var(--border)}
+.search{flex:1;min-width:200px;padding:.65rem .85rem;border:1px solid var(--border);background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:.85rem}
+.search:focus{outline:none;border-color:var(--gold)}
+.lvl-filters{display:flex;flex-wrap:wrap;gap:.35rem}
+.lvl-btn{font-size:.52rem;font-weight:700;letter-spacing:.08em;padding:.35rem .55rem;border:1px solid var(--border);background:transparent;color:var(--ash);cursor:pointer}
+.lvl-btn.on,.lvl-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--sakura-dim)}
+.section{margin-bottom:2.75rem}
+.section-h{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;padding:.85rem 1rem;background:var(--ink);color:var(--paper);border-radius:4px}
+.section-h.lv-N5{background:linear-gradient(90deg,#5a7a5a,#3d5c3d)}
+.section-h.lv-N4{background:linear-gradient(90deg,#4a6a8a,#2d4a6a)}
+.section-h.lv-N3{background:linear-gradient(90deg,#8a6a4a,#6a4a2d)}
+.section-h.lv-N2{background:linear-gradient(90deg,#7a4a6a,#5a2d4a)}
+.section-h.lv-N1{background:linear-gradient(90deg,#6a4a8a,#4a2d6a)}
+.section-h h2{font-family:var(--jp);font-size:1.2rem;font-weight:600;letter-spacing:.05em}
+.section-h .section-tag{font-size:.55rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;opacity:.85}
+.section-h span{font-size:.65rem;opacity:.9}
+.list{display:flex;flex-direction:column;gap:.55rem}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:.5rem 1rem;padding:.85rem 1rem;border:1px solid var(--border);background:var(--cream);align-items:start}
+.item.hidden{display:none}
+.item-n{font-size:.62rem;font-weight:700;color:var(--ash);min-width:2rem;text-align:right;padding-top:.2rem}
+.item-body{min-width:0}
+.item-pat{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--rose);line-height:1.45}
+.item-mean{font-size:.8rem;color:var(--ash);line-height:1.55;margin-top:.3rem}
+.item-rumus{font-size:.72rem;color:var(--plum);line-height:1.5;margin-top:.35rem;padding:.4rem .55rem;background:var(--sakura-dim);border-left:2px solid var(--gold)}
+.item-rumus strong{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);font-weight:700;display:block;margin-bottom:.15rem}
+.item-contoh{font-size:.74rem;line-height:1.55;margin-top:.35rem;padding:.45rem .55rem;background:rgba(61,90,128,.06);border-left:2px solid #4a6a8a}
+.item-contoh strong{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);font-weight:700;display:block;margin-bottom:.2rem}
+.item-contoh-jp{font-family:var(--jp);color:var(--ink);display:block;margin-bottom:.15rem}
+.item-contoh-id{font-size:.7rem;color:var(--ash);display:block}
+.rumus-dasar{margin-bottom:2rem;border:1px solid var(--border);background:var(--mist)}
+.rumus-dasar summary{cursor:pointer;padding:.85rem 1rem;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.rumus-dasar-body{padding:0 1rem 1rem;font-size:.78rem;color:var(--ash);line-height:1.6}
+.rumus-dasar-body h3{font-family:var(--jp);font-size:.95rem;color:var(--rose);margin:1rem 0 .35rem}
+.rumus-dasar-body h3:first-child{margin-top:.25rem}
+.rumus-dasar-body ul{margin:0 0 .5rem 1.1rem}
+.item-lvl{font-size:.5rem;font-weight:800;letter-spacing:.1em;padding:.2rem .4rem;border:1px solid var(--gold);color:var(--gold);white-space:nowrap;margin-top:.15rem}
+.item-lvl.lv-N5{border-color:#5a7a5a;color:#3d5c3d}
+.item-lvl.lv-N4{border-color:#4a6a8a;color:#2d4a6a}
+.item-lvl.lv-N3{border-color:#8a6a4a;color:#6a4a2d}
+.item-lvl.lv-N2{border-color:#7a4a6a;color:#5a2d4a}
+.item-lvl.lv-N1{border-color:#6a4a8a;color:#4a2d6a}
+.loading,.err{padding:2rem 1rem;text-align:center;color:var(--ash);border:1px dashed var(--border)}
+.empty-all{padding:2rem;text-align:center;color:var(--ash);border:1px dashed var(--border);display:none}
+.note{margin-top:2rem;font-size:.72rem;color:var(--smoke);line-height:1.6;padding:1rem;border:1px solid var(--border);background:var(--mist)}
+a.back{font-size:.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
+@media(max-width:600px){.item{grid-template-columns:1fr}.item-n{text-align:left}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="../index.html"><div class="nljp">夢Lyrics</div><div class="nlen">YumeSubs · Bunpou JLPT</div></a>
+  <div class="nav-links">
+    <a href="../index.html">Katalog</a>
+    <a href="../bunpou-saved.html">Bunpou tersimpan</a>
+  </div>
+</nav>
+<div class="wrap">
+  <a class="back" href="../index.html">← Beranda</a>
+  <h1>Katalog bunpou JLPT</h1>
+  <p class="sub">Daftar dari <strong>daftar-bunpou-jlpt.txt</strong> — tiap entri: <strong>rumus</strong> + <strong>contoh kalimat</strong> (N5 → N1), sama seperti popup 文法 di lagu.</p>
+  <div class="stats" id="stats"></div>
+  <details class="rumus-dasar" id="rumus-dasar" open>
+    <summary>Rumus dasar (て形 · ない形 · slot ～)</summary>
+    <div class="rumus-dasar-body" id="rumus-dasar-body"></div>
+  </details>
+  <div class="toolbar" id="toolbar" style="display:none">
+    <input type="search" class="search" id="q" placeholder="Cari pola, arti, rumus, atau contoh…" autocomplete="off">
+    <div class="lvl-filters" id="lvl-filters"></div>
+  </div>
+  <div id="load" class="loading">Memuat daftar bunpou…</div>
+  <div id="sections"></div>
+  <p class="empty-all" id="empty-all">Tidak ada yang cocok dengan pencarian.</p>
+  <p class="note">Edit <code>daftar-bunpou-jlpt.txt</code> → <code>bake-jlpt.bat</code> → upload folder <code>bunpou-jlpt/</code> (termasuk <code>bunpou-rumus.js</code>, <code>bunpou-rumus-init.mjs</code>, <code>bunpou-jlpt-data.js</code>) + <code>ym-grammar-browser.js</code>.</p>
+</div>
+<script type="module" src="bunpou-rumus-init.mjs"></script>
+<script src="bunpou-rumus-browser.js"></script>
+<script>
+/* Fallback inferContoh — みたい dulu (bukan たい di dalam みたいな); modul ES menimpa jika termuat */
+(function () {
+  window.inferContoh = function (pat) {
+    var p = String(pat || '');
+    if (/みたい/.test(p)) {
+      if (/みたいに/.test(p)) return { jp: '子供みたいに遊ぶ。', id: 'Bermain seperti anak-anak.' };
+      if (/みたいな/.test(p)) return { jp: '夢みたいな話。', id: 'Cerita seperti mimpi.' };
+      return { jp: '雨みたいだ。', id: 'Kayak hujan.' };
+    }
+    if (p === 'たい') return { jp: '日本に行きたい。', id: 'Pengen ke Jepang.' };
+    return null;
+  };
+})();
+</script>
+<script src="bunpou-jlpt-data.js"></script>
+<script>
+var activeLv = 'all';
+var LINE_RE = /^\s*(\d+)\.\s*(.+?)\s*=\s*(.+?)\s*$/;
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function parseLevelHeader(line) {
+  var t = line.replace(/\\+/g, '').trim();
+  var m = t.match(/JLPT\s*N([1-5])/i);
+  return m ? 'N' + m[1] : null;
+}
+
+function parseCatalog(text) {
+  var level = 'N5';
+  var sections = [];
+  var cur = { level: level, title: 'JLPT N5', tag: '// JLPT N5', items: [] };
+  text.split(/\r?\n/).forEach(function (line) {
+    var t = line.trim();
+    if (!t) return;
+    var hdr = parseLevelHeader(t);
+    if (hdr) {
+      if (cur.items.length) sections.push(cur);
+      level = hdr;
+      cur = { level: level, title: 'JLPT ' + level, tag: t, items: [] };
+      return;
+    }
+    var m = t.match(LINE_RE);
+    if (!m) return;
+    var pat = m[2].trim();
+    var mean = m[3].trim();
+    var c = window.inferContoh ? window.inferContoh(pat, mean) : null;
+    cur.items.push({
+      n: +m[1], pattern: pat, meaning: mean,
+      rumus: (window.inferRumus ? window.inferRumus(pat, mean) : ''),
+      contoh: c,
+      level: level
+    });
+  });
+  if (cur.items.length) sections.push(cur);
+  return sections;
+}
+
+function renderFilters(catalog) {
+  var el = document.getElementById('lvl-filters');
+  var html = '<button type="button" class="lvl-btn on" data-lv="all">Semua</button>';
+  catalog.forEach(function (sec) {
+    html += '<button type="button" class="lvl-btn" data-lv="' + sec.level + '">' + sec.level + '</button>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.lvl-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeLv = btn.getAttribute('data-lv');
+      el.querySelectorAll('.lvl-btn').forEach(function (b) { b.classList.toggle('on', b === btn); });
+      applyFilter();
+    });
+  });
+}
+
+function renderSections(catalog) {
+  var root = document.getElementById('sections');
+  root.innerHTML = catalog.map(function (sec) {
+    var rows = sec.items.map(function (it) {
+      var cj = it.contoh && it.contoh.jp ? it.contoh.jp : '';
+      var ci = it.contoh && it.contoh.id ? it.contoh.id : '';
+      var q = (it.pattern + ' ' + it.meaning + ' ' + (it.rumus || '') + ' ' + cj + ' ' + ci + ' ' + it.level).toLowerCase();
+      var rumusHtml = it.rumus
+        ? '<div class="item-rumus"><strong>Rumus</strong>' + esc(it.rumus) + '</div>'
+        : '';
+      var contohHtml = cj
+        ? '<div class="item-contoh"><strong>Contoh</strong><span class="item-contoh-jp">' + esc(cj) + '</span>' +
+          (ci ? '<span class="item-contoh-id">' + esc(ci) + '</span>' : '') + '</div>'
+        : '';
+      return '<article class="item" data-lv="' + sec.level + '" data-q="' + esc(q) + '">' +
+        '<span class="item-n">' + it.n + '.</span>' +
+        '<div class="item-body"><div class="item-pat">' + esc(it.pattern) + '</div>' +
+        '<div class="item-mean">' + esc(it.meaning) + '</div>' + rumusHtml + contohHtml + '</div>' +
+        '<span class="item-lvl lv-' + it.level + '">' + it.level + '</span></article>';
+    }).join('');
+    return '<section class="section" data-section-lv="' + sec.level + '">' +
+      '<div class="section-h lv-' + sec.level + '"><div><div class="section-tag">' + esc(sec.tag) + '</div>' +
+      '<h2>' + esc(sec.title) + '</h2></div><span>' + sec.items.length + ' entri</span></div>' +
+      '<div class="list">' + rows + '</div></section>';
+  }).join('');
+}
+
+function applyFilter() {
+  var q = (document.getElementById('q').value || '').trim().toLowerCase();
+  var any = false;
+  document.querySelectorAll('.section').forEach(function (sec) {
+    var lv = sec.getAttribute('data-section-lv');
+    var secShow = activeLv === 'all' || activeLv === lv;
+    var secAny = false;
+    sec.querySelectorAll('.item').forEach(function (it) {
+      var matchQ = !q || (it.getAttribute('data-q') || '').indexOf(q) >= 0;
+      var show = secShow && matchQ;
+      it.classList.toggle('hidden', !show);
+      if (show) { secAny = true; any = true; }
+    });
+    sec.style.display = secAny ? '' : 'none';
+  });
+  document.getElementById('empty-all').style.display = any ? 'none' : 'block';
+}
+
+function renderRumusDasar() {
+  var box = document.getElementById('rumus-dasar-body');
+  if (!box || !window.RUMUS_DASAR) return;
+  box.innerHTML = window.RUMUS_DASAR.map(function (blk) {
+    return '<h3>' + esc(blk.title) + '</h3><ul>' +
+      blk.lines.map(function (ln) { return '<li>' + esc(ln) + '</li>'; }).join('') + '</ul>';
+  }).join('');
+}
+
+function fixMitaiContoh(it) {
+  var p = it.pattern || '';
+  if (!/みたい/.test(p) || !it.contoh || !/行きたい/.test(it.contoh.jp || '')) return;
+  if (/みたいに/.test(p)) it.contoh = { jp: '子供みたいに遊ぶ。', id: 'Bermain seperti anak-anak.' };
+  else if (/みたいな/.test(p)) it.contoh = { jp: '夢みたいな話。', id: 'Cerita seperti mimpi.' };
+  else it.contoh = { jp: '雨みたいだ。', id: 'Kayak hujan.' };
+}
+
+function ensureMeta(catalog) {
+  catalog.forEach(function (sec) {
+    sec.items.forEach(function (it) {
+      if (window.inferRumus) it.rumus = window.inferRumus(it.pattern, it.meaning);
+      if (window.inferContoh) {
+        var c = window.inferContoh(it.pattern, it.meaning);
+        if (c && c.jp) it.contoh = c;
+      }
+      fixMitaiContoh(it);
+    });
+  });
+  return catalog;
+}
+
+function showCatalog(catalog) {
+  catalog = ensureMeta(catalog);
+  renderRumusDasar();
+  var total = catalog.reduce(function (s, x) { return s + x.items.length; }, 0);
+  document.getElementById('load').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'flex';
+  document.getElementById('stats').innerHTML =
+    '<span class="stat">' + total + ' entri</span>' +
+    catalog.map(function (s) { return '<span class="stat">' + s.level + ': ' + s.items.length + '</span>'; }).join('');
+  renderFilters(catalog);
+  renderSections(catalog);
+  document.getElementById('q').addEventListener('input', applyFilter);
+  applyFilter();
+}
+
+function bootFromText(text) {
+  showCatalog(parseCatalog(text));
+}
+
+function bootCatalog() {
+  if (window.JLPT_CATALOG && window.JLPT_CATALOG.length) {
+    showCatalog(window.JLPT_CATALOG);
+    return;
+  }
+  fetch('daftar-bunpou-jlpt.txt')
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(bootFromText)
+    .catch(function () {
+      document.getElementById('load').className = 'err';
+      document.getElementById('load').innerHTML =
+        'Katalog tidak bisa dimuat (browser memblokir file lokal).<br><br>' +
+        '<strong>Di PC:</strong> double-click <code>BUKA-KATALOG.bat</code> atau jalankan:<br>' +
+        '<code>python make_data.py</code><br>' +
+        'lalu refresh — butuh file <code>bunpou-jlpt-data.js</code>.<br><br>' +
+        '<strong>Di web:</strong> upload seluruh folder <code>bunpou-jlpt/</code> ke root GitHub ' +
+        '(termasuk <code>bunpou-rumus-init.mjs</code>, <code>bunpou-rumus.js</code>, <code>bunpou-contoh.js</code>). ' +
+        'Buka via https://yumelyrics.my.id/bunpou-jlpt/bunpou-jlpt.html';
+    });
+}
+
+function whenRumusReady(fn) {
+  function ready() {
+    return window.inferRumus && window.inferContoh;
+  }
+  function tryBoot() {
+    if (ready()) fn();
+  }
+  window.addEventListener('rumus-ready', tryBoot, { once: true });
+  setTimeout(tryBoot, 1500);
+}
+
+whenRumusReady(bootCatalog);
+</script>
+</body>
+</html>
