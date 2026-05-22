@@ -3,8 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Spotify Lirik — YumeSubs</title>
-  <meta name="description" content="Ambil lirik dari link Spotify — paste link, salin lirik. YumeSubs.">
+
+  <!-- ═══ SEO Primary ═══ -->
+  <title>Spotify ke Lirik — Copy Lirik dari Link Spotify | YumeSubs</title>
+  <meta name="description" content="Paste link Spotify, langsung dapat liriknya. Gratis, tanpa login, tanpa iklan. Cari lirik lagu dari Spotify pakai judul dan artis juga bisa. Spotify lyrics converter bahasa Indonesia.">
+  <meta name="keywords" content="spotify ke lirik, spotify to lyrics, copy lirik spotify, ambil lirik spotify, spotify lyrics converter, cara copy lirik spotify, lirik dari link spotify, spotify lyrics indonesia, cari lirik lagu spotify, paste link spotify dapat lirik, download lirik spotify, spotify lyrics copier, lirik lagu dari spotify, spotify lyrics grabber, salin lirik spotify">
+  <link rel="canonical" href="https://yumelyrics.my.id/spotify_lirik.html">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="YumeSubs">
+  <meta name="language" content="Indonesian">
+
+  <!-- ═══ Open Graph (WhatsApp, Facebook, Discord) ═══ -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yumelyrics.my.id/spotify_lirik.html">
+  <meta property="og:title" content="Spotify ke Lirik — Copy Lirik dari Link Spotify">
+  <meta property="og:description" content="Paste link Spotify → langsung dapat liriknya. Gratis, tanpa login. Bisa cari pakai Artis - Judul juga.">
+  <meta property="og:image" content="https://yumelyrics.my.id/anime_icon.png">
+  <meta property="og:site_name" content="YumeSubs">
+  <meta property="og:locale" content="id_ID">
+
+  <!-- ═══ Twitter / X Card ═══ -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Spotify ke Lirik — Copy Lirik dari Link Spotify">
+  <meta name="twitter:description" content="Paste link Spotify → langsung dapat liriknya. Gratis, tanpa login. Bisa cari pakai Artis - Judul juga.">
+  <meta name="twitter:image" content="https://yumelyrics.my.id/anime_icon.png">
+
+  <!-- ═══ JSON-LD Structured Data ═══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Spotify ke Lirik — YumeSubs",
+    "url": "https://yumelyrics.my.id/spotify_lirik.html",
+    "description": "Tool gratis untuk mengambil dan menyalin lirik lagu dari link Spotify. Paste link Spotify atau ketik Artis - Judul untuk mendapatkan lirik lengkap.",
+    "applicationCategory": "MusicApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+    "inLanguage": ["id", "en", "ja"],
+    "provider": {
+      "@type": "Organization",
+      "name": "YumeSubs",
+      "url": "https://yumelyrics.my.id"
+    },
+    "featureList": [
+      "Copy lirik dari link Spotify",
+      "Cari lirik pakai nama artis dan judul lagu",
+      "Lirik dari Spotify dan LRCLIB",
+      "Gratis tanpa login"
+    ]
+  }
+  </script>
+
   <link rel="icon" type="image/jpeg" href="anime_icon.png">
   <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,6 +125,12 @@
     button:disabled{opacity:.4;cursor:not-allowed}
     .btn-go{background:var(--rose);border-color:var(--rose);color:#fff}
     .btn-go:hover:not(:disabled){filter:brightness(1.06)}
+    .btn-sp{background:var(--spotify);border-color:var(--spotify);color:#000;font-size:.68rem;font-weight:700;letter-spacing:.08em}
+    .btn-sp:hover:not(:disabled){filter:brightness(1.08)}
+    .btn-lrc{background:var(--plum);border-color:var(--plum);color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.08em}
+    .btn-lrc:hover:not(:disabled){filter:brightness(1.1)}
+    .btn-cancel{background:transparent;border-color:var(--err);color:var(--err);font-size:.68rem;font-weight:700;letter-spacing:.08em}
+    .btn-cancel:hover:not(:disabled){background:var(--err);color:#fff}
     .btn-sec:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
     .examples{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-top:.65rem}
     .ex-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
@@ -145,7 +200,9 @@
   <textarea id="paste" placeholder="Paste link atau ketik Artis - Judul..."></textarea>
 
   <div class="row">
-    <button type="button" class="btn-go" id="btnGo">Ambil lirik</button>
+    <button type="button" class="btn-sp" id="btnSpotify">Lirik Spotify</button>
+    <button type="button" class="btn-lrc" id="btnLrclib">Lirik LRCLIB</button>
+    <button type="button" class="btn-cancel" id="btnCancel" style="display:none">✕ Batal</button>
     <button type="button" class="btn-sec" id="btnClear">Bersihkan</button>
   </div>
 
@@ -383,9 +440,11 @@
     $('songTitle').textContent = track.title || '—';
     $('songArtist').textContent = track.artist ? track.artist + (track.album ? ' · ' + track.album : '') : '';
     const tag = $('sourceTag');
-    const srcLabel = lyricMeta || track.lyricsSource || track.source || 'LRCLIB';
+    const srcLabel =
+      lyricMeta === 'LRCLIB_FALLBACK' ? 'LRCLIB (Spotify: tidak ada)' :
+      lyricMeta || track.lyricsSource || track.source || 'LRCLIB';
     tag.textContent = 'Lirik: ' + srcLabel;
-    tag.className = 'source-tag' + (/spotify/i.test(srcLabel) ? ' sp' : '');
+    tag.className = 'source-tag' + (/spotify/i.test(lyricMeta||'') && lyricMeta !== 'LRCLIB_FALLBACK' ? ' sp' : '');
     tag.style.display = 'inline-block';
     setAlbumArt(track.artUrl || null);
     $('lyrics').textContent = lyrics;
@@ -412,87 +471,216 @@
     setTimeout(() => t.classList.remove('show'), 2200);
   }
 
+  /* ─── Abort controller ─── */
+  let currentAC = null;
+
+  function cancelRun() {
+    if (currentAC) { currentAC.abort(); currentAC = null; }
+  }
+
+  /* ─── Loading state ─── */
+  function setLoading(on) {
+    $('btnSpotify').disabled = on;
+    $('btnLrclib').disabled = on;
+    $('btnClear').disabled = on;
+    $('btnCancel').style.display = on ? 'inline-flex' : 'none';
+  }
+
+  /* ─── fetchJson with signal ─── */
+  async function fetchJsonSig(url, signal, directOnly) {
+    const headers = { Accept: 'application/json' };
+    const attempts = directOnly
+      ? [() => fetch(url, { headers, signal })]
+      : [
+          () => fetch(url, { headers, signal }),
+          () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers, signal }),
+        ];
+    let lastErr;
+    for (const fn of attempts) {
+      try {
+        const res = await fn();
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        if (e.name === 'AbortError') throw e;
+        lastErr = e;
+      }
+    }
+    throw new Error(lastErr?.message || 'Gagal mengambil data.');
+  }
+
+  /* ─── Get metadata ─── */
+  async function resolveTrack(raw, signal) {
+    const spotifyUrl = raw.match(/https?:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/[a-zA-Z0-9]+(?:\?[^\s]*)?/i)?.[0];
+    if (spotifyUrl) {
+      const cleanUrl = spotifyUrl.split('?')[0];
+      const trackId = extractTrackId(cleanUrl);
+      if (trackId && SPOTIFY_WORKER_URL) {
+        try {
+          const data = await fetchJsonSig((SPOTIFY_WORKER_URL).replace(/\/$/, '') + '/track/' + trackId, signal, true);
+          if (data && !data.error) return {
+            title: data.title, artist: data.artist, album: data.album || '',
+            artUrl: normalizeArtUrl(data.artUrl) || data.artUrl || null,
+            source: 'Spotify', plainLyrics: data.plainLyrics || null,
+            lyricsSource: data.lyricsSource || null, trackId
+          };
+        } catch (e) { if (e.name === 'AbortError') throw e; }
+      }
+      // fallback oEmbed
+      const t = await getTrackViaOEmbedSig(cleanUrl, signal);
+      t.trackId = trackId;
+      return t;
+    }
+    const manual = parseManualLine(raw);
+    if (!manual) return null;
+    return { title: manual.title, artist: manual.artist, artUrl: null, source: 'Manual', trackId: null };
+  }
+
+  async function getTrackViaOEmbedSig(url, signal) {
+    const oembed = 'https://open.spotify.com/oembed?url=' + encodeURIComponent(url);
+    const data = await fetchJsonSig(oembed, signal);
+    const raw = (data.title || '').replace(/&amp;/g, '&').trim();
+    if (!raw) throw new Error('Judul lagu tidak ditemukan.');
+    const artUrl = normalizeArtUrl(data.thumbnail_url) || data.thumbnail_url || null;
+    const parts = raw.split('·').map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 2)
+      return { title: parts.slice(0, -1).join(' · '), artist: parts[parts.length - 1], source: 'Spotify', artUrl };
+    const dash = raw.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+    if (dash) return { title: dash[1].trim(), artist: dash[2].trim(), source: 'Spotify', artUrl };
+    return { title: raw, artist: '', source: 'Spotify', artUrl };
+  }
+
+  /* ─── LRCLIB with signal ─── */
+  async function findLyricsSig(artist, title, signal) {
+    // search
+    const q = encodeURIComponent([artist, title].filter(Boolean).join(' '));
+    try {
+      const list = await fetchJsonSig('https://lrclib.net/api/search?q=' + q, signal);
+      if (Array.isArray(list) && list.length) {
+        const norm = s => s.toLowerCase().replace(/[^\w]/g, '');
+        const na = norm(artist), nt = norm(title);
+        const hit =
+          list.find(x => norm(x.artistName||'')===na && norm(x.trackName||'')===nt) ||
+          list.find(x => norm(x.trackName||'').includes(nt) && norm(x.artistName||'').includes(na)) ||
+          list[0];
+        if (hit?.id) {
+          try { const d = await fetchJsonSig('https://lrclib.net/api/get/'+hit.id, signal); if (pickLyrics(d)) return d; } catch(e) { if (e.name==='AbortError') throw e; }
+        }
+        if (pickLyrics(hit)) return hit;
+      }
+    } catch(e) { if (e.name==='AbortError') throw e; }
+    // get
+    try {
+      const q2 = new URLSearchParams({ artist_name: artist, track_name: title });
+      const d = await fetchJsonSig('https://lrclib.net/api/get?'+q2, signal);
+      if (pickLyrics(d)) return d;
+    } catch(e) { if (e.name==='AbortError') throw e; }
+    // fallback lyrics.ovh
+    try {
+      const url = 'https://api.lyrics.ovh/v1/'+encodeURIComponent(artist)+'/'+encodeURIComponent(title);
+      const d = await fetchJsonSig(url, signal);
+      if (d?.lyrics) return { plainLyrics: d.lyrics };
+    } catch(e) { if (e.name==='AbortError') throw e; }
+    return null;
+  }
+
   /* ─── Main run ─── */
-  async function run() {
+  async function run(mode) {
     const raw = $('paste').value.trim();
     if (!raw) { setStatus('Paste link Spotify atau ketik Artis - Judul dulu.', 'error'); return; }
 
-    $('btnGo').disabled = true;
+    cancelRun();
+    currentAC = new AbortController();
+    const signal = currentAC.signal;
+
+    setLoading(true);
     $('btnCopy').disabled = true;
     $('panel').classList.remove('show', 'err');
-    setStatus('Memproses...', 'loading');
+
+    const modeLabel = mode === 'spotify' ? '🟢 Spotify' : '🔵 LRCLIB';
+    setStatus('Memproses... [' + modeLabel + ']', 'loading');
 
     try {
-      let track = { title: '', artist: '', artUrl: null, source: '' };
+      setStatus('Mengambil info lagu...', 'loading');
+      const track = await resolveTrack(raw, signal);
 
-      const spotifyUrl = raw.match(/https?:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/[a-zA-Z0-9]+(?:\?[^\s]*)?/i)?.[0];
+      if (!track) {
+        setStatus('Format tidak dikenali. Gunakan link Spotify atau: Artis - Judul', 'error');
+        return;
+      }
+      if (!track.title) {
+        setStatus('Judul lagu tidak ditemukan.', 'error');
+        return;
+      }
 
-      if (spotifyUrl) {
-        const cleanUrl = spotifyUrl.split('?')[0];
-        const trackId = extractTrackId(cleanUrl);
-        if (trackId && SPOTIFY_WORKER_URL) {
-          setStatus('Mengambil info lagu (server aman)...', 'loading');
-          const viaWorker = await getTrackViaWorker(trackId);
-          if (viaWorker) track = viaWorker;
-        }
-        if (!track.title) {
-          setStatus('Mengambil info lagu dari Spotify...', 'loading');
-          track = await getTrackViaOEmbed(cleanUrl);
-        } else if (!track.artUrl) {
+      let lyrics = '';
+      let lyricMeta = null;
+
+      if (mode === 'spotify') {
+        // Gunakan lirik dari worker kalau sudah ada
+        if (track.plainLyrics?.trim()) {
+          lyrics = track.plainLyrics.trim();
+          lyricMeta = 'Spotify';
+          setStatus('Lirik dari Spotify dimuat.', 'loading');
+        } else if (track.trackId && SPOTIFY_WORKER_URL) {
+          setStatus('Mencari lirik dari Spotify...', 'loading');
           try {
-            const emb = await getTrackViaOEmbed(cleanUrl);
-            if (emb.artUrl) track.artUrl = emb.artUrl;
-          } catch (_) { /* ok */ }
+            const base = SPOTIFY_WORKER_URL.replace(/\/$/, '');
+            const d = await fetchJsonSig(base + '/lyrics/' + track.trackId, signal, true);
+            if (d?.plainLyrics) { lyrics = d.plainLyrics.trim(); lyricMeta = 'Spotify'; }
+          } catch(e) { if (e.name === 'AbortError') throw e; }
+        }
+        if (!lyrics) {
+          // Fallback ke LRCLIB
+          setStatus('Tidak ada di Spotify, mencari di LRCLIB...', 'loading');
+          const d = await findLyricsSig(track.artist, track.title, signal);
+          lyrics = pickLyrics(d);
+          lyricMeta = lyrics ? 'LRCLIB' : null;
+          if (lyrics) lyricMeta = 'LRCLIB_FALLBACK';
         }
       } else {
-        const manual = parseManualLine(raw);
-        if (!manual) {
-          setStatus('Format tidak dikenali. Gunakan link Spotify atau: Artis - Judul', 'error');
-          $('btnGo').disabled = false;
-          return;
-        }
-        track.title = manual.title;
-        track.artist = manual.artist;
-        track.source = 'Manual';
-      }
-
-      if (!track.title) { setStatus('Judul lagu tidak ditemukan.', 'error'); $('btnGo').disabled = false; return; }
-
-      let lyrics = (track.plainLyrics || '').trim();
-      let lyricMeta = track.lyricsSource || null;
-
-      if (!lyrics) {
-        setStatus('Mencari lirik «' + track.title + '»...', 'loading');
-        const lyricsData = await findLyrics(track.artist, track.title);
-        lyrics = pickLyrics(lyricsData);
-        lyricMeta = lyricsData ? 'LRCLIB' : null;
-      } else {
-        setStatus('Lirik dari Spotify dimuat.', 'loading');
+        // LRCLIB mode
+        setStatus('Mencari lirik «' + track.title + '» di LRCLIB...', 'loading');
+        const d = await findLyricsSig(track.artist, track.title, signal);
+        lyrics = pickLyrics(d);
+        lyricMeta = lyrics ? 'LRCLIB' : null;
       }
 
       if (!lyrics) {
-        setStatus('Lirik tidak ditemukan untuk lagu ini.', 'error');
+        setStatus('Lirik tidak ditemukan — tidak ada di Spotify maupun LRCLIB.', 'error');
         showNoLyrics(track);
       } else {
         showResult(track, lyrics, lyricMeta);
-        const hint = lyricMeta === 'Spotify'
-          ? 'Lirik sama dengan sumber Spotify — klik Salin untuk copy.'
-          : 'Lirik dari database LRCLIB (bisa sedikit beda dengan Spotify) — klik Salin untuk copy.';
+        const hint =
+          lyricMeta === 'Spotify'         ? '✓ Lirik Spotify — sama seperti di app.' :
+          lyricMeta === 'LRCLIB_FALLBACK' ? '⚠️ Tidak ada di Spotify — ditemukan di LRCLIB (teks bisa sedikit beda).' :
+                                            '✓ Lirik LRCLIB — bisa sedikit beda dengan Spotify.';
         setStatus(hint, '');
       }
     } catch (err) {
+      if (err.name === 'AbortError') {
+        setStatus('Pencarian dibatalkan.', '');
+        return;
+      }
       console.error(err);
       setStatus(err.message || 'Terjadi kesalahan.', 'error');
-      $('panel').classList.add('show', 'err');
-      $('lyrics').textContent = err.message || 'Error tidak diketahui.';
     } finally {
-      $('btnGo').disabled = false;
+      setLoading(false);
+      currentAC = null;
     }
   }
 
   /* ─── Events ─── */
-  $('btnGo').addEventListener('click', run);
-  $('paste').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run(); });
+  $('btnSpotify').addEventListener('click', () => run('spotify'));
+  $('btnLrclib').addEventListener('click', () => run('lrclib'));
+  $('btnCancel').addEventListener('click', () => {
+    cancelRun();
+    setStatus('Pencarian dibatalkan.', '');
+    setLoading(false);
+  });
+  $('paste').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run('lrclib');
+  });
 
   $('btnCopy').addEventListener('click', async () => {
     const text = $('lyrics').textContent;
@@ -509,11 +697,13 @@
   });
 
   $('btnClear').addEventListener('click', () => {
+    cancelRun();
     $('paste').value = '';
     $('panel').classList.remove('show', 'err');
     setStatus('');
     $('btnCopy').disabled = true;
     setAlbumArt(null);
+    setLoading(false);
   });
 
   function toggleTheme() {
