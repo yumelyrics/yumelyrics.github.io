@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify → Lirik (paste & salin)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0d0b;
+      --card: #1a1714;
+      --text: #e8e2d9;
+      --muted: #8c8278;
+      --accent: #1db954;
+      --accent-dim: rgba(29, 185, 84, 0.15);
+      --err: #e85d6f;
+      --border: rgba(232, 226, 217, 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Syne', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .sub strong { color: var(--accent); }
+    label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      border-radius: 6px;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-dim);
+    }
+    textarea::placeholder { color: var(--muted); opacity: 0.7; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-go {
+      background: var(--accent);
+      color: #0a0812;
+    }
+    .btn-go:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn-sec {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-sec:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .note {
+      margin-top: 1.25rem;
+      padding: 0.85rem 1rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(29, 185, 84, 0.25);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .note ul { margin: 0.5rem 0 0 1.1rem; }
+    .note li { margin-bottom: 0.25rem; }
+    .panel {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: none;
+    }
+    .panel.show { display: block; }
+    .panel.err { border-color: rgba(232, 93, 111, 0.4); }
+    .meta {
+      margin-bottom: 1rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .meta h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .meta p { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+    .lyrics {
+      font-family: 'Noto Serif JP', Georgia, serif;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.85;
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+    .status.loading { color: var(--accent); }
+    .status.error { color: var(--err); }
+    .badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.45rem;
+      border-radius: 3px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      margin-left: 0.35rem;
+      vertical-align: middle;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent);
+      color: #0a0812;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      opacity: 0;
+      transition: transform 0.25s, opacity 0.25s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .warn-file {
+      display: none;
+      margin-bottom: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(232, 93, 111, 0.12);
+      border: 1px solid rgba(232, 93, 111, 0.45);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #f0b4bc;
+    }
+    .warn-file.show { display: block; }
+    .warn-file code { font-size: 0.85em; color: var(--text); }
+    .btn-ext {
+      background: transparent;
+      color: #7eb8ff;
+      border: 1px solid rgba(126, 184, 255, 0.35);
+    }
+    .btn-ext:hover:not(:disabled) { border-color: #7eb8ff; color: #7eb8ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="warn-file" id="warnFile">
+      <strong>File dibuka langsung (file://)</strong> — Firefox/Chrome memblokir koneksi internet dari sini (NetworkError).<br>
+      Jalankan <code>BUKA-SERVER.bat</code> di folder yang sama, atau upload ke <strong>https://</strong> (GitHub Pages).
+    </div>
+    <h1>Spotify → Lirik</h1>
+    <p class="sub">Paste <strong>link lagu Spotify</strong> atau ketik <strong>Artis - Judul</strong>. Lirik muncul kalau tersedia di database publik (sama seperti lagu yang punya lirik di Spotify).</p>
+
+    <label for="paste">Tempel di sini</label>
+    <textarea id="paste" placeholder="https://open.spotify.com/track/…&#10;atau: Yoasobi - 夜に駆ける"></textarea>
+
+    <div class="row">
+      <button type="button" class="btn-go" id="btnGo">Ambil lirik</button>
+      <button type="button" class="btn-sec" id="btnCopy" disabled>Salin lirik</button>
+      <button type="button" class="btn-sec" id="btnClear">Bersihkan</button>
+      <a class="btn-sec btn-ext" id="btnSpotscribe" href="https://spotscribe.io/spotify-transcript-generator" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;line-height:normal;">SpotScribe ↗</a>
+    </div>
+
+    <p class="status" id="status"></p>
+
+    <div class="panel" id="panel">
+      <div class="meta">
+        <h2 id="songTitle">—</h2>
+        <p id="songArtist"></p>
+        <p id="songSource" style="margin-top:0.35rem;font-size:0.72rem;"></p>
+      </div>
+      <pre class="lyrics" id="lyrics"></pre>
+    </div>
+
+    <div class="note">
+      <strong>Cara pakai</strong>
+      <ul>
+        <li>Buka lagu di Spotify → Share → Copy link → paste di atas.</li>
+        <li>Hanya <strong>link track</strong> (bukan playlist/album penuh).</li>
+        <li>Kalau di Spotify tidak ada lirik, biasanya di sini juga tidak ketemu.</li>
+        <li>Lirik dicari di <a href="https://lrclib.net" style="color:var(--accent)">LRCLIB</a>. Situs seperti <a href="https://spotscribe.io/spotify-transcript-generator" style="color:#7eb8ff">SpotScribe</a> pakai server + API internal Spotify (butuh HTTPS).</li>
+        <li>Jangan double-click HTML — pakai <strong>BUKA-SERVER.bat</strong> atau hosting web.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Lirik disalin!</div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const pasteEl = $('paste');
+    const statusEl = $('status');
+    const panelEl = $('panel');
+    const lyricsEl = $('lyrics');
+    const btnGo = $('btnGo');
+    const btnCopy = $('btnCopy');
+    const IS_FILE = location.protocol === 'file:';
+
+    if (IS_FILE) $('warnFile').classList.add('show');
+
+    /** Fetch JSON — dari file:// wajib lewat proxy (CORS) */
+    async function fetchJson(url) {
+      const headers = { Accept: 'application/json' };
+      const attempts = IS_FILE
+        ? [
+            () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
+            () => fetch('https://corsproxy.io/?' + encodeURIComponent(url), { headers }),
+          ]
+        : [
+            () => fetch(url, { headers: { ...headers, 'User-Agent': 'YumeSubs-LirikPaste/1.0' } }),
+            () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
+          ];
+      let lastErr;
+      for (const fn of attempts) {
+        try {
+          const res = await fn();
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (IS_FILE) {
+        throw new Error(
+          'NetworkError: buka lewat BUKA-SERVER.bat (http://localhost:8765) atau upload ke situs HTTPS.'
+        );
+      }
+      throw new Error(lastErr?.message || 'Gagal mengambil data dari internet.');
+    }
+
+    async function fetchText(url) {
+      const headers = { Accept: 'text/plain,*/*' };
+      const attempts = IS_FILE
+        ? [
+            () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
+            () => fetch('https://corsproxy.io/?' + encodeURIComponent(url), { headers }),
+          ]
+        : [
+            () => fetch(url, { headers }),
+            () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { headers }),
+          ];
+      let lastErr;
+      for (const fn of attempts) {
+        try {
+          const res = await fn();
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.text();
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      throw new Error(lastErr?.message || 'Gagal mengambil data.');
+    }
+
+    function setStatus(msg, type) {
+      statusEl.textContent = msg || '';
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function showToast() {
+      const t = $('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    /** @returns {string|null} */
+    function extractSpotifyTrackUrl(text) {
+      const m = text.match(/https?:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/([a-zA-Z0-9]+)(?:\?[^\s]*)?/i);
+      return m ? m[0].split('?')[0] : null;
+    }
+
+    /** @returns {{ artist: string, title: string }|null} */
+    function parseManualLine(text) {
+      const line = text.trim().split(/\n/)[0].trim();
+      if (!line || /spotify\.com/i.test(line)) return null;
+      const sep = line.match(/\s*[-–—|｜]\s*/);
+      if (!sep) return null;
+      const i = line.search(/\s*[-–—|｜]\s*/);
+      const artist = line.slice(0, i).trim();
+      const title = line.slice(i).replace(/^[\s\-–—|｜]+/, '').trim();
+      if (artist && title) return { artist, title };
+      return null;
+    }
+
+    async function resolveFromSpotify(url) {
+      const oembed = 'https://open.spotify.com/oembed?url=' + encodeURIComponent(url);
+      const data = await fetchJson(oembed);
+      const raw = (data.title || '').replace(/&amp;/g, '&').trim();
+      if (!raw) throw new Error('Judul lagu tidak ditemukan dari Spotify.');
+      const parts = raw.split('·').map((s) => s.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        return { artist: parts[parts.length - 1], title: parts.slice(0, -1).join('·') };
+      }
+      const dash = raw.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+      if (dash) return { artist: dash[2].trim(), title: dash[1].trim() };
+      return { artist: '', title: raw };
+    }
+
+    async function fetchLrclibGet(artist, title) {
+      const q = new URLSearchParams({ artist_name: artist, track_name: title });
+      try {
+        return await fetchJson('https://lrclib.net/api/get?' + q);
+      } catch (e) {
+        if (/404|TrackNotFound/i.test(String(e.message || e))) return null;
+        throw e;
+      }
+    }
+
+    async function fetchLrclibSearch(artist, title) {
+      const q = encodeURIComponent([artist, title].filter(Boolean).join(' '));
+      let list;
+      try {
+        list = await fetchJson('https://lrclib.net/api/search?q=' + q);
+      } catch {
+        return null;
+      }
+      if (!Array.isArray(list) || !list.length) return null;
+      const norm = (s) => s.toLowerCase().replace(/\s+/g, '');
+      const na = norm(artist);
+      const nt = norm(title);
+      const hit =
+        list.find((x) => norm(x.artistName || '') === na && norm(x.trackName || '') === nt) ||
+        list.find((x) => norm(x.trackName || '').includes(nt) && norm(x.artistName || '').includes(na)) ||
+        list[0];
+      if (hit && (hit.plainLyrics || hit.syncedLyrics)) return hit;
+      if (hit && hit.id) {
+        try {
+          return await fetchJson('https://lrclib.net/api/get/' + hit.id);
+        } catch {
+          return hit;
+        }
+      }
+      return hit;
+    }
+
+    async function fetchLyricsOvh(artist, title) {
+      const url =
+        'https://api.lyrics.ovh/v1/' +
+        encodeURIComponent(artist) +
+        '/' +
+        encodeURIComponent(title);
+      try {
+        const data = await fetchJson(url);
+        if (data && data.lyrics) return { plainLyrics: data.lyrics, trackName: title, artistName: artist };
+      } catch {
+        /* ignore */
+      }
+      return null;
+    }
+
+    function stripLrc(synced) {
+      if (!synced) return '';
+      return synced
+        .replace(/\[[\d:.]+\]/g, '')
+        .replace(/<\d+,\d+>/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    function pickLyrics(data) {
+      if (!data) return '';
+      if (data.plainLyrics && data.plainLyrics.trim()) return data.plainLyrics.trim();
+      return stripLrc(data.syncedLyrics);
+    }
+
+    async function findLyrics(artist, title) {
+      let data = await fetchLrclibSearch(artist, title);
+      if (data && pickLyrics(data)) return data;
+      data = await fetchLrclibGet(artist, title);
+      if (data && pickLyrics(data)) return data;
+      data = await fetchLyricsOvh(artist, title);
+      return data;
+    }
+
+    function showResult(artist, title, lyrics, sourceNote) {
+      panelEl.classList.add('show');
+      panelEl.classList.remove('err');
+      $('songTitle').textContent = title || '—';
+      $('songArtist').textContent = artist ? 'Artis: ' + artist : '';
+      $('songSource').innerHTML = sourceNote + ' <span class="badge">siap disalin</span>';
+      lyricsEl.textContent = lyrics;
+      btnCopy.disabled = !lyrics;
+    }
+
+    function showNoLyrics(artist, title, extra) {
+      panelEl.classList.add('show', 'err');
+      $('songTitle').textContent = title || '—';
+      $('songArtist').textContent = artist ? 'Artis: ' + artist : '';
+      $('songSource').textContent = '';
+      lyricsEl.textContent =
+        (extra || '') +
+        '\n\nLirik tidak ditemukan.\n\n' +
+        '• Di Spotify, lagu ini mungkin tidak punya lirik.\n' +
+        '• Coba paste link track yang lain, atau ketik manual: Artis - Judul (ejaan sama persis Spotify).\n' +
+        '• Atau pakai tombol SpotScribe ↗ (lirik langsung dari database Spotify).';
+      btnCopy.disabled = true;
+    }
+
+    let lastSpotifyUrl = '';
+
+    async function run() {
+      const raw = pasteEl.value.trim();
+      if (!raw) {
+        setStatus('Paste link Spotify atau ketik Artis - Judul dulu.', 'error');
+        return;
+      }
+
+      btnGo.disabled = true;
+      btnCopy.disabled = true;
+      panelEl.classList.remove('show');
+      setStatus('Mencari lagu & lirik…', 'loading');
+
+      try {
+        let artist = '';
+        let title = '';
+        const spotifyUrl = extractSpotifyTrackUrl(raw);
+
+        if (spotifyUrl) {
+          lastSpotifyUrl = spotifyUrl;
+          setStatus('Membaca info dari Spotify…', 'loading');
+          const meta = await resolveFromSpotify(spotifyUrl);
+          artist = meta.artist;
+          title = meta.title;
+        } else {
+          lastSpotifyUrl = '';
+          const manual = parseManualLine(raw);
+          if (!manual) {
+            setStatus('Format tidak dikenali. Gunakan link track Spotify atau: Artis - Judul', 'error');
+            btnGo.disabled = false;
+            return;
+          }
+          artist = manual.artist;
+          title = manual.title;
+        }
+
+        setStatus('Mencari lirik untuk «' + title + '» — ' + artist + '…', 'loading');
+        const data = await findLyrics(artist, title);
+        const lyrics = pickLyrics(data);
+
+        if (!lyrics) {
+          setStatus('Lirik tidak tersedia untuk lagu ini.', 'error');
+          showNoLyrics(artist, title, '');
+          return;
+        }
+
+        const src = data.instrumental
+          ? 'Sumber: database lirik (instrumental?)'
+          : 'Sumber: ' + (data.artistName || artist) + ' — ' + (data.trackName || title);
+        showResult(artist, title, lyrics, src);
+        setStatus('Lirik ditemukan. Klik «Salin lirik» untuk copy.', '');
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Terjadi kesalahan.', 'error');
+        panelEl.classList.add('show', 'err');
+        lyricsEl.textContent = err.message || 'Error';
+        btnCopy.disabled = true;
+      } finally {
+        btnGo.disabled = false;
+      }
+    }
+
+    btnGo.addEventListener('click', run);
+    pasteEl.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run();
+    });
+
+    btnCopy.addEventListener('click', async () => {
+      const text = lyricsEl.textContent;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast();
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast();
+      }
+    });
+
+    $('btnClear').addEventListener('click', () => {
+      pasteEl.value = '';
+      lastSpotifyUrl = '';
+      panelEl.classList.remove('show', 'err');
+      setStatus('');
+      btnCopy.disabled = true;
+    });
+
+    $('btnSpotscribe').addEventListener('click', () => {
+      const u = extractSpotifyTrackUrl(pasteEl.value) || lastSpotifyUrl;
+      if (u) try { navigator.clipboard.writeText(u); } catch { /* ok */ }
+    });
+  </script>
+</body>
+</html>
