@@ -319,6 +319,13 @@
       <image:caption>Lirik Totte - Centimillimental | YumeSubs</image:caption>
     </image:image>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/himawari.html</loc><lastmod>2026-05-22</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02671de38d1c3375a90ea25a15</image:loc>
+      <image:title>Himawari - Ado</image:title>
+      <image:caption>Lirik Himawari - Ado | YumeSubs</image:caption>
+    </image:image>
+  </url>
   <url><loc>https://yumelyrics.my.id/kata/</loc><lastmod>2026-05-22</lastmod><priority>0.7</priority></url>
   <url><loc>https://yumelyrics.my.id/kata/te-shimau.html</loc><lastmod>2026-05-22</lastmod><priority>0.55</priority></url>
   <url><loc>https://yumelyrics.my.id/kata/te-iru.html</loc><lastmod>2026-05-22</lastmod><priority>0.55</priority></url>
