@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bunpou Tersimpan — YumeSubs</title>
+<meta name="description" content="Kumpulan pola bunpou (tata bahasa Jepang) yang kamu simpan dari lirik lagu YumeSubs.">
+<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--mist:#f0ebe3;--smoke:#c8bfb0;--ash:#8c8278;--gold:#c9a96e;--rose:#c4637a;--sakura:#e8b4c8;--sakura-dim:rgba(232,180,200,.12);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Syne',sans-serif;--jp:'Noto Serif JP',serif;--border:rgba(10,8,18,.1);--plum:#7c4d6e}
+[data-theme="dark"]{--ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--mist:#14110f;--smoke:#4a4540;--ash:#7a7068;--gold:#d4a96e;--rose:#d4758a;--border:rgba(232,226,217,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height:100vh}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(245,240,234,.92);position:sticky;top:0;z-index:50}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+.nav-logo{text-decoration:none;color:inherit}
+.nljp{font-family:var(--jp);font-size:1rem;font-weight:600}
+.nlen{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
+.wrap{max-width:720px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:300;margin-bottom:.35rem}
+.sub{font-family:var(--serif);font-size:.95rem;color:var(--ash);line-height:1.7;margin-bottom:2rem}
+.toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--sakura-dim);border-color:var(--rose)}
+.count{font-size:.68rem;color:var(--ash)}
+.list{display:flex;flex-direction:column;gap:.75rem}
+.card{border:1px solid var(--border);padding:1rem 1.1rem;background:var(--cream)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem}
+.card-char{font-family:var(--jp);font-size:1.15rem;font-weight:600;color:var(--rose)}
+.card-lvl{font-size:.48rem;font-weight:700;letter-spacing:.08em;padding:.12rem .38rem;border:1px solid var(--gold);color:var(--gold)}
+.card-kind{font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--plum);margin-bottom:.25rem}
+.card-label{font-size:.72rem;font-weight:600;color:var(--ink)}
+.card-desc{font-size:.78rem;color:var(--ash);line-height:1.6;margin-top:.35rem}
+.card-ctx{margin-top:.75rem;padding-top:.75rem;border-top:1px dashed var(--border);font-size:.68rem;color:var(--smoke);line-height:1.55}
+.card-ctx-jp{font-family:var(--jp);font-size:.88rem;color:var(--ink);margin-top:.25rem}
+.card-ctx-ro{font-family:var(--serif);font-style:italic;color:var(--ash);margin-top:.2rem}
+.card-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.card-del{font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .5rem;border:1px solid var(--border);background:transparent;color:var(--ash);cursor:pointer}
+.card-del:hover{border-color:var(--rose);color:var(--rose)}
+.card-link{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.card-link:hover{color:var(--rose)}
+.empty{padding:2rem 1rem;text-align:center;border:1px dashed var(--border);color:var(--ash);font-size:.85rem;line-height:1.7}
+.empty a{color:var(--gold)}
+a.back{font-size:.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:var(--paper);padding:.65rem 1.2rem;font-size:.72rem;z-index:999;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html"><div class="nljp">夢Lyrics</div><div class="nlen">YumeSubs</div></a>
+  <a class="btn btn-ghost" href="index.html">← Katalog</a>
+</nav>
+<div class="wrap">
+  <a class="back" href="index.html">← Beranda</a>
+  <h1>Bunpou tersimpan</h1>
+  <p class="sub">Pola tata bahasa yang kamu simpan dari tombol <strong>Simpan ★</strong> di popup 文法 di halaman lagu. Data disimpan di perangkat ini (localStorage).</p>
+  <div class="toolbar">
+    <span class="count" id="save-count">0 bunpou</span>
+    <button type="button" class="btn btn-ghost" id="clear-all-btn" style="display:none">Hapus semua</button>
+  </div>
+  <div class="list" id="saved-list"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var BUNPOU_SAVE_KEY = 'yume_saved_bunpou';
+
+function toast(m) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = m;
+  t.classList.add('show');
+  setTimeout(function () { t.classList.remove('show'); }, 2600);
+}
+
+function loadList() {
+  try { return JSON.parse(localStorage.getItem(BUNPOU_SAVE_KEY) || '[]'); } catch (e) { return []; }
+}
+
+function saveList(list) {
+  try { localStorage.setItem(BUNPOU_SAVE_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function kindClass(k) {
+  return k || 'pola';
+}
+
+function render() {
+  var list = loadList();
+  var el = document.getElementById('saved-list');
+  var countEl = document.getElementById('save-count');
+  var clearBtn = document.getElementById('clear-all-btn');
+  if (countEl) countEl.textContent = list.length + ' bunpou';
+  if (clearBtn) clearBtn.style.display = list.length ? 'inline-flex' : 'none';
+  if (!list.length) {
+    el.innerHTML = '<div class="empty">Belum ada bunpou tersimpan.<br>Buka lagu → ketuk <strong>文法</strong> di suatu baris → <strong>Simpan ★</strong> pada pola yang ingin diingat.<br><a href="index.html">Ke katalog lagu</a></div>';
+    return;
+  }
+  el.innerHTML = list.map(function (item, i) {
+    var lv = (item.level || 'N5').toLowerCase();
+    var ctx = '';
+    if (item.songTitle || item.lineJp) {
+      ctx = '<div class="card-ctx">';
+      if (item.songTitle) {
+        ctx += 'Dari: ';
+        if (item.songSlug) ctx += '<a class="card-link" href="lagu/' + esc(item.songSlug) + '.html">' + esc(item.songTitle) + '</a>';
+        else ctx += esc(item.songTitle);
+        if (item.lineIdx >= 0) ctx += ' · baris ' + (item.lineIdx + 1);
+      }
+      if (item.lineJp) ctx += '<div class="card-ctx-jp">' + esc(item.lineJp) + '</div>';
+      if (item.lineRo) ctx += '<div class="card-ctx-ro">' + esc(item.lineRo) + '</div>';
+      ctx += '</div>';
+    }
+    return '<article class="card" data-idx="' + i + '">' +
+      '<div class="card-top">' +
+      '<span class="card-char">' + esc(item.text) + '</span>' +
+      '<span class="card-lvl ' + lv + '">' + esc(item.level || 'N5') + '</span></div>' +
+      '<div class="card-kind">' + esc(item.kindLabel || item.kind || 'pola') + '</div>' +
+      '<div class="card-label">' + esc(item.label) + '</div>' +
+      '<div class="card-desc">' + esc(item.desc) + '</div>' +
+      ctx +
+      '<div class="card-actions">' +
+      '<button type="button" class="card-del" data-del="' + i + '">Hapus</button>' +
+      '</div></article>';
+  }).join('');
+
+  el.querySelectorAll('[data-del]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var idx = parseInt(btn.getAttribute('data-del'), 10);
+      var arr = loadList();
+      arr.splice(idx, 1);
+      saveList(arr);
+      render();
+      toast('Dihapus');
+    });
+  });
+}
+
+document.getElementById('clear-all-btn').addEventListener('click', function () {
+  if (!confirm('Hapus semua bunpou tersimpan?')) return;
+  saveList([]);
+  render();
+  toast('Semua bunpou dihapus');
+});
+
+render();
+</script>
+</body>
+</html>

@@ -265,6 +265,7 @@ function buildSiteNav(prefix, active) {
     <a class="nd-item${catOn}" href="${p}index.html">Katalog</a>
     <a class="nd-item${artOn}" href="${artHref}">Artis</a>
     <a class="nd-item" href="${p}playlists.html">Setlist</a>
+    <a class="nd-item" href="${p}bunpou-saved.html">Bunpou tersimpan</a>
     <a class="nd-item" href="${p}kata/index.html">Glosarium</a>
     <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
@@ -1189,7 +1190,11 @@ body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .
 .bunpou-sub{display:block;font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:.35rem}
 .bunpou-body{padding:1.1rem 1.35rem 1.35rem;overflow-y:auto;flex:1}
 .bunpou-line-tag{font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);margin-bottom:.65rem}
-.bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink);padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
+.bunpou-lyric-block{padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
+.bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink)}
+.bunpou-ro{font-family:var(--serif);font-size:.82rem;font-style:italic;color:var(--ash);line-height:1.5;margin-top:.45rem;letter-spacing:.02em}
+.bunpou-ro:empty{display:none}
+.bunpou-ro-lbl{font-size:.48rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:.5rem;display:block}
 .bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
 .bunpou-list{display:flex;flex-direction:column;gap:.55rem}
 .bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.6;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
@@ -1209,6 +1214,7 @@ body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .
 .bunpou-item--sopan .bunpou-item-type{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.08)}
 .bunpou-item--penghubung .bunpou-item-type{color:#2d6a5a;border-color:rgba(45,106,90,.35);background:rgba(45,106,90,.08)}
 .bunpou-item--ekspresi .bunpou-item-type{color:var(--ash);border-color:var(--border);background:var(--paper)}
+.bunpou-item--slang .bunpou-item-type{color:#8b5a2b;border-color:rgba(139,90,43,.35);background:rgba(139,90,43,.08)}
 .bunpou-item-char{font-family:var(--jp);font-size:1rem;color:var(--rose);font-weight:600}
 .bunpou-item-label{font-size:.58rem;font-weight:600;letter-spacing:.06em;color:var(--ink);margin-top:.15rem}
 .bunpou-levels{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
@@ -1225,6 +1231,11 @@ body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .
 .bunpou-item-lvl.n2{color:var(--plum);border-color:rgba(124,77,110,.35)}
 .bunpou-item-lvl.n1{color:var(--rose);border-color:rgba(196,99,122,.4)}
 .bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
+.bunpou-item-actions{display:flex;align-items:center;justify-content:flex-end;margin-top:.5rem;padding-top:.45rem;border-top:1px dashed var(--border)}
+.bunpou-save-btn{font-family:var(--sans);font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .55rem;border:1px solid var(--border);background:var(--paper);color:var(--ash);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.bunpou-save-btn:hover{border-color:var(--gold);color:var(--rose)}
+.bunpou-save-btn.is-saved{border-color:var(--rose);color:var(--rose);background:rgba(196,99,122,.08)}
+.bunpou-foot-links{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center}
 .bunpou-foot{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
 .bunpou-gloss{display:inline-flex;align-items:center;gap:.35rem;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none}
 .bunpou-gloss:hover{color:var(--rose)}
@@ -2090,6 +2101,7 @@ ${(()=>{
       <span class="footer-col-label">Jelajahi</span>
       <a class="footer-link" href="../index.html">Katalog Lengkap</a>
       <a class="footer-link" href="../playlists.html">Setlist Belajar</a>
+      <a class="footer-link" href="../bunpou-saved.html">Bunpou tersimpan</a>
       <a class="footer-link" href="../kata/index.html">Glosarium 文法</a>
       <a class="footer-link" href="../stories.html">Cerita</a>
       <a class="footer-link" href="../contact.html">Hubungi</a>
@@ -2114,11 +2126,18 @@ ${(()=>{
     </div>
     <div class="bunpou-body">
       <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
-      <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
+      <div class="bunpou-lyric-block">
+        <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
+        <span class="bunpou-ro-lbl" id="bunpou-ro-lbl" style="display:none">Romaji</span>
+        <div class="bunpou-ro" id="bunpou-ro-preview"></div>
+      </div>
       <p class="bunpou-summary" id="bunpou-summary"></p>
       <div class="bunpou-list" id="bunpou-list"></div>
       <div class="bunpou-foot">
-        <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
+        <div class="bunpou-foot-links">
+          <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
+          <a class="bunpou-gloss" href="../bunpou-saved.html">Bunpou tersimpan →</a>
+        </div>
       </div>
     </div>
   </div>
@@ -2462,6 +2481,57 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
   }
 
+  var BUNPOU_SAVE_KEY = 'yume_saved_bunpou';
+
+  function loadSavedBunpouList() {
+    try { return JSON.parse(localStorage.getItem(BUNPOU_SAVE_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function bunpouSaveId(it) {
+    return (it.text || it.char || '') + '|' + (it.label || '') + '|' + (it.kind || 'pola');
+  }
+
+  function isBunpouItemSaved(it) {
+    var id = bunpouSaveId(it);
+    return loadSavedBunpouList().some(function (x) { return x.id === id; });
+  }
+
+  window.saveBunpouByIndex = function (bi) {
+    var it = window._bunpouRenderList && window._bunpouRenderList[bi];
+    if (!it) return;
+    var id = bunpouSaveId(it);
+    var list = loadSavedBunpouList();
+    if (list.some(function (x) { return x.id === id; })) {
+      if (typeof toast === 'function') toast('Bunpou ini sudah tersimpan');
+      return;
+    }
+    var ctx = window._bunpouLineContext || {};
+    list.unshift({
+      id: id,
+      text: it.text || it.char || '',
+      label: it.label || '',
+      desc: it.desc || '',
+      level: it.level || 'N5',
+      kind: it.kind || 'pola',
+      kindLabel: it.kindLabel || '',
+      savedAt: Date.now(),
+      songSlug: ctx.slug || '',
+      songTitle: ctx.title || '',
+      lineIdx: typeof ctx.idx === 'number' ? ctx.idx : -1,
+      lineJp: ctx.jp || '',
+      lineRo: ctx.ro || ''
+    });
+    try {
+      localStorage.setItem(BUNPOU_SAVE_KEY, JSON.stringify(list.slice(0, 300)));
+    } catch (e) {}
+    var btn = document.querySelector('.bunpou-save-btn[data-bunpou-idx="' + bi + '"]');
+    if (btn) {
+      btn.classList.add('is-saved');
+      btn.textContent = 'Tersimpan ✓';
+    }
+    if (typeof toast === 'function') toast('Bunpou disimpan ★');
+  };
+
   window.closeBunpouPopup = function() {
     var overlay = document.getElementById('bunpou-overlay');
     if (!overlay) return;
@@ -2478,19 +2548,26 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     if (!overlay) return;
     var plain = getPlainLine(idx);
     var jp = plain.jp || '';
+    var ro = (plain.ro || '').trim();
     var lineTag = document.getElementById('bunpou-line-num');
     var preview = document.getElementById('bunpou-jp-preview');
+    var roPreview = document.getElementById('bunpou-ro-preview');
+    var roLbl = document.getElementById('bunpou-ro-lbl');
     var summaryEl = document.getElementById('bunpou-summary');
     var listEl = document.getElementById('bunpou-list');
     var glossLink = document.getElementById('bunpou-gloss-link');
+    window._bunpouLineContext = { slug: SONG_SLUG, title: SONG_TITLE, idx: idx, jp: jp, ro: ro };
+    window._bunpouRenderList = [];
     if (lineTag) lineTag.textContent = 'Baris ' + (idx + 1) + ' · ' + SONG_TITLE;
-    if (preview) preview.textContent = jp || plain.ro || '—';
+    if (preview) preview.textContent = jp || '—';
+    if (roPreview) roPreview.textContent = ro;
+    if (roLbl) roLbl.style.display = ro ? 'block' : 'none';
     document.querySelectorAll('.ll-item').forEach(function(r) {
       r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
     });
     saveProgress(idx);
     var lvBox = document.getElementById('bunpou-levels');
-    if (!jp && !(plain.ro || '').trim()) {
+    if (!jp && !ro) {
       if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks untuk dianalisis.';
       if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
       if (glossLink) glossLink.style.display = 'none';
@@ -2513,16 +2590,20 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       }
       var html = '';
       function itemHtml(it) {
+        var bi = window._bunpouRenderList.length;
+        window._bunpouRenderList.push(it);
         var c = (it.level || 'N5').toLowerCase();
         var k = (it.kind || 'pola');
         var kindLabel = it.kindLabel || 'Pola tata bahasa';
+        var saved = isBunpouItemSaved(it);
         return '<div class="bunpou-item bunpou-item--' + k + '">' +
           '<div class="bunpou-item-top">' +
           '<span class="bunpou-item-type" title="Jenis bunpou">' + kindLabel + '</span>' +
           '<span class="bunpou-item-lvl ' + c + '" title="Level JLPT">' + (it.level || 'N5') + '</span></div>' +
           '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
           '<div class="bunpou-item-label">' + (it.label || '') + ' · <em style="font-style:normal;color:var(--smoke);font-size:.58rem">' + kindLabel + '</em></div>' +
-          '<div class="bunpou-item-desc">' + (it.desc || '') + '</div></div>';
+          '<div class="bunpou-item-desc">' + (it.desc || '') + '</div>' +
+          '<div class="bunpou-item-actions"><button type="button" class="bunpou-save-btn' + (saved ? ' is-saved' : '') + '" data-bunpou-idx="' + bi + '" onclick="event.stopPropagation();saveBunpouByIndex(' + bi + ')">' + (saved ? 'Tersimpan ✓' : 'Simpan ★') + '</button></div></div>';
       }
       var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
         ? window.YumeGrammar.KIND_ORDER
@@ -5113,6 +5194,7 @@ async function main() {
     `  <url><loc>${BASE_URL}/stories.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/artis/</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>`,
+    `  <url><loc>${BASE_URL}/bunpou-saved.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>monthly</changefreq></url>`,
   ];
   const slugMap = {};
 

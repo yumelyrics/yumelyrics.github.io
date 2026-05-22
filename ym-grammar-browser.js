@@ -2050,6 +2050,8 @@
       const match = row[0];
       if (!match) continue;
       if (match.length === 1 && PARTICLE_CHAR_SET.has(match)) continue;
+      /** Hindari な・た・て di tengah/awal kosakata (ならす, 食べた, dll.) — partikel lewat scan terpisah */
+      if (match.length === 1 && /^[\u3040-\u309F]$/.test(match)) continue;
       map.set(match, row);
     }
     return [...map.values()];
@@ -2126,6 +2128,57 @@
 
   function isKanaChar(ch) {
     return KANA.test(ch);
+  }
+
+  function isKanaOnlyPattern(ph) {
+    const core = String(ph).replace(/[～〜]/g, '');
+    return core.length > 0 && /^[\u3040-\u30FFー]+$/.test(core);
+  }
+
+  /**
+   * Pola bunpou hanya valid di batas kata / setelah kanji — bukan huruf di dalam kosakata.
+   * Contoh: tolak な di ならす, た di tengah 立った (kecuali di akhir bentuk).
+   */
+  function isValidPhraseMatch(text, start, ph) {
+    const len = ph.length;
+    const end = start + len;
+    const prev = text[start - 1] || '';
+    const next = text[end] || '';
+    const prevIsKana = isKanaChar(prev);
+    const nextIsKana = isKanaChar(next);
+    const prevBound = !prev || BOUND.test(prev);
+    const nextBound = !next || BOUND.test(next);
+    const prevIsKanji = KANJI.test(prev);
+    const nextIsKanji = KANJI.test(next);
+    const phCore = ph.replace(/[～〜]/g, '');
+    const phHasKanji = KANJI.test(phCore);
+    const phKanaOnly = isKanaOnlyPattern(ph);
+
+    if (phHasKanji && !phKanaOnly) {
+      return prevBound || nextBound || prevIsKanji || nextIsKanji;
+    }
+
+    if (phKanaOnly) {
+      const klen = [...phCore].length;
+      if (klen === 1) {
+        if (!prev && nextIsKana) return false;
+        if (prevIsKana && nextIsKana) return false;
+        return prevBound || nextBound || prevIsKanji || !next;
+      }
+      if (klen === 2) {
+        if (!prev && nextIsKana) return false;
+        if (prevIsKana && nextIsKana && !nextBound) return false;
+      }
+      if (klen <= 3 && !prevBound && !nextBound && !prevIsKanji && !nextIsKanji) {
+        return false;
+      }
+      if (klen >= 4) {
+        return prevBound || nextBound || prevIsKanji || nextIsKanji;
+      }
+      return prevBound || nextBound || prevIsKanji;
+    }
+
+    return prevBound || nextBound;
   }
 
   /** Hindari か di わかって, の di tengah kata, dll. */
@@ -2233,7 +2286,7 @@
         const ix = text.indexOf(ph, start);
         if (ix < 0) break;
         const key = ix + ':' + ph;
-        if (!usedSpan.has(key)) {
+        if (!usedSpan.has(key) && isValidPhraseMatch(text, ix, ph)) {
           usedSpan.add(key);
           for (let k = ix; k < ix + ph.length; k++) usedSpan.add('c' + k);
           const knd = kind || inferKind(ph);
@@ -2241,7 +2294,7 @@
             items.push(makeItem(ph, label, desc, level, knd, gloss));
           }
         }
-        start = ix + ph.length;
+        start = ix + 1;
       }
     }
 

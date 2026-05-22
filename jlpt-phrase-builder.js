@@ -80,6 +80,7 @@ export function parseJlptBunpouText(text) {
     for (const match of splitPatterns(rawPat)) {
       const mt = match.replace(/〜/g, '～').trim();
       if (!mt || mt.length > 48 || /\[A\]/.test(mt) || seen.has(mt)) continue;
+      if (mt.length === 1 && /^[\u3040-\u309F]$/.test(mt)) continue;
       seen.add(mt);
       rows.push([mt, label.slice(0, 80), desc, slugify(label || mt), level, inferJlptKind(mt)]);
     }
