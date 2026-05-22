@@ -342,12 +342,13 @@
     let list;
     try { list = await fetchJson('https://lrclib.net/api/search?q=' + q); } catch { return null; }
     if (!Array.isArray(list) || !list.length) return null;
-    const norm = s => s.toLowerCase().replace(/[^\w]/g, '');
+    // Pakai Unicode-aware norm: buang punctuation tapi pertahankan huruf & angka (termasuk kanji, kana, dll)
+    const norm = s => s.toLowerCase().replace(/[\p{P}\p{S}\s]/gu, '');
     const na = norm(artist), nt = norm(title);
     const hit =
       list.find(x => norm(x.artistName || '') === na && norm(x.trackName || '') === nt) ||
       list.find(x => norm(x.trackName || '').includes(nt) && norm(x.artistName || '').includes(na)) ||
-      list[0];
+      null; // jangan fallback ke list[0] — bisa lagu yang salah total
     if (hit?.id) {
       try { return await fetchJson('https://lrclib.net/api/get/' + hit.id); } catch { return hit; }
     }
@@ -557,12 +558,12 @@
     try {
       const list = await fetchJsonSig('https://lrclib.net/api/search?q=' + q, signal);
       if (Array.isArray(list) && list.length) {
-        const norm = s => s.toLowerCase().replace(/[^\w]/g, '');
+        const norm = s => s.toLowerCase().replace(/[\p{P}\p{S}\s]/gu, '');
         const na = norm(artist), nt = norm(title);
         const hit =
           list.find(x => norm(x.artistName||'')===na && norm(x.trackName||'')===nt) ||
           list.find(x => norm(x.trackName||'').includes(nt) && norm(x.artistName||'').includes(na)) ||
-          list[0];
+          null; // jangan fallback ke list[0] — bisa lagu yang salah
         if (hit?.id) {
           try { const d = await fetchJsonSig('https://lrclib.net/api/get/'+hit.id, signal); if (pickLyrics(d)) return d; } catch(e) { if (e.name==='AbortError') throw e; }
         }
