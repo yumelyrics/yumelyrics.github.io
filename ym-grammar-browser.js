@@ -1905,7 +1905,7 @@
     ['グッジョブ', 'Gujjobu', 'Good job.', 'gujjobu', 'N4', 'slang'],
     ['かっこいいじゃん', 'Kakkoii jan', 'Keren kan.', 'kakkoii-jan', 'N4', 'slang'],
     ['イケメン', 'Ikemen', 'Cakep.', 'ikemen', 'N4', 'slang'],
-    ['死ぬほど好き', 'Shinu hodo suki', 'Suka mati-matan.', 'shinu-hodo-suki', 'N4', 'slang'],
+    ['死ぬほど好き', 'Shinu hodo suki', 'Suka mati-matian.', 'shinu-hodo-suki', 'N4', 'slang'],
   ];
 
   /** Parser JLPT N5–N1 dari Documents/JLPT no BUNPOU.txt (arti Indonesia) */
