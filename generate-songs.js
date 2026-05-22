@@ -10,14 +10,14 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { buildJlptPhrasesInject, buildJlptSourceInject } from './jlpt-phrase-builder.js';
+import { buildJlptPhrasesInject, buildJlptSourceInject, applyJlptSourceToGrammar } from './jlpt-phrase-builder.js';
 
 function loadGrammarBrowserJs() {
   let grammar = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
   const jlptSrc = buildJlptSourceInject();
   if (jlptSrc !== "''") {
-    grammar = grammar.replace("/*JLPT_BUNPOU_SOURCE*/''", jlptSrc);
-    const rows = (jlptSrc.match(/\\\\n/g) || jlptSrc.match(/\\n/g) || []).length;
+    grammar = applyJlptSourceToGrammar(grammar, jlptSrc);
+    const rows = (jlptSrc.match(/\\n/g) || []).length;
     console.log('✓ JLPT bunpou source injected (~' + Math.max(0, rows) + ' baris teks)');
   } else {
     const jlptInject = buildJlptPhrasesInject();
@@ -1231,6 +1231,12 @@ body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .
 .bunpou-item-lvl.n2{color:var(--plum);border-color:rgba(124,77,110,.35)}
 .bunpou-item-lvl.n1{color:var(--rose);border-color:rgba(196,99,122,.4)}
 .bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
+.bunpou-item-rumus{font-size:.65rem;color:var(--plum,#7c4d6e);line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(201,169,110,.12);border-left:2px solid var(--gold,#c9a96e)}
+.bunpou-item-rumus strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);margin-right:.35rem}
+.bunpou-item-contoh{font-size:.65rem;line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(61,90,128,.08);border-left:2px solid #4a6a8a}
+.bunpou-item-contoh strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:.2rem}
+.bunpou-item-contoh-jp{font-family:var(--jp);color:var(--ink);display:block;margin-bottom:.12rem}
+.bunpou-item-contoh-id{font-size:.62rem;color:var(--ash);display:block}
 .bunpou-item-actions{display:flex;align-items:center;justify-content:flex-end;margin-top:.5rem;padding-top:.45rem;border-top:1px dashed var(--border)}
 .bunpou-save-btn{font-family:var(--sans);font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .55rem;border:1px solid var(--border);background:var(--paper);color:var(--ash);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
 .bunpou-save-btn:hover{border-color:var(--gold);color:var(--rose)}
@@ -2603,6 +2609,11 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
           '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
           '<div class="bunpou-item-label">' + (it.label || '') + ' · <em style="font-style:normal;color:var(--smoke);font-size:.58rem">' + kindLabel + '</em></div>' +
           '<div class="bunpou-item-desc">' + (it.desc || '') + '</div>' +
+          (it.rumus ? '<div class="bunpou-item-rumus"><strong>Rumus</strong>' + (it.rumus || '') + '</div>' : '') +
+          (it.contoh && it.contoh.jp
+            ? '<div class="bunpou-item-contoh"><strong>Contoh</strong><span class="bunpou-item-contoh-jp">' + it.contoh.jp + '</span>' +
+              (it.contoh.id ? '<span class="bunpou-item-contoh-id">' + it.contoh.id + '</span>' : '') + '</div>'
+            : '') +
           '<div class="bunpou-item-actions"><button type="button" class="bunpou-save-btn' + (saved ? ' is-saved' : '') + '" data-bunpou-idx="' + bi + '" onclick="event.stopPropagation();saveBunpouByIndex(' + bi + ')">' + (saved ? 'Tersimpan ✓' : 'Simpan ★') + '</button></div></div>';
       }
       var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
