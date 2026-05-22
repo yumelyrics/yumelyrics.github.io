@@ -315,7 +315,9 @@
     ['ていく', 'Te iku', 'Berlanjut.', 'te-iku', 'N4'],
     ['てくる', 'Te kuru', 'Datang / berkembang.', 'te-kuru', 'N4'],
     ['てしまう', 'Te shimau', 'Terlanjur / selesai.', 'te-shimau', 'N4'],
-    ['ている', 'Te iru', 'Sedang / hasil.', 'te-iru', 'N4'],
+    ['ている', 'Te iru', 'Sedang / keadaan (〜ている).', 'te-iru', 'N4', 'bentuk'],
+    ['んでいる', 'Te iru (〜んでいる)', 'Sedang · て+いる (遊ぶ→遊んでいる).', 'nde-iru', 'N4', 'bentuk'],
+    ['いでいる', 'Te iru (〜いでいる)', 'Sedang · て+いる (泳ぐ→泳いでいる).', 'ide-iru', 'N4', 'bentuk'],
     ['てください', 'Te kudasai', 'Tolong.', 'te-kudasai', 'N4'],
     ['なければならない', 'Nakereba naranai', 'Harus.', 'nakereba-naranai', 'N4'],
     ['なくてはいけない', 'Nakute wa ikenai', 'Harus.', 'nakute-wa-ikenai', 'N4'],
@@ -461,7 +463,14 @@
     ['なら', 'Nara', 'Kalau.', 'nara', 'N5'],
     ['たい', 'Tai', 'Ingin.', 'tai', 'N5'],
     ['たくない', 'Takunai', 'Tidak ingin.', 'tai', 'N5'],
-    ['ている', 'Te iru', 'Sedang.', 'te-iru', 'N5'],
+    ['ている', 'Te iru', 'Sedang / keadaan (〜ている).', 'te-iru', 'N5', 'bentuk'],
+    ['んでいる', 'Te iru (〜んでいる)', 'Sedang · て+いる (遊ぶ→遊んでいる).', 'nde-iru', 'N5', 'bentuk'],
+    ['いでいる', 'Te iru (〜いでいる)', 'Sedang · て+いる (泳ぐ→泳いでいる).', 'ide-iru', 'N5', 'bentuk'],
+    ['している', 'Te iru (〜している)', 'Sedang · て+いる (する→している).', 'shite-iru', 'N5', 'bentuk'],
+    ['してる', 'Te iru (〜してる)', 'Sedang (している casual).', 'shiteru', 'N5', 'bentuk'],
+    ['っている', 'Te iru (〜っている)', 'Sedang (ている).', 'tteiru', 'N5', 'bentuk'],
+    ['ってる', 'Te iru (〜ってる)', 'Sedang (ている casual).', 'tteru', 'N5', 'bentuk'],
+    ['てる', 'Te iru (〜てる)', 'Sedang (ている bentuk casual).', 'teru', 'N5', 'bentuk'],
     ['てください', 'Te kudasai', 'Tolong.', 'te-kudasai', 'N5'],
     ['てしまう', 'Te shimau', 'Selesai / terlanjur.', 'te-shimau', 'N5'],
     ['てくる', 'Te kuru', 'Datang.', 'te-kuru', 'N5'],
@@ -1098,7 +1107,7 @@
     ['愛してくれ', 'Aishite kure', 'Cintai aku.', 'aishite-kure', 'N4', 'pola'],
     ['愛してくれない', 'Aishite kurenai', 'Tidak mencintai.', 'aishite-kurenai', 'N4', 'pola'],
     ['愛してるの', 'Aishiteru no', 'Aku mencintaimu (nuansa).', 'aishiteru-no', 'N4', 'pola'],
-    ['好きでいる', 'Suki de iru', 'Tetap suka.', 'suki-de-iru', 'N4', 'pola'],
+    ['好きでいる', 'Suki de iru', 'Tetap suka (suka + de iru).', 'suki-de-iru', 'N4', 'pola'],
     ['好きだった', 'Suki datta', 'Dulu suka.', 'suki-datta', 'N4', 'pola'],
     ['好きだったの', 'Suki datta no', 'Dulu suka (nuansa).', 'suki-datta-no', 'N4', 'pola'],
     ['嫌いになった', 'Kirai ni natta', 'Jadi benci.', 'kirai-ni-natta', 'N4', 'pola'],
@@ -1935,7 +1944,7 @@
     function jlptKind(match) {
       if (/です|ます|でした|ません|ましょう|でしょう|ござい|いたし|いらっしゃ|であります|でございます/.test(match)) return 'sopan';
       if (match.length === 1 && 'はがをにでのともかよねやへ'.includes(match)) return 'partikel';
-      if (/すぎる|たい|ない|られる|れる|ている|てある|させる|くなる|になり/.test(match)) return 'bentuk';
+      if (/すぎる|たい|ない|られる|れる|ている|てる|でいる|てある|させる|くなる|になり/.test(match)) return 'bentuk';
       if (/^(でも|けど|しかし|または|つまり|ところで|それで|それなら|だって|なお|一方|反面|および|ちなみに|それでも|ところが|さて|それとも)$/.test(match)) return 'penghubung';
       return 'pola';
     }
@@ -2136,6 +2145,52 @@
   }
 
   /**
+   * 「でいる」 di 遊んでいる = bentuk て+いる (romaji: asonde iru), BUKAN partikel で.
+   * Tolak match pola でいる jika didahului hiragana bentuk て (ん/い/し/っ…).
+   */
+  function shouldRejectDeIruAsTeForm(text, start, ph) {
+    if (ph !== 'でいる') return false;
+    const prev = text[start - 1] || '';
+    if ('んいしって'.includes(prev)) return true;
+    return false;
+  }
+
+  function hasTeIruInItems(items) {
+    return items.some((x) => {
+      const t = x.text || '';
+      return (
+        /ている|んでいる|いでいる|している|してる|っている|ってる/.test(t) ||
+        (t.length <= 3 && /^(てる|てる)$/.test(t)) ||
+        x.glossSlug === 'te-iru'
+      );
+    });
+  }
+
+  /** Romaji: asonde iru / tabete iru = 〜ている (bukan partikel で + iru). */
+  function collectTeIruFromRomaji(romaji, items, seenKeys) {
+    if (!romaji || !String(romaji).trim()) return;
+    if (hasTeIruInItems(items)) return;
+    const ro = String(romaji).toLowerCase();
+    const key = 'grammar:te-iru-romaji';
+    if (seenKeys.has(key)) return;
+    const teIruRomaji =
+      /\b[a-zāīūēō]{2,}(te|de|nde)\s+(iru|imasu)\b/i.test(ro) ||
+      /\b[a-zāīūēō]{2,}(teru|teiru|deiru|ndeteru|ndeteiru|shiteru|shiteiru)\b/i.test(ro);
+    if (!teIruRomaji) return;
+    seenKeys.add(key);
+    items.push(
+      makeItem(
+        'ている',
+        'Te iru (〜ている)',
+        'Sedang melakukan / keadaan. Contoh: asobu→asonde iru (遊んでいる), taberu→tabete iru.',
+        'N5',
+        'bentuk',
+        'te-iru'
+      )
+    );
+  }
+
+  /**
    * って pola topik (「彼って」) vs って bentuk て verba (「光って」= hikatte).
    * Di romaji: partikel = token "tte" terpisah; verba = satu kata diakhiri tte (hikatte, tsuite).
    */
@@ -2184,6 +2239,7 @@
     const phKanaOnly = isKanaOnlyPattern(ph);
 
     if (shouldRejectTtePattern(text, start, ph, romaji)) return false;
+    if (shouldRejectDeIruAsTeForm(text, start, ph)) return false;
 
     if (phHasKanji && !phKanaOnly) {
       return prevBound || nextBound || prevIsKanji || nextIsKanji;
@@ -2260,6 +2316,10 @@
     if (t === 'ra' && prev === 'ta') return true;
     if (t === 'ni' && prev === 'de') return true;
     if (t === 'de' && next === 'wa') return true;
+    if (t === 'iru' && prev === 'de') return true;
+    if (t === 'de' && next === 'iru') return true;
+    if (t === 'iru' && prev === 'te') return true;
+    if (t === 'te' && next === 'iru') return true;
     return false;
   }
 
@@ -2363,6 +2423,9 @@
         start = ix + 1;
       }
     }
+
+    /** Romaji: ...te/de iru (asonde iru) = 〜ている, bukan partikel で */
+    collectTeIruFromRomaji(romaji, items, seenParticleKeys);
 
     /** Ada lirik JP: partikel dari hiragana + hormati span bunpou (ように → bukan に terpisah) */
     if (text) {
