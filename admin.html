@@ -980,7 +980,7 @@ Paragraf dipisah dengan enter 2x.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, where, writeBatch }
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, getDoc, where, writeBatch }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -999,7 +999,7 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
-const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
@@ -1238,7 +1238,11 @@ async function isAdminUser(user){
   if(!user) return false;
   try {
     const token = await user.getIdTokenResult(true);
-    return token.claims.admin === true;
+    if (token.claims.admin === true) return true;
+  } catch(e) {}
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists();
   } catch(e) { return false; }
 }
 async function rejectNonAdmin(user){
@@ -1247,8 +1251,8 @@ async function rejectNonAdmin(user){
   await signOut(auth);
   document.getElementById('loginOverlay').classList.remove('hide');
   document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('l-err').textContent = 'Email ini bukan akun admin.';
-  resetAdminGate();
+  document.getElementById('l-err').textContent = 'Akun belum admin. Set custom claim admin:true atau buat dokumen admins/{uid} di Firestore, lalu login ulang.';
+  showAdminLoginStep('credentials');
   if(unsubSongs){ unsubSongs(); unsubSongs = null; }
   return true;
 }
