@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://*.googleapis.com; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script>(function(){'use strict';var b=function(e){e.preventDefault();return false};document.addEventListener('contextmenu',b);document.addEventListener('keydown',function(e){var k=(e.key||'').toUpperCase(),c=e.ctrlKey||e.metaKey,s=e.shiftKey;if(k==='F12'||(c&&s&&'IJC'.includes(k))||(c&&!s&&k==='U')||(c&&s&&k==='K')){b(e)}},true);document.addEventListener('dragstart',b);var _dt=0;setInterval(function(){var w=window.outerWidth-window.innerWidth>180,h=window.outerHeight-window.innerHeight>180;if((w||h)&&!_dt){_dt=1;document.documentElement.style.filter='blur(12px)';document.title='Akses diblokir'}},800);})();</script>
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <!-- Init theme sebelum render untuk mencegah flash -->
@@ -997,23 +999,80 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
-const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
-// Ubah angka ASCII di bawah untuk mengganti kata kunci (contoh: "YumeAdmin" = Y,u,m,e,A,d,m,i,n)
-const ADMIN_GATE_CHARS = [89,117,109,101,65,100,109,105,110];
-function getAdminGateKey(){
-  return ADMIN_GATE_CHARS.map(c => String.fromCharCode(c)).join('');
+const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
+const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+const GATE_LOCK_KEY = 'yume_gate_lock_until';
+const LOGIN_LOCK_KEY = 'yume_login_lock_until';
+const GATE_ATTEMPTS_KEY = 'yume_gate_attempts';
+const LOGIN_ATTEMPTS_KEY = 'yume_login_attempts';
+function getStoredAttempts(key) {
+  try { return Math.max(0, parseInt(sessionStorage.getItem(key) || '0', 10) || 0); } catch (e) { return 0; }
 }
-function isGateKeyOk(input){
-  const a = String(input || '').trim();
-  const b = getAdminGateKey();
-  if(a.length !== b.length) return false;
-  let diff = 0;
-  for(let i = 0; i < a.length; i++) diff |= (a.charCodeAt(i) ^ b.charCodeAt(i));
-  return diff === 0;
+function setStoredAttempts(key, n) {
+  try {
+    if (n > 0) sessionStorage.setItem(key, String(n));
+    else sessionStorage.removeItem(key);
+  } catch (e) {}
 }
-function isAdminGateUnlocked(){
-  try { return sessionStorage.getItem(ADMIN_GATE_SESSION) === '1'; } catch(e) { return false; }
+let _gateAttempts = getStoredAttempts(GATE_ATTEMPTS_KEY);
+let _loginAttempts = getStoredAttempts(LOGIN_ATTEMPTS_KEY);
+const GATE_MAX_ATTEMPTS = 3;
+const GATE_LOCKOUT_MS = 30 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 3;
+const LOGIN_LOCKOUT_MS = 30 * 60 * 1000;
+function getStoredLock(key) {
+  try {
+    const t = Number(sessionStorage.getItem(key) || 0);
+    if (t && Date.now() < t) return t;
+    sessionStorage.removeItem(key);
+  } catch (e) {}
+  return 0;
+}
+function setStoredLock(key, until) {
+  try {
+    if (until > Date.now()) sessionStorage.setItem(key, String(until));
+    else sessionStorage.removeItem(key);
+  } catch (e) {}
+}
+function clearStoredLock(key) {
+  try { sessionStorage.removeItem(key); } catch (e) {}
+}
+let _gateLockUntil = getStoredLock(GATE_LOCK_KEY);
+let _loginLockUntil = getStoredLock(LOGIN_LOCK_KEY);
+
+async function isGateKeyOk(input) {
+  const val = String(input || '').trim();
+  if (!val) return false;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex === ADMIN_GATE_HASH;
+}
+function setAdminGateSession() {
+  const token = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random();
+  sessionStorage.setItem(ADMIN_GATE_SESSION, token + '.' + Date.now());
+}
+function isAdminGateUnlocked() {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_GATE_SESSION);
+    if (!raw) return false;
+    const dot = raw.lastIndexOf('.');
+    if (dot < 1) return false;
+    const ts = Number(raw.slice(dot + 1));
+    if (!ts || Date.now() - ts > ADMIN_GATE_TTL_MS) {
+      sessionStorage.removeItem(ADMIN_GATE_SESSION);
+      return false;
+    }
+    return raw.slice(0, dot).length >= 8;
+  } catch (e) { return false; }
+}
+function sanitizeUrl(url) {
+  try {
+    const u = new URL(String(url || '').trim());
+    if (!['https:', 'http:'].includes(u.protocol)) return '#';
+    return u.href;
+  } catch { return '#'; }
 }
 function showAdminLoginStep(step){
   const gate = document.getElementById('login-gate-step');
@@ -1032,21 +1091,41 @@ function initAdminLoginUI(){
   if(isAdminGateUnlocked()) showAdminLoginStep('credentials');
   else showAdminLoginStep('gate');
 }
-window.unlockAdminGate = function(){
+window.unlockAdminGate = async function(){
   const inp = document.getElementById('l-gate');
   const err = document.getElementById('l-gate-err');
   const btn = document.getElementById('gateBtn');
   const val = inp ? inp.value : '';
   if(!val){ if(err) err.textContent = 'Kata kunci wajib diisi.'; return; }
+  const now = Date.now();
+  if(_gateLockUntil && now < _gateLockUntil){
+    const secs = Math.ceil((_gateLockUntil - now) / 1000);
+    if(err) err.textContent = 'Terlalu banyak percobaan. Tunggu ' + secs + ' detik.';
+    return;
+  }
   if(btn) btn.disabled = true;
   if(err) err.textContent = '';
-  if(!isGateKeyOk(val)){
-    if(err) err.textContent = 'Kata kunci salah.';
+  if(!(await isGateKeyOk(val))){
+    _gateAttempts++;
+    setStoredAttempts(GATE_ATTEMPTS_KEY, _gateAttempts);
+    if(_gateAttempts >= GATE_MAX_ATTEMPTS){
+      _gateLockUntil = Date.now() + GATE_LOCKOUT_MS;
+      setStoredLock(GATE_LOCK_KEY, _gateLockUntil);
+      _gateAttempts = 0;
+      setStoredAttempts(GATE_ATTEMPTS_KEY, 0);
+      if(err) err.textContent = 'Terlalu banyak percobaan. Terkunci 30 menit.';
+    } else {
+      if(err) err.textContent = 'Kata kunci salah.';
+    }
     if(inp){ inp.value = ''; inp.focus(); }
     if(btn) btn.disabled = false;
     return;
   }
-  try { sessionStorage.setItem(ADMIN_GATE_SESSION, '1'); } catch(e){}
+  _gateAttempts = 0;
+  _gateLockUntil = 0;
+  clearStoredLock(GATE_LOCK_KEY);
+  setStoredAttempts(GATE_ATTEMPTS_KEY, 0);
+  try { setAdminGateSession(); } catch(e){}
   if(inp) inp.value = '';
   showAdminLoginStep('credentials');
   if(btn) btn.disabled = false;
@@ -1061,11 +1140,15 @@ window.resetAdminGate = function(){
   document.getElementById('l-pw').value = '';
   showAdminLoginStep('gate');
 };
-function isAdminUser(user){
-  return !!(user && ADMIN_EMAILS.includes(user.email));
+async function isAdminUser(user){
+  if(!user) return false;
+  try {
+    const token = await user.getIdTokenResult(true);
+    return token.claims.admin === true;
+  } catch(e) { return false; }
 }
 async function rejectNonAdmin(user){
-  if(!user || isAdminUser(user)) return false;
+  if(!user || await isAdminUser(user)) return false;
   toast('Akun ini tidak punya akses admin.');
   await signOut(auth);
   document.getElementById('loginOverlay').classList.remove('hide');
@@ -1117,20 +1200,43 @@ window.doLogin = async () => {
   const email = document.getElementById('l-email').value.trim();
   const pw    = document.getElementById('l-pw').value;
   if(!email||!pw){ err.textContent='Email & password wajib diisi.'; return; }
+  const now = Date.now();
+  if(_loginLockUntil && now < _loginLockUntil){
+    const secs = Math.ceil((_loginLockUntil - now) / 1000);
+    err.textContent = 'Terlalu banyak percobaan. Tunggu ' + secs + ' detik.';
+    return;
+  }
   btn.disabled=true; err.textContent='';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
-    if(!isAdminUser(auth.currentUser)){
+    if(!(await isAdminUser(auth.currentUser))){
       await signOut(auth);
-      err.textContent = 'Email ini bukan akun admin.';
+      err.textContent = 'Akun tidak punya hak admin (custom claim).';
       document.getElementById('l-pw').value='';
       btn.disabled=false;
       return;
     }
+    _loginAttempts = 0;
+    _loginLockUntil = 0;
+    clearStoredLock(LOGIN_LOCK_KEY);
+    setStoredAttempts(LOGIN_ATTEMPTS_KEY, 0);
     document.getElementById('l-pw').value='';
   } catch(e){
-    err.textContent = (e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')
-      ? 'Email atau password salah.' : 'Login gagal, coba lagi.';
+    if(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found'){
+      _loginAttempts++;
+      setStoredAttempts(LOGIN_ATTEMPTS_KEY, _loginAttempts);
+      if(_loginAttempts >= LOGIN_MAX_ATTEMPTS){
+        _loginLockUntil = Date.now() + LOGIN_LOCKOUT_MS;
+        setStoredLock(LOGIN_LOCK_KEY, _loginLockUntil);
+        _loginAttempts = 0;
+        setStoredAttempts(LOGIN_ATTEMPTS_KEY, 0);
+        err.textContent = 'Terlalu banyak percobaan. Terkunci 30 menit.';
+      } else {
+        err.textContent = 'Email atau password salah.';
+      }
+    } else {
+      err.textContent = 'Login gagal, coba lagi.';
+    }
     document.getElementById('l-pw').value='';
     document.getElementById('l-pw').focus();
   }
@@ -1164,10 +1270,10 @@ function renderBody(raw){
     if(para.startsWith('> ')) return `<blockquote>${escHtml(para.slice(2))}</blockquote>`;
     return `<p>${escHtml(para)}</p>`;
   }).join('');
-  html = html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g,'<em>$1</em>');
-  html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/g,'<img src="$2" alt="$1" style="max-width:100%;border:1px solid var(--border);margin:.5rem 0;display:block">');
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--accent2)">$1</a>');
+  html = html.replace(/\*\*(.+?)\*\*/g,(_,t)=>'<strong>'+escHtml(t)+'</strong>');
+  html = html.replace(/\*(.+?)\*/g,(_,t)=>'<em>'+escHtml(t)+'</em>');
+  html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\)]+)\)/g,(_,alt,url)=>'<img src="'+sanitizeUrl(url)+'" alt="'+escHtml(alt)+'" style="max-width:100%;border:1px solid var(--border);margin:.5rem 0;display:block">');
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,(_,label,url)=>'<a href="'+sanitizeUrl(url)+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent2)">'+escHtml(label)+'</a>');
   return html;
 }
 
@@ -1191,7 +1297,7 @@ window.wrapText = (before, after) => {
 
 window.insertLink = () => {
   const url = prompt('URL link:','https://');
-  if(!url) return;
+  if(!url || sanitizeUrl(url) === '#') { toast('URL tidak valid (hanya http/https).'); return; }
   const teks = prompt('Teks link:','klik di sini');
   if(!teks) return;
   const ta = document.getElementById('sf-body');
@@ -1202,7 +1308,7 @@ window.insertLink = () => {
 
 window.insertImg = () => {
   const url = prompt('URL gambar:','https://');
-  if(!url) return;
+  if(!url || sanitizeUrl(url) === '#') { toast('URL gambar tidak valid.'); return; }
   const alt = prompt('Deskripsi gambar (opsional):','') || '';
   const ta = document.getElementById('sf-body');
   const pos = ta.selectionStart;
@@ -1869,18 +1975,19 @@ window.onArtistKeydown = (e) => {
   if(_artistFocusIdx >= 0) items[_artistFocusIdx].scrollIntoView({block:'nearest'});
 };
 
-// ── COVER UPLOAD ──
-const IMGBB_KEY = 'ccd1f5ec9faeb81ce9e207e83f63e285';
+// ── COVER UPLOAD (via Cloudflare Worker — kunci ImgBB tidak di client) ──
 
 function showCoverPreview(url) {
   const wrap = document.getElementById('cover-preview-wrap');
   const img  = document.getElementById('cover-preview-img');
-  if (url) { img.src = url; wrap.style.display = 'block'; }
+  const safe = sanitizeUrl(url);
+  if (url && safe !== '#') { img.src = safe; wrap.style.display = 'block'; }
   else { img.src = ''; wrap.style.display = 'none'; }
 }
 
 window.onImgUrlInput = () => {
   const url = document.getElementById('f-img').value.trim();
+  if (url && sanitizeUrl(url) === '#') { toast('URL cover tidak valid.'); return; }
   showCoverPreview(url);
   updateSpotifyBtn();
 };
@@ -1902,7 +2009,11 @@ window.handleCoverUpload = async (input) => {
   try {
     const fd = new FormData();
     fd.append('image', file);
-    const res  = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+    const headers = {};
+    if (auth.currentUser) {
+      try { headers['Authorization'] = 'Bearer ' + await auth.currentUser.getIdToken(); } catch(e){}
+    }
+    const res  = await fetch(UPLOAD_WORKER + '/upload-img', { method:'POST', headers, body:fd });
     const json = await res.json();
     if (!json.success) throw new Error('Upload gagal');
     const url = json.data.url;
@@ -1998,10 +2109,10 @@ function updateCoverBtns() {
 function updateSpotifyBtn(){ updateCoverBtns(); }
 
 // ── YouTube API Key ──
-function ytKeyGet(){ return localStorage.getItem('yume_yt_key')||''; }
-function ytKeySet(k){ localStorage.setItem('yume_yt_key', k); }
-function geniusKeyGet(){ return localStorage.getItem('yume_genius_key')||''; }
-function geniusKeySet(k){ localStorage.setItem('yume_genius_key', k); }
+function ytKeyGet(){ return sessionStorage.getItem('yume_yt_key')||''; }
+function ytKeySet(k){ sessionStorage.setItem('yume_yt_key', k); }
+function geniusKeyGet(){ return sessionStorage.getItem('yume_genius_key')||''; }
+function geniusKeySet(k){ sessionStorage.setItem('yume_genius_key', k); }
 document.getElementById('yt-api-key-inp').addEventListener('input', function(){
   ytKeySet(this.value.trim());
   updateKeyStatus();
@@ -2253,8 +2364,8 @@ const GH_WORKFLOWS = {
 const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
 let _pollTimers = {};
 
-function ghTokenGet(){ return localStorage.getItem('yume_gh_token')||''; }
-function ghTokenSet(t){ localStorage.setItem('yume_gh_token', t); }
+function ghTokenGet(){ return sessionStorage.getItem('yume_gh_token')||''; }
+function ghTokenSet(t){ sessionStorage.setItem('yume_gh_token', t); }
 
 // ── Key visibility toggle ──
 let _keysVisible = false;
@@ -2269,9 +2380,9 @@ window.toggleKeyVisibility = function(){
 
 window.clearAllKeys = function(){
   if(!confirm('Hapus semua API key dari browser?')) return;
-  localStorage.removeItem('yume_gh_token');
-  localStorage.removeItem('yume_yt_key');
-  localStorage.removeItem('yume_genius_key');
+  sessionStorage.removeItem('yume_gh_token');
+  sessionStorage.removeItem('yume_yt_key');
+  sessionStorage.removeItem('yume_genius_key');
   document.getElementById('gh-token-inp').value = '';
   document.getElementById('yt-api-key-inp').value = '';
   document.getElementById('genius-api-key-inp').value = '';
