@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://*.googleapis.com; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://asia-southeast2-yumesubs7.cloudfunctions.net https://*.googleapis.com https://*.cloudfunctions.net; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script>(function(){'use strict';var b=function(e){e.preventDefault();return false};document.addEventListener('contextmenu',b);document.addEventListener('keydown',function(e){var k=(e.key||'').toUpperCase(),c=e.ctrlKey||e.metaKey,s=e.shiftKey;if(k==='F12'||(c&&s&&'IJC'.includes(k))||(c&&!s&&k==='U')||(c&&s&&k==='K')){b(e)}},true);document.addEventListener('dragstart',b);var _dt=0;setInterval(function(){var w=window.outerWidth-window.innerWidth>180,h=window.outerHeight-window.innerHeight>180;if((w||h)&&!_dt){_dt=1;document.documentElement.style.filter='blur(12px)';document.title='Akses diblokir'}},800);})();</script>
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
@@ -999,21 +999,23 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
-const ADMIN_GATE_HASH = '5a66df1fd3d2b79e6dae398b884cab8dccca51ddd36871239a8a1d6f5344615a';
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
+const GATE_CLIENT_ID_KEY = 'yume_gate_client_id';
 const GATE_LOCK_KEY = 'yume_gate_lock_until';
 const LOGIN_LOCK_KEY = 'yume_login_lock_until';
 const GATE_ATTEMPTS_KEY = 'yume_gate_attempts';
 const LOGIN_ATTEMPTS_KEY = 'yume_login_attempts';
 function getStoredAttempts(key) {
-  try { return Math.max(0, parseInt(sessionStorage.getItem(key) || '0', 10) || 0); } catch (e) { return 0; }
+  try { return Math.max(0, parseInt(localStorage.getItem(key) || '0', 10) || 0); } catch (e) { return 0; }
 }
 function setStoredAttempts(key, n) {
   try {
-    if (n > 0) sessionStorage.setItem(key, String(n));
-    else sessionStorage.removeItem(key);
+    if (n > 0) localStorage.setItem(key, String(n));
+    else localStorage.removeItem(key);
   } catch (e) {}
 }
 let _gateAttempts = getStoredAttempts(GATE_ATTEMPTS_KEY);
@@ -1024,24 +1026,48 @@ const LOGIN_MAX_ATTEMPTS = 3;
 const LOGIN_LOCKOUT_MS = 30 * 60 * 1000;
 function getStoredLock(key) {
   try {
-    const t = Number(sessionStorage.getItem(key) || 0);
+    const t = Number(localStorage.getItem(key) || 0);
     if (t && Date.now() < t) return t;
-    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   } catch (e) {}
   return 0;
 }
 function setStoredLock(key, until) {
   try {
-    if (until > Date.now()) sessionStorage.setItem(key, String(until));
-    else sessionStorage.removeItem(key);
+    if (until > Date.now()) localStorage.setItem(key, String(until));
+    else localStorage.removeItem(key);
   } catch (e) {}
 }
 function clearStoredLock(key) {
-  try { sessionStorage.removeItem(key); } catch (e) {}
+  try { localStorage.removeItem(key); } catch (e) {}
 }
+let _gateUnlocked = false;
+let _gateHmacKey = null;
+let _gateSessionExpires = 0;
 let _gateLockUntil = getStoredLock(GATE_LOCK_KEY);
 let _loginLockUntil = getStoredLock(LOGIN_LOCK_KEY);
 
+function getGateClientId() {
+  try {
+    let id = localStorage.getItem(GATE_CLIENT_ID_KEY);
+    if (!id) {
+      id = 'gc_' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random());
+      localStorage.setItem(GATE_CLIENT_ID_KEY, id);
+    }
+    return id;
+  } catch (e) {
+    return 'gc_fallback';
+  }
+}
+async function verifyGateOnServer(password) {
+  const res = await fetch(GATE_VERIFY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: String(password || ''), clientId: getGateClientId() }),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
 async function isGateKeyOk(input) {
   const val = String(input || '').trim();
   if (!val) return false;
@@ -1049,23 +1075,38 @@ async function isGateKeyOk(input) {
   const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
   return hex === ADMIN_GATE_HASH;
 }
-function setAdminGateSession() {
-  const token = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random();
-  sessionStorage.setItem(ADMIN_GATE_SESSION, token + '.' + Date.now());
+async function importGateHmacKey(password) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(password)));
+  return crypto.subtle.importKey('raw', buf, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+}
+async function gateHmacSign(key, payload) {
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function clearGateSession() {
+  _gateUnlocked = false;
+  _gateHmacKey = null;
+  _gateSessionExpires = 0;
+  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch (e) {}
+}
+async function establishGateSession(password) {
+  const key = await importGateHmacKey(password);
+  const t = Date.now();
+  const n = crypto.randomUUID();
+  const s = await gateHmacSign(key, n + '|' + t + '|v2');
+  _gateHmacKey = key;
+  _gateUnlocked = true;
+  _gateSessionExpires = t + ADMIN_GATE_TTL_MS;
+  sessionStorage.setItem(ADMIN_GATE_SESSION, JSON.stringify({ v: 2, n, t, s }));
+  return true;
 }
 function isAdminGateUnlocked() {
-  try {
-    const raw = sessionStorage.getItem(ADMIN_GATE_SESSION);
-    if (!raw) return false;
-    const dot = raw.lastIndexOf('.');
-    if (dot < 1) return false;
-    const ts = Number(raw.slice(dot + 1));
-    if (!ts || Date.now() - ts > ADMIN_GATE_TTL_MS) {
-      sessionStorage.removeItem(ADMIN_GATE_SESSION);
-      return false;
-    }
-    return raw.slice(0, dot).length >= 8;
-  } catch (e) { return false; }
+  if (!_gateUnlocked || !_gateHmacKey) return false;
+  if (Date.now() > _gateSessionExpires) {
+    clearGateSession();
+    return false;
+  }
+  return true;
 }
 function sanitizeUrl(url) {
   try {
@@ -1088,8 +1129,19 @@ function showAdminLoginStep(step){
   }
 }
 function initAdminLoginUI(){
-  if(isAdminGateUnlocked()) showAdminLoginStep('credentials');
-  else showAdminLoginStep('gate');
+  _gateLockUntil = getStoredLock(GATE_LOCK_KEY);
+  _loginLockUntil = getStoredLock(LOGIN_LOCK_KEY);
+  if (!isAdminGateUnlocked()) {
+    clearGateSession();
+    showAdminLoginStep('gate');
+    const ge = document.getElementById('l-gate-err');
+    if (_gateLockUntil && Date.now() < _gateLockUntil && ge) {
+      const secs = Math.ceil((_gateLockUntil - Date.now()) / 1000);
+      ge.textContent = 'Terlalu banyak percobaan. Tunggu ' + secs + ' detik.';
+    }
+  } else {
+    showAdminLoginStep('credentials');
+  }
 }
 window.unlockAdminGate = async function(){
   const inp = document.getElementById('l-gate');
@@ -1105,33 +1157,55 @@ window.unlockAdminGate = async function(){
   }
   if(btn) btn.disabled = true;
   if(err) err.textContent = '';
-  if(!(await isGateKeyOk(val))){
-    _gateAttempts++;
-    setStoredAttempts(GATE_ATTEMPTS_KEY, _gateAttempts);
-    if(_gateAttempts >= GATE_MAX_ATTEMPTS){
-      _gateLockUntil = Date.now() + GATE_LOCKOUT_MS;
+  let gateOk = false;
+  try {
+    const data = await verifyGateOnServer(val);
+    if (data.locked) {
+      _gateLockUntil = data.lockUntil || Date.now() + (data.retrySec || 1800) * 1000;
       setStoredLock(GATE_LOCK_KEY, _gateLockUntil);
-      _gateAttempts = 0;
-      setStoredAttempts(GATE_ATTEMPTS_KEY, 0);
-      if(err) err.textContent = 'Terlalu banyak percobaan. Terkunci 30 menit.';
-    } else {
-      if(err) err.textContent = 'Kata kunci salah.';
+      if (err) err.textContent = data.retrySec
+        ? 'Terlalu banyak percobaan. Tunggu ' + data.retrySec + ' detik.'
+        : 'Terlalu banyak percobaan. Terkunci 30 menit.';
+      if (inp) { inp.value = ''; inp.focus(); }
+      if (btn) btn.disabled = false;
+      return;
     }
-    if(inp){ inp.value = ''; inp.focus(); }
-    if(btn) btn.disabled = false;
+    if (data.ok) gateOk = true;
+    else if (err) {
+      err.textContent = data.attemptsLeft != null
+        ? 'Kata kunci salah. Sisa percobaan: ' + data.attemptsLeft
+        : 'Kata kunci salah.';
+    }
+  } catch (e) {
+    if (await isGateKeyOk(val)) {
+      gateOk = true;
+      if (err) err.textContent = 'Verifikasi server offline — mode cadangan aktif.';
+    } else if (err) err.textContent = 'Kata kunci salah (server offline).';
+  }
+  if (!gateOk) {
+    if (inp) { inp.value = ''; inp.focus(); }
+    if (btn) btn.disabled = false;
     return;
   }
   _gateAttempts = 0;
   _gateLockUntil = 0;
   clearStoredLock(GATE_LOCK_KEY);
   setStoredAttempts(GATE_ATTEMPTS_KEY, 0);
-  try { setAdminGateSession(); } catch(e){}
+  try { await establishGateSession(val); } catch (e) {
+    if (err) err.textContent = 'Gagal membuka gate. Coba lagi.';
+    if (btn) btn.disabled = false;
+    return;
+  }
   if(inp) inp.value = '';
-  showAdminLoginStep('credentials');
+  if (auth.currentUser && await isAdminUser(auth.currentUser)) {
+    await enterAdminAppIfReady();
+  } else {
+    showAdminLoginStep('credentials');
+  }
   if(btn) btn.disabled = false;
 };
 window.resetAdminGate = function(){
-  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch(e){}
+  clearGateSession();
   const ge = document.getElementById('l-gate-err');
   const le = document.getElementById('l-err');
   if(ge) ge.textContent = '';
@@ -1167,13 +1241,25 @@ function toast(m){
 }
 window._ymToast = toast;
 
+async function enterAdminAppIfReady() {
+  if (!auth.currentUser || !(await isAdminUser(auth.currentUser)) || !isAdminGateUnlocked()) return false;
+  document.getElementById('loginOverlay').classList.add('hide');
+  document.getElementById('logoutBtn').style.display = 'block';
+  startListening();
+  return true;
+}
 // Auth state listener
 onAuthStateChanged(auth, async user => {
   if(user){
     if(await rejectNonAdmin(user)) return;
-    document.getElementById('loginOverlay').classList.add('hide');
-    document.getElementById('logoutBtn').style.display='block';
-    startListening();
+    if (!isAdminGateUnlocked()) {
+      document.getElementById('loginOverlay').classList.remove('hide');
+      document.getElementById('logoutBtn').style.display = 'none';
+      showAdminLoginStep('gate');
+      if(unsubSongs){ unsubSongs(); unsubSongs=null; }
+      return;
+    }
+    await enterAdminAppIfReady();
   } else {
     document.getElementById('loginOverlay').classList.remove('hide');
     document.getElementById('logoutBtn').style.display='none';
@@ -1221,6 +1307,7 @@ window.doLogin = async () => {
     clearStoredLock(LOGIN_LOCK_KEY);
     setStoredAttempts(LOGIN_ATTEMPTS_KEY, 0);
     document.getElementById('l-pw').value='';
+    await enterAdminAppIfReady();
   } catch(e){
     if(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found'){
       _loginAttempts++;
@@ -1244,7 +1331,7 @@ window.doLogin = async () => {
 };
 
 window.doLogout = async () => {
-  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch(e){}
+  clearGateSession();
   await signOut(auth);
   window.location.href='index.html';
 };
@@ -2000,6 +2087,7 @@ window.clearCoverPreview = () => {
 };
 
 window.handleCoverUpload = async (input) => {
+  if (!auth.currentUser) { toast('Login admin dulu sebelum upload cover.'); input.value = ''; return; }
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { toast('File terlalu besar! Maks 5MB.'); input.value = ''; return; }
@@ -2543,9 +2631,13 @@ function geniusDoSearch(){
   // Pakai Cloudflare Worker sebagai proxy — ganti URL di bawah setelah deploy worker
   // Worker code: genius-proxy-worker.js
   var WORKER_URL = window._geniusWorkerUrl || 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
-  var workerReqUrl = WORKER_URL + '?q=' + encodeURIComponent(q) + '&token=' + encodeURIComponent(apiKey);
-
-  var p = fetch(workerReqUrl)
+  var p = fetch(WORKER_URL + '/genius-search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: q, token: apiKey })
+  }).catch(function() {
+    return fetch(WORKER_URL + '?q=' + encodeURIComponent(q) + '&token=' + encodeURIComponent(apiKey));
+  })
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 
   p.then(function(data){
