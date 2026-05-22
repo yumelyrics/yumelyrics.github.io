@@ -135,7 +135,7 @@
 
   <header class="page-hd">
     <h1>Spotify Lirik <span class="badge-sp">Paste & salin</span></h1>
-    <p class="sub">Paste <strong>link lagu Spotify</strong> atau <strong>Artis - Judul</strong>. Lirik muncul jika tersedia di database (sama seperti lagu berlirik di Spotify).</p>
+    <p class="sub">Paste <strong>link lagu Spotify</strong> atau <strong>Artis - Judul</strong>. Prioritas lirik dari <strong>Spotify</strong> (via server); kalau tidak ada, fallback <strong>LRCLIB</strong>.</p>
   </header>
 
 
@@ -188,7 +188,8 @@
     <ul>
       <li>Buka lagu di Spotify → Share → Copy link → paste di atas.</li>
       <li>Hanya <strong>link track</strong> (bukan playlist/album/episode).</li>
-      <li>Kalau di Spotify lagu itu tidak ada liriknya, kemungkinan besar di sini juga tidak ketemu.</li>
+      <li>Lirik <strong>Spotify</strong> = sama seperti di app (setelah deploy Worker terbaru). <strong>LRCLIB</strong> bisa beda teks/format.</li>
+      <li>Kalau di Spotify tidak ada lirik, di sini juga tidak ketemu.</li>
     </ul>
   </div>
 </div>
@@ -225,7 +226,9 @@
         artist: data.artist,
         album: data.album || '',
         artUrl: normalizeArtUrl(data.artUrl) || data.artUrl || null,
-        source: data.source || 'Spotify API',
+        source: data.source || 'Spotify',
+        plainLyrics: data.plainLyrics || null,
+        lyricsSource: data.lyricsSource || null,
       };
     } catch { return null; }
   }
@@ -374,14 +377,15 @@
     wrap.appendChild(img);
   }
 
-  function showResult(track, lyrics) {
+  function showResult(track, lyrics, lyricMeta) {
     $('panel').classList.add('show');
     $('panel').classList.remove('err');
     $('songTitle').textContent = track.title || '—';
     $('songArtist').textContent = track.artist ? track.artist + (track.album ? ' · ' + track.album : '') : '';
     const tag = $('sourceTag');
-    tag.textContent = track.source || 'LRCLIB';
-    tag.className = 'source-tag' + (/spotify/i.test(track.source || '') ? ' sp' : '');
+    const srcLabel = lyricMeta || track.lyricsSource || track.source || 'LRCLIB';
+    tag.textContent = 'Lirik: ' + srcLabel;
+    tag.className = 'source-tag' + (/spotify/i.test(srcLabel) ? ' sp' : '');
     tag.style.display = 'inline-block';
     setAlbumArt(track.artUrl || null);
     $('lyrics').textContent = lyrics;
@@ -454,16 +458,27 @@
 
       if (!track.title) { setStatus('Judul lagu tidak ditemukan.', 'error'); $('btnGo').disabled = false; return; }
 
-      setStatus('Mencari lirik «' + track.title + '»...', 'loading');
-      const lyricsData = await findLyrics(track.artist, track.title);
-      const lyrics = pickLyrics(lyricsData);
+      let lyrics = (track.plainLyrics || '').trim();
+      let lyricMeta = track.lyricsSource || null;
+
+      if (!lyrics) {
+        setStatus('Mencari lirik «' + track.title + '»...', 'loading');
+        const lyricsData = await findLyrics(track.artist, track.title);
+        lyrics = pickLyrics(lyricsData);
+        lyricMeta = lyricsData ? 'LRCLIB' : null;
+      } else {
+        setStatus('Lirik dari Spotify dimuat.', 'loading');
+      }
 
       if (!lyrics) {
         setStatus('Lirik tidak ditemukan untuk lagu ini.', 'error');
         showNoLyrics(track);
       } else {
-        showResult(track, lyrics);
-        setStatus('Lirik ditemukan — klik Salin untuk copy.', '');
+        showResult(track, lyrics, lyricMeta);
+        const hint = lyricMeta === 'Spotify'
+          ? 'Lirik sama dengan sumber Spotify — klik Salin untuk copy.'
+          : 'Lirik dari database LRCLIB (bisa sedikit beda dengan Spotify) — klik Salin untuk copy.';
+        setStatus(hint, '');
       }
     } catch (err) {
       console.error(err);
