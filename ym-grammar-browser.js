@@ -2136,10 +2136,39 @@
   }
 
   /**
+   * って pola topik (「彼って」) vs って bentuk て verba (「光って」= hikatte).
+   * Di romaji: partikel = token "tte" terpisah; verba = satu kata diakhiri tte (hikatte, tsuite).
+   */
+  function shouldRejectTtePattern(text, start, ph, romaji) {
+    if (ph !== 'って' || text.slice(start, start + 2) !== 'って') return false;
+
+    if (romaji) {
+      const tokens = romaji.toLowerCase().match(/[a-zāīūēō]+/gi) || [];
+      const hasStandaloneTte = tokens.some((t) => t === 'tte');
+      const hasAttachedTte = tokens.some((t) => t.length >= 4 && /tte$/i.test(t) && t !== 'tte');
+
+      if (hasAttachedTte && !hasStandaloneTte) return true;
+      if (hasAttachedTte && hasStandaloneTte) {
+        const next = text[start + 2] || '';
+        const atTail = !next || BOUND.test(next);
+        if (atTail && start >= text.length - 3) return true;
+      }
+      return false;
+    }
+
+    const prev = text[start - 1] || '';
+    const next = text[start + 2] || '';
+    if (text[start] === 'っ' && KANJI.test(prev) && (!next || BOUND.test(next))) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Pola bunpou hanya valid di batas kata / setelah kanji — bukan huruf di dalam kosakata.
    * Contoh: tolak な di ならす, た di tengah 立った (kecuali di akhir bentuk).
    */
-  function isValidPhraseMatch(text, start, ph) {
+  function isValidPhraseMatch(text, start, ph, romaji) {
     const len = ph.length;
     const end = start + len;
     const prev = text[start - 1] || '';
@@ -2153,6 +2182,8 @@
     const phCore = ph.replace(/[～〜]/g, '');
     const phHasKanji = KANJI.test(phCore);
     const phKanaOnly = isKanaOnlyPattern(ph);
+
+    if (shouldRejectTtePattern(text, start, ph, romaji)) return false;
 
     if (phHasKanji && !phKanaOnly) {
       return prevBound || nextBound || prevIsKanji || nextIsKanji;
@@ -2207,14 +2238,40 @@
     return false;
   }
 
+  /** Token romaji yang bagian dari pola bunpou, bukan partikel sendiri */
+  function isRomajiCompoundParticle(tokens, i) {
+    const t = tokens[i].toLowerCase();
+    const prev = i > 0 ? tokens[i - 1].toLowerCase() : '';
+    const next = i + 1 < tokens.length ? tokens[i + 1].toLowerCase() : '';
+    if (t === 'you' && (next === 'ni' || next === 'na')) return true;
+    if (t === 'ni' && prev === 'you') return true;
+    if (t === 'na' && prev === 'you') return true;
+    if (t === 'no' && (next === 'de' || next === 'ni')) return true;
+    if ((t === 'de' || t === 'ni') && prev === 'no') return true;
+    if (t === 'to' && next === 'ka') return true;
+    if (t === 'ka' && prev === 'to') return true;
+    if (t === 'te' && next === 'mo') return true;
+    if (t === 'mo' && prev === 'te') return true;
+    if (t === 'de' && next === 'mo') return true;
+    if (t === 'mo' && prev === 'de') return true;
+    if (t === 'na' && next === 'ra') return true;
+    if (t === 'ra' && prev === 'na') return true;
+    if (t === 'ta' && next === 'ra') return true;
+    if (t === 'ra' && prev === 'ta') return true;
+    if (t === 'ni' && prev === 'de') return true;
+    if (t === 'de' && next === 'wa') return true;
+    return false;
+  }
+
   function collectRomajiParticles(ro, items, seenKeys) {
     if (!ro || !String(ro).trim()) return;
     const raw = String(ro).toLowerCase();
     const tokens = raw.match(/[a-zāīūēōâêîôûäëöü]+(?:'[a-z]+)?/gi) || [];
     const used = new Set();
-    for (const tok of tokens) {
-      const t = tok.toLowerCase();
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i].toLowerCase();
       if (used.has(t) || t.length > 14) continue;
+      if (isRomajiCompoundParticle(tokens, i)) continue;
       const meta = ROM_PARTICLES[t];
       if (!meta) continue;
       used.add(t);
@@ -2225,11 +2282,20 @@
     }
   }
 
+  function isInsideYouNi(text, i, ch) {
+    if (ch !== 'に') return false;
+    if (i >= 2 && text.slice(i - 2, i + 1) === 'ように') return true;
+    if (i >= 3 && text.slice(i - 3, i + 1) === 'のように') return true;
+    if (i >= 1 && text.slice(i - 1, i + 1) === 'うに') return true;
+    return false;
+  }
+
   function collectJapaneseParticles(text, items, usedSpan, seenKeys) {
     const chars = [...text];
     for (let i = 0; i < chars.length; i++) {
       if (usedSpan.has('c' + i)) continue;
       const ch = chars[i];
+      if (isInsideYouNi(text, i, ch)) continue;
       const meta = PARTICLES[ch];
       if (!meta || !isParticleContext(text, i, ch)) continue;
       const key = 'jp:' + i + ':' + ch;
@@ -2286,7 +2352,7 @@
         const ix = text.indexOf(ph, start);
         if (ix < 0) break;
         const key = ix + ':' + ph;
-        if (!usedSpan.has(key) && isValidPhraseMatch(text, ix, ph)) {
+        if (!usedSpan.has(key) && isValidPhraseMatch(text, ix, ph, romaji)) {
           usedSpan.add(key);
           for (let k = ix; k < ix + ph.length; k++) usedSpan.add('c' + k);
           const knd = kind || inferKind(ph);
@@ -2298,10 +2364,11 @@
       }
     }
 
-    if (romaji) {
-      collectRomajiParticles(romaji, items, seenParticleKeys);
-    } else if (text) {
+    /** Ada lirik JP: partikel dari hiragana + hormati span bunpou (ように → bukan に terpisah) */
+    if (text) {
       collectJapaneseParticles(text, items, usedSpan, seenParticleKeys);
+    } else if (romaji) {
+      collectRomajiParticles(romaji, items, seenParticleKeys);
     }
 
     items.sort((a, b) => {
