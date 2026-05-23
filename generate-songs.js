@@ -6,6 +6,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,6 +49,89 @@ const firebaseConfig = {
 };
 
 const BASE_URL = 'https://yumelyrics.my.id';
+const MANIFEST_PATH = '.yume-generate-manifest.json';
+
+/** Hash isi lagu — dipakai untuk skip generate jika tidak berubah */
+function songContentHash(song) {
+  const payload = {
+    titleJp: song.titleJp || '',
+    titleRo: song.titleRo || '',
+    titleId: song.titleId || '',
+    artist: song.artist || '',
+    artistSlug: song.artistSlug || '',
+    ytId: song.ytId || '',
+    nicoId: song.nicoId || '',
+    img: song.img || '',
+    sp: song.sp || '',
+    descId: song.descId || '',
+    descJp: song.descJp || '',
+    anime: song.anime || '',
+    animeId: song.animeId || '',
+    animeEn: song.animeEn || '',
+    type: song.type || '',
+    genre: song.genre || '',
+    mood: song.mood || '',
+    jlpt: song.jlpt || '',
+    difficulty: song.difficulty || '',
+    order: song.order ?? null,
+    lyrics: song.lyrics || [],
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
+}
+
+function loadManifest() {
+  try {
+    if (fs.existsSync(MANIFEST_PATH)) {
+      const data = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+      if (data && typeof data.songs === 'object') return data;
+    }
+  } catch (e) { /* corrupt manifest → rebuild */ }
+  return { version: 1, songs: {} };
+}
+
+function saveManifest(manifest) {
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+}
+
+/** Run pertama: isi manifest dari HTML yang sudah ada di repo (tanpa generate ulang semua) */
+function seedManifestFromDisk(manifest, songMeta) {
+  let seeded = 0;
+  for (const { song, slug } of songMeta) {
+    if (manifest.songs[song.id]) continue;
+    const fp = path.join('lagu', `${slug}.html`);
+    if (!fs.existsSync(fp)) continue;
+    manifest.songs[song.id] = { slug, hash: songContentHash(song) };
+    seeded++;
+  }
+  return seeded;
+}
+
+function needsSongGenerate(song, slug, manifest, fullMode) {
+  if (fullMode) return true;
+  if (song.htmlDirty === true) return true;
+  const fp = path.join('lagu', `${slug}.html`);
+  if (!fs.existsSync(fp)) return true;
+  const prev = manifest.songs[song.id];
+  if (!prev) return true;
+  if (prev.slug !== slug) return true;
+  const hash = songContentHash(song);
+  if (prev.hash !== hash) return true;
+  return false;
+}
+
+function removeOrphanHtml(dir, validNames, ext = '.html') {
+  if (!fs.existsSync(dir)) return 0;
+  let removed = 0;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith(ext)) continue;
+    const base = f.slice(0, -ext.length);
+    if (!validNames.has(base)) {
+      fs.unlinkSync(path.join(dir, f));
+      removed++;
+    }
+  }
+  return removed;
+}
 
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2884,13 +2968,14 @@ window.saveSongEdit = async function(){
     type: document.getElementById('se-type')?.value.trim() || '',
     genre: document.getElementById('se-genre')?.value.trim() || '',
     mood: document.getElementById('se-mood')?.value.trim() || '',
-    lyrics
+    lyrics,
+    htmlDirty: true
   };
   const btn = document.getElementById('se-save-btn');
   if(btn) btn.disabled = true;
   try {
     await updateDoc(doc(db,'songs', SONG_ID), payload);
-    toast('Tersimpan di Firestore. Klik Generate HTML agar halaman publik terbarui.');
+    toast('Tersimpan. Klik Generate HTML (hanya lagu ini yang di-build ulang).');
   } catch(e){
     const code = e && (e.code || e.name || '');
     if(code === 'permission-denied'){
@@ -2966,7 +3051,7 @@ window.triggerSongPageGenerate = async function(){
     const res = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/workflows/'+SE_GH_WORKFLOW+'/dispatches', {
       method: 'POST',
       headers: { ...seGhHeaders(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main' })
+      body: JSON.stringify({ ref: 'main', inputs: { mode: 'incremental' } })
     });
     if(res.status === 204){
       toast('Generate Song Pages di-trigger!');
@@ -5182,6 +5267,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 }
 
 async function main() {
+  const fullMode = process.env.GENERATE_MODE === 'full' || process.argv.includes('--full');
+  console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
   console.log('🔥 Menghubungkan ke Firebase...');
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
@@ -5192,10 +5279,13 @@ async function main() {
 
   if(!fs.existsSync('lagu')) fs.mkdirSync('lagu');
 
-  // Hapus semua file HTML lama dulu biar tidak ada duplikat
-  const oldFiles = fs.readdirSync('lagu').filter(f => f.endsWith('.html'));
-  for(const f of oldFiles) fs.unlinkSync(path.join('lagu', f));
-  console.log(`🗑  ${oldFiles.length} file lama dihapus`);
+  let manifest = loadManifest();
+  if (fullMode) {
+    manifest = { version: 1, songs: {} };
+    const oldFiles = fs.readdirSync('lagu').filter(f => f.endsWith('.html'));
+    for (const f of oldFiles) fs.unlinkSync(path.join('lagu', f));
+    console.log(`🗑  ${oldFiles.length} file lagu dihapus (full rebuild)`);
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const urls = [
@@ -5216,6 +5306,11 @@ async function main() {
     while(slugMap[finalSlug]&&slugMap[finalSlug]!==song.id) finalSlug=`${slug}-${counter++}`;
     slugMap[finalSlug]=song.id;
     songMeta.push({song, slug:finalSlug});
+  }
+
+  if (!fullMode) {
+    const seeded = seedManifestFromDisk(manifest, songMeta);
+    if (seeded) console.log(`📋 Manifest diisi dari ${seeded} file HTML yang sudah ada (tanpa generate ulang)`);
   }
 
   // Build lookup: artist (normalized) -> songs, anime -> songs
@@ -5263,16 +5358,70 @@ async function main() {
   }
 
   if(!fs.existsSync('artis')) fs.mkdirSync('artis');
-  const oldArtistFiles = fs.readdirSync('artis').filter(f => f.endsWith('.html'));
-  for(const f of oldArtistFiles) fs.unlinkSync(path.join('artis', f));
+  if (fullMode) {
+    const oldArtistFiles = fs.readdirSync('artis').filter(f => f.endsWith('.html'));
+    for (const f of oldArtistFiles) fs.unlinkSync(path.join('artis', f));
+  }
+
+  const touchedArtistKeys = new Set();
+  let generatedSongCount = 0;
+  let skippedSongCount = 0;
+
+  console.log('🎵 Generate halaman lagu...');
+  for(const {song, slug: finalSlug} of songMeta){
+    if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
+      skippedSongCount++;
+      const prev = manifest.songs[song.id];
+      if (!prev || prev.slug !== finalSlug) {
+        manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
+      }
+      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>`);
+      continue;
+    }
+
+    const artistKey = song.artist ? normalizeArtistKey(song.artist) : '';
+    if (artistKey) touchedArtistKeys.add(artistKey);
+    const relByArtist = artistKey
+      ? (byArtist[artistKey]||[]).filter(r=>r.slug!==finalSlug)
+      : [];
+    const relByAnime = song.anime
+      ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
+      : [];
+
+    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
+    fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
+    manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
+    generatedSongCount++;
+    console.log(`  ✓ lagu/${finalSlug}.html`);
+    const imgTag = song.img ? `
+    <image:image>
+      <image:loc>${song.img}</image:loc>
+      <image:title>${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')}</image:title>
+      <image:caption>Lirik ${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')} | YumeSubs</image:caption>
+    </image:image>` : '';
+    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}
+  </url>`);
+  }
 
   const artistIndexList = [];
-  console.log(`🎤 Generating ${Object.keys(byArtist).length} halaman artis...`);
+  console.log(`🎤 Halaman artis (${Object.keys(byArtist).length} total)...`);
   for(const key of Object.keys(byArtist).sort((a, b) => artistMeta[a].displayName.localeCompare(artistMeta[b].displayName, 'id'))){
     const meta = artistMeta[key];
     const aSlug = meta.slug;
+    const artistPath = path.join('artis', `${aSlug}.html`);
+    const needArtist = fullMode || touchedArtistKeys.has(key) || !fs.existsSync(artistPath);
+    if (!needArtist) {
+      artistIndexList.push({
+        name: meta.displayName,
+        slug: aSlug,
+        count: byArtist[key].length,
+        img: byArtist[key][0]?.img || '',
+      });
+      urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
+      continue;
+    }
     const artistHtml = generateArtistHTML(meta.displayName, byArtist[key], aSlug);
-    fs.writeFileSync(path.join('artis', `${aSlug}.html`), artistHtml, 'utf8');
+    fs.writeFileSync(artistPath, artistHtml, 'utf8');
     artistIndexList.push({
       name: meta.displayName,
       slug: aSlug,
@@ -5286,34 +5435,40 @@ async function main() {
   fs.writeFileSync(path.join('artis', 'index.html'), generateArtistIndexHTML(artistIndexList), 'utf8');
   console.log(`  ✓ artis/index.html (${artistIndexList.length} artis)`);
 
-  for(const {song, slug: finalSlug} of songMeta){
-    const artistKey = song.artist ? normalizeArtistKey(song.artist) : '';
-    const relByArtist = artistKey
-      ? (byArtist[artistKey]||[]).filter(r=>r.slug!==finalSlug)
-      : [];
-    const relByAnime = song.anime
-      ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
-      : [];
-
-    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
-    fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
-    console.log(`  ✓ lagu/${finalSlug}.html`);
-    const imgTag = song.img ? `
-    <image:image>
-      <image:loc>${song.img}</image:loc>
-      <image:title>${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')}</image:title>
-      <image:caption>Lirik ${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')} | YumeSubs</image:caption>
-    </image:image>` : '';
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}
-  </url>`);
+  const currentSongIds = new Set(songs.map(s => s.id));
+  for (const id of Object.keys(manifest.songs)) {
+    if (!currentSongIds.has(id)) delete manifest.songs[id];
   }
 
-  console.log('📖 Glosarium tata bahasa...');
-  const glossUrls = buildGlossaryPages(songMeta, today);
-  urls.push(...glossUrls);
+  const validSongSlugs = new Set(songMeta.map(m => m.slug));
+  const validArtistSlugs = new Set(Object.values(artistMeta).map(m => m.slug));
+  validArtistSlugs.add('index');
+  const orphanSongs = removeOrphanHtml('lagu', validSongSlugs);
+  const orphanArtis = removeOrphanHtml('artis', validArtistSlugs);
+  if (orphanSongs || orphanArtis) {
+    console.log(`🗑  Orphan: ${orphanSongs} lagu, ${orphanArtis} artis`);
+  }
+
+  if (fullMode || generatedSongCount > 0) {
+    console.log('📖 Glosarium tata bahasa...');
+    const glossUrls = buildGlossaryPages(songMeta, today);
+    urls.push(...glossUrls);
+  } else {
+    console.log('📖 Glosarium dilewati (tidak ada lagu yang di-generate ulang)');
+    if (fs.existsSync('kata')) {
+      for (const f of fs.readdirSync('kata').filter(x => x.endsWith('.html'))) {
+        const slug = f.replace(/\.html$/, '');
+        const loc = slug === 'index' ? `${BASE_URL}/kata/` : `${BASE_URL}/kata/${slug}.html`;
+        urls.push(`  <url><loc>${loc}</loc><lastmod>${today}</lastmod><priority>0.55</priority></url>`);
+      }
+    }
+  }
+
+  saveManifest(manifest);
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
-  console.log(`\n✅ Selesai! ${songs.length} lagu + ${Object.keys(byArtist).length} artis + glosarium + sitemap.xml`);
+  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-generate, ${skippedSongCount} dilewati (sudah mutakhir)`);
+  console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
 }
 

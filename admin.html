@@ -754,7 +754,8 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     </div>
     </div>
     <div style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
-      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs')" style="flex:1;min-width:180px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate Song Pages</button>
+      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs','incremental')" style="flex:1;min-width:200px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate (baru &amp; diedit)</button>
+      <button class="bcancel" id="gh-run-full-btn" onclick="triggerWorkflow('songs','full')" style="font-size:.62rem;padding:.55rem .9rem" title="Generate ulang semua lagu — lama">Generate semua</button>
       <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
     </div>
     <div id="gh-songs-status" style="grid-column:1/-1;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
@@ -999,7 +1000,7 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
-const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
@@ -1802,12 +1803,12 @@ window.saveSong = async () => {
   btn.disabled=true;
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,...songMeta});
-      toast('Lagu berhasil diupdate!');
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,...songMeta});
+      toast('Lagu berhasil diupdate! Jalankan Generate (baru & diedit) untuk update HTML.');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,...songMeta});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,...songMeta});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
@@ -2468,7 +2469,7 @@ window.resetResForm = () => {
 const GH_OWNER = 'yumelyrics';
 const GH_REPO  = 'yumelyrics.github.io';
 const GH_WORKFLOWS = {
-  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: 'Run Generate Song Pages',     dlUrl: 'https://yumelyrics.my.id/lagu/' },
+  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: '▶ Generate (baru & diedit)',     dlUrl: 'https://yumelyrics.my.id/lagu/' },
   resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.my.id/resources/' },
   stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' }
 };
@@ -2560,6 +2561,8 @@ async function pollRunStatus(type, runId){
       setStatus(type, true, conclusion, labels[conclusion] || conclusion);
       document.getElementById(cfg.btn).disabled = false;
       document.getElementById(cfg.btn).textContent = cfg.label;
+      const fullBtn = type === 'songs' ? document.getElementById('gh-run-full-btn') : null;
+      if (fullBtn) fullBtn.disabled = false;
     }
   } catch(e){ /* silent */ }
 }
@@ -2571,23 +2574,28 @@ async function getLatestRunId(workflowFile, token){
   return d.workflow_runs?.[0]?.id || null;
 }
 
-window.triggerWorkflow = async (type) => {
+window.triggerWorkflow = async (type, mode = 'incremental') => {
   const cfg = GH_WORKFLOWS[type];
   const token = ghTokenGet();
   if(!token){ toast('Token belum diisi!'); return; }
   const btn = document.getElementById(cfg.btn);
+  const fullBtn = type === 'songs' ? document.getElementById('gh-run-full-btn') : null;
   btn.disabled = true;
+  if (fullBtn) fullBtn.disabled = true;
   btn.textContent = 'Mengirim...';
-  setStatus(type, true, 'queued', 'Mengirim trigger...');
+  const modeLabel = mode === 'full' ? 'semua lagu' : 'baru & diedit';
+  setStatus(type, true, 'queued', `Mengirim trigger (${modeLabel})...`);
+  const dispatchBody = { ref: 'main' };
+  if (type === 'songs') dispatchBody.inputs = { mode };
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${cfg.file}/dispatches`, {
       method: 'POST',
       headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main' })
+      body: JSON.stringify(dispatchBody)
     });
     if(res.status === 204){
-      toast('Workflow berhasil di-trigger! 🚀');
-      setStatus(type, true, 'queued', 'Antri, menunggu runner...');
+      toast('Workflow di-trigger (' + modeLabel + ')! 🚀');
+      setStatus(type, true, 'queued', 'Antri (' + modeLabel + ')...');
       // Tunggu sebentar baru poll (GH butuh ~2-3 detik buat buat run baru)
       setTimeout(async () => {
         const runId = await getLatestRunId(cfg.file, token);
@@ -2599,12 +2607,14 @@ window.triggerWorkflow = async (type) => {
       toast('Gagal: ' + (err.message||res.status));
       setStatus(type, false);
       btn.disabled = false;
+      if (fullBtn) fullBtn.disabled = false;
       btn.textContent = cfg.label;
     }
   } catch(e){
     toast('Error: ' + e.message);
     setStatus(type, false);
     btn.disabled = false;
+    if (fullBtn) fullBtn.disabled = false;
     btn.textContent = cfg.label;
   }
 };
