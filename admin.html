@@ -999,7 +999,7 @@ const db   = getFirestore(app);
 let songs = [];
 let unsubSongs = null;
 
-const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
+const ADMIN_GATE_HASH = '0c47830bece73394d169c9177ed766033a36183ede6a4710846a5bfd3e0a357a';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
@@ -1007,7 +1007,6 @@ const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev'
 const GATE_USE_SERVER = false;
 const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
 const GATE_CLIENT_ID_KEY = 'yume_gate_client_id';
-// Hash untuk: YumeSubs#G8te2026 — ganti hash jika ganti kata kunci (lihat SECURITY-SETUP.md)
 const GATE_LOCK_KEY = 'yume_gate_lock_until';
 const LOGIN_LOCK_KEY = 'yume_login_lock_until';
 const GATE_ATTEMPTS_KEY = 'yume_gate_attempts';
