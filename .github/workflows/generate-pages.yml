@@ -1,72 +1,42 @@
+# Salin ke: yumelyrics.github.io/.github/workflows/generate-pages.yml
+# Generate inkremental (default) = hanya lagu baru / diedit / belum punya HTML
+
 name: Generate Song Pages
 
 on:
-  schedule:
-    - cron: '0 23 * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'incremental = baru & diedit saja · full = semua lagu'
+        type: choice
+        options:
+          - incremental
+          - full
+        default: incremental
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install firebase
+        run: npm ci || npm install
 
-      - name: Generate halaman lagu, artis & sitemap
-        run: node generate-songs.js
+      - name: Generate pages
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          GENERATE_MODE: ${{ inputs.mode }}
+        run: node generate-songs.js
 
-      - name: Commit & push hasil generate
-        id: push
+      - name: Commit & push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add lagu/ artis/ sitemap.xml robots.txt
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Tidak ada perubahan — skip purge."
-          else
-            git commit -m "chore: auto-generate halaman lagu & artis [skip ci]"
-            git push
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Purge Cloudflare cache (lagu & artis)
-        if: steps.push.outputs.changed == 'true'
-        continue-on-error: true
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
-        run: |
-          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ZONE_ID" ]; then
-            echo "⚠️ Lewati purge: isi GitHub Secrets CF_API_TOKEN + CF_ZONE_ID (Zone ID domain, bukan Account ID)."
-            exit 0
-          fi
-          resp=$(curl -sS -w "\n%{http_code}" -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
-            -H "Authorization: Bearer ${CF_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data '{
-              "prefixes": ["yumelyrics.my.id/lagu/", "yumelyrics.my.id/artis/"],
-              "files": [
-                "https://yumelyrics.my.id/sitemap.xml",
-                "https://yumelyrics.my.id/robots.txt"
-              ]
-            }')
-          code=$(echo "$resp" | tail -n1)
-          body=$(echo "$resp" | sed '$d')
-          if [ "$code" = "200" ]; then
-            echo "✅ Cloudflare cache purged (lagu, artis, sitemap)."
-          else
-            echo "❌ Purge gagal (HTTP $code). Cek: Zone ID = dari halaman domain (bukan Account ID). Token = Cache Purge."
-            echo "$body"
-            exit 1
-          fi
+          git add lagu/ artis/ kata/ sitemap.xml .yume-generate-manifest.json
+          git diff --staged --quiet || git commit -m "chore: generate songs (${{ inputs.mode }})"
+          git push
