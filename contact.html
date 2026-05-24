@@ -565,7 +565,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -578,52 +578,72 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-onSnapshot(
-  query(collection(db,'submissions'), orderBy('ts','desc')),
-  async snap => {
-    const all = snap.docs.map(d=>({id:d.id,...d.data()}));
-    const sharings = all.filter(s=>s.type==='sharing');
-    const reqs = all.filter(s=>s.type==='request');
-
-    const list = document.getElementById('reqList');
-    if(!reqs.length){ list.innerHTML='<div style="font-size:.82rem;color:var(--ash);font-style:italic">Belum ada request.</div>'; }
-    else {
-      list.innerHTML = reqs.map(s => {
-        const replyHtml = s.adminReply ? `
-          <div class="admin-reply-block">
-            <div class="admin-badge-wrap">
-              <span class="admin-badge">Admin</span>
-              <span class="admin-name">YumeSubs</span>
-            </div>
-            <div class="admin-reply-text">${escH(s.adminReply)}</div>
-          </div>` : '';
-        const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
-        const linkHtml = s.link ? renderLinkPreview(s.link) : '';
-        return `<div class="req-card">
-          <div class="req-card-head">
-            <div class="req-song">${escH(s.title)}</div>
-            <div class="req-date">${s.date||''}</div>
-          </div>
-          <div class="req-artist">${escH(s.artist)}</div>
-          ${linkHtml}${msgHtml}${replyHtml}
-        </div>`;
-      }).join('');
-    }
-
-    const sharingList = document.getElementById('sharingList');
-    const badge = document.getElementById('sharingCountBadge');
-    badge.textContent = sharings.length;
-    if(!sharings.length){
-      sharingList.innerHTML='<div class="no-sharing">Belum ada cerita yang dibagikan. Jadilah yang pertama! 🌸</div>';
-      return;
-    }
-    const withReplies = await Promise.all(sharings.map(async s => {
-      const rsnap = await getDocs(query(collection(db,'submissions',s.id,'replies'), orderBy('ts','asc')));
-      s._replies = rsnap.docs.map(d=>({id:d.id,...d.data()}));
-      return s;
-    }));
-    sharingList.innerHTML = withReplies.map(s => renderSharingCard(s)).join('');
+function renderRequestList(reqs) {
+  const list = document.getElementById('reqList');
+  if (!list) return;
+  if (!reqs.length) {
+    list.innerHTML = '<div style="font-size:.82rem;color:var(--ash);font-style:italic">Belum ada request.</div>';
+    return;
   }
+  list.innerHTML = reqs.map(s => {
+    const replyHtml = s.adminReply ? `
+      <div class="admin-reply-block">
+        <div class="admin-badge-wrap">
+          <span class="admin-badge">Admin</span>
+          <span class="admin-name">YumeSubs</span>
+        </div>
+        <div class="admin-reply-text">${escH(s.adminReply)}</div>
+      </div>` : '';
+    const msgHtml = s.msg ? `<div class="req-msg">"${escH(s.msg)}"</div>` : '';
+    const linkHtml = s.link ? renderLinkPreview(s.link) : '';
+    return `<div class="req-card">
+      <div class="req-card-head">
+        <div class="req-song">${escH(s.title)}</div>
+        <div class="req-date">${s.date||''}</div>
+      </div>
+      <div class="req-artist">${escH(s.artist)}</div>
+      ${linkHtml}${msgHtml}${replyHtml}
+    </div>`;
+  }).join('');
+}
+
+async function renderSharingList(sharings) {
+  const sharingList = document.getElementById('sharingList');
+  const badge = document.getElementById('sharingCountBadge');
+  if (!sharingList) return;
+  if (badge) badge.textContent = sharings.length;
+  if (!sharings.length) {
+    sharingList.innerHTML = '<div class="no-sharing">Belum ada cerita yang dibagikan. Jadilah yang pertama! 🌸</div>';
+    return;
+  }
+  const withReplies = await Promise.all(sharings.map(async s => {
+    const rsnap = await getDocs(query(collection(db, 'submissions', s.id, 'replies'), orderBy('ts', 'asc')));
+    s._replies = rsnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return s;
+  }));
+  sharingList.innerHTML = withReplies.map(s => renderSharingCard(s)).join('');
+}
+
+function showSubmissionsLoadError(err) {
+  const msg = (err && err.code === 'permission-denied')
+    ? 'Gagal memuat data (izin Firestore). Pastikan rules sudah di-publish.'
+    : 'Gagal memuat data. Coba refresh halaman.';
+  const sharingList = document.getElementById('sharingList');
+  const reqList = document.getElementById('reqList');
+  if (sharingList) sharingList.innerHTML = `<div class="no-sharing">${msg}</div>`;
+  if (reqList) reqList.innerHTML = `<div style="font-size:.82rem;color:var(--ash)">${msg}</div>`;
+}
+
+onSnapshot(
+  query(collection(db, 'submissions'), where('type', '==', 'sharing'), orderBy('ts', 'desc')),
+  snap => { renderSharingList(snap.docs.map(d => ({ id: d.id, ...d.data() }))); },
+  err => { console.error(err); showSubmissionsLoadError(err); }
+);
+
+onSnapshot(
+  query(collection(db, 'submissions'), where('type', '==', 'request'), orderBy('ts', 'desc')),
+  snap => { renderRequestList(snap.docs.map(d => ({ id: d.id, ...d.data() }))); },
+  err => { console.error(err); showSubmissionsLoadError(err); }
 );
 
 function getYoutubeId(url){
