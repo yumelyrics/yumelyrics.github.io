@@ -634,15 +634,20 @@ function showSubmissionsLoadError(err) {
   if (reqList) reqList.innerHTML = `<div style="font-size:.82rem;color:var(--ash)">${msg}</div>`;
 }
 
+function sortByTsDesc(items) {
+  return items.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0));
+}
+
+// Tanpa orderBy di query → tidak perlu composite index Firestore (sort di browser)
 onSnapshot(
-  query(collection(db, 'submissions'), where('type', '==', 'sharing'), orderBy('ts', 'desc')),
-  snap => { renderSharingList(snap.docs.map(d => ({ id: d.id, ...d.data() }))); },
+  query(collection(db, 'submissions'), where('type', '==', 'sharing')),
+  snap => { renderSharingList(sortByTsDesc(snap.docs.map(d => ({ id: d.id, ...d.data() })))); },
   err => { console.error(err); showSubmissionsLoadError(err); }
 );
 
 onSnapshot(
-  query(collection(db, 'submissions'), where('type', '==', 'request'), orderBy('ts', 'desc')),
-  snap => { renderRequestList(snap.docs.map(d => ({ id: d.id, ...d.data() }))); },
+  query(collection(db, 'submissions'), where('type', '==', 'request')),
+  snap => { renderRequestList(sortByTsDesc(snap.docs.map(d => ({ id: d.id, ...d.data() })))); },
   err => { console.error(err); showSubmissionsLoadError(err); }
 );
 
