@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0e1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Yume Upload — Tambah Lagu</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../anime_icon.png">
+<link rel="apple-touch-icon" href="../anime_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#e8ecf6;--paper:#0a0c12;--cream:#141824;--ash:#8a94b0;--smoke:#4a5268;
+  --gold:#8fb4f0;--rose:#f08aaa;--border:rgba(232,236,246,.12);--red:#f06a7a;
+  --sans:'Syne',sans-serif;--jp:'Noto Serif JP',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,12,18,.94);backdrop-filter:blur(12px);z-index:50}
+.logo{font-family:var(--jp);font-size:1rem;letter-spacing:.08em}
+.logo small{display:block;font-family:var(--sans);font-size:.5rem;color:var(--ash);letter-spacing:.25em;text-transform:uppercase;margin-top:.15rem}
+.hdr-actions{display:flex;gap:.5rem;align-items:center}
+.hdr-actions a,.hdr-actions button{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;color:var(--ash);background:none;border:1px solid var(--border);padding:.4rem .7rem;cursor:pointer;font-family:var(--sans)}
+.hdr-actions a:hover,.hdr-actions button:hover{color:var(--ink);border-color:var(--gold)}
+main{max-width:640px;margin:0 auto;padding:1rem 1.1rem 6rem}
+h1{font-size:1.35rem;font-weight:700;margin-bottom:.25rem}
+.sub{font-size:.75rem;color:var(--ash);margin-bottom:1.25rem;line-height:1.5}
+.card{background:var(--cream);border:1px solid var(--border);padding:1rem;margin-bottom:1rem}
+.card h2{font-size:.62rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:.75rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.grid .full{grid-column:1/-1}
+label{display:block;font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-bottom:.35rem}
+input,textarea,select{width:100%;background:rgba(232,236,246,.04);border:1px solid var(--border);color:var(--ink);font-family:var(--sans);font-size:.88rem;padding:.65rem .75rem;outline:none;border-radius:4px}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:80px}
+.lyric-hdr{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.4rem;margin-bottom:.4rem}
+.lyric-hdr span{font-size:.5rem;color:var(--smoke);letter-spacing:.1em;text-transform:uppercase}
+.lrows{display:flex;flex-direction:column;gap:.45rem;margin:.6rem 0}
+.lrow{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.4rem;align-items:center}
+.lrow input{font-size:.78rem;padding:.5rem}
+.btn-del{width:34px;height:34px;border:1px solid rgba(240,106,122,.3);background:none;color:var(--red);cursor:pointer;border-radius:4px}
+.btn-add{width:100%;border:1px dashed var(--border);background:none;color:var(--ash);font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-top:.4rem}
+.btn-add:hover{border-color:var(--gold);color:var(--gold)}
+.toolbar{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.6rem}
+.toolbar button{border:1px solid var(--border);background:none;color:var(--gold);font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .65rem;cursor:pointer}
+.sticky{position:fixed;left:0;right:0;bottom:0;padding:.75rem 1.1rem calc(.75rem + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(10,12,18,.95) 25%);z-index:40}
+.sticky-inner{max-width:640px;margin:0 auto;display:flex;gap:.6rem}
+.btn-save{flex:1;background:var(--gold);color:var(--paper);border:none;font-family:var(--sans);font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:1rem;cursor:pointer;border-radius:4px}
+.btn-save:disabled{opacity:.45;cursor:not-allowed}
+.btn-gh{background:none;border:1px solid var(--border);color:var(--ash);font-family:var(--sans);font-size:.58rem;padding:1rem .8rem;text-decoration:none;display:inline-flex;align-items:center}
+#loginOverlay{position:fixed;inset:0;z-index:200;background:rgba(10,12,18,.98);display:flex;align-items:center;justify-content:center;padding:1.5rem}
+#loginOverlay.hide{display:none}
+.loginbox{width:100%;max-width:360px;background:var(--cream);border:1px solid var(--border);padding:1.5rem}
+.loginbox h2{font-size:1.1rem;margin-bottom:.35rem}
+.loginbox p{font-size:.72rem;color:var(--ash);margin-bottom:1rem;line-height:1.5}
+.login-step-hidden{display:none!important}
+.err{font-size:.72rem;color:var(--red);min-height:1.2em;margin-top:.4rem}
+.toast{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%) translateY(8px);background:var(--gold);color:var(--paper);font-size:.68rem;font-weight:700;padding:.65rem 1.2rem;border-radius:4px;opacity:0;transition:all .25s;pointer-events:none;z-index:100;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.cover-row{display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap;margin-top:.4rem}
+.cover-preview img{width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--border)}
+.install-hint{font-size:.68rem;color:var(--ash);background:rgba(143,180,240,.08);border:1px solid rgba(143,180,240,.2);padding:.65rem .8rem;border-radius:4px;margin-bottom:1rem;line-height:1.5}
+.install-hint strong{color:var(--gold)}
+.song-list{display:flex;flex-direction:column;gap:.5rem;max-height:300px;overflow-y:auto}
+.song-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .65rem;border:1px solid var(--border);font-size:.78rem}
+.song-item-meta{min-width:0;flex:1}
+.song-item-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.song-item-artist{font-size:.65rem;color:var(--ash)}
+.song-item-btns{display:flex;gap:.25rem;flex-shrink:0;flex-wrap:wrap}
+.song-item-btns button{font-size:.52rem;padding:.25rem .45rem;border:1px solid var(--border);background:none;color:var(--ash);cursor:pointer;font-family:var(--sans)}
+.edit-mode-banner{background:rgba(240,138,170,.12);border:1px solid rgba(240,138,170,.35);padding:.5rem .75rem;font-size:.72rem;margin-bottom:1rem;border-radius:4px;display:none}
+.edit-mode-banner.on{display:block}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.lyric-hdr,.lrow{grid-template-columns:1fr 1fr auto}.lyric-hdr span:nth-child(3){display:none}}
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div class="loginbox">
+    <h2>Yume Upload</h2>
+    <p>Login admin yang sama dengan panel web.</p>
+    <div id="step-gate">
+      <label>Kata kunci admin</label>
+      <input class="fi" type="password" id="l-gate" placeholder="Kata kunci panel" autocomplete="off">
+      <div class="err" id="l-gate-err"></div>
+      <button type="button" class="btn-save" style="width:100%;margin-top:.8rem" id="gateBtn" onclick="unlockAdminGate()">Lanjut</button>
+    </div>
+    <div id="step-cred" class="login-step-hidden">
+      <label>Email admin</label>
+      <input type="email" id="l-email" placeholder="admin@..." style="margin-bottom:.6rem">
+      <label>Password Firebase</label>
+      <input type="password" id="l-pw" placeholder="••••••••">
+      <div class="err" id="l-err"></div>
+      <button type="button" class="btn-save" style="width:100%;margin-top:.8rem" id="loginBtn" onclick="doLogin()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">夢 Upload<small>Tambah lagu cepat</small></div>
+  <div class="hdr-actions">
+    <a href="../admin.html">Panel penuh</a>
+    <a href="../inbox.html">Inbox</a>
+    <button type="button" id="logoutBtn" style="display:none" onclick="doLogout()">Keluar</button>
+  </div>
+</header>
+
+<main id="app" style="display:none">
+  <h1>Tambah lagu baru</h1>
+  <p class="sub">Form ringkas — sama backend dengan admin web. Setelah simpan → Generate GitHub.</p>
+
+  <div class="install-hint" id="installHint" hidden>
+    <strong>Install aplikasi:</strong> Chrome → menu ⋮ → <em>Install app</em> / <em>Tambahkan ke Layar Utama</em> (Android). Di Windows: ikon ⊕ di bilah alamat.
+  </div>
+
+  <input type="hidden" id="f-editid" value="">
+  <div class="edit-mode-banner" id="editBanner">✏️ Mode edit — <button type="button" onclick="cancelEdit()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-weight:700">Batal</button></div>
+
+  <section class="card">
+    <h2>Katalog (<span id="songCount">0</span>)</h2>
+    <input id="catalogSearch" placeholder="Cari lagu…" style="margin-bottom:.6rem" oninput="renderSongList()">
+    <div class="song-list" id="songList"></div>
+  </section>
+
+  <section class="card">
+    <h2>1 · Info</h2>
+    <div class="grid">
+      <div class="full"><label>Judul Jepang *</label><input id="f-jt" placeholder="例: 夜に駆ける"></div>
+      <div><label>Judul Indonesia</label><input id="f-it"></div>
+      <div><label>Romaji</label><input id="f-ro"></div>
+      <div class="full"><label>Artis *</label><input id="f-ar"></div>
+      <div><label>Slug artis</label><input id="f-artist-slug" placeholder="kosong = otomatis"></div>
+      <div><label>Genre</label><input id="f-genre"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2 · Media</h2>
+    <div class="grid">
+      <div class="full"><label>YouTube ID / URL</label><input id="f-yt" placeholder="dQw4w9WgXcQ"></div>
+      <div class="full"><label>Spotify URL</label><input id="f-sp"></div>
+      <div class="full">
+        <label>Cover URL</label>
+        <input id="f-img" oninput="onImgUrlInput()">
+        <div class="cover-row">
+          <label style="cursor:pointer;border:1px dashed var(--border);padding:.45rem .8rem;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em">
+            📁 Upload cover
+            <input type="file" accept="image/*" hidden id="cover-file-input" onchange="handleCoverUpload(this)">
+          </label>
+          <span id="cover-upload-status" style="font-size:.62rem;color:var(--ash)"></span>
+          <div class="cover-preview" id="cover-preview-wrap" style="display:none">
+            <img id="cover-preview-img" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3 · Lirik</h2>
+    <div class="toolbar">
+      <button type="button" onclick="toggleBulk()">⚡ Paste bulk</button>
+      <button type="button" onclick="parseBulk()">Generate baris</button>
+    </div>
+    <div id="bulkArea" style="display:none;margin-bottom:.6rem">
+      <textarea id="bulkInput" rows="6" placeholder="JP&#10;Romaji&#10;Terjemahan&#10;&#10;(paragraf berikutnya...)"></textarea>
+    </div>
+    <div class="lyric-hdr"><span>JP</span><span>Romaji</span><span>ID</span><span></span></div>
+    <div class="lrows" id="lrows"></div>
+    <button type="button" class="btn-add" onclick="addRow()">+ Baris</button>
+  </section>
+</main>
+
+<div class="sticky" id="stickyBar" style="display:none">
+  <div class="sticky-inner">
+    <button type="button" class="btn-save" id="bsaveBtn" onclick="saveSong()">Simpan lagu</button>
+    <a class="btn-gh" href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-pages.yml" target="_blank" rel="noopener">↗ GH</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDoc, writeBatch, where, getDocs }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+  authDomain: "yumesubs7.firebaseapp.com",
+  projectId: "yumesubs7",
+  storageBucket: "yumesubs7.firebasestorage.app",
+  messagingSenderId: "1076202015626",
+  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
+const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
+const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
+const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+let songs = [];
+const FEATURED_PIN_HOURS = 24;
+let unsubSongs = null;
+let _gateUnlocked = false;
+let _gateHmacKey = null;
+let _gateSessionExpires = 0;
+
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2800);
+}
+window._ymToast = toast;
+
+function showStep(which) {
+  document.getElementById('step-gate').classList.toggle('login-step-hidden', which !== 'gate');
+  document.getElementById('step-cred').classList.toggle('login-step-hidden', which !== 'cred');
+}
+
+async function isGateKeyOk(input) {
+  const val = String(input || '').trim();
+  if (!val) return false;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex === ADMIN_GATE_HASH;
+}
+
+async function importGateHmacKey(password) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(password)));
+  return crypto.subtle.importKey('raw', buf, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+}
+
+async function gateHmacSign(key, payload) {
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function clearGateSession() {
+  _gateUnlocked = false;
+  _gateHmacKey = null;
+  _gateSessionExpires = 0;
+  try { sessionStorage.removeItem(ADMIN_GATE_SESSION); } catch (e) {}
+}
+
+async function establishGateSession(password) {
+  const key = await importGateHmacKey(password);
+  const t = Date.now();
+  const n = crypto.randomUUID();
+  const s = await gateHmacSign(key, n + '|' + t + '|v2');
+  _gateHmacKey = key;
+  _gateUnlocked = true;
+  _gateSessionExpires = t + ADMIN_GATE_TTL_MS;
+  sessionStorage.setItem(ADMIN_GATE_SESSION, JSON.stringify({ v: 2, n, t, s }));
+}
+
+function isAdminGateUnlocked() {
+  if (!_gateUnlocked || !_gateHmacKey) return false;
+  if (Date.now() > _gateSessionExpires) {
+    clearGateSession();
+    return false;
+  }
+  return true;
+}
+
+window.unlockAdminGate = async function () {
+  const inp = document.getElementById('l-gate');
+  const err = document.getElementById('l-gate-err');
+  const val = inp?.value || '';
+  if (!val) { if (err) err.textContent = 'Kata kunci wajib diisi.'; return; }
+  if (await isGateKeyOk(val)) {
+    await establishGateSession(val);
+    if (err) err.textContent = '';
+    if (inp) inp.value = '';
+    showStep('cred');
+    document.getElementById('l-email')?.focus();
+  } else if (err) err.textContent = 'Kata kunci salah.';
+};
+
+async function isAdminUser(user) {
+  if (!user) return false;
+  try {
+    const token = await user.getIdTokenResult(true);
+    if (token.claims.admin === true) return true;
+  } catch (e) {}
+  try {
+    const snap = await getDoc(doc(db, 'admins', user.uid));
+    return snap.exists();
+  } catch (e) { return false; }
+}
+
+function startSongList() {
+  if (unsubSongs) return;
+  unsubSongs = onSnapshot(
+    query(collection(db, 'songs'), orderBy('order', 'asc')),
+    snap => {
+      songs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('songCount').textContent = songs.length;
+      renderSongList();
+    },
+    e => toast('Gagal load katalog: ' + e.message)
+  );
+}
+
+function stopSongList() {
+  if (unsubSongs) { unsubSongs(); unsubSongs = null; }
+  songs = [];
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
+
+window.renderSongList = function () {
+  const q = (document.getElementById('catalogSearch')?.value || '').trim().toLowerCase();
+  const el = document.getElementById('songList');
+  const list = songs.filter(s => {
+    if (!q) return true;
+    return [s.titleJp, s.titleRo, s.titleId, s.artist].join(' ').toLowerCase().includes(q);
+  });
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:.75rem;color:var(--ash)">Tidak ada lagu.</div>';
+    return;
+  }
+  el.innerHTML = list.map(s => `
+    <div class="song-item">
+      <div class="song-item-meta">
+        <div class="song-item-title">${escHtml(s.titleJp || s.titleId)}</div>
+        <div class="song-item-artist">${escHtml(s.artist)}</div>
+      </div>
+      <div class="song-item-btns">
+        <button type="button" onclick="editSong('${s.id}')">Edit</button>
+        <button type="button" onclick="patchSongMeta('${s.id}','rec',${!!s.recommended})">${s.recommended ? '★' : '☆'}</button>
+        <button type="button" onclick="patchSongMeta('${s.id}','hero',${!!s.heroFeatured})">🌙</button>
+        <button type="button" onclick="delSong('${s.id}')">Hapus</button>
+      </div>
+    </div>`).join('');
+};
+
+function showApp(show) {
+  document.getElementById('loginOverlay').classList.toggle('hide', show);
+  document.getElementById('app').style.display = show ? 'block' : 'none';
+  document.getElementById('stickyBar').style.display = show ? 'block' : 'none';
+  document.getElementById('logoutBtn').style.display = show ? 'inline-block' : 'none';
+  if (show) {
+    startSongList();
+    if (!document.querySelector('#lrows .lrow')) addRow();
+  } else {
+    stopSongList();
+  }
+}
+
+window.doLogin = async function () {
+  const err = document.getElementById('l-err');
+  if (!isAdminGateUnlocked()) {
+    if (err) err.textContent = 'Selesaikan kata kunci dulu.';
+    showStep('gate');
+    return;
+  }
+  const email = document.getElementById('l-email').value.trim();
+  const pw = document.getElementById('l-pw').value;
+  if (!email || !pw) { if (err) err.textContent = 'Email & password wajib.'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  if (err) err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    if (!(await isAdminUser(auth.currentUser))) {
+      await signOut(auth);
+      if (err) err.textContent = 'Akun bukan admin.';
+      btn.disabled = false;
+      return;
+    }
+    showApp(true);
+    toast('Siap upload!');
+  } catch (e) {
+    if (err) err.textContent = e.message || 'Login gagal.';
+  }
+  btn.disabled = false;
+};
+
+window.doLogout = async function () {
+  await signOut(auth);
+  clearGateSession();
+  showApp(false);
+  showStep('gate');
+  cancelEdit();
+};
+
+onAuthStateChanged(auth, async user => {
+  if (user && (await isAdminUser(user)) && isAdminGateUnlocked()) {
+    showApp(true);
+  } else {
+    showApp(false);
+    if (!isAdminGateUnlocked()) showStep('gate');
+    else showStep('cred');
+  }
+});
+
+function esc(s) {
+  return String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+window.addRow = (jp = '', ro = '', id = '') => {
+  const r = document.createElement('div');
+  r.className = 'lrow';
+  r.innerHTML =
+    `<input class="rjp" placeholder="日本語" value="${esc(jp)}">` +
+    `<input class="rro" placeholder="Romaji" value="${esc(ro)}">` +
+    `<input class="rid" placeholder="ID" value="${esc(id)}">` +
+    `<button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('lrows').appendChild(r);
+};
+
+window.toggleBulk = () => {
+  const el = document.getElementById('bulkArea');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.parseBulk = () => {
+  const raw = document.getElementById('bulkInput').value;
+  const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  if (!paragraphs.length) { toast('Isi lirik bulk dulu'); return; }
+  let added = 0;
+  paragraphs.forEach(para => {
+    const lines = para.split('\n').map(l => l.trim());
+    const jp = lines[0] || '';
+    const ro = lines[1] || '';
+    const id = lines[2] || '';
+    if (jp) { addRow(jp, ro, id); added++; }
+  });
+  toast(`${added} baris ditambah`);
+  document.getElementById('bulkArea').style.display = 'none';
+};
+
+window.saveSong = async function () {
+  const jt = document.getElementById('f-jt').value.trim();
+  const it = document.getElementById('f-it').value.trim();
+  const ar = document.getElementById('f-ar').value.trim();
+  const artistSlug = document.getElementById('f-artist-slug').value.trim();
+  const ro = document.getElementById('f-ro').value.trim();
+  const yt = document.getElementById('f-yt').value.trim();
+  const img = document.getElementById('f-img').value.trim();
+  const sp = document.getElementById('f-sp').value.trim();
+  const genre = document.getElementById('f-genre').value.trim();
+  const editId = document.getElementById('f-editid').value;
+  if (!jt || !ar) { toast('Judul JP & artis wajib'); return; }
+
+  const lyrics = [];
+  document.querySelectorAll('#lrows .lrow').forEach(r => {
+    const jp = r.querySelector('.rjp').value.trim();
+    const ro2 = r.querySelector('.rro').value.trim();
+    const id = r.querySelector('.rid').value.trim();
+    if (jp) lyrics.push({ jp, ro: ro2, id, ans: '' });
+  });
+
+  const btn = document.getElementById('bsaveBtn');
+  btn.disabled = true;
+  const payload = {
+    titleJp: jt, titleRo: ro, titleId: it, artist: ar, artistSlug,
+    ytId: yt, nicoId: '', img, sp, lyrics,
+    descId: '', descJp: '', htmlDirty: true,
+    anime: '', animeId: '', animeEn: '', type: '', genre, mood: '', jlpt: '', difficulty: ''
+  };
+
+  try {
+    if (editId) {
+      await updateDoc(doc(db, 'songs', editId), payload);
+      toast('Lagu diupdate!');
+      cancelEdit();
+    } else {
+      const snap = await getCountFromServer(collection(db, 'songs'));
+      await addDoc(collection(db, 'songs'), { ...payload, order: snap.data().count });
+      toast('Lagu tersimpan!');
+      clearForm();
+    }
+  } catch (e) {
+    toast('Gagal: ' + e.message);
+  }
+  btn.disabled = false;
+};
+
+window.editSong = function (id) {
+  const s = songs.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('f-jt').value = s.titleJp || '';
+  document.getElementById('f-it').value = s.titleId || '';
+  document.getElementById('f-ar').value = s.artist || '';
+  document.getElementById('f-artist-slug').value = s.artistSlug || '';
+  document.getElementById('f-ro').value = s.titleRo || '';
+  document.getElementById('f-yt').value = s.ytId || '';
+  document.getElementById('f-img').value = s.img || '';
+  document.getElementById('f-sp').value = s.sp || '';
+  document.getElementById('f-genre').value = s.genre || '';
+  document.getElementById('f-editid').value = s.id;
+  document.getElementById('editBanner').classList.add('on');
+  document.getElementById('bsaveBtn').textContent = 'Update lagu';
+  document.getElementById('lrows').innerHTML = '';
+  (s.lyrics || []).forEach(l => addRow(l.jp, l.ro, l.id));
+  if (!s.lyrics?.length) addRow();
+  showCoverPreview(s.img || '');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.cancelEdit = function () {
+  document.getElementById('f-editid').value = '';
+  document.getElementById('editBanner').classList.remove('on');
+  document.getElementById('bsaveBtn').textContent = 'Simpan lagu';
+  clearForm();
+};
+
+window.delSong = async function (id) {
+  if (!confirm('Hapus lagu ini?')) return;
+  try {
+    await deleteDoc(doc(db, 'songs', id));
+    toast('Lagu dihapus');
+    if (document.getElementById('f-editid').value === id) cancelEdit();
+  } catch (e) {
+    toast('Gagal: ' + e.message);
+  }
+};
+
+window.patchSongMeta = async function (id, kind, current) {
+  try {
+    if (kind === 'rec') {
+      await updateDoc(doc(db, 'songs', id), { recommended: !current });
+      toast(!current ? '★ Rekomendasi' : 'Rekomendasi dicabut');
+    } else if (kind === 'hero') {
+      if (current) {
+        await updateDoc(doc(db, 'songs', id), { heroFeatured: false, heroFeaturedUntil: null });
+        toast('Pin dicabut');
+      } else {
+        const until = Date.now() + FEATURED_PIN_HOURS * 3600000;
+        const prev = await getDocs(query(collection(db, 'songs'), where('heroFeatured', '==', true)));
+        const batch = writeBatch(db);
+        prev.docs.forEach(d => {
+          if (d.id !== id) batch.update(d.ref, { heroFeatured: false, heroFeaturedUntil: null });
+        });
+        batch.update(doc(db, 'songs', id), { heroFeatured: true, heroFeaturedUntil: until });
+        await batch.commit();
+        toast('🌙 Pin beranda 24j');
+      }
+    }
+  } catch (e) {
+    toast('Gagal: ' + e.message);
+  }
+};
+
+function clearForm() {
+  ['f-jt', 'f-it', 'f-ar', 'f-artist-slug', 'f-ro', 'f-yt', 'f-img', 'f-sp', 'f-genre'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('lrows').innerHTML = '';
+  document.getElementById('f-editid').value = '';
+  showCoverPreview('');
+  addRow();
+}
+
+window.onImgUrlInput = () => showCoverPreview(document.getElementById('f-img').value.trim());
+
+function showCoverPreview(url) {
+  const wrap = document.getElementById('cover-preview-wrap');
+  const img = document.getElementById('cover-preview-img');
+  if (url) { img.src = url; wrap.style.display = 'block'; }
+  else { img.src = ''; wrap.style.display = 'none'; }
+}
+
+window.handleCoverUpload = async function (input) {
+  if (!auth.currentUser) { toast('Login dulu'); input.value = ''; return; }
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Maks 5MB'); input.value = ''; return; }
+  const statusEl = document.getElementById('cover-upload-status');
+  statusEl.textContent = 'Uploading…';
+  try {
+    const fd = new FormData();
+    fd.append('image', file);
+    const headers = {};
+    try { headers.Authorization = 'Bearer ' + await auth.currentUser.getIdToken(); } catch (e) {}
+    const res = await fetch(UPLOAD_WORKER + '/upload-img', { method: 'POST', headers, body: fd });
+    const json = await res.json();
+    if (!json.success) throw new Error('Upload gagal');
+    document.getElementById('f-img').value = json.data.url;
+    showCoverPreview(json.data.url);
+    statusEl.textContent = '✓ OK';
+  } catch (e) {
+    statusEl.textContent = '✗ ' + e.message;
+  }
+  input.value = '';
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.getElementById('installHint').hidden = true;
+} else {
+  document.getElementById('installHint').hidden = false;
+}
+</script>
+</body>
+</html>
