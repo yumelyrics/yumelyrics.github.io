@@ -136,6 +136,26 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 @media(pointer:coarse){body{-webkit-user-select:none;-moz-user-select:none;user-select:none}}
 
+/* ── Mobile performance: reduce scroll jank ──
+   Banyak efek di bawah ini (fixed grain overlay, blur filter, backdrop-filter, transisi global)
+   bisa bikin “glitch” saat scroll di HP. Kita matikan khusus perangkat touch. */
+@media (pointer:coarse){
+  html{scroll-behavior:auto}
+  body,nav,#bgwrap,.hero,.sc,footer,.toast{transition:none!important}
+  body::before{display:none!important} /* grain overlay (fixed) */
+  nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  #report-modal-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  #editProfileModal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  #chat-lightbox{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  #bgwrap{display:none!important} /* aurora gradients + blur animation */
+  #sakuraPetals{display:none!important}
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(240,242,248,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(14,18,32,.08);min-width:0;max-width:100%;box-shadow:none;isolation:isolate}
 [data-theme="dark"] nav{background:rgba(10,12,18,.92)}
