@@ -434,9 +434,13 @@ Japanese → Romaji → Indonesian meaning → example sentence</p><p>5. Indones
     <div class="dcm-heading">Apa yang<br>kamu rasakan?</div>
     <div>
       <div class="dcm-tit">Tinggalkan Komentar</div>
-      <div class="dcm-form">
+      <div id="st-cm-login" class="dcm-form" style="display:none;text-align:center;padding:1rem 0">
+        <p style="font-size:.82rem;color:var(--ash);margin-bottom:1rem">Login dulu untuk berkomentar.</p>
+        <button type="button" class="sbtn" onclick="storySignIn()">Login dengan Google</button>
+      </div>
+      <div class="dcm-form" id="st-cm-form">
         <div class="cmrow">
-          <input class="cmi" id="cm-n" placeholder="Nama (opsional)">
+          <input class="cmi" id="cm-n" placeholder="Nama" readonly style="opacity:.85">
           <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
         </div>
         <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis sesuatu tentang cerita ini..."></textarea>
@@ -472,8 +476,10 @@ Japanese → Romaji → Indonesian meaning → example sentence</p><p>5. Indones
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, getDocs, where, orderBy }
+import { getFirestore, collection, addDoc, query, getDocs, where, doc, setDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -485,8 +491,13 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+const STORY_ADMIN_EMAILS = ['khoirustsani143@gmail.com','admin@yumesubs.com'];
 
 const STORY_ID = "sjkM1Jl8Uj6IrR7bxVWQ";
+let _storyUser = null;
+let _storyIsAdmin = false;
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -494,6 +505,50 @@ function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m; t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+function updateStoryCommentUI(){
+  const login=document.getElementById('st-cm-login');
+  const form=document.getElementById('st-cm-form');
+  const nameInp=document.getElementById('cm-n');
+  if(!login||!form) return;
+  if(_storyUser){
+    login.style.display='none';
+    form.style.display='flex';
+    if(nameInp) nameInp.value=_storyIsAdmin?'YumeSubs':(_storyUser.displayName||'Kamu');
+  } else {
+    login.style.display='block';
+    form.style.display='none';
+  }
+}
+
+window.storySignIn=async()=>{
+  try{
+    await signInWithPopup(auth,provider);
+    toast('Login berhasil!');
+  }catch(e){
+    if(e?.code!=='auth/popup-closed-by-user') toast('Login gagal.');
+  }
+};
+
+onAuthStateChanged(auth,user=>{
+  _storyUser=user;
+  _storyIsAdmin=user&&STORY_ADMIN_EMAILS.includes(user.email||'');
+  updateStoryCommentUI();
+});
+
+async function saveStoryRateLimit(uid,kind){
+  const data=kind==='reply'?{lastReply:Date.now()}:{lastComment:Date.now()};
+  await setDoc(doc(db,'comment_ratelimit',uid),data,{merge:true});
+}
+
+function storyCommentPayload(text,parentId){
+  const name=_storyIsAdmin?'YumeSubs':(_storyUser.displayName||'Kamu');
+  return {
+    storyId:STORY_ID, parentId:parentId||null, uid:_storyUser.uid, name, text,
+    date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
+    ts:Date.now(), isAdmin:_storyIsAdmin
+  };
 }
 
 function renderComment(id, c, replies){
@@ -563,38 +618,30 @@ window.toggleRepForm = id => {
 };
 
 window.postReply = async parentId => {
+  if(!_storyUser){ toast('Login dulu untuk membalas.'); return; }
   const t=document.getElementById('srt-'+parentId).value.trim();
   if(!t) return;
-  const n=document.getElementById('srn-'+parentId).value.trim();
   try {
-    await addDoc(collection(db,'story_comments'),{
-      storyId:STORY_ID, parentId,
-      name:n||'Anonim', text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now(), isAdmin:false
-    });
+    await addDoc(collection(db,'story_comments'), storyCommentPayload(t, parentId));
+    await saveStoryRateLimit(_storyUser.uid,'reply');
     toast('Balasan terkirim!');
     loadCm();
-  } catch(e){ toast('Gagal kirim.'); }
+  } catch(e){ toast(e?.code==='permission-denied'?'Ditolak server.':'Gagal kirim.'); }
 };
 
 window.postCm = async () => {
-  const n=document.getElementById('cm-n').value.trim();
+  if(!_storyUser){ toast('Login dulu untuk berkomentar.'); return; }
   const t=document.getElementById('cm-t').value.trim();
   const btn=document.getElementById('cm-btn');
   if(!t) return;
   btn.disabled=true;
   try {
-    await addDoc(collection(db,'story_comments'),{
-      storyId:STORY_ID, parentId:null,
-      name:n||'Anonim', text:t,
-      date:new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts:Date.now(), isAdmin:false
-    });
+    await addDoc(collection(db,'story_comments'), storyCommentPayload(t, null));
+    await saveStoryRateLimit(_storyUser.uid,'comment');
     document.getElementById('cm-t').value='';
     toast('Komentar terkirim!');
     loadCm();
-  } catch(e){ toast('Gagal kirim.'); }
+  } catch(e){ toast(e?.code==='permission-denied'?'Ditolak server.':'Gagal kirim.'); }
   btn.disabled=false;
 };
 
