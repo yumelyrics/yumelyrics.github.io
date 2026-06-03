@@ -2826,7 +2826,7 @@ window.addEventListener('resize', fixBg);
   </div>
 
   <!-- Messages (tampil untuk semua, termasuk guest) -->
-  <div id="chat-msgs"><div class="chat-loading">Memuat pesan...</div></div>
+  <div id="chat-msgs"></div>
 
   <!-- Gate login — tampil kalau belum login, di bawah pesan -->
   <div id="chat-login-gate" style="display:none;flex-direction:column;align-items:center;gap:.5rem;padding:.75rem 1rem;text-align:center;border-top:1px solid rgba(0,229,255,.1)">
@@ -2935,6 +2935,8 @@ let _chatInited = false;
 let _lastMsgs = null;
 let _chatDeferredUser = null;
 let _chatModuleReady = false;
+let _chatGuestMode = null;
+let _lastChatAuthUserAt = 0;
 
 function isMobile() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -2984,18 +2986,15 @@ function getChatAuthUser() {
 function bootChatListeners() {
   const loggedIn = getChatAuthUser();
   if (_chatModuleReady) {
-    if (loggedIn && !_chatUser) initChat(loggedIn);
+    if (loggedIn && (!_chatUser || _chatUser.uid !== loggedIn.uid)) initChat(loggedIn);
+    else if (!loggedIn && !_chatUnsub) initGuestChat();
     return;
   }
   _chatModuleReady = true;
-  const msgsEl = document.getElementById('chat-msgs');
-  if (msgsEl && !_chatInited) {
-    msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
-  }
   if (loggedIn) {
     initChat(loggedIn);
     _chatDeferredUser = null;
-  } else if (!_chatInited) {
+  } else {
     initGuestChat();
   }
 }
@@ -3003,7 +3002,7 @@ function bootChatListeners() {
 window.toggleChat = () => {
   if (!_chatModuleReady) bootChatListeners();
   const u = getChatAuthUser();
-  if (u && !_chatUser) initChat(u);
+  if (u && (!_chatUser || _chatUser.uid !== u.uid)) initChat(u);
   else if (!u && !_chatUnsub) initGuestChat();
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
@@ -3341,6 +3340,11 @@ function subscribeGroupChat(msgsEl, opts) {
   const { guestMode = false } = opts || {};
   if (!msgsEl) return;
   msgsEl.style.display = 'flex';
+  if (_chatUnsub && _chatGuestMode === guestMode) {
+    if (_lastMsgs && _lastMsgs.length) renderMsgs(_lastMsgs);
+    return;
+  }
+  _chatGuestMode = guestMode;
   if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
   loadCustomRoleCache().catch(() => {});
   loadBannedCache().catch(() => {});
@@ -3392,7 +3396,14 @@ function initGuestChat() {
   const inpWrap = document.getElementById('chat-inp-wrap');
   if (inpWrap) inpWrap.classList.remove('show');
   const msgsEl = document.getElementById('chat-msgs');
-  if (msgsEl && !_chatInited) msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+  if (msgsEl) {
+    msgsEl.style.display = 'flex';
+    if (_lastMsgs && _lastMsgs.length) {
+      renderMsgs(_lastMsgs);
+    } else if (!_chatInited) {
+      msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+    }
+  }
   subscribeGroupChat(msgsEl, { guestMode: true });
 }
 
@@ -3401,11 +3412,18 @@ function initChat(user) {
   const gate = document.getElementById('chat-login-gate');
   if (gate) gate.style.display = 'none';
   const msgsEl = document.getElementById('chat-msgs');
-  if (msgsEl) msgsEl.style.display = 'flex';
+  if (msgsEl) {
+    msgsEl.style.display = 'flex';
+    if (_lastMsgs && _lastMsgs.length) {
+      renderMsgs(_lastMsgs);
+    } else if (!_chatInited) {
+      msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+    }
+  }
   document.getElementById('chat-inp-wrap')?.classList.add('show');
 
   loadCustomRoleCache().then(() => {
-    if (_chatInited && _lastMsgs) renderMsgs(_lastMsgs);
+    if (_lastMsgs) renderMsgs(_lastMsgs);
   });
   loadBannedCache().then(() => {
     if (_lastMsgs) renderMsgs(_lastMsgs);
@@ -3416,8 +3434,26 @@ function initChat(user) {
 
 let _chatAuthNullTimer = null;
 
+function scheduleChatAuthLoggedOutCheck() {
+  if (_chatAuthNullTimer) clearTimeout(_chatAuthNullTimer);
+  _chatAuthNullTimer = setTimeout(() => {
+    _chatAuthNullTimer = null;
+    if (_chatAuth.currentUser) return;
+    if (Date.now() - _lastChatAuthUserAt < 3000) return;
+    setTimeout(() => {
+      if (_chatAuth.currentUser) return;
+      if (Date.now() - _lastChatAuthUserAt < 3000) return;
+      _chatUser = null;
+      _chatDeferredUser = null;
+      if (_chatModuleReady) initGuestChat();
+      else bootChatListeners();
+    }, 500);
+  }, 1200);
+}
+
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
+    _lastChatAuthUserAt = Date.now();
     if (_chatAuthNullTimer) { clearTimeout(_chatAuthNullTimer); _chatAuthNullTimer = null; }
     _chatDeferredUser = user;
     if (_chatModuleReady) initChat(user);
@@ -3427,22 +3463,11 @@ onAuthStateChanged(_chatAuth, user => {
       else setTimeout(runReport, 4000);
     }
   } else {
-    if (_chatAuthNullTimer) clearTimeout(_chatAuthNullTimer);
-    _chatAuthNullTimer = setTimeout(() => {
-      _chatAuthNullTimer = null;
-      if (_chatAuth.currentUser) return;
-      _chatUser = null;
-      _chatDeferredUser = null;
-      _chatInited = false;
-      if (_chatModuleReady) initGuestChat();
-      else bootChatListeners();
-    }, 450);
+    scheduleChatAuthLoggedOutCheck();
   }
 });
 
 (function deferChatModule() {
-  const msgs = document.getElementById('chat-msgs');
-  if (msgs) msgs.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
   const start = () => bootChatListeners();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(start, 400));
