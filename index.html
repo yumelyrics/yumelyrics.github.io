@@ -1274,14 +1274,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div class="llines" id="ll"></div>
       <div class="cmsec">
         <div class="cmtit">Komentar</div>
-        <div class="cmform">
-          <div class="cmrow">
-            <input class="cmi" id="cm-n" placeholder="Nama lo (opsional)">
-            <button class="sbtn" id="cm-btn" onclick="postCm()">Kirim</button>
-          </div>
-          <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentar tentang lagu ini..."></textarea>
-        </div>
-        <div class="cmlist" id="cmlist"></div>
+        <p style="font-size:.82rem;color:var(--ash);line-height:1.75;font-family:var(--serif);font-style:italic;margin:0">Diskusi tiap lagu ada di halaman lirik masing-masing (GraphComment — terbaru, terpopuler, thread).</p>
       </div>
     </div>
   </div>
@@ -2412,138 +2405,7 @@ window.tl = t => {
   }
 };
 
-// ── Comments ──
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function renderComment(id, c, replies){
-  const isAdm = !!c.isAdmin;
-  const repHtml = replies.length ? `<div class="replies">${replies.map(r=>{
-    const ra = !!r.isAdmin;
-    if(ra) return `<div class="admin-reply-block">
-      <div class="admin-badge-wrap">
-        <span class="admin-badge">Admin</span>
-        <span class="admin-name">YumeSubs</span>
-      </div>
-      <div class="admin-reply-text">${esc(r.text)}</div>
-    </div>`;
-    return `<div class="ritem">
-      <div class="chdr">
-        <div class="chdr-left">
-          <div class="cname">${esc(r.name)}</div>
-          <div class="cdate">${esc(r.date)}</div>
-        </div>
-      </div>
-      <div class="ctxt">${esc(r.text)}</div>
-    </div>`;
-  }).join('')}</div>` : '';
-  return `<div class="citem${isAdm?' is-admin':''}" id="cm-${id}">
-    <div class="chdr">
-      <div class="chdr-left">
-        <div class="cname">${esc(c.name)}</div>
-        ${isAdm?'<span class="admin-badge">Admin</span>':''}
-        <div class="cdate">${esc(c.date)}</div>
-      </div>
-      <button class="reply-btn" onclick="toggleReplyForm('${id}')">↩ Balas</button>
-    </div>
-    <div class="ctxt">${esc(c.text)}</div>
-    ${repHtml}
-    <div class="reply-form" id="rf-${id}">
-      <div class="reply-row">
-        <input class="cmi" id="rn-${id}" placeholder="Nama (opsional)">
-        <button class="rbtn-cancel" onclick="toggleReplyForm('${id}')">✕</button>
-      </div>
-      <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <button class="sbtn" style="padding:.55rem 1rem;align-self:flex-start" onclick="postReply('${id}')">Kirim Balasan</button>
-    </div>
-  </div>`;
-}
-
-async function rcm(songId){
-  const el = document.getElementById('cmlist');
-  el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
-  try {
-    const allQ = query(collection(db,'comments'), where('songId','==',songId));
-    const allSnap = await getDocs(allQ);
-    const allDocs = allSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts?.seconds||0)-(a.ts?.seconds||0));
-    if(allDocs.length===0){ el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>'; return; }
-    const parents = allDocs.filter(c=>!c.parentId);
-    const replyMap = {};
-    allDocs.filter(c=>!!c.parentId).forEach(r=>{
-      if(!replyMap[r.parentId]) replyMap[r.parentId]=[];
-      replyMap[r.parentId].push(r);
-    });
-    if(parents.length===0){ el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>'; return; }
-    el.innerHTML = parents.map(c=>renderComment(c.id, c, replyMap[c.id]||[])).join('');
-  } catch(e){
-    el.innerHTML='<div class="nocm">Gagal memuat komentar.</div>';
-  }
-}
-
-window.toggleReplyForm = id => {
-  const rf = document.getElementById('rf-'+id);
-  rf.classList.toggle('open');
-  if(rf.classList.contains('open')) document.getElementById('rt-'+id).focus();
-};
-
-window.postReply = async parentId => {
-  const t = document.getElementById('rt-'+parentId).value.trim();
-  if(!t) return;
-  const n = document.getElementById('rn-'+parentId).value.trim();
-  try {
-    await addDoc(collection(db,'comments'), {
-      songId: cur, parentId,
-      name: n||'Anonim', text: t,
-      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts: Date.now(), isAdmin: false
-    });
-    toast('Balasan terkirim!');
-    rcm(cur);
-  } catch(e){ toast('Gagal kirim.'); }
-};
-
-// ── ADMIN NOTIF HELPER ──
-const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
-async function notifyAdmins({ songId, songTitle, commenterName, commentText }) {
-  try {
-    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', ADMIN_EMAILS)));
-    if (snap.empty) return;
-    const notifBase = {
-      type: 'admin_comment',
-      songId,
-      songTitle,
-      fromName: commenterName,
-      replyText: commentText.substring(0, 100),
-      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts: Date.now(),
-      read: false
-    };
-    await Promise.all(snap.docs.map(d => addDoc(collection(db,'notifications'), { ...notifBase, toUid: d.id })));
-  } catch(e) {}
-}
-
-window.postCm = async () => {
-  const n   = document.getElementById('cm-n').value.trim();
-  const t   = document.getElementById('cm-t').value.trim();
-  const btn = document.getElementById('cm-btn');
-  if(!t || !cur) return;
-  btn.disabled = true;
-  try {
-    await addDoc(collection(db,'comments'), {
-      songId: cur, parentId: null,
-      name: n||'Anonim', text: t,
-      date: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),
-      ts: Date.now(), isAdmin: false
-    });
-    document.getElementById('cm-t').value = '';
-    const songTitle = songs.find(s=>s.id===cur)?.titleRo || songs.find(s=>s.id===cur)?.titleJp || cur;
-    notifyAdmins({ songId: cur, songTitle, commenterName: n||'Anonim', commentText: t });
-    rcm(cur);
-    toast('Komentar terkirim!');
-  } catch(e){
-    toast('Gagal kirim komentar.');
-  }
-  btn.disabled = false;
-};
+// ── Komentar: GraphComment di halaman /lagu/{slug}.html (generate-songs.js) ──
 
 // ── INSTANT CACHE — tampilkan dari localStorage sebelum Firebase merespons ──
 function showCachedSongs() {
