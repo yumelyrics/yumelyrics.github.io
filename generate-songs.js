@@ -1571,6 +1571,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 #copy-comment-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(12px);z-index:1000;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.34,1.2,.64,1);display:flex;align-items:center;gap:.75rem;max-width:min(360px,calc(100vw - 2rem));padding:.75rem 1rem .75rem 1.15rem;background:var(--ink);color:var(--paper);border:1px solid rgba(201,169,110,.28);box-shadow:0 10px 32px rgba(10,8,18,.22);font-family:var(--sans);font-size:.72rem;font-weight:500;letter-spacing:.04em;line-height:1.45}
 #copy-comment-toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .cct-text{margin:0;flex:1}
+.cct-unlock{flex-shrink:0;background:rgba(201,169,110,.2);border:1px solid rgba(201,169,110,.45);color:var(--paper);font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .65rem;cursor:pointer;transition:background .2s,border-color .2s;white-space:nowrap}
+.cct-unlock:hover{background:rgba(201,169,110,.35);border-color:var(--gold)}
 .cct-close{flex-shrink:0;background:none;border:none;color:var(--paper);font-size:1.15rem;line-height:1;cursor:pointer;opacity:.65;padding:0 .15rem;transition:opacity .2s}
 .cct-close:hover{opacity:1}
 [data-theme="dark"] #copy-comment-toast{border-color:rgba(201,169,110,.38)}
@@ -2172,6 +2174,7 @@ ${(()=>{
 <!-- ── Copy hint toast (GraphComment) ── -->
 <div id="copy-comment-toast" role="status" aria-live="polite">
   <p class="cct-text">tinggalkan komentar untuk salin lirik</p>
+  <button type="button" class="cct-unlock" onclick="confirmGcCommentUnlock()">Sudah komentar</button>
   <button type="button" class="cct-close" onclick="dismissCopyCommentToast()" aria-label="Tutup">×</button>
 </div>
 <!-- ── Lightbox ── -->
@@ -3174,27 +3177,67 @@ async function checkBanStatus(uid) {
   } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
 }
 
-const GC_COMMENT_KEY = 'ym_gc_' + SONG_ID;
+const GC_THREAD_UID = ${JSON.stringify(slug)};
+const GC_COMMENT_KEY = 'ym_gc_' + GC_THREAD_UID;
+const GC_COMMENT_KEY_LEGACY = 'ym_gc_' + SONG_ID;
 let _hasCommented = false;
-try { _hasCommented = !!localStorage.getItem(GC_COMMENT_KEY); } catch(e) {}
+try {
+  _hasCommented = !!(localStorage.getItem(GC_COMMENT_KEY) ||
+    (GC_THREAD_UID !== SONG_ID && localStorage.getItem(GC_COMMENT_KEY_LEGACY)));
+} catch(e) {}
 
 let _copyToastTimer = null;
+let _gcWatchReady = false;
+let _gcStorageBaseline = '';
+let _gcCookieBaseline = '';
 
 function markGcCommented() {
   if (_hasCommented) return;
   _hasCommented = true;
-  try { localStorage.setItem(GC_COMMENT_KEY, '1'); } catch(e) {}
+  try {
+    localStorage.setItem(GC_COMMENT_KEY, String(Date.now()));
+    if (GC_THREAD_UID !== SONG_ID) localStorage.setItem(GC_COMMENT_KEY_LEGACY, '1');
+  } catch(e) {}
   updateCopyGate();
   hideCopyCommentToast();
+  toast('Copy lirik aktif — terima kasih sudah berkomentar!');
+}
+
+window.confirmGcCommentUnlock = function() {
+  markGcCommented();
+};
+
+function gcStorageBlob() {
+  let s = '';
+  try {
+    const stores = [localStorage, sessionStorage];
+    for (const store of stores) {
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i) || '';
+        if (/gc|graph|semio|comment|guest|yumelyrics/i.test(k)) {
+          s += k + (store.getItem(k) || '');
+        }
+      }
+    }
+  } catch(e) {}
+  return s;
 }
 
 function isGcCommentPosted(data) {
-  if (!data || typeof data !== 'object') return false;
+  if (data == null) return false;
+  if (typeof data === 'string') {
+    const s = data.toLowerCase();
+    if (/height|resize|ping|ready|load|open|close|focus|blur/.test(s) && !/comment/.test(s)) return false;
+    return /comment/.test(s) && /post|sent|submit|creat|add|publish|success|done|new/.test(s);
+  }
+  if (typeof data !== 'object') return false;
   const blob = JSON.stringify(data).toLowerCase();
-  if (/newcomment|commentposted|comment_post|commentpost|comment_created|commentcreated|comment_sent|commentsent|comment_submitted/.test(blob)) return true;
+  if (/newcomment|commentposted|comment_post|commentpost|comment_created|commentcreated|comment_sent|commentsent|comment_submitted|addcomment/.test(blob)) return true;
+  if ((data.content || data.text || data.message) && (data._id || data.id || data.commentId)) return true;
   const t = String(data.type || data.event || data.action || data.name || '').toLowerCase();
   if (/comment/.test(t) && /post|sent|submit|creat|add|publish|success|done/.test(t)) return true;
   if (data.status === 'published' || data.status === 'approved') return true;
+  if (/comment/.test(blob) && /post|sent|submit|creat|publish|success/.test(blob) && !/height|resize|ping/.test(blob)) return true;
   return false;
 }
 
@@ -3202,18 +3245,59 @@ function parseGcMessage(raw) {
   if (raw == null) return null;
   if (typeof raw === 'object') return raw;
   if (typeof raw === 'string') {
-    if (!/comment|post|submit|creat|sent|publish/i.test(raw)) return null;
-    try { return JSON.parse(raw); } catch { return { type: raw }; }
+    try { return JSON.parse(raw); } catch { return { type: raw, raw: raw }; }
   }
   return null;
 }
 
+function handleGcMessage(raw) {
+  const data = parseGcMessage(raw);
+  if (!data) return;
+  if (isGcCommentPosted(data)) markGcCommented();
+}
+
 window.addEventListener('message', (e) => {
   if (!e.origin || !/graphcomment/i.test(e.origin)) return;
-  const data = parseGcMessage(e.data);
-  if (!data || !isGcCommentPosted(data)) return;
-  markGcCommented();
+  handleGcMessage(e.data);
 });
+
+function startGcCommentWatch() {
+  setTimeout(() => {
+    _gcStorageBaseline = gcStorageBlob();
+    _gcCookieBaseline = document.cookie || '';
+    _gcWatchReady = true;
+  }, 3500);
+
+  setInterval(() => {
+    if (_hasCommented || !_gcWatchReady) return;
+    const ls = gcStorageBlob();
+    const ck = document.cookie || '';
+    if (ls.length > _gcStorageBaseline.length + 24 && ls !== _gcStorageBaseline) {
+      markGcCommented();
+      return;
+    }
+    if (ck !== _gcCookieBaseline && /gc|graphcomment|semio/i.test(ck)) {
+      markGcCommented();
+    }
+  }, 1200);
+
+  setTimeout(() => {
+    const mount = document.getElementById('graphcomment');
+    if (!mount || typeof MutationObserver === 'undefined') return;
+    let baseKids = mount.childElementCount;
+    const obs = new MutationObserver(() => {
+      if (_hasCommented || !_gcWatchReady) return;
+      const n = mount.childElementCount;
+      if (n <= baseKids) return;
+      baseKids = n;
+      const ls = gcStorageBlob();
+      if (ls.length > _gcStorageBaseline.length + 16) markGcCommented();
+    });
+    obs.observe(mount, { childList: true, subtree: true });
+  }, 4000);
+}
+
+startGcCommentWatch();
 
 function showCopyCommentToast() {
   if (_hasCommented || _isAdmin) return;
@@ -4594,6 +4678,9 @@ legacy comment UI removed */
     graphcommentId: 'yumelyrics',
     behaviour: {
       uid: ${JSON.stringify(slug)}
+    },
+    onCommentPosted: function() {
+      if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
     }
   };
   if (isMobileGc) {
@@ -4628,6 +4715,16 @@ legacy comment UI removed */
     ? 'https://integration.graphcomment.com/gc_sidePanel_graphlogin.js'
     : 'https://integration.graphcomment.com/gc_graphlogin.js') + '?' + Date.now();
   (document.head || document.body).appendChild(gc);
+
+  window.addEventListener('message', function(e) {
+    if (!e.origin || !/graphcomment/i.test(e.origin)) return;
+    var d = e.data;
+    if (d == null) return;
+    var s = typeof d === 'string' ? d : JSON.stringify(d);
+    if (/comment/i.test(s) && /post|sent|submit|creat|add|publish|success|new|approved/i.test(s)) {
+      if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
+    }
+  });
 })();
 </script>
 <script>
