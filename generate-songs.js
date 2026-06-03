@@ -1454,8 +1454,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 
 /* ── COMMENTS SECTION (GraphComment) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#graphcomment-widget{min-height:120px;width:100%}
-#graphcomment-widget iframe{max-width:100%}
+#graphcomment{min-height:48px;width:100%}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2134,10 +2133,10 @@ ${(()=>{
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu, interpretasimu, atau momen yang membuat lagu ini bermakna bagimu. Diskusi dikelola lewat GraphComment — tab terbaru, terpopuler, dan thread teratas.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat panel komentar GraphComment. Ketuk tombol ungu di sisi layar untuk membuka form komentar, melihat thread terbaru, terpopuler, dan balasan.</p>
     </div>
   </div>
-  <div id="graphcomment-widget"></div>
+  <div id="graphcomment" aria-hidden="true"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -4185,7 +4184,7 @@ window.goToNotif = async (notifId, songSlug, el) => {
     const currentSlug=location.pathname.split('/').pop().replace('.html','');
     if(songSlug===currentSlug){
       closeUserDropdown();
-      document.getElementById('graphcomment-widget')?.scrollIntoView({behavior:'smooth',block:'start'});
+      document.querySelector('.comments-section')?.scrollIntoView({behavior:'smooth',block:'start'});
     } else {
       location.href='../lagu/'+songSlug+'.html';
     }
@@ -4622,34 +4621,38 @@ window.deleteCm = async cmId => {
 legacy comment UI removed */
 
 </script>
-<script src="https://graphcomment.com/js/widget.js"></script>
-<script>
-(function initYumeGraphComment(){
-  var el = document.getElementById('graphcomment-widget');
-  if (!el) return;
-  function boot(){
-    if (typeof graphcommentWidget !== 'function') return;
-    graphcommentWidget(el, {
-      graphcomment_id: 'yumelyrics',
-      uid: ${JSON.stringify(slug)},
-      url: ${JSON.stringify(BASE_URL + '/lagu/' + slug + '.html')},
-      page_title: ${JSON.stringify(titleMain)},
-      defaultTab: 'last_comments',
-      tabs: ['last_comments', 'top_comments', 'top_threads'],
-      labels: { last_comments: '', top_comments: '', top_threads: '' },
-      period: '1 year',
-      limit: 25,
-      height: null,
-      openLinksNewWindow: true,
-      showVotes: true,
-      locale: 'en'
-    });
+<script type="text/javascript">
+(function(){
+  var __semio__params = {
+    graphcommentId: 'yumelyrics',
+    behaviour: {
+      uid: ${JSON.stringify(slug)}
+    },
+    sidePanel: {
+      width: 480,
+      button: {
+        background: '#7805fc',
+        color: '#ffffff'
+      },
+      bubble: true
+    }
+  };
+  function __semio__onload() {
+    if (typeof __semio__gc_sidePanel_graphlogin === 'function') {
+      __semio__gc_sidePanel_graphlogin(__semio__params);
+    }
   }
-  if (typeof graphcommentWidget === 'function') boot();
-  else {
-    var scr = document.querySelector('script[src*="graphcomment.com/js/widget.js"]');
-    if (scr) scr.addEventListener('load', boot);
+  if (typeof __semio__gc_sidePanel_graphlogin === 'function') {
+    __semio__onload();
+    return;
   }
+  var gc = document.createElement('script');
+  gc.type = 'text/javascript';
+  gc.async = true;
+  gc.defer = true;
+  gc.onload = __semio__onload;
+  gc.src = 'https://integration.graphcomment.com/gc_sidePanel_graphlogin.js?' + Date.now();
+  (document.head || document.body).appendChild(gc);
 })();
 </script>
 <script>

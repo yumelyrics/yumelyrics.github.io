@@ -3002,10 +3002,9 @@ function bootChatListeners() {
 
 window.toggleChat = () => {
   if (!_chatModuleReady) bootChatListeners();
-  else {
-    const u = getChatAuthUser();
-    if (u && !_chatUser) initChat(u);
-  }
+  const u = getChatAuthUser();
+  if (u && !_chatUser) initChat(u);
+  else if (!u && !_chatUnsub) initGuestChat();
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
   const fab = document.getElementById('chat-fab');
@@ -3326,65 +3325,93 @@ async function loadBannedCache() {
   } catch(e) { _bannedCacheLoaded = true; }
 }
 
-function initGuestChat() {
-  const msgsEl = document.getElementById('chat-msgs');
+function msgTsMs(m) {
+  const t = m && m.ts;
+  if (!t) return 0;
+  if (typeof t.toMillis === 'function') return t.toMillis();
+  if (typeof t === 'number') return t;
+  return new Date(t).getTime() || 0;
+}
+
+function sortMsgsChronological(docs) {
+  return docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => msgTsMs(a) - msgTsMs(b));
+}
+
+function subscribeGroupChat(msgsEl, opts) {
+  const { guestMode = false } = opts || {};
+  if (!msgsEl) return;
   msgsEl.style.display = 'flex';
-  loadCustomRoleCache().catch(()=>{});
-  loadBannedCache().catch(()=>{});
-  const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
+  if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
+  loadCustomRoleCache().catch(() => {});
+  loadBannedCache().catch(() => {});
+
   let gotData = false;
   const fallbackTimer = setTimeout(() => {
-    if (!gotData) msgsEl.innerHTML = '<div class="chat-loading">Login untuk melihat pesan grup chat. 💬</div>';
-  }, 6000);
-  _chatUnsub = onSnapshot(q, snap => {
-    gotData = true; clearTimeout(fallbackTimer);
-    _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!gotData && msgsEl) {
+      msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan… coba tutup dan buka chat lagi.</div>';
+    }
+  }, 12000);
+
+  const applySnap = snap => {
+    gotData = true;
+    clearTimeout(fallbackTimer);
+    _lastMsgs = sortMsgsChronological(snap.docs);
     renderMsgs(_lastMsgs);
     if (!_chatInited) scrollChatBottom(true);
     _chatInited = true;
-  }, () => {
-    gotData = true; clearTimeout(fallbackTimer);
-    msgsEl.innerHTML = '<div class="chat-loading">Login untuk melihat pesan grup chat. 💬</div>';
-  });
+    if (!guestMode && !_chatOpen) {
+      const newMsgs = _lastMsgs.filter(m => msgTsMs(m) > _chatLastSeen && m.uid !== _chatUser?.uid);
+      _chatUnreadCount = newMsgs.length;
+      updateUnreadBadge();
+    }
+    const onlineEl = document.getElementById('online-count');
+    const count = onlineEl ? onlineEl.textContent : '—';
+    const hdrOn = document.getElementById('chat-hdr-online');
+    if (hdrOn) hdrOn.textContent = count + ' online';
+  };
+
+  const onErr = async err => {
+    console.warn('[chat] snapshot', err && (err.code || err.message));
+    try {
+      const snap = await getDocs(collection(_chatDb, 'group_chat'));
+      applySnap(snap);
+    } catch (e2) {
+      gotData = true;
+      clearTimeout(fallbackTimer);
+      msgsEl.innerHTML = '<div class="chat-loading">Gagal memuat chat. (' + (err?.code || e2?.code || 'error') + ')</div>';
+    }
+  };
+
+  const q = query(collection(_chatDb, 'group_chat'), orderBy('ts', 'asc'), limit(MSG_LIMIT));
+  _chatUnsub = onSnapshot(q, applySnap, onErr);
+}
+
+function initGuestChat() {
+  const gate = document.getElementById('chat-login-gate');
+  if (gate) gate.style.display = 'flex';
+  const inpWrap = document.getElementById('chat-inp-wrap');
+  if (inpWrap) inpWrap.classList.remove('show');
+  const msgsEl = document.getElementById('chat-msgs');
+  if (msgsEl && !_chatInited) msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+  subscribeGroupChat(msgsEl, { guestMode: true });
 }
 
 function initChat(user) {
   _chatUser = user;
-  document.getElementById('chat-login-gate').style.display = 'none';
-  document.getElementById('chat-msgs').style.display = 'flex';
-  document.getElementById('chat-inp-wrap').classList.add('show');
+  const gate = document.getElementById('chat-login-gate');
+  if (gate) gate.style.display = 'none';
+  const msgsEl = document.getElementById('chat-msgs');
+  if (msgsEl) msgsEl.style.display = 'flex';
+  document.getElementById('chat-inp-wrap')?.classList.add('show');
 
-  // Load cache custom roles sekali, lalu render ulang kalau ada perubahan
   loadCustomRoleCache().then(() => {
     if (_chatInited && _lastMsgs) renderMsgs(_lastMsgs);
   });
-
-  // Load banned cache untuk semua user
   loadBannedCache().then(() => {
     if (_lastMsgs) renderMsgs(_lastMsgs);
   });
 
-  if (_chatUnsub) _chatUnsub();
-  const q = query(collection(_chatDb,'group_chat'), orderBy('ts','asc'), limit(MSG_LIMIT));
-  _chatUnsub = onSnapshot(q, snap => {
-    _lastMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderMsgs(_lastMsgs);
-
-    // Hitung unread
-    if (!_chatOpen) {
-      const newMsgs = _lastMsgs.filter(m => {
-        const t = m.ts?.toMillis ? m.ts.toMillis() : (m.ts||0);
-        return t > _chatLastSeen && m.uid !== _chatUser?.uid;
-      });
-      _chatUnreadCount = newMsgs.length;
-      updateUnreadBadge();
-    }
-
-    // Update online count di header
-    const onlineEl = document.getElementById('online-count');
-    const count = onlineEl ? onlineEl.textContent : '—';
-    document.getElementById('chat-hdr-online').textContent = count + ' online';
-  }, () => {});
+  subscribeGroupChat(msgsEl, { guestMode: false });
 }
 
 let _chatAuthNullTimer = null;
@@ -3392,7 +3419,6 @@ let _chatAuthNullTimer = null;
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
     if (_chatAuthNullTimer) { clearTimeout(_chatAuthNullTimer); _chatAuthNullTimer = null; }
-    document.getElementById('chat-login-gate').style.display = 'none';
     _chatDeferredUser = user;
     if (_chatModuleReady) initChat(user);
     if (ADMIN_EMAILS.includes(user.email||'')) {
@@ -3401,35 +3427,28 @@ onAuthStateChanged(_chatAuth, user => {
       else setTimeout(runReport, 4000);
     }
   } else {
-    // Firebase kadang emit null sebentar saat refresh token — jangan langsung reset UI
     if (_chatAuthNullTimer) clearTimeout(_chatAuthNullTimer);
     _chatAuthNullTimer = setTimeout(() => {
       _chatAuthNullTimer = null;
       if (_chatAuth.currentUser) return;
       _chatUser = null;
       _chatDeferredUser = null;
-      document.getElementById('chat-login-gate').style.display = 'flex';
-      document.getElementById('chat-inp-wrap').classList.remove('show');
-      document.getElementById('chat-msgs').style.display = 'flex';
-      if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
       _chatInited = false;
-      if (!_chatOpen) {
-        document.getElementById('chat-msgs').innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat pesan 💬</div>';
-      }
+      if (_chatModuleReady) initGuestChat();
+      else bootChatListeners();
     }, 450);
   }
 });
 
 (function deferChatModule() {
   const msgs = document.getElementById('chat-msgs');
-  if (msgs) msgs.innerHTML = '<div class="chat-loading">Ketuk ikon chat untuk memuat 💬</div>';
-  const idleBoot = () => {
-    if (!_chatModuleReady && (getChatAuthUser() || matchMedia('(hover:hover)').matches)) {
-      bootChatListeners();
-    }
-  };
-  if ('requestIdleCallback' in window) requestIdleCallback(idleBoot, { timeout: 15000 });
-  else setTimeout(idleBoot, 8000);
+  if (msgs) msgs.innerHTML = '<div class="chat-loading">Memuat pesan...</div>';
+  const start = () => bootChatListeners();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(start, 400));
+  } else {
+    setTimeout(start, 400);
+  }
 })();
 
 // ── REPLY ──
