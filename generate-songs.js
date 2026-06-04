@@ -1441,12 +1441,13 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 
 /* ── COMMENTS SECTION (GraphComment) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#graphcomment{min-height:48px;width:100%;position:relative}
-#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:6;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
+#graphcomment{min-height:48px;width:100%;position:relative;background:transparent}
+#graphcomment iframe{background:transparent!important;border:none!important}
+#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;top:52px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:6;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
 #graphcomment.yume-gc-avatar-patch-on .yume-gc-avatar-patch{display:block}
 @media(min-width:901px){
   #graphcomment{min-height:200px;display:block!important}
-  #graphcomment iframe{max-width:100%}
+  #graphcomment iframe{max-width:100%;background:transparent!important}
 }
 @media(max-width:900px){
   #graphcomment:not(:empty){min-height:0}
@@ -3258,18 +3259,12 @@ function yumeGcAvatarOverlayReposition() {
   const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
   const patch = mount && mount.querySelector('.yume-gc-avatar-patch');
   if (!mount || !patch || !iframe) return;
-  const h = iframe.offsetHeight || parseInt(iframe.style.height, 10) || 0;
   const size = 36;
   patch.style.width = size + 'px';
   patch.style.height = size + 'px';
   patch.style.left = '14px';
-  if (h > 420) {
-    patch.style.top = 'auto';
-    patch.style.bottom = '72px';
-  } else {
-    patch.style.bottom = 'auto';
-    patch.style.top = Math.min(128, Math.max(72, Math.round(h * 0.28))) + 'px';
-  }
+  patch.style.bottom = 'auto';
+  patch.style.top = '52px';
 }
 
 function yumeGcAvatarOverlayActivate() {
@@ -4718,12 +4713,31 @@ legacy comment UI removed */
       setTimeout(yumeGcAvatarOverlayActivate, 600);
       setTimeout(yumeGcAvatarOverlayActivate, 1800);
     }
+    setTimeout(function() {
+      var frame = document.querySelector('#graphcomment iframe');
+      if (frame) {
+        frame.setAttribute('allowtransparency', 'true');
+        frame.style.background = 'transparent';
+      }
+    }, 300);
   };
+  var _gcIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var _gcTextColor = _gcIsDark ? '#e8e2d9' : '#0a0812';
+  var _gcMutedColor = _gcIsDark ? '#7a7068' : '#8c8278';
+  var _gcBorderColor = _gcIsDark ? 'rgba(232,226,217,.1)' : 'rgba(10,8,18,.1)';
   var __semio__params = {
     graphcommentId: 'yumelyrics',
     behaviour: {
       uid: ${JSON.stringify(slug)}
-    }
+    },
+    customCSS: [
+      'body,html{background:transparent!important}',
+      '*{box-shadow:none!important}',
+      '.gc-widget,.gc-container,.gc-wrapper,[class*="gc-"]{background:transparent!important}',
+      'body{color:' + _gcTextColor + '!important}',
+      'a{color:' + _gcMutedColor + '!important}',
+      '[class*="border"],[class*="divider"]{border-color:' + _gcBorderColor + '!important}'
+    ].join('')
   };
   if (mount) {
     __semio__params.target = mount;
