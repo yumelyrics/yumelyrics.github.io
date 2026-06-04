@@ -3245,10 +3245,12 @@ function yumeGcAvatarOverlayEnsure() {
   if (!patch) {
     patch = document.createElement('img');
     patch.className = 'yume-gc-avatar-patch';
-    patch.src = DEFAULT_COMMENT_PROFILE;
     patch.alt = '';
     patch.referrerPolicy = 'no-referrer';
     patch.decoding = 'async';
+    patch.onerror = function() {
+      patch.style.display = 'none';
+    };
     mount.appendChild(patch);
   }
   return patch;
@@ -4721,6 +4723,34 @@ legacy comment UI removed */
       }
     }, 300);
   };
+  (function() {
+    var gcMount = document.getElementById('graphcomment');
+    if (!gcMount) return;
+    var obs = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var node = added[j];
+          if (node.tagName === 'IFRAME' || (node.querySelector && node.querySelector('iframe'))) {
+            obs.disconnect();
+            setTimeout(function() {
+              if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
+            }, 400);
+            setTimeout(function() {
+              if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
+              var frame = document.querySelector('#graphcomment iframe');
+              if (frame) {
+                frame.setAttribute('allowtransparency', 'true');
+                frame.style.background = 'transparent';
+              }
+            }, 1200);
+            return;
+          }
+        }
+      }
+    });
+    obs.observe(gcMount, { childList: true, subtree: true });
+  })();
   var _gcIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var _gcTextColor = _gcIsDark ? '#e8e2d9' : '#0a0812';
   var _gcMutedColor = _gcIsDark ? '#7a7068' : '#8c8278';
