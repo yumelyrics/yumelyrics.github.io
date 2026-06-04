@@ -1444,6 +1444,9 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
 #waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
 [data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
+#waline .wl-browser,#waline .wl-os{display:none!important}
+#waline .wl-content img{max-width:100%;height:auto;display:block}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -4577,20 +4580,21 @@ const walineApp = init({
   pageview: false,
   reaction: false,
   dark: 'html[data-theme="dark"]',
+  meta: ['nick', 'mail'],
+  requiredMeta: [],
+  imageUploader: false,
   locale: {
     placeholder: 'Tulis komentarmu di sini...',
     sofa: 'Jadilah yang pertama berkomentar!',
     submit: 'Kirim',
     nick: 'Nama',
     mail: 'Email',
-    link: 'Website',
     preview: 'Pratinjau',
     comment: 'Komentar',
     reply: 'Balas',
     more: 'Muat lebih banyak...',
     admin: 'Admin',
     word: '{0} kata',
-    wordHint: 'Komentar harus antara {0} dan {1} kata',
     anonymous: 'Tamu',
     level0: 'Pendatang',
     level1: 'Pengunjung',
@@ -4600,9 +4604,21 @@ const walineApp = init({
     level5: 'Legenda',
   },
 });
-document.addEventListener('waline:comment', function() {
-  if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
-});
+(function() {
+  var walineEl = document.getElementById('waline');
+  if (!walineEl) return;
+  var _baseline = null;
+  var obs = new MutationObserver(function() {
+    if (window._hasCommented) { obs.disconnect(); return; }
+    var items = walineEl.querySelectorAll('.wl-item');
+    if (_baseline === null) { _baseline = items.length; return; }
+    if (items.length > _baseline) {
+      if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
+      obs.disconnect();
+    }
+  });
+  obs.observe(walineEl, { childList: true, subtree: true });
+})();
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
