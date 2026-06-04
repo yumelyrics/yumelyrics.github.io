@@ -258,7 +258,9 @@ function imgTag(src, alt, opts = {}) {
 }
 
 function renderText(str) {
-  return escHtml(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g, '$1<span class="cm-mention">$2</span>');
+  return escHtml(str||'')
+    .replace(/(^|\s)(@[^\s<]{1,40})/g, '$1<span class="cm-mention">$2</span>')
+    .replace(/\|\|(.*?)\|\|/gs, '<span class="cm-sp">$1</span>');
 }
 
 /** Navbar & menu — sama dengan index.html (prefix relatif ke folder artis/). */
@@ -1497,7 +1499,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .ritem .cm-avatar,.ritem .cm-avatar-ph,.ritem .cm-avatar-crown{width:30px;height:30px;font-size:.8rem}
 .cdate{font-size:.6rem;color:var(--smoke);font-family:var(--sans);letter-spacing:.05em}
 .ctxt{font-size:.88rem;color:var(--ash);line-height:1.8;font-weight:400}
-.cm-mention{color:var(--rose);font-weight:500}
+.cm-mention{color:var(--rose);font-weight:500}.cm-sp{background:#2a1f3d;color:transparent;border-radius:3px;padding:1px 3px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline;font-style:normal}.cm-sp.open{background:var(--sakura-dim);color:var(--ink)}.cm-sp:hover:not(.open){background:#3d2d5e}[data-theme="dark"] .cm-sp{background:#1a0f2e}[data-theme="dark"] .cm-sp.open{background:rgba(212,117,138,.15);color:var(--ink)}
 .nocm{font-size:.82rem;color:var(--ash);font-style:italic;font-family:var(--serif);padding:1.5rem 0}
 .admin-badge{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--plum);padding:.12rem .42rem;font-weight:600}
 .admin-cm-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
@@ -3876,7 +3878,8 @@ window.tl = function(type){
 };
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function renderText(str){return esc(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>');}
+function renderText(str){return esc(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>').replace(/\|\|(.*?)\|\|/gs,'<span class="cm-sp" onclick="this.classList.toggle('open')">$1</span>');}
+function initSpoilers(root){(root||document).querySelectorAll('.cm-sp:not([data-sp])').forEach(function(el){el.setAttribute('data-sp','1');el.addEventListener('click',function(){this.classList.toggle('open');});});}
 
 // Format tanggal + jam menit
 function fmtDate(d){
