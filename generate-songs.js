@@ -4572,7 +4572,7 @@ legacy comment UI removed */
 </script>
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
-const walineApp = init({
+window._walineAppInstance = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
   path: ${JSON.stringify('/lagu/' + slug)},
@@ -4582,6 +4582,37 @@ const walineApp = init({
   dark: 'html[data-theme="dark"]',
   meta: ['nick'],
   requiredMeta: [],
+  imageUploader: function(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var panel = document.getElementById('yume-img-preview');
+        if (!panel) {
+          panel = document.createElement('div');
+          panel.id = 'yume-img-preview';
+          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
+          var wEl = document.getElementById('waline');
+          if (wEl) {
+            var editor = wEl.querySelector('.wl-editor');
+            if (editor) editor.appendChild(panel);
+            else wEl.prepend(panel);
+          }
+        }
+        var img = document.createElement('img');
+        img.src = dataUrl;
+        img.title = file.name;
+        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer;';
+        img.onclick = function() {
+          if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
+        };
+        panel.appendChild(img);
+        resolve(dataUrl);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
   locale: {
     placeholder: 'Tulis komentarmu di sini...',
     sofa: 'Jadilah yang pertama berkomentar!',
@@ -4618,6 +4649,36 @@ const walineApp = init({
     } catch(e) {}
     return p;
   };
+})();
+(function() {
+  var _path = ${JSON.stringify('/lagu/' + slug)};
+  var _api = 'https://yumelyrics-comment.vercel.app/api/comment?path=' + encodeURIComponent(_path) + '&pageSize=1&page=1&lang=id';
+  var _knownCount = null;
+  function _fetchCount() {
+    if (document.hidden) return;
+    fetch(_api).then(function(r){ return r.json(); }).then(function(d) {
+      var cnt = d && typeof d.count === 'number' ? d.count : null;
+      if (cnt === null) return;
+      if (_knownCount === null) { _knownCount = cnt; return; }
+      if (cnt > _knownCount) {
+        _knownCount = cnt;
+        var existing = document.getElementById('yume-rt-banner');
+        if (existing) return;
+        var banner = document.createElement('div');
+        banner.id = 'yume-rt-banner';
+        banner.style.cssText = 'cursor:pointer;padding:8px 16px;background:var(--rose,#e85d7a);color:#fff;border-radius:8px;font-size:.82rem;text-align:center;margin-bottom:12px;transition:opacity .3s;';
+        banner.textContent = 'Ada komentar baru! Klik untuk memuat.';
+        banner.onclick = function() {
+          banner.remove();
+          if (window._walineAppInstance) window._walineAppInstance.update();
+        };
+        var wEl = document.getElementById('waline');
+        if (wEl) wEl.parentNode.insertBefore(banner, wEl);
+      }
+    }).catch(function(){});
+  }
+  setTimeout(_fetchCount, 5000);
+  setInterval(_fetchCount, 30000);
 })();
 </script>
 <script>
