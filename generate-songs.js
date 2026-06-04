@@ -1443,7 +1443,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
 #graphcomment{min-height:48px;width:100%;position:relative;background:transparent}
 #graphcomment iframe{background:transparent!important;border:none!important}
-#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;top:52px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:6;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
+#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;top:52px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:2147483647;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
 #graphcomment.yume-gc-avatar-patch-on .yume-gc-avatar-patch{display:block}
 @media(min-width:901px){
   #graphcomment{min-height:200px;display:block!important}
@@ -4726,6 +4726,20 @@ legacy comment UI removed */
   (function() {
     var gcMount = document.getElementById('graphcomment');
     if (!gcMount) return;
+    function reorderAndActivate() {
+      var frame = gcMount.querySelector('iframe');
+      if (frame) {
+        frame.setAttribute('allowtransparency', 'true');
+        frame.style.background = 'transparent';
+      }
+      if (typeof yumeGcAvatarOverlayActivate === 'function') {
+        yumeGcAvatarOverlayActivate();
+        var patch = gcMount.querySelector('.yume-gc-avatar-patch');
+        if (patch && gcMount.lastChild !== patch) {
+          gcMount.appendChild(patch);
+        }
+      }
+    }
     var obs = new MutationObserver(function(mutations) {
       for (var i = 0; i < mutations.length; i++) {
         var added = mutations[i].addedNodes;
@@ -4733,17 +4747,8 @@ legacy comment UI removed */
           var node = added[j];
           if (node.tagName === 'IFRAME' || (node.querySelector && node.querySelector('iframe'))) {
             obs.disconnect();
-            setTimeout(function() {
-              if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
-            }, 400);
-            setTimeout(function() {
-              if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
-              var frame = document.querySelector('#graphcomment iframe');
-              if (frame) {
-                frame.setAttribute('allowtransparency', 'true');
-                frame.style.background = 'transparent';
-              }
-            }, 1200);
+            setTimeout(reorderAndActivate, 200);
+            setTimeout(reorderAndActivate, 1000);
             return;
           }
         }
