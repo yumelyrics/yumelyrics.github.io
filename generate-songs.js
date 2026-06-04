@@ -4581,8 +4581,8 @@ legacy comment UI removed */
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
 /* ── Gambar: token map (bukan base64 di textarea) ── */
-var _yumeImgMap = {};
-var _yumeImgCount = 0;
+window._yumeImgMap = {};
+window._yumeImgCount = 0;
 window._walineAppInstance = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
@@ -4599,9 +4599,9 @@ window._walineAppInstance = init({
       reader.onload = function(e) {
         var dataUrl = e.target.result;
         /* Simpan ke map, resolve token pendek bukan base64 */
-        _yumeImgCount++;
-        var token = 'yume_img_' + _yumeImgCount;
-        _yumeImgMap[token] = dataUrl;
+        window._yumeImgCount++;
+        var token = 'yume_img_' + window._yumeImgCount;
+        window._yumeImgMap[token] = dataUrl;
         /* Tampilkan thumbnail di panel pratinjau */
         var panel = document.getElementById('yume-img-preview');
         if (!panel) {
@@ -4624,7 +4624,7 @@ window._walineAppInstance = init({
         img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #93c5fd;display:block;cursor:pointer;';
         img.onclick = function() {
           if (confirm('Hapus gambar ini?')) {
-            delete _yumeImgMap[token];
+            delete window._yumeImgMap[token];
             wrap.remove();
           }
         };
@@ -4681,14 +4681,14 @@ window._walineAppInstance = init({
       var u = typeof url === 'string' ? url : (url && url.url) || '';
       if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
         /* Sisipkan gambar ke field comment di JSON body sebelum dikirim */
-        if (opts.body && typeof opts.body === 'string' && Object.keys(_yumeImgMap).length > 0) {
+        if (opts.body && typeof opts.body === 'string' && Object.keys(window._yumeImgMap).length > 0) {
           try {
             var bodyObj = JSON.parse(opts.body);
             if (bodyObj && typeof bodyObj.comment === 'string') {
               var imgMd = '';
               var n = 1;
-              for (var tok in _yumeImgMap) {
-                imgMd += '\n\n![Gambar ' + n + '](' + _yumeImgMap[tok] + ')';
+              for (var tok in window._yumeImgMap) {
+                imgMd += '\n\n![Gambar ' + n + '](' + window._yumeImgMap[tok] + ')';
                 n++;
               }
               bodyObj.comment = bodyObj.comment + imgMd;
@@ -4707,8 +4707,8 @@ window._walineAppInstance = init({
             if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
           }
           /* Reset setelah komentar terkirim */
-          _yumeImgMap = {};
-          _yumeImgCount = 0;
+          window._yumeImgMap = {};
+          window._yumeImgCount = 0;
           var panel = document.getElementById('yume-img-preview');
           if (panel) panel.remove();
         }).catch(function() {});
