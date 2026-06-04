@@ -4721,7 +4721,6 @@ legacy comment UI removed */
 </script>
 <script type="text/javascript">
 (function(){
-  var isMobileGc = window.matchMedia('(max-width: 900px)').matches;
   var mount = document.getElementById('graphcomment');
   window.__semio__gcOnComment__semio__ = function() {
     if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
@@ -4739,21 +4738,11 @@ legacy comment UI removed */
       uid: ${JSON.stringify(slug)}
     }
   };
-  if (isMobileGc) {
-    __semio__params.sidePanel = {
-      width: 480,
-      button: { background: '#7805fc', color: '#ffffff' },
-      bubble: true
-    };
-  } else if (mount) {
+  if (mount) {
     __semio__params.target = mount;
   }
   function __semio__onload() {
-    if (isMobileGc) {
-      if (typeof __semio__gc_sidePanel_graphlogin === 'function') {
-        __semio__gc_sidePanel_graphlogin(__semio__params);
-      }
-    } else if (typeof __semio__gc_graphlogin === 'function') {
+    if (typeof __semio__gc_graphlogin === 'function') {
       __semio__gc_graphlogin(__semio__params);
     }
     var origShow = window.__semio__showGraphCommentOverlay;
@@ -4774,8 +4763,7 @@ legacy comment UI removed */
       }, { passive: true });
     }
   }
-  if ((isMobileGc && typeof __semio__gc_sidePanel_graphlogin === 'function') ||
-      (!isMobileGc && typeof __semio__gc_graphlogin === 'function')) {
+  if (typeof __semio__gc_graphlogin === 'function') {
     __semio__onload();
     return;
   }
@@ -4784,9 +4772,7 @@ legacy comment UI removed */
   gc.async = true;
   gc.defer = true;
   gc.onload = __semio__onload;
-  gc.src = (isMobileGc
-    ? 'https://integration.graphcomment.com/gc_sidePanel_graphlogin.js'
-    : 'https://integration.graphcomment.com/gc_graphlogin.js') + '?' + Date.now();
+  gc.src = 'https://integration.graphcomment.com/gc_graphlogin.js?' + Date.now();
   (document.head || document.body).appendChild(gc);
 })();
 </script>
