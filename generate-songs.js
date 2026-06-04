@@ -1099,6 +1099,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
 <style>
@@ -1439,12 +1440,21 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
 
-/* ── COMMENTS SECTION ── */
+/* ── COMMENTS SECTION (Waline) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-/* ── Inline Spoiler (||teks||) ── */
+#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
+[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
+#waline .wl-browser,#waline .wl-os{display:none!important}
+#waline .wl-content img{max-width:100%;height:auto;display:block}
+/* ── Inline Spoiler ── */
 .cm-sp{background:#1a1625;color:transparent;border-radius:3px;padding:0 4px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline}
 .cm-sp:hover{background:#2d2440}
 .cm-sp.cm-sp-open{background:#ede8f8;color:inherit;cursor:default}
+/* ── Spoiler button in Waline toolbar ── */
+#yume-spoiler-btn{background:none;border:1px solid rgba(10,8,18,.18);border-radius:4px;padding:3px 8px;font-size:.72rem;font-family:inherit;color:var(--ash,#666);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,background .15s,color .15s;margin-left:4px;vertical-align:middle}
+#yume-spoiler-btn:hover{border-color:var(--rose,#e85d7a);color:var(--rose,#e85d7a);background:rgba(232,93,122,.05)}
+[data-theme="dark"] #yume-spoiler-btn{border-color:rgba(232,226,217,.22);color:var(--ash,#aaa)}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2075,35 +2085,15 @@ ${(()=>{
 </section>`;
 })()}
 
-<!-- ── COMMENTS (Firebase) ── -->
+<!-- ── COMMENTS (Waline) ── -->
 <section class="comments-section">
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat komentar. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
     </div>
   </div>
-  <div id="cm-login-gate" class="comment-form-area">
-    <p class="comment-desc" style="font-size:.78rem">Login dengan Google untuk berkomentar dan mengaktifkan tombol salin lirik.</p>
-    <button class="btn-ghost" onclick="window.doLogin()" style="font-size:.6rem;padding:.6rem 1.4rem;cursor:pointer">Login dengan Google</button>
-  </div>
-  <div class="comment-form-area cm-login-gate-hidden" id="cm-form-area">
-    <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentarmu di sini..."></textarea>
-    <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
-      <img id="cm-img-preview" class="cm-img-preview cm-lightbox-img" src="" alt="preview foto">
-      <button class="cm-img-remove" onclick="window.removeCmPhoto()" title="Hapus foto">✕</button>
-    </div>
-    <div class="comment-footer">
-      <span class="comment-user" id="cm-user-label">—</span>
-      <div style="display:flex;gap:.5rem;align-items:center">
-        <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="window.handleCmPhoto(this)">
-        <button class="cm-photo-btn" onclick="document.getElementById('cm-photo-input').click()">📷 Foto</button>
-        <button class="sbtn" id="cm-btn" onclick="window.postCm()">Kirim</button>
-      </div>
-    </div>
-  </div>
-  <div id="cc-count-wrap" style="font-size:.72rem;color:var(--ash);margin:.6rem 0 .2rem;letter-spacing:.05em;display:none"><span id="cc-count"></span> komentar</div>
-  <div id="cmlist" class="cmlist"></div>
+  <div id="waline"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -3287,10 +3277,6 @@ async function applyAuthLoggedOut(){
   _banReason = '';
   _banUntil = undefined;
   updateCopyGate();
-  const _cmGateOut = document.getElementById('cm-login-gate');
-  const _cmFormOut = document.getElementById('cm-form-area');
-  if(_cmGateOut) _cmGateOut.classList.remove('cm-login-gate-hidden');
-  if(_cmFormOut) _cmFormOut.classList.add('cm-login-gate-hidden');
 }
 
 function applyAuthLoggedInUISync(user){
@@ -3366,12 +3352,6 @@ async function applyAuthLoggedIn(user, gen){
     );
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     await updateAdminSongUI();
-    const _cmGateIn = document.getElementById('cm-login-gate');
-    const _cmFormIn = document.getElementById('cm-form-area');
-    if(_cmGateIn) _cmGateIn.classList.add('cm-login-gate-hidden');
-    if(_cmFormIn) _cmFormIn.classList.remove('cm-login-gate-hidden');
-    const _cmULabel = document.getElementById('cm-user-label');
-    if(_cmULabel) _cmULabel.textContent = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
   }
 }
 
@@ -3429,7 +3409,6 @@ getRedirectResult(auth).then(result => {
 }).catch(()=>{});
 
 updateCopyGate();
-rcm();
 setTimeout(() => showCopyCommentToast(), 900);
 
 window.doLogin = async () => {
@@ -3976,8 +3955,9 @@ function startBanTicker(){
   }, 1000);
 }
 
-/* ── Render komentar Firebase ── */
-function renderComment(id, c, replies){
+/* Komentar: GraphComment (lihat script di bawah halaman) */
+void 0; /* removed renderComment
+function __REMOVE_START_renderComment(id, c, replies){
   const isAdm=c.isAdmin;
   const canDelete = _currentUser && (c.uid===_currentUser.uid || _isAdmin);
   let repHtml='';
@@ -4086,6 +4066,7 @@ function renderComment(id, c, replies){
     </div>
   </div>\`;
 }
+removed renderComment */
 
 /* ── NOTIFIKASI REALTIME ── */
 let _unsubNotif = null;
@@ -4208,7 +4189,9 @@ async function deleteReadNotifs(){
   }catch(e){}
 }
 
-async function rcm(){
+async function rcm(){ /* GraphComment */ }
+
+void 0; /*
   const el = document.getElementById('cmlist');
   if(!el) return;
   el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
@@ -4295,8 +4278,9 @@ async function rcm(){
     console.error('[rcm] error:', e.code, e.message, e);
     if(el) el.innerHTML='<div class="nocm">Gagal memuat komentar. Coba refresh halaman.</div>';
   }
-}
+*/
 
+void 0; /* legacy comment UI removed
 window.toggleReplyForm = function(key) {
   const form = document.getElementById('rf-'+key);
   if(form) form.classList.toggle('open');
@@ -4616,7 +4600,154 @@ window.deleteCm = async cmId => {
     rcm();
   } catch(e) { toast('Gagal hapus komentar.'); }
 };
+legacy comment UI removed */
 
+</script>
+<script type="module">
+import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
+/* ── Gambar: token map (bukan base64 di textarea) ── */
+window._yumeImgMap = {};
+window._yumeImgCount = 0;
+
+/* ── Spoiler helper ── */
+function insertSpoiler(ta) {
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end) || 'teks spoiler';
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(end);
+  const inserted = '||' + sel + '||';
+  const nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+  nd.set.call(ta, before + inserted + after);
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  const pos = start + inserted.length;
+  ta.setSelectionRange(pos, pos);
+  ta.focus();
+}
+
+
+window._walineAppInstance = init({
+  el: '#waline',
+  serverURL: 'https://yumelyrics-comment.vercel.app',
+  path: '/lagu/${slug}',
+  locale: {
+    placeholder: 'Tulis komentarmu di sini… (bebas sebagai tamu)',
+    sofa: 'Belum ada komentar. Jadi yang pertama!',
+    submit: 'Kirim',
+    comment: 'Komentar',
+    reply: 'Balas',
+    preview: 'Pratinjau',
+    logout: 'Keluar',
+  },
+  dark: '[data-theme="dark"]',
+  emoji: ['//unpkg.com/@waline/emojis@1.2.0/bmoji'],
+  search: false,
+  copyright: false,
+  reaction: false,
+  imageUploader: function(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        /* ── Simpan ke map, resolve dengan token pendek ── */
+        window._yumeImgCount = (window._yumeImgCount || 0) + 1;
+        var token = 'yume_img_' + window._yumeImgCount;
+        window._yumeImgMap[token] = ev.target.result; /* base64 */
+
+        resolve(token);
+
+        /* ── Hapus token dari textarea Waline setelah ia dimasukkan ──
+           Waline memasukkan ![nama](token) ke textarea secara async.
+           Gunakan retry agar cleanup berjalan setelah React selesai render. */
+        (function tryCleanup(n) {
+          setTimeout(function() {
+            var ta = document.querySelector('#waline .wl-editor textarea');
+            if (!ta) { if (n < 20) tryCleanup(n + 1); return; }
+            var escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var pat = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + escapedToken + '\\)\\n?', 'g');
+            var cleaned = ta.value.replace(pat, '');
+            if (cleaned !== ta.value) {
+              var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+              nd.set.call(ta, cleaned);
+              ta.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (n < 20) {
+              tryCleanup(n + 1);
+            }
+          }, 100);
+        })(0);
+      };
+      reader.onerror = function() { reject(new Error('Gagal baca file')); };
+      reader.readAsDataURL(file);
+    });
+  },
+  texRenderer: false,
+});
+
+/* ── Pasang tombol Spoiler ke toolbar Waline ── */
+(function attachSpoilerBtn() {
+  var MAX = 40, n = 0;
+  var iv = setInterval(function() {
+    n++;
+    var toolbar = document.querySelector('#waline .wl-editor .wl-header');
+    if (!toolbar) { if (n >= MAX) clearInterval(iv); return; }
+    if (document.getElementById('yume-spoiler-btn')) { clearInterval(iv); return; }
+    var btn = document.createElement('button');
+    btn.id = 'yume-spoiler-btn';
+    btn.type = 'button';
+    btn.title = 'Masukkan spoiler';
+    btn.innerHTML = '||spoiler||';
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var ta = document.querySelector('#waline .wl-editor textarea');
+      insertSpoiler(ta);
+    });
+    toolbar.appendChild(btn);
+    clearInterval(iv);
+  }, 300);
+})();
+
+/* ── Render ||spoiler|| di preview Waline ── */
+(function patchWalinePreview() {
+  var origPreview = null;
+  Object.defineProperty(window, '__waline_preview_hook', {
+    set: function(fn) { origPreview = fn; },
+    get: function() { return origPreview; }
+  });
+  var iv = setInterval(function() {
+    var prev = document.querySelector('#waline .wl-preview-body');
+    if (!prev) return;
+    var mo = new MutationObserver(function() {
+      prev.querySelectorAll('code').forEach(function(el) {
+        var t = el.textContent;
+        if (/^\|\|.+\|\|$/.test(t)) {
+          var sp = document.createElement('span');
+          sp.className = 'cm-sp';
+          sp.textContent = t.slice(2, -2);
+          el.replaceWith(sp);
+        }
+      });
+    });
+    mo.observe(prev, { childList: true, subtree: true });
+    clearInterval(iv);
+  }, 500);
+})();
+
+/* ── Tandai sudah komentar → buka copy-gate ── */
+(function watchWalineComment() {
+  var iv = setInterval(function() {
+    var list = document.querySelector('#waline .wl-comment-list');
+    if (!list) return;
+    var prevCount = list.querySelectorAll('.wl-comment').length;
+    var mo = new MutationObserver(function() {
+      var newCount = list.querySelectorAll('.wl-comment').length;
+      if (newCount > prevCount) {
+        prevCount = newCount;
+        if (typeof window.markWalineCommented === 'function') window.markWalineCommented();
+      }
+    });
+    mo.observe(list, { childList: true, subtree: true });
+    clearInterval(iv);
+  }, 600);
+})();
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
