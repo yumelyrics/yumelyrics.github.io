@@ -1421,12 +1421,20 @@ function isDirectImageUrl(url){
   return true;
 }
 
+const DEFAULT_COMMENT_PROFILE = 'https://yumelyrics.my.id/profile-comment.jpg';
+
+function resolveCommentProfilePhoto(photoURL) {
+  const url = String(photoURL || '').trim();
+  if (url && !url.startsWith('data:') && isDirectImageUrl(url)) return url;
+  return DEFAULT_COMMENT_PROFILE;
+}
+
 function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
   if(!wrap) return;
   const initial = (displayName||'U')[0].toUpperCase();
   wrap.innerHTML = '';
-  const url = String(photoURL||'').trim();
-  if(url && !url.startsWith('data:') && isDirectImageUrl(url)){
+  const url = resolveCommentProfilePhoto(photoURL);
+  if(url){
     const img = document.createElement('img');
     img.className = imgClass;
     img.src = url;
@@ -2353,7 +2361,7 @@ function _updateAvatar(photoURL, displayName) {
   const reportBadge = wrap.querySelector('#report-notif-badge');
   const bannedOverlay = wrap.querySelector('#nav-banned-overlay');
   wrap.innerHTML = '';
-  const url = (photoURL && isDirectImageUrl(photoURL)) ? photoURL : null;
+  const url = resolveCommentProfilePhoto(photoURL);
   if (url) {
     const img = document.createElement('img');
     img.id = 'nav-avatar-img';
@@ -2362,7 +2370,18 @@ function _updateAvatar(photoURL, displayName) {
     img.alt = '';
     img.referrerPolicy = 'no-referrer';
     img.decoding = 'async';
-    img.onerror = () => { _updateAvatar(null, displayName); };
+    img.onerror = () => {
+      if (img.src === DEFAULT_COMMENT_PROFILE) {
+        wrap.innerHTML = '';
+        const ph = document.createElement('div');
+        ph.id = 'nav-avatar-ph';
+        ph.className = 'nav-avatar-placeholder float-avatar-face';
+        ph.textContent = (displayName||'?')[0].toUpperCase();
+        wrap.appendChild(ph);
+      } else {
+        img.src = DEFAULT_COMMENT_PROFILE;
+      }
+    };
     wrap.appendChild(img);
   } else {
     const ph = document.createElement('div');
@@ -2694,7 +2713,7 @@ window.addEventListener('resize', fixBg);
       <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
       <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama & avatar akan tampil di komentar dan grup chat. Kosongkan untuk pakai foto Google.</div>
+    <div class="ep-note">Nama tampil di profil situs & chat. Foto kosong = avatar default YumeSubs. Komentar GraphComment memakai profil di panel GraphComment.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -2904,6 +2923,7 @@ const _chatAuth = getAuth(_chatApp);
 const UPLOAD_WORKER_CHAT = window.UPLOAD_WORKER || 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
 const ADMIN_EMAILS = ['khoirustsani143@gmail.com', 'admin@yumesubs.com'];
 const MSG_LIMIT = 80;
+const DEFAULT_COMMENT_PROFILE = 'https://yumelyrics.my.id/profile-comment.jpg';
 
 function imgbbDirectUrl(json){
   const d = json && json.data;
@@ -2922,7 +2942,7 @@ function chatProfilePhoto(){
   const custom = typeof window !== 'undefined' ? window.__yumeCustomPhoto : null;
   if(custom && isDirectImageUrl(custom)) return custom;
   if(_chatUser?.photoURL && isDirectImageUrl(_chatUser.photoURL)) return _chatUser.photoURL;
-  return null;
+  return DEFAULT_COMMENT_PROFILE;
 }
 
 let _chatUser = null;
@@ -2983,27 +3003,25 @@ function getChatAuthUser() {
   return _chatAuth.currentUser || _chatDeferredUser || null;
 }
 
-function bootChatListeners() {
-  const loggedIn = getChatAuthUser();
-  if (_chatModuleReady) {
-    if (loggedIn && (!_chatUser || _chatUser.uid !== loggedIn.uid)) initChat(loggedIn);
-    else if (!loggedIn && !_chatUnsub) initGuestChat();
-    return;
-  }
+function showChatMsgsCached() {
+  const msgsEl = document.getElementById('chat-msgs');
+  if (!msgsEl) return;
+  msgsEl.style.display = 'flex';
+  if (_lastMsgs && _lastMsgs.length) renderMsgs(_lastMsgs);
+}
+
+function ensureChatBootstrapped() {
+  if (_chatAuthBootstrapped) return;
+  _chatAuthBootstrapped = true;
   _chatModuleReady = true;
-  if (loggedIn) {
-    initChat(loggedIn);
-    _chatDeferredUser = null;
-  } else {
-    initGuestChat();
-  }
+  const u = _chatAuth.currentUser || _chatDeferredUser;
+  if (u) initChat(u);
+  else initGuestChat();
 }
 
 window.toggleChat = () => {
-  if (!_chatModuleReady) bootChatListeners();
-  const u = getChatAuthUser();
-  if (u && (!_chatUser || _chatUser.uid !== u.uid)) initChat(u);
-  else if (!u && !_chatUnsub) initGuestChat();
+  ensureChatBootstrapped();
+  showChatMsgsCached();
   _chatOpen = !_chatOpen;
   document.getElementById('chat-box').classList.toggle('open', _chatOpen);
   const fab = document.getElementById('chat-fab');
@@ -3211,9 +3229,8 @@ function renderMsgs(msgs) {
       html += `<div class="chat-date-sep">${esc(dateStr)}</div>`;
       lastDateStr = dateStr;
     }
-    const avatarHtml = (m.photoURL && isDirectImageUrl(m.photoURL))
-      ? `<img class="chat-msg-avatar" src="${esc(m.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='flex'"><div class="chat-msg-avatar-ph" style="display:none">${esc((m.name||'?')[0].toUpperCase())}</div>`
-      : `<div class="chat-msg-avatar-ph">${esc((m.name||'?')[0].toUpperCase())}</div>`;
+    const chatAv = (m.photoURL && isDirectImageUrl(m.photoURL)) ? m.photoURL : DEFAULT_COMMENT_PROFILE;
+    const avatarHtml = `<img class="chat-msg-avatar" src="${esc(chatAv)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='flex'"><div class="chat-msg-avatar-ph" style="display:none">${esc((m.name||'?')[0].toUpperCase())}</div>`;
     // Untuk pesan sendiri: gunakan window._myCustomRole sebagai fallback jika pesan lama tidak punya customRole
     const effectiveCustomRole = m.customRole ?? (isMe ? (window._myCustomRole ?? null) : null);
     const role = getChatRole(m.commentCount||0, isAdmin, effectiveCustomRole);
@@ -3341,17 +3358,18 @@ function subscribeGroupChat(msgsEl, opts) {
   if (!msgsEl) return;
   msgsEl.style.display = 'flex';
   if (_chatUnsub && _chatGuestMode === guestMode) {
-    if (_lastMsgs && _lastMsgs.length) renderMsgs(_lastMsgs);
+    showChatMsgsCached();
     return;
   }
   _chatGuestMode = guestMode;
   if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
+  showChatMsgsCached();
   loadCustomRoleCache().catch(() => {});
   loadBannedCache().catch(() => {});
 
   let gotData = false;
   const fallbackTimer = setTimeout(() => {
-    if (!gotData && msgsEl) {
+    if (!gotData && msgsEl && !(_lastMsgs && _lastMsgs.length)) {
       msgsEl.innerHTML = '<div class="chat-loading">Memuat pesan… coba tutup dan buka chat lagi.</div>';
     }
   }, 12000);
@@ -3391,6 +3409,10 @@ function subscribeGroupChat(msgsEl, opts) {
 }
 
 function initGuestChat() {
+  if (_chatUnsub && _chatGuestMode && !_chatUser) {
+    showChatMsgsCached();
+    return;
+  }
   const gate = document.getElementById('chat-login-gate');
   if (gate) gate.style.display = 'flex';
   const inpWrap = document.getElementById('chat-inp-wrap');
@@ -3408,6 +3430,8 @@ function initGuestChat() {
 }
 
 function initChat(user) {
+  if (!user) return;
+  const sameUser = _chatUser && _chatUser.uid === user.uid;
   _chatUser = user;
   const gate = document.getElementById('chat-login-gate');
   if (gate) gate.style.display = 'none';
@@ -3422,6 +3446,11 @@ function initChat(user) {
   }
   document.getElementById('chat-inp-wrap')?.classList.add('show');
 
+  if (sameUser && _chatUnsub && !_chatGuestMode) {
+    showChatMsgsCached();
+    return;
+  }
+
   loadCustomRoleCache().then(() => {
     if (_lastMsgs) renderMsgs(_lastMsgs);
   });
@@ -3433,48 +3462,61 @@ function initChat(user) {
 }
 
 let _chatAuthNullTimer = null;
+let _chatAuthBootstrapped = false;
 
 function scheduleChatAuthLoggedOutCheck() {
   if (_chatAuthNullTimer) clearTimeout(_chatAuthNullTimer);
   _chatAuthNullTimer = setTimeout(() => {
     _chatAuthNullTimer = null;
     if (_chatAuth.currentUser) return;
-    if (Date.now() - _lastChatAuthUserAt < 3000) return;
+    if (Date.now() - _lastChatAuthUserAt < 4000) return;
     setTimeout(() => {
       if (_chatAuth.currentUser) return;
-      if (Date.now() - _lastChatAuthUserAt < 3000) return;
+      if (Date.now() - _lastChatAuthUserAt < 4000) return;
       _chatUser = null;
       _chatDeferredUser = null;
-      if (_chatModuleReady) initGuestChat();
-      else bootChatListeners();
+      if (_chatGuestMode && _chatUnsub) {
+        showChatMsgsCached();
+        return;
+      }
+      initGuestChat();
     }, 500);
-  }, 1200);
+  }, 1500);
+}
+
+function handleChatAuthUser(user) {
+  _lastChatAuthUserAt = Date.now();
+  if (_chatAuthNullTimer) { clearTimeout(_chatAuthNullTimer); _chatAuthNullTimer = null; }
+  _chatDeferredUser = user;
+  if (!_chatAuthBootstrapped) {
+    _chatAuthBootstrapped = true;
+    _chatModuleReady = true;
+    initChat(user);
+  } else if (!_chatUser || _chatUser.uid !== user.uid || _chatGuestMode) {
+    initChat(user);
+  } else {
+    showChatMsgsCached();
+  }
+  if (ADMIN_EMAILS.includes(user.email||'')) {
+    const runReport = () => _startReportListenerModule();
+    if ('requestIdleCallback' in window) requestIdleCallback(runReport, { timeout: 8000 });
+    else setTimeout(runReport, 4000);
+  }
 }
 
 onAuthStateChanged(_chatAuth, user => {
   if (user) {
-    _lastChatAuthUserAt = Date.now();
-    if (_chatAuthNullTimer) { clearTimeout(_chatAuthNullTimer); _chatAuthNullTimer = null; }
-    _chatDeferredUser = user;
-    if (_chatModuleReady) initChat(user);
-    if (ADMIN_EMAILS.includes(user.email||'')) {
-      const runReport = () => _startReportListenerModule();
-      if ('requestIdleCallback' in window) requestIdleCallback(runReport, { timeout: 8000 });
-      else setTimeout(runReport, 4000);
-    }
+    handleChatAuthUser(user);
   } else {
+    if (!_chatAuthBootstrapped) {
+      _chatAuthBootstrapped = true;
+      _chatModuleReady = true;
+      initGuestChat();
+      return;
+    }
     scheduleChatAuthLoggedOutCheck();
   }
 });
-
-(function deferChatModule() {
-  const start = () => bootChatListeners();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(start, 400));
-  } else {
-    setTimeout(start, 400);
-  }
-})();
 
 // ── REPLY ──
 let _replyTo = null; // { id, name, text }
