@@ -1499,7 +1499,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .ritem .cm-avatar,.ritem .cm-avatar-ph,.ritem .cm-avatar-crown{width:30px;height:30px;font-size:.8rem}
 .cdate{font-size:.6rem;color:var(--smoke);font-family:var(--sans);letter-spacing:.05em}
 .ctxt{font-size:.88rem;color:var(--ash);line-height:1.8;font-weight:400}
-.cm-mention{color:var(--rose);font-weight:500}.cm-sp{background:#2a1f3d;color:transparent;border-radius:3px;padding:1px 3px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline;font-style:normal}.cm-sp.open{background:var(--sakura-dim);color:var(--ink)}.cm-sp:hover:not(.open){background:#3d2d5e}[data-theme="dark"] .cm-sp{background:#1a0f2e}[data-theme="dark"] .cm-sp.open{background:rgba(212,117,138,.15);color:var(--ink)}
+.cm-mention{color:var(--rose);font-weight:500}.cm-sp{background:#2a1f3d;color:transparent;border-radius:3px;padding:1px 4px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline}.cm-sp.open{background:rgba(124,77,110,.15);color:var(--ink)}[data-theme="dark"] .cm-sp{background:#1a0f2e}[data-theme="dark"] .cm-sp.open{background:rgba(154,106,138,.2);color:var(--ink)}
 .nocm{font-size:.82rem;color:var(--ash);font-style:italic;font-family:var(--serif);padding:1.5rem 0}
 .admin-badge{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--plum);padding:.12rem .42rem;font-weight:600}
 .admin-cm-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
@@ -3878,7 +3878,7 @@ window.tl = function(type){
 };
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function renderText(str){return esc(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>').replace(/\|\|(.*?)\|\|/gs,'<span class="cm-sp" onclick="this.classList.toggle('open')">$1</span>');}
+function renderText(str){return esc(str||'').replace(/(^|\s)(@[^\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>').replace(/\|\|(.*?)\|\|/gs,'<span class="cm-sp" onclick="this.classList.toggle(\'open\')">$1</span>');}
 function initSpoilers(root){(root||document).querySelectorAll('.cm-sp:not([data-sp])').forEach(function(el){el.setAttribute('data-sp','1');el.addEventListener('click',function(){this.classList.toggle('open');});});}
 
 // Format tanggal + jam menit
@@ -4590,11 +4590,18 @@ window._walineAppInstance = init({
       var reader = new FileReader();
       reader.onload = function(e) {
         var dataUrl = e.target.result;
+        // Simpan dataUrl dengan token pendek — tidak masuk textarea sebagai teks panjang
+        if (!window._yumeImgMap) window._yumeImgMap = {};
+        var idx = Object.keys(window._yumeImgMap).length + 1;
+        var token = 'yume_img_' + idx;
+        window._yumeImgMap[token] = dataUrl;
+
+        // Tampilkan thumbnail di panel pratinjau
         var panel = document.getElementById('yume-img-preview');
         if (!panel) {
           panel = document.createElement('div');
           panel.id = 'yume-img-preview';
-          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
+          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 4px;';
           var wEl = document.getElementById('waline');
           if (wEl) {
             var editor = wEl.querySelector('.wl-editor');
@@ -4602,15 +4609,29 @@ window._walineAppInstance = init({
             else wEl.prepend(panel);
           }
         }
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;display:inline-block;';
         var img = document.createElement('img');
         img.src = dataUrl;
         img.title = file.name;
-        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer;';
-        img.onclick = function() {
-          if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
+        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);display:block;';
+        var lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:10px;color:#7a6f8a;text-align:center;margin-top:2px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        lbl.textContent = 'Gambar ' + idx;
+        var rmBtn = document.createElement('button');
+        rmBtn.textContent = '×';
+        rmBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#c0392b;color:#fff;border:none;width:16px;height:16px;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;';
+        rmBtn.onclick = function() {
+          delete window._yumeImgMap[token];
+          wrap.remove();
         };
-        panel.appendChild(img);
-        resolve(dataUrl);
+        wrap.appendChild(img);
+        wrap.appendChild(lbl);
+        wrap.appendChild(rmBtn);
+        panel.appendChild(wrap);
+
+        // Resolve dengan token pendek — Waline memasukkan "![Gambar N](yume_img_N)" ke textarea
+        resolve(token);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -4636,17 +4657,65 @@ window._walineAppInstance = init({
     level5: 'Legenda',
   },
 });
+// ── Tombol Spoiler untuk Waline textarea ──
+(function() {
+  function addSpoilerBtn() {
+    var wEl = document.getElementById('waline');
+    if (!wEl || document.getElementById('yume-spoiler-btn')) return;
+    var toolbar = wEl.querySelector('.wl-editor-toolbar,.wl-header');
+    if (!toolbar) { setTimeout(addSpoilerBtn, 800); return; }
+    var btn = document.createElement('button');
+    btn.id = 'yume-spoiler-btn';
+    btn.type = 'button';
+    btn.title = 'Pilih teks lalu klik untuk sembunyikan sebagai spoiler';
+    btn.style.cssText = 'background:none;border:1px solid rgba(10,8,18,.18);color:var(--ash,#8c8278);font-size:.6rem;letter-spacing:.08em;padding:.2rem .55rem;cursor:pointer;font-family:var(--sans,system-ui);font-weight:600;border-radius:2px;margin-left:.5rem;transition:background .15s,color .15s;';
+    btn.innerHTML = '&#128065; SPOILER';
+    btn.onmouseenter = function(){ this.style.background='#2a1f3d'; this.style.color='#fff'; this.style.borderColor='#2a1f3d'; };
+    btn.onmouseleave = function(){ this.style.background=''; this.style.color=''; this.style.borderColor=''; };
+    btn.onclick = function() {
+      var ta = wEl.querySelector('textarea.wl-textarea');
+      if (!ta) return;
+      var s = ta.selectionStart, e = ta.selectionEnd;
+      if (s === e) { alert('Pilih teks dulu sebelum klik Spoiler'); return; }
+      var sel = ta.value.slice(s, e);
+      var before = ta.value.slice(0, s), after = ta.value.slice(e);
+      var wrapped = '||' + sel + '||';
+      ta.value = before + wrapped + after;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      ta.setSelectionRange(s, s + wrapped.length);
+      ta.focus();
+    };
+    toolbar.appendChild(btn);
+  }
+  var _obs = new MutationObserver(function(){ addSpoilerBtn(); });
+  _obs.observe(document.body, { childList: true, subtree: true });
+  addSpoilerBtn();
+})();
 (function() {
   var _orig = window.fetch;
   window.fetch = function(url, opts) {
-    var p = _orig.apply(this, arguments);
+    var u = typeof url === 'string' ? url : (url && url.url) || '';
+    // Sebelum POST komentar: ganti token yume_img_N → dataUrl asli
+    if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1 && opts.body && window._yumeImgMap) {
+      try {
+        var body = JSON.parse(opts.body);
+        if (body && body.comment) {
+          body.comment = body.comment.replace(/yume_img_\d+/g, function(tok) {
+            return window._yumeImgMap[tok] || tok;
+          });
+          opts = Object.assign({}, opts, { body: JSON.stringify(body) });
+        }
+      } catch(e) {}
+    }
+    var p = _orig.call(this, url, opts);
     try {
-      var u = typeof url === 'string' ? url : (url && url.url) || '';
       if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
         p.then(function(res) {
           if (res && res.ok && !window._hasCommented) {
             if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
           }
+          // Reset map setelah berhasil kirim
+          if (res && res.ok) { window._yumeImgMap = {}; var p2 = document.getElementById('yume-img-preview'); if(p2) p2.innerHTML=''; }
         }).catch(function() {});
       }
     } catch(e) {}
