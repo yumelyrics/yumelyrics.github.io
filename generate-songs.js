@@ -1441,7 +1441,9 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 
 /* ── COMMENTS SECTION (GraphComment) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#graphcomment{min-height:48px;width:100%}
+#graphcomment{min-height:48px;width:100%;position:relative}
+#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:6;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
+#graphcomment.yume-gc-avatar-patch-on .yume-gc-avatar-patch{display:block}
 @media(min-width:901px){
   #graphcomment{min-height:200px;display:block!important}
   #graphcomment iframe{max-width:100%}
@@ -2185,7 +2187,7 @@ ${(()=>{
   <div class="ep-box">
     <div class="ep-title">Edit Profil</div>
     <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
-      <div class="ep-avatar-placeholder-big" id="ep-avatar-big">?</div>
+      <img class="ep-avatar-big" id="ep-avatar-big" src="${DEFAULT_COMMENT_PROFILE_URL}" alt="" referrerpolicy="no-referrer" decoding="async">
       <div class="ep-info">
         <div class="ep-name" id="ep-display-name-preview">—</div>
         <div class="ep-email" id="ep-email-preview">—</div>
@@ -2204,7 +2206,7 @@ ${(()=>{
       <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
       <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama tampil di profil situs. Foto kosong = avatar default YumeSubs. Komentar GraphComment memakai akun/profil di panel GraphComment.</div>
+    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Avatar default: profile-comment.jpg. Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -3230,7 +3232,75 @@ window.addEventListener('message', (e) => {
   if (!e.origin || !/graphcomment/i.test(e.origin)) return;
   const data = parseGcMessage(e.data);
   if (data && isGcCommentPosted(data)) markGcCommented();
+  if (data && (data.name === 'gc-height' || data.name === 'gc-ready')) {
+    if (typeof yumeGcAvatarOverlayReposition === 'function') yumeGcAvatarOverlayReposition();
+  }
 });
+
+function yumeGcAvatarOverlayEnsure() {
+  const mount = document.getElementById('graphcomment');
+  if (!mount) return null;
+  let patch = mount.querySelector('.yume-gc-avatar-patch');
+  if (!patch) {
+    patch = document.createElement('img');
+    patch.className = 'yume-gc-avatar-patch';
+    patch.src = DEFAULT_COMMENT_PROFILE;
+    patch.alt = '';
+    patch.referrerPolicy = 'no-referrer';
+    patch.decoding = 'async';
+    mount.appendChild(patch);
+  }
+  return patch;
+}
+
+function yumeGcAvatarOverlayReposition() {
+  const mount = document.getElementById('graphcomment');
+  const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
+  const patch = mount && mount.querySelector('.yume-gc-avatar-patch');
+  if (!mount || !patch || !iframe) return;
+  const h = iframe.offsetHeight || parseInt(iframe.style.height, 10) || 0;
+  const size = 36;
+  patch.style.width = size + 'px';
+  patch.style.height = size + 'px';
+  patch.style.left = '14px';
+  if (h > 420) {
+    patch.style.top = 'auto';
+    patch.style.bottom = '72px';
+  } else {
+    patch.style.bottom = 'auto';
+    patch.style.top = Math.min(128, Math.max(72, Math.round(h * 0.28))) + 'px';
+  }
+}
+
+async function yumeGcShouldShowAvatarPatch() {
+  try {
+    const res = await fetch('https://graphcomment.com/api/users/me?website=yumelyrics&plateform=front', { credentials: 'include' });
+    if (!res.ok) return true;
+    const u = await res.json();
+    const pic = u && (u.picture || u.avatar || (u.profile && u.profile.picture) || '');
+    const picStr = String(pic || '').trim();
+    if (!picStr) return true;
+    if (/default|placeholder|no-avatar|anonymous/i.test(picStr)) return true;
+    if (/graphcomment\\.com\\/.*\\/(default|guest|anonymous)/i.test(picStr)) return true;
+    return false;
+  } catch (e) { return true; }
+}
+
+async function yumeGcAvatarOverlayActivate() {
+  if (!(await yumeGcShouldShowAvatarPatch())) return;
+  const mount = document.getElementById('graphcomment');
+  if (!mount) return;
+  yumeGcAvatarOverlayEnsure();
+  mount.classList.add('yume-gc-avatar-patch-on');
+  yumeGcAvatarOverlayReposition();
+  const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
+  if (iframe && !iframe.dataset.yumeGcPatchObs) {
+    iframe.dataset.yumeGcPatchObs = '1';
+    try {
+      new ResizeObserver(() => yumeGcAvatarOverlayReposition()).observe(iframe);
+    } catch (e) {}
+  }
+}
 
 async function fetchGcThreadCount() {
   const qs = new URLSearchParams({
@@ -3677,6 +3747,11 @@ function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
     img.referrerPolicy = 'no-referrer';
     img.decoding = 'async';
     img.onerror = function(){
+      if (img.src !== DEFAULT_COMMENT_PROFILE) {
+        img.onerror = null;
+        img.src = DEFAULT_COMMENT_PROFILE;
+        return;
+      }
       wrap.innerHTML = '';
       const ph = document.createElement('div');
       ph.className = phClass;
@@ -4646,29 +4721,22 @@ legacy comment UI removed */
 </script>
 <script type="text/javascript">
 (function(){
-  var GC_DEFAULT_AVATAR = ${JSON.stringify(DEFAULT_COMMENT_PROFILE_URL)};
   var isMobileGc = window.matchMedia('(max-width: 900px)').matches;
   var mount = document.getElementById('graphcomment');
   window.__semio__gcOnComment__semio__ = function() {
     if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
   };
   window.__semio__onGcLoaded__semio__ = function() {
-    var iframe = document.querySelector('#graphcomment iframe, #gc-iframe');
-    if (!iframe || !iframe.contentWindow) return;
-    try {
-      iframe.contentWindow.postMessage(JSON.stringify({
-        info: 'cmd',
-        cmd: 'gcSetDefaultAvatar',
-        args: [GC_DEFAULT_AVATAR]
-      }), '*');
-    } catch(e) {}
+    if (typeof yumeGcAvatarOverlayActivate === 'function') {
+      yumeGcAvatarOverlayActivate();
+      setTimeout(yumeGcAvatarOverlayActivate, 600);
+      setTimeout(yumeGcAvatarOverlayActivate, 1800);
+    }
   };
   var __semio__params = {
     graphcommentId: 'yumelyrics',
     behaviour: {
-      uid: ${JSON.stringify(slug)},
-      defaultUserPicture: GC_DEFAULT_AVATAR,
-      defaultAvatar: GC_DEFAULT_AVATAR
+      uid: ${JSON.stringify(slug)}
     }
   };
   if (isMobileGc) {
@@ -4687,6 +4755,23 @@ legacy comment UI removed */
       }
     } else if (typeof __semio__gc_graphlogin === 'function') {
       __semio__gc_graphlogin(__semio__params);
+    }
+    var origShow = window.__semio__showGraphCommentOverlay;
+    if (typeof origShow === 'function' && !origShow.__yumePatched) {
+      window.__semio__showGraphCommentOverlay = function() {
+        var out = origShow.apply(this, arguments);
+        setTimeout(function() {
+          if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
+        }, 500);
+        return out;
+      };
+      window.__semio__showGraphCommentOverlay.__yumePatched = true;
+    }
+    if (!window.__yumeGcPatchResize) {
+      window.__yumeGcPatchResize = true;
+      window.addEventListener('resize', function() {
+        if (typeof yumeGcAvatarOverlayReposition === 'function') yumeGcAvatarOverlayReposition();
+      }, { passive: true });
     }
   }
   if ((isMobileGc && typeof __semio__gc_sidePanel_graphlogin === 'function') ||
