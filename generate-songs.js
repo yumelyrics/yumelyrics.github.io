@@ -4635,8 +4635,20 @@ window._walineAppInstance = init({
         wrap.appendChild(img);
         wrap.appendChild(lbl);
         panel.appendChild(wrap);
-        /* Kembalikan token pendek → Waline insert ![image](yume_img_N) */
+        /* Resolve token pendek → Waline insert ![filename](yume_img_N) ke textarea,
+           langsung hapus dari textarea agar tidak muncul teks panjang */
         resolve(token);
+        setTimeout(function() {
+          var ta = document.querySelector('#waline .wl-editor textarea');
+          if (!ta) return;
+          var pat = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + token.replace('_','_') + '\\)\\n?', 'g');
+          var cleaned = ta.value.replace(pat, '');
+          if (cleaned !== ta.value) {
+            var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+            nd.set.call(ta, cleaned);
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }, 80);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -4668,13 +4680,21 @@ window._walineAppInstance = init({
     try {
       var u = typeof url === 'string' ? url : (url && url.url) || '';
       if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
-        /* Ganti token yume_img_N dengan dataUrl asli sebelum dikirim */
+        /* Sisipkan gambar ke field comment di JSON body sebelum dikirim */
         if (opts.body && typeof opts.body === 'string' && Object.keys(_yumeImgMap).length > 0) {
-          var body = opts.body;
-          for (var tok in _yumeImgMap) {
-            body = body.split(tok).join(_yumeImgMap[tok]);
-          }
-          opts = Object.assign({}, opts, { body: body });
+          try {
+            var bodyObj = JSON.parse(opts.body);
+            if (bodyObj && typeof bodyObj.comment === 'string') {
+              var imgMd = '';
+              var n = 1;
+              for (var tok in _yumeImgMap) {
+                imgMd += '\n\n![Gambar ' + n + '](' + _yumeImgMap[tok] + ')';
+                n++;
+              }
+              bodyObj.comment = bodyObj.comment + imgMd;
+              opts = Object.assign({}, opts, { body: JSON.stringify(bodyObj) });
+            }
+          } catch(e2) {}
         }
       }
     } catch(e) {}
@@ -4733,15 +4753,18 @@ window._walineAppInstance = init({
   }
   function _yumeInjectSpoilerBtn() {
     if (document.getElementById('yume-spoiler-btn')) return;
-    /* Cari tombol toolbar Waline (emoji / gambar) */
-    var toolbar = document.querySelector('#waline .wl-action');
-    if (!toolbar) return;
+    /* .wl-action adalah <a> ke GitHub docs — jangan masuk di dalamnya!
+       Sisipkan tepat SETELAH elemen .wl-action sebagai sibling */
+    var actionLink = document.querySelector('#waline .wl-action');
+    if (!actionLink) return;
     var btn = document.createElement('button');
     btn.id = 'yume-spoiler-btn';
     btn.type = 'button';
     btn.title = 'Sembunyikan teks yang dipilih sebagai spoiler (||teks||)';
     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Spoiler';
-    btn.onclick = function() {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       var ta = document.querySelector('#waline .wl-editor textarea');
       if (!ta) return;
       var s = ta.selectionStart, e2 = ta.selectionEnd;
@@ -4750,13 +4773,14 @@ window._walineAppInstance = init({
       var wrapped = '||' + sel + '||';
       var newVal = val.slice(0, s) + wrapped + val.slice(e2);
       /* Trigger React controlled input */
-      var desc = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-      desc.set.call(ta, newVal);
+      var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+      nd.set.call(ta, newVal);
       ta.dispatchEvent(new Event('input', { bubbles: true }));
       ta.focus();
       setTimeout(function() { ta.setSelectionRange(s + 2, s + 2 + sel.length); }, 0);
     };
-    toolbar.appendChild(btn);
+    /* Insert sebagai sibling setelah .wl-action, bukan di dalamnya */
+    actionLink.parentNode.insertBefore(btn, actionLink.nextSibling);
   }
   if (window.MutationObserver) {
     var _wObs = new MutationObserver(function() {
