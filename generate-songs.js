@@ -1101,7 +1101,6 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -1440,21 +1439,12 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
 
-/* ── COMMENTS SECTION (Waline) ── */
+/* ── COMMENTS SECTION ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
-[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
-#waline .wl-browser,#waline .wl-os{display:none!important}
-#waline .wl-content img{max-width:100%;height:auto;display:block}
-/* ── Inline Spoiler ── */
+/* ── Inline Spoiler (||teks||) ── */
 .cm-sp{background:#1a1625;color:transparent;border-radius:3px;padding:0 4px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline}
 .cm-sp:hover{background:#2d2440}
 .cm-sp.cm-sp-open{background:#ede8f8;color:inherit;cursor:default}
-/* ── Spoiler button in Waline toolbar ── */
-#yume-spoiler-btn{background:none;border:1px solid rgba(10,8,18,.18);border-radius:4px;padding:3px 8px;font-size:.72rem;font-family:inherit;color:var(--ash,#666);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,background .15s,color .15s;margin-left:4px;vertical-align:middle}
-#yume-spoiler-btn:hover{border-color:var(--rose,#e85d7a);color:var(--rose,#e85d7a);background:rgba(232,93,122,.05)}
-[data-theme="dark"] #yume-spoiler-btn{border-color:rgba(232,226,217,.22);color:var(--ash,#aaa)}
-#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2085,15 +2075,35 @@ ${(()=>{
 </section>`;
 })()}
 
-<!-- ── COMMENTS (Waline) ── -->
+<!-- ── COMMENTS (Firebase) ── -->
 <section class="comments-section">
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat komentar. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
     </div>
   </div>
-  <div id="waline"></div>
+  <div id="cm-login-gate" class="comment-form-area">
+    <p class="comment-desc" style="font-size:.78rem">Login dengan Google untuk berkomentar dan mengaktifkan tombol salin lirik.</p>
+    <button class="btn-ghost" onclick="window.doLogin()" style="font-size:.6rem;padding:.6rem 1.4rem;cursor:pointer">Login dengan Google</button>
+  </div>
+  <div class="comment-form-area cm-login-gate-hidden" id="cm-form-area">
+    <textarea class="cmi" id="cm-t" rows="3" placeholder="Tulis komentarmu di sini..."></textarea>
+    <div id="cm-img-preview-wrap" class="cm-img-preview-wrap" style="display:none">
+      <img id="cm-img-preview" class="cm-img-preview cm-lightbox-img" src="" alt="preview foto">
+      <button class="cm-img-remove" onclick="window.removeCmPhoto()" title="Hapus foto">✕</button>
+    </div>
+    <div class="comment-footer">
+      <span class="comment-user" id="cm-user-label">—</span>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input type="file" accept="image/*" class="cm-photo-input" id="cm-photo-input" onchange="window.handleCmPhoto(this)">
+        <button class="cm-photo-btn" onclick="document.getElementById('cm-photo-input').click()">📷 Foto</button>
+        <button class="sbtn" id="cm-btn" onclick="window.postCm()">Kirim</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-count-wrap" style="font-size:.72rem;color:var(--ash);margin:.6rem 0 .2rem;letter-spacing:.05em;display:none"><span id="cc-count"></span> komentar</div>
+  <div id="cmlist" class="cmlist"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -3277,6 +3287,10 @@ async function applyAuthLoggedOut(){
   _banReason = '';
   _banUntil = undefined;
   updateCopyGate();
+  const _cmGateOut = document.getElementById('cm-login-gate');
+  const _cmFormOut = document.getElementById('cm-form-area');
+  if(_cmGateOut) _cmGateOut.classList.remove('cm-login-gate-hidden');
+  if(_cmFormOut) _cmFormOut.classList.add('cm-login-gate-hidden');
 }
 
 function applyAuthLoggedInUISync(user){
@@ -3352,6 +3366,12 @@ async function applyAuthLoggedIn(user, gen){
     );
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     await updateAdminSongUI();
+    const _cmGateIn = document.getElementById('cm-login-gate');
+    const _cmFormIn = document.getElementById('cm-form-area');
+    if(_cmGateIn) _cmGateIn.classList.add('cm-login-gate-hidden');
+    if(_cmFormIn) _cmFormIn.classList.remove('cm-login-gate-hidden');
+    const _cmULabel = document.getElementById('cm-user-label');
+    if(_cmULabel) _cmULabel.textContent = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
   }
 }
 
@@ -3409,6 +3429,7 @@ getRedirectResult(auth).then(result => {
 }).catch(()=>{});
 
 updateCopyGate();
+rcm();
 setTimeout(() => showCopyCommentToast(), 900);
 
 window.doLogin = async () => {
@@ -3955,9 +3976,8 @@ function startBanTicker(){
   }, 1000);
 }
 
-/* Komentar: GraphComment (lihat script di bawah halaman) */
-void 0; /* removed renderComment
-function __REMOVE_START_renderComment(id, c, replies){
+/* ── Render komentar Firebase ── */
+function renderComment(id, c, replies){
   const isAdm=c.isAdmin;
   const canDelete = _currentUser && (c.uid===_currentUser.uid || _isAdmin);
   let repHtml='';
@@ -4066,7 +4086,6 @@ function __REMOVE_START_renderComment(id, c, replies){
     </div>
   </div>\`;
 }
-removed renderComment */
 
 /* ── NOTIFIKASI REALTIME ── */
 let _unsubNotif = null;
@@ -4189,9 +4208,26 @@ async function deleteReadNotifs(){
   }catch(e){}
 }
 
-async function rcm(){ /* GraphComment */ }
-
-void 0; /*
+async function rcm(){
+  const el = document.getElementById('cmlist');
+  if(!el) return;
+  el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
+  const ccEl = document.getElementById('cc-count');
+  const ccWrap = document.getElementById('cc-count-wrap');
+  try {
+    const q = query(collection(db,'comments'), where('songId','==',SONG_ID), orderBy('ts','asc'));
+    const snap = await getDocs(q);
+    const allDocs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Cek apakah user sudah pernah komentar di lagu ini (untuk copy gate)
+    if (!_hasCommented && _currentUser) {
+      if (allDocs.some(c => c.uid === _currentUser.uid)) {
+        _hasCommented = true;
+        try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(ex) {}
+        updateCopyGate();
+      }
+    }
+    const topCount = allDocs.filter(c=>!c.parentId).length;
+    if(ccWrap) ccWrap.style.display = topCount > 0 ? '' : 'none';
     if(ccEl) ccEl.textContent = topCount >= 1000 ? (topCount/1000).toFixed(1).replace(/\.0$/,'')+'k' : topCount;
     if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
 
@@ -4220,7 +4256,6 @@ void 0; /*
       } catch(e){}
 
       // Role badge: pakai localCountMap dari allDocs — tidak perlu query count ke seluruh koleksi
-      // Query where('uid','==',uid) di comments/story_comments sangat lambat tanpa composite index
       if(_roleCache[uid] !== undefined){
         roleMap[uid] = _roleCache[uid];
       } else {
@@ -4255,15 +4290,21 @@ void 0; /*
     if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
     startBanTicker();
-    _resolveCustomRoleBadges(); // resolve CR: custom role badges async
-    // Load thumbs untuk semua komentar + reply
-    const allIds = enriched.map(c => c.id);
-    loadCommentThumbs(allIds);
+    if(typeof _resolveCustomRoleBadges === 'function') _resolveCustomRoleBadges();
   }catch(e){
     console.error('[rcm] error:', e.code, e.message, e);
-*/
+    if(el) el.innerHTML='<div class="nocm">Gagal memuat komentar. Coba refresh halaman.</div>';
+  }
+}
 
-void 0; /* legacy comment UI removed
+window.toggleReplyForm = function(key) {
+  const form = document.getElementById('rf-'+key);
+  if(form) form.classList.toggle('open');
+};
+window.doCommentThumb = function(cmId, btn) {
+  // fitur thumb akan ditambahkan di versi berikutnya
+};
+
 document.getElementById('cmlist').addEventListener('click', e => {
   // Hapus komentar
   const delBtn = e.target.closest('[data-cmid]');
@@ -4575,256 +4616,7 @@ window.deleteCm = async cmId => {
     rcm();
   } catch(e) { toast('Gagal hapus komentar.'); }
 };
-legacy comment UI removed */
 
-</script>
-<script type="module">
-import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
-/* ── Gambar: token map (bukan base64 di textarea) ── */
-window._yumeImgMap = {};
-window._yumeImgCount = 0;
-window._walineAppInstance = init({
-  el: '#waline',
-  serverURL: 'https://yumelyrics-comment.vercel.app',
-  path: ${JSON.stringify('/lagu/' + slug)},
-  comment: true,
-  pageview: false,
-  reaction: false,
-  dark: 'html[data-theme="dark"]',
-  meta: ['nick'],
-  requiredMeta: [],
-  imageUploader: function(file) {
-    return new Promise(function(resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var dataUrl = e.target.result;
-        /* Simpan ke map, resolve token pendek bukan base64 */
-        window._yumeImgCount++;
-        var token = 'yume_img_' + window._yumeImgCount;
-        window._yumeImgMap[token] = dataUrl;
-        /* Tampilkan thumbnail di panel pratinjau */
-        var panel = document.getElementById('yume-img-preview');
-        if (!panel) {
-          panel = document.createElement('div');
-          panel.id = 'yume-img-preview';
-          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
-          var wEl = document.getElementById('waline');
-          if (wEl) {
-            var editor = wEl.querySelector('.wl-editor');
-            if (editor) editor.appendChild(panel);
-            else wEl.prepend(panel);
-          }
-        }
-        var wrap = document.createElement('div');
-        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
-        wrap.dataset.yumeToken = token;
-        var img = document.createElement('img');
-        img.src = dataUrl;
-        img.title = file.name;
-        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #93c5fd;display:block;cursor:pointer;';
-        img.onclick = function() {
-          if (confirm('Hapus gambar ini?')) {
-            delete window._yumeImgMap[token];
-            wrap.remove();
-          }
-        };
-        var idx = panel.children.length + 1;
-        var lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:10px;color:#1d4ed8;font-weight:700;background:#eff6ff;border-radius:3px;padding:1px 5px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-        lbl.textContent = '\uD83D\uDCCE Gambar ' + idx;
-        wrap.appendChild(img);
-        wrap.appendChild(lbl);
-        panel.appendChild(wrap);
-        /* Resolve token pendek → Waline insert ![filename](yume_img_N) ke textarea,
-           langsung hapus dari textarea agar tidak muncul teks panjang */
-        resolve(token);
-        setTimeout(function() {
-          var ta = document.querySelector('#waline .wl-editor textarea');
-          if (!ta) return;
-          var pat = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + token.replace('_','_') + '\\)\\n?', 'g');
-          var cleaned = ta.value.replace(pat, '');
-          if (cleaned !== ta.value) {
-            var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-            nd.set.call(ta, cleaned);
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        }, 80);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  },
-  locale: {
-    placeholder: 'Tulis komentarmu di sini...',
-    sofa: 'Jadilah yang pertama berkomentar!',
-    submit: 'Kirim',
-    nick: 'Nama',
-    preview: 'Pratinjau',
-    comment: 'Komentar',
-    reply: 'Balas',
-    more: 'Muat lebih banyak...',
-    admin: 'Admin',
-    word: '{0} kata',
-    anonymous: 'Tamu',
-    level0: 'Pendatang',
-    level1: 'Pengunjung',
-    level2: 'Reguler',
-    level3: 'Veteran',
-    level4: 'Master',
-    level5: 'Legenda',
-  },
-});
-(function() {
-  var _orig = window.fetch;
-  window.fetch = function(url, opts) {
-    try {
-      var u = typeof url === 'string' ? url : (url && url.url) || '';
-      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
-        /* Sisipkan gambar ke field comment di JSON body sebelum dikirim */
-        if (opts.body && typeof opts.body === 'string' && Object.keys(window._yumeImgMap).length > 0) {
-          try {
-            var bodyObj = JSON.parse(opts.body);
-            if (bodyObj && typeof bodyObj.comment === 'string') {
-              var imgMd = '';
-              var n = 1;
-              for (var tok in window._yumeImgMap) {
-                imgMd += '\n\n![Gambar ' + n + '](' + window._yumeImgMap[tok] + ')';
-                n++;
-              }
-              bodyObj.comment = bodyObj.comment + imgMd;
-              opts = Object.assign({}, opts, { body: JSON.stringify(bodyObj) });
-            }
-          } catch(e2) {}
-        }
-      }
-    } catch(e) {}
-    var p = _orig.call(this, url, opts);
-    try {
-      var u2 = typeof url === 'string' ? url : (url && url.url) || '';
-      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u2.indexOf('/api/comment') !== -1) {
-        p.then(function(res) {
-          if (res && res.ok && !window._hasCommented) {
-            if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
-          }
-          /* Reset setelah komentar terkirim */
-          window._yumeImgMap = {};
-          window._yumeImgCount = 0;
-          var panel = document.getElementById('yume-img-preview');
-          if (panel) panel.remove();
-        }).catch(function() {});
-      }
-    } catch(e) {}
-    return p;
-  };
-})();
-/* ── Spoiler: inject tombol ke toolbar Waline + render ||teks|| di komentar ── */
-(function() {
-  function _yumeProcessNode(node) {
-    if (node.nodeType === 3) {
-      var txt = node.textContent;
-      if (txt.indexOf('||') === -1) return;
-      var parts = txt.split(/\|\|/);
-      if (parts.length < 3) return;
-      var frag = document.createDocumentFragment();
-      for (var i = 0; i < parts.length; i++) {
-        if (i % 2 === 0) {
-          if (parts[i]) frag.appendChild(document.createTextNode(parts[i]));
-        } else {
-          var sp = document.createElement('span');
-          sp.className = 'cm-sp';
-          sp.textContent = parts[i];
-          sp.onclick = function() { this.classList.toggle('cm-sp-open'); };
-          frag.appendChild(sp);
-        }
-      }
-      node.parentNode.replaceChild(frag, node);
-      return;
-    }
-    if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
-      Array.from(node.childNodes).forEach(_yumeProcessNode);
-    }
-  }
-  function _yumeApplySpoilerRender(root) {
-    (root || document).querySelectorAll('.wl-content').forEach(function(el) {
-      if (el.dataset.yumeSp) return;
-      el.dataset.yumeSp = '1';
-      _yumeProcessNode(el);
-    });
-  }
-  function _yumeInjectSpoilerBtn() {
-    if (document.getElementById('yume-spoiler-btn')) return;
-    /* .wl-action adalah <a> ke GitHub docs — jangan masuk di dalamnya!
-       Sisipkan tepat SETELAH elemen .wl-action sebagai sibling */
-    var actionLink = document.querySelector('#waline .wl-action');
-    if (!actionLink) return;
-    var btn = document.createElement('button');
-    btn.id = 'yume-spoiler-btn';
-    btn.type = 'button';
-    btn.title = 'Sembunyikan teks yang dipilih sebagai spoiler (||teks||)';
-    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Spoiler';
-    btn.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var ta = document.querySelector('#waline .wl-editor textarea');
-      if (!ta) return;
-      var s = ta.selectionStart, e2 = ta.selectionEnd;
-      var val = ta.value;
-      var sel = val.slice(s, e2).trim() || 'teks spoiler';
-      var wrapped = '||' + sel + '||';
-      var newVal = val.slice(0, s) + wrapped + val.slice(e2);
-      /* Trigger React controlled input */
-      var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-      nd.set.call(ta, newVal);
-      ta.dispatchEvent(new Event('input', { bubbles: true }));
-      ta.focus();
-      setTimeout(function() { ta.setSelectionRange(s + 2, s + 2 + sel.length); }, 0);
-    };
-    /* Insert sebagai sibling setelah .wl-action, bukan di dalamnya */
-    actionLink.parentNode.insertBefore(btn, actionLink.nextSibling);
-  }
-  if (window.MutationObserver) {
-    var _wObs = new MutationObserver(function() {
-      _yumeInjectSpoilerBtn();
-      _yumeApplySpoilerRender();
-    });
-    function _startObs() {
-      var wEl = document.getElementById('waline');
-      if (wEl) _wObs.observe(wEl, { childList: true, subtree: true });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _startObs);
-    else _startObs();
-  }
-})();
-(function() {
-  var _path = ${JSON.stringify('/lagu/' + slug)};
-  var _api = 'https://yumelyrics-comment.vercel.app/api/comment?path=' + encodeURIComponent(_path) + '&pageSize=1&page=1&lang=id';
-  var _knownCount = null;
-  function _fetchCount() {
-    if (document.hidden) return;
-    fetch(_api).then(function(r){ return r.json(); }).then(function(d) {
-      var cnt = d && typeof d.count === 'number' ? d.count : null;
-      if (cnt === null) return;
-      if (_knownCount === null) { _knownCount = cnt; return; }
-      if (cnt > _knownCount) {
-        _knownCount = cnt;
-        var existing = document.getElementById('yume-rt-banner');
-        if (existing) return;
-        var banner = document.createElement('div');
-        banner.id = 'yume-rt-banner';
-        banner.style.cssText = 'cursor:pointer;padding:8px 16px;background:var(--rose,#e85d7a);color:#fff;border-radius:8px;font-size:.82rem;text-align:center;margin-bottom:12px;transition:opacity .3s;';
-        banner.textContent = 'Ada komentar baru! Klik untuk memuat.';
-        banner.onclick = function() {
-          banner.remove();
-          if (window._walineAppInstance) window._walineAppInstance.update();
-        };
-        var wEl = document.getElementById('waline');
-        if (wEl) wEl.parentNode.insertBefore(banner, wEl);
-      }
-    }).catch(function(){});
-  }
-  setTimeout(_fetchCount, 5000);
-  setInterval(_fetchCount, 30000);
-})();
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
