@@ -1101,6 +1101,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
+<link rel="stylesheet" href="https://unpkg.com/@waline/client/v3/dist/waline.css">
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -1439,19 +1440,10 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
 
-/* ── COMMENTS SECTION (GraphComment) ── */
+/* ── COMMENTS SECTION (Waline) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#graphcomment{min-height:48px;width:100%;position:relative;background:transparent}
-#graphcomment iframe{background:transparent!important;border:none!important}
-#graphcomment .yume-gc-avatar-patch{position:absolute;left:14px;top:52px;width:36px;height:36px;border-radius:50%;object-fit:cover;z-index:2147483647;pointer-events:none;display:none;border:2px solid var(--cream);box-shadow:0 1px 6px rgba(10,8,18,.12)}
-#graphcomment.yume-gc-avatar-patch-on .yume-gc-avatar-patch{display:block}
-@media(min-width:901px){
-  #graphcomment{min-height:200px;display:block!important}
-  #graphcomment iframe{max-width:100%;background:transparent!important}
-}
-@media(max-width:900px){
-  #graphcomment:not(:empty){min-height:0}
-}
+#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:transparent;--waline-bgcolor-hover:var(--mist);--waline-color:var(--ink);--waline-border-radius:0;--waline-avatar-size:36px;--waline-font-family:var(--sans)}
+[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:transparent;--waline-bgcolor-hover:rgba(232,226,217,.05)}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2082,15 +2074,15 @@ ${(()=>{
 </section>`;
 })()}
 
-<!-- ── COMMENTS (GraphComment) ── -->
+<!-- ── COMMENTS (Waline) ── -->
 <section class="comments-section">
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat GraphComment — bebas sebagai tamu atau setelah login di panel komentar. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
     </div>
   </div>
-  <div id="graphcomment"></div>
+  <div id="waline"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -3180,148 +3172,20 @@ async function checkBanStatus(uid) {
 
 const DEFAULT_COMMENT_PROFILE = ${JSON.stringify(DEFAULT_COMMENT_PROFILE_URL)};
 try { window.__yumeDefaultCommentProfile = DEFAULT_COMMENT_PROFILE; } catch(e) {}
-const GC_THREAD_UID = ${JSON.stringify(slug)};
-const GC_PAGE_URL = ${JSON.stringify(BASE_URL + '/lagu/' + slug)};
-const GC_COMMENT_KEY = 'ym_gc2_' + GC_THREAD_UID;
+const WALINE_COMMENT_KEY = 'ym_waline2_' + ${JSON.stringify(slug)};
 let _hasCommented = false;
-try { _hasCommented = !!localStorage.getItem(GC_COMMENT_KEY); } catch(e) {}
+try { _hasCommented = !!localStorage.getItem(WALINE_COMMENT_KEY); } catch(e) {}
 
 let _copyToastTimer = null;
-let _gcCountBaseline = null;
-let _gcCountPollReady = false;
 
-function markGcCommented() {
+function markWalineCommented() {
   if (_hasCommented) return;
   _hasCommented = true;
-  try { localStorage.setItem(GC_COMMENT_KEY, String(Date.now())); } catch(e) {}
+  try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
   updateCopyGate();
   hideCopyCommentToast();
   toast('Copy lirik aktif — terima kasih sudah berkomentar!');
 }
-
-const GC_POST_EVENT_TYPES = new Set([
-  'new_comment','comment_posted','commentposted','comment_created','commentcreated',
-  'comment_sent','commentsent','comment_submitted','add_comment','comment_add',
-  'gc_new_comment','gc_comment_posted','post_comment','submit_comment'
-]);
-
-function isGcCommentPosted(data) {
-  if (!data || typeof data !== 'object') return false;
-  const type = String(data.type || data.event || data.action || data.name || '')
-    .toLowerCase().replace(/[\\s-]+/g, '_');
-  if (GC_POST_EVENT_TYPES.has(type)) return true;
-  const status = String(data.status || '').toLowerCase();
-  const hasBody = !!(data.content || data.text || data.message);
-  const hasId = !!(data._id || data.id || data.commentId);
-  if (hasBody && hasId && (status === 'approved' || status === 'published')) return true;
-  return false;
-}
-
-function parseGcMessage(raw) {
-  if (raw == null) return null;
-  if (typeof raw === 'object') return raw;
-  if (typeof raw === 'string') {
-    try {
-      const parsed = JSON.parse(raw);
-      return typeof parsed === 'object' ? parsed : null;
-    } catch { return null; }
-  }
-  return null;
-}
-
-window.addEventListener('message', (e) => {
-  if (!e.origin || !/graphcomment/i.test(e.origin)) return;
-  const data = parseGcMessage(e.data);
-  if (data && isGcCommentPosted(data)) markGcCommented();
-  if (data && (data.name === 'gc-height' || data.name === 'gc-ready')) {
-    if (typeof yumeGcAvatarOverlayReposition === 'function') yumeGcAvatarOverlayReposition();
-  }
-});
-
-function yumeGcAvatarOverlayEnsure() {
-  const mount = document.getElementById('graphcomment');
-  if (!mount) return null;
-  let patch = mount.querySelector('.yume-gc-avatar-patch');
-  if (!patch) {
-    patch = document.createElement('img');
-    patch.className = 'yume-gc-avatar-patch';
-    patch.alt = '';
-    patch.referrerPolicy = 'no-referrer';
-    patch.decoding = 'async';
-    patch.onerror = function() {
-      patch.style.display = 'none';
-    };
-    mount.appendChild(patch);
-  }
-  return patch;
-}
-
-function yumeGcAvatarOverlayReposition() {
-  const mount = document.getElementById('graphcomment');
-  const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
-  const patch = mount && mount.querySelector('.yume-gc-avatar-patch');
-  if (!mount || !patch || !iframe) return;
-  const size = 36;
-  patch.style.width = size + 'px';
-  patch.style.height = size + 'px';
-  patch.style.left = '14px';
-  patch.style.bottom = 'auto';
-  patch.style.top = '52px';
-}
-
-function yumeGcAvatarOverlayActivate() {
-  const mount = document.getElementById('graphcomment');
-  if (!mount) return;
-  const patch = yumeGcAvatarOverlayEnsure();
-  if (patch) {
-    const photoToUse = _customPhotoURL || DEFAULT_COMMENT_PROFILE;
-    if (patch.src !== photoToUse) patch.src = photoToUse;
-  }
-  mount.classList.add('yume-gc-avatar-patch-on');
-  yumeGcAvatarOverlayReposition();
-  const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
-  if (iframe && !iframe.dataset.yumeGcPatchObs) {
-    iframe.dataset.yumeGcPatchObs = '1';
-    try {
-      new ResizeObserver(() => yumeGcAvatarOverlayReposition()).observe(iframe);
-    } catch (e) {}
-  }
-}
-
-async function fetchGcThreadCount() {
-  const qs = new URLSearchParams({
-    website: 'yumelyrics',
-    uid: GC_THREAD_UID,
-    url: GC_PAGE_URL
-  });
-  try {
-    const res = await fetch('https://graphcomment.com/api/pub/numberOfComments?' + qs, { mode: 'cors' });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const n = json.count ?? json.comments ?? json.number ?? json.total ?? json;
-    const num = parseInt(n, 10);
-    return Number.isFinite(num) ? num : null;
-  } catch(e) { return null; }
-}
-
-async function pollGcThreadCount() {
-  if (_hasCommented) return;
-  const count = await fetchGcThreadCount();
-  if (count === null) return;
-  if (_gcCountBaseline === null) {
-    _gcCountBaseline = count;
-    _gcCountPollReady = true;
-    return;
-  }
-  if (count > _gcCountBaseline) markGcCommented();
-}
-
-(function startGcCountPoll() {
-  setTimeout(() => {
-    pollGcThreadCount();
-    setInterval(pollGcThreadCount, 8000);
-  }, 5000);
-})();
 
 function showCopyCommentToast() {
   if (_hasCommented || _isAdmin) return;
@@ -3340,7 +3204,7 @@ function hideCopyCommentToast() {
 }
 
 window.dismissCopyCommentToast = hideCopyCommentToast;
-window.__yumeMarkGcCommented = markGcCommented;
+window.__yumeMarkWalineCommented = markWalineCommented;
 
 function updateCopyGate() {
   const btn  = document.getElementById('copy-lyric-btn');
@@ -4703,114 +4567,40 @@ window.deleteCm = async cmId => {
 legacy comment UI removed */
 
 </script>
-<script type="text/javascript">
-(function(){
-  var mount = document.getElementById('graphcomment');
-  window.__semio__gcOnComment__semio__ = function() {
-    if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
-  };
-  window.__semio__onGcLoaded__semio__ = function() {
-    if (typeof yumeGcAvatarOverlayActivate === 'function') {
-      yumeGcAvatarOverlayActivate();
-      setTimeout(yumeGcAvatarOverlayActivate, 600);
-      setTimeout(yumeGcAvatarOverlayActivate, 1800);
-    }
-    setTimeout(function() {
-      var frame = document.querySelector('#graphcomment iframe');
-      if (frame) {
-        frame.setAttribute('allowtransparency', 'true');
-        frame.style.background = 'transparent';
-      }
-    }, 300);
-  };
-  (function() {
-    var gcMount = document.getElementById('graphcomment');
-    if (!gcMount) return;
-    function reorderAndActivate() {
-      var frame = gcMount.querySelector('iframe');
-      if (frame) {
-        frame.setAttribute('allowtransparency', 'true');
-        frame.style.background = 'transparent';
-      }
-      if (typeof yumeGcAvatarOverlayActivate === 'function') {
-        yumeGcAvatarOverlayActivate();
-        var patch = gcMount.querySelector('.yume-gc-avatar-patch');
-        if (patch && gcMount.lastChild !== patch) {
-          gcMount.appendChild(patch);
-        }
-      }
-    }
-    var obs = new MutationObserver(function(mutations) {
-      for (var i = 0; i < mutations.length; i++) {
-        var added = mutations[i].addedNodes;
-        for (var j = 0; j < added.length; j++) {
-          var node = added[j];
-          if (node.tagName === 'IFRAME' || (node.querySelector && node.querySelector('iframe'))) {
-            obs.disconnect();
-            setTimeout(reorderAndActivate, 200);
-            setTimeout(reorderAndActivate, 1000);
-            return;
-          }
-        }
-      }
-    });
-    obs.observe(gcMount, { childList: true, subtree: true });
-  })();
-  var _gcIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var _gcTextColor = _gcIsDark ? '#e8e2d9' : '#0a0812';
-  var _gcMutedColor = _gcIsDark ? '#7a7068' : '#8c8278';
-  var _gcBorderColor = _gcIsDark ? 'rgba(232,226,217,.1)' : 'rgba(10,8,18,.1)';
-  var __semio__params = {
-    graphcommentId: 'yumelyrics',
-    behaviour: {
-      uid: ${JSON.stringify(slug)}
-    },
-    customCSS: [
-      'body,html{background:transparent!important}',
-      '*{box-shadow:none!important}',
-      '.gc-widget,.gc-container,.gc-wrapper,[class*="gc-"]{background:transparent!important}',
-      'body{color:' + _gcTextColor + '!important}',
-      'a{color:' + _gcMutedColor + '!important}',
-      '[class*="border"],[class*="divider"]{border-color:' + _gcBorderColor + '!important}'
-    ].join('')
-  };
-  if (mount) {
-    __semio__params.target = mount;
+<script type="module">
+import { init } from 'https://unpkg.com/@waline/client/v3/dist/waline.js';
+init({
+  el: '#waline',
+  serverURL: 'https://yumelyrics-comment.vercel.app',
+  path: ${JSON.stringify('/lagu/' + slug)},
+  lang: 'id',
+  comment: true,
+  pageview: false,
+  reaction: false,
+  dark: 'html[data-theme="dark"]',
+  locale: {
+    placeholder: 'Tulis komentarmu di sini...',
+    sofa: 'Jadilah yang pertama berkomentar!',
+    submit: 'Kirim',
+    nick: 'Nama',
+    mail: 'Email',
+    link: 'Website',
+    preview: 'Pratinjau',
+    emoji: 'Emoji',
+    uploadImage: 'Upload Gambar',
+    seconds: 'detik yang lalu',
+    minutes: 'menit yang lalu',
+    hours: 'jam yang lalu',
+    days: 'hari yang lalu',
+    now: 'baru saja',
+    comment: 'Komentar',
+    reply: 'Balas',
+    more: 'Muat lebih banyak...',
+  },
+  afterPost: function() {
+    if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
   }
-  function __semio__onload() {
-    if (typeof __semio__gc_graphlogin === 'function') {
-      __semio__gc_graphlogin(__semio__params);
-    }
-    var origShow = window.__semio__showGraphCommentOverlay;
-    if (typeof origShow === 'function' && !origShow.__yumePatched) {
-      window.__semio__showGraphCommentOverlay = function() {
-        var out = origShow.apply(this, arguments);
-        setTimeout(function() {
-          if (typeof yumeGcAvatarOverlayActivate === 'function') yumeGcAvatarOverlayActivate();
-        }, 500);
-        return out;
-      };
-      window.__semio__showGraphCommentOverlay.__yumePatched = true;
-    }
-    if (!window.__yumeGcPatchResize) {
-      window.__yumeGcPatchResize = true;
-      window.addEventListener('resize', function() {
-        if (typeof yumeGcAvatarOverlayReposition === 'function') yumeGcAvatarOverlayReposition();
-      }, { passive: true });
-    }
-  }
-  if (typeof __semio__gc_graphlogin === 'function') {
-    __semio__onload();
-    return;
-  }
-  var gc = document.createElement('script');
-  gc.type = 'text/javascript';
-  gc.async = true;
-  gc.defer = true;
-  gc.onload = __semio__onload;
-  gc.src = 'https://integration.graphcomment.com/gc_graphlogin.js?' + Date.now();
-  (document.head || document.body).appendChild(gc);
-})();
+});
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
