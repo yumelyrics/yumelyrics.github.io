@@ -4662,7 +4662,7 @@ window._walineAppInstance = init({
           setTimeout(function() {
             var ta = document.querySelector('#waline .wl-editor textarea');
             if (!ta) { if (n < 20) tryCleanup(n + 1); return; }
-            var escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var escapedToken = token.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
             var pat = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + escapedToken + '\\)\\n?', 'g');
             var cleaned = ta.value.replace(pat, '');
             if (cleaned !== ta.value) {
