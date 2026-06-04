@@ -4580,15 +4580,13 @@ const walineApp = init({
   pageview: false,
   reaction: false,
   dark: 'html[data-theme="dark"]',
-  meta: ['nick', 'mail'],
+  meta: ['nick'],
   requiredMeta: [],
-  imageUploader: false,
   locale: {
     placeholder: 'Tulis komentarmu di sini...',
     sofa: 'Jadilah yang pertama berkomentar!',
     submit: 'Kirim',
     nick: 'Nama',
-    mail: 'Email',
     preview: 'Pratinjau',
     comment: 'Komentar',
     reply: 'Balas',
@@ -4605,19 +4603,21 @@ const walineApp = init({
   },
 });
 (function() {
-  var walineEl = document.getElementById('waline');
-  if (!walineEl) return;
-  var _baseline = null;
-  var obs = new MutationObserver(function() {
-    if (window._hasCommented) { obs.disconnect(); return; }
-    var items = walineEl.querySelectorAll('.wl-item');
-    if (_baseline === null) { _baseline = items.length; return; }
-    if (items.length > _baseline) {
-      if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
-      obs.disconnect();
-    }
-  });
-  obs.observe(walineEl, { childList: true, subtree: true });
+  var _orig = window.fetch;
+  window.fetch = function(url, opts) {
+    var p = _orig.apply(this, arguments);
+    try {
+      var u = typeof url === 'string' ? url : (url && url.url) || '';
+      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
+        p.then(function(res) {
+          if (res && res.ok && !window._hasCommented) {
+            if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
+          }
+        }).catch(function() {});
+      }
+    } catch(e) {}
+    return p;
+  };
 })();
 </script>
 <script>
