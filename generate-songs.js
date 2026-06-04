@@ -49,6 +49,7 @@ const firebaseConfig = {
 };
 
 const BASE_URL = 'https://yumelyrics.my.id';
+const DEFAULT_COMMENT_PROFILE_URL = `${BASE_URL}/profile-comment.jpg`;
 const MANIFEST_PATH = '.yume-generate-manifest.json';
 
 /** Hash isi lagu — dipakai untuk skip generate jika tidak berubah */
@@ -2203,7 +2204,7 @@ ${(()=>{
       <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
       <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama & avatar akan tampil di komentar. Kosongkan untuk pakai foto Google.</div>
+    <div class="ep-note">Nama tampil di profil situs. Foto kosong = avatar default YumeSubs. Komentar GraphComment memakai akun/profil di panel GraphComment.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -3174,6 +3175,8 @@ async function checkBanStatus(uid) {
   } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
 }
 
+const DEFAULT_COMMENT_PROFILE = ${JSON.stringify(DEFAULT_COMMENT_PROFILE_URL)};
+try { window.__yumeDefaultCommentProfile = DEFAULT_COMMENT_PROFILE; } catch(e) {}
 const GC_THREAD_UID = ${JSON.stringify(slug)};
 const GC_PAGE_URL = ${JSON.stringify(BASE_URL + '/lagu/' + slug)};
 const GC_COMMENT_KEY = 'ym_gc2_' + GC_THREAD_UID;
@@ -3281,6 +3284,7 @@ function hideCopyCommentToast() {
 }
 
 window.dismissCopyCommentToast = hideCopyCommentToast;
+window.__yumeMarkGcCommented = markGcCommented;
 
 function updateCopyGate() {
   const btn  = document.getElementById('copy-lyric-btn');
@@ -3654,12 +3658,18 @@ function imgbbDirectUrl(json){
   return d.display_url || (d.image && d.image.url) || d.url || '';
 }
 
+function resolveCommentProfilePhoto(photoURL) {
+  const url = String(photoURL || '').trim();
+  if (url && !url.startsWith('data:') && /^https?:\\/\\//i.test(url)) return url;
+  return DEFAULT_COMMENT_PROFILE;
+}
+
 function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
   if(!wrap) return;
   const initial = (displayName||'U')[0].toUpperCase();
   wrap.innerHTML = '';
-  const url = String(photoURL||'').trim();
-  if(url && !url.startsWith('data:') && /^https?:\\/\\//i.test(url)){
+  const url = resolveCommentProfilePhoto(photoURL);
+  if(url){
     const img = document.createElement('img');
     img.className = imgClass;
     img.src = url;
@@ -4636,12 +4646,29 @@ legacy comment UI removed */
 </script>
 <script type="text/javascript">
 (function(){
+  var GC_DEFAULT_AVATAR = ${JSON.stringify(DEFAULT_COMMENT_PROFILE_URL)};
   var isMobileGc = window.matchMedia('(max-width: 900px)').matches;
   var mount = document.getElementById('graphcomment');
+  window.__semio__gcOnComment__semio__ = function() {
+    if (window.__yumeMarkGcCommented) window.__yumeMarkGcCommented();
+  };
+  window.__semio__onGcLoaded__semio__ = function() {
+    var iframe = document.querySelector('#graphcomment iframe, #gc-iframe');
+    if (!iframe || !iframe.contentWindow) return;
+    try {
+      iframe.contentWindow.postMessage(JSON.stringify({
+        info: 'cmd',
+        cmd: 'gcSetDefaultAvatar',
+        args: [GC_DEFAULT_AVATAR]
+      }), '*');
+    } catch(e) {}
+  };
   var __semio__params = {
     graphcommentId: 'yumelyrics',
     behaviour: {
-      uid: ${JSON.stringify(slug)}
+      uid: ${JSON.stringify(slug)},
+      defaultUserPicture: GC_DEFAULT_AVATAR,
+      defaultAvatar: GC_DEFAULT_AVATAR
     }
   };
   if (isMobileGc) {
