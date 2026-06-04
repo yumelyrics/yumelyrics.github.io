@@ -1442,8 +1442,8 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 
 /* ── COMMENTS SECTION (Waline) ── */
 .comments-section{padding:5rem 3.5rem;border-top:1px solid rgba(10,8,18,.08)}
-#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:transparent;--waline-bgcolor-hover:var(--mist);--waline-color:var(--ink);--waline-border-radius:0;--waline-avatar-size:36px;--waline-font-family:var(--sans)}
-[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:transparent;--waline-bgcolor-hover:rgba(232,226,217,.05)}
+#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
+[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -4569,11 +4569,10 @@ legacy comment UI removed */
 </script>
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client/v3/dist/waline.js';
-init({
+const walineApp = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
   path: ${JSON.stringify('/lagu/' + slug)},
-  lang: 'id',
   comment: true,
   pageview: false,
   reaction: false,
@@ -4586,20 +4585,23 @@ init({
     mail: 'Email',
     link: 'Website',
     preview: 'Pratinjau',
-    emoji: 'Emoji',
-    uploadImage: 'Upload Gambar',
-    seconds: 'detik yang lalu',
-    minutes: 'menit yang lalu',
-    hours: 'jam yang lalu',
-    days: 'hari yang lalu',
-    now: 'baru saja',
     comment: 'Komentar',
     reply: 'Balas',
     more: 'Muat lebih banyak...',
+    admin: 'Admin',
+    word: '{0} kata',
+    wordHint: 'Komentar harus antara {0} dan {1} kata',
+    anonymous: 'Tamu',
+    level0: 'Pendatang',
+    level1: 'Pengunjung',
+    level2: 'Reguler',
+    level3: 'Veteran',
+    level4: 'Master',
+    level5: 'Legenda',
   },
-  afterPost: function() {
-    if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
-  }
+});
+document.addEventListener('waline:comment', function() {
+  if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
 });
 </script>
 <script>
