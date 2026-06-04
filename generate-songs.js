@@ -3272,25 +3272,14 @@ function yumeGcAvatarOverlayReposition() {
   }
 }
 
-async function yumeGcShouldShowAvatarPatch() {
-  try {
-    const res = await fetch('https://graphcomment.com/api/users/me?website=yumelyrics&plateform=front', { credentials: 'include' });
-    if (!res.ok) return true;
-    const u = await res.json();
-    const pic = u && (u.picture || u.avatar || (u.profile && u.profile.picture) || '');
-    const picStr = String(pic || '').trim();
-    if (!picStr) return true;
-    if (/default|placeholder|no-avatar|anonymous/i.test(picStr)) return true;
-    if (/graphcomment\\.com\\/.*\\/(default|guest|anonymous)/i.test(picStr)) return true;
-    return false;
-  } catch (e) { return true; }
-}
-
-async function yumeGcAvatarOverlayActivate() {
-  if (!(await yumeGcShouldShowAvatarPatch())) return;
+function yumeGcAvatarOverlayActivate() {
   const mount = document.getElementById('graphcomment');
   if (!mount) return;
-  yumeGcAvatarOverlayEnsure();
+  const patch = yumeGcAvatarOverlayEnsure();
+  if (patch) {
+    const photoToUse = _customPhotoURL || DEFAULT_COMMENT_PROFILE;
+    if (patch.src !== photoToUse) patch.src = photoToUse;
+  }
   mount.classList.add('yume-gc-avatar-patch-on');
   yumeGcAvatarOverlayReposition();
   const iframe = document.querySelector('#graphcomment #gc-iframe, #graphcomment iframe');
@@ -3482,15 +3471,13 @@ async function applyAuthLoggedIn(user, gen){
     const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
     const bubble = document.getElementById('nav-avatar-bubble');
     if(bubble) bubble.classList.toggle('is-banned', _isBanned);
-    if(_customPhotoURL){
-      renderAvatarEl(
-        document.getElementById('nav-avatar-wrap'),
-        _customPhotoURL,
-        displayName,
-        'nav-avatar',
-        'nav-avatar-placeholder'
-      );
-    }
+    renderAvatarEl(
+      document.getElementById('nav-avatar-wrap'),
+      _customPhotoURL,
+      displayName,
+      'nav-avatar',
+      'nav-avatar-placeholder'
+    );
     if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
     await updateAdminSongUI();
   }
