@@ -1101,7 +1101,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
-<link rel="stylesheet" href="https://unpkg.com/@waline/client/v3/dist/waline.css">
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -4568,7 +4568,7 @@ legacy comment UI removed */
 
 </script>
 <script type="module">
-import { init } from 'https://unpkg.com/@waline/client/v3/dist/waline.js';
+import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
 const walineApp = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
