@@ -1446,6 +1446,14 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 [data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
 #waline .wl-browser,#waline .wl-os{display:none!important}
 #waline .wl-content img{max-width:100%;height:auto;display:block}
+/* ── Inline Spoiler ── */
+.cm-sp{background:#1a1625;color:transparent;border-radius:3px;padding:0 4px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline}
+.cm-sp:hover{background:#2d2440}
+.cm-sp.cm-sp-open{background:#ede8f8;color:inherit;cursor:default}
+/* ── Spoiler button in Waline toolbar ── */
+#yume-spoiler-btn{background:none;border:1px solid rgba(10,8,18,.18);border-radius:4px;padding:3px 8px;font-size:.72rem;font-family:inherit;color:var(--ash,#666);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,background .15s,color .15s;margin-left:4px;vertical-align:middle}
+#yume-spoiler-btn:hover{border-color:var(--rose,#e85d7a);color:var(--rose,#e85d7a);background:rgba(232,93,122,.05)}
+[data-theme="dark"] #yume-spoiler-btn{border-color:rgba(232,226,217,.22);color:var(--ash,#aaa)}
 #waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
@@ -4572,6 +4580,9 @@ legacy comment UI removed */
 </script>
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
+/* ── Gambar: token map (bukan base64 di textarea) ── */
+var _yumeImgMap = {};
+var _yumeImgCount = 0;
 window._walineAppInstance = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
@@ -4587,6 +4598,11 @@ window._walineAppInstance = init({
       var reader = new FileReader();
       reader.onload = function(e) {
         var dataUrl = e.target.result;
+        /* Simpan ke map, resolve token pendek bukan base64 */
+        _yumeImgCount++;
+        var token = 'yume_img_' + _yumeImgCount;
+        _yumeImgMap[token] = dataUrl;
+        /* Tampilkan thumbnail di panel pratinjau */
         var panel = document.getElementById('yume-img-preview');
         if (!panel) {
           panel = document.createElement('div');
@@ -4599,15 +4615,19 @@ window._walineAppInstance = init({
             else wEl.prepend(panel);
           }
         }
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
+        wrap.dataset.yumeToken = token;
         var img = document.createElement('img');
         img.src = dataUrl;
         img.title = file.name;
         img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid #93c5fd;display:block;cursor:pointer;';
         img.onclick = function() {
-          if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
+          if (confirm('Hapus gambar ini?')) {
+            delete _yumeImgMap[token];
+            wrap.remove();
+          }
         };
-        var wrap = document.createElement('div');
-        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
         var idx = panel.children.length + 1;
         var lbl = document.createElement('div');
         lbl.style.cssText = 'font-size:10px;color:#1d4ed8;font-weight:700;background:#eff6ff;border-radius:3px;padding:1px 5px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
@@ -4615,7 +4635,8 @@ window._walineAppInstance = init({
         wrap.appendChild(img);
         wrap.appendChild(lbl);
         panel.appendChild(wrap);
-        resolve(dataUrl);
+        /* Kembalikan token pendek → Waline insert ![image](yume_img_N) */
+        resolve(token);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -4644,19 +4665,111 @@ window._walineAppInstance = init({
 (function() {
   var _orig = window.fetch;
   window.fetch = function(url, opts) {
-    var p = _orig.apply(this, arguments);
     try {
       var u = typeof url === 'string' ? url : (url && url.url) || '';
       if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
+        /* Ganti token yume_img_N dengan dataUrl asli sebelum dikirim */
+        if (opts.body && typeof opts.body === 'string' && Object.keys(_yumeImgMap).length > 0) {
+          var body = opts.body;
+          for (var tok in _yumeImgMap) {
+            body = body.split(tok).join(_yumeImgMap[tok]);
+          }
+          opts = Object.assign({}, opts, { body: body });
+        }
+      }
+    } catch(e) {}
+    var p = _orig.call(this, url, opts);
+    try {
+      var u2 = typeof url === 'string' ? url : (url && url.url) || '';
+      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u2.indexOf('/api/comment') !== -1) {
         p.then(function(res) {
           if (res && res.ok && !window._hasCommented) {
             if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
           }
+          /* Reset setelah komentar terkirim */
+          _yumeImgMap = {};
+          _yumeImgCount = 0;
+          var panel = document.getElementById('yume-img-preview');
+          if (panel) panel.remove();
         }).catch(function() {});
       }
     } catch(e) {}
     return p;
   };
+})();
+/* ── Spoiler: inject tombol ke toolbar Waline + render ||teks|| di komentar ── */
+(function() {
+  function _yumeProcessNode(node) {
+    if (node.nodeType === 3) {
+      var txt = node.textContent;
+      if (txt.indexOf('||') === -1) return;
+      var parts = txt.split(/\|\|/);
+      if (parts.length < 3) return;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < parts.length; i++) {
+        if (i % 2 === 0) {
+          if (parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+        } else {
+          var sp = document.createElement('span');
+          sp.className = 'cm-sp';
+          sp.textContent = parts[i];
+          sp.onclick = function() { this.classList.toggle('cm-sp-open'); };
+          frag.appendChild(sp);
+        }
+      }
+      node.parentNode.replaceChild(frag, node);
+      return;
+    }
+    if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+      Array.from(node.childNodes).forEach(_yumeProcessNode);
+    }
+  }
+  function _yumeApplySpoilerRender(root) {
+    (root || document).querySelectorAll('.wl-content').forEach(function(el) {
+      if (el.dataset.yumeSp) return;
+      el.dataset.yumeSp = '1';
+      _yumeProcessNode(el);
+    });
+  }
+  function _yumeInjectSpoilerBtn() {
+    if (document.getElementById('yume-spoiler-btn')) return;
+    /* Cari tombol toolbar Waline (emoji / gambar) */
+    var toolbar = document.querySelector('#waline .wl-action');
+    if (!toolbar) return;
+    var btn = document.createElement('button');
+    btn.id = 'yume-spoiler-btn';
+    btn.type = 'button';
+    btn.title = 'Sembunyikan teks yang dipilih sebagai spoiler (||teks||)';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Spoiler';
+    btn.onclick = function() {
+      var ta = document.querySelector('#waline .wl-editor textarea');
+      if (!ta) return;
+      var s = ta.selectionStart, e2 = ta.selectionEnd;
+      var val = ta.value;
+      var sel = val.slice(s, e2).trim() || 'teks spoiler';
+      var wrapped = '||' + sel + '||';
+      var newVal = val.slice(0, s) + wrapped + val.slice(e2);
+      /* Trigger React controlled input */
+      var desc = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+      desc.set.call(ta, newVal);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      ta.focus();
+      setTimeout(function() { ta.setSelectionRange(s + 2, s + 2 + sel.length); }, 0);
+    };
+    toolbar.appendChild(btn);
+  }
+  if (window.MutationObserver) {
+    var _wObs = new MutationObserver(function() {
+      _yumeInjectSpoilerBtn();
+      _yumeApplySpoilerRender();
+    });
+    function _startObs() {
+      var wEl = document.getElementById('waline');
+      if (wEl) _wObs.observe(wEl, { childList: true, subtree: true });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _startObs);
+    else _startObs();
+  }
 })();
 (function() {
   var _path = ${JSON.stringify('/lagu/' + slug)};
