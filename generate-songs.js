@@ -1099,9 +1099,9 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}">
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <script type="application/ld+json">${schema}</script>
 ${FONT_HEAD}
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -1446,21 +1446,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 [data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
 #waline .wl-browser,#waline .wl-os{display:none!important}
 #waline .wl-content img{max-width:100%;height:auto;display:block}
-/* ── Inline Spoiler ── */
-.cm-sp{background:#1a1625;color:transparent;border-radius:3px;padding:0 4px;cursor:pointer;user-select:none;transition:background .2s,color .2s;display:inline}
-.cm-sp:hover{background:#2d2440}
-.cm-sp.cm-sp-open{background:#ede8f8;color:inherit;cursor:default}
-/* ── Spoiler button in Waline toolbar ── */
-#yume-spoiler-btn{background:none;border:1px solid rgba(10,8,18,.18);border-radius:4px;padding:3px 8px;font-size:.72rem;font-family:inherit;color:var(--ash,#666);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,background .15s,color .15s;margin-left:4px;vertical-align:middle}
-#yume-spoiler-btn:hover{border-color:var(--rose,#e85d7a);color:var(--rose,#e85d7a);background:rgba(232,93,122,.05)}
-[data-theme="dark"] #yume-spoiler-btn{border-color:rgba(232,226,217,.22);color:var(--ash,#aaa)}
-#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]),#waline .wl-input[name="mail"],#waline label[for*="mail"],#waline .wl-header-item:has(input[name="mail"]){display:none!important}
-/* ── Image preview panel ── */
-#yume-img-preview{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 10px}
-.yip-item{position:relative;width:80px;height:80px;flex-shrink:0}
-.yip-item img{width:80px;height:80px;object-fit:cover;border-radius:6px;display:block;border:1px solid rgba(10,8,18,.12)}
-.yip-x{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#d63031;color:#fff;border:2px solid #fff;cursor:pointer;font-size:13px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.22)}
-.yip-x:hover{background:#c0392b}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2097,10 +2083,8 @@ ${(()=>{
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
       <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
-      <button id="yume-spoiler-btn" type="button" onclick="window._yumeInsertSpoiler()" title="Sisipkan teks spoiler di posisi kursor pada kotak komentar">||spoiler||</button>
     </div>
   </div>
-  <div id="yume-img-preview"></div>
   <div id="waline"></div>
 </section>
 
@@ -4200,25 +4184,6 @@ async function deleteReadNotifs(){
 async function rcm(){ /* GraphComment */ }
 
 void 0; /*
-  const el = document.getElementById('cmlist');
-  if(!el) return;
-  el.innerHTML = '<div class="nocm">Memuat komentar...</div>';
-  const ccEl = document.getElementById('cc-count');
-  const ccWrap = document.getElementById('cc-count-wrap');
-  try {
-    const q = query(collection(db,'comments'), where('songId','==',SONG_ID), orderBy('ts','asc'));
-    const snap = await getDocs(q);
-    const allDocs = snap.docs.map(d=>({id:d.id,...d.data()}));
-    // Cek apakah user sudah pernah komentar di lagu ini (untuk copy gate)
-    if (!_hasCommented && _currentUser) {
-      if (allDocs.some(c => c.uid === _currentUser.uid)) {
-        _hasCommented = true;
-        try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(ex) {}
-        updateCopyGate();
-      }
-    }
-    const topCount = allDocs.filter(c=>!c.parentId).length;
-    if(ccWrap) ccWrap.style.display = topCount > 0 ? '' : 'none';
     if(ccEl) ccEl.textContent = topCount >= 1000 ? (topCount/1000).toFixed(1).replace(/\.0$/,'')+'k' : topCount;
     if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
 
@@ -4247,6 +4212,7 @@ void 0; /*
       } catch(e){}
 
       // Role badge: pakai localCountMap dari allDocs — tidak perlu query count ke seluruh koleksi
+      // Query where('uid','==',uid) di comments/story_comments sangat lambat tanpa composite index
       if(_roleCache[uid] !== undefined){
         roleMap[uid] = _roleCache[uid];
       } else {
@@ -4281,22 +4247,15 @@ void 0; /*
     if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
     el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
     startBanTicker();
-    if(typeof _resolveCustomRoleBadges === 'function') _resolveCustomRoleBadges();
+    _resolveCustomRoleBadges(); // resolve CR: custom role badges async
+    // Load thumbs untuk semua komentar + reply
+    const allIds = enriched.map(c => c.id);
+    loadCommentThumbs(allIds);
   }catch(e){
     console.error('[rcm] error:', e.code, e.message, e);
-    if(el) el.innerHTML='<div class="nocm">Gagal memuat komentar. Coba refresh halaman.</div>';
-  }
 */
 
 void 0; /* legacy comment UI removed
-window.toggleReplyForm = function(key) {
-  const form = document.getElementById('rf-'+key);
-  if(form) form.classList.toggle('open');
-};
-window.doCommentThumb = function(cmId, btn) {
-  // fitur thumb akan ditambahkan di versi berikutnya
-};
-
 document.getElementById('cmlist').addEventListener('click', e => {
   // Hapus komentar
   const delBtn = e.target.closest('[data-cmid]');
@@ -4613,174 +4572,113 @@ legacy comment UI removed */
 </script>
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
-
-/* ── Spoiler: sisipkan ||teks|| di kursor textarea Waline ── */
-window._yumeInsertSpoiler = function() {
-  var ta = document.querySelector('#waline textarea');
-  if (!ta) { ta = document.querySelector('#waline .wl-editor textarea'); }
-  if (!ta) return;
-  ta.focus();
-  var start = ta.selectionStart, end = ta.selectionEnd;
-  var sel = ta.value.slice(start, end) || 'spoiler';
-  var before = ta.value.slice(0, start);
-  var after = ta.value.slice(end);
-  var inserted = '||' + sel + '||';
-  /* Gunakan setter asli agar React/Preact mendeteksi perubahan */
-  var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-  nd.set.call(ta, before + inserted + after);
-  ta.dispatchEvent(new Event('input', { bubbles: true }));
-  var pos = start + inserted.length;
-  ta.setSelectionRange(pos, pos);
-  ta.focus();
-};
-
-/* ── Resize gambar → base64 kecil (maks 700px, JPEG q0.75) ── */
-function yumeResizeToDataUrl(file) {
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = function(ev) {
-      var img = new Image();
-      img.onerror = reject;
-      img.onload = function() {
-        var MAX = 700, w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
-          else        { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        var c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(c.toDataURL('image/jpeg', 0.75));
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-/* ── Tampilkan thumbnail + tombol X (hapus dari textarea & panel) ── */
-function yumeShowImgPreview(dataUrl, filename) {
-  var panel = document.getElementById('yume-img-preview');
-  if (!panel) return;
-  var item = document.createElement('div');
-  item.className = 'yip-item';
-  var imgEl = document.createElement('img');
-  imgEl.src = dataUrl;
-  imgEl.alt = filename;
-  var xBtn = document.createElement('button');
-  xBtn.type = 'button';
-  xBtn.className = 'yip-x';
-  xBtn.textContent = '\u00d7';
-  xBtn.title = 'Hapus gambar';
-  xBtn.onclick = function() {
-    /* hapus markdown gambar dari textarea menggunakan indexOf (bukan regex)
-       karena data URL terlalu panjang untuk regex yang aman */
-    var ta = document.querySelector('#waline textarea');
-    if (ta) {
-      var val = ta.value;
-      var idx = val.indexOf(dataUrl);
-      if (idx !== -1) {
-        /* temukan awal ![  sebelum data URL */
-        var mdStart = val.lastIndexOf('![', idx);
-        /* temukan akhir ) sesudah data URL */
-        var mdEnd = val.indexOf(')', idx + dataUrl.length) + 1;
-        if (mdStart !== -1 && mdEnd > mdStart) {
-          var before = val.slice(0, mdStart).replace(/\n+$/, '');
-          var after = val.slice(mdEnd).replace(/^\n+/, '');
-          var cleaned = before + (before.length && after.length ? '\n' : '') + after;
-          var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-          nd.set.call(ta, cleaned);
-          ta.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      }
-    }
-    item.remove();
-  };
-  item.appendChild(imgEl);
-  item.appendChild(xBtn);
-  panel.appendChild(item);
-}
-
 window._walineAppInstance = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
-  path: '/lagu/${slug}',
+  path: ${JSON.stringify('/lagu/' + slug)},
+  comment: true,
+  pageview: false,
+  reaction: false,
+  dark: 'html[data-theme="dark"]',
+  meta: ['nick'],
+  requiredMeta: [],
+  imageUploader: function(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var panel = document.getElementById('yume-img-preview');
+        if (!panel) {
+          panel = document.createElement('div');
+          panel.id = 'yume-img-preview';
+          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
+          var wEl = document.getElementById('waline');
+          if (wEl) {
+            var editor = wEl.querySelector('.wl-editor');
+            if (editor) editor.appendChild(panel);
+            else wEl.prepend(panel);
+          }
+        }
+        var img = document.createElement('img');
+        img.src = dataUrl;
+        img.title = file.name;
+        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer;';
+        img.onclick = function() {
+          if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
+        };
+        panel.appendChild(img);
+        resolve(dataUrl);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
   locale: {
-    placeholder: 'Tulis komentarmu di sini\u2026 (bebas sebagai tamu)',
-    sofa: 'Belum ada komentar. Jadi yang pertama!',
+    placeholder: 'Tulis komentarmu di sini...',
+    sofa: 'Jadilah yang pertama berkomentar!',
     submit: 'Kirim',
+    nick: 'Nama',
+    preview: 'Pratinjau',
     comment: 'Komentar',
     reply: 'Balas',
-    preview: 'Pratinjau',
-    logout: 'Keluar',
+    more: 'Muat lebih banyak...',
+    admin: 'Admin',
+    word: '{0} kata',
+    anonymous: 'Tamu',
+    level0: 'Pendatang',
+    level1: 'Pengunjung',
+    level2: 'Reguler',
+    level3: 'Veteran',
+    level4: 'Master',
+    level5: 'Legenda',
   },
-  dark: '[data-theme="dark"]',
-  emoji: ['//unpkg.com/@waline/emojis@1.2.0/bmoji'],
-  search: false,
-  copyright: false,
-  reaction: false,
-  /* imageUploader mengembalikan data URL langsung → Waline simpan ke state-nya
-     sendiri → gambar muncul di komentar setelah diposting. Thumbnail di panel
-     preview hanya untuk UX (bukan sumber kebenaran). */
-  imageUploader: function(file) {
-    return yumeResizeToDataUrl(file).then(function(dataUrl) {
-      var filename = file.name || 'gambar.jpg';
-      yumeShowImgPreview(dataUrl, filename);
-      return dataUrl;
-    });
-  },
-  texRenderer: false,
 });
-
-/* ── Render ||spoiler|| di komentar yang sudah diposting ──
-   Dilakukan sekali setelah Waline selesai render awal,
-   lalu pantau penambahan komentar baru. Tidak memodifikasi
-   node yang sedang aktif di virtual DOM Preact. ── */
-function yumeApplySpoilers(root) {
-  root.querySelectorAll('.wl-content p, .wl-content li').forEach(function(el) {
-    Array.from(el.childNodes).forEach(function(node) {
-      if (node.nodeType !== 3) return; /* hanya text node */
-      var txt = node.textContent;
-      if (txt.indexOf('||') === -1) return;
-      var parts = txt.split(/(\\|\\|[^|]+\\|\\|)/);
-      if (parts.length < 2) return;
-      var frag = document.createDocumentFragment();
-      parts.forEach(function(p) {
-        if (/^\\|\\|.+\\|\\|$/.test(p)) {
-          var sp = document.createElement('span');
-          sp.className = 'cm-sp';
-          sp.textContent = p.slice(2, -2);
-          sp.onclick = function() { sp.classList.toggle('cm-sp-open'); };
-          frag.appendChild(sp);
-        } else {
-          frag.appendChild(document.createTextNode(p));
-        }
-      });
-      node.parentNode.replaceChild(frag, node);
-    });
-  });
-}
-
-(function watchWalineComments() {
-  var iv = setInterval(function() {
-    var list = document.querySelector('#waline .wl-comment-list');
-    if (!list) return;
-    clearInterval(iv);
-    /* proses komentar yang sudah ada */
-    yumeApplySpoilers(list);
-    /* pantau penambahan komentar baru */
-    var prevCount = list.querySelectorAll('.wl-comment').length;
-    new MutationObserver(function(mutations) {
-      var newCount = list.querySelectorAll('.wl-comment').length;
-      if (newCount > prevCount) {
-        prevCount = newCount;
-        /* tunda sedikit agar Preact selesai commit sebelum kita sentuh DOM */
-        setTimeout(function() { yumeApplySpoilers(list); }, 80);
-        if (typeof window.markWalineCommented === 'function') window.markWalineCommented();
+(function() {
+  var _orig = window.fetch;
+  window.fetch = function(url, opts) {
+    var p = _orig.apply(this, arguments);
+    try {
+      var u = typeof url === 'string' ? url : (url && url.url) || '';
+      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
+        p.then(function(res) {
+          if (res && res.ok && !window._hasCommented) {
+            if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
+          }
+        }).catch(function() {});
       }
-    }).observe(list, { childList: true, subtree: false });
-  }, 500);
+    } catch(e) {}
+    return p;
+  };
+})();
+(function() {
+  var _path = ${JSON.stringify('/lagu/' + slug)};
+  var _api = 'https://yumelyrics-comment.vercel.app/api/comment?path=' + encodeURIComponent(_path) + '&pageSize=1&page=1&lang=id';
+  var _knownCount = null;
+  function _fetchCount() {
+    if (document.hidden) return;
+    fetch(_api).then(function(r){ return r.json(); }).then(function(d) {
+      var cnt = d && typeof d.count === 'number' ? d.count : null;
+      if (cnt === null) return;
+      if (_knownCount === null) { _knownCount = cnt; return; }
+      if (cnt > _knownCount) {
+        _knownCount = cnt;
+        var existing = document.getElementById('yume-rt-banner');
+        if (existing) return;
+        var banner = document.createElement('div');
+        banner.id = 'yume-rt-banner';
+        banner.style.cssText = 'cursor:pointer;padding:8px 16px;background:var(--rose,#e85d7a);color:#fff;border-radius:8px;font-size:.82rem;text-align:center;margin-bottom:12px;transition:opacity .3s;';
+        banner.textContent = 'Ada komentar baru! Klik untuk memuat.';
+        banner.onclick = function() {
+          banner.remove();
+          if (window._walineAppInstance) window._walineAppInstance.update();
+        };
+        var wEl = document.getElementById('waline');
+        if (wEl) wEl.parentNode.insertBefore(banner, wEl);
+      }
+    }).catch(function(){});
+  }
+  setTimeout(_fetchCount, 5000);
+  setInterval(_fetchCount, 30000);
 })();
 </script>
 <script>
