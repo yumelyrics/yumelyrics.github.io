@@ -4667,7 +4667,7 @@ function yumeCleanToken(token, n) {
   setTimeout(function() {
     var ta = document.querySelector('#waline textarea');
     if (!ta) { if (n < 25) yumeCleanToken(token, n + 1); return; }
-    var esc = token.replace(/[-.*+?^${}()|[\]\\]/g, '\\$&');
+    var esc = token.replace(/[-.*+?^\${}()|[\]\\]/g, '\\$&');
     var re = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + esc + '\\)\\n?', 'g');
     var cleaned = ta.value.replace(re, '');
     if (cleaned !== ta.value) {
