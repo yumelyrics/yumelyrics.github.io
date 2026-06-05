@@ -1454,7 +1454,13 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 #yume-spoiler-btn{background:none;border:1px solid rgba(10,8,18,.18);border-radius:4px;padding:3px 8px;font-size:.72rem;font-family:inherit;color:var(--ash,#666);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,background .15s,color .15s;margin-left:4px;vertical-align:middle}
 #yume-spoiler-btn:hover{border-color:var(--rose,#e85d7a);color:var(--rose,#e85d7a);background:rgba(232,93,122,.05)}
 [data-theme="dark"] #yume-spoiler-btn{border-color:rgba(232,226,217,.22);color:var(--ash,#aaa)}
-#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]),#waline .wl-input[name="mail"],#waline label[for*="mail"],#waline .wl-header-item:has(input[name="mail"]){display:none!important}
+/* ── Image preview panel ── */
+#yume-img-preview{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 10px}
+.yip-item{position:relative;width:80px;height:80px;flex-shrink:0}
+.yip-item img{width:80px;height:80px;object-fit:cover;border-radius:6px;display:block;border:1px solid rgba(10,8,18,.12)}
+.yip-x{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#d63031;color:#fff;border:2px solid #fff;cursor:pointer;font-size:13px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.22)}
+.yip-x:hover{background:#c0392b}
 .comment-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(10,8,18,.08)}
 .comment-heading{font-family:var(--serif);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);line-height:1.2}
 .comment-desc{font-size:.82rem;line-height:1.8;color:var(--ash);font-weight:400}
@@ -2095,6 +2101,7 @@ ${(()=>{
     </div>
   </div>
   <div id="waline"></div>
+  <div id="yume-img-preview"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -4627,8 +4634,54 @@ window._yumeInsertSpoiler = function() {
   ta.focus();
 };
 
-/* ── Upload gambar: resize → data URL (base64 kecil, maks 700px / q0.75) ── */
-function yumeResizeAndUpload(file) {
+/* ── State gambar pending (belum dimasukkan ke komentar) ── */
+var _yumeImgCount = 0;
+var _yumeImgPending = []; /* [{token, dataUrl, filename}] */
+
+/* ── Tampilkan thumbnail gambar + tombol X ── */
+function yumeShowImgPreview(imgData) {
+  var panel = document.getElementById('yume-img-preview');
+  if (!panel) return;
+  var item = document.createElement('div');
+  item.className = 'yip-item';
+  item.dataset.token = imgData.token;
+  var imgEl = document.createElement('img');
+  imgEl.src = imgData.dataUrl;
+  imgEl.alt = imgData.filename;
+  var xBtn = document.createElement('button');
+  xBtn.type = 'button';
+  xBtn.className = 'yip-x';
+  xBtn.textContent = '\u00d7';
+  xBtn.title = 'Hapus gambar';
+  xBtn.onclick = function() {
+    _yumeImgPending = _yumeImgPending.filter(function(p) { return p.token !== imgData.token; });
+    item.remove();
+  };
+  item.appendChild(imgEl);
+  item.appendChild(xBtn);
+  panel.appendChild(item);
+}
+
+/* ── Hapus token pendek dari textarea setelah Waline memasukkannya ── */
+function yumeCleanToken(token, n) {
+  setTimeout(function() {
+    var ta = document.querySelector('#waline textarea');
+    if (!ta) { if (n < 25) yumeCleanToken(token, n + 1); return; }
+    var esc = token.replace(/[-.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + esc + '\\)\\n?', 'g');
+    var cleaned = ta.value.replace(re, '');
+    if (cleaned !== ta.value) {
+      var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+      nd.set.call(ta, cleaned);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    } else if (n < 25) {
+      yumeCleanToken(token, n + 1);
+    }
+  }, 80);
+}
+
+/* ── Resize gambar → base64 (maks 700px, JPEG q0.75) ── */
+function yumeResizeToDataUrl(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
     reader.onerror = reject;
@@ -4636,22 +4689,45 @@ function yumeResizeAndUpload(file) {
       var img = new Image();
       img.onerror = reject;
       img.onload = function() {
-        var MAX = 700;
-        var w = img.width, h = img.height;
+        var MAX = 700, w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
           if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
           else        { w = Math.round(w * MAX / h); h = MAX; }
         }
-        var canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.75));
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
 }
+
+/* ── Inject gambar ke textarea sebelum Waline submit (capture phase) ── */
+document.addEventListener('click', function(e) {
+  if (_yumeImgPending.length === 0) return;
+  var btn = e.target.closest('button[type="submit"]');
+  if (!btn) return;
+  var walineEl = document.getElementById('waline');
+  if (!walineEl || !walineEl.contains(btn)) return;
+  /* cari textarea di editor yang berisi tombol submit ini */
+  var editorEl = btn.closest('.wl-editor') || walineEl.querySelector('.wl-editor');
+  var ta = editorEl && editorEl.querySelector('textarea');
+  if (!ta) return;
+  /* gabungkan gambar pending ke akhir teks */
+  var suffix = _yumeImgPending.map(function(p) {
+    return '\n![' + p.filename + '](' + p.dataUrl + ')';
+  }).join('');
+  var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+  nd.set.call(ta, ta.value.trimEnd() + suffix);
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  /* reset state */
+  _yumeImgPending = [];
+  var panel = document.getElementById('yume-img-preview');
+  if (panel) panel.innerHTML = '';
+}, true /* capture = berjalan SEBELUM handler Waline */);
 
 window._walineAppInstance = init({
   el: '#waline',
@@ -4671,7 +4747,21 @@ window._walineAppInstance = init({
   search: false,
   copyright: false,
   reaction: false,
-  imageUploader: yumeResizeAndUpload,
+  imageUploader: function(file) {
+    return yumeResizeToDataUrl(file).then(function(dataUrl) {
+      _yumeImgCount++;
+      var token = 'yume_img_' + _yumeImgCount;
+      var filename = file.name || 'gambar.jpg';
+      var imgData = { token: token, dataUrl: dataUrl, filename: filename };
+      _yumeImgPending.push(imgData);
+      /* tampilkan thumbnail di panel preview */
+      yumeShowImgPreview(imgData);
+      /* hapus token pendek dari textarea (Waline memasukkan ![name](token)) */
+      yumeCleanToken(token, 0);
+      /* resolve dengan token pendek — bukan base64 — agar textarea bersih */
+      return token;
+    });
+  },
   texRenderer: false,
 });
 
