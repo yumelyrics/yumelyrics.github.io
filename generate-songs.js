@@ -2091,6 +2091,7 @@ ${(()=>{
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
       <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
+      <button id="yume-spoiler-btn" type="button" onclick="window._yumeInsertSpoiler()" title="Sisipkan teks spoiler di posisi kursor pada kotak komentar">||spoiler||</button>
     </div>
   </div>
   <div id="waline"></div>
@@ -4605,33 +4606,59 @@ legacy comment UI removed */
 </script>
 <script type="module">
 import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
-/* ── Gambar: token map (bukan base64 di textarea) ── */
-window._yumeImgMap = {};
-window._yumeImgCount = 0;
 
-/* ── Spoiler helper ── */
-function insertSpoiler(ta) {
+/* ── Spoiler: sisipkan ||teks|| di kursor textarea Waline ── */
+window._yumeInsertSpoiler = function() {
+  var ta = document.querySelector('#waline textarea');
+  if (!ta) { ta = document.querySelector('#waline .wl-editor textarea'); }
   if (!ta) return;
-  const start = ta.selectionStart, end = ta.selectionEnd;
-  const sel = ta.value.slice(start, end) || 'teks spoiler';
-  const before = ta.value.slice(0, start);
-  const after = ta.value.slice(end);
-  const inserted = '||' + sel + '||';
-  const nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
+  ta.focus();
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  var sel = ta.value.slice(start, end) || 'spoiler';
+  var before = ta.value.slice(0, start);
+  var after = ta.value.slice(end);
+  var inserted = '||' + sel + '||';
+  /* Gunakan setter asli agar React/Preact mendeteksi perubahan */
+  var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
   nd.set.call(ta, before + inserted + after);
   ta.dispatchEvent(new Event('input', { bubbles: true }));
-  const pos = start + inserted.length;
+  var pos = start + inserted.length;
   ta.setSelectionRange(pos, pos);
   ta.focus();
-}
+};
 
+/* ── Upload gambar: resize → data URL (base64 kecil, maks 700px / q0.75) ── */
+function yumeResizeAndUpload(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onerror = reject;
+      img.onload = function() {
+        var MAX = 700;
+        var w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+          else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 window._walineAppInstance = init({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
   path: '/lagu/${slug}',
   locale: {
-    placeholder: 'Tulis komentarmu di sini… (bebas sebagai tamu)',
+    placeholder: 'Tulis komentarmu di sini\u2026 (bebas sebagai tamu)',
     sofa: 'Belum ada komentar. Jadi yang pertama!',
     submit: 'Kirim',
     comment: 'Komentar',
@@ -4644,109 +4671,58 @@ window._walineAppInstance = init({
   search: false,
   copyright: false,
   reaction: false,
-  imageUploader: function(file) {
-    return new Promise(function(resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        /* ── Simpan ke map, resolve dengan token pendek ── */
-        window._yumeImgCount = (window._yumeImgCount || 0) + 1;
-        var token = 'yume_img_' + window._yumeImgCount;
-        window._yumeImgMap[token] = ev.target.result; /* base64 */
-
-        resolve(token);
-
-        /* ── Hapus token dari textarea Waline setelah ia dimasukkan ──
-           Waline memasukkan ![nama](token) ke textarea secara async.
-           Gunakan retry agar cleanup berjalan setelah React selesai render. */
-        (function tryCleanup(n) {
-          setTimeout(function() {
-            var ta = document.querySelector('#waline .wl-editor textarea');
-            if (!ta) { if (n < 20) tryCleanup(n + 1); return; }
-            var escapedToken = token.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
-            var pat = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + escapedToken + '\\)\\n?', 'g');
-            var cleaned = ta.value.replace(pat, '');
-            if (cleaned !== ta.value) {
-              var nd = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-              nd.set.call(ta, cleaned);
-              ta.dispatchEvent(new Event('input', { bubbles: true }));
-            } else if (n < 20) {
-              tryCleanup(n + 1);
-            }
-          }, 100);
-        })(0);
-      };
-      reader.onerror = function() { reject(new Error('Gagal baca file')); };
-      reader.readAsDataURL(file);
-    });
-  },
+  imageUploader: yumeResizeAndUpload,
   texRenderer: false,
 });
 
-/* ── Pasang tombol Spoiler ke toolbar Waline ── */
-(function attachSpoilerBtn() {
-  var MAX = 40, n = 0;
-  var iv = setInterval(function() {
-    n++;
-    var toolbar = document.querySelector('#waline .wl-editor .wl-header');
-    if (!toolbar) { if (n >= MAX) clearInterval(iv); return; }
-    if (document.getElementById('yume-spoiler-btn')) { clearInterval(iv); return; }
-    var btn = document.createElement('button');
-    btn.id = 'yume-spoiler-btn';
-    btn.type = 'button';
-    btn.title = 'Masukkan spoiler';
-    btn.innerHTML = '||spoiler||';
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      var ta = document.querySelector('#waline .wl-editor textarea');
-      insertSpoiler(ta);
-    });
-    toolbar.appendChild(btn);
-    clearInterval(iv);
-  }, 300);
-})();
-
-/* ── Render ||spoiler|| di preview Waline ── */
-(function patchWalinePreview() {
-  var origPreview = null;
-  Object.defineProperty(window, '__waline_preview_hook', {
-    set: function(fn) { origPreview = fn; },
-    get: function() { return origPreview; }
-  });
-  var iv = setInterval(function() {
-    var prev = document.querySelector('#waline .wl-preview-body');
-    if (!prev) return;
-    var mo = new MutationObserver(function() {
-      prev.querySelectorAll('code').forEach(function(el) {
-        var t = el.textContent;
-        if (/^\|\|.+\|\|$/.test(t)) {
+/* ── Render ||spoiler|| di komentar yang sudah diposting ──
+   Dilakukan sekali setelah Waline selesai render awal,
+   lalu pantau penambahan komentar baru. Tidak memodifikasi
+   node yang sedang aktif di virtual DOM Preact. ── */
+function yumeApplySpoilers(root) {
+  root.querySelectorAll('.wl-content p, .wl-content li').forEach(function(el) {
+    Array.from(el.childNodes).forEach(function(node) {
+      if (node.nodeType !== 3) return; /* hanya text node */
+      var txt = node.textContent;
+      if (txt.indexOf('||') === -1) return;
+      var parts = txt.split(/(\\|\\|[^|]+\\|\\|)/);
+      if (parts.length < 2) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function(p) {
+        if (/^\\|\\|.+\\|\\|$/.test(p)) {
           var sp = document.createElement('span');
           sp.className = 'cm-sp';
-          sp.textContent = t.slice(2, -2);
-          el.replaceWith(sp);
+          sp.textContent = p.slice(2, -2);
+          sp.onclick = function() { sp.classList.toggle('cm-sp-open'); };
+          frag.appendChild(sp);
+        } else {
+          frag.appendChild(document.createTextNode(p));
         }
       });
+      node.parentNode.replaceChild(frag, node);
     });
-    mo.observe(prev, { childList: true, subtree: true });
-    clearInterval(iv);
-  }, 500);
-})();
+  });
+}
 
-/* ── Tandai sudah komentar → buka copy-gate ── */
-(function watchWalineComment() {
+(function watchWalineComments() {
   var iv = setInterval(function() {
     var list = document.querySelector('#waline .wl-comment-list');
     if (!list) return;
+    clearInterval(iv);
+    /* proses komentar yang sudah ada */
+    yumeApplySpoilers(list);
+    /* pantau penambahan komentar baru */
     var prevCount = list.querySelectorAll('.wl-comment').length;
-    var mo = new MutationObserver(function() {
+    new MutationObserver(function(mutations) {
       var newCount = list.querySelectorAll('.wl-comment').length;
       if (newCount > prevCount) {
         prevCount = newCount;
+        /* tunda sedikit agar Preact selesai commit sebelum kita sentuh DOM */
+        setTimeout(function() { yumeApplySpoilers(list); }, 80);
         if (typeof window.markWalineCommented === 'function') window.markWalineCommented();
       }
-    });
-    mo.observe(list, { childList: true, subtree: true });
-    clearInterval(iv);
-  }, 600);
+    }).observe(list, { childList: true, subtree: false });
+  }, 500);
 })();
 </script>
 <script>
