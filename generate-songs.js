@@ -4718,7 +4718,7 @@ document.addEventListener('click', function(e) {
   if (!ta) return;
   /* gabungkan gambar pending ke akhir teks */
   var suffix = _yumeImgPending.map(function(p) {
-    return '\n![' + p.filename + '](' + p.dataUrl + ')';
+    return '\\n![' + p.filename + '](' + p.dataUrl + ')';
   }).join('');
   var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
   nd.set.call(ta, ta.value.trimEnd() + suffix);
