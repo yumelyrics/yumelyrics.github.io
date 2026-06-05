@@ -2100,8 +2100,8 @@ ${(()=>{
       <button id="yume-spoiler-btn" type="button" onclick="window._yumeInsertSpoiler()" title="Sisipkan teks spoiler di posisi kursor pada kotak komentar">||spoiler||</button>
     </div>
   </div>
-  <div id="waline"></div>
   <div id="yume-img-preview"></div>
+  <div id="waline"></div>
 </section>
 
 <!-- ── FOOTER ── -->
@@ -4634,53 +4634,7 @@ window._yumeInsertSpoiler = function() {
   ta.focus();
 };
 
-/* ── State gambar pending (belum dimasukkan ke komentar) ── */
-var _yumeImgCount = 0;
-var _yumeImgPending = []; /* [{token, dataUrl, filename}] */
-
-/* ── Tampilkan thumbnail gambar + tombol X ── */
-function yumeShowImgPreview(imgData) {
-  var panel = document.getElementById('yume-img-preview');
-  if (!panel) return;
-  var item = document.createElement('div');
-  item.className = 'yip-item';
-  item.dataset.token = imgData.token;
-  var imgEl = document.createElement('img');
-  imgEl.src = imgData.dataUrl;
-  imgEl.alt = imgData.filename;
-  var xBtn = document.createElement('button');
-  xBtn.type = 'button';
-  xBtn.className = 'yip-x';
-  xBtn.textContent = '\u00d7';
-  xBtn.title = 'Hapus gambar';
-  xBtn.onclick = function() {
-    _yumeImgPending = _yumeImgPending.filter(function(p) { return p.token !== imgData.token; });
-    item.remove();
-  };
-  item.appendChild(imgEl);
-  item.appendChild(xBtn);
-  panel.appendChild(item);
-}
-
-/* ── Hapus token pendek dari textarea setelah Waline memasukkannya ── */
-function yumeCleanToken(token, n) {
-  setTimeout(function() {
-    var ta = document.querySelector('#waline textarea');
-    if (!ta) { if (n < 25) yumeCleanToken(token, n + 1); return; }
-    var esc = token.replace(/[-.*+?^\${}()|[\]\\]/g, '\\$&');
-    var re = new RegExp('\\n?!\\[[^\\]]*\\]\\(' + esc + '\\)\\n?', 'g');
-    var cleaned = ta.value.replace(re, '');
-    if (cleaned !== ta.value) {
-      var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-      nd.set.call(ta, cleaned);
-      ta.dispatchEvent(new Event('input', { bubbles: true }));
-    } else if (n < 25) {
-      yumeCleanToken(token, n + 1);
-    }
-  }, 80);
-}
-
-/* ── Resize gambar → base64 (maks 700px, JPEG q0.75) ── */
+/* ── Resize gambar → base64 kecil (maks 700px, JPEG q0.75) ── */
 function yumeResizeToDataUrl(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
@@ -4705,29 +4659,48 @@ function yumeResizeToDataUrl(file) {
   });
 }
 
-/* ── Inject gambar ke textarea sebelum Waline submit (capture phase) ── */
-document.addEventListener('click', function(e) {
-  if (_yumeImgPending.length === 0) return;
-  var btn = e.target.closest('button[type="submit"]');
-  if (!btn) return;
-  var walineEl = document.getElementById('waline');
-  if (!walineEl || !walineEl.contains(btn)) return;
-  /* cari textarea di editor yang berisi tombol submit ini */
-  var editorEl = btn.closest('.wl-editor') || walineEl.querySelector('.wl-editor');
-  var ta = editorEl && editorEl.querySelector('textarea');
-  if (!ta) return;
-  /* gabungkan gambar pending ke akhir teks */
-  var suffix = _yumeImgPending.map(function(p) {
-    return '\\n![' + p.filename + '](' + p.dataUrl + ')';
-  }).join('');
-  var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-  nd.set.call(ta, ta.value.trimEnd() + suffix);
-  ta.dispatchEvent(new Event('input', { bubbles: true }));
-  /* reset state */
-  _yumeImgPending = [];
+/* ── Tampilkan thumbnail + tombol X (hapus dari textarea & panel) ── */
+function yumeShowImgPreview(dataUrl, filename) {
   var panel = document.getElementById('yume-img-preview');
-  if (panel) panel.innerHTML = '';
-}, true /* capture = berjalan SEBELUM handler Waline */);
+  if (!panel) return;
+  var item = document.createElement('div');
+  item.className = 'yip-item';
+  var imgEl = document.createElement('img');
+  imgEl.src = dataUrl;
+  imgEl.alt = filename;
+  var xBtn = document.createElement('button');
+  xBtn.type = 'button';
+  xBtn.className = 'yip-x';
+  xBtn.textContent = '\u00d7';
+  xBtn.title = 'Hapus gambar';
+  xBtn.onclick = function() {
+    /* hapus markdown gambar dari textarea menggunakan indexOf (bukan regex)
+       karena data URL terlalu panjang untuk regex yang aman */
+    var ta = document.querySelector('#waline textarea');
+    if (ta) {
+      var val = ta.value;
+      var idx = val.indexOf(dataUrl);
+      if (idx !== -1) {
+        /* temukan awal ![  sebelum data URL */
+        var mdStart = val.lastIndexOf('![', idx);
+        /* temukan akhir ) sesudah data URL */
+        var mdEnd = val.indexOf(')', idx + dataUrl.length) + 1;
+        if (mdStart !== -1 && mdEnd > mdStart) {
+          var before = val.slice(0, mdStart).replace(/\n+$/, '');
+          var after = val.slice(mdEnd).replace(/^\n+/, '');
+          var cleaned = before + (before.length && after.length ? '\n' : '') + after;
+          var nd = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+          nd.set.call(ta, cleaned);
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+    item.remove();
+  };
+  item.appendChild(imgEl);
+  item.appendChild(xBtn);
+  panel.appendChild(item);
+}
 
 window._walineAppInstance = init({
   el: '#waline',
@@ -4747,19 +4720,14 @@ window._walineAppInstance = init({
   search: false,
   copyright: false,
   reaction: false,
+  /* imageUploader mengembalikan data URL langsung → Waline simpan ke state-nya
+     sendiri → gambar muncul di komentar setelah diposting. Thumbnail di panel
+     preview hanya untuk UX (bukan sumber kebenaran). */
   imageUploader: function(file) {
     return yumeResizeToDataUrl(file).then(function(dataUrl) {
-      _yumeImgCount++;
-      var token = 'yume_img_' + _yumeImgCount;
       var filename = file.name || 'gambar.jpg';
-      var imgData = { token: token, dataUrl: dataUrl, filename: filename };
-      _yumeImgPending.push(imgData);
-      /* tampilkan thumbnail di panel preview */
-      yumeShowImgPreview(imgData);
-      /* hapus token pendek dari textarea (Waline memasukkan ![name](token)) */
-      yumeCleanToken(token, 0);
-      /* resolve dengan token pendek — bukan base64 — agar textarea bersih */
-      return token;
+      yumeShowImgPreview(dataUrl, filename);
+      return dataUrl;
     });
   },
   texRenderer: false,
