@@ -1285,8 +1285,9 @@ ${CSS_TOKENS}
 .rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 .rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-/* Saat theme toggle aktif, matikan semua transisi sementara supaya tidak berat */
 .no-transition,html.no-transition *{transition:none!important}
+html{transition:background-color .35s ease}
+body,nav,.lyrics-sidebar,.lyrics-main,.hero,.hero-text,.hero-visual,.section-divider,.cover-frame,.cover-wrap,.cmsec,.related-section-block,.comments-section{transition:background .35s ease,color .35s ease,border-color .35s ease}
 input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--paper);scrollbar-gutter:stable}
@@ -1355,8 +1356,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .divider-ornament{font-family:var(--serif);font-size:.85rem;font-weight:300;font-style:italic;color:var(--ash);white-space:nowrap;letter-spacing:.1em}
 
 /* ── LYRICS SECTION ── */
-.lyrics-section{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh;overflow:hidden}
-.lyrics-sidebar{padding:4rem 2.5rem 4rem 3.5rem;border-right:1px solid rgba(10,8,18,.08);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:2.5rem}
+.lyrics-section{display:block;min-height:auto}
+.lyrics-sidebar{padding:1.2rem 3.5rem;border-bottom:1px solid rgba(10,8,18,.08);display:flex;flex-direction:row;flex-wrap:wrap;gap:1.25rem 3rem;align-items:flex-start;position:static;height:auto;overflow:visible}
 .sidebar-section-label{font-size:.58rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke);margin-bottom:1rem;display:block}
 .toggle-group{display:flex;flex-direction:column;gap:.35rem}
 .toggle-item{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.4rem 0;border-bottom:1px solid rgba(10,8,18,.06)}
@@ -1910,14 +1911,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .hero-visual{padding:2rem 1.5rem 3rem;border-top:1px solid rgba(10,8,18,.08)}
   .song-title-jp{font-size:2.2rem}
   .kanji-bg{font-size:10rem}
-  /* Sidebar jadi horizontal 2 kolom di atas lirik */
-  .lyrics-section{grid-template-columns:1fr}
+  /* Sidebar 2 kolom di layar tablet */
   .lyrics-sidebar{
-    position:static;height:auto;
-    padding:1.2rem 1.5rem;
-    border-right:none;border-bottom:1px solid rgba(10,8,18,.08);
     display:grid;
     grid-template-columns:1fr 1fr;
+    padding:1.2rem 1.5rem;
     gap:1.2rem;
     align-items:start;
   }
@@ -2095,16 +2093,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   </div>
 </section>
 
-<!-- ── DIVIDER ── -->
-<div class="section-divider" style="margin:2rem 0">
-  <div class="divider-line"></div>
-  <div class="divider-ornament">— Lirik Lengkap —</div>
-  <div class="divider-line"></div>
-</div>
-
-<!-- ── LYRICS ── -->
-<section class="lyrics-section" id="lyrics">
-  <aside class="lyrics-sidebar">
+<aside class="lyrics-sidebar">
     <div>
       <span class="sidebar-section-label">Tampilkan</span>
       <div class="toggle-group">
@@ -2176,7 +2165,17 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         <span class="online-sub">pembaca aktif</span>
       </div>
     </div>
-  </aside>
+</aside>
+
+<!-- ── DIVIDER ── -->
+<div class="section-divider" style="margin:2rem 0">
+  <div class="divider-line"></div>
+  <div class="divider-ornament">— Lirik Lengkap —</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ── LYRICS ── -->
+<section class="lyrics-section" id="lyrics">
 
   <main class="lyrics-main">
     <div class="lyrics-controls">
@@ -2879,7 +2878,6 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
   window.toggleTheme = function(){
     var root = document.documentElement;
     var isDark = root.getAttribute('data-theme') === 'dark';
-    root.classList.add('no-transition');
     if(isDark){
       root.removeAttribute('data-theme');
       localStorage.setItem('ym_theme','light');
@@ -2887,11 +2885,6 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       root.setAttribute('data-theme','dark');
       localStorage.setItem('ym_theme','dark');
     }
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        root.classList.remove('no-transition');
-      });
-    });
   };
 })();
 </script>
