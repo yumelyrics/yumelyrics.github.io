@@ -365,7 +365,7 @@ const ARTIST_MOBILE_CSS = `
   nav{padding:.85rem 1rem}
   #nav-dropdown{right:1rem;left:auto;max-width:min(280px,calc(100vw - 2rem))}
   .artist-hero{padding:1.75rem 1rem 1rem}
-  .artist-title{font-size:1.6rem;line-height:1.2}
+  .artist-title{font-size:1.6rem;line-height:1.4}
   .artist-count{font-size:.55rem}
   .artist-desc{font-size:.78rem;margin-top:.85rem}
   .breadcrumb{font-size:.5rem;margin-bottom:.85rem;gap:.35rem}
@@ -380,7 +380,7 @@ const ARTIST_MOBILE_CSS = `
   .related-thumb,.rc-no-img{width:3.4rem;height:3.4rem;min-width:3.4rem}
   .related-info{min-width:0}
   .related-title{font-size:.8rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .related-ro{font-size:.6rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .related-ro{font-size:.6rem;line-height:1.6;padding-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .related-artist{font-size:.5rem}
   .related-arr{display:none}
   footer{flex-direction:column;padding:2rem 1rem;gap:1.25rem}
@@ -836,7 +836,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 ${SITE_NAV_CSS}
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;line-height:1.35;padding-bottom:.1rem}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin-top:.6rem}
 .catalog{padding:2rem 3.5rem 5rem}
 .related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
@@ -845,7 +845,7 @@ ${SITE_NAV_CSS}
 .related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--smoke);flex-shrink:0}
 .related-title{font-size:.88rem;font-weight:600}
-.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem}
+.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem;line-height:1.55;padding-bottom:.1rem}
 .related-arr{margin-left:auto;color:var(--gold)}
 footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3rem;flex-wrap:wrap}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
@@ -942,7 +942,7 @@ ${SITE_NAV_CSS}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}
 .breadcrumb a:hover{color:var(--gold)}
 .breadcrumb span{color:var(--gold)}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.1;margin-bottom:.6rem}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.35;padding-bottom:.1rem;margin-bottom:.6rem}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke)}
 .artist-desc{font-size:.85rem;color:var(--ash);line-height:1.75;max-width:520px;margin-top:1.2rem}
 .catalog{padding:2rem 3.5rem 5rem}
@@ -954,7 +954,7 @@ ${SITE_NAV_CSS}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .related-title{font-family:var(--jp);font-size:.92rem;color:var(--ink);line-height:1.35}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash)}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.55;padding-bottom:.1rem}
 .related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;font-family:var(--serif)}
 footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3rem;padding:3rem 3.5rem;border-top:1px solid var(--border);background:var(--cream)}
@@ -1318,7 +1318,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .song-type{font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
 .song-type::before{content:'';width:2rem;height:1px;background:var(--rose);display:block}
 .song-title-jp{font-family:var(--jp);font-size:3.2rem;font-weight:300;color:var(--ink);line-height:1.1;letter-spacing:.04em;margin-bottom:.5rem}
-.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;margin-bottom:.3rem}
+.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;line-height:1.45;padding-bottom:.15rem;margin-bottom:.3rem}
 .song-title-id{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:2.5rem}
 .meta-row{display:flex;gap:2.5rem;margin-bottom:3rem}
 .meta-item{display:flex;flex-direction:column;gap:.3rem}
@@ -1606,7 +1606,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .rc-info,.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.6;padding-bottom:.18rem;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
 .rc-artist,.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .rc-arr,.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;margin-top:.2rem;transition:all .2s;font-family:var(--serif)}
 .rc:hover .rc-arr,.related-card:hover .related-arr{color:var(--gold);transform:translateX(3px)}
