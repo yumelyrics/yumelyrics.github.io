@@ -824,7 +824,7 @@ function generateArtistIndexHTML(artists) {
 <link rel="canonical" href="${BASE_URL}/artis/">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs', description: \`\${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.\`, url: \`\${BASE_URL}/artis/\` })}
+${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs', description: sorted.length + ' artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.', url: BASE_URL + '/artis/' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -925,7 +925,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${buildArtistFAQSchema(artistName, count, metaDesc)}</script>
-${buildGeoAeoMeta({ title: \`Lirik \${artistName} — \${count} Lagu + Terjemahan Indonesia | YumeSubs\`, description: metaDesc, url: \`\${BASE_URL}/artis/\${artistSlug}.html\` })}
+${buildGeoAeoMeta({ title: 'Lirik ' + artistName + ' — ' + count + ' Lagu + Terjemahan Indonesia | YumeSubs', description: metaDesc, url: BASE_URL + '/artis/' + artistSlug + '.html' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
