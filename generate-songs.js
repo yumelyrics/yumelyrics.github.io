@@ -1538,10 +1538,22 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 [data-theme="dark"] .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.14)}
 
 /* ── SPOTIFY & VIDEO ── */
-.spbtn,.spotify-btn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
-.spbtn:hover,.spotify-btn:hover{opacity:.87}
+.spbtn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
+.spbtn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
-.spotify-dot{width:8px;height:8px;border-radius:50%;background:#000}
+/* Discord-style Spotify card */
+.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;width:100%;max-width:100%;min-width:0;border-left:4px solid #1DB954;box-sizing:border-box}
+.spotify-card:hover{background:#2a2b2f}
+.spotify-card-art{width:64px;height:64px;min-width:64px;object-fit:cover;display:block;flex-shrink:0}
+.spotify-card-art-fallback{width:64px;height:64px;min-width:64px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
+.spotify-card-body{flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.spotify-card-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1DB954;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.spotify-card-label svg{width:10px;height:10px;fill:#1DB954;flex-shrink:0}
+.spotify-card-title{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.spotify-card-artist{font-size:.72rem;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.spotify-card-play{width:34px;height:34px;border-radius:50%;background:#1DB954;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;transition:background .15s,transform .1s}
+.spotify-card:hover .spotify-card-play{background:#1ed760;transform:scale(1.06)}
+.spotify-card-play svg{width:12px;height:12px;fill:#000;margin-left:2px}
 .ytwrap{margin-top:2rem;display:none} /* video tetap tersedia di-DOM tapi sidebar menggantinya */
 .ytframe{width:100%;aspect-ratio:16/9;border:1px solid var(--border);background:#000;display:block}
 .nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);font-family:var(--sans);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:all .2s;margin-top:1rem}
@@ -1914,7 +1926,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   /* Tombol suka & spotify: full width, tidak overflow keluar sidebar */
   .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0;overflow:hidden;box-sizing:border-box}
   .thumbs-btn{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
-  .spotify-btn{width:100%;max-width:100%;box-sizing:border-box;display:flex;min-width:0}
+  .spotify-card{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
   .toggle-group{display:flex;flex-direction:column;gap:0;width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{min-width:0;overflow:hidden;box-sizing:border-box}
   .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -1951,7 +1963,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .lyrics-sidebar>div:last-child{grid-column:1}
   .thumbs-block{min-width:0;width:100%;overflow:hidden;box-sizing:border-box}
   .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
-  .spotify-btn{width:100%;box-sizing:border-box;min-width:0;display:flex;overflow:hidden}
+  .spotify-card{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   .toggle-group{width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2135,9 +2147,22 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         <span id="thumbs-count-sb">…</span>
         <span id="thumbs-label">Suka lagu ini?</span>
       </button>
-      ${song.sp ? `<a class="spotify-btn" href="${escHtml(song.sp)}" target="_blank" rel="noopener">
-        <div class="spotify-dot"></div>
-        Dengarkan di Spotify
+      ${song.sp ? `<a class="spotify-card" href="${escHtml(song.sp)}" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
+        ${song.img
+          ? `<img class="spotify-card-art" src="${escHtml(song.img)}" alt="Cover ${escHtml(titleMain)}" loading="lazy">`
+          : `<div class="spotify-card-art-fallback"><svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg></div>`
+        }
+        <div class="spotify-card-body">
+          <span class="spotify-card-label">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg>
+            Spotify
+          </span>
+          <span class="spotify-card-title">${escHtml(titleMain)}</span>
+          <span class="spotify-card-artist">${escHtml(artist)}</span>
+        </div>
+        <div class="spotify-card-play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
       </a>` : ''}
     </div>
 
