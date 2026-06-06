@@ -1367,7 +1367,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .toggle-switch.on{background:var(--gold);border-color:var(--gold)}
 .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ash);transition:all .2s}
 .toggle-switch.on::after{left:14px;background:#fff}
-.thumbs-block{display:flex;flex-direction:column;gap:.75rem}
+.thumbs-block{display:flex;flex-direction:column;gap:.75rem;flex:1;min-width:320px}
 .thumbs-row{display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap}
 
 /* ── LYRICS MAIN ── */
@@ -1544,11 +1544,11 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spbtn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
 /* Discord-style Spotify card */
-.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:1;min-width:200px;max-width:360px;border-left:4px solid #1DB954;box-sizing:border-box}
+.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:1;min-width:260px;max-width:520px;border-left:4px solid #1DB954;box-sizing:border-box}
 .spotify-card:hover{background:#2a2b2f}
-.spotify-card-art{width:64px;height:64px;min-width:64px;object-fit:cover;display:block;flex-shrink:0}
-.spotify-card-art-fallback{width:64px;height:64px;min-width:64px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
-.spotify-card-body{flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.spotify-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0}
+.spotify-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
+.spotify-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .spotify-card-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1DB954;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .spotify-card-label svg{width:10px;height:10px;fill:#1DB954;flex-shrink:0}
 .spotify-card-title{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
@@ -1558,9 +1558,18 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spotify-card-play svg{width:12px;height:12px;fill:#000;margin-left:2px}
 .ytwrap{margin-top:2rem;display:none} /* video tetap tersedia di-DOM tapi sidebar menggantinya */
 .ytframe{width:100%;aspect-ratio:16/9;border:1px solid var(--border);background:#000;display:block}
-.nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);font-family:var(--sans);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:all .2s;margin-top:1rem}
-.nicobtn:hover{background:#333}
-.nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;margin-top:1rem;filter:sepia(.1)}
+.nico-card{display:flex;align-items:stretch;gap:0;background:linear-gradient(135deg,#1c1c22 0%,#161618 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s;border-left:3px solid rgba(180,180,210,.35);box-sizing:border-box;width:100%;box-shadow:0 2px 14px rgba(0,0,0,.28);margin-top:.5rem}
+.nico-card:hover{background:linear-gradient(135deg,#242430 0%,#1c1c22 100%);box-shadow:0 4px 22px rgba(0,0,0,.38)}
+.nico-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0;filter:brightness(.9) saturate(.85)}
+.nico-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#1e1e28;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:rgba(200,200,220,.4)}
+.nico-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.nico-card-label{font-size:.52rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(190,190,215,.65);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.nico-card-label svg{flex-shrink:0}
+.nico-card-title{font-size:.8rem;font-weight:700;color:#eeeef2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.nico-card-sub{font-size:.7rem;color:#7a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.nico-card-play{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px;align-self:center;transition:background .15s,transform .12s;border:1.5px solid rgba(255,255,255,.15)}
+.nico-card:hover .nico-card-play{background:rgba(255,255,255,.2);transform:scale(1.08)}
+.nico-card-play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
 
 /* ── ONLINE COUNTER ── */
 /* ── ONLINE COUNTER ── */
@@ -2167,6 +2176,21 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
           <span class="online-sub">pembaca aktif</span>
         </div>
       </div>
+      ${song.nicoId ? `<a class="nico-card" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener" aria-label="Tonton di Niconico">
+        <img class="nico-card-art" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="Niconico thumbnail" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="nico-card-art-fallback" style="display:none">▶</div>
+        <div class="nico-card-body">
+          <span class="nico-card-label">
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            ニコニコ動画
+          </span>
+          <span class="nico-card-title">${escHtml(titleMain)}</span>
+          <span class="nico-card-sub">${escHtml(artist)}</span>
+        </div>
+        <div class="nico-card-play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </a>` : ''}
     </div>
 </aside>
 
@@ -2213,11 +2237,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem">
       <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Video</div>
       <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>` : ''}
-    ${song.nicoId ? `<div style="margin-bottom:2rem">
-      <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Niconico</div>
-      <img class="nicothumb" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'">
-      <a class="nicobtn" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Tonton di Niconico</a>
     </div>` : ''}
 
   </main>
