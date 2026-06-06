@@ -566,6 +566,8 @@ function buildGlossaryPages(songMeta, today) {
 <title>${escHtml(term.title)} — Glosarium | YumeSubs</title>
 <meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeSubs.">
 <link rel="canonical" href="${BASE_URL}/kata/${term.slug}.html">
+<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: `Apa itu pola tata bahasa Jepang ${term.title}?`, acceptedAnswer: { '@type': 'Answer', text: term.desc + ' Temukan contoh penggunaan nyata dari lirik lagu Jepang di YumeSubs.' } }, { '@type': 'Question', name: `Bagaimana cara menggunakan ${term.title} dalam bahasa Jepang?`, acceptedAnswer: { '@type': 'Answer', text: term.desc } }] })}</script>
+${buildGeoAeoMeta({ title: `${term.title} — Glosarium | YumeSubs`, description: term.desc + ' Contoh dari lirik lagu Jepang di YumeSubs.', url: `${BASE_URL}/kata/${term.slug}.html` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
@@ -595,6 +597,7 @@ ${exHtml}
 <title>Glosarium Tata Bahasa Jepang | YumeSubs</title>
 <meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.">
 <link rel="canonical" href="${BASE_URL}/kata/">
+${buildGeoAeoMeta({ title: 'Glosarium Tata Bahasa Jepang | YumeSubs', description: 'Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.', url: `${BASE_URL}/kata/` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:3rem 1.5rem}
@@ -645,6 +648,144 @@ function obfuscateLine(str) {
   }).join('');
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────
+ *  AI SEO · AEO · GEO helpers
+ *  Tambahkan ke semua halaman yang di-generate agar dapat diindeks
+ *  oleh AI search (Perplexity, ChatGPT, Gemini, dll.) dan muncul di
+ *  featured snippet / voice answer.
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * buildGeoAeoMeta — blok meta tag AI SEO / AEO / GEO.
+ *
+ * AI SEO  : meta robots eksplisit untuk setiap AI crawler utama.
+ * AEO     : citation metadata agar AI men-cite sumber dengan benar +
+ *           sinyal speakable untuk voice search.
+ * GEO     : Dublin Core (dcterms) agar AI generatif (ChatGPT, Gemini,
+ *           Perplexity) memahami entitas, bahasa, dan pemilik konten.
+ */
+function buildGeoAeoMeta({ title, description, url = '', dateModified = '', language = 'id', author = 'YumeSubs' }) {
+  const dm         = dateModified || new Date().toISOString().split('T')[0];
+  const cleanDesc  = String(description || '').replace(/"/g, '&quot;').substring(0, 200);
+  const cleanTitle = String(title || '').replace(/"/g, '&quot;');
+  const cleanUrl   = String(url || '');
+  return `<!-- ── AI SEO: izinkan AI crawler utama ──────────────────────── -->
+<meta name="GPTBot" content="index">
+<meta name="ChatGPT-User" content="index">
+<meta name="Google-Extended" content="index">
+<meta name="PerplexityBot" content="index">
+<meta name="ClaudeBot" content="index">
+<meta name="anthropic-ai" content="index">
+<meta name="cohere-ai" content="index">
+<meta name="YouBot" content="index">
+<meta name="Diffbot" content="index">
+<!-- ── AEO: Citation metadata — AI atribusi sumber dengan benar ── -->
+<meta name="citation_title" content="${cleanTitle}">
+<meta name="citation_author" content="${author}">
+<meta name="citation_publisher" content="YumeSubs — yumelyrics.my.id">
+<meta name="citation_online_date" content="${dm}">
+<meta name="citation_language" content="${language}">${cleanUrl ? `
+<meta name="citation_abstract_html_url" content="${cleanUrl}">` : ''}
+<!-- ── GEO: Dublin Core — machine-readable untuk AI generatif ─── -->
+<meta name="dcterms.title" content="${cleanTitle}">
+<meta name="dcterms.description" content="${cleanDesc}">
+<meta name="dcterms.language" content="${language}">
+<meta name="dcterms.creator" content="${author}">
+<meta name="dcterms.publisher" content="YumeSubs — yumelyrics.my.id">
+<meta name="dcterms.rights" content="© YumeSubs — yumelyrics.my.id">
+<meta name="dcterms.modified" content="${dm}">${cleanUrl ? `
+<meta name="dcterms.identifier" content="${cleanUrl}">` : ''}
+<meta name="dcterms.type" content="Text">
+<meta name="dcterms.format" content="text/html">
+<!-- ── AEO: voice search / featured snippet signal ───────────── -->
+<meta name="speakable" content="true">`;
+}
+
+/**
+ * buildFAQSchema — FAQPage schema.org untuk halaman lagu.
+ *
+ * AEO: FAQ schema menjadi sumber jawaban di Google's People Also Ask,
+ *      Bing Answer Box, dan voice assistant.
+ * GEO: Pertanyaan terstruktur membantu AI generatif menjawab query
+ *      seperti "apa arti lagu X" dengan mengutip YumeSubs.
+ */
+function buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc) {
+  const faqs = [
+    {
+      q: `Apa arti lagu ${titleMain}${artist ? ` oleh ${artist}` : ''}?`,
+      a: metaDesc
+    },
+    {
+      q: `Di mana bisa baca lirik ${titleMain}${artist ? ` - ${artist}` : ''} terjemahan bahasa Indonesia?`,
+      a: `Lirik lengkap ${titleMain}${artist ? ` oleh ${artist}` : ''} beserta terjemahan bahasa Indonesia dan romaji tersedia di YumeSubs (yumelyrics.my.id). ${metaDesc}`
+    },
+    {
+      q: `Apakah lirik ${titleMain} tersedia dalam romaji dan terjemahan?`,
+      a: `Ya. YumeSubs menyediakan tiga versi teks untuk lagu ${titleMain}: teks Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia secara lengkap per baris.`
+    },
+  ];
+  if (titleId) {
+    faqs.push({
+      q: `Apa makna judul lagu "${titleMain}"?`,
+      a: `Judul lagu "${titleMain}" dalam bahasa Indonesia berarti "${titleId}".`
+    });
+  }
+  if (animeDisplay) {
+    faqs.push({
+      q: `Lagu "${titleMain}" berasal dari anime apa?`,
+      a: `"${titleMain}"${artist ? ` oleh ${artist}` : ''} adalah lagu dari anime ${animeDisplay}.`
+    });
+  }
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a }
+    }))
+  });
+}
+
+/**
+ * buildArtistFAQSchema — FAQPage schema untuk halaman artis.
+ * AEO: muncul di "People Also Ask" untuk query seperti "lirik [artis]".
+ */
+function buildArtistFAQSchema(artistName, count, metaDesc) {
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `Di mana bisa baca lirik lagu ${artistName} terjemahan Indonesia?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Lirik lagu ${artistName} dengan terjemahan bahasa Indonesia tersedia di YumeSubs (yumelyrics.my.id). ${metaDesc}`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Berapa banyak lagu ${artistName} yang tersedia di YumeSubs?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `YumeSubs memiliki ${count} lagu ${artistName} lengkap dengan teks Jepang, romaji, dan terjemahan bahasa Indonesia.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Apakah lirik ${artistName} di YumeSubs disertai romaji?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Ya, semua lirik ${artistName} di YumeSubs dilengkapi tiga lapisan teks: Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia.`
+        }
+      },
+    ]
+  });
+}
+
 function generateArtistIndexHTML(artists) {
   const sorted = [...artists].sort((a, b) => a.name.localeCompare(b.name, 'id'));
   const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
@@ -683,6 +824,7 @@ function generateArtistIndexHTML(artists) {
 <link rel="canonical" href="${BASE_URL}/artis/">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
+${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs', description: \`\${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.\`, url: \`\${BASE_URL}/artis/\` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -782,6 +924,8 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <link rel="canonical" href="${BASE_URL}/artis/${artistSlug}.html">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
+<script type="application/ld+json">${buildArtistFAQSchema(artistName, count, metaDesc)}</script>
+${buildGeoAeoMeta({ title: \`Lirik \${artistName} — \${count} Lagu + Terjemahan Indonesia | YumeSubs\`, description: metaDesc, url: \`\${BASE_URL}/artis/\${artistSlug}.html\` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -933,7 +1077,15 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 
 
 
-  const today = new Date().toISOString().split('T')[0];
+  const today      = new Date().toISOString().split('T')[0];
+  // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
+  const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
+  const geoAeoMeta = buildGeoAeoMeta({
+    title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeSubs`,
+    description: metaDesc,
+    url: `${BASE_URL}/lagu/${slug}`,
+    dateModified: today,
+  });
   const schema = JSON.stringify([
     {
       "@context":"https://schema.org",
@@ -1100,6 +1252,8 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
+<script type="application/ld+json">${faqSchema}</script>
+${geoAeoMeta}
 ${FONT_HEAD}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <style>
@@ -4415,6 +4569,7 @@ window.postCm = async () => {
     // Langsung aktifkan tombol copy setelah komentar berhasil — tanpa tunggu Firestore
     if (!_isAdmin && !_hasCommented) {
       _hasCommented = true;
+      try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
       updateCopyGate();
     }
     if (_isAdmin) {
@@ -4633,18 +4788,43 @@ window._walineAppInstance = init({
     level5: 'Legenda',
   },
 });
+// ── Waline submit-click detector ─────────────────────────────────────────
+// Set flag HANYA ketika user benar-benar klik tombol Submit Waline,
+// bukan saat inisialisasi/fetch internal Waline yang juga POST ke /api/comment.
+// Flag di-reset setelah 8 detik atau setelah berhasil unlock.
+window._ymPendingWalineSubmit = false;
+(function() {
+  var walineEl = document.getElementById('waline');
+  if (!walineEl) return;
+  walineEl.addEventListener('click', function(e) {
+    var btn = e.target && (e.target.closest ? e.target.closest('button') : null);
+    if (!btn) return;
+    // Waline v3 submit button: class wl-btn + primary, atau type=submit
+    if (btn.type === 'submit' || btn.classList.contains('wl-submit') ||
+        (btn.classList.contains('primary') && btn.classList.contains('wl-btn'))) {
+      window._ymPendingWalineSubmit = true;
+      // Auto-reset jika dalam 8 detik tidak ada POST berhasil
+      setTimeout(function() { window._ymPendingWalineSubmit = false; }, 8000);
+    }
+  }, true);
+})();
+// ── Fetch interceptor: unlock copy HANYA jika user benar-benar submit ────
 (function() {
   var _orig = window.fetch;
   window.fetch = function(url, opts) {
     var p = _orig.apply(this, arguments);
     try {
       var u = typeof url === 'string' ? url : (url && url.url) || '';
-      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
+      // Cek: harus POST ke /api/comment DAN user sudah klik Submit (flag aktif)
+      if (window._ymPendingWalineSubmit &&
+          opts && opts.method && opts.method.toUpperCase() === 'POST' &&
+          u.indexOf('/api/comment') !== -1) {
         p.then(function(res) {
-          if (res && res.ok && !window._hasCommented) {
+          if (res && res.ok) {
+            window._ymPendingWalineSubmit = false;
             if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
           }
-        }).catch(function() {});
+        }).catch(function() { window._ymPendingWalineSubmit = false; });
       }
     } catch(e) {}
     return p;
