@@ -1544,7 +1544,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spbtn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
 /* Discord-style Spotify card */
-.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:1;min-width:260px;max-width:520px;border-left:4px solid #1DB954;box-sizing:border-box}
+.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;min-width:200px;max-width:340px;border-left:4px solid #1DB954;box-sizing:border-box}
 .spotify-card:hover{background:#2a2b2f}
 .spotify-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0}
 .spotify-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
@@ -1558,7 +1558,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spotify-card-play svg{width:12px;height:12px;fill:#000;margin-left:2px}
 .ytwrap{margin-top:2rem;display:none} /* video tetap tersedia di-DOM tapi sidebar menggantinya */
 .ytframe{width:100%;aspect-ratio:16/9;border:1px solid var(--border);background:#000;display:block}
-.nico-card{display:flex;align-items:stretch;gap:0;background:linear-gradient(135deg,#1c1c22 0%,#161618 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s;border-left:3px solid rgba(180,180,210,.35);box-sizing:border-box;width:100%;box-shadow:0 2px 14px rgba(0,0,0,.28);margin-top:.5rem}
+.nico-card{display:flex;align-items:stretch;gap:0;background:linear-gradient(135deg,#1c1c22 0%,#161618 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s;border-left:3px solid rgba(180,180,210,.35);box-sizing:border-box;max-width:340px;box-shadow:0 2px 14px rgba(0,0,0,.28);margin-top:.5rem}
 .nico-card:hover{background:linear-gradient(135deg,#242430 0%,#1c1c22 100%);box-shadow:0 4px 22px rgba(0,0,0,.38)}
 .nico-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0;filter:brightness(.9) saturate(.85)}
 .nico-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#1e1e28;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:rgba(200,200,220,.4)}
@@ -1567,6 +1567,8 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .nico-card-label svg{flex-shrink:0}
 .nico-card-title{font-size:.8rem;font-weight:700;color:#eeeef2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
 .nico-card-sub{font-size:.7rem;color:#7a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.nico-card-cta{font-size:.6rem;font-weight:700;letter-spacing:.08em;color:rgba(210,210,230,.45);margin-top:3px;white-space:nowrap;font-family:var(--sans);text-transform:uppercase}
+.nico-card:hover .nico-card-cta{color:rgba(210,210,230,.7)}
 .nico-card-play{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px;align-self:center;transition:background .15s,transform .12s;border:1.5px solid rgba(255,255,255,.15)}
 .nico-card:hover .nico-card-play{background:rgba(255,255,255,.2);transform:scale(1.08)}
 .nico-card-play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
@@ -2182,10 +2184,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         <div class="nico-card-body">
           <span class="nico-card-label">
             <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            ニコニコ動画
+            NICONICO
           </span>
           <span class="nico-card-title">${escHtml(titleMain)}</span>
           <span class="nico-card-sub">${escHtml(artist)}</span>
+          <span class="nico-card-cta">Tonton di Niconico →</span>
         </div>
         <div class="nico-card-play">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
