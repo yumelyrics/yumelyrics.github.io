@@ -40,6 +40,7 @@ async function sendDiscordNotification(generatedSongs, mode, success = true) {
     if (count > 10) songLines.push(`...dan ${count - 10} lagu lainnya`);
     const songListValue = songLines.length > 0 ? songLines.join('\n') : '_Semua lagu sudah up-to-date._';
     const payload = {
+      content: '<@&1513469865451716771>',
       embeds: [{
         title,
         description: desc,
@@ -139,7 +140,6 @@ function seedManifestFromDisk(manifest, songMeta) {
 
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
-  if (song.htmlDirty === true) return true;
   const fp = path.join('lagu', `${slug}.html`);
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
