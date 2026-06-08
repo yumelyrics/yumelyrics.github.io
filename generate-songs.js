@@ -107,7 +107,7 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
@@ -123,6 +123,7 @@ const CSS_TOKENS = `
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
   --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --ro:'DM Sans',sans-serif;
   --sans:var(--en);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
   --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
@@ -1407,8 +1408,8 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.lro{font-family:var(--en);font-size:.88rem;color:var(--dusk);font-style:normal;font-weight:400;letter-spacing:.01em;line-height:1.95;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lro{font-family:var(--ro);font-size:.88rem;color:var(--dusk);font-style:normal;font-weight:400;letter-spacing:.01em;line-height:1.95;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lid{font-family:var(--ro);font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:visible;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:nowrap;display:inline;position:relative}
