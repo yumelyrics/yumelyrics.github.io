@@ -11,6 +11,33 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+import { buildJlptPhrasesInject, buildJlptSourceInject, applyJlptSourceToGrammar } from './jlpt-phrase-builder.js';
+
+function loadGrammarBrowserJs() {
+  let grammar = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
+  const jlptSrc = buildJlptSourceInject();
+  if (jlptSrc !== "''") {
+    grammar = applyJlptSourceToGrammar(grammar, jlptSrc);
+    const rows = (jlptSrc.match(/\\n/g) || []).length;
+    console.log('✓ JLPT bunpou source injected (~' + Math.max(0, rows) + ' baris teks)');
+  } else {
+    const jlptInject = buildJlptPhrasesInject();
+    if (jlptInject !== '[]') {
+      grammar = grammar.replace('/*JLPT_PHRASES_INJECT*/[]', jlptInject);
+      console.log('✓ JLPT bunpou array:', (jlptInject.match(/\n/g) || []).length + 1, 'baris');
+    } else {
+      console.warn('⚠ JLPT no BUNPOU.txt tidak ditemukan — PHRASES_JLPT kosong.');
+    }
+  }
+  return grammar;
+}
+
+let GRAMMAR_BROWSER_JS = '';
+try {
+  GRAMMAR_BROWSER_JS = loadGrammarBrowserJs();
+} catch (e) {
+  console.warn('⚠ ym-grammar-browser.js tidak ditemukan — panel tata bahasa dilewati.', e.message);
+}
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -107,7 +134,7 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
@@ -123,7 +150,6 @@ const CSS_TOKENS = `
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
   --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
-  --ro:'DM Sans',sans-serif;
   --sans:var(--en);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
   --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
@@ -324,6 +350,7 @@ function buildSiteNav(prefix, active) {
     <a class="nd-item${catOn}" href="${p}index.html">Katalog</a>
     <a class="nd-item${artOn}" href="${artHref}">Artis</a>
     <a class="nd-item" href="${p}playlists.html">Setlist</a>
+    <a class="nd-item" href="${p}bunpou-saved.html">Bunpou tersimpan</a>
     <a class="nd-item" href="${p}kata/index.html">Glosarium</a>
     <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
@@ -338,7 +365,7 @@ const ARTIST_MOBILE_CSS = `
   nav{padding:.85rem 1rem}
   #nav-dropdown{right:1rem;left:auto;max-width:min(280px,calc(100vw - 2rem))}
   .artist-hero{padding:1.75rem 1rem 1rem}
-  .artist-title{font-size:1.6rem;line-height:1.4}
+  .artist-title{font-size:1.6rem;line-height:1.2}
   .artist-count{font-size:.55rem}
   .artist-desc{font-size:.78rem;margin-top:.85rem}
   .breadcrumb{font-size:.5rem;margin-bottom:.85rem;gap:.35rem}
@@ -353,7 +380,7 @@ const ARTIST_MOBILE_CSS = `
   .related-thumb,.rc-no-img{width:3.4rem;height:3.4rem;min-width:3.4rem}
   .related-info{min-width:0}
   .related-title{font-size:.8rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .related-ro{font-size:.6rem;line-height:1.6;padding-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .related-ro{font-size:.6rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .related-artist{font-size:.5rem}
   .related-arr{display:none}
   footer{flex-direction:column;padding:2rem 1rem;gap:1.25rem}
@@ -536,11 +563,9 @@ function buildGlossaryPages(songMeta, today) {
       : '<p class="gloss-empty">Belum ada contoh di katalog — akan bertambah seiring generate.</p>';
 
     const page = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escHtml(term.title)} — Glosarium | YumeLyrics</title>
-<meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeLyrics.">
+<title>${escHtml(term.title)} — Glosarium | YumeSubs</title>
+<meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeSubs.">
 <link rel="canonical" href="${BASE_URL}/kata/${term.slug}.html">
-<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: `Apa itu pola tata bahasa Jepang ${term.title}?`, acceptedAnswer: { '@type': 'Answer', text: term.desc + ' Temukan contoh penggunaan nyata dari lirik lagu Jepang di YumeLyrics.' } }, { '@type': 'Question', name: `Bagaimana cara menggunakan ${term.title} dalam bahasa Jepang?`, acceptedAnswer: { '@type': 'Answer', text: term.desc } }] })}</script>
-${buildGeoAeoMeta({ title: `${term.title} — Glosarium | YumeLyrics`, description: term.desc + ' Contoh dari lirik lagu Jepang di YumeLyrics.', url: `${BASE_URL}/kata/${term.slug}.html` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
@@ -567,10 +592,9 @@ ${exHtml}
   }
 
   const indexHtml = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Glosarium Tata Bahasa Jepang | YumeLyrics</title>
-<meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeLyrics.">
+<title>Glosarium Tata Bahasa Jepang | YumeSubs</title>
+<meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.">
 <link rel="canonical" href="${BASE_URL}/kata/">
-${buildGeoAeoMeta({ title: 'Glosarium Tata Bahasa Jepang | YumeLyrics', description: 'Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeLyrics.', url: `${BASE_URL}/kata/` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:3rem 1.5rem}
@@ -621,144 +645,6 @@ function obfuscateLine(str) {
   }).join('');
 }
 
-/**
- * ─────────────────────────────────────────────────────────────────
- *  AI SEO · AEO · GEO helpers
- *  Tambahkan ke semua halaman yang di-generate agar dapat diindeks
- *  oleh AI search (Perplexity, ChatGPT, Gemini, dll.) dan muncul di
- *  featured snippet / voice answer.
- * ─────────────────────────────────────────────────────────────────
- */
-
-/**
- * buildGeoAeoMeta — blok meta tag AI SEO / AEO / GEO.
- *
- * AI SEO  : meta robots eksplisit untuk setiap AI crawler utama.
- * AEO     : citation metadata agar AI men-cite sumber dengan benar +
- *           sinyal speakable untuk voice search.
- * GEO     : Dublin Core (dcterms) agar AI generatif (ChatGPT, Gemini,
- *           Perplexity) memahami entitas, bahasa, dan pemilik konten.
- */
-function buildGeoAeoMeta({ title, description, url = '', dateModified = '', language = 'id', author = 'YumeLyrics' }) {
-  const dm         = dateModified || new Date().toISOString().split('T')[0];
-  const cleanDesc  = String(description || '').replace(/"/g, '&quot;').substring(0, 200);
-  const cleanTitle = String(title || '').replace(/"/g, '&quot;');
-  const cleanUrl   = String(url || '');
-  return `<!-- ── AI SEO: izinkan AI crawler utama ──────────────────────── -->
-<meta name="GPTBot" content="index">
-<meta name="ChatGPT-User" content="index">
-<meta name="Google-Extended" content="index">
-<meta name="PerplexityBot" content="index">
-<meta name="ClaudeBot" content="index">
-<meta name="anthropic-ai" content="index">
-<meta name="cohere-ai" content="index">
-<meta name="YouBot" content="index">
-<meta name="Diffbot" content="index">
-<!-- ── AEO: Citation metadata — AI atribusi sumber dengan benar ── -->
-<meta name="citation_title" content="${cleanTitle}">
-<meta name="citation_author" content="${author}">
-<meta name="citation_publisher" content="YumeLyrics — yumelyrics.my.id">
-<meta name="citation_online_date" content="${dm}">
-<meta name="citation_language" content="${language}">${cleanUrl ? `
-<meta name="citation_abstract_html_url" content="${cleanUrl}">` : ''}
-<!-- ── GEO: Dublin Core — machine-readable untuk AI generatif ─── -->
-<meta name="dcterms.title" content="${cleanTitle}">
-<meta name="dcterms.description" content="${cleanDesc}">
-<meta name="dcterms.language" content="${language}">
-<meta name="dcterms.creator" content="${author}">
-<meta name="dcterms.publisher" content="YumeLyrics — yumelyrics.my.id">
-<meta name="dcterms.rights" content="© YumeLyrics — yumelyrics.my.id">
-<meta name="dcterms.modified" content="${dm}">${cleanUrl ? `
-<meta name="dcterms.identifier" content="${cleanUrl}">` : ''}
-<meta name="dcterms.type" content="Text">
-<meta name="dcterms.format" content="text/html">
-<!-- ── AEO: voice search / featured snippet signal ───────────── -->
-<meta name="speakable" content="true">`;
-}
-
-/**
- * buildFAQSchema — FAQPage schema.org untuk halaman lagu.
- *
- * AEO: FAQ schema menjadi sumber jawaban di Google's People Also Ask,
- *      Bing Answer Box, dan voice assistant.
- * GEO: Pertanyaan terstruktur membantu AI generatif menjawab query
- *      seperti "apa arti lagu X" dengan mengutip YumeSubs.
- */
-function buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc) {
-  const faqs = [
-    {
-      q: `Apa arti lagu ${titleMain}${artist ? ` oleh ${artist}` : ''}?`,
-      a: metaDesc
-    },
-    {
-      q: `Di mana bisa baca lirik ${titleMain}${artist ? ` - ${artist}` : ''} terjemahan bahasa Indonesia?`,
-      a: `Lirik lengkap ${titleMain}${artist ? ` oleh ${artist}` : ''} beserta terjemahan bahasa Indonesia dan romaji tersedia di YumeSubs (yumelyrics.my.id). ${metaDesc}`
-    },
-    {
-      q: `Apakah lirik ${titleMain} tersedia dalam romaji dan terjemahan?`,
-      a: `Ya. YumeSubs menyediakan tiga versi teks untuk lagu ${titleMain}: teks Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia secara lengkap per baris.`
-    },
-  ];
-  if (titleId) {
-    faqs.push({
-      q: `Apa makna judul lagu "${titleMain}"?`,
-      a: `Judul lagu "${titleMain}" dalam bahasa Indonesia berarti "${titleId}".`
-    });
-  }
-  if (animeDisplay) {
-    faqs.push({
-      q: `Lagu "${titleMain}" berasal dari anime apa?`,
-      a: `"${titleMain}"${artist ? ` oleh ${artist}` : ''} adalah lagu dari anime ${animeDisplay}.`
-    });
-  }
-  return JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map(f => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a }
-    }))
-  });
-}
-
-/**
- * buildArtistFAQSchema — FAQPage schema untuk halaman artis.
- * AEO: muncul di "People Also Ask" untuk query seperti "lirik [artis]".
- */
-function buildArtistFAQSchema(artistName, count, metaDesc) {
-  return JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: `Di mana bisa baca lirik lagu ${artistName} terjemahan Indonesia?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Lirik lagu ${artistName} dengan terjemahan bahasa Indonesia tersedia di YumeLyrics (yumelyrics.my.id). ${metaDesc}`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `Berapa banyak lagu ${artistName} yang tersedia di YumeLyrics?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `YumeLyrics memiliki ${count} lagu ${artistName} lengkap dengan teks Jepang, romaji, dan terjemahan bahasa Indonesia.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `Apakah lirik ${artistName} di YumeLyrics disertai romaji?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Ya, semua lirik ${artistName} di YumeLyrics dilengkapi tiga lapisan teks: Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia.`
-        }
-      },
-    ]
-  });
-}
-
 function generateArtistIndexHTML(artists) {
   const sorted = [...artists].sort((a, b) => a.name.localeCompare(b.name, 'id'));
   const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
@@ -776,11 +662,11 @@ function generateArtistIndexHTML(artists) {
   const schema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Daftar Artis — YumeLyrics',
+    name: 'Daftar Artis — YumeSubs',
     description: `${sorted.length} artis, ${totalSongs} lagu lirik Jepang dengan terjemahan Indonesia.`,
     url: `${BASE_URL}/artis/`,
     inLanguage: 'id',
-    isPartOf: { '@type': 'WebSite', name: 'YumeLyrics', alternateName: ['YumeSubs', 'Yume Lyrics'], url: BASE_URL },
+    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
   });
 
   return `<!DOCTYPE html>
@@ -789,16 +675,14 @@ function generateArtistIndexHTML(artists) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
-<title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeLyrics</title>
-<meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.">
-<meta property="og:title" content="Daftar Artis | YumeLyrics">
-<meta property="og:site_name" content="YumeLyrics">
+<title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs</title>
+<meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.">
+<meta property="og:title" content="Daftar Artis | YumeSubs">
 <meta property="og:url" content="${BASE_URL}/artis/">
 <meta property="og:type" content="website">
 <link rel="canonical" href="${BASE_URL}/artis/">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeLyrics', description: sorted.length + ' artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.', url: BASE_URL + '/artis/' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -810,7 +694,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 ${SITE_NAV_CSS}
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;line-height:1.35;padding-bottom:.3rem}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin-top:.6rem}
 .catalog{padding:2rem 3.5rem 5rem}
 .related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
@@ -819,7 +703,7 @@ ${SITE_NAV_CSS}
 .related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--smoke);flex-shrink:0}
 .related-title{font-size:.88rem;font-weight:600}
-.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem;line-height:1.9;padding-bottom:.3rem}
+.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem}
 .related-arr{margin-left:auto;color:var(--gold)}
 footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3rem;flex-wrap:wrap}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
@@ -854,7 +738,7 @@ ${SITE_NAV_SCRIPT}
 
 function generateArtistHTML(artistName, songs, artistSlug) {
   const count = songs.length;
-  const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.`;
+  const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.`;
   const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
     ${r.img
       ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 96, h: 96, hd: true, sizes: '56px' })
@@ -870,11 +754,11 @@ function generateArtistHTML(artistName, songs, artistSlug) {
   const schema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: `Lirik ${artistName} — YumeLyrics`,
+    name: `Lirik ${artistName} — YumeSubs`,
     description: metaDesc,
     url: `${BASE_URL}/artis/${artistSlug}.html`,
     inLanguage: 'id',
-    isPartOf: { '@type': 'WebSite', name: 'YumeLyrics', alternateName: ['YumeSubs', 'Yume Lyrics'], url: BASE_URL },
+    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
     mainEntity: {
       '@type': 'MusicGroup',
       name: artistName,
@@ -888,18 +772,16 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
-<title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeLyrics</title>
+<title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${escHtml(metaDesc)}">
-<meta property="og:title" content="Lirik ${escHtml(artistName)} | YumeLyrics">
+<meta property="og:title" content="Lirik ${escHtml(artistName)} | YumeSubs">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/artis/${artistSlug}.html">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="YumeLyrics">
+<meta property="og:site_name" content="YumeSubs">
 <link rel="canonical" href="${BASE_URL}/artis/${artistSlug}.html">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-<script type="application/ld+json">${buildArtistFAQSchema(artistName, count, metaDesc)}</script>
-${buildGeoAeoMeta({ title: 'Lirik ' + artistName + ' — ' + count + ' Lagu + Terjemahan Indonesia | YumeLyrics', description: metaDesc, url: BASE_URL + '/artis/' + artistSlug + '.html' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -916,7 +798,7 @@ ${SITE_NAV_CSS}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}
 .breadcrumb a:hover{color:var(--gold)}
 .breadcrumb span{color:var(--gold)}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.35;padding-bottom:.3rem;margin-bottom:.6rem}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.1;margin-bottom:.6rem}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke)}
 .artist-desc{font-size:.85rem;color:var(--ash);line-height:1.75;max-width:520px;margin-top:1.2rem}
 .catalog{padding:2rem 3.5rem 5rem}
@@ -928,7 +810,7 @@ ${SITE_NAV_CSS}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .related-title{font-family:var(--jp);font-size:.92rem;color:var(--ink);line-height:1.35}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.9;padding-bottom:.3rem}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash)}
 .related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;font-family:var(--serif)}
 footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3rem;padding:3rem 3.5rem;border-top:1px solid var(--border);background:var(--cream)}
@@ -1044,21 +926,14 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
     '</div>' +
     (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
     '<div class="line-actions">' +
+    '<button type="button" class="line-bunpou-btn" onclick="event.stopPropagation();openBunpouPopup(' + i + ')" title="Bunpou · tata bahasa baris ini" aria-label="Bunpou baris ' + (i + 1) + '">文法</button>' +
     '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
     '</div></div>'
   ).join('');
 
 
 
-  const today      = new Date().toISOString().split('T')[0];
-  // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
-  const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
-  const geoAeoMeta = buildGeoAeoMeta({
-    title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeLyrics`,
-    description: metaDesc,
-    url: `${BASE_URL}/lagu/${slug}`,
-    dateModified: today,
-  });
+  const today = new Date().toISOString().split('T')[0];
   const schema = JSON.stringify([
     {
       "@context":"https://schema.org",
@@ -1094,10 +969,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
       "dateModified":today,
       "isPartOf":{
         "@type":"WebSite",
-        "name":"YumeLyrics",
-        "alternateName":["YumeSubs","Yume Lyrics","Yume Subs","yumelyrics"],
+        "name":"YumeSubs",
+        "alternateName":["YumeLyrics","Yume Subs","yumelyrics"],
         "url":BASE_URL,
-        "description":"YumeLyrics — website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia.",
+        "description":"Website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia.",
         "potentialAction":{
           "@type":"SearchAction",
           "target":{"@type":"EntryPoint","urlTemplate":`${BASE_URL}/index.html?q={search_term_string}`},
@@ -1105,7 +980,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
         },
         "publisher":{
           "@type":"Organization",
-          "name":"YumeLyrics",
+          "name":"YumeSubs",
           "url":BASE_URL,
           "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
         }
@@ -1133,10 +1008,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
       "inLanguage":"id",
       "datePublished":"2025-01-01",
       "dateModified":today,
-      "author":{"@type":"Organization","name":"YumeLyrics","url":BASE_URL},
+      "author":{"@type":"Organization","name":"YumeSubs","url":BASE_URL},
       "publisher":{
         "@type":"Organization",
-        "name":"YumeLyrics",
+        "name":"YumeSubs",
         "url":BASE_URL,
         "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
       },
@@ -1161,16 +1036,16 @@ ${THEME_BOOT_SCRIPT}
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="author" content="YumeLyrics">
+<meta name="author" content="YumeSubs">
 <meta name="theme-color" content="#f5f0ea">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YumeLyrics">
+<meta name="apple-mobile-web-app-title" content="YumeSubs">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="readable" content="false">
-<meta name="application-name" content="YumeLyrics">
+<meta name="application-name" content="YumeSubs">
 <meta name="format-detection" content="telephone=no">
-<meta name="copyright" content="YumeLyrics — yumelyrics.my.id">
+<meta name="copyright" content="YumeSubs — yumelyrics.my.id">
 <meta name="geo.region" content="ID">
 <meta name="content-language" content="id">
 <meta name="classification" content="Entertainment/Music">
@@ -1182,7 +1057,7 @@ ${THEME_BOOT_SCRIPT}
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-<title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
+<title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeSubs</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
   `lirik ${escHtml(titleMain)}`,
@@ -1202,14 +1077,13 @@ ${THEME_BOOT_SCRIPT}
   songType && anime ? `${songType} ${escHtml(animeDisplay)}` : '',
   'lirik lagu jepang terjemahan indonesia',
   'anime ost lirik',
-  'YumeLyrics',
   'YumeSubs',
 ].filter(Boolean).join(', ')}">
-<meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
+<meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}">
 <meta property="og:type" content="music.song">
-<meta property="og:site_name" content="YumeLyrics">
+<meta property="og:site_name" content="YumeSubs">
 <meta property="og:locale" content="id_ID">
 ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:secure_url" content="${escHtml(song.img)}">
@@ -1218,7 +1092,7 @@ ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:height" content="600">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">`}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@YumeSubs">
-<meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
+<meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
 <meta name="twitter:description" content="${escHtml(metaDesc)}">
 ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
 <link rel="canonical" href="${BASE_URL}/lagu/${slug}">
@@ -1226,8 +1100,6 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-<script type="application/ld+json">${faqSchema}</script>
-${geoAeoMeta}
 ${FONT_HEAD}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
 <style>
@@ -1259,9 +1131,8 @@ ${CSS_TOKENS}
 .rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 .rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+/* Saat theme toggle aktif, matikan semua transisi sementara supaya tidak berat */
 .no-transition,html.no-transition *{transition:none!important}
-html{transition:background-color .35s ease}
-body,nav,.lyrics-sidebar,.lyrics-main,.hero,.hero-text,.hero-visual,.section-divider,.cover-frame,.cover-wrap,.cmsec,.related-section-block,.comments-section{transition:background .35s ease,color .35s ease,border-color .35s ease}
 input,textarea,*[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--paper);scrollbar-gutter:stable}
@@ -1292,7 +1163,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .song-type{font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
 .song-type::before{content:'';width:2rem;height:1px;background:var(--rose);display:block}
 .song-title-jp{font-family:var(--jp);font-size:3.2rem;font-weight:300;color:var(--ink);line-height:1.1;letter-spacing:.04em;margin-bottom:.5rem}
-.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;line-height:1.55;padding-bottom:.35rem;margin-bottom:.3rem}
+.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;margin-bottom:.3rem}
 .song-title-id{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:2.5rem}
 .meta-row{display:flex;gap:2.5rem;margin-bottom:3rem}
 .meta-item{display:flex;flex-direction:column;gap:.3rem}
@@ -1330,8 +1201,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .divider-ornament{font-family:var(--serif);font-size:.85rem;font-weight:300;font-style:italic;color:var(--ash);white-space:nowrap;letter-spacing:.1em}
 
 /* ── LYRICS SECTION ── */
-.lyrics-section{display:block;min-height:auto}
-.lyrics-sidebar{padding:1.2rem 3.5rem;border-bottom:1px solid rgba(10,8,18,.08);display:flex;flex-direction:row;flex-wrap:wrap;gap:1.25rem 3rem;align-items:flex-start;position:static;height:auto;overflow:visible}
+.lyrics-section{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh;overflow:hidden}
+.lyrics-sidebar{padding:4rem 2.5rem 4rem 3.5rem;border-right:1px solid rgba(10,8,18,.08);position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:2.5rem}
 .sidebar-section-label{font-size:.58rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke);margin-bottom:1rem;display:block}
 .toggle-group{display:flex;flex-direction:column;gap:.35rem}
 .toggle-item{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.4rem 0;border-bottom:1px solid rgba(10,8,18,.06)}
@@ -1341,8 +1212,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .toggle-switch.on{background:var(--gold);border-color:var(--gold)}
 .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ash);transition:all .2s}
 .toggle-switch.on::after{left:14px;background:#fff}
-.thumbs-block{display:flex;flex-direction:column;gap:.75rem;flex:1;min-width:320px}
-.thumbs-row{display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap}
+.thumbs-block{display:flex;flex-direction:column;gap:.75rem}
 
 /* ── LYRICS MAIN ── */
 .lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
@@ -1370,10 +1240,88 @@ body.mode-quiz .ll-item,body.mode-karaoke .ll-item{pointer-events:auto}
 body.mode-quiz .lyric-left,body.mode-quiz .lyric-right,body.mode-quiz .ljp,body.mode-quiz .lid,
 body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .ljp,body.mode-karaoke .lid{pointer-events:auto}
 .line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
+.line-bunpou-btn{font-family:var(--jp);font-size:.72rem;font-weight:600;line-height:1;letter-spacing:.06em;padding:.32rem .5rem;border:1px solid rgba(201,169,110,.45);background:linear-gradient(165deg,var(--paper) 0%,var(--cream) 100%);color:var(--ink);cursor:pointer;box-shadow:0 2px 12px rgba(10,8,18,.06);transition:transform .2s,border-color .2s,box-shadow .2s,color .2s,background .2s}
+.line-bunpou-btn:hover{border-color:var(--gold);color:var(--rose);transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,99,122,.15)}
+.line-bunpou-btn:active{transform:translateY(0)}
+.ll-item.bunpou-line-active .line-bunpou-btn{border-color:var(--rose);background:rgba(196,99,122,.08);color:var(--rose)}
 .line-share-btn{opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.7rem;padding:.15rem .35rem;transition:opacity .15s,color .15s}
 .ll-item:hover .line-share-btn{opacity:1}
 .line-share-btn:hover{color:var(--gold)}
 @media(max-width:768px){.line-actions{top:.4rem;right:.2rem}.line-share-btn{opacity:.55}}
+/* ── Popup Bunpou ── */
+.bunpou-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility .28s}
+.bunpou-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.bunpou-modal{position:relative;width:min(440px,calc(100vw - 2rem));max-height:min(82vh,640px);overflow:hidden;display:flex;flex-direction:column;background:var(--paper);border:1px solid rgba(201,169,110,.35);box-shadow:0 24px 80px rgba(10,8,18,.22),0 0 0 1px rgba(232,180,200,.12) inset;transform:translateY(16px) scale(.97);opacity:0;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .28s ease}
+.bunpou-overlay.is-open .bunpou-modal{transform:translateY(0) scale(1);opacity:1}
+.bunpou-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sakura),var(--gold),var(--rose));opacity:.85}
+.bunpou-modal::after{content:'夢';position:absolute;right:-.5rem;top:2.5rem;font-family:var(--jp);font-size:5.5rem;font-weight:600;color:rgba(196,99,122,.05);pointer-events:none;line-height:1}
+.bunpou-close{position:absolute;top:.65rem;right:.65rem;z-index:2;width:2rem;height:2rem;border:1px solid var(--border);background:var(--cream);color:var(--ash);font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.bunpou-close:hover{border-color:var(--rose);color:var(--rose);background:var(--paper);transform:rotate(90deg)}
+.bunpou-head{padding:1.35rem 3rem 1rem 1.35rem;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(232,180,200,.08) 0%,transparent 100%)}
+.bunpou-kanji{display:block;font-family:var(--jp);font-size:1.75rem;font-weight:600;color:var(--ink);line-height:1.1}
+.bunpou-sub{display:block;font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:.35rem}
+.bunpou-body{padding:1.1rem 1.35rem 1.35rem;overflow-y:auto;flex:1}
+.bunpou-line-tag{font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);margin-bottom:.65rem}
+.bunpou-lyric-block{padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
+.bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink)}
+.bunpou-ro{font-family:var(--serif);font-size:.82rem;font-style:italic;color:var(--ash);line-height:1.5;margin-top:.45rem;letter-spacing:.02em}
+.bunpou-ro:empty{display:none}
+.bunpou-ro-lbl{font-size:.48rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:.5rem;display:block}
+.bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
+.bunpou-list{display:flex;flex-direction:column;gap:.55rem}
+.bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.6;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
+.bunpou-legend strong{color:var(--ink);font-weight:600}
+.bunpou-legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.35rem .5rem;margin-top:.45rem}
+.bunpou-legend-item{font-size:.54rem;color:var(--smoke);line-height:1.4}
+.bunpou-legend-item b{color:var(--ink);font-weight:700}
+.bunpou-group-title{font-size:.54rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin:1rem 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.bunpou-group-title:first-child{margin-top:0}
+.bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s;margin-bottom:.45rem}
+.bunpou-item:hover{border-color:rgba(201,169,110,.5);background:rgba(201,169,110,.06)}
+.bunpou-item-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem;flex-wrap:wrap}
+.bunpou-item-type{font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border:1px solid}
+.bunpou-item--partikel .bunpou-item-type{color:var(--rose);border-color:rgba(196,99,122,.4);background:rgba(196,99,122,.08)}
+.bunpou-item--pola .bunpou-item-type{color:var(--plum);border-color:rgba(124,77,110,.35);background:rgba(124,77,110,.06)}
+.bunpou-item--bentuk .bunpou-item-type{color:#3d5a80;border-color:rgba(61,90,128,.35);background:rgba(61,90,128,.06)}
+.bunpou-item--sopan .bunpou-item-type{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.08)}
+.bunpou-item--penghubung .bunpou-item-type{color:#2d6a5a;border-color:rgba(45,106,90,.35);background:rgba(45,106,90,.08)}
+.bunpou-item--ekspresi .bunpou-item-type{color:var(--ash);border-color:var(--border);background:var(--paper)}
+.bunpou-item--slang .bunpou-item-type{color:#8b5a2b;border-color:rgba(139,90,43,.35);background:rgba(139,90,43,.08)}
+.bunpou-item-char{font-family:var(--jp);font-size:1rem;color:var(--rose);font-weight:600}
+.bunpou-item-label{font-size:.58rem;font-weight:600;letter-spacing:.06em;color:var(--ink);margin-top:.15rem}
+.bunpou-levels{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.bunpou-lv-chip{font-size:.5rem;font-weight:700;letter-spacing:.1em;padding:.12rem .4rem;border:1px solid}
+.bunpou-lv-chip.n5{color:var(--gold);border-color:rgba(201,169,110,.45);background:rgba(201,169,110,.08)}
+.bunpou-lv-chip.n4{color:#2d6a5a;border-color:rgba(45,106,90,.4);background:rgba(45,106,90,.08)}
+.bunpou-lv-chip.n3{color:#3d5a80;border-color:rgba(61,90,128,.4);background:rgba(61,90,128,.08)}
+.bunpou-lv-chip.n2{color:var(--plum);border-color:rgba(124,77,110,.4);background:rgba(124,77,110,.08)}
+.bunpou-lv-chip.n1{color:var(--rose);border-color:rgba(196,99,122,.45);background:rgba(196,99,122,.1)}
+.bunpou-item-lvl{font-size:.48rem;font-weight:700;letter-spacing:.08em;margin-left:.35rem;padding:.1rem .32rem;border:1px solid;vertical-align:middle}
+.bunpou-item-lvl.n5{color:var(--gold);border-color:rgba(201,169,110,.4)}
+.bunpou-item-lvl.n4{color:#2d6a5a;border-color:rgba(45,106,90,.35)}
+.bunpou-item-lvl.n3{color:#3d5a80;border-color:rgba(61,90,128,.35)}
+.bunpou-item-lvl.n2{color:var(--plum);border-color:rgba(124,77,110,.35)}
+.bunpou-item-lvl.n1{color:var(--rose);border-color:rgba(196,99,122,.4)}
+.bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
+.bunpou-item-rumus{font-size:.65rem;color:var(--plum,#7c4d6e);line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(201,169,110,.12);border-left:2px solid var(--gold,#c9a96e)}
+.bunpou-item-rumus strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);margin-right:.35rem}
+.bunpou-item-contoh{font-size:.65rem;line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(61,90,128,.08);border-left:2px solid #4a6a8a}
+.bunpou-item-contoh strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:.2rem}
+.bunpou-item-contoh-jp{font-family:var(--jp);color:var(--ink);display:block;margin-bottom:.12rem}
+.bunpou-item-contoh-id{font-size:.62rem;color:var(--ash);display:block}
+.bunpou-item-actions{display:flex;align-items:center;justify-content:flex-end;margin-top:.5rem;padding-top:.45rem;border-top:1px dashed var(--border)}
+.bunpou-save-btn{font-family:var(--sans);font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .55rem;border:1px solid var(--border);background:var(--paper);color:var(--ash);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.bunpou-save-btn:hover{border-color:var(--gold);color:var(--rose)}
+.bunpou-save-btn.is-saved{border-color:var(--rose);color:var(--rose);background:rgba(196,99,122,.08)}
+.bunpou-foot-links{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center}
+.bunpou-foot{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
+.bunpou-gloss{display:inline-flex;align-items:center;gap:.35rem;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.bunpou-gloss:hover{color:var(--rose)}
+.bunpou-empty{font-size:.75rem;color:var(--ash);font-style:italic;line-height:1.6}
+body.bunpou-open{overflow:hidden}
+[data-theme="dark"] .bunpou-overlay{background:rgba(0,0,0,.65)}
+[data-theme="dark"] .bunpou-modal{box-shadow:0 28px 90px rgba(0,0,0,.55)}
+[data-theme="dark"] .line-bunpou-btn{background:linear-gradient(165deg,var(--cream) 0%,#14110f 100%);border-color:rgba(212,169,110,.35)}
 body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
 body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
 body.mode-quiz .ll-item{cursor:pointer}
@@ -1408,8 +1356,8 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
 .ljp{font-family:var(--jp);font-size:1.25rem;font-weight:400;color:var(--ink);line-height:1.7;overflow:visible;visibility:hidden;word-break:break-word;overflow-wrap:break-word;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.lro{font-family:var(--ro);font-size:.88rem;color:var(--dusk);font-style:normal;font-weight:400;letter-spacing:.01em;line-height:1.95;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.lid{font-family:var(--ro);font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lro{font-family:var(--serif);font-size:.96rem;color:var(--gold);font-style:italic;font-weight:300;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+.lid{font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.1rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
 [data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:visible;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
 [data-obf="1"] span[data-c]{white-space:nowrap;display:inline;position:relative}
@@ -1421,7 +1369,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .lsep{display:none}
 
 /* ── THUMBS (sidebar) ── */
-.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:auto;flex-shrink:0;white-space:nowrap;font-family:var(--sans);color:var(--ink)}
+.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;font-family:var(--sans);color:var(--ink)}
 .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
 .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.1)}
 .thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
@@ -1436,38 +1384,15 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 [data-theme="dark"] .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.14)}
 
 /* ── SPOTIFY & VIDEO ── */
-.spbtn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
-.spbtn:hover{opacity:.87}
+.spbtn,.spotify-btn{display:flex;align-items:center;gap:.6rem;background:#1DB954;border:none;padding:.65rem 1rem;cursor:pointer;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#000;text-decoration:none;transition:opacity .2s}
+.spbtn:hover,.spotify-btn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
-/* Discord-style Spotify card */
-.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;min-width:200px;max-width:340px;border-left:4px solid #1DB954;box-sizing:border-box}
-.spotify-card:hover{background:#2a2b2f}
-.spotify-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0}
-.spotify-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
-.spotify-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
-.spotify-card-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1DB954;display:flex;align-items:center;gap:4px;white-space:nowrap}
-.spotify-card-label svg{width:10px;height:10px;fill:#1DB954;flex-shrink:0}
-.spotify-card-title{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
-.spotify-card-artist{font-size:.72rem;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
-.spotify-card-play{width:34px;height:34px;border-radius:50%;background:#1DB954;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;transition:background .15s,transform .1s}
-.spotify-card:hover .spotify-card-play{background:#1ed760;transform:scale(1.06)}
-.spotify-card-play svg{width:12px;height:12px;fill:#000;margin-left:2px}
+.spotify-dot{width:8px;height:8px;border-radius:50%;background:#000}
 .ytwrap{margin-top:2rem;display:none} /* video tetap tersedia di-DOM tapi sidebar menggantinya */
 .ytframe{width:100%;aspect-ratio:16/9;border:1px solid var(--border);background:#000;display:block}
-.nico-card{display:flex;align-items:stretch;gap:0;background:linear-gradient(135deg,#1c1c22 0%,#161618 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s;border-left:3px solid rgba(180,180,210,.35);box-sizing:border-box;max-width:340px;box-shadow:0 2px 14px rgba(0,0,0,.28);margin-top:.5rem}
-.nico-card:hover{background:linear-gradient(135deg,#242430 0%,#1c1c22 100%);box-shadow:0 4px 22px rgba(0,0,0,.38)}
-.nico-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0;filter:brightness(.9) saturate(.85)}
-.nico-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#1e1e28;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:rgba(200,200,220,.4)}
-.nico-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
-.nico-card-label{font-size:.52rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(190,190,215,.65);display:flex;align-items:center;gap:5px;white-space:nowrap}
-.nico-card-label svg{flex-shrink:0}
-.nico-card-title{font-size:.8rem;font-weight:700;color:#eeeef2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
-.nico-card-sub{font-size:.7rem;color:#7a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
-.nico-card-cta{font-size:.6rem;font-weight:700;letter-spacing:.08em;color:rgba(210,210,230,.45);margin-top:3px;white-space:nowrap;font-family:var(--sans);text-transform:uppercase}
-.nico-card:hover .nico-card-cta{color:rgba(210,210,230,.7)}
-.nico-card-play{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px;align-self:center;transition:background .15s,transform .12s;border:1.5px solid rgba(255,255,255,.15)}
-.nico-card:hover .nico-card-play{background:rgba(255,255,255,.2);transform:scale(1.08)}
-.nico-card-play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
+.nicobtn{display:inline-flex;align-items:center;gap:.5rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.12);font-family:var(--sans);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:.5rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:all .2s;margin-top:1rem}
+.nicobtn:hover{background:#333}
+.nicothumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;margin-top:1rem;filter:sepia(.1)}
 
 /* ── ONLINE COUNTER ── */
 /* ── ONLINE COUNTER ── */
@@ -1502,7 +1427,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .rc-info,.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.9;padding-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
 .rc-artist,.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .rc-arr,.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;margin-top:.2rem;transition:all .2s;font-family:var(--serif)}
 .rc:hover .rc-arr,.related-card:hover .related-arr{color:var(--gold);transform:translateX(3px)}
@@ -1819,11 +1744,14 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .hero-visual{padding:2rem 1.5rem 3rem;border-top:1px solid rgba(10,8,18,.08)}
   .song-title-jp{font-size:2.2rem}
   .kanji-bg{font-size:10rem}
-  /* Sidebar 2 kolom di layar tablet */
+  /* Sidebar jadi horizontal 2 kolom di atas lirik */
+  .lyrics-section{grid-template-columns:1fr}
   .lyrics-sidebar{
+    position:static;height:auto;
+    padding:1.2rem 1.5rem;
+    border-right:none;border-bottom:1px solid rgba(10,8,18,.08);
     display:grid;
     grid-template-columns:1fr 1fr;
-    padding:1.2rem 1.5rem;
     gap:1.2rem;
     align-items:start;
   }
@@ -1831,10 +1759,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .lyrics-sidebar>div:last-child{grid-column:1/-1}
   /* Tombol suka & spotify: full width, tidak overflow keluar sidebar */
   .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-wrap:wrap;gap:.6rem}
   .thumbs-btn{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
-  .spotify-card{flex:1;min-width:160px;max-width:100%;box-sizing:border-box}
-  #online-counter{width:100%;box-sizing:border-box}
+  .spotify-btn{width:100%;max-width:100%;box-sizing:border-box;display:flex;min-width:0}
   .toggle-group{display:flex;flex-direction:column;gap:0;width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{min-width:0;overflow:hidden;box-sizing:border-box}
   .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -1870,10 +1796,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   }
   .lyrics-sidebar>div:last-child{grid-column:1}
   .thumbs-block{min-width:0;width:100%;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-direction:column;gap:.5rem}
   .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
-  .spotify-card{flex:none;width:100%;max-width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
-  #online-counter{width:100%}
+  .spotify-btn{width:100%;box-sizing:border-box;min-width:0;display:flex;overflow:hidden}
   .toggle-group{width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   .toggle-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2005,7 +1929,16 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   </div>
 </section>
 
-<aside class="lyrics-sidebar">
+<!-- ── DIVIDER ── -->
+<div class="section-divider" style="margin:2rem 0">
+  <div class="divider-line"></div>
+  <div class="divider-ornament">— Lirik Lengkap —</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ── LYRICS ── -->
+<section class="lyrics-section" id="lyrics">
+  <aside class="lyrics-sidebar">
     <div>
       <span class="sidebar-section-label">Tampilkan</span>
       <div class="toggle-group">
@@ -2043,65 +1976,28 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 
     <div class="thumbs-block">
       <span class="sidebar-section-label">Apresiasi</span>
-      <div class="thumbs-row">
-        <button class="thumbs-btn" id="thumbs-btn" onclick="window.doThumb()" aria-label="Suka lagu ini">
-          <span class="thumbs-icon">♡</span>
-          <span id="thumbs-count-sb">…</span>
-          <span id="thumbs-label">Suka lagu ini?</span>
-        </button>
-        ${song.sp ? `<a class="spotify-card" href="${escHtml(song.sp)}" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
-          ${song.img
-            ? `<img class="spotify-card-art" src="${escHtml(song.img)}" alt="Cover ${escHtml(titleMain)}" loading="lazy">`
-            : `<div class="spotify-card-art-fallback"><svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg></div>`
-          }
-          <div class="spotify-card-body">
-            <span class="spotify-card-label">
-              <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg>
-              Spotify
-            </span>
-            <span class="spotify-card-title">${escHtml(titleMain)}</span>
-            <span class="spotify-card-artist">${escHtml(artist)}</span>
-          </div>
-          <div class="spotify-card-play">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </a>` : ''}
-        <div id="online-counter">
-          <div class="online-dot-row">
-            <div class="online-dot"></div>
-            <span class="online-num" id="online-count">—</span>
-          </div>
-          <span class="online-sub">pembaca aktif</span>
-        </div>
-      </div>
-      ${song.nicoId ? `<a class="nico-card" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener" aria-label="Tonton di Niconico">
-        <img class="nico-card-art" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="Niconico thumbnail" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="nico-card-art-fallback" style="display:none">▶</div>
-        <div class="nico-card-body">
-          <span class="nico-card-label">
-            <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            NICONICO
-          </span>
-          <span class="nico-card-title">${escHtml(titleMain)}</span>
-          <span class="nico-card-sub">${escHtml(artist)}</span>
-          <span class="nico-card-cta">Tonton di Niconico →</span>
-        </div>
-        <div class="nico-card-play">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </div>
+      <button class="thumbs-btn" id="thumbs-btn" onclick="window.doThumb()" aria-label="Suka lagu ini">
+        <span class="thumbs-icon">♡</span>
+        <span id="thumbs-count-sb">…</span>
+        <span id="thumbs-label">Suka lagu ini?</span>
+      </button>
+      ${song.sp ? `<a class="spotify-btn" href="${escHtml(song.sp)}" target="_blank" rel="noopener">
+        <div class="spotify-dot"></div>
+        Dengarkan di Spotify
       </a>` : ''}
     </div>
-</aside>
 
-<!-- ── DIVIDER ── -->
-<div class="section-divider" style="margin:2rem 0">
-  <div class="divider-line"></div>
-  <div class="divider-ornament">— Lirik Lengkap —</div>
-  <div class="divider-line"></div>
-</div>
-
-<!-- ── LYRICS ── -->
-<section class="lyrics-section" id="lyrics">
+    <div>
+      <span class="sidebar-section-label">Sedang Membaca</span>
+      <div id="online-counter">
+        <div class="online-dot-row">
+          <div class="online-dot"></div>
+          <span class="online-num" id="online-count">—</span>
+        </div>
+        <span class="online-sub">pembaca aktif</span>
+      </div>
+    </div>
+  </aside>
 
   <main class="lyrics-main">
     <div class="lyrics-controls">
@@ -2136,6 +2032,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem">
       <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Video</div>
       <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>` : ''}
+    ${song.nicoId ? `<div style="margin-bottom:2rem">
+      <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Niconico</div>
+      <img class="nicothumb" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="thumbnail" loading="lazy" onerror="this.style.display='none'">
+      <a class="nicobtn" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Tonton di Niconico</a>
     </div>` : ''}
 
   </main>
@@ -2199,7 +2100,7 @@ ${(()=>{
       <span class="footer-col-label">Jelajahi</span>
       <a class="footer-link" href="../index.html">Katalog Lengkap</a>
       <a class="footer-link" href="../playlists.html">Setlist Belajar</a>
-
+      <a class="footer-link" href="../bunpou-saved.html">Bunpou tersimpan</a>
       <a class="footer-link" href="../kata/index.html">Glosarium 文法</a>
       <a class="footer-link" href="../stories.html">Cerita</a>
       <a class="footer-link" href="../contact.html">Hubungi</a>
@@ -2212,6 +2113,34 @@ ${(()=>{
 </footer>
 
 </div><!-- .wrap -->
+
+<!-- ── Popup Bunpou (文法) ── -->
+<div id="bunpou-overlay" class="bunpou-overlay" aria-hidden="true" onclick="if(event.target===this)closeBunpouPopup()">
+  <div class="bunpou-modal" role="dialog" aria-modal="true" aria-labelledby="bunpou-title">
+    <button type="button" class="bunpou-close" onclick="closeBunpouPopup()" aria-label="Tutup">×</button>
+    <div class="bunpou-head">
+      <span class="bunpou-kanji" id="bunpou-title">文法</span>
+      <span class="bunpou-sub">Bunpou · JLPT N5–N1 · label jenis</span>
+      <div class="bunpou-levels" id="bunpou-levels"></div>
+    </div>
+    <div class="bunpou-body">
+      <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
+      <div class="bunpou-lyric-block">
+        <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
+        <span class="bunpou-ro-lbl" id="bunpou-ro-lbl" style="display:none">Romaji</span>
+        <div class="bunpou-ro" id="bunpou-ro-preview"></div>
+      </div>
+      <p class="bunpou-summary" id="bunpou-summary"></p>
+      <div class="bunpou-list" id="bunpou-list"></div>
+      <div class="bunpou-foot">
+        <div class="bunpou-foot-links">
+          <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
+          <a class="bunpou-gloss" href="../bunpou-saved.html">Bunpou tersimpan →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Floating Avatar Bubble ── -->
 <div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
@@ -2380,6 +2309,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 });
 </script>
+${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
 <script>
 /* ── Fitur belajar YumeSubs: mode uji, karaoke, tata bahasa, favorit ── */
 (function(){
@@ -2530,6 +2460,169 @@ document.addEventListener('DOMContentLoaded', function(){
     text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
   }
 
+  var BUNPOU_SAVE_KEY = 'yume_saved_bunpou';
+
+  function loadSavedBunpouList() {
+    try { return JSON.parse(localStorage.getItem(BUNPOU_SAVE_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function bunpouSaveId(it) {
+    return (it.text || it.char || '') + '|' + (it.label || '') + '|' + (it.kind || 'pola');
+  }
+
+  function isBunpouItemSaved(it) {
+    var id = bunpouSaveId(it);
+    return loadSavedBunpouList().some(function (x) { return x.id === id; });
+  }
+
+  window.saveBunpouByIndex = function (bi) {
+    var it = window._bunpouRenderList && window._bunpouRenderList[bi];
+    if (!it) return;
+    var id = bunpouSaveId(it);
+    var list = loadSavedBunpouList();
+    if (list.some(function (x) { return x.id === id; })) {
+      if (typeof toast === 'function') toast('Bunpou ini sudah tersimpan');
+      return;
+    }
+    var ctx = window._bunpouLineContext || {};
+    list.unshift({
+      id: id,
+      text: it.text || it.char || '',
+      label: it.label || '',
+      desc: it.desc || '',
+      level: it.level || 'N5',
+      kind: it.kind || 'pola',
+      kindLabel: it.kindLabel || '',
+      savedAt: Date.now(),
+      songSlug: ctx.slug || '',
+      songTitle: ctx.title || '',
+      lineIdx: typeof ctx.idx === 'number' ? ctx.idx : -1,
+      lineJp: ctx.jp || '',
+      lineRo: ctx.ro || ''
+    });
+    try {
+      localStorage.setItem(BUNPOU_SAVE_KEY, JSON.stringify(list.slice(0, 300)));
+    } catch (e) {}
+    var btn = document.querySelector('.bunpou-save-btn[data-bunpou-idx="' + bi + '"]');
+    if (btn) {
+      btn.classList.add('is-saved');
+      btn.textContent = 'Tersimpan ✓';
+    }
+    if (typeof toast === 'function') toast('Bunpou disimpan ★');
+  };
+
+  window.closeBunpouPopup = function() {
+    var overlay = document.getElementById('bunpou-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('bunpou-open');
+    document.querySelectorAll('.ll-item').forEach(function(r) {
+      r.classList.remove('bunpou-line-active');
+    });
+  };
+
+  window.openBunpouPopup = function(idx) {
+    var overlay = document.getElementById('bunpou-overlay');
+    if (!overlay) return;
+    var plain = getPlainLine(idx);
+    var jp = plain.jp || '';
+    var ro = (plain.ro || '').trim();
+    var lineTag = document.getElementById('bunpou-line-num');
+    var preview = document.getElementById('bunpou-jp-preview');
+    var roPreview = document.getElementById('bunpou-ro-preview');
+    var roLbl = document.getElementById('bunpou-ro-lbl');
+    var summaryEl = document.getElementById('bunpou-summary');
+    var listEl = document.getElementById('bunpou-list');
+    var glossLink = document.getElementById('bunpou-gloss-link');
+    window._bunpouLineContext = { slug: SONG_SLUG, title: SONG_TITLE, idx: idx, jp: jp, ro: ro };
+    window._bunpouRenderList = [];
+    if (lineTag) lineTag.textContent = 'Baris ' + (idx + 1) + ' · ' + SONG_TITLE;
+    if (preview) preview.textContent = jp || '—';
+    if (roPreview) roPreview.textContent = ro;
+    if (roLbl) roLbl.style.display = ro ? 'block' : 'none';
+    document.querySelectorAll('.ll-item').forEach(function(r) {
+      r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
+    });
+    saveProgress(idx);
+    var lvBox = document.getElementById('bunpou-levels');
+    if (!jp && !ro) {
+      if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks untuk dianalisis.';
+      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
+      if (glossLink) glossLink.style.display = 'none';
+      if (lvBox) lvBox.innerHTML = '';
+    } else if (!window.YumeGrammar) {
+      if (summaryEl) summaryEl.textContent = 'Modul bunpou belum dimuat — generate ulang halaman lagu.';
+      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Pastikan ym-grammar-browser.js ada di repo.</p>';
+      if (glossLink) glossLink.style.display = 'none';
+      if (lvBox) lvBox.innerHTML = '';
+    } else {
+      var result = window.YumeGrammar.analyzeJapaneseGrammar(jp, plain.ro || '');
+      if (summaryEl) summaryEl.textContent = result.summary || '';
+      if (lvBox) {
+        var lvHtml = '';
+        (result.levels || []).forEach(function(l) {
+          var c = (l || 'N5').toLowerCase();
+          lvHtml += '<span class="bunpou-lv-chip ' + c + '">' + l + '</span>';
+        });
+        lvBox.innerHTML = lvHtml || '<span class="bunpou-lv-chip n5">N5</span>';
+      }
+      var html = '';
+      function itemHtml(it) {
+        var bi = window._bunpouRenderList.length;
+        window._bunpouRenderList.push(it);
+        var c = (it.level || 'N5').toLowerCase();
+        var k = (it.kind || 'pola');
+        var kindLabel = it.kindLabel || 'Pola tata bahasa';
+        var saved = isBunpouItemSaved(it);
+        return '<div class="bunpou-item bunpou-item--' + k + '">' +
+          '<div class="bunpou-item-top">' +
+          '<span class="bunpou-item-type" title="Jenis bunpou">' + kindLabel + '</span>' +
+          '<span class="bunpou-item-lvl ' + c + '" title="Level JLPT">' + (it.level || 'N5') + '</span></div>' +
+          '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
+          '<div class="bunpou-item-label">' + (it.label || '') + ' · <em style="font-style:normal;color:var(--smoke);font-size:.58rem">' + kindLabel + '</em></div>' +
+          '<div class="bunpou-item-desc">' + (it.desc || '') + '</div>' +
+          (it.rumus ? '<div class="bunpou-item-rumus"><strong>Rumus</strong>' + (it.rumus || '') + '</div>' : '') +
+          (it.contoh && it.contoh.jp
+            ? '<div class="bunpou-item-contoh"><strong>Contoh</strong><span class="bunpou-item-contoh-jp">' + it.contoh.jp + '</span>' +
+              (it.contoh.id ? '<span class="bunpou-item-contoh-id">' + it.contoh.id + '</span>' : '') + '</div>'
+            : '') +
+          '<div class="bunpou-item-actions"><button type="button" class="bunpou-save-btn' + (saved ? ' is-saved' : '') + '" data-bunpou-idx="' + bi + '" onclick="event.stopPropagation();saveBunpouByIndex(' + bi + ')">' + (saved ? 'Tersimpan ✓' : 'Simpan ★') + '</button></div></div>';
+      }
+      var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
+        ? window.YumeGrammar.KIND_ORDER
+        : ['partikel','penghubung','sopan','bentuk','pola','ekspresi'];
+      var groups = result.groups || {};
+      var hasGroup = false;
+      order.forEach(function(k) {
+        var arr = groups[k] || [];
+        if (!arr.length) return;
+        hasGroup = true;
+        var title = (window.YumeGrammar && window.YumeGrammar.KIND_LABELS && window.YumeGrammar.KIND_LABELS[k]) || k;
+        html += '<div class="bunpou-group-title">' + title + '</div>';
+        arr.forEach(function(it) { html += itemHtml(it); });
+      });
+      if (!hasGroup && result.items && result.items.length) {
+        result.items.forEach(function(it) { html += itemHtml(it); });
+      }
+      if (listEl) listEl.innerHTML = html || '<p class="bunpou-empty">Tidak ada bunpou N5–N1 yang terdeteksi di baris ini.</p>';
+      if (glossLink) {
+        var slug = null;
+        var all = (result.phrases || []).concat(result.particles || []);
+        for (var gi = 0; gi < all.length; gi++) {
+          if (all[gi].glossSlug) { slug = all[gi].glossSlug; break; }
+        }
+        glossLink.href = slug ? '../kata/' + slug + '.html' : '../kata/index.html';
+        glossLink.textContent = slug ? 'Glosarium · ' + slug.replace(/-/g, ' ') + ' →' : 'Glosarium bunpou →';
+        glossLink.style.display = 'inline-flex';
+      }
+    }
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('bunpou-open');
+    try { overlay.querySelector('.bunpou-close').focus(); } catch(e) {}
+  };
+
   function initYumeFeatures() {
     renderProgressUI(loadProgress());
     updateFavBtn();
@@ -2564,6 +2657,12 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     });
 
+    if (!document.body.dataset.bunpouEsc) {
+      document.body.dataset.bunpouEsc = '1';
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeBunpouPopup();
+      });
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
   else initYumeFeatures();
@@ -2601,6 +2700,7 @@ document.addEventListener('DOMContentLoaded', function(){
   window.toggleTheme = function(){
     var root = document.documentElement;
     var isDark = root.getAttribute('data-theme') === 'dark';
+    root.classList.add('no-transition');
     if(isDark){
       root.removeAttribute('data-theme');
       localStorage.setItem('ym_theme','light');
@@ -2608,6 +2708,11 @@ document.addEventListener('DOMContentLoaded', function(){
       root.setAttribute('data-theme','dark');
       localStorage.setItem('ym_theme','dark');
     }
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        root.classList.remove('no-transition');
+      });
+    });
   };
 })();
 </script>
@@ -4310,7 +4415,6 @@ window.postCm = async () => {
     // Langsung aktifkan tombol copy setelah komentar berhasil — tanpa tunggu Firestore
     if (!_isAdmin && !_hasCommented) {
       _hasCommented = true;
-      try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
       updateCopyGate();
     }
     if (_isAdmin) {
@@ -4529,43 +4633,18 @@ window._walineAppInstance = init({
     level5: 'Legenda',
   },
 });
-// ── Waline submit-click detector ─────────────────────────────────────────
-// Set flag HANYA ketika user benar-benar klik tombol Submit Waline,
-// bukan saat inisialisasi/fetch internal Waline yang juga POST ke /api/comment.
-// Flag di-reset setelah 8 detik atau setelah berhasil unlock.
-window._ymPendingWalineSubmit = false;
-(function() {
-  var walineEl = document.getElementById('waline');
-  if (!walineEl) return;
-  walineEl.addEventListener('click', function(e) {
-    var btn = e.target && (e.target.closest ? e.target.closest('button') : null);
-    if (!btn) return;
-    // Waline v3 submit button: class wl-btn + primary, atau type=submit
-    if (btn.type === 'submit' || btn.classList.contains('wl-submit') ||
-        (btn.classList.contains('primary') && btn.classList.contains('wl-btn'))) {
-      window._ymPendingWalineSubmit = true;
-      // Auto-reset jika dalam 8 detik tidak ada POST berhasil
-      setTimeout(function() { window._ymPendingWalineSubmit = false; }, 8000);
-    }
-  }, true);
-})();
-// ── Fetch interceptor: unlock copy HANYA jika user benar-benar submit ────
 (function() {
   var _orig = window.fetch;
   window.fetch = function(url, opts) {
     var p = _orig.apply(this, arguments);
     try {
       var u = typeof url === 'string' ? url : (url && url.url) || '';
-      // Cek: harus POST ke /api/comment DAN user sudah klik Submit (flag aktif)
-      if (window._ymPendingWalineSubmit &&
-          opts && opts.method && opts.method.toUpperCase() === 'POST' &&
-          u.indexOf('/api/comment') !== -1) {
+      if (opts && opts.method && opts.method.toUpperCase() === 'POST' && u.indexOf('/api/comment') !== -1) {
         p.then(function(res) {
-          if (res && res.ok) {
-            window._ymPendingWalineSubmit = false;
+          if (res && res.ok && !window._hasCommented) {
             if (window.__yumeMarkWalineCommented) window.__yumeMarkWalineCommented();
           }
-        }).catch(function() { window._ymPendingWalineSubmit = false; });
+        }).catch(function() {});
       }
     } catch(e) {}
     return p;
@@ -4930,7 +5009,7 @@ async function main() {
     `  <url><loc>${BASE_URL}/stories.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/artis/</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>`,
-
+    `  <url><loc>${BASE_URL}/bunpou-saved.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>monthly</changefreq></url>`,
   ];
   const slugMap = {};
 
@@ -5011,24 +5090,7 @@ async function main() {
       if (!prev || prev.slug !== finalSlug) {
         manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
       }
-      const skipTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const skipArtist = (song.artist||'').replace(/&/g,'&amp;');
-      const skipImgBlock = song.img ? `
-    <image:image>
-      <image:loc>${song.img}</image:loc>
-      <image:title>${skipTitle} - ${skipArtist}</image:title>
-      <image:caption>Lirik ${skipTitle} - ${skipArtist} | YumeLyrics</image:caption>
-    </image:image>` : '';
-      const skipVideoBlock = song.ytId ? `
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>${skipTitle} - ${skipArtist}</video:title>
-      <video:description>Lirik ${skipTitle} - ${skipArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
-      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
-    </video:video>` : '';
-      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${skipImgBlock}${skipVideoBlock}
-  </url>`);
+      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>`);
       continue;
     }
 
@@ -5046,23 +5108,13 @@ async function main() {
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
     generatedSongCount++;
     console.log(`  ✓ lagu/${finalSlug}.html`);
-    const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const genArtist = (song.artist||'').replace(/&/g,'&amp;');
     const imgTag = song.img ? `
     <image:image>
       <image:loc>${song.img}</image:loc>
-      <image:title>${genTitle} - ${genArtist}</image:title>
-      <image:caption>Lirik ${genTitle} - ${genArtist} | YumeLyrics</image:caption>
+      <image:title>${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')}</image:title>
+      <image:caption>Lirik ${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')} | YumeSubs</image:caption>
     </image:image>` : '';
-    const videoTag = song.ytId ? `
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>${genTitle} - ${genArtist}</video:title>
-      <video:description>Lirik ${genTitle} - ${genArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
-      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
-    </video:video>` : '';
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
+    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}
   </url>`);
   }
 
@@ -5129,7 +5181,7 @@ async function main() {
 
   saveManifest(manifest);
 
-  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
+  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-generate, ${skippedSongCount} dilewati (sudah mutakhir)`);
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
