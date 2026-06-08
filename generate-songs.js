@@ -12,46 +12,14 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
-const NOTIFY_EDIT_WINDOW_MS = 60 * 60 * 1000; // 1 jam
 
 function isHtmlDirty(song) {
   return song.htmlDirty === true || song.htmlDirty === 'true';
 }
 
-function parseEditedAt(htmlEditedAt) {
-  if (!htmlEditedAt) return null;
-  if (typeof htmlEditedAt === 'object') {
-    if (typeof htmlEditedAt.toDate === 'function') return htmlEditedAt.toDate();
-    if (typeof htmlEditedAt.toMillis === 'function') return new Date(htmlEditedAt.toMillis());
-    if (htmlEditedAt.seconds != null) {
-      return new Date(htmlEditedAt.seconds * 1000 + (htmlEditedAt.nanoseconds || 0) / 1e6);
-    }
-  }
-  const d = new Date(htmlEditedAt);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/** Cek apakah lagu diedit dalam 1 jam terakhir — dipakai filter notif Discord */
-function isEditedWithinNotifyWindow(htmlEditedAt, windowMs = NOTIFY_EDIT_WINDOW_MS) {
-  const d = parseEditedAt(htmlEditedAt);
-  if (!d) return false;
-  return Date.now() - d.getTime() <= windowMs;
-}
-
-/**
- * Umumkan ke Discord hanya lagu yang benar-benar di-upload run ini.
- * Edit: harus htmlDirty + (diedit ≤1 jam ATAU belum punya htmlEditedAt).
- */
-function shouldNotifyDiscord(song, kind, fullMode, wasDirty = false) {
-  if (fullMode) return true;
-  if (kind === 'upload') return true;
-  if (kind === 'edit') {
-    if (!wasDirty) return false;
-    const editedAt = parseEditedAt(song.htmlEditedAt);
-    if (!editedAt) return true;
-    return Date.now() - editedAt.getTime() <= NOTIFY_EDIT_WINDOW_MS;
-  }
-  return false;
+/** Notif Discord: hanya lagu baru (belum punya halaman HTML) */
+function shouldNotifyDiscord(_song, kind) {
+  return kind === 'upload';
 }
 
 function formatDiscordSongLine(s) {
@@ -60,12 +28,10 @@ function formatDiscordSongLine(s) {
   return `• [${t}${a}](${s.url})`;
 }
 
-async function sendDiscordNotification(generatedSongs, mode, success = true) {
+async function sendDiscordNotification(generatedSongs, success = true) {
   if (!DISCORD_WEBHOOK_URL) return;
   try {
     const count = generatedSongs.length;
-    const uploads = generatedSongs.filter(s => s.kind === 'upload');
-    const edits = generatedSongs.filter(s => s.kind === 'edit');
     const SITE_URL = 'https://yumelyrics.my.id';
     let title, desc, listTitle, color;
     if (!success) {
@@ -73,54 +39,16 @@ async function sendDiscordNotification(generatedSongs, mode, success = true) {
       desc = 'Terjadi error saat upload halaman lagu ke website.';
       listTitle = '🎶 Lagu';
       color = 15158332;
-    } else if (count === 0) {
-      title = '✅ Tidak Ada Perubahan Baru';
-      desc = 'Tidak ada lagu baru atau diedit dalam **1 jam terakhir** yang perlu diumumkan.';
-      listTitle = '🎶 Lagu';
-      color = 9807270;
-    } else if (mode === 'full') {
-      title = '🔄 Semua Halaman Lagu Diperbarui';
-      desc = `**${count} halaman lagu** berhasil diupload ulang ke website.`;
-      listTitle = '🎶 Lagu yang Diperbarui';
-      color = 3066993;
-    } else if (edits.length && uploads.length) {
-      title = '✅ Lagu Diupload & Diedit';
-      desc = `**${uploads.length}** lagu baru diupload, **${edits.length}** lagu diedit.`;
-      listTitle = '🎶 Perubahan';
-      color = 3066993;
-    } else if (edits.length) {
-      title = '✏️ Lagu Diedit';
-      desc = `**${edits.length}** lagu berhasil diedit dan diupload ke website.`;
-      listTitle = '🎶 Lagu yang Diedit';
-      color = 3066993;
     } else {
       title = '🎵 Lagu Baru Diupload';
-      desc = `**${uploads.length}** lagu baru berhasil diupload ke website.`;
+      desc = `**${count}** lagu baru berhasil diupload ke website.`;
       listTitle = '🎶 Lagu Baru';
       color = 3066993;
     }
 
-    let songListValue = '_Semua halaman lagu sudah mutakhir._';
-    if (count > 0) {
-      const parts = [];
-      if (edits.length) {
-        const editLines = edits.slice(0, 10).map(formatDiscordSongLine);
-        if (edits.length > 10) editLines.push(`_...dan ${edits.length - 10} lagu diedit lainnya_`);
-        parts.push(`**✏️ Diedit**\n${editLines.join('\n')}`);
-      }
-      if (uploads.length) {
-        const uploadLines = uploads.slice(0, 10).map(formatDiscordSongLine);
-        if (uploads.length > 10) uploadLines.push(`_...dan ${uploads.length - 10} lagu baru lainnya_`);
-        parts.push(`**🎵 Baru**\n${uploadLines.join('\n')}`);
-      }
-      if (mode === 'full') {
-        const lines = generatedSongs.slice(0, 10).map(formatDiscordSongLine);
-        if (count > 10) lines.push(`_...dan ${count - 10} lagu lainnya_`);
-        songListValue = lines.join('\n');
-      } else if (parts.length) {
-        songListValue = parts.join('\n\n');
-      }
-    }
+    const lines = generatedSongs.slice(0, 10).map(formatDiscordSongLine);
+    if (count > 10) lines.push(`_...dan ${count - 10} lagu baru lainnya_`);
+    const songListValue = count > 0 ? lines.join('\n') : '_Tidak ada lagu baru._';
 
     const payload = {
       content: '<@&1513469865451716771>',
@@ -5219,7 +5147,7 @@ async function main() {
       await clearHtmlDirtyFlag(db, song.id);
     }
     generatedSongCount++;
-    if (shouldNotifyDiscord(song, songKind, fullMode, wasDirty)) {
+    if (shouldNotifyDiscord(song, songKind)) {
       generatedSongs.push({
         kind: songKind,
         titleRo: song.titleRo || song.titleJp || '',
@@ -5227,10 +5155,6 @@ async function main() {
         slug: finalSlug,
         url: `${BASE_URL}/lagu/${finalSlug}.html`,
       });
-    } else if (wasDirty && songKind === 'edit') {
-      const editedAt = parseEditedAt(song.htmlEditedAt);
-      const ageMin = editedAt ? Math.round((Date.now() - editedAt.getTime()) / 60000) : null;
-      console.log(`  · notif dilewati: ${finalSlug} (diedit ${ageMin ?? '?'} menit lalu, lewat batas 1 jam)`);
     }
     console.log(`  ✓ lagu/${finalSlug}.html`);
     const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -5315,28 +5239,21 @@ async function main() {
   }
 
   saveManifest(manifest);
-  const generateMode = process.env.GENERATE_MODE || 'incremental';
   if (generatedSongs.length > 0) {
-    await sendDiscordNotification(generatedSongs, generateMode, true);
-  } else if (generatedSongCount === 0) {
-    await sendDiscordNotification([], generateMode, true);
+    await sendDiscordNotification(generatedSongs, true);
+    console.log(`   Notif Discord: ${generatedSongs.length} lagu baru`);
   } else {
-    console.log('   Notif Discord tidak dikirim — lagu di-upload tapi di luar batas 1 jam / tanpa htmlEditedAt.');
+    console.log('   Notif Discord dilewati — tidak ada lagu baru.');
   }
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir)`);
-  if (generatedSongCount > 0 && generatedSongs.length === 0) {
-    console.log(`   Notif Discord dilewati — tidak ada lagu baru/diedit dalam 1 jam terakhir.`);
-  } else {
-    console.log(`   Notif Discord: ${generatedSongs.length} lagu`);
-  }
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
 }
 
 main().catch(async e => {
   console.error(e);
-  await sendDiscordNotification([], process.env.GENERATE_MODE || 'incremental', false);
+  await sendDiscordNotification([], false);
   process.exit(1);
 });
