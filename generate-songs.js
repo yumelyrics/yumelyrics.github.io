@@ -11,7 +11,15 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { buildJlptPhrasesInject, buildJlptSourceInject, applyJlptSourceToGrammar } from './jlpt-phrase-builder.js';
+let buildJlptPhrasesInject = () => '[]';
+let buildJlptSourceInject  = () => "''";
+let applyJlptSourceToGrammar = (grammar, _src) => grammar;
+try {
+  const _jlpt = await import('./jlpt-phrase-builder.js');
+  buildJlptPhrasesInject   = _jlpt.buildJlptPhrasesInject;
+  buildJlptSourceInject    = _jlpt.buildJlptSourceInject;
+  applyJlptSourceToGrammar = _jlpt.applyJlptSourceToGrammar;
+} catch { /* jlpt-phrase-builder.js tidak ada — fitur JLPT dilewati */ }
 
 function loadGrammarBrowserJs() {
   let grammar = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
