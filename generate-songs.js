@@ -3,7 +3,7 @@
 // Cek baris 20: harus ada "Cormorant" di FONT_URL (bukan Plus Jakarta)
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -140,6 +140,7 @@ function seedManifestFromDisk(manifest, songMeta) {
 
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
+  if (song.htmlDirty === true) return true;
   const fp = path.join('lagu', `${slug}.html`);
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
@@ -5102,6 +5103,10 @@ async function main() {
     const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
     fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
+    // Clear htmlDirty di Firebase supaya incremental run berikutnya tidak regenerate lagi
+    if (!fullMode && song.htmlDirty === true) {
+      await updateDoc(doc(db, 'songs', song.id), { htmlDirty: false }).catch(() => {});
+    }
     generatedSongCount++;
     generatedSongs.push({
       titleRo: song.titleRo || song.titleJp || '',
