@@ -1,4 +1,4 @@
-# YumeSubs — jangan indeks halaman internal / skrip build
+# YumeLyrics (YumeSubs) — jangan indeks halaman internal / skrip build
 User-agent: *
 Allow: /
 Disallow: /admin.html
@@ -9,3 +9,5 @@ Disallow: /generate-stories.cjs
 Disallow: /firestore.rules
 Disallow: /FIRESTORE-RULES-DEPLOY.md
 Disallow: /GITHUB-SECURITY.md
+
+Sitemap: https://yumelyrics.my.id/sitemap.xml
