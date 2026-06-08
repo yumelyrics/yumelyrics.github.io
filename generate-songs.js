@@ -83,7 +83,17 @@ const BASE_URL = 'https://yumelyrics.my.id';
 const DEFAULT_COMMENT_PROFILE_URL = `${BASE_URL}/profile-comment.jpg`;
 const MANIFEST_PATH = '.yume-generate-manifest.json';
 
-/** Hash isi lagu — dipakai untuk skip generate jika tidak berubah */
+/** Normalisasi lirik supaya hash stabil (field kosong / ans hilang tidak bikin mismatch) */
+function normalizeLyrics(lyrics) {
+  return (lyrics || []).map(l => ({
+    jp: l.jp || '',
+    ro: l.ro || '',
+    id: l.id || '',
+    ans: l.ans || '',
+  }));
+}
+
+/** Hash isi lagu — dipakai manifest & deteksi htmlDirty yang sudah ter-generate */
 function songContentHash(song) {
   const payload = {
     titleJp: song.titleJp || '',
@@ -102,11 +112,11 @@ function songContentHash(song) {
     animeEn: song.animeEn || '',
     type: song.type || '',
     genre: song.genre || '',
-    mood: song.mood || '',
+    mood: Array.isArray(song.mood) ? song.mood.join(', ') : (song.mood || ''),
     jlpt: song.jlpt || '',
     difficulty: song.difficulty || '',
     order: song.order ?? null,
-    lyrics: song.lyrics || [],
+    lyrics: normalizeLyrics(song.lyrics),
   };
   return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
 }
@@ -125,30 +135,55 @@ function saveManifest(manifest) {
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 }
 
-/** Run pertama: isi manifest dari HTML yang sudah ada di repo (tanpa generate ulang semua) */
+/** Run pertama / manifest kosong: sinkronkan dari HTML yang sudah ada (tanpa generate ulang) */
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    if (manifest.songs[song.id]) continue;
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
-    manifest.songs[song.id] = { slug, hash: songContentHash(song) };
-    seeded++;
+    const hash = songContentHash(song);
+    const prev = manifest.songs[song.id];
+    if (!prev || prev.slug !== slug || prev.hash !== hash) {
+      manifest.songs[song.id] = { slug, hash };
+      seeded++;
+    }
   }
   return seeded;
 }
 
+/**
+ * Incremental: generate hanya jika
+ * - file HTML belum ada (lagu baru), atau
+ * - slug berubah, atau
+ * - htmlDirty === true DAN isi belum tercatat di manifest (belum di-build)
+ *
+ * Hash TIDAK dipakai untuk memaksa rebuild semua — cukup htmlDirty + keberadaan file.
+ */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
-  if (song.htmlDirty === true) return true;
   const fp = path.join('lagu', `${slug}.html`);
-  if (!fs.existsSync(fp)) return true;
-  const prev = manifest.songs[song.id];
-  if (!prev) return true;
-  if (prev.slug !== slug) return true;
+  const fileExists = fs.existsSync(fp);
   const hash = songContentHash(song);
-  if (prev.hash !== hash) return true;
+  const prev = manifest.songs[song.id];
+
+  if (!fileExists) return true;
+  if (prev && prev.slug !== slug) return true;
+
+  if (song.htmlDirty === true) {
+    // Sudah di-generate run lalu tapi htmlDirty gagal di-clear di Firebase
+    if (prev && prev.slug === slug && prev.hash === hash) return false;
+    return true;
+  }
+
   return false;
+}
+
+async function clearHtmlDirtyFlag(db, songId) {
+  try {
+    await updateDoc(doc(db, 'songs', songId), { htmlDirty: false });
+  } catch (e) {
+    console.warn(`  ⚠ htmlDirty tidak bisa di-clear untuk ${songId}: ${e.message || e}`);
+  }
 }
 
 function removeOrphanHtml(dir, validNames, ext = '.html') {
@@ -5066,9 +5101,13 @@ async function main() {
   for(const {song, slug: finalSlug} of songMeta){
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
+      const skipHash = songContentHash(song);
       const prev = manifest.songs[song.id];
-      if (!prev || prev.slug !== finalSlug) {
-        manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
+      if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
+        manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
+      }
+      if (!fullMode && song.htmlDirty === true) {
+        await clearHtmlDirtyFlag(db, song.id);
       }
       const skipTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const skipArtist = (song.artist||'').replace(/&/g,'&amp;');
@@ -5103,9 +5142,8 @@ async function main() {
     const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
     fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
-    // Clear htmlDirty di Firebase supaya incremental run berikutnya tidak regenerate lagi
     if (!fullMode && song.htmlDirty === true) {
-      await updateDoc(doc(db, 'songs', song.id), { htmlDirty: false }).catch(() => {});
+      await clearHtmlDirtyFlag(db, song.id);
     }
     generatedSongCount++;
     generatedSongs.push({
