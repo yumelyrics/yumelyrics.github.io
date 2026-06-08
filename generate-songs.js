@@ -11,33 +11,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { buildJlptPhrasesInject, buildJlptSourceInject, applyJlptSourceToGrammar } from './jlpt-phrase-builder.js';
-
-function loadGrammarBrowserJs() {
-  let grammar = fs.readFileSync(path.join(__dirname, 'ym-grammar-browser.js'), 'utf8');
-  const jlptSrc = buildJlptSourceInject();
-  if (jlptSrc !== "''") {
-    grammar = applyJlptSourceToGrammar(grammar, jlptSrc);
-    const rows = (jlptSrc.match(/\\n/g) || []).length;
-    console.log('✓ JLPT bunpou source injected (~' + Math.max(0, rows) + ' baris teks)');
-  } else {
-    const jlptInject = buildJlptPhrasesInject();
-    if (jlptInject !== '[]') {
-      grammar = grammar.replace('/*JLPT_PHRASES_INJECT*/[]', jlptInject);
-      console.log('✓ JLPT bunpou array:', (jlptInject.match(/\n/g) || []).length + 1, 'baris');
-    } else {
-      console.warn('⚠ JLPT no BUNPOU.txt tidak ditemukan — PHRASES_JLPT kosong.');
-    }
-  }
-  return grammar;
-}
-
-let GRAMMAR_BROWSER_JS = '';
-try {
-  GRAMMAR_BROWSER_JS = loadGrammarBrowserJs();
-} catch (e) {
-  console.warn('⚠ ym-grammar-browser.js tidak ditemukan — panel tata bahasa dilewati.', e.message);
-}
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -350,7 +323,6 @@ function buildSiteNav(prefix, active) {
     <a class="nd-item${catOn}" href="${p}index.html">Katalog</a>
     <a class="nd-item${artOn}" href="${artHref}">Artis</a>
     <a class="nd-item" href="${p}playlists.html">Setlist</a>
-    <a class="nd-item" href="${p}bunpou-saved.html">Bunpou tersimpan</a>
     <a class="nd-item" href="${p}kata/index.html">Glosarium</a>
     <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
@@ -837,7 +809,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 ${SITE_NAV_CSS}
 .artist-hero{padding:4rem 3.5rem 2rem;max-width:1100px}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;line-height:1.35;padding-bottom:.1rem}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;line-height:1.35;padding-bottom:.3rem}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin-top:.6rem}
 .catalog{padding:2rem 3.5rem 5rem}
 .related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
@@ -846,7 +818,7 @@ ${SITE_NAV_CSS}
 .related-thumb{width:52px;height:52px;object-fit:cover;flex-shrink:0}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--smoke);flex-shrink:0}
 .related-title{font-size:.88rem;font-weight:600}
-.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem;line-height:1.55;padding-bottom:.1rem}
+.related-ro{font-size:.68rem;color:var(--ash);margin-top:.2rem;line-height:1.9;padding-bottom:.3rem}
 .related-arr{margin-left:auto;color:var(--gold)}
 footer{padding:3rem 3.5rem;border-top:1px solid var(--border);display:flex;gap:3rem;flex-wrap:wrap}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.35rem}
@@ -943,7 +915,7 @@ ${SITE_NAV_CSS}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}
 .breadcrumb a:hover{color:var(--gold)}
 .breadcrumb span{color:var(--gold)}
-.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.35;padding-bottom:.1rem;margin-bottom:.6rem}
+.artist-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.35;padding-bottom:.3rem;margin-bottom:.6rem}
 .artist-count{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke)}
 .artist-desc{font-size:.85rem;color:var(--ash);line-height:1.75;max-width:520px;margin-top:1.2rem}
 .catalog{padding:2rem 3.5rem 5rem}
@@ -955,7 +927,7 @@ ${SITE_NAV_CSS}
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .related-title{font-family:var(--jp);font-size:.92rem;color:var(--ink);line-height:1.35}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.55;padding-bottom:.1rem}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.9;padding-bottom:.3rem}
 .related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;font-family:var(--serif)}
 footer{display:flex;justify-content:space-between;align-items:flex-start;gap:3rem;padding:3rem 3.5rem;border-top:1px solid var(--border);background:var(--cream)}
@@ -1071,7 +1043,6 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
     '</div>' +
     (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
     '<div class="line-actions">' +
-    '<button type="button" class="line-bunpou-btn" onclick="event.stopPropagation();openBunpouPopup(' + i + ')" title="Bunpou · tata bahasa baris ini" aria-label="Bunpou baris ' + (i + 1) + '">文法</button>' +
     '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
     '</div></div>'
   ).join('');
@@ -1320,7 +1291,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .song-type{font-size:.58rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
 .song-type::before{content:'';width:2rem;height:1px;background:var(--rose);display:block}
 .song-title-jp{font-family:var(--jp);font-size:3.2rem;font-weight:300;color:var(--ink);line-height:1.1;letter-spacing:.04em;margin-bottom:.5rem}
-.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;line-height:1.45;padding-bottom:.15rem;margin-bottom:.3rem}
+.song-title-ro{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--ash);letter-spacing:.05em;line-height:1.55;padding-bottom:.35rem;margin-bottom:.3rem}
 .song-title-id{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);margin-bottom:2.5rem}
 .meta-row{display:flex;gap:2.5rem;margin-bottom:3rem}
 .meta-item{display:flex;flex-direction:column;gap:.3rem}
@@ -1398,88 +1369,10 @@ body.mode-quiz .ll-item,body.mode-karaoke .ll-item{pointer-events:auto}
 body.mode-quiz .lyric-left,body.mode-quiz .lyric-right,body.mode-quiz .ljp,body.mode-quiz .lid,
 body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .ljp,body.mode-karaoke .lid{pointer-events:auto}
 .line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
-.line-bunpou-btn{font-family:var(--jp);font-size:.72rem;font-weight:600;line-height:1;letter-spacing:.06em;padding:.32rem .5rem;border:1px solid rgba(201,169,110,.45);background:linear-gradient(165deg,var(--paper) 0%,var(--cream) 100%);color:var(--ink);cursor:pointer;box-shadow:0 2px 12px rgba(10,8,18,.06);transition:transform .2s,border-color .2s,box-shadow .2s,color .2s,background .2s}
-.line-bunpou-btn:hover{border-color:var(--gold);color:var(--rose);transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,99,122,.15)}
-.line-bunpou-btn:active{transform:translateY(0)}
-.ll-item.bunpou-line-active .line-bunpou-btn{border-color:var(--rose);background:rgba(196,99,122,.08);color:var(--rose)}
 .line-share-btn{opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.7rem;padding:.15rem .35rem;transition:opacity .15s,color .15s}
 .ll-item:hover .line-share-btn{opacity:1}
 .line-share-btn:hover{color:var(--gold)}
 @media(max-width:768px){.line-actions{top:.4rem;right:.2rem}.line-share-btn{opacity:.55}}
-/* ── Popup Bunpou ── */
-.bunpou-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility .28s}
-.bunpou-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
-.bunpou-modal{position:relative;width:min(440px,calc(100vw - 2rem));max-height:min(82vh,640px);overflow:hidden;display:flex;flex-direction:column;background:var(--paper);border:1px solid rgba(201,169,110,.35);box-shadow:0 24px 80px rgba(10,8,18,.22),0 0 0 1px rgba(232,180,200,.12) inset;transform:translateY(16px) scale(.97);opacity:0;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .28s ease}
-.bunpou-overlay.is-open .bunpou-modal{transform:translateY(0) scale(1);opacity:1}
-.bunpou-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sakura),var(--gold),var(--rose));opacity:.85}
-.bunpou-modal::after{content:'夢';position:absolute;right:-.5rem;top:2.5rem;font-family:var(--jp);font-size:5.5rem;font-weight:600;color:rgba(196,99,122,.05);pointer-events:none;line-height:1}
-.bunpou-close{position:absolute;top:.65rem;right:.65rem;z-index:2;width:2rem;height:2rem;border:1px solid var(--border);background:var(--cream);color:var(--ash);font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,color .2s,transform .2s}
-.bunpou-close:hover{border-color:var(--rose);color:var(--rose);background:var(--paper);transform:rotate(90deg)}
-.bunpou-head{padding:1.35rem 3rem 1rem 1.35rem;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(232,180,200,.08) 0%,transparent 100%)}
-.bunpou-kanji{display:block;font-family:var(--jp);font-size:1.75rem;font-weight:600;color:var(--ink);line-height:1.1}
-.bunpou-sub{display:block;font-size:.52rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:.35rem}
-.bunpou-body{padding:1.1rem 1.35rem 1.35rem;overflow-y:auto;flex:1}
-.bunpou-line-tag{font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);margin-bottom:.65rem}
-.bunpou-lyric-block{padding:.85rem 1rem;background:var(--cream);border-left:2px solid var(--rose);margin-bottom:.85rem}
-.bunpou-jp{font-family:var(--jp);font-size:1.05rem;line-height:1.55;color:var(--ink)}
-.bunpou-ro{font-family:var(--serif);font-size:.82rem;font-style:italic;color:var(--ash);line-height:1.5;margin-top:.45rem;letter-spacing:.02em}
-.bunpou-ro:empty{display:none}
-.bunpou-ro-lbl{font-size:.48rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:.5rem;display:block}
-.bunpou-summary{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.65;margin-bottom:1rem}
-.bunpou-list{display:flex;flex-direction:column;gap:.55rem}
-.bunpou-legend{font-size:.62rem;color:var(--ash);line-height:1.6;margin-bottom:.85rem;padding:.55rem .65rem;background:var(--cream);border:1px dashed var(--border)}
-.bunpou-legend strong{color:var(--ink);font-weight:600}
-.bunpou-legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.35rem .5rem;margin-top:.45rem}
-.bunpou-legend-item{font-size:.54rem;color:var(--smoke);line-height:1.4}
-.bunpou-legend-item b{color:var(--ink);font-weight:700}
-.bunpou-group-title{font-size:.54rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);margin:1rem 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
-.bunpou-group-title:first-child{margin-top:0}
-.bunpou-item{padding:.65rem .75rem;border:1px solid var(--border);background:var(--mist);transition:border-color .2s,background .2s;margin-bottom:.45rem}
-.bunpou-item:hover{border-color:rgba(201,169,110,.5);background:rgba(201,169,110,.06)}
-.bunpou-item-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem;flex-wrap:wrap}
-.bunpou-item-type{font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border:1px solid}
-.bunpou-item--partikel .bunpou-item-type{color:var(--rose);border-color:rgba(196,99,122,.4);background:rgba(196,99,122,.08)}
-.bunpou-item--pola .bunpou-item-type{color:var(--plum);border-color:rgba(124,77,110,.35);background:rgba(124,77,110,.06)}
-.bunpou-item--bentuk .bunpou-item-type{color:#3d5a80;border-color:rgba(61,90,128,.35);background:rgba(61,90,128,.06)}
-.bunpou-item--sopan .bunpou-item-type{color:var(--gold);border-color:rgba(201,169,110,.4);background:rgba(201,169,110,.08)}
-.bunpou-item--penghubung .bunpou-item-type{color:#2d6a5a;border-color:rgba(45,106,90,.35);background:rgba(45,106,90,.08)}
-.bunpou-item--ekspresi .bunpou-item-type{color:var(--ash);border-color:var(--border);background:var(--paper)}
-.bunpou-item--slang .bunpou-item-type{color:#8b5a2b;border-color:rgba(139,90,43,.35);background:rgba(139,90,43,.08)}
-.bunpou-item-char{font-family:var(--jp);font-size:1rem;color:var(--rose);font-weight:600}
-.bunpou-item-label{font-size:.58rem;font-weight:600;letter-spacing:.06em;color:var(--ink);margin-top:.15rem}
-.bunpou-levels{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
-.bunpou-lv-chip{font-size:.5rem;font-weight:700;letter-spacing:.1em;padding:.12rem .4rem;border:1px solid}
-.bunpou-lv-chip.n5{color:var(--gold);border-color:rgba(201,169,110,.45);background:rgba(201,169,110,.08)}
-.bunpou-lv-chip.n4{color:#2d6a5a;border-color:rgba(45,106,90,.4);background:rgba(45,106,90,.08)}
-.bunpou-lv-chip.n3{color:#3d5a80;border-color:rgba(61,90,128,.4);background:rgba(61,90,128,.08)}
-.bunpou-lv-chip.n2{color:var(--plum);border-color:rgba(124,77,110,.4);background:rgba(124,77,110,.08)}
-.bunpou-lv-chip.n1{color:var(--rose);border-color:rgba(196,99,122,.45);background:rgba(196,99,122,.1)}
-.bunpou-item-lvl{font-size:.48rem;font-weight:700;letter-spacing:.08em;margin-left:.35rem;padding:.1rem .32rem;border:1px solid;vertical-align:middle}
-.bunpou-item-lvl.n5{color:var(--gold);border-color:rgba(201,169,110,.4)}
-.bunpou-item-lvl.n4{color:#2d6a5a;border-color:rgba(45,106,90,.35)}
-.bunpou-item-lvl.n3{color:#3d5a80;border-color:rgba(61,90,128,.35)}
-.bunpou-item-lvl.n2{color:var(--plum);border-color:rgba(124,77,110,.35)}
-.bunpou-item-lvl.n1{color:var(--rose);border-color:rgba(196,99,122,.4)}
-.bunpou-item-desc{font-size:.68rem;color:var(--ash);line-height:1.55;margin-top:.25rem}
-.bunpou-item-rumus{font-size:.65rem;color:var(--plum,#7c4d6e);line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(201,169,110,.12);border-left:2px solid var(--gold,#c9a96e)}
-.bunpou-item-rumus strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);margin-right:.35rem}
-.bunpou-item-contoh{font-size:.65rem;line-height:1.5;margin-top:.35rem;padding:.35rem .5rem;background:rgba(61,90,128,.08);border-left:2px solid #4a6a8a}
-.bunpou-item-contoh strong{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:.2rem}
-.bunpou-item-contoh-jp{font-family:var(--jp);color:var(--ink);display:block;margin-bottom:.12rem}
-.bunpou-item-contoh-id{font-size:.62rem;color:var(--ash);display:block}
-.bunpou-item-actions{display:flex;align-items:center;justify-content:flex-end;margin-top:.5rem;padding-top:.45rem;border-top:1px dashed var(--border)}
-.bunpou-save-btn{font-family:var(--sans);font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .55rem;border:1px solid var(--border);background:var(--paper);color:var(--ash);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
-.bunpou-save-btn:hover{border-color:var(--gold);color:var(--rose)}
-.bunpou-save-btn.is-saved{border-color:var(--rose);color:var(--rose);background:rgba(196,99,122,.08)}
-.bunpou-foot-links{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center}
-.bunpou-foot{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
-.bunpou-gloss{display:inline-flex;align-items:center;gap:.35rem;font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);text-decoration:none}
-.bunpou-gloss:hover{color:var(--rose)}
-.bunpou-empty{font-size:.75rem;color:var(--ash);font-style:italic;line-height:1.6}
-body.bunpou-open{overflow:hidden}
-[data-theme="dark"] .bunpou-overlay{background:rgba(0,0,0,.65)}
-[data-theme="dark"] .bunpou-modal{box-shadow:0 28px 90px rgba(0,0,0,.55)}
-[data-theme="dark"] .line-bunpou-btn{background:linear-gradient(165deg,var(--cream) 0%,#14110f 100%);border-color:rgba(212,169,110,.35)}
 body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
 body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
 body.mode-quiz .ll-item{cursor:pointer}
@@ -1608,7 +1501,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .rc-no-img{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--smoke);background:var(--cream);flex-shrink:0}
 .rc-info,.related-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}
 .rc-title,.related-title{font-family:var(--jp);font-size:.92rem;font-weight:400;color:var(--ink);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.6;padding-bottom:.18rem;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.related-ro{font-family:var(--serif);font-size:.75rem;font-style:italic;color:var(--ash);line-height:1.9;padding-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-artist,.related-artist{font-size:.55rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke)}
 .rc-arr,.related-arr{font-size:.7rem;color:var(--smoke);flex-shrink:0;margin-top:.2rem;transition:all .2s;font-family:var(--serif)}
 .rc:hover .rc-arr,.related-card:hover .related-arr{color:var(--gold);transform:translateX(3px)}
@@ -2305,7 +2198,7 @@ ${(()=>{
       <span class="footer-col-label">Jelajahi</span>
       <a class="footer-link" href="../index.html">Katalog Lengkap</a>
       <a class="footer-link" href="../playlists.html">Setlist Belajar</a>
-      <a class="footer-link" href="../bunpou-saved.html">Bunpou tersimpan</a>
+
       <a class="footer-link" href="../kata/index.html">Glosarium 文法</a>
       <a class="footer-link" href="../stories.html">Cerita</a>
       <a class="footer-link" href="../contact.html">Hubungi</a>
@@ -2318,34 +2211,6 @@ ${(()=>{
 </footer>
 
 </div><!-- .wrap -->
-
-<!-- ── Popup Bunpou (文法) ── -->
-<div id="bunpou-overlay" class="bunpou-overlay" aria-hidden="true" onclick="if(event.target===this)closeBunpouPopup()">
-  <div class="bunpou-modal" role="dialog" aria-modal="true" aria-labelledby="bunpou-title">
-    <button type="button" class="bunpou-close" onclick="closeBunpouPopup()" aria-label="Tutup">×</button>
-    <div class="bunpou-head">
-      <span class="bunpou-kanji" id="bunpou-title">文法</span>
-      <span class="bunpou-sub">Bunpou · JLPT N5–N1 · label jenis</span>
-      <div class="bunpou-levels" id="bunpou-levels"></div>
-    </div>
-    <div class="bunpou-body">
-      <div class="bunpou-line-tag" id="bunpou-line-num">Baris —</div>
-      <div class="bunpou-lyric-block">
-        <div class="bunpou-jp" id="bunpou-jp-preview">—</div>
-        <span class="bunpou-ro-lbl" id="bunpou-ro-lbl" style="display:none">Romaji</span>
-        <div class="bunpou-ro" id="bunpou-ro-preview"></div>
-      </div>
-      <p class="bunpou-summary" id="bunpou-summary"></p>
-      <div class="bunpou-list" id="bunpou-list"></div>
-      <div class="bunpou-foot">
-        <div class="bunpou-foot-links">
-          <a class="bunpou-gloss" id="bunpou-gloss-link" href="../kata/index.html" style="display:none">Glosarium N5 →</a>
-          <a class="bunpou-gloss" href="../bunpou-saved.html">Bunpou tersimpan →</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ── Floating Avatar Bubble ── -->
 <div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
@@ -2514,7 +2379,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 });
 </script>
-${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
 <script>
 /* ── Fitur belajar YumeSubs: mode uji, karaoke, tata bahasa, favorit ── */
 (function(){
@@ -2665,169 +2529,6 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
     text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
   }
 
-  var BUNPOU_SAVE_KEY = 'yume_saved_bunpou';
-
-  function loadSavedBunpouList() {
-    try { return JSON.parse(localStorage.getItem(BUNPOU_SAVE_KEY) || '[]'); } catch (e) { return []; }
-  }
-
-  function bunpouSaveId(it) {
-    return (it.text || it.char || '') + '|' + (it.label || '') + '|' + (it.kind || 'pola');
-  }
-
-  function isBunpouItemSaved(it) {
-    var id = bunpouSaveId(it);
-    return loadSavedBunpouList().some(function (x) { return x.id === id; });
-  }
-
-  window.saveBunpouByIndex = function (bi) {
-    var it = window._bunpouRenderList && window._bunpouRenderList[bi];
-    if (!it) return;
-    var id = bunpouSaveId(it);
-    var list = loadSavedBunpouList();
-    if (list.some(function (x) { return x.id === id; })) {
-      if (typeof toast === 'function') toast('Bunpou ini sudah tersimpan');
-      return;
-    }
-    var ctx = window._bunpouLineContext || {};
-    list.unshift({
-      id: id,
-      text: it.text || it.char || '',
-      label: it.label || '',
-      desc: it.desc || '',
-      level: it.level || 'N5',
-      kind: it.kind || 'pola',
-      kindLabel: it.kindLabel || '',
-      savedAt: Date.now(),
-      songSlug: ctx.slug || '',
-      songTitle: ctx.title || '',
-      lineIdx: typeof ctx.idx === 'number' ? ctx.idx : -1,
-      lineJp: ctx.jp || '',
-      lineRo: ctx.ro || ''
-    });
-    try {
-      localStorage.setItem(BUNPOU_SAVE_KEY, JSON.stringify(list.slice(0, 300)));
-    } catch (e) {}
-    var btn = document.querySelector('.bunpou-save-btn[data-bunpou-idx="' + bi + '"]');
-    if (btn) {
-      btn.classList.add('is-saved');
-      btn.textContent = 'Tersimpan ✓';
-    }
-    if (typeof toast === 'function') toast('Bunpou disimpan ★');
-  };
-
-  window.closeBunpouPopup = function() {
-    var overlay = document.getElementById('bunpou-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('is-open');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('bunpou-open');
-    document.querySelectorAll('.ll-item').forEach(function(r) {
-      r.classList.remove('bunpou-line-active');
-    });
-  };
-
-  window.openBunpouPopup = function(idx) {
-    var overlay = document.getElementById('bunpou-overlay');
-    if (!overlay) return;
-    var plain = getPlainLine(idx);
-    var jp = plain.jp || '';
-    var ro = (plain.ro || '').trim();
-    var lineTag = document.getElementById('bunpou-line-num');
-    var preview = document.getElementById('bunpou-jp-preview');
-    var roPreview = document.getElementById('bunpou-ro-preview');
-    var roLbl = document.getElementById('bunpou-ro-lbl');
-    var summaryEl = document.getElementById('bunpou-summary');
-    var listEl = document.getElementById('bunpou-list');
-    var glossLink = document.getElementById('bunpou-gloss-link');
-    window._bunpouLineContext = { slug: SONG_SLUG, title: SONG_TITLE, idx: idx, jp: jp, ro: ro };
-    window._bunpouRenderList = [];
-    if (lineTag) lineTag.textContent = 'Baris ' + (idx + 1) + ' · ' + SONG_TITLE;
-    if (preview) preview.textContent = jp || '—';
-    if (roPreview) roPreview.textContent = ro;
-    if (roLbl) roLbl.style.display = ro ? 'block' : 'none';
-    document.querySelectorAll('.ll-item').forEach(function(r) {
-      r.classList.toggle('bunpou-line-active', parseInt(r.getAttribute('data-line'), 10) === idx);
-    });
-    saveProgress(idx);
-    var lvBox = document.getElementById('bunpou-levels');
-    if (!jp && !ro) {
-      if (summaryEl) summaryEl.textContent = 'Baris ini tidak memiliki teks untuk dianalisis.';
-      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Tidak ada analisis.</p>';
-      if (glossLink) glossLink.style.display = 'none';
-      if (lvBox) lvBox.innerHTML = '';
-    } else if (!window.YumeGrammar) {
-      if (summaryEl) summaryEl.textContent = 'Modul bunpou belum dimuat — generate ulang halaman lagu.';
-      if (listEl) listEl.innerHTML = '<p class="bunpou-empty">Pastikan ym-grammar-browser.js ada di repo.</p>';
-      if (glossLink) glossLink.style.display = 'none';
-      if (lvBox) lvBox.innerHTML = '';
-    } else {
-      var result = window.YumeGrammar.analyzeJapaneseGrammar(jp, plain.ro || '');
-      if (summaryEl) summaryEl.textContent = result.summary || '';
-      if (lvBox) {
-        var lvHtml = '';
-        (result.levels || []).forEach(function(l) {
-          var c = (l || 'N5').toLowerCase();
-          lvHtml += '<span class="bunpou-lv-chip ' + c + '">' + l + '</span>';
-        });
-        lvBox.innerHTML = lvHtml || '<span class="bunpou-lv-chip n5">N5</span>';
-      }
-      var html = '';
-      function itemHtml(it) {
-        var bi = window._bunpouRenderList.length;
-        window._bunpouRenderList.push(it);
-        var c = (it.level || 'N5').toLowerCase();
-        var k = (it.kind || 'pola');
-        var kindLabel = it.kindLabel || 'Pola tata bahasa';
-        var saved = isBunpouItemSaved(it);
-        return '<div class="bunpou-item bunpou-item--' + k + '">' +
-          '<div class="bunpou-item-top">' +
-          '<span class="bunpou-item-type" title="Jenis bunpou">' + kindLabel + '</span>' +
-          '<span class="bunpou-item-lvl ' + c + '" title="Level JLPT">' + (it.level || 'N5') + '</span></div>' +
-          '<div class="bunpou-item-char">' + (it.text || it.char || '') + '</div>' +
-          '<div class="bunpou-item-label">' + (it.label || '') + ' · <em style="font-style:normal;color:var(--smoke);font-size:.58rem">' + kindLabel + '</em></div>' +
-          '<div class="bunpou-item-desc">' + (it.desc || '') + '</div>' +
-          (it.rumus ? '<div class="bunpou-item-rumus"><strong>Rumus</strong>' + (it.rumus || '') + '</div>' : '') +
-          (it.contoh && it.contoh.jp
-            ? '<div class="bunpou-item-contoh"><strong>Contoh</strong><span class="bunpou-item-contoh-jp">' + it.contoh.jp + '</span>' +
-              (it.contoh.id ? '<span class="bunpou-item-contoh-id">' + it.contoh.id + '</span>' : '') + '</div>'
-            : '') +
-          '<div class="bunpou-item-actions"><button type="button" class="bunpou-save-btn' + (saved ? ' is-saved' : '') + '" data-bunpou-idx="' + bi + '" onclick="event.stopPropagation();saveBunpouByIndex(' + bi + ')">' + (saved ? 'Tersimpan ✓' : 'Simpan ★') + '</button></div></div>';
-      }
-      var order = window.YumeGrammar && window.YumeGrammar.KIND_ORDER
-        ? window.YumeGrammar.KIND_ORDER
-        : ['partikel','penghubung','sopan','bentuk','pola','ekspresi'];
-      var groups = result.groups || {};
-      var hasGroup = false;
-      order.forEach(function(k) {
-        var arr = groups[k] || [];
-        if (!arr.length) return;
-        hasGroup = true;
-        var title = (window.YumeGrammar && window.YumeGrammar.KIND_LABELS && window.YumeGrammar.KIND_LABELS[k]) || k;
-        html += '<div class="bunpou-group-title">' + title + '</div>';
-        arr.forEach(function(it) { html += itemHtml(it); });
-      });
-      if (!hasGroup && result.items && result.items.length) {
-        result.items.forEach(function(it) { html += itemHtml(it); });
-      }
-      if (listEl) listEl.innerHTML = html || '<p class="bunpou-empty">Tidak ada bunpou N5–N1 yang terdeteksi di baris ini.</p>';
-      if (glossLink) {
-        var slug = null;
-        var all = (result.phrases || []).concat(result.particles || []);
-        for (var gi = 0; gi < all.length; gi++) {
-          if (all[gi].glossSlug) { slug = all[gi].glossSlug; break; }
-        }
-        glossLink.href = slug ? '../kata/' + slug + '.html' : '../kata/index.html';
-        glossLink.textContent = slug ? 'Glosarium · ' + slug.replace(/-/g, ' ') + ' →' : 'Glosarium bunpou →';
-        glossLink.style.display = 'inline-flex';
-      }
-    }
-    overlay.classList.add('is-open');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('bunpou-open');
-    try { overlay.querySelector('.bunpou-close').focus(); } catch(e) {}
-  };
-
   function initYumeFeatures() {
     renderProgressUI(loadProgress());
     updateFavBtn();
@@ -2862,12 +2563,6 @@ ${GRAMMAR_BROWSER_JS ? `<script>\n${GRAMMAR_BROWSER_JS}\n</script>\n` : ''}
       });
     });
 
-    if (!document.body.dataset.bunpouEsc) {
-      document.body.dataset.bunpouEsc = '1';
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeBunpouPopup();
-      });
-    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
   else initYumeFeatures();
@@ -5234,7 +4929,7 @@ async function main() {
     `  <url><loc>${BASE_URL}/stories.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/artis/</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>`,
-    `  <url><loc>${BASE_URL}/bunpou-saved.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>monthly</changefreq></url>`,
+
   ];
   const slugMap = {};
 
