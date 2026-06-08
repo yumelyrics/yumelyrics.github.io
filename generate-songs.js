@@ -13,32 +13,74 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
+function formatDiscordSongLine(s) {
+  const t = s.titleRo || s.titleJp || s.slug;
+  const a = s.artist ? ` — ${s.artist}` : '';
+  return `• [${t}${a}](${s.url})`;
+}
+
 async function sendDiscordNotification(generatedSongs, mode, success = true) {
   if (!DISCORD_WEBHOOK_URL) return;
   try {
     const count = generatedSongs.length;
+    const uploads = generatedSongs.filter(s => s.kind === 'upload');
+    const edits = generatedSongs.filter(s => s.kind === 'edit');
     const SITE_URL = 'https://yumelyrics.my.id';
-    let title, desc, color;
+    let title, desc, listTitle, color;
     if (!success) {
-      title = '❌ Generate Gagal';
-      desc = `Terjadi error saat generate dengan mode **${mode}**.`;
+      title = '❌ Upload Gagal';
+      desc = 'Terjadi error saat upload halaman lagu ke website.';
+      listTitle = '🎶 Lagu';
       color = 15158332;
     } else if (count === 0) {
-      title = '✅ Generate Selesai';
-      desc = `Tidak ada lagu baru atau yang berubah (mode: **${mode}**).`;
+      title = '✅ Tidak Ada Perubahan';
+      desc = 'Semua halaman lagu sudah mutakhir — tidak ada yang perlu diupload.';
+      listTitle = '🎶 Lagu';
       color = 9807270;
+    } else if (mode === 'full') {
+      title = '🔄 Semua Halaman Lagu Diperbarui';
+      desc = `**${count} halaman lagu** berhasil diupload ulang ke website.`;
+      listTitle = '🎶 Lagu yang Diperbarui';
+      color = 3066993;
+    } else if (edits.length && uploads.length) {
+      title = '✅ Lagu Diupload & Diedit';
+      desc = `**${uploads.length}** lagu baru diupload, **${edits.length}** lagu diedit.`;
+      listTitle = '🎶 Perubahan';
+      color = 3066993;
+    } else if (edits.length) {
+      title = '✏️ Lagu Diedit';
+      desc = `**${edits.length}** lagu berhasil diedit dan diupload ke website.`;
+      listTitle = '🎶 Lagu yang Diedit';
+      color = 3066993;
     } else {
-      title = '🎵 Lagu Baru Ditambahkan!';
-      desc = `**${count} lagu** berhasil ditambahkan!`;
+      title = '🎵 Lagu Baru Diupload';
+      desc = `**${uploads.length}** lagu baru berhasil diupload ke website.`;
+      listTitle = '🎶 Lagu Baru';
       color = 3066993;
     }
-    const songLines = generatedSongs.slice(0, 10).map(s => {
-      const t = s.titleRo || s.titleJp || s.slug;
-      const a = s.artist ? ` — ${s.artist}` : '';
-      return `• [${t}${a}](${s.url})`;
-    });
-    if (count > 10) songLines.push(`...dan ${count - 10} lagu lainnya`);
-    const songListValue = songLines.length > 0 ? songLines.join('\n') : '_Semua lagu sudah up-to-date._';
+
+    let songListValue = '_Semua halaman lagu sudah mutakhir._';
+    if (count > 0) {
+      const parts = [];
+      if (edits.length) {
+        const editLines = edits.slice(0, 10).map(formatDiscordSongLine);
+        if (edits.length > 10) editLines.push(`_...dan ${edits.length - 10} lagu diedit lainnya_`);
+        parts.push(`**✏️ Diedit**\n${editLines.join('\n')}`);
+      }
+      if (uploads.length) {
+        const uploadLines = uploads.slice(0, 10).map(formatDiscordSongLine);
+        if (uploads.length > 10) uploadLines.push(`_...dan ${uploads.length - 10} lagu baru lainnya_`);
+        parts.push(`**🎵 Baru**\n${uploadLines.join('\n')}`);
+      }
+      if (mode === 'full') {
+        const lines = generatedSongs.slice(0, 10).map(formatDiscordSongLine);
+        if (count > 10) lines.push(`_...dan ${count - 10} lagu lainnya_`);
+        songListValue = lines.join('\n');
+      } else if (parts.length) {
+        songListValue = parts.join('\n\n');
+      }
+    }
+
     const payload = {
       content: '<@&1513469865451716771>',
       embeds: [{
@@ -47,8 +89,7 @@ async function sendDiscordNotification(generatedSongs, mode, success = true) {
         color,
         url: SITE_URL,
         fields: [
-          { name: '🎶 Lagu yang Di-generate', value: songListValue, inline: false },
-          { name: 'Mode', value: mode, inline: true },
+          { name: listTitle, value: songListValue, inline: false },
           { name: '🔗 Website', value: `[yumelyrics.my.id](${SITE_URL})`, inline: true },
         ],
         footer: { text: 'yumelyrics.my.id' },
@@ -139,6 +180,7 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
+    if (song.htmlDirty === true) continue; // jangan sync — lagu ini menunggu generate
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -155,26 +197,15 @@ function seedManifestFromDisk(manifest, songMeta) {
  * Incremental: generate hanya jika
  * - file HTML belum ada (lagu baru), atau
  * - slug berubah, atau
- * - htmlDirty === true DAN isi belum tercatat di manifest (belum di-build)
- *
- * Hash TIDAK dipakai untuk memaksa rebuild semua — cukup htmlDirty + keberadaan file.
+ * - htmlDirty === true (baru disimpan dari admin)
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
+  if (song.htmlDirty === true) return true;
   const fp = path.join('lagu', `${slug}.html`);
-  const fileExists = fs.existsSync(fp);
-  const hash = songContentHash(song);
+  if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
-
-  if (!fileExists) return true;
   if (prev && prev.slug !== slug) return true;
-
-  if (song.htmlDirty === true) {
-    // Sudah di-generate run lalu tapi htmlDirty gagal di-clear di Firebase
-    if (prev && prev.slug === slug && prev.hash === hash) return false;
-    return true;
-  }
-
   return false;
 }
 
@@ -5106,9 +5137,6 @@ async function main() {
       if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
         manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
       }
-      if (!fullMode && song.htmlDirty === true) {
-        await clearHtmlDirtyFlag(db, song.id);
-      }
       const skipTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const skipArtist = (song.artist||'').replace(/&/g,'&amp;');
       const skipImgBlock = song.img ? `
@@ -5139,14 +5167,17 @@ async function main() {
       ? (byAnime[song.anime]||[]).filter(r=>r.slug!==finalSlug)
       : [];
 
+    const songPath = path.join('lagu', `${finalSlug}.html`);
+    const songKind = fullMode ? 'refresh' : (fs.existsSync(songPath) ? 'edit' : 'upload');
     const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
-    fs.writeFileSync(path.join('lagu',`${finalSlug}.html`), html, 'utf8');
+    fs.writeFileSync(songPath, html, 'utf8');
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
     if (!fullMode && song.htmlDirty === true) {
       await clearHtmlDirtyFlag(db, song.id);
     }
     generatedSongCount++;
     generatedSongs.push({
+      kind: songKind,
       titleRo: song.titleRo || song.titleJp || '',
       artist: song.artist || '',
       slug: finalSlug,
