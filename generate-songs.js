@@ -563,11 +563,11 @@ function buildGlossaryPages(songMeta, today) {
       : '<p class="gloss-empty">Belum ada contoh di katalog — akan bertambah seiring generate.</p>';
 
     const page = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escHtml(term.title)} — Glosarium | YumeSubs</title>
-<meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeSubs.">
+<title>${escHtml(term.title)} — Glosarium | YumeLyrics</title>
+<meta name="description" content="${escHtml(term.desc)} Contoh dari lirik lagu Jepang di YumeLyrics.">
 <link rel="canonical" href="${BASE_URL}/kata/${term.slug}.html">
-<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: `Apa itu pola tata bahasa Jepang ${term.title}?`, acceptedAnswer: { '@type': 'Answer', text: term.desc + ' Temukan contoh penggunaan nyata dari lirik lagu Jepang di YumeSubs.' } }, { '@type': 'Question', name: `Bagaimana cara menggunakan ${term.title} dalam bahasa Jepang?`, acceptedAnswer: { '@type': 'Answer', text: term.desc } }] })}</script>
-${buildGeoAeoMeta({ title: `${term.title} — Glosarium | YumeSubs`, description: term.desc + ' Contoh dari lirik lagu Jepang di YumeSubs.', url: `${BASE_URL}/kata/${term.slug}.html` })}
+<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: `Apa itu pola tata bahasa Jepang ${term.title}?`, acceptedAnswer: { '@type': 'Answer', text: term.desc + ' Temukan contoh penggunaan nyata dari lirik lagu Jepang di YumeLyrics.' } }, { '@type': 'Question', name: `Bagaimana cara menggunakan ${term.title} dalam bahasa Jepang?`, acceptedAnswer: { '@type': 'Answer', text: term.desc } }] })}</script>
+${buildGeoAeoMeta({ title: `${term.title} — Glosarium | YumeLyrics`, description: term.desc + ' Contoh dari lirik lagu Jepang di YumeLyrics.', url: `${BASE_URL}/kata/${term.slug}.html` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
@@ -594,10 +594,10 @@ ${exHtml}
   }
 
   const indexHtml = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Glosarium Tata Bahasa Jepang | YumeSubs</title>
-<meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.">
+<title>Glosarium Tata Bahasa Jepang | YumeLyrics</title>
+<meta name="description" content="Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeLyrics.">
 <link rel="canonical" href="${BASE_URL}/kata/">
-${buildGeoAeoMeta({ title: 'Glosarium Tata Bahasa Jepang | YumeSubs', description: 'Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeSubs.', url: `${BASE_URL}/kata/` })}
+${buildGeoAeoMeta({ title: 'Glosarium Tata Bahasa Jepang | YumeLyrics', description: 'Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeLyrics.', url: `${BASE_URL}/kata/` })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:3rem 1.5rem}
@@ -666,7 +666,7 @@ function obfuscateLine(str) {
  * GEO     : Dublin Core (dcterms) agar AI generatif (ChatGPT, Gemini,
  *           Perplexity) memahami entitas, bahasa, dan pemilik konten.
  */
-function buildGeoAeoMeta({ title, description, url = '', dateModified = '', language = 'id', author = 'YumeSubs' }) {
+function buildGeoAeoMeta({ title, description, url = '', dateModified = '', language = 'id', author = 'YumeLyrics' }) {
   const dm         = dateModified || new Date().toISOString().split('T')[0];
   const cleanDesc  = String(description || '').replace(/"/g, '&quot;').substring(0, 200);
   const cleanTitle = String(title || '').replace(/"/g, '&quot;');
@@ -684,7 +684,7 @@ function buildGeoAeoMeta({ title, description, url = '', dateModified = '', lang
 <!-- ── AEO: Citation metadata — AI atribusi sumber dengan benar ── -->
 <meta name="citation_title" content="${cleanTitle}">
 <meta name="citation_author" content="${author}">
-<meta name="citation_publisher" content="YumeSubs — yumelyrics.my.id">
+<meta name="citation_publisher" content="YumeLyrics — yumelyrics.my.id">
 <meta name="citation_online_date" content="${dm}">
 <meta name="citation_language" content="${language}">${cleanUrl ? `
 <meta name="citation_abstract_html_url" content="${cleanUrl}">` : ''}
@@ -693,8 +693,8 @@ function buildGeoAeoMeta({ title, description, url = '', dateModified = '', lang
 <meta name="dcterms.description" content="${cleanDesc}">
 <meta name="dcterms.language" content="${language}">
 <meta name="dcterms.creator" content="${author}">
-<meta name="dcterms.publisher" content="YumeSubs — yumelyrics.my.id">
-<meta name="dcterms.rights" content="© YumeSubs — yumelyrics.my.id">
+<meta name="dcterms.publisher" content="YumeLyrics — yumelyrics.my.id">
+<meta name="dcterms.rights" content="© YumeLyrics — yumelyrics.my.id">
 <meta name="dcterms.modified" content="${dm}">${cleanUrl ? `
 <meta name="dcterms.identifier" content="${cleanUrl}">` : ''}
 <meta name="dcterms.type" content="Text">
@@ -763,23 +763,23 @@ function buildArtistFAQSchema(artistName, count, metaDesc) {
         name: `Di mana bisa baca lirik lagu ${artistName} terjemahan Indonesia?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Lirik lagu ${artistName} dengan terjemahan bahasa Indonesia tersedia di YumeSubs (yumelyrics.my.id). ${metaDesc}`
+          text: `Lirik lagu ${artistName} dengan terjemahan bahasa Indonesia tersedia di YumeLyrics (yumelyrics.my.id). ${metaDesc}`
         }
       },
       {
         '@type': 'Question',
-        name: `Berapa banyak lagu ${artistName} yang tersedia di YumeSubs?`,
+        name: `Berapa banyak lagu ${artistName} yang tersedia di YumeLyrics?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `YumeSubs memiliki ${count} lagu ${artistName} lengkap dengan teks Jepang, romaji, dan terjemahan bahasa Indonesia.`
+          text: `YumeLyrics memiliki ${count} lagu ${artistName} lengkap dengan teks Jepang, romaji, dan terjemahan bahasa Indonesia.`
         }
       },
       {
         '@type': 'Question',
-        name: `Apakah lirik ${artistName} di YumeSubs disertai romaji?`,
+        name: `Apakah lirik ${artistName} di YumeLyrics disertai romaji?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Ya, semua lirik ${artistName} di YumeSubs dilengkapi tiga lapisan teks: Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia.`
+          text: `Ya, semua lirik ${artistName} di YumeLyrics dilengkapi tiga lapisan teks: Jepang asli (kanji/kana), romaji, dan terjemahan bahasa Indonesia.`
         }
       },
     ]
@@ -803,11 +803,11 @@ function generateArtistIndexHTML(artists) {
   const schema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Daftar Artis — YumeSubs',
+    name: 'Daftar Artis — YumeLyrics',
     description: `${sorted.length} artis, ${totalSongs} lagu lirik Jepang dengan terjemahan Indonesia.`,
     url: `${BASE_URL}/artis/`,
     inLanguage: 'id',
-    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
+    isPartOf: { '@type': 'WebSite', name: 'YumeLyrics', alternateName: ['YumeSubs', 'Yume Lyrics'], url: BASE_URL },
   });
 
   return `<!DOCTYPE html>
@@ -816,15 +816,16 @@ function generateArtistIndexHTML(artists) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
-<title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs</title>
-<meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.">
-<meta property="og:title" content="Daftar Artis | YumeSubs">
+<title>Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeLyrics</title>
+<meta name="description" content="${sorted.length} artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.">
+<meta property="og:title" content="Daftar Artis | YumeLyrics">
+<meta property="og:site_name" content="YumeLyrics">
 <meta property="og:url" content="${BASE_URL}/artis/">
 <meta property="og:type" content="website">
 <link rel="canonical" href="${BASE_URL}/artis/">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
-${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeSubs', description: sorted.length + ' artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.', url: BASE_URL + '/artis/' })}
+${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeLyrics', description: sorted.length + ' artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.', url: BASE_URL + '/artis/' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -880,7 +881,7 @@ ${SITE_NAV_SCRIPT}
 
 function generateArtistHTML(artistName, songs, artistSlug) {
   const count = songs.length;
-  const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeSubs.`;
+  const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.`;
   const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
     ${r.img
       ? imgTag(r.img, r.titleMain, { cls: 'related-thumb', w: 96, h: 96, hd: true, sizes: '56px' })
@@ -896,11 +897,11 @@ function generateArtistHTML(artistName, songs, artistSlug) {
   const schema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: `Lirik ${artistName} — YumeSubs`,
+    name: `Lirik ${artistName} — YumeLyrics`,
     description: metaDesc,
     url: `${BASE_URL}/artis/${artistSlug}.html`,
     inLanguage: 'id',
-    isPartOf: { '@type': 'WebSite', name: 'YumeSubs', url: BASE_URL },
+    isPartOf: { '@type': 'WebSite', name: 'YumeLyrics', alternateName: ['YumeSubs', 'Yume Lyrics'], url: BASE_URL },
     mainEntity: {
       '@type': 'MusicGroup',
       name: artistName,
@@ -914,18 +915,18 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow">
-<title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeSubs</title>
+<title>Lirik ${escHtml(artistName)} — ${count} Lagu + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
-<meta property="og:title" content="Lirik ${escHtml(artistName)} | YumeSubs">
+<meta property="og:title" content="Lirik ${escHtml(artistName)} | YumeLyrics">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/artis/${artistSlug}.html">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="YumeSubs">
+<meta property="og:site_name" content="YumeLyrics">
 <link rel="canonical" href="${BASE_URL}/artis/${artistSlug}.html">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${buildArtistFAQSchema(artistName, count, metaDesc)}</script>
-${buildGeoAeoMeta({ title: 'Lirik ' + artistName + ' — ' + count + ' Lagu + Terjemahan Indonesia | YumeSubs', description: metaDesc, url: BASE_URL + '/artis/' + artistSlug + '.html' })}
+${buildGeoAeoMeta({ title: 'Lirik ' + artistName + ' — ' + count + ' Lagu + Terjemahan Indonesia | YumeLyrics', description: metaDesc, url: BASE_URL + '/artis/' + artistSlug + '.html' })}
 ${FONT_HEAD}
 ${THEME_BOOT_SCRIPT}
 <style>
@@ -1081,7 +1082,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
   // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
   const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
   const geoAeoMeta = buildGeoAeoMeta({
-    title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeSubs`,
+    title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeLyrics`,
     description: metaDesc,
     url: `${BASE_URL}/lagu/${slug}`,
     dateModified: today,
@@ -1121,10 +1122,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
       "dateModified":today,
       "isPartOf":{
         "@type":"WebSite",
-        "name":"YumeSubs",
-        "alternateName":["YumeLyrics","Yume Subs","yumelyrics"],
+        "name":"YumeLyrics",
+        "alternateName":["YumeSubs","Yume Lyrics","Yume Subs","yumelyrics"],
         "url":BASE_URL,
-        "description":"Website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia.",
+        "description":"YumeLyrics — website lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia.",
         "potentialAction":{
           "@type":"SearchAction",
           "target":{"@type":"EntryPoint","urlTemplate":`${BASE_URL}/index.html?q={search_term_string}`},
@@ -1132,7 +1133,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
         },
         "publisher":{
           "@type":"Organization",
-          "name":"YumeSubs",
+          "name":"YumeLyrics",
           "url":BASE_URL,
           "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
         }
@@ -1160,10 +1161,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
       "inLanguage":"id",
       "datePublished":"2025-01-01",
       "dateModified":today,
-      "author":{"@type":"Organization","name":"YumeSubs","url":BASE_URL},
+      "author":{"@type":"Organization","name":"YumeLyrics","url":BASE_URL},
       "publisher":{
         "@type":"Organization",
-        "name":"YumeSubs",
+        "name":"YumeLyrics",
         "url":BASE_URL,
         "logo":{"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512}
       },
@@ -1188,16 +1189,16 @@ ${THEME_BOOT_SCRIPT}
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="author" content="YumeSubs">
+<meta name="author" content="YumeLyrics">
 <meta name="theme-color" content="#f5f0ea">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YumeSubs">
+<meta name="apple-mobile-web-app-title" content="YumeLyrics">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="readable" content="false">
-<meta name="application-name" content="YumeSubs">
+<meta name="application-name" content="YumeLyrics">
 <meta name="format-detection" content="telephone=no">
-<meta name="copyright" content="YumeSubs — yumelyrics.my.id">
+<meta name="copyright" content="YumeLyrics — yumelyrics.my.id">
 <meta name="geo.region" content="ID">
 <meta name="content-language" content="id">
 <meta name="classification" content="Entertainment/Music">
@@ -1209,7 +1210,7 @@ ${THEME_BOOT_SCRIPT}
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-<title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeSubs</title>
+<title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
   `lirik ${escHtml(titleMain)}`,
@@ -1229,13 +1230,14 @@ ${THEME_BOOT_SCRIPT}
   songType && anime ? `${songType} ${escHtml(animeDisplay)}` : '',
   'lirik lagu jepang terjemahan indonesia',
   'anime ost lirik',
+  'YumeLyrics',
   'YumeSubs',
 ].filter(Boolean).join(', ')}">
-<meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
+<meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}">
 <meta property="og:type" content="music.song">
-<meta property="og:site_name" content="YumeSubs">
+<meta property="og:site_name" content="YumeLyrics">
 <meta property="og:locale" content="id_ID">
 ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:secure_url" content="${escHtml(song.img)}">
@@ -1244,7 +1246,7 @@ ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:height" content="600">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">`}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@YumeSubs">
-<meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeSubs">
+<meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
 <meta name="twitter:description" content="${escHtml(metaDesc)}">
 ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
 <link rel="canonical" href="${BASE_URL}/lagu/${slug}">
@@ -5313,7 +5315,24 @@ async function main() {
       if (!prev || prev.slug !== finalSlug) {
         manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
       }
-      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>`);
+      const skipTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const skipArtist = (song.artist||'').replace(/&/g,'&amp;');
+      const skipImgBlock = song.img ? `
+    <image:image>
+      <image:loc>${song.img}</image:loc>
+      <image:title>${skipTitle} - ${skipArtist}</image:title>
+      <image:caption>Lirik ${skipTitle} - ${skipArtist} | YumeLyrics</image:caption>
+    </image:image>` : '';
+      const skipVideoBlock = song.ytId ? `
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>${skipTitle} - ${skipArtist}</video:title>
+      <video:description>Lirik ${skipTitle} - ${skipArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
+    </video:video>` : '';
+      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${skipImgBlock}${skipVideoBlock}
+  </url>`);
       continue;
     }
 
@@ -5331,13 +5350,23 @@ async function main() {
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
     generatedSongCount++;
     console.log(`  ✓ lagu/${finalSlug}.html`);
+    const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const genArtist = (song.artist||'').replace(/&/g,'&amp;');
     const imgTag = song.img ? `
     <image:image>
       <image:loc>${song.img}</image:loc>
-      <image:title>${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')}</image:title>
-      <image:caption>Lirik ${(song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')} - ${(song.artist||'').replace(/&/g,'&amp;')} | YumeSubs</image:caption>
+      <image:title>${genTitle} - ${genArtist}</image:title>
+      <image:caption>Lirik ${genTitle} - ${genArtist} | YumeLyrics</image:caption>
     </image:image>` : '';
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}
+    const videoTag = song.ytId ? `
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>${genTitle} - ${genArtist}</video:title>
+      <video:description>Lirik ${genTitle} - ${genArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
+    </video:video>` : '';
+    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
   </url>`);
   }
 
@@ -5404,7 +5433,7 @@ async function main() {
 
   saveManifest(manifest);
 
-  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
+  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-generate, ${skippedSongCount} dilewati (sudah mutakhir)`);
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
