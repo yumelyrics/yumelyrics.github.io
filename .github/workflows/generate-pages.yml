@@ -38,5 +38,45 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add lagu/ artis/ kata/ sitemap.xml .yume-generate-manifest.json
-          git diff --staged --quiet || git commit -m "chore: generate songs (${{ inputs.mode }})"
+          git diff --staged --quiet || (git commit -m "chore: generate songs (${{ inputs.mode }})" && echo "COMMITTED=true" >> $GITHUB_ENV) || echo "COMMITTED=false" >> $GITHUB_ENV
           git push
+
+      - name: Kirim notif ke Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL belum di-set, skip notif."
+            exit 0
+          fi
+
+          STATUS="${{ job.status }}"
+          MODE="${{ inputs.mode }}"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ "$STATUS" = "success" ]; then
+            COLOR=3066993
+            EMOJI="✅"
+            DESC="Generate selesai dengan mode **${MODE}**."
+          else
+            COLOR=15158332
+            EMOJI="❌"
+            DESC="Generate **gagal** dengan mode **${MODE}**. Cek log untuk detail."
+          fi
+
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"${EMOJI} Yume Lyrics — Generate Pages\",
+                \"description\": \"${DESC}\",
+                \"color\": ${COLOR},
+                \"fields\": [
+                  { \"name\": \"Mode\", \"value\": \"${MODE}\", \"inline\": true },
+                  { \"name\": \"Status\", \"value\": \"${STATUS}\", \"inline\": true }
+                ],
+                \"url\": \"${RUN_URL}\",
+                \"footer\": { \"text\": \"Lihat detail run di GitHub Actions\" }
+              }]
+            }"
