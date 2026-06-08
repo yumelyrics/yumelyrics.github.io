@@ -1,541 +1,941 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://yumelyrics.my.id/</loc><lastmod>2026-06-06</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/latihan.html</loc><lastmod>2026-06-06</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/stories.html</loc><lastmod>2026-06-06</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/contact.html</loc><lastmod>2026-06-06</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/bunpou-saved.html</loc><lastmod>2026-06-06</lastmod><priority>0.65</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/lagu/misut-bursukai.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/</loc><lastmod>2026-06-08</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/latihan.html</loc><lastmod>2026-06-08</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/stories.html</loc><lastmod>2026-06-08</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/contact.html</loc><lastmod>2026-06-08</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/bunpou-saved.html</loc><lastmod>2026-06-08</lastmod><priority>0.65</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/lagu/misut-bursukai.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/72/10/65/721065ba-e620-35c5-fa90-7154c6afaed0/bigup11881687.jpg/600x600cc.webp</image:loc>
       <image:title>Misutā Burūsukai - Macaroni Empitsu</image:title>
-      <image:caption>Lirik Misutā Burūsukai - Macaroni Empitsu | YumeSubs</image:caption>
+      <image:caption>Lirik Misutā Burūsukai - Macaroni Empitsu | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/8ooptXF4IDE/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Misutā Burūsukai - Macaroni Empitsu</video:title>
+      <video:description>Lirik Misutā Burūsukai - Macaroni Empitsu lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=8ooptXF4IDE</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/8ooptXF4IDE</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/oyasumi-nakigoe-sayonara-utahime.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/oyasumi-nakigoe-sayonara-utahime.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02b257fbc46c35af1fc48d2914</image:loc>
       <image:title>Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ</image:title>
-      <image:caption>Lirik Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ | YumeSubs</image:caption>
+      <image:caption>Lirik Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/GpADSdd68UI/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ</video:title>
+      <video:description>Lirik Oyasumi Nakigoe, Sayonara Utahime - クリープハイプ lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=GpADSdd68UI</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/GpADSdd68UI</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg</image:loc>
       <image:title>Daiji na koto - Back Number</image:title>
-      <image:caption>Lirik Daiji na koto - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Daiji na koto - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/GnIm3kkCYo4/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Daiji na koto - Back Number</video:title>
+      <video:description>Lirik Daiji na koto - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=GnIm3kkCYo4</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/GnIm3kkCYo4</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://pict.giga.co.jp/images/gaia_htdocs/news/barks/image/20260504/202605042230110.jpg?width=500&height=400&type=resize</image:loc>
       <image:title>Haru ni mau - Ado</image:title>
-      <image:caption>Lirik Haru ni mau - Ado | YumeSubs</image:caption>
+      <image:caption>Lirik Haru ni mau - Ado | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NCGL-YdhNCA/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Haru ni mau - Ado</video:title>
+      <video:description>Lirik Haru ni mau - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=NCGL-YdhNCA</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/NCGL-YdhNCA</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/shigatsu-no-ao.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/shigatsu-no-ao.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://yt3.googleusercontent.com/p61znZraiOz40J2PC2I_Vsm7xJ60wxPsuqj46_-wh9Uk8wTa9u7vxyq1eeMtF4lK6Thzzd_COp1WSZA=w544-h544-l90-rj</image:loc>
       <image:title>Shigatsu no Ao - Mosawo</image:title>
-      <image:caption>Lirik Shigatsu no Ao - Mosawo | YumeSubs</image:caption>
+      <image:caption>Lirik Shigatsu no Ao - Mosawo | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/VvnZVCT2HzU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Shigatsu no Ao - Mosawo</video:title>
+      <video:description>Lirik Shigatsu no Ao - Mosawo lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=VvnZVCT2HzU</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/VvnZVCT2HzU</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://www.lyrical-nonsense.com/wp-content/uploads/2022/08/Polkadot-Stingray-Odoru-You-ni-300x300.jpg</image:loc>
       <image:title>Renairon - Polkadot Stingray</image:title>
-      <image:caption>Lirik Renairon - Polkadot Stingray | YumeSubs</image:caption>
+      <image:caption>Lirik Renairon - Polkadot Stingray | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/42ZqKKSvyGQ/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Renairon - Polkadot Stingray</video:title>
+      <video:description>Lirik Renairon - Polkadot Stingray lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=42ZqKKSvyGQ</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/42ZqKKSvyGQ</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/yui-yui-no-uta.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/yui-yui-no-uta.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://spice.eplus.jp/images/BPF3OHo1JhhaLELNgN3FJCAisvyLuRRMtNAxWvG4yS2oDkGhVz5AIUpjwbKLZcy8</image:loc>
       <image:title>Yui Yui no Uta - ReoNa</image:title>
-      <image:caption>Lirik Yui Yui no Uta - ReoNa | YumeSubs</image:caption>
+      <image:caption>Lirik Yui Yui no Uta - ReoNa | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/8QlHqjc-_GM/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yui Yui no Uta - ReoNa</video:title>
+      <video:description>Lirik Yui Yui no Uta - ReoNa lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=8QlHqjc-_GM</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/8QlHqjc-_GM</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kimi-no-kawari.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kimi-no-kawari.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.kfs.io/album/global/48289399,0v1/fit/500x500.jpg</image:loc>
       <image:title>Kimi no kawari - Back Number</image:title>
-      <image:caption>Lirik Kimi no kawari - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Kimi no kawari - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/8VhmbbzsiC0/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kimi no kawari - Back Number</video:title>
+      <video:description>Lirik Kimi no kawari - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=8VhmbbzsiC0</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/8VhmbbzsiC0</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b273783ed3c2af46af7ab7c671c0</image:loc>
       <image:title>Kowai Hanashi - Back number</image:title>
-      <image:caption>Lirik Kowai Hanashi - Back number | YumeSubs</image:caption>
+      <image:caption>Lirik Kowai Hanashi - Back number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/CVOauFxtpks/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kowai Hanashi - Back number</video:title>
+      <video:description>Lirik Kowai Hanashi - Back number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=CVOauFxtpks</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/CVOauFxtpks</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kotoba-no-tsuzuki.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kotoba-no-tsuzuki.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.ytimg.com/vi/HIytijrapTw/mqdefault.jpg</image:loc>
       <image:title>Kotoba no tsuzuki - Rokudenashi</image:title>
-      <image:caption>Lirik Kotoba no tsuzuki - Rokudenashi | YumeSubs</image:caption>
+      <image:caption>Lirik Kotoba no tsuzuki - Rokudenashi | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/S0WRUA8JewY/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kotoba no tsuzuki - Rokudenashi</video:title>
+      <video:description>Lirik Kotoba no tsuzuki - Rokudenashi lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=S0WRUA8JewY</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/S0WRUA8JewY</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/amanojaku.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/amanojaku.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://images.genius.com/3b25a060ee7aaf9eb591ab6e4c710795.563x563x1.jpg</image:loc>
       <image:title>Amanojaku - 164</image:title>
-      <image:caption>Lirik Amanojaku - 164 | YumeSubs</image:caption>
+      <image:caption>Lirik Amanojaku - 164 | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/2-zPY0vrpjQ/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Amanojaku - 164</video:title>
+      <video:description>Lirik Amanojaku - 164 lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=2-zPY0vrpjQ</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/2-zPY0vrpjQ</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/suiheisen.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/suiheisen.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/qRGRcUTends/maxresdefault.jpg</image:loc>
       <image:title>Suiheisen - Back Number</image:title>
-      <image:caption>Lirik Suiheisen - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Suiheisen - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/qRGRcUTends/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Suiheisen - Back Number</video:title>
+      <video:description>Lirik Suiheisen - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=qRGRcUTends</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/qRGRcUTends</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/pretender.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/pretender.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b27378582014369e64b6596f30ad</image:loc>
       <image:title>Pretender - Official HIGE DANdism</image:title>
-      <image:caption>Lirik Pretender - Official HIGE DANdism | YumeSubs</image:caption>
+      <image:caption>Lirik Pretender - Official HIGE DANdism | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/TQ8WlA2GXbk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Pretender - Official HIGE DANdism</video:title>
+      <video:description>Lirik Pretender - Official HIGE DANdism lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=TQ8WlA2GXbk</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/TQ8WlA2GXbk</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/stay-with-me.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/stay-with-me.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtfjbXQ65hmZQ0A6c6PtwLU8ZQGvQB0kh2ag&s</image:loc>
       <image:title>Stay with me - Back Number</image:title>
-      <image:caption>Lirik Stay with me - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Stay with me - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/wzVKbSAD408/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Stay with me - Back Number</video:title>
+      <video:description>Lirik Stay with me - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=wzVKbSAD408</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/wzVKbSAD408</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/magnus.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/magnus.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b273dedf1b7ae5312ee4874acf7f</image:loc>
       <image:title>Magnus - ICO</image:title>
-      <image:caption>Lirik Magnus - ICO | YumeSubs</image:caption>
+      <image:caption>Lirik Magnus - ICO | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/LU3Ra_pB3rg/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Magnus - ICO</video:title>
+      <video:description>Lirik Magnus - ICO lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=LU3Ra_pB3rg</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/LU3Ra_pB3rg</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://cdn-images.dzcdn.net/images/cover/7c7cefd881f531c02c94d988f631dcb8/1900x1900-000000-80-0-0.jpg</image:loc>
       <image:title>Yuigon - Centimillimental</image:title>
-      <image:caption>Lirik Yuigon - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Yuigon - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/VYSrhiOgfBk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yuigon - Centimillimental</video:title>
+      <video:description>Lirik Yuigon - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=VYSrhiOgfBk</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/VYSrhiOgfBk</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i1.sndcdn.com/artworks-000121515830-ifl6e0-t500x500.jpg</image:loc>
       <image:title>Kokoronashi - Chouchou-P</image:title>
-      <image:caption>Lirik Kokoronashi - Chouchou-P | YumeSubs</image:caption>
+      <image:caption>Lirik Kokoronashi - Chouchou-P | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/3SkNrZnoK5w/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kokoronashi - Chouchou-P</video:title>
+      <video:description>Lirik Kokoronashi - Chouchou-P lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=3SkNrZnoK5w</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/3SkNrZnoK5w</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/eien-no-akuruhi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/eien-no-akuruhi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.ytimg.com/vi/ZHAnZTVF_10/maxresdefault.jpg</image:loc>
       <image:title>Eien no Akuruhi - Ado</image:title>
-      <image:caption>Lirik Eien no Akuruhi - Ado | YumeSubs</image:caption>
+      <image:caption>Lirik Eien no Akuruhi - Ado | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/ZHAnZTVF_10/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Eien no Akuruhi - Ado</video:title>
+      <video:description>Lirik Eien no Akuruhi - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=ZHAnZTVF_10</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/ZHAnZTVF_10</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0271f37528b331c70d38aec1fb</image:loc>
       <image:title>Spiral - Longman</image:title>
-      <image:caption>Lirik Spiral - Longman | YumeSubs</image:caption>
+      <image:caption>Lirik Spiral - Longman | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/fE9trKOuT3Q/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Spiral - Longman</video:title>
+      <video:description>Lirik Spiral - Longman lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=fE9trKOuT3Q</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/fE9trKOuT3Q</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b27377658cd1e9731710b19762a1</image:loc>
       <image:title>Watagashi - Back Number</image:title>
-      <image:caption>Lirik Watagashi - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Watagashi - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/uy_BaRBJIzQ/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Watagashi - Back Number</video:title>
+      <video:description>Lirik Watagashi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=uy_BaRBJIzQ</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/uy_BaRBJIzQ</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-hanashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-hanashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
       <image:title>Fuyu no Hanashi - Given</image:title>
-      <image:caption>Lirik Fuyu no Hanashi - Given | YumeSubs</image:caption>
+      <image:caption>Lirik Fuyu no Hanashi - Given | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NL8Y9-g6jrw/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Fuyu no Hanashi - Given</video:title>
+      <video:description>Lirik Fuyu no Hanashi - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=NL8Y9-g6jrw</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/NL8Y9-g6jrw</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/marigold.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/marigold.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3c/3b/f6/3c3bf6e8-1947-347e-f6f0-c857ca4c026f/190295490089.jpg/800x800cc.jpg</image:loc>
       <image:title>Marigold - Aimyon</image:title>
-      <image:caption>Lirik Marigold - Aimyon | YumeSubs</image:caption>
+      <image:caption>Lirik Marigold - Aimyon | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/0xSiBpUdW4E/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Marigold - Aimyon</video:title>
+      <video:description>Lirik Marigold - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=0xSiBpUdW4E</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/0xSiBpUdW4E</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/answer.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/answer.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b27348c5cfdc37632311b3093be5</image:loc>
       <image:title>Answer - Ikuta Lilas</image:title>
-      <image:caption>Lirik Answer - Ikuta Lilas | YumeSubs</image:caption>
+      <image:caption>Lirik Answer - Ikuta Lilas | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/fmDB-HyPNYc/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Answer - Ikuta Lilas</video:title>
+      <video:description>Lirik Answer - Ikuta Lilas lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=fmDB-HyPNYc</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/fmDB-HyPNYc</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/ano-yume-wo-nazotte.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/ano-yume-wo-nazotte.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e020f46d80794891bde2dcbf1a8</image:loc>
       <image:title>Ano Yume wo Nazotte - Yoasobi</image:title>
-      <image:caption>Lirik Ano Yume wo Nazotte - Yoasobi | YumeSubs</image:caption>
+      <image:caption>Lirik Ano Yume wo Nazotte - Yoasobi | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/sAuEeM_6zpk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Ano Yume wo Nazotte - Yoasobi</video:title>
+      <video:description>Lirik Ano Yume wo Nazotte - Yoasobi lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=sAuEeM_6zpk</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/sAuEeM_6zpk</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-present.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-present.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/CePgforHlTs/maxresdefault.jpg</image:loc>
       <image:title>Fuyu no present - もさを</image:title>
-      <image:caption>Lirik Fuyu no present - もさを | YumeSubs</image:caption>
+      <image:caption>Lirik Fuyu no present - もさを | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/CePgforHlTs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Fuyu no present - もさを</video:title>
+      <video:description>Lirik Fuyu no present - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=CePgforHlTs</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/CePgforHlTs</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/sakura-koi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/sakura-koi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/DqbU4rz6fyc/maxresdefault.jpg</image:loc>
       <image:title>Sakura koi - もさを</image:title>
-      <image:caption>Lirik Sakura koi - もさを | YumeSubs</image:caption>
+      <image:caption>Lirik Sakura koi - もさを | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/DqbU4rz6fyc/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Sakura koi - もさを</video:title>
+      <video:description>Lirik Sakura koi - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=DqbU4rz6fyc</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/DqbU4rz6fyc</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/tabako.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/tabako.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b27355d5b8010eea441036383ee5</image:loc>
       <image:title>Tabako - コレサワ</image:title>
-      <image:caption>Lirik Tabako - コレサワ | YumeSubs</image:caption>
+      <image:caption>Lirik Tabako - コレサワ | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/7B_PVsPvcg0/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Tabako - コレサワ</video:title>
+      <video:description>Lirik Tabako - コレサワ lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=7B_PVsPvcg0</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/7B_PVsPvcg0</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/sarishinohara.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/sarishinohara.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i1.sndcdn.com/artworks-rJUEaFHsXGS5dpxA-WCAwXA-t500x500.jpg</image:loc>
       <image:title>Sarishinohara - みきとP</image:title>
-      <image:caption>Lirik Sarishinohara - みきとP | YumeSubs</image:caption>
+      <image:caption>Lirik Sarishinohara - みきとP | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/fAbO6CV7Qko/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Sarishinohara - みきとP</video:title>
+      <video:description>Lirik Sarishinohara - みきとP lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=fAbO6CV7Qko</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/fAbO6CV7Qko</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/umi-he.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/umi-he.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026c52b8f059802dc3bc31d706</image:loc>
       <image:title>Umi he - SYH</image:title>
-      <image:caption>Lirik Umi he - SYH | YumeSubs</image:caption>
+      <image:caption>Lirik Umi he - SYH | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/yXr4cAGslwI/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Umi he - SYH</video:title>
+      <video:description>Lirik Umi he - SYH lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=yXr4cAGslwI</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/yXr4cAGslwI</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kimi-ni-saigo-no-kuchizuke-wo.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kimi-ni-saigo-no-kuchizuke-wo.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://images.genius.com/a0902240cc90b9bf68c544f6ed67e5c9.296x296x1.jpg</image:loc>
       <image:title>Kimi Ni Saigo No Kuchizuke Wo - Majiko</image:title>
-      <image:caption>Lirik Kimi Ni Saigo No Kuchizuke Wo - Majiko | YumeSubs</image:caption>
+      <image:caption>Lirik Kimi Ni Saigo No Kuchizuke Wo - Majiko | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/gqiRJn7me-s/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kimi Ni Saigo No Kuchizuke Wo - Majiko</video:title>
+      <video:description>Lirik Kimi Ni Saigo No Kuchizuke Wo - Majiko lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=gqiRJn7me-s</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/gqiRJn7me-s</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/ikite-ita-nda-yo-na.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/ikite-ita-nda-yo-na.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.ibb.co.com/XfrPvpZ7/Seishuneki.webp</image:loc>
       <image:title>Ikite Ita Nda Yo Na - Aimyon</image:title>
-      <image:caption>Lirik Ikite Ita Nda Yo Na - Aimyon | YumeSubs</image:caption>
+      <image:caption>Lirik Ikite Ita Nda Yo Na - Aimyon | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/EEMwA8KZAqg/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Ikite Ita Nda Yo Na - Aimyon</video:title>
+      <video:description>Lirik Ikite Ita Nda Yo Na - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=EEMwA8KZAqg</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/EEMwA8KZAqg</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/futaba.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/futaba.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e023baf45bc783428f905c5fd66</image:loc>
       <image:title>Futaba - Aimyon</image:title>
-      <image:caption>Lirik Futaba - Aimyon | YumeSubs</image:caption>
+      <image:caption>Lirik Futaba - Aimyon | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/6lgT4zBr8eY/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Futaba - Aimyon</video:title>
+      <video:description>Lirik Futaba - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=6lgT4zBr8eY</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/6lgT4zBr8eY</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/muri-ni-warawanakute-ii-yo.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/muri-ni-warawanakute-ii-yo.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d6fb7b2cce58402dd3f2ddbc</image:loc>
       <image:title>Muri ni Warawanakute Ii yo - Atsu Mizuno</image:title>
-      <image:caption>Lirik Muri ni Warawanakute Ii yo - Atsu Mizuno | YumeSubs</image:caption>
+      <image:caption>Lirik Muri ni Warawanakute Ii yo - Atsu Mizuno | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/8eHDGWOFgm8/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Muri ni Warawanakute Ii yo - Atsu Mizuno</video:title>
+      <video:description>Lirik Muri ni Warawanakute Ii yo - Atsu Mizuno lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=8eHDGWOFgm8</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/8eHDGWOFgm8</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/one-room.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/one-room.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/gR61iTaAkcU/maxresdefault.jpg</image:loc>
       <image:title>One Room - Back Number</image:title>
-      <image:caption>Lirik One Room - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik One Room - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/gR61iTaAkcU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>One Room - Back Number</video:title>
+      <video:description>Lirik One Room - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=gR61iTaAkcU</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/gR61iTaAkcU</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/doushitemo-doushitemo.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/doushitemo-doushitemo.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026742a4c3db5d172a98733e91</image:loc>
       <image:title>Doushitemo Doushitemo - Back Number</image:title>
-      <image:caption>Lirik Doushitemo Doushitemo - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Doushitemo Doushitemo - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/wl6V4GpVTj4/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Doushitemo Doushitemo - Back Number</video:title>
+      <video:description>Lirik Doushitemo Doushitemo - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=wl6V4GpVTj4</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/wl6V4GpVTj4</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kizuato.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kizuato.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0268b0fd0087c3b5f9b9060374</image:loc>
       <image:title>Kizuato - Centimillimental</image:title>
-      <image:caption>Lirik Kizuato - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Kizuato - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/e6uOkHm8vcQ/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kizuato - Centimillimental</video:title>
+      <video:description>Lirik Kizuato - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=e6uOkHm8vcQ</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/e6uOkHm8vcQ</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/bokura-dake-no-shudaika.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/bokura-dake-no-shudaika.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e021511a2e4ad20711a71306f2b</image:loc>
       <image:title>Bokura dake no shudaika - Centimillimental</image:title>
-      <image:caption>Lirik Bokura dake no shudaika - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Bokura dake no shudaika - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/GWkLAGlEcxg/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Bokura dake no shudaika - Centimillimental</video:title>
+      <video:description>Lirik Bokura dake no shudaika - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=GWkLAGlEcxg</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/GWkLAGlEcxg</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/marutsuke.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/marutsuke.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/NkDmqUv8FeE/maxresdefault.jpg</image:loc>
       <image:title>Marutsuke - Given</image:title>
-      <image:caption>Lirik Marutsuke - Given | YumeSubs</image:caption>
+      <image:caption>Lirik Marutsuke - Given | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NkDmqUv8FeE/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Marutsuke - Given</video:title>
+      <video:description>Lirik Marutsuke - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=NkDmqUv8FeE</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/NkDmqUv8FeE</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/uragawa-no-sonzai.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/uragawa-no-sonzai.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024fbb59991e745559ccd8ab7b</image:loc>
       <image:title>Uragawa no Sonzai - Given</image:title>
-      <image:caption>Lirik Uragawa no Sonzai - Given | YumeSubs</image:caption>
+      <image:caption>Lirik Uragawa no Sonzai - Given | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/IQx36UHWi10/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Uragawa no Sonzai - Given</video:title>
+      <video:description>Lirik Uragawa no Sonzai - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=IQx36UHWi10</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/IQx36UHWi10</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/yoru-ga-akeru.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/yoru-ga-akeru.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
       <image:title>Yoru ga Akeru - Given</image:title>
-      <image:caption>Lirik Yoru ga Akeru - Given | YumeSubs</image:caption>
+      <image:caption>Lirik Yoru ga Akeru - Given | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/_UE3NNYOAxs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yoru ga Akeru - Given</video:title>
+      <video:description>Lirik Yoru ga Akeru - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=_UE3NNYOAxs</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/_UE3NNYOAxs</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/totte.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/totte.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02c05d00bd4784c403e0bf905f</image:loc>
       <image:title>Totte - Centimillimental</image:title>
-      <image:caption>Lirik Totte - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Totte - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/bWvSiZpbj04/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Totte - Centimillimental</video:title>
+      <video:description>Lirik Totte - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=bWvSiZpbj04</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/bWvSiZpbj04</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/himawari.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/himawari.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02671de38d1c3375a90ea25a15</image:loc>
       <image:title>Himawari - Ado</image:title>
-      <image:caption>Lirik Himawari - Ado | YumeSubs</image:caption>
+      <image:caption>Lirik Himawari - Ado | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/aOKa-5AHCtU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Himawari - Ado</video:title>
+      <video:description>Lirik Himawari - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=aOKa-5AHCtU</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/aOKa-5AHCtU</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hikari-no-machi.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/hikari-no-machi.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/RhgTqqxxqds/maxresdefault.jpg</image:loc>
       <image:title>Hikari no Machi - Back Number</image:title>
-      <image:caption>Lirik Hikari no Machi - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Hikari no Machi - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/RhgTqqxxqds/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hikari no Machi - Back Number</video:title>
+      <video:description>Lirik Hikari no Machi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=RhgTqqxxqds</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/RhgTqqxxqds</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hairaito.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/hairaito.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/oA3FK0C_-l0/maxresdefault.jpg</image:loc>
       <image:title>Hairaito - Centimillimental</image:title>
-      <image:caption>Lirik Hairaito - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Hairaito - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/oA3FK0C_-l0/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hairaito - Centimillimental</video:title>
+      <video:description>Lirik Hairaito - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=oA3FK0C_-l0</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/oA3FK0C_-l0</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hoshi-ga-furu.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/hoshi-ga-furu.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e027f383235666167a6f6513ac6</image:loc>
       <image:title>Hoshi ga furu - Centimillimental</image:title>
-      <image:caption>Lirik Hoshi ga furu - Centimillimental | YumeSubs</image:caption>
+      <image:caption>Lirik Hoshi ga furu - Centimillimental | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/6E20QU7Gnnw/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hoshi ga furu - Centimillimental</video:title>
+      <video:description>Lirik Hoshi ga furu - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=6E20QU7Gnnw</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/6E20QU7Gnnw</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/insomnia.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/insomnia.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0260a92e3abb9b89e67aa69cc0</image:loc>
       <image:title>Insomnia - Eve</image:title>
-      <image:caption>Lirik Insomnia - Eve | YumeSubs</image:caption>
+      <image:caption>Lirik Insomnia - Eve | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/35nV_M3asRs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Insomnia - Eve</video:title>
+      <video:description>Lirik Insomnia - Eve lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=35nV_M3asRs</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/35nV_M3asRs</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/usseswa.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/usseswa.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e022cd7888600aafe2eb8b6be9f</image:loc>
       <image:title>Usseswa - Ado</image:title>
-      <image:caption>Lirik Usseswa - Ado | YumeSubs</image:caption>
+      <image:caption>Lirik Usseswa - Ado | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/Qp3b-RXtz4w/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Usseswa - Ado</video:title>
+      <video:description>Lirik Usseswa - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=Qp3b-RXtz4w</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/Qp3b-RXtz4w</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hyakka-ryouran.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/hyakka-ryouran.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e027ec22dead06c7dd4fc2f5b0a</image:loc>
       <image:title>Hyakka Ryouran - Ikuta Lilas</image:title>
-      <image:caption>Lirik Hyakka Ryouran - Ikuta Lilas | YumeSubs</image:caption>
+      <image:caption>Lirik Hyakka Ryouran - Ikuta Lilas | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/3Fz17pPuI4k/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hyakka Ryouran - Ikuta Lilas</video:title>
+      <video:description>Lirik Hyakka Ryouran - Ikuta Lilas lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=3Fz17pPuI4k</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/3Fz17pPuI4k</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/RTzkD3FLvFSbPGXMcHrE.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/RTzkD3FLvFSbPGXMcHrE.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0203d3216d6c463f993c96c9c7</image:loc>
       <image:title>KICKBACK - Kenshi Yonezu</image:title>
-      <image:caption>Lirik KICKBACK - Kenshi Yonezu | YumeSubs</image:caption>
+      <image:caption>Lirik KICKBACK - Kenshi Yonezu | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/M2cckDmNLMI/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>KICKBACK - Kenshi Yonezu</video:title>
+      <video:description>Lirik KICKBACK - Kenshi Yonezu lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=M2cckDmNLMI</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/M2cckDmNLMI</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kurisumasu-songu.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/kurisumasu-songu.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0259a14a1d53eb5610f84c8382</image:loc>
       <image:title>Kurisumasu Songu - Back Number</image:title>
-      <image:caption>Lirik Kurisumasu Songu - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Kurisumasu Songu - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/7zBeQezaz4U/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kurisumasu Songu - Back Number</video:title>
+      <video:description>Lirik Kurisumasu Songu - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=7zBeQezaz4U</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/7zBeQezaz4U</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/takane-no-hanako-san.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/takane-no-hanako-san.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02219616165557d9d7c71b007e</image:loc>
       <image:title>Takane no Hanako-san - Back Number</image:title>
-      <image:caption>Lirik Takane no Hanako-san - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Takane no Hanako-san - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/SII-S-zCg-c/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Takane no Hanako-san - Back Number</video:title>
+      <video:description>Lirik Takane no Hanako-san - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=SII-S-zCg-c</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/SII-S-zCg-c</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/happi-endo.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/happi-endo.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02e09353d6028fda18c3699085</image:loc>
       <image:title>Happi Endo - Back Number</image:title>
-      <image:caption>Lirik Happi Endo - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Happi Endo - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/T8y_RsF4TSw/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Happi Endo - Back Number</video:title>
+      <video:description>Lirik Happi Endo - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=T8y_RsF4TSw</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/T8y_RsF4TSw</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/mabataki.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/mabataki.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ce51ffc5c742ed217779cb9d</image:loc>
       <image:title>Mabataki - Back NUmber</image:title>
-      <image:caption>Lirik Mabataki - Back NUmber | YumeSubs</image:caption>
+      <image:caption>Lirik Mabataki - Back NUmber | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/h-KuoHHjGRs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Mabataki - Back NUmber</video:title>
+      <video:description>Lirik Mabataki - Back NUmber lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=h-KuoHHjGRs</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/h-KuoHHjGRs</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/awato-hitsuji.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/awato-hitsuji.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/O3wu44M9d_o/maxresdefault.jpg</image:loc>
       <image:title>Awato Hitsuji - Back Number</image:title>
-      <image:caption>Lirik Awato Hitsuji - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Awato Hitsuji - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/O3wu44M9d_o/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Awato Hitsuji - Back Number</video:title>
+      <video:description>Lirik Awato Hitsuji - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=O3wu44M9d_o</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/O3wu44M9d_o</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hajimari-hajimari.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/hajimari-hajimari.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/lJ3lxWIs7pc/maxresdefault.jpg</image:loc>
       <image:title>Hajimari hajimari - Back Number</image:title>
-      <image:caption>Lirik Hajimari hajimari - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Hajimari hajimari - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/lJ3lxWIs7pc/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hajimari hajimari - Back Number</video:title>
+      <video:description>Lirik Hajimari hajimari - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=lJ3lxWIs7pc</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/lJ3lxWIs7pc</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/tegami.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/tegami.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0259a14a1d53eb5610f84c8382</image:loc>
       <image:title>Tegami - Back Number</image:title>
-      <image:caption>Lirik Tegami - Back Number | YumeSubs</image:caption>
+      <image:caption>Lirik Tegami - Back Number | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/woRV5VxJDkU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Tegami - Back Number</video:title>
+      <video:description>Lirik Tegami - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=woRV5VxJDkU</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/woRV5VxJDkU</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/boku-no-kami-sama.html</loc><lastmod>2026-06-06</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/boku-no-kami-sama.html</loc><lastmod>2026-06-08</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02e3154924b9c700ce3afc79c1</image:loc>
       <image:title>Boku no kami-sama - Hanyuu Maigo</image:title>
-      <image:caption>Lirik Boku no kami-sama - Hanyuu Maigo | YumeSubs</image:caption>
+      <image:caption>Lirik Boku no kami-sama - Hanyuu Maigo | YumeLyrics</image:caption>
     </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/nP3Lv7CfCFs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Boku no kami-sama - Hanyuu Maigo</video:title>
+      <video:description>Lirik Boku no kami-sama - Hanyuu Maigo lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=nP3Lv7CfCFs</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/nP3Lv7CfCFs</video:player_loc>
+    </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/atsu-mizuno.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/back-number.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/centimillimental.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/chouchou-p.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/eve.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/given.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/hanyuu-maigo.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/ico.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/ikuta-lilas.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/kenshi-yonezu.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/longman.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/macaroni-empitsu.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/majiko.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/mosawo.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/official-hige-dandism.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/polkadot-stingray.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/reona.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/rokudenashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/syh.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/yoasobi.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/artis.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/artis-3.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/p.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/artis/artis-2.html</loc><lastmod>2026-06-06</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://yumelyrics.my.id/kata/</loc><lastmod>2026-06-06</lastmod><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-shimau.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-iru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-kuru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-kudasai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/tai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/masu.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mashita.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/masen.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/desu.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/deshita.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/nai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ta.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/node.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/noni.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/kara.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/made.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/dake.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to-omou.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/you-ni.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-naru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ga-aru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ga-iru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/arimasu.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/imasu.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/tara.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mashou.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/wa.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ga.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/wo.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/de.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/no.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mo.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-oku.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-aru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-miru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-kureru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-hoshii.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/you-ni-suru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/you-ni-naru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/kamo.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/rashii.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/you-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mitai-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/sou-da-rumor.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/sou-ni.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-totte.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-tsuite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-yotte.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/hou-ga-ii.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ba.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/reba.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/nagara.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/darou.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/deshou.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/kedo.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/shikashi.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/dakara.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-chigainai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/wake-dewa-nai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/wake-ga-nai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/wake-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/zu-ni-irarenai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-ni-suru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-ga-aru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-ga-dekiru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/you-ni-shite-iru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mono-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mono-dewa-nai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/dake-de-naku.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/dokoro-ka.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-suginai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to-wa-kagiranai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-tsurete.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ka-no-you-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ki-ga-suru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/bakari-da.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-ni-natte-iru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koto-ni-natta.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/te-tamaranai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-shite-wa.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-oite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-kanshite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-taishite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-yoru-to.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-motozuite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-oujite.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to-iu-yori.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to-itte-mo.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/mono-no.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/dake-atte.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/koso.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/sae.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ppoi.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/zaru-wo-enai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/to-wa-ie.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/ni-hoka-naranai.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/bakari-ka.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/kara-ni-wa.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/kata/tsutsu-aru.html</loc><lastmod>2026-06-06</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/atsu-mizuno.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/back-number.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/centimillimental.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/chouchou-p.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/eve.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/given.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/hanyuu-maigo.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/ico.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/ikuta-lilas.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/kenshi-yonezu.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/longman.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/macaroni-empitsu.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/majiko.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/mosawo.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/official-hige-dandism.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/polkadot-stingray.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/reona.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/rokudenashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/syh.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/yoasobi.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/artis.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/artis-3.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/p.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/artis-2.html</loc><lastmod>2026-06-08</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/kata/</loc><lastmod>2026-06-08</lastmod><priority>0.7</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-shimau.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-iru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-kuru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-kudasai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/tai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/masu.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mashita.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/masen.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/desu.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/deshita.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/nai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ta.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/node.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/noni.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/kara.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/made.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/dake.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to-omou.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/you-ni.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-naru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ga-aru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ga-iru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/arimasu.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/imasu.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/tara.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mashou.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/wa.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ga.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/wo.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/de.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/no.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mo.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-oku.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-aru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-miru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-kureru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-hoshii.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/you-ni-suru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/you-ni-naru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/kamo.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/rashii.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/you-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mitai-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/sou-da-rumor.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/sou-ni.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-totte.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-tsuite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-yotte.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/hou-ga-ii.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ba.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/reba.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/nagara.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/darou.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/deshou.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/kedo.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/shikashi.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/dakara.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-chigainai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/wake-dewa-nai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/wake-ga-nai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/wake-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/zu-ni-irarenai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-ni-suru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-ga-aru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-ga-dekiru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/you-ni-shite-iru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mono-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mono-dewa-nai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/dake-de-naku.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/dokoro-ka.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-suginai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to-wa-kagiranai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-tsurete.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ka-no-you-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ki-ga-suru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/bakari-da.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-ni-natte-iru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koto-ni-natta.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/te-tamaranai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-shite-wa.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-oite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-kanshite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-taishite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-yoru-to.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-motozuite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-oujite.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to-iu-yori.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to-itte-mo.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/mono-no.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/dake-atte.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/koso.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/sae.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ppoi.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/zaru-wo-enai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/to-wa-ie.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/ni-hoka-naranai.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/bakari-ka.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/kara-ni-wa.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
+  <url><loc>https://yumelyrics.my.id/kata/tsutsu-aru.html</loc><lastmod>2026-06-08</lastmod><priority>0.55</priority></url>
 </urlset>
