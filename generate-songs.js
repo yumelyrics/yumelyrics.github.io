@@ -12,6 +12,33 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+const NOTIFY_EDIT_WINDOW_MS = 60 * 60 * 1000; // 1 jam
+
+function parseEditedAt(htmlEditedAt) {
+  if (!htmlEditedAt) return null;
+  if (typeof htmlEditedAt === 'object' && typeof htmlEditedAt.toDate === 'function') {
+    return htmlEditedAt.toDate();
+  }
+  if (typeof htmlEditedAt === 'object' && htmlEditedAt.seconds) {
+    return new Date(htmlEditedAt.seconds * 1000);
+  }
+  const d = new Date(htmlEditedAt);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Cek apakah lagu diedit dalam 1 jam terakhir — dipakai filter notif Discord */
+function isEditedWithinNotifyWindow(htmlEditedAt, windowMs = NOTIFY_EDIT_WINDOW_MS) {
+  const d = parseEditedAt(htmlEditedAt);
+  if (!d) return false;
+  return Date.now() - d.getTime() <= windowMs;
+}
+
+function shouldNotifyDiscord(song, kind, fullMode) {
+  if (fullMode) return true;
+  if (kind === 'upload') return true;
+  if (kind === 'edit') return isEditedWithinNotifyWindow(song.htmlEditedAt);
+  return false;
+}
 
 function formatDiscordSongLine(s) {
   const t = s.titleRo || s.titleJp || s.slug;
@@ -33,8 +60,8 @@ async function sendDiscordNotification(generatedSongs, mode, success = true) {
       listTitle = '🎶 Lagu';
       color = 15158332;
     } else if (count === 0) {
-      title = '✅ Tidak Ada Perubahan';
-      desc = 'Semua halaman lagu sudah mutakhir — tidak ada yang perlu diupload.';
+      title = '✅ Tidak Ada Perubahan Baru';
+      desc = 'Tidak ada lagu baru atau diedit dalam **1 jam terakhir** yang perlu diumumkan.';
       listTitle = '🎶 Lagu';
       color = 9807270;
     } else if (mode === 'full') {
@@ -2877,7 +2904,8 @@ window.saveSongEdit = async function(){
     genre: document.getElementById('se-genre')?.value.trim() || '',
     mood: document.getElementById('se-mood')?.value.trim() || '',
     lyrics,
-    htmlDirty: true
+    htmlDirty: true,
+    htmlEditedAt: new Date().toISOString()
   };
   const btn = document.getElementById('se-save-btn');
   if(btn) btn.disabled = true;
@@ -5176,13 +5204,15 @@ async function main() {
       await clearHtmlDirtyFlag(db, song.id);
     }
     generatedSongCount++;
-    generatedSongs.push({
-      kind: songKind,
-      titleRo: song.titleRo || song.titleJp || '',
-      artist: song.artist || '',
-      slug: finalSlug,
-      url: `${BASE_URL}/lagu/${finalSlug}.html`,
-    });
+    if (shouldNotifyDiscord(song, songKind, fullMode)) {
+      generatedSongs.push({
+        kind: songKind,
+        titleRo: song.titleRo || song.titleJp || '',
+        artist: song.artist || '',
+        slug: finalSlug,
+        url: `${BASE_URL}/lagu/${finalSlug}.html`,
+      });
+    }
     console.log(`  ✓ lagu/${finalSlug}.html`);
     const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const genArtist = (song.artist||'').replace(/&/g,'&amp;');
@@ -5269,7 +5299,12 @@ async function main() {
   await sendDiscordNotification(generatedSongs, process.env.GENERATE_MODE || 'incremental', true);
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
-  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-generate, ${skippedSongCount} dilewati (sudah mutakhir)`);
+  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir)`);
+  if (generatedSongCount > 0 && generatedSongs.length === 0) {
+    console.log(`   Notif Discord dilewati — tidak ada lagu baru/diedit dalam 1 jam terakhir.`);
+  } else {
+    console.log(`   Notif Discord: ${generatedSongs.length} lagu`);
+  }
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
 }
