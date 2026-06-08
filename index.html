@@ -75,6 +75,95 @@
 ]
 </script>
 
+<!-- ═══════════════════════════════════════════════════════
+     AI SEO — izinkan crawler AI utama (GPTBot, ClaudeBot, Perplexity, dll)
+     ═══════════════════════════════════════════════════════ -->
+<meta name="GPTBot" content="index, follow">
+<meta name="ClaudeBot" content="index, follow">
+<meta name="PerplexityBot" content="index, follow">
+<meta name="Anthropic-AI" content="index, follow">
+<meta name="Google-Extended" content="index, follow">
+<meta name="CCBot" content="index, follow">
+
+<!-- GEO — Generative Engine Optimization: bantu AI cite konten ini dengan benar -->
+<meta name="citation_title" content="YumeSubs — Lirik dan Terjemahan Lagu Jepang Indonesia">
+<meta name="citation_language" content="id">
+<meta name="citation_publication_date" content="2024">
+<meta name="citation_abstract" content="YumeSubs adalah sumber terpercaya lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia. Mencakup lebih dari 57 lagu dari artis seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, dan Amazarashi.">
+<meta name="citation_author" content="YumeSubs">
+<meta name="citation_url" content="https://yumelyrics.my.id">
+<meta name="ai-content-declaration" content="human-authored, original-translations">
+<meta name="content-type" content="lyrics, music-translation, japanese-language">
+
+<!-- Speakable untuk AEO — konten yang bisa dibacakan AI assistant -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "YumeSubs — Lirik & Terjemahan Lagu Jepang Indonesia",
+  "url": "https://yumelyrics.my.id",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".hero-lead", ".eyebrow", "h1"]
+  },
+  "about": {
+    "@type": "Thing",
+    "name": "Lirik Lagu Jepang",
+    "description": "Terjemahan dan lirik romaji lagu Jepang dalam bahasa Indonesia"
+  }
+}
+</script>
+
+<!-- AEO — FAQ Schema: jawab pertanyaan umum langsung di search & AI -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Apa itu YumeSubs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "YumeSubs (YumeLyrics) adalah website yang menyediakan lirik lagu Jepang lengkap beserta romaji dan terjemahan bahasa Indonesia secara gratis. Tersedia lagu dari artis seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, dan ratusan artis lainnya."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Bagaimana cara membaca lirik lagu Jepang di YumeSubs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Di YumeSubs, setiap lagu ditampilkan dalam tiga format sekaligus: lirik asli Jepang (kanji/kana), romaji (transliterasi latin), dan terjemahan bahasa Indonesia. Kamu bisa memilih tampilan yang diinginkan menggunakan tombol pilihan di halaman lagu."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Apakah YumeSubs gratis?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ya, YumeSubs sepenuhnya gratis. Kamu bisa membaca lirik lagu Jepang dengan romaji dan terjemahan Indonesia tanpa biaya apapun."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Apa saja fitur YumeSubs selain lirik?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "YumeSubs memiliki fitur Mode Uji Ingatan untuk latihan menghafal lirik, Bunpou N5-N1 untuk belajar tata bahasa Jepang dari lirik, Latihan Terjemahan interaktif, serta fitur Favorit untuk menyimpan lagu favorit dan melanjutkan bacaan."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Artis Jepang apa saja yang ada di YumeSubs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "YumeSubs mencakup berbagai artis J-Pop dan J-Rock populer seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, Amazarashi, Polkadot Stingray, Official HIGE DANdism, Aimer, Kenshi Yonezu, dan masih banyak lagi."
+      }
+    }
+  ]
+}
+</script>
+
 <!-- Font dimuat async agar tidak blokir render awal -->
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=swap"></noscript>
@@ -214,7 +303,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* KATALOG — manuskrip / daftar trek */
 .catalog-panel{position:relative;z-index:2}
-.catalog-panel::before{content:'';position:absolute;left:3rem;top:0;bottom:4rem;width:1px;background:linear-gradient(180deg,transparent,var(--border) 6%,var(--border) 94%,transparent);opacity:.65;pointer-events:none}
+.catalog-panel::before{display:none}
 .manuscript-sec-hd .sec-lb{font-family:var(--serif);font-weight:400;font-size:1.2rem;letter-spacing:.06em;text-transform:none;color:var(--ink)}
 .manuscript-sec-hd .sec-lb::before{content:'— ';color:var(--sakura);font-weight:300}
 .catalog-list-wrap{
@@ -561,7 +650,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 }
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold) 15%,var(--rose) 50%,var(--gold) 85%,transparent);pointer-events:none;opacity:.65}
 .hero-layout{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:2.25rem;align-items:end;padding:0 3rem;max-width:1180px;margin:0 auto;width:100%}
-.hero-manuscript{position:relative;padding-left:1.25rem;border-left:3px solid transparent;border-image:linear-gradient(180deg,var(--gold),var(--rose),var(--plum)) 1}
+.hero-manuscript{position:relative;padding-left:0;text-align:left}
 .hero-inner{padding:0}
 .hero-reveal > *{animation:heroFadeUp .9s cubic-bezier(.22,1,.36,1) both}
 .hero-reveal .hero-badge{animation-delay:.05s}
@@ -611,7 +700,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hero-stat-lbl{font-size:.5rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-family:var(--en)}
 .hero-stat-div{width:1px;height:2.5rem;background:linear-gradient(180deg,transparent,var(--border),transparent)}
 .hero-scroll{
-  position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);z-index:3;
+  position:absolute;bottom:2.75rem;left:50%;transform:translateX(-50%);z-index:3;
   display:flex;flex-direction:column;align-items:center;gap:.35rem;
   background:none;border:none;cursor:pointer;color:var(--ash);font-family:var(--en);
   font-size:.48rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;padding:.5rem;
@@ -899,6 +988,75 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 .sc.reorder-anim{animation:card-in .3s cubic-bezier(.25,.8,.25,1) both}
 
+/* ── Button Hover & Click Animations ── */
+@keyframes ym-ripple{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:.35}
+  80%{transform:translate(-50%,-50%) scale(2.8);opacity:.08}
+  100%{transform:translate(-50%,-50%) scale(3);opacity:0}
+}
+@keyframes ym-press{
+  0%{transform:scale(1)}
+  40%{transform:scale(.94)}
+  100%{transform:scale(1)}
+}
+
+/* Shared ripple container setup */
+.req-btn,.gbtn,.tpill,.sbtn,.hero-feat,.hero-scroll,.nb,.fbtn{
+  position:relative;overflow:hidden;
+}
+/* Hover lift — tombol utama */
+.req-btn:hover:not(:disabled){
+  transform:translateY(-3px);
+  box-shadow:0 8px 28px rgba(201,169,110,.22);
+}
+.req-btn--primary:hover:not(:disabled){
+  transform:translateY(-3px);
+  box-shadow:0 12px 36px var(--glow-pink);
+}
+/* Active / klik — tekan ke bawah */
+.req-btn:active:not(:disabled){animation:ym-press .22s ease both}
+.gbtn:active:not(:disabled){animation:ym-press .2s ease both}
+.tpill:active{animation:ym-press .18s ease both}
+.sbtn:active:not(:disabled){animation:ym-press .2s ease both}
+.fbtn:active{animation:ym-press .18s ease both}
+.nb:active{animation:ym-press .15s ease both}
+.hero-feat:active{animation:ym-press .15s ease both}
+.hero-scroll:active{animation:ym-press .15s ease both}
+
+/* Hover lift — tombol kecil */
+.gbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 14px rgba(26,22,18,.08)}
+.tpill:hover{transform:translateY(-1px)}
+.fbtn:hover{transform:translateY(-1px)}
+.nb:hover{transform:translateY(-1px)}
+.hero-feat:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(201,169,110,.15)}
+
+/* Ripple on click via JS class */
+.ym-ripple-el{
+  position:absolute;width:60px;height:60px;border-radius:50%;
+  background:currentColor;opacity:0;pointer-events:none;
+  animation:ym-ripple .5s ease-out both;
+}
+
+/* transition tambahan supaya hover lebih smooth */
+.req-btn,.gbtn,.tpill,.sbtn,.fbtn,.nb,.hero-feat{
+  transition:color .2s,border-color .2s,background .2s,transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s cubic-bezier(.22,1,.36,1),opacity .2s;
+}
+
+/* ── Scroll Entrance Animations (ringan, tidak berat) ── */
+@media(prefers-reduced-motion:no-preference){
+  .ym-reveal{opacity:0;transform:translateY(16px);transition:opacity .52s cubic-bezier(.22,1,.36,1),transform .52s cubic-bezier(.22,1,.36,1)}
+  .ym-reveal.ym-in{opacity:1;transform:translateY(0)}
+  .ym-reveal.ym-delay-1{transition-delay:.06s}
+  .ym-reveal.ym-delay-2{transition-delay:.12s}
+  .ym-reveal.ym-delay-3{transition-delay:.18s}
+  .ym-reveal.ym-delay-4{transition-delay:.24s}
+  .ym-reveal.ym-delay-5{transition-delay:.30s}
+  .ym-reveal.ym-delay-6{transition-delay:.36s}
+  .ym-reveal.ym-delay-7{transition-delay:.42s}
+  .ym-reveal.ym-delay-8{transition-delay:.48s}
+  .sec-hd.ym-reveal,.filter-row.ym-reveal{transform:translateY(10px)}
+}
+
 /* ── Nav Avatar & Dropdown (index) ── */
 #nav-avatar-wrap{position:relative;width:32px;height:32px;cursor:pointer;flex-shrink:0}
 .nav-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border);transition:transform .2s}
@@ -1119,7 +1277,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="hero-layout">
     <div class="hero-manuscript hero-reveal">
     <div class="hero-inner">
-    <div class="hero-badge"><span class="hero-badge-dot" aria-hidden="true"></span> Lirik · Romaji · Terjemahan ID</div>
     <div class="eyebrow">夢の夜 · YumeSubs</div>
     <h1>Kata-kata yang terasa seperti <em>mimpi</em><span class="jp-line">言葉が夢のように</span></h1>
     <p class="hero-lead">Rasakan makna setiap baris — lirik Jepang, romaji, dan terjemahan Indonesia dalam satu pengalaman baca yang tenang tapi hidup.</p>
@@ -4025,6 +4182,81 @@ window.goToReport = (reportId) => {
 // Expose esc to window for use in report listener
 window._chatEsc = esc;
 
+</script>
+
+<!-- ── Button Ripple + Hover Enhancement ── -->
+<script>
+(function(){
+  var BTN_SEL = '.req-btn,.gbtn,.tpill,.sbtn,.fbtn,.nb,.hero-feat,.hero-scroll';
+  function addRipple(e){
+    var btn = e.currentTarget;
+    var r = btn.getBoundingClientRect();
+    var el = document.createElement('span');
+    el.className = 'ym-ripple-el';
+    el.style.left = (e.clientX - r.left) + 'px';
+    el.style.top  = (e.clientY - r.top)  + 'px';
+    btn.appendChild(el);
+    el.addEventListener('animationend', function(){ el.remove(); });
+  }
+  function bindRipples(){
+    document.querySelectorAll(BTN_SEL).forEach(function(btn){
+      if(btn.dataset.ymRipple) return;
+      btn.dataset.ymRipple = '1';
+      btn.addEventListener('mousedown', addRipple);
+      btn.addEventListener('touchstart', function(e){
+        if(e.touches[0]) addRipple({currentTarget:btn,clientX:e.touches[0].clientX,clientY:e.touches[0].clientY});
+      },{passive:true});
+    });
+  }
+  bindRipples();
+  // Re-bind setelah konten dinamis
+  new MutationObserver(function(){ bindRipples(); })
+    .observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+<!-- ── Scroll Reveal: ringan, berbasis IntersectionObserver ── -->
+<script>
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  if(window.matchMedia('(pointer:coarse)').matches) return; // skip di HP (sudah dimatiin transisi)
+
+  var delays=['ym-delay-1','ym-delay-2','ym-delay-3','ym-delay-4','ym-delay-5','ym-delay-6','ym-delay-7','ym-delay-8'];
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('ym-in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.07,rootMargin:'0px 0px -32px 0px'});
+
+  function observeEl(el,i){
+    if(el.classList.contains('ym-reveal')) return;
+    el.classList.add('ym-reveal');
+    if(typeof i==='number') el.classList.add(delays[i % delays.length]);
+    io.observe(el);
+  }
+
+  function observeAll(){
+    // Section headers
+    document.querySelectorAll('.sec-hd,.filter-row').forEach(function(el){ observeEl(el); });
+    // Song cards — stagger per batch of 8
+    var cards = document.querySelectorAll('.sc:not(.ym-reveal)');
+    cards.forEach(function(el,i){ observeEl(el,i); });
+    // Hero extras
+    document.querySelectorAll('.hero-features,.hero-action-row,.continue-read,.hero-stats').forEach(function(el){ observeEl(el); });
+  }
+
+  // Initial pass
+  observeAll();
+
+  // Re-observe setelah konten dinamis muncul
+  var mutObs = new MutationObserver(function(){ observeAll(); });
+  var target = document.getElementById('catView') || document.body;
+  mutObs.observe(target,{childList:true,subtree:true});
+})();
 </script>
 
 </body>
