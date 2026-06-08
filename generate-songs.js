@@ -14,13 +14,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 const NOTIFY_EDIT_WINDOW_MS = 60 * 60 * 1000; // 1 jam
 
+function isHtmlDirty(song) {
+  return song.htmlDirty === true || song.htmlDirty === 'true';
+}
+
 function parseEditedAt(htmlEditedAt) {
   if (!htmlEditedAt) return null;
-  if (typeof htmlEditedAt === 'object' && typeof htmlEditedAt.toDate === 'function') {
-    return htmlEditedAt.toDate();
-  }
-  if (typeof htmlEditedAt === 'object' && htmlEditedAt.seconds) {
-    return new Date(htmlEditedAt.seconds * 1000);
+  if (typeof htmlEditedAt === 'object') {
+    if (typeof htmlEditedAt.toDate === 'function') return htmlEditedAt.toDate();
+    if (typeof htmlEditedAt.toMillis === 'function') return new Date(htmlEditedAt.toMillis());
+    if (htmlEditedAt.seconds != null) {
+      return new Date(htmlEditedAt.seconds * 1000 + (htmlEditedAt.nanoseconds || 0) / 1e6);
+    }
   }
   const d = new Date(htmlEditedAt);
   return Number.isNaN(d.getTime()) ? null : d;
@@ -33,10 +38,19 @@ function isEditedWithinNotifyWindow(htmlEditedAt, windowMs = NOTIFY_EDIT_WINDOW_
   return Date.now() - d.getTime() <= windowMs;
 }
 
-function shouldNotifyDiscord(song, kind, fullMode) {
+/**
+ * Umumkan ke Discord hanya lagu yang benar-benar di-upload run ini.
+ * Edit: harus htmlDirty + (diedit ≤1 jam ATAU belum punya htmlEditedAt).
+ */
+function shouldNotifyDiscord(song, kind, fullMode, wasDirty = false) {
   if (fullMode) return true;
   if (kind === 'upload') return true;
-  if (kind === 'edit') return isEditedWithinNotifyWindow(song.htmlEditedAt);
+  if (kind === 'edit') {
+    if (!wasDirty) return false;
+    const editedAt = parseEditedAt(song.htmlEditedAt);
+    if (!editedAt) return true;
+    return Date.now() - editedAt.getTime() <= NOTIFY_EDIT_WINDOW_MS;
+  }
   return false;
 }
 
@@ -207,7 +221,7 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    if (song.htmlDirty === true) continue; // jangan sync — lagu ini menunggu generate
+    if (isHtmlDirty(song)) continue; // jangan sync — lagu ini menunggu generate
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -228,7 +242,7 @@ function seedManifestFromDisk(manifest, songMeta) {
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
-  if (song.htmlDirty === true) return true;
+  if (isHtmlDirty(song)) return true;
   const fp = path.join('lagu', `${slug}.html`);
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
@@ -5196,15 +5210,16 @@ async function main() {
       : [];
 
     const songPath = path.join('lagu', `${finalSlug}.html`);
+    const wasDirty = isHtmlDirty(song);
     const songKind = fullMode ? 'refresh' : (fs.existsSync(songPath) ? 'edit' : 'upload');
     const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
     fs.writeFileSync(songPath, html, 'utf8');
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
-    if (!fullMode && song.htmlDirty === true) {
+    if (!fullMode && wasDirty) {
       await clearHtmlDirtyFlag(db, song.id);
     }
     generatedSongCount++;
-    if (shouldNotifyDiscord(song, songKind, fullMode)) {
+    if (shouldNotifyDiscord(song, songKind, fullMode, wasDirty)) {
       generatedSongs.push({
         kind: songKind,
         titleRo: song.titleRo || song.titleJp || '',
@@ -5212,6 +5227,10 @@ async function main() {
         slug: finalSlug,
         url: `${BASE_URL}/lagu/${finalSlug}.html`,
       });
+    } else if (wasDirty && songKind === 'edit') {
+      const editedAt = parseEditedAt(song.htmlEditedAt);
+      const ageMin = editedAt ? Math.round((Date.now() - editedAt.getTime()) / 60000) : null;
+      console.log(`  · notif dilewati: ${finalSlug} (diedit ${ageMin ?? '?'} menit lalu, lewat batas 1 jam)`);
     }
     console.log(`  ✓ lagu/${finalSlug}.html`);
     const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -5296,7 +5315,14 @@ async function main() {
   }
 
   saveManifest(manifest);
-  await sendDiscordNotification(generatedSongs, process.env.GENERATE_MODE || 'incremental', true);
+  const generateMode = process.env.GENERATE_MODE || 'incremental';
+  if (generatedSongs.length > 0) {
+    await sendDiscordNotification(generatedSongs, generateMode, true);
+  } else if (generatedSongCount === 0) {
+    await sendDiscordNotification([], generateMode, true);
+  } else {
+    console.log('   Notif Discord tidak dikirim — lagu di-upload tapi di luar batas 1 jam / tanpa htmlEditedAt.');
+  }
 
   fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir)`);

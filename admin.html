@@ -1801,14 +1801,15 @@ window.saveSong = async () => {
   });
   const btn=document.getElementById('bsaveBtn');
   btn.disabled=true;
+  const htmlEditedAt=new Date().toISOString();
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,...songMeta});
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,htmlEditedAt,...songMeta});
       toast('Lagu berhasil diupdate! Jalankan Generate (baru & diedit) untuk update HTML.');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,...songMeta});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,htmlEditedAt,...songMeta});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
