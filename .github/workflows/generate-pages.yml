@@ -1,5 +1,4 @@
 # Salin ke: yumelyrics.github.io/.github/workflows/generate-pages.yml
-# Generate inkremental (default) = hanya lagu baru / diedit / belum punya HTML
 
 name: Generate Song Pages
 
@@ -38,45 +37,107 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add lagu/ artis/ kata/ sitemap.xml .yume-generate-manifest.json
-          git diff --staged --quiet || (git commit -m "chore: generate songs (${{ inputs.mode }})" && echo "COMMITTED=true" >> $GITHUB_ENV) || echo "COMMITTED=false" >> $GITHUB_ENV
+          git diff --staged --quiet || git commit -m "chore: generate songs (${{ inputs.mode }})"
           git push
 
-      - name: Kirim notif ke Discord
+      - name: Kirim notif Discord
         if: always()
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "DISCORD_WEBHOOK_URL belum di-set, skip notif."
+            echo "DISCORD_WEBHOOK_URL belum di-set, skip."
             exit 0
           fi
 
           STATUS="${{ job.status }}"
           MODE="${{ inputs.mode }}"
           RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SITE_URL="https://yumelyrics.my.id"
+          TRIGGERED_BY="${{ github.actor }}"
 
+          # Baca summary JSON yang ditulis oleh generate-songs.js
+          SONG_COUNT=0
+          SONG_LIST=""
+          if [ -f "_generate-summary.json" ]; then
+            SONG_COUNT=$(node -e "const d=require('./_generate-summary.json');console.log(d.count||0)")
+            # Buat daftar lagu: "• Title (Artist) → link"
+            SONG_LIST=$(node -e "
+              const d = require('./_generate-summary.json');
+              const songs = (d.songs || []).slice(0, 10); // maks 10 lagu di notif
+              const lines = songs.map(s => {
+                const title = s.titleRo || s.titleJp || s.slug;
+                const artist = s.artist ? ' — ' + s.artist : '';
+                return '• [' + title + artist + '](' + s.url + ')';
+              });
+              if (d.count > 10) lines.push('...dan ' + (d.count - 10) + ' lagu lainnya');
+              console.log(lines.join('\n') || '_Tidak ada lagu baru._');
+            ")
+          fi
+
+          # Pilih warna & emoji sesuai status
           if [ "$STATUS" = "success" ]; then
             COLOR=3066993
-            EMOJI="✅"
-            DESC="Generate selesai dengan mode **${MODE}**."
+            if [ "$SONG_COUNT" -gt 0 ]; then
+              TITLE="🎵 Lagu Baru Ditambahkan!"
+              DESC="**${SONG_COUNT} lagu** berhasil di-generate dengan mode **${MODE}**."
+            else
+              TITLE="✅ Generate Selesai"
+              DESC="Tidak ada lagu baru atau yang berubah (mode: **${MODE}**)."
+              SONG_LIST="_Semua lagu sudah up-to-date._"
+            fi
           else
             COLOR=15158332
-            EMOJI="❌"
-            DESC="Generate **gagal** dengan mode **${MODE}**. Cek log untuk detail."
+            TITLE="❌ Generate Gagal"
+            DESC="Terjadi error saat generate dengan mode **${MODE}**. Cek log untuk detail."
+            SONG_LIST=""
           fi
+
+          # Escape string buat JSON (ganti newline dan quote)
+          SONG_LIST_ESCAPED=$(echo "$SONG_LIST" | python3 -c "
+          import sys, json
+          print(json.dumps(sys.stdin.read().strip()))
+          ")
+
+          # Bangun payload JSON
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [{
+              "title": "${TITLE}",
+              "description": "${DESC}",
+              "color": ${COLOR},
+              "fields": [
+                {
+                  "name": "🎶 Lagu yang Di-generate",
+                  "value": ${SONG_LIST_ESCAPED},
+                  "inline": false
+                },
+                {
+                  "name": "Mode",
+                  "value": "${MODE}",
+                  "inline": true
+                },
+                {
+                  "name": "Dijalankan oleh",
+                  "value": "${TRIGGERED_BY}",
+                  "inline": true
+                },
+                {
+                  "name": "🔗 Lihat Website",
+                  "value": "[yumelyrics.my.id](${SITE_URL})",
+                  "inline": true
+                }
+              ],
+              "url": "${SITE_URL}",
+              "footer": {
+                "text": "yumelyrics.my.id"
+              },
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }]
+          }
+          EOF
+          )
 
           curl -s -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"embeds\": [{
-                \"title\": \"${EMOJI} Yume Lyrics — Generate Pages\",
-                \"description\": \"${DESC}\",
-                \"color\": ${COLOR},
-                \"fields\": [
-                  { \"name\": \"Mode\", \"value\": \"${MODE}\", \"inline\": true },
-                  { \"name\": \"Status\", \"value\": \"${STATUS}\", \"inline\": true }
-                ],
-                \"url\": \"${RUN_URL}\",
-                \"footer\": { \"text\": \"Lihat detail run di GitHub Actions\" }
-              }]
-            }"
+            -d "$PAYLOAD"
