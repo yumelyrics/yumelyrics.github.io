@@ -242,13 +242,23 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 @media (pointer:coarse){
   html{scroll-behavior:auto}
   body,nav,#bgwrap,.hero,.sc,footer,.toast{transition:none!important}
-  body::before{display:none!important} /* grain overlay (fixed) */
+  body::before{display:none!important}
   nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
   #report-modal-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
   #editProfileModal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
   #chat-lightbox{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  #bgwrap{display:none!important} /* aurora gradients + blur animation */
+  #bgwrap{display:none!important}
   #sakuraPetals{display:none!important}
+  /* Stop all continuous animations — biggest scroll-jank sources on mobile */
+  .hero-aurora{animation:none!important;filter:none!important;opacity:.55}
+  .hero-badge{animation:none!important}
+  .hero-badge-dot{animation:none!important;box-shadow:none!important}
+  .online-dot-ring{animation:none!important}
+  .hero-scroll-line{animation:none!important}
+  .sc.reorder-anim{animation:none!important}
+  /* Remove heavy box-shadow on the featured card — forces compositing repaint every scroll frame */
+  .hero-featured{box-shadow:0 2px 10px rgba(0,0,0,.07)!important;transition:none!important;transform:none!important;will-change:auto!important}
+  .hero-featured:hover{transform:none!important;box-shadow:0 2px 10px rgba(0,0,0,.07)!important}
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -651,6 +661,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     radial-gradient(ellipse 50% 40% at 82% 22%, rgba(196,99,122,.16) 0%, transparent 55%),
     radial-gradient(ellipse 40% 35% at 55% 88%, rgba(124,77,110,.10) 0%, transparent 60%);
   filter:blur(2px);animation:auroraShift 18s ease-in-out infinite;
+  contain:layout style paint;
 }
 [data-theme="dark"] .hero-aurora{
   background:
@@ -2732,7 +2743,8 @@ showContinueRead();
 (function initSakuraPetals(){
   const box = document.getElementById('sakuraPetals');
   if (!box || box.childElementCount) return;
-  const n = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : (window.innerWidth < 768 ? 8 : 20);
+  const isTouch = window.matchMedia('(pointer:coarse)').matches;
+  const n = (isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : (window.innerWidth < 768 ? 8 : 20);
   for (let i = 0; i < n; i++) {
     const p = document.createElement('span');
     p.className = 'petal';
