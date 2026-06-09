@@ -848,6 +848,20 @@
       <video:player_loc>https://www.youtube.com/embed/meZPD28Y7xE</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/atarashii-koibito-tachi-ni.html</loc><lastmod>2026-06-09</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0266681c9936b8e02441bcfb5f</image:loc>
+      <image:title>Atarashii koibito tachi ni - Back Number</image:title>
+      <image:caption>Lirik Atarashii koibito tachi ni - Back Number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/euBPUj8CkbA/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Atarashii koibito tachi ni - Back Number</video:title>
+      <video:description>Lirik Atarashii koibito tachi ni - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=euBPUj8CkbA</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/euBPUj8CkbA</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
