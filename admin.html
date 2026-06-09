@@ -1085,7 +1085,7 @@ Paragraf dipisah dengan enter 2x.
     </div>
     </div><!-- end sec-webhook -->
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast-ui"></div>
 
 
 </div>
@@ -1408,7 +1408,7 @@ async function rejectNonAdmin(user){
 initAdminLoginUI();
 
 function toast(m){
-  const t=document.getElementById('toast');
+  const t=document.getElementById('toast-ui');
   t.textContent=m;t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),2800);
 }
@@ -3074,19 +3074,20 @@ window.sendWebhookMessage = async function(){
   btn.disabled = true; btn.textContent = 'Mengirim...';
   setWhStatus(true, null, 'Mengirim ke Discord...');
 
-  let content = '';
-  if(pingAll) content += '@everyone ';
-  else if(pingHere) content += '@here ';
-  if(pingMember) content += '<@&1513469865451716771> ';
+  let pingStr = '';
+  if(pingAll) pingStr += '@everyone ';
+  else if(pingHere) pingStr += '@here ';
+  if(pingMember) pingStr += '<@&1513469865451716771> ';
+  pingStr = pingStr.trim();
 
   const payload = {};
   if(username) payload.username = username;
 
   if(embedTitle){
-    if(content.trim()) payload.content = content.trim();
-    payload.embeds = [{ title: embedTitle, description: message, color: 5793266 }];
+    const desc = pingStr ? message + '\n' + pingStr : message;
+    payload.embeds = [{ title: embedTitle, description: desc, color: 5793266 }];
   } else {
-    payload.content = (content + message).trim();
+    payload.content = pingStr ? message + '\n' + pingStr : message;
   }
 
   try {
