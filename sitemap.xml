@@ -876,6 +876,20 @@
       <video:player_loc>https://www.youtube.com/embed/nf-L5R8U-Q0</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/hadaka-no-kokoro.html</loc><lastmod>2026-06-09</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024cf57a2df30a90a9a3fc39ef</image:loc>
+      <image:title>Hadaka no kokoro - Aimyon</image:title>
+      <image:caption>Lirik Hadaka no kokoro - Aimyon | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/yOAwvRmVIyo/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hadaka no kokoro - Aimyon</video:title>
+      <video:description>Lirik Hadaka no kokoro - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=yOAwvRmVIyo</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/yOAwvRmVIyo</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
