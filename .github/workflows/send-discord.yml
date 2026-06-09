@@ -1,0 +1,37 @@
+# Salin ke: yumelyrics.github.io/.github/workflows/send-discord.yml
+
+name: Send Discord Message
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Isi pesan'
+        required: true
+        type: string
+      embed_title:
+        description: 'Judul embed (kosongkan = teks biasa)'
+        required: false
+        type: string
+      ping_member:
+        description: 'Ping @Member'
+        type: boolean
+        default: true
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Send Discord message
+        env:
+          DISCORD_MANUAL_WEBHOOK_URL: ${{ secrets.DISCORD_MANUAL_WEBHOOK_URL }}
+          DC_MESSAGE: ${{ inputs.message }}
+          DC_EMBED_TITLE: ${{ inputs.embed_title }}
+          DC_PING_MEMBER: ${{ inputs.ping_member }}
+        run: node send-discord.js
