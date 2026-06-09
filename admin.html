@@ -566,6 +566,12 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
       </div>
     </div>
     <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">Disimpan lokal di browser. GitHub: <code style="color:var(--accent2)">workflow</code> · YT: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud</a></div>
+    <div style="font-size:.58rem;color:var(--muted);margin-top:.5rem;line-height:1.65;padding:.65rem .75rem;background:rgba(88,101,242,.06);border:1px solid rgba(88,101,242,.15);border-radius:8px">
+      <strong style="color:var(--ink);font-weight:600">Discord webhooks (GitHub Secrets):</strong><br>
+      <code style="color:var(--accent2)">DISCORD_WEBHOOK_URL</code> → #new-post (notif lagu baru otomatis)<br>
+      <code style="color:var(--accent2)">DISCORD_RULES_WEBHOOK_URL</code> → #rules (tab Rules)<br>
+      <code style="color:var(--accent2)">DISCORD_ANNOUNCEMENTS_WEBHOOK_URL</code> → #announcements (tab Announcements)
+    </div>
     </div>
   </details>
 
@@ -573,7 +579,8 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <button class="adm-tab on" id="tab-katalog" onclick="switchTab('katalog')">🎵 Katalog</button>
     <button class="adm-tab" id="tab-cerita" onclick="switchTab('cerita')">📝 Cerita</button>
     <button class="adm-tab" id="tab-resources" onclick="switchTab('resources')">🔧 Resources</button>
-    <button class="adm-tab" id="tab-discord" onclick="switchTab('discord')">📢 Discord</button>
+    <button class="adm-tab" id="tab-rules" onclick="switchTab('rules')">📜 Rules</button>
+    <button class="adm-tab" id="tab-announcements" onclick="switchTab('announcements')">📣 Announcements</button>
   </div>
 
   <div id="sec-katalog" class="adm-section on">
@@ -941,43 +948,71 @@ Paragraf dipisah dengan enter 2x.
     </div>
     </div><!-- end sec-resources -->
 
-    <div id="sec-discord" class="adm-section">
+    <div id="sec-rules" class="adm-section">
     <div class="dc-panel">
-      <div class="story-tit">Kirim Pesan Discord</div>
-      <div class="story-desc">Kirim pesan manual ke channel Discord lain — terpisah dari notif upload lagu. Butuh secret <code style="color:var(--accent2)">DISCORD_MANUAL_WEBHOOK_URL</code> di GitHub Secrets + token GitHub di atas.</div>
-
+      <div class="story-tit">Kirim ke #rules</div>
+      <div class="story-desc">Pesan manual ke channel <strong>#rules</strong>. Secret: <code style="color:var(--accent2)">DISCORD_RULES_WEBHOOK_URL</code></div>
       <section class="form-card">
-        <div class="form-card-title">Pesan</div>
-        <p class="form-card-hint">Tulis pesan yang mau dikirim ke Discord. Bisa pakai embed (judul opsional) atau teks biasa.</p>
-
+        <div class="form-card-title">Pesan Rules</div>
+        <p class="form-card-hint">Embed opsional. Markdown Discord: **tebal**, *miring*, [link](url)</p>
         <div class="fg" style="margin-bottom:1rem">
           <div class="fl">Judul embed <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional</span></div>
-          <input class="fi" id="dc-embed-title" type="text" placeholder="Contoh: Pengumuman / Update" maxlength="256">
+          <input class="fi" id="dr-embed-title" type="text" placeholder="Contoh: Aturan komunitas" maxlength="256">
         </div>
-
         <div class="fg" style="margin-bottom:1rem">
           <div class="fl">Isi pesan *</div>
-          <textarea class="fi" id="dc-message" rows="8" maxlength="2000" placeholder="Tulis pesan di sini...&#10;&#10;Markdown Discord didukung: **tebal**, *miring*, [link](https://...)"></textarea>
-          <div class="dc-char"><span id="dc-char-count">0</span> / 2000</div>
+          <textarea class="fi" id="dr-message" rows="8" maxlength="2000" placeholder="Tulis pesan untuk #rules..."></textarea>
+          <div class="dc-char"><span id="dr-char-count">0</span> / 2000</div>
         </div>
-
         <label class="dc-check" style="margin-bottom:1.2rem">
-          <input type="checkbox" id="dc-ping-member" checked>
+          <input type="checkbox" id="dr-ping-member" checked>
           <span>Ping <strong>@Member</strong> saat kirim</span>
         </label>
-
         <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
-          <button class="bsave" id="dc-send-btn" onclick="sendDiscordMessage()" style="flex:1;min-width:200px;background:rgba(88,101,242,.15);color:#5865f2;border:1px solid rgba(88,101,242,.35)">📤 Kirim ke Discord</button>
-          <button class="bcancel" type="button" onclick="clearDiscordForm()">Kosongkan</button>
+          <button class="bsave" id="dr-send-btn" onclick="sendDiscordChannel('rules')" style="flex:1;min-width:200px;background:rgba(88,101,242,.15);color:#5865f2;border:1px solid rgba(88,101,242,.35)">📤 Kirim ke #rules</button>
+          <button class="bcancel" type="button" onclick="clearDiscordChannel('rules')">Kosongkan</button>
         </div>
-        <div id="dc-send-status" style="font-size:.72rem;color:var(--muted);margin-top:.75rem;display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
-          <span id="dc-send-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
-          <span id="dc-send-status-text"></span>
-          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/send-discord.yml" target="_blank" rel="noopener" style="font-size:.62rem;color:var(--accent2);text-decoration:none">↗ GitHub Actions</a>
+        <div id="dr-send-status" style="font-size:.72rem;color:var(--muted);margin-top:.75rem;display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="dr-send-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="dr-send-status-text"></span>
+          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/send-discord-rules.yml" target="_blank" rel="noopener" style="font-size:.62rem;color:var(--accent2);text-decoration:none">↗ GitHub Actions</a>
         </div>
       </section>
     </div>
-    </div><!-- end sec-discord -->
+    </div><!-- end sec-rules -->
+
+    <div id="sec-announcements" class="adm-section">
+    <div class="dc-panel">
+      <div class="story-tit">Kirim ke #announcements</div>
+      <div class="story-desc">Pengumuman resmi ke channel <strong>#announcements</strong>. Secret: <code style="color:var(--accent2)">DISCORD_ANNOUNCEMENTS_WEBHOOK_URL</code></div>
+      <section class="form-card">
+        <div class="form-card-title">Pesan Announcements</div>
+        <p class="form-card-hint">Untuk update penting, event, atau info komunitas.</p>
+        <div class="fg" style="margin-bottom:1rem">
+          <div class="fl">Judul embed <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional</span></div>
+          <input class="fi" id="da-embed-title" type="text" placeholder="Contoh: Pengumuman Resmi" maxlength="256">
+        </div>
+        <div class="fg" style="margin-bottom:1rem">
+          <div class="fl">Isi pesan *</div>
+          <textarea class="fi" id="da-message" rows="8" maxlength="2000" placeholder="Tulis pengumuman untuk #announcements..."></textarea>
+          <div class="dc-char"><span id="da-char-count">0</span> / 2000</div>
+        </div>
+        <label class="dc-check" style="margin-bottom:1.2rem">
+          <input type="checkbox" id="da-ping-member" checked>
+          <span>Ping <strong>@Member</strong> saat kirim</span>
+        </label>
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+          <button class="bsave" id="da-send-btn" onclick="sendDiscordChannel('announcements')" style="flex:1;min-width:200px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">📤 Kirim ke #announcements</button>
+          <button class="bcancel" type="button" onclick="clearDiscordChannel('announcements')">Kosongkan</button>
+        </div>
+        <div id="da-send-status" style="font-size:.72rem;color:var(--muted);margin-top:.75rem;display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="da-send-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="da-send-status-text"></span>
+          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/send-discord-announcements.yml" target="_blank" rel="noopener" style="font-size:.62rem;color:var(--accent2);text-decoration:none">↗ GitHub Actions</a>
+        </div>
+      </section>
+    </div>
+    </div><!-- end sec-announcements -->
 
 <div class="toast" id="toast"></div>
 
@@ -1336,7 +1371,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 window.switchTab = (tab) => {
-  ['katalog','cerita','resources','discord'].forEach(t=>{
+  ['katalog','cerita','resources','rules','announcements'].forEach(t=>{
     document.getElementById('sec-'+t).classList.toggle('on', t===tab);
     document.getElementById('tab-'+t).classList.toggle('on', t===tab);
   });
@@ -2561,22 +2596,41 @@ document.getElementById('gh-token-inp').addEventListener('input', function(){
 });
 (function(){ const t=ghTokenGet(); if(t) document.getElementById('gh-token-inp').value=t; updateKeyStatus(); })();
 
-// ── DISCORD (kirim pesan manual via GitHub Actions) ──
-const DC_WORKFLOW = 'send-discord.yml';
+// ── DISCORD (kirim pesan manual per channel via GitHub Actions) ──
+const DC_CHANNELS = {
+  rules: {
+    prefix: 'dr',
+    workflow: 'send-discord-rules.yml',
+    channel: '#rules',
+    btnLabel: '📤 Kirim ke #rules',
+    toastOk: 'Pesan terkirim ke #rules! ✅'
+  },
+  announcements: {
+    prefix: 'da',
+    workflow: 'send-discord-announcements.yml',
+    channel: '#announcements',
+    btnLabel: '📤 Kirim ke #announcements',
+    toastOk: 'Pengumuman terkirim ke #announcements! ✅'
+  }
+};
+const _dcPollTimers = {};
 
-function updateDcCharCount(){
-  const el = document.getElementById('dc-message');
-  const cnt = document.getElementById('dc-char-count');
+function updateDcCharCount(prefix){
+  const el = document.getElementById(prefix + '-message');
+  const cnt = document.getElementById(prefix + '-char-count');
   if(el && cnt) cnt.textContent = String(el.value.length);
 }
 
-document.getElementById('dc-message').addEventListener('input', updateDcCharCount);
-updateDcCharCount();
+Object.values(DC_CHANNELS).forEach(cfg => {
+  const el = document.getElementById(cfg.prefix + '-message');
+  if(el) el.addEventListener('input', () => updateDcCharCount(cfg.prefix));
+  updateDcCharCount(cfg.prefix);
+});
 
-function setDcStatus(visible, conclusion, text){
-  const box = document.getElementById('dc-send-status');
-  const dot = document.getElementById('dc-send-status-dot');
-  const txt = document.getElementById('dc-send-status-text');
+function setDcStatus(prefix, visible, conclusion, text){
+  const box = document.getElementById(prefix + '-send-status');
+  const dot = document.getElementById(prefix + '-send-status-dot');
+  const txt = document.getElementById(prefix + '-send-status-text');
   if(!box) return;
   box.style.display = visible ? 'flex' : 'none';
   if(!visible) return;
@@ -2587,51 +2641,57 @@ function setDcStatus(visible, conclusion, text){
   if(txt) txt.textContent = text || '';
 }
 
-let _dcPollTimer = null;
-async function pollDcRunStatus(runId, token){
-  clearTimeout(_dcPollTimer);
+async function pollDcChannelRun(channelKey, runId, token){
+  const cfg = DC_CHANNELS[channelKey];
+  if(!cfg) return;
+  clearTimeout(_dcPollTimers[channelKey]);
   try {
     const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/runs/${runId}`, { headers: ghHeaders(token) });
     if(!r.ok) return;
     const run = await r.json();
     if(run.status !== 'completed'){
       const label = run.status === 'in_progress' ? 'Mengirim pesan...' : 'Antri di GitHub...';
-      setDcStatus(true, run.status, label);
-      _dcPollTimer = setTimeout(() => pollDcRunStatus(runId, token), 4000);
+      setDcStatus(cfg.prefix, true, run.status, label);
+      _dcPollTimers[channelKey] = setTimeout(() => pollDcChannelRun(channelKey, runId, token), 4000);
     } else {
-      const labels = { success:'✅ Pesan terkirim ke Discord!', failure:'❌ Gagal kirim. Cek log di GitHub.', cancelled:'⚠️ Dibatalkan.' };
-      setDcStatus(true, run.conclusion, labels[run.conclusion] || run.conclusion);
-      const btn = document.getElementById('dc-send-btn');
-      if(btn){ btn.disabled = false; btn.textContent = '📤 Kirim ke Discord'; }
-      if(run.conclusion === 'success') toast('Pesan terkirim ke Discord! ✅');
+      const labels = { success:'✅ Pesan terkirim!', failure:'❌ Gagal kirim. Cek log di GitHub.', cancelled:'⚠️ Dibatalkan.' };
+      setDcStatus(cfg.prefix, true, run.conclusion, labels[run.conclusion] || run.conclusion);
+      const btn = document.getElementById(cfg.prefix + '-send-btn');
+      if(btn){ btn.disabled = false; btn.textContent = cfg.btnLabel; }
+      if(run.conclusion === 'success') toast(cfg.toastOk);
     }
   } catch(e){ /* silent */ }
 }
 
-window.clearDiscordForm = function(){
-  document.getElementById('dc-embed-title').value = '';
-  document.getElementById('dc-message').value = '';
-  document.getElementById('dc-ping-member').checked = true;
-  updateDcCharCount();
-  setDcStatus(false);
+window.clearDiscordChannel = function(channelKey){
+  const cfg = DC_CHANNELS[channelKey];
+  if(!cfg) return;
+  document.getElementById(cfg.prefix + '-embed-title').value = '';
+  document.getElementById(cfg.prefix + '-message').value = '';
+  document.getElementById(cfg.prefix + '-ping-member').checked = true;
+  updateDcCharCount(cfg.prefix);
+  setDcStatus(cfg.prefix, false);
 };
 
-window.sendDiscordMessage = async function(){
+window.sendDiscordChannel = async function(channelKey){
+  const cfg = DC_CHANNELS[channelKey];
+  if(!cfg) return;
   const token = ghTokenGet();
   if(!token){ toast('GitHub token belum diisi! Buka API Keys di atas.'); return; }
 
-  const message = document.getElementById('dc-message').value.trim();
-  const embedTitle = document.getElementById('dc-embed-title').value.trim();
-  const ping = document.getElementById('dc-ping-member').checked;
-  if(!message){ toast('Isi pesan wajib diisi!'); document.getElementById('dc-message').focus(); return; }
+  const p = cfg.prefix;
+  const message = document.getElementById(p + '-message').value.trim();
+  const embedTitle = document.getElementById(p + '-embed-title').value.trim();
+  const ping = document.getElementById(p + '-ping-member').checked;
+  if(!message){ toast('Isi pesan wajib diisi!'); document.getElementById(p + '-message').focus(); return; }
 
-  const btn = document.getElementById('dc-send-btn');
+  const btn = document.getElementById(p + '-send-btn');
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
-  setDcStatus(true, 'queued', 'Mengirim ke GitHub Actions...');
+  setDcStatus(p, true, 'queued', 'Mengirim ke GitHub Actions...');
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${DC_WORKFLOW}/dispatches`, {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${cfg.workflow}/dispatches`, {
       method: 'POST',
       headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2640,25 +2700,25 @@ window.sendDiscordMessage = async function(){
       })
     });
     if(res.status === 204){
-      toast('Workflow Discord di-trigger! 🚀');
-      setDcStatus(true, 'queued', 'Antri, menunggu runner...');
+      toast('Workflow ' + cfg.channel + ' di-trigger! 🚀');
+      setDcStatus(p, true, 'queued', 'Antri, menunggu runner...');
       setTimeout(async () => {
-        const runId = await getLatestRunId(DC_WORKFLOW, token);
-        if(runId) pollDcRunStatus(runId, token);
-        else setDcStatus(true, 'queued', 'Run diantri — pantau di GitHub Actions.');
+        const runId = await getLatestRunId(cfg.workflow, token);
+        if(runId) pollDcChannelRun(channelKey, runId, token);
+        else setDcStatus(p, true, 'queued', 'Run diantri — pantau di GitHub Actions.');
       }, 3500);
     } else {
       const err = await res.json().catch(() => ({}));
       toast('Gagal: ' + (err.message || res.status));
-      setDcStatus(false);
+      setDcStatus(p, false);
       btn.disabled = false;
-      btn.textContent = '📤 Kirim ke Discord';
+      btn.textContent = cfg.btnLabel;
     }
   } catch(e){
     toast('Error: ' + e.message);
-    setDcStatus(false);
+    setDcStatus(p, false);
     btn.disabled = false;
-    btn.textContent = '📤 Kirim ke Discord';
+    btn.textContent = cfg.btnLabel;
   }
 };
 

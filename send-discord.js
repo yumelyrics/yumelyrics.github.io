@@ -1,8 +1,8 @@
-// send-discord.js — kirim pesan manual ke Discord via webhook (GitHub Actions)
-// Secret terpisah dari notif lagu otomatis (channel beda)
-const webhook = process.env.DISCORD_MANUAL_WEBHOOK_URL || '';
+// send-discord.js — kirim pesan manual ke Discord (GitHub Actions)
+// Set DISCORD_TARGET_WEBHOOK_URL per workflow (rules / announcements / dll.)
+const webhook = process.env.DISCORD_TARGET_WEBHOOK_URL || '';
 if (!webhook) {
-  console.error('DISCORD_MANUAL_WEBHOOK_URL tidak diset di GitHub Secrets');
+  console.error('DISCORD_TARGET_WEBHOOK_URL tidak diset di GitHub Secrets');
   process.exit(1);
 }
 
