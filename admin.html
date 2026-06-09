@@ -482,7 +482,7 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .adm-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
 .adm-section{display:none}
 .adm-section.on{display:block}
-.dc-panel{max-width:640px}
+.dc-panel{max-width:640px;margin-left:auto;margin-right:auto}
 .dc-check{display:flex;align-items:center;gap:.55rem;font-size:.78rem;color:var(--ash);cursor:pointer;user-select:none}
 .dc-check input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
 .dc-char{font-size:.58rem;color:var(--muted);text-align:right;margin-top:.25rem}
@@ -581,6 +581,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <button class="adm-tab" id="tab-resources" onclick="switchTab('resources')">🔧 Resources</button>
     <button class="adm-tab" id="tab-rules" onclick="switchTab('rules')">📜 Rules</button>
     <button class="adm-tab" id="tab-announcements" onclick="switchTab('announcements')">📣 Announcements</button>
+    <button class="adm-tab" id="tab-webhook" onclick="switchTab('webhook')">💬 Chat Webhook</button>
   </div>
 
   <div id="sec-katalog" class="adm-section on">
@@ -1013,6 +1014,76 @@ Paragraf dipisah dengan enter 2x.
       </section>
     </div>
     </div><!-- end sec-announcements -->
+
+    <div id="sec-webhook" class="adm-section">
+    <div class="dc-panel">
+      <div class="story-tit">Chat Webhook</div>
+      <div class="story-desc">Kirim pesan ke channel Discord mana saja — cukup masukkan webhook URL-nya. Tidak perlu GitHub Actions.</div>
+
+      <section class="form-card">
+        <div class="form-card-title">🔗 Webhook URL</div>
+        <p class="form-card-hint">Masukkan webhook URL channel Discord tujuan. Disimpan lokal di browser ini saja, tidak dikirim ke mana pun.</p>
+        <div style="display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg" style="flex:1;min-width:0;margin:0">
+            <div class="fl" style="display:flex;align-items:center;justify-content:space-between">
+              <span>Discord Webhook URL</span>
+              <span id="wh-url-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
+            </div>
+            <input class="fi" id="wh-url-inp" type="password" placeholder="https://discord.com/api/webhooks/...">
+          </div>
+          <div style="display:flex;gap:.4rem;flex-shrink:0;padding-bottom:.1rem;flex-wrap:wrap">
+            <button onclick="saveWebhookUrl()" style="background:var(--ink);border:none;font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--paper);padding:.55rem 1rem;cursor:pointer;border-radius:8px;min-height:40px">Simpan</button>
+            <button onclick="toggleWebhookVisibility()" id="wh-toggle-btn" style="background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.55rem .75rem;cursor:pointer;border-radius:2rem;min-height:40px">👁 Tampilkan</button>
+            <button onclick="clearWebhookUrl()" style="background:none;border:1px solid rgba(185,64,64,.25);font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);padding:.55rem .75rem;cursor:pointer;border-radius:2rem;min-height:40px">✕ Hapus</button>
+          </div>
+        </div>
+        <div style="font-size:.58rem;color:var(--muted);margin-top:.7rem;line-height:1.65;padding:.65rem .75rem;background:rgba(88,101,242,.06);border:1px solid rgba(88,101,242,.15);border-radius:8px">
+          <strong style="color:var(--ink);font-weight:600">Cara dapat webhook URL:</strong><br>
+          Discord → Server kamu → Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-title">Tulis Pesan</div>
+        <p class="form-card-hint">Kirim langsung ke channel mana saja. Markdown Discord: **tebal**, *miring*, [link](url), \`kode\`</p>
+        <div class="fg" style="margin-bottom:1rem">
+          <div class="fl">Username pengirim <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional, default nama webhook</span></div>
+          <input class="fi" id="wh-username" type="text" placeholder="Misal: YumeLyrics Admin" maxlength="80">
+        </div>
+        <div class="fg" style="margin-bottom:1rem">
+          <div class="fl">Judul embed <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— opsional</span></div>
+          <input class="fi" id="wh-embed-title" type="text" placeholder="Contoh: Info Terbaru" maxlength="256">
+        </div>
+        <div class="fg" style="margin-bottom:1rem">
+          <div class="fl">Isi pesan *</div>
+          <textarea class="fi" id="wh-message" rows="8" maxlength="2000" placeholder="Tulis pesan yang akan dikirim ke Discord..."></textarea>
+          <div class="dc-char"><span id="wh-char-count">0</span> / 2000</div>
+        </div>
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-bottom:.9rem">
+          <button class="bsave" id="wh-send-btn" onclick="sendWebhookMessage()" style="flex:1;min-width:200px;background:rgba(88,101,242,.15);color:#5865f2;border:1px solid rgba(88,101,242,.35)">📤 Kirim ke Discord</button>
+          <button class="bcancel" type="button" onclick="clearWebhookForm()">Kosongkan</button>
+        </div>
+        <div id="wh-send-status" style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span id="wh-send-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="wh-send-status-text"></span>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:.9rem;display:flex;gap:1.2rem;flex-wrap:wrap">
+          <label class="dc-check">
+            <input type="checkbox" id="wh-ping-member">
+            <span>Ping <strong>@Member</strong></span>
+          </label>
+          <label class="dc-check">
+            <input type="checkbox" id="wh-ping-here">
+            <span>Ping <strong>@here</strong></span>
+          </label>
+          <label class="dc-check">
+            <input type="checkbox" id="wh-ping-everyone">
+            <span>Ping <strong>@everyone</strong></span>
+          </label>
+        </div>
+      </section>
+    </div>
+    </div><!-- end sec-webhook -->
 
 <div class="toast" id="toast"></div>
 
@@ -2908,6 +2979,139 @@ function geniusDoSearch(){
     res.innerHTML = '<div style="font-size:.78rem;color:var(--red)">Gagal: ' + _escH(e.message) + '</div>';
   });
 }
+
+// ── CHAT WEBHOOK (kirim langsung ke Discord webhook URL, tanpa GitHub Actions) ──
+const WH_STORAGE_KEY = 'ym_discord_webhook_url';
+
+function whUrlGet(){ return localStorage.getItem(WH_STORAGE_KEY) || ''; }
+
+function updateWhUrlStatus(){
+  const val = whUrlGet();
+  const status = document.getElementById('wh-url-status');
+  if(!status) return;
+  if(val){ status.style.display = 'inline'; } else { status.style.display = 'none'; }
+}
+
+window.saveWebhookUrl = function(){
+  const inp = document.getElementById('wh-url-inp');
+  if(!inp) return;
+  const val = inp.value.trim();
+  if(!val){ toast('URL tidak boleh kosong!'); return; }
+  if(!val.startsWith('https://discord.com/api/webhooks/') && !val.startsWith('https://discordapp.com/api/webhooks/')){
+    toast('Format URL tidak valid. Harus diawali https://discord.com/api/webhooks/'); return;
+  }
+  localStorage.setItem(WH_STORAGE_KEY, val);
+  updateWhUrlStatus();
+  toast('Webhook URL tersimpan! ✅');
+};
+
+window.clearWebhookUrl = function(){
+  localStorage.removeItem(WH_STORAGE_KEY);
+  const inp = document.getElementById('wh-url-inp');
+  if(inp) inp.value = '';
+  updateWhUrlStatus();
+  toast('Webhook URL dihapus.');
+};
+
+window.toggleWebhookVisibility = function(){
+  const inp = document.getElementById('wh-url-inp');
+  const btn = document.getElementById('wh-toggle-btn');
+  if(!inp) return;
+  if(inp.type === 'password'){ inp.type = 'text'; if(btn) btn.textContent = '🙈 Sembunyikan'; }
+  else { inp.type = 'password'; if(btn) btn.textContent = '👁 Tampilkan'; }
+};
+
+function setWhStatus(visible, ok, text){
+  const box = document.getElementById('wh-send-status');
+  const dot = document.getElementById('wh-send-status-dot');
+  const txt = document.getElementById('wh-send-status-text');
+  if(!box) return;
+  box.style.display = visible ? 'flex' : 'none';
+  if(!visible) return;
+  if(dot) dot.style.background = ok === true ? '#4caf7d' : ok === false ? '#c0392b' : 'var(--muted)';
+  if(txt) txt.textContent = text || '';
+}
+
+(function(){
+  const el = document.getElementById('wh-message');
+  if(el) el.addEventListener('input', function(){
+    const cnt = document.getElementById('wh-char-count');
+    if(cnt) cnt.textContent = String(el.value.length);
+  });
+  const saved = whUrlGet();
+  if(saved){ const inp = document.getElementById('wh-url-inp'); if(inp) inp.value = saved; }
+  updateWhUrlStatus();
+})();
+
+window.clearWebhookForm = function(){
+  ['wh-username','wh-embed-title','wh-message'].forEach(function(id){
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  const pingM = document.getElementById('wh-ping-member');
+  const pingH = document.getElementById('wh-ping-here');
+  const pingE = document.getElementById('wh-ping-everyone');
+  if(pingM) pingM.checked = false;
+  if(pingH) pingH.checked = false;
+  if(pingE) pingE.checked = false;
+  const cnt = document.getElementById('wh-char-count'); if(cnt) cnt.textContent = '0';
+  setWhStatus(false);
+};
+
+window.sendWebhookMessage = async function(){
+  const webhookUrl = whUrlGet();
+  if(!webhookUrl){ toast('Webhook URL belum diisi! Masukkan URL di bagian atas.'); return; }
+
+  const message   = (document.getElementById('wh-message')    .value || '').trim();
+  const embedTitle= (document.getElementById('wh-embed-title').value || '').trim();
+  const username  = (document.getElementById('wh-username')   .value || '').trim();
+  const pingMember= document.getElementById('wh-ping-member')  .checked;
+  const pingHere  = document.getElementById('wh-ping-here')    .checked;
+  const pingAll   = document.getElementById('wh-ping-everyone').checked;
+
+  if(!message){ toast('Isi pesan wajib diisi!'); document.getElementById('wh-message').focus(); return; }
+
+  const btn = document.getElementById('wh-send-btn');
+  btn.disabled = true; btn.textContent = 'Mengirim...';
+  setWhStatus(true, null, 'Mengirim ke Discord...');
+
+  let content = '';
+  if(pingAll) content += '@everyone ';
+  else if(pingHere) content += '@here ';
+  if(pingMember) content += '<@&1513469865451716771> ';
+
+  const payload = {};
+  if(username) payload.username = username;
+
+  if(embedTitle){
+    if(content.trim()) payload.content = content.trim();
+    payload.embeds = [{ title: embedTitle, description: message, color: 5793266 }];
+  } else {
+    payload.content = (content + message).trim();
+  }
+
+  try {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if(res.ok || res.status === 204){
+      setWhStatus(true, true, '✅ Pesan berhasil dikirim ke Discord!');
+      toast('Pesan terkirim ke Discord! ✅');
+    } else {
+      let errMsg = 'HTTP ' + res.status;
+      try{ const j = await res.json(); if(j.message) errMsg = j.message; } catch(e){}
+      setWhStatus(true, false, '❌ Gagal: ' + errMsg);
+      toast('Gagal kirim: ' + errMsg);
+    }
+  } catch(e){
+    setWhStatus(true, false, '❌ Error: ' + e.message);
+    toast('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Kirim ke Discord';
+  }
+};
 
 function geniusFetchLyrics(url, fullTitle){
   var res = document.getElementById('gd-results');

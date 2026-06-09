@@ -149,7 +149,8 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    if (isHtmlDirty(song)) continue; // jangan sync — lagu ini menunggu generate
+    // Seed semua lagu (termasuk yang htmlDirty) agar hash konten tersimpan.
+    // Ini mencegah lagu dengan flag dirty yang macet ter-generate ulang terus menerus.
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -166,15 +167,21 @@ function seedManifestFromDisk(manifest, songMeta) {
  * Incremental: generate hanya jika
  * - file HTML belum ada (lagu baru), atau
  * - slug berubah, atau
- * - htmlDirty === true (baru disimpan dari admin)
+ * - htmlDirty === true DAN konten benar-benar berubah (hash berbeda dari manifest)
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
-  if (isHtmlDirty(song)) return true;
   const fp = path.join('lagu', `${slug}.html`);
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
   if (prev && prev.slug !== slug) return true;
+  if (isHtmlDirty(song)) {
+    // Generate ulang hanya jika konten benar-benar berubah.
+    // Kalau flag dirty macet (clearHtmlDirtyFlag gagal di run sebelumnya),
+    // tapi isi lagu sama → skip, jangan generate ulang.
+    const currentHash = songContentHash(song);
+    return !prev || prev.hash !== currentHash;
+  }
   return false;
 }
 
