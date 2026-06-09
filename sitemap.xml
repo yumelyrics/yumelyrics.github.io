@@ -862,6 +862,20 @@
       <video:player_loc>https://www.youtube.com/embed/euBPUj8CkbA</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/orenji.html</loc><lastmod>2026-06-09</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e021e80ff49846a5654e005d411</image:loc>
+      <image:title>Orenji - Seven Oops</image:title>
+      <image:caption>Lirik Orenji - Seven Oops | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/nf-L5R8U-Q0/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Orenji - Seven Oops</video:title>
+      <video:description>Lirik Orenji - Seven Oops lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=nf-L5R8U-Q0</video:content_loc>
+      <video:player_loc>https://www.youtube.com/embed/nf-L5R8U-Q0</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
@@ -884,6 +898,7 @@
   <url><loc>https://yumelyrics.my.id/artis/reona.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/rokudenashi.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/sayuri.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/seven-oops.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/syh.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/yoasobi.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/artis.html</loc><lastmod>2026-06-09</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
@@ -994,11 +1009,4 @@
   <url><loc>https://yumelyrics.my.id/kata/bakari-ka.html</loc><lastmod>2026-06-09</lastmod><priority>0.55</priority></url>
   <url><loc>https://yumelyrics.my.id/kata/kara-ni-wa.html</loc><lastmod>2026-06-09</lastmod><priority>0.55</priority></url>
   <url><loc>https://yumelyrics.my.id/kata/tsutsu-aru.html</loc><lastmod>2026-06-09</lastmod><priority>0.55</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/discord-yumesubs.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/tentang-website-ini.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/system-prompt-custom-instruction-chatgpt-untuk-belajar-bahasa-jepang.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/anki-deck.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/role-info.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/buat-pesan-untuk-dirimu-sendiri-di-masa-depan.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://yumelyrics.my.id/stories/rekomendasi-tsk-untuk-tg-mandiri.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
