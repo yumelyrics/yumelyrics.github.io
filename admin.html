@@ -3098,16 +3098,13 @@ window.sendWebhookMessage = async function(){
     });
     if(res.ok || res.status === 204){
       setWhStatus(true, true, '✅ Pesan berhasil dikirim ke Discord!');
-      toast('Pesan terkirim ke Discord! ✅');
     } else {
       let errMsg = 'HTTP ' + res.status;
       try{ const j = await res.json(); if(j.message) errMsg = j.message; } catch(e){}
       setWhStatus(true, false, '❌ Gagal: ' + errMsg);
-      toast('Gagal kirim: ' + errMsg);
     }
   } catch(e){
     setWhStatus(true, false, '❌ Error: ' + e.message);
-    toast('Error: ' + e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = '📤 Kirim ke Discord';
