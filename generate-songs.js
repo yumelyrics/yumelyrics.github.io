@@ -13,6 +13,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
+// ── DISCORD SERVER LINK ──────────────────────────────────────────────────────
+// Ganti URL di bawah dengan invite link Discord server kamu.
+// Contoh: 'https://discord.gg/abcdefg'
+// Kalau server sudah punya vanity URL, ganti juga bagian ini.
+const DISCORD_SERVER_URL = 'https://discord.gg/v9V35kNXdx';
+// ─────────────────────────────────────────────────────────────────────────────
+
 function isHtmlDirty(song) {
   return song.htmlDirty === true || song.htmlDirty === 'true';
 }
@@ -1570,6 +1577,22 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .nico-card:hover .nico-card-play{background:rgba(255,255,255,.2);transform:scale(1.08)}
 .nico-card-play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
 
+/* ── DISCORD ── */
+.discord-card{display:flex;align-items:center;gap:0;background:linear-gradient(135deg,#23272a 0%,#1e2124 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s,transform .15s;border-left:3px solid #5865F2;box-sizing:border-box;max-width:340px;box-shadow:0 2px 14px rgba(0,0,0,.3);margin-top:.5rem}
+.discord-card:hover{background:linear-gradient(135deg,#2c2f33 0%,#23272a 100%);box-shadow:0 6px 28px rgba(88,101,242,.28);transform:translateY(-1px)}
+.discord-card-icon{width:72px;height:72px;min-width:72px;flex-shrink:0;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);display:flex;align-items:center;justify-content:center;transition:filter .2s}
+.discord-card:hover .discord-card-icon{filter:brightness(1.1)}
+.discord-card-icon svg{width:34px;height:26px}
+.discord-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.discord-card-label{font-size:.52rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5865F2;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.discord-card-title{font-size:.8rem;font-weight:700;color:#eeeef2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.discord-card-sub{font-size:.7rem;color:#7a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
+.discord-card-cta{font-size:.6rem;font-weight:700;letter-spacing:.08em;color:rgba(88,101,242,.55);margin-top:3px;white-space:nowrap;font-family:var(--sans);text-transform:uppercase;transition:color .2s}
+.discord-card:hover .discord-card-cta{color:#5865F2}
+.discord-card-arrow{width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px;transition:background .15s,transform .12s;border:1.5px solid rgba(88,101,242,.28)}
+.discord-card:hover .discord-card-arrow{background:rgba(88,101,242,.28);transform:scale(1.08)}
+.discord-card-arrow svg{width:13px;height:13px;fill:#5865F2}
+
 /* ── ONLINE COUNTER ── */
 /* ── ONLINE COUNTER ── */
 #online-counter{display:flex;flex-direction:column;gap:.35rem}
@@ -2191,6 +2214,20 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </div>
       </a>` : ''}
+      <a class="discord-card" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener" aria-label="Gabung server Discord">
+        <div class="discord-card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36"><path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+        </div>
+        <div class="discord-card-body">
+          <span class="discord-card-label">Discord</span>
+          <span class="discord-card-title">Server Yume Lyrics</span>
+          <span class="discord-card-sub">Chat, request, &amp; diskusi bareng</span>
+          <span class="discord-card-cta">Gabung Sekarang →</span>
+        </div>
+        <div class="discord-card-arrow">
+          <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
+      </a>
     </div>
 </aside>
 
