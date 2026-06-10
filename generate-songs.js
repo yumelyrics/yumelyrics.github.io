@@ -149,8 +149,9 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Seed semua lagu (termasuk yang htmlDirty) agar hash konten tersimpan.
-    // Ini mencegah lagu dengan flag dirty yang macet ter-generate ulang terus menerus.
+    // Jangan seed lagu yang htmlDirty — biarkan manifest lama dipakai supaya
+    // needsSongGenerate bisa mendeteksi perubahan konten dengan benar.
+    if (isHtmlDirty(song)) continue;
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
