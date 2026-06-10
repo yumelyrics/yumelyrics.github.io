@@ -1597,9 +1597,8 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .discord-card-sub{font-size:.7rem;color:#7a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans)}
 .discord-card-cta{font-size:.6rem;font-weight:700;letter-spacing:.08em;color:rgba(88,101,242,.55);margin-top:3px;white-space:nowrap;font-family:var(--sans);text-transform:uppercase;transition:color .2s}
 .discord-card:hover .discord-card-cta{color:#5865F2}
-.discord-card-arrow{width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px;transition:background .15s,transform .12s;border:1.5px solid rgba(88,101,242,.28)}
-.discord-card:hover .discord-card-arrow{background:rgba(88,101,242,.28);transform:scale(1.08)}
-.discord-card-arrow svg{width:13px;height:13px;fill:#5865F2}
+.card-duo{display:flex;flex-direction:row;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.card-duo .nico-card,.card-duo .discord-card{flex:1;min-width:200px;max-width:100%;margin-top:0}
 
 /* ── ONLINE COUNTER ── */
 /* ── ONLINE COUNTER ── */
@@ -2199,36 +2198,35 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
           </div>
         </a>` : ''}
       </div>
-      ${song.nicoId ? `<a class="nico-card" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener" aria-label="Tonton di Niconico">
-        <img class="nico-card-art" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="Niconico thumbnail" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="nico-card-art-fallback" style="display:none">▶</div>
-        <div class="nico-card-body">
-          <span class="nico-card-label">
-            <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            NICONICO
-          </span>
-          <span class="nico-card-title">${escHtml(titleMain)}</span>
-          <span class="nico-card-sub">${escHtml(artist)}</span>
-          <span class="nico-card-cta">Tonton di Niconico →</span>
-        </div>
-        <div class="nico-card-play">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </div>
-      </a>` : ''}
-      <a class="discord-card" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener" aria-label="Gabung server Discord">
-        <div class="discord-card-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36"><path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-        </div>
-        <div class="discord-card-body">
-          <span class="discord-card-label">Discord</span>
-          <span class="discord-card-title">Server Yume Lyrics</span>
-          <span class="discord-card-sub">Chat, request, &amp; diskusi bareng</span>
-          <span class="discord-card-cta">Gabung Sekarang →</span>
-        </div>
-        <div class="discord-card-arrow">
-          <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </div>
-      </a>
+      <div class="card-duo">
+        ${song.nicoId ? `<a class="nico-card" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener" aria-label="Tonton di Niconico">
+          <img class="nico-card-art" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="Niconico thumbnail" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="nico-card-art-fallback" style="display:none">▶</div>
+          <div class="nico-card-body">
+            <span class="nico-card-label">
+              <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              NICONICO
+            </span>
+            <span class="nico-card-title">${escHtml(titleMain)}</span>
+            <span class="nico-card-sub">${escHtml(artist)}</span>
+            <span class="nico-card-cta">Tonton di Niconico →</span>
+          </div>
+          <div class="nico-card-play">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </a>` : ''}
+        <a class="discord-card" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener" aria-label="Gabung server Discord">
+          <div class="discord-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36"><path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+          </div>
+          <div class="discord-card-body">
+            <span class="discord-card-label">Discord</span>
+            <span class="discord-card-title">Server Yume Lyrics</span>
+            <span class="discord-card-sub">Chat, request, &amp; diskusi bareng</span>
+            <span class="discord-card-cta">Gabung Sekarang →</span>
+          </div>
+        </a>
+      </div>
       <div id="online-counter">
         <div class="online-dot-row">
           <div class="online-dot"></div>
