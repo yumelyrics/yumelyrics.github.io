@@ -251,15 +251,22 @@ const CSS_TOKENS = `
     radial-gradient(ellipse 60% 40% at 50% 100%, rgba(196,99,122,.1) 0%, transparent 55%),
     var(--paper);
 }
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;will-change:transform;background:
   radial-gradient(ellipse 85% 50% at 8% -8%, rgba(232,180,200,.2) 0%, transparent 58%),
   radial-gradient(ellipse 55% 40% at 92% 12%, rgba(201,169,110,.12) 0%, transparent 52%),
   radial-gradient(ellipse 50% 35% at 50% 105%, rgba(107,91,122,.09) 0%, transparent 55%),
   var(--paper)}
 #bgwrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;opacity:.2;pointer-events:none}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;will-change:transform;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
 [data-theme="dark"] body::before{opacity:.22}
 .wrap{position:relative;z-index:1}
+/* ── MOBILE PERFORMANCE ── */
+@media(max-width:768px){
+  body::before{display:none}
+  #bgwrap::before{display:none}
+  #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
+  [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
+}
 `;
 
 function toSlug(titleRo, titleJp, docId) {
@@ -1337,7 +1344,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
 ${FONT_HEAD}
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css">
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -1378,7 +1385,8 @@ nav{transition:var(--nm-transition)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
 
 /* ── NAV ── */
-nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px)}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+@media(max-width:768px){nav{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
 .nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
 .nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
 .nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
@@ -1578,9 +1586,9 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .nico-card-play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
 
 /* ── DISCORD ── */
-.discord-card{display:flex;align-items:center;gap:0;background:linear-gradient(135deg,#23272a 0%,#1e2124 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s,transform .15s;border-left:3px solid #5865F2;box-sizing:border-box;max-width:340px;box-shadow:0 2px 14px rgba(0,0,0,.3);margin-top:.5rem}
+.discord-card{display:flex;align-items:stretch;gap:0;background:linear-gradient(135deg,#23272a 0%,#1e2124 100%);border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .2s,box-shadow .2s,transform .15s;border-left:3px solid #5865F2;box-sizing:border-box;max-width:340px;box-shadow:0 2px 14px rgba(0,0,0,.3);margin-top:.5rem}
 .discord-card:hover{background:linear-gradient(135deg,#2c2f33 0%,#23272a 100%);box-shadow:0 6px 28px rgba(88,101,242,.28);transform:translateY(-1px)}
-.discord-card-icon{width:72px;height:72px;min-width:72px;flex-shrink:0;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);display:flex;align-items:center;justify-content:center;transition:filter .2s}
+.discord-card-icon{width:72px;min-width:72px;flex-shrink:0;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);display:flex;align-items:center;justify-content:center;transition:filter .2s}
 .discord-card:hover .discord-card-icon{filter:brightness(1.1)}
 .discord-card-icon svg{width:34px;height:26px}
 .discord-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
@@ -2190,13 +2198,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </a>` : ''}
-        <div id="online-counter">
-          <div class="online-dot-row">
-            <div class="online-dot"></div>
-            <span class="online-num" id="online-count">—</span>
-          </div>
-          <span class="online-sub">pembaca aktif</span>
-        </div>
       </div>
       ${song.nicoId ? `<a class="nico-card" href="https://www.nicovideo.jp/watch/${escHtml(song.nicoId)}" target="_blank" rel="noopener" aria-label="Tonton di Niconico">
         <img class="nico-card-art" src="https://nicovideo.cdn.nimg.jp/thumbnails/${escHtml(song.nicoId.replace('sm',''))}/1" alt="Niconico thumbnail" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -2228,6 +2229,13 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
           <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
         </div>
       </a>
+      <div id="online-counter">
+        <div class="online-dot-row">
+          <div class="online-dot"></div>
+          <span class="online-num" id="online-count">—</span>
+        </div>
+        <span class="online-sub">pembaca aktif</span>
+      </div>
     </div>
 </aside>
 
