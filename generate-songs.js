@@ -149,9 +149,9 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Jangan seed lagu yang htmlDirty — biarkan manifest lama dipakai supaya
-    // needsSongGenerate bisa mendeteksi perubahan konten dengan benar.
-    if (isHtmlDirty(song)) continue;
+    // Hapus entry manifest untuk lagu yang htmlDirty supaya needsSongGenerate
+    // pasti return true (prev === null) tanpa perlu hapus manifest file manual.
+    if (isHtmlDirty(song)) { delete manifest.songs[song.id]; continue; }
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
