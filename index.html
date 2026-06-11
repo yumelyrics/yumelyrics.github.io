@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>YumeLyrics — Lirik & Terjemahan Lagu Jepang Indonesia Lengkap | YumeSubs</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
 <meta name="description" content="YumeLyrics (YumeSubs): lirik lagu Jepang lengkap dengan romaji dan terjemahan bahasa Indonesia. Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, Amazarashi, dan ratusan lagu lainnya. Baca arti & makna lagu Jepang favoritmu, gratis di YumeLyrics.">
@@ -44,6 +43,9 @@
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
+<!-- Modulepreload Firebase — mulai fetch modul sebelum parser sampai script tag -->
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js">
 <meta name="google-site-verification" content="kUWbuwBUM0v9gKqMXVG7t9A80DgPCgMYQvOU533ERjE">
 <script type="application/ld+json">
 [
@@ -81,21 +83,79 @@
       "https://yumelyrics.my.id",
       "https://yumelyrics.github.io"
     ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "YumeLyrics — Lirik & Terjemahan Lagu Jepang Indonesia | YumeSubs",
+    "url": "https://yumelyrics.my.id",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [".hero-lead", ".eyebrow", "h1"]
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Lirik Lagu Jepang",
+      "description": "Terjemahan dan lirik romaji lagu Jepang dalam bahasa Indonesia"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Apa itu YumeLyrics?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "YumeLyrics (juga dikenal sebagai YumeSubs) adalah website yang menyediakan lirik lagu Jepang lengkap beserta romaji dan terjemahan bahasa Indonesia secara gratis. Tersedia lagu dari artis seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, dan ratusan artis lainnya."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Bagaimana cara membaca lirik lagu Jepang di YumeSubs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Di YumeSubs, setiap lagu ditampilkan dalam tiga format sekaligus: lirik asli Jepang (kanji/kana), romaji (transliterasi latin), dan terjemahan bahasa Indonesia. Kamu bisa memilih tampilan yang diinginkan menggunakan tombol pilihan di halaman lagu."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Apakah YumeSubs gratis?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ya, YumeSubs sepenuhnya gratis. Kamu bisa membaca lirik lagu Jepang dengan romaji dan terjemahan Indonesia tanpa biaya apapun."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Apa saja fitur YumeSubs selain lirik?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "YumeSubs memiliki fitur Mode Uji Ingatan untuk latihan menghafal lirik, Bunpou N5-N1 untuk belajar tata bahasa Jepang dari lirik, Latihan Terjemahan interaktif, serta fitur Favorit untuk menyimpan lagu favorit dan melanjutkan bacaan."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Artis Jepang apa saja yang ada di YumeSubs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "YumeSubs mencakup berbagai artis J-Pop dan J-Rock populer seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, Amazarashi, Polkadot Stingray, Official HIGE DANdism, Aimer, Kenshi Yonezu, dan masih banyak lagi."
+        }
+      }
+    ]
   }
 ]
 </script>
 
-<!-- ═══════════════════════════════════════════════════════
-     AI SEO — izinkan crawler AI utama (GPTBot, ClaudeBot, Perplexity, dll)
-     ═══════════════════════════════════════════════════════ -->
+<!-- AI SEO -->
 <meta name="GPTBot" content="index, follow">
 <meta name="ClaudeBot" content="index, follow">
 <meta name="PerplexityBot" content="index, follow">
 <meta name="Anthropic-AI" content="index, follow">
 <meta name="Google-Extended" content="index, follow">
 <meta name="CCBot" content="index, follow">
-
-<!-- GEO — Generative Engine Optimization: bantu AI cite konten ini dengan benar -->
+<!-- GEO -->
 <meta name="citation_title" content="YumeLyrics — Lirik dan Terjemahan Lagu Jepang Indonesia">
 <meta name="citation_language" content="id">
 <meta name="citation_publication_date" content="2024">
@@ -105,81 +165,11 @@
 <meta name="ai-content-declaration" content="human-authored, original-translations">
 <meta name="content-type" content="lyrics, music-translation, japanese-language">
 
-<!-- Speakable untuk AEO — konten yang bisa dibacakan AI assistant -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "YumeLyrics — Lirik & Terjemahan Lagu Jepang Indonesia | YumeSubs",
-  "url": "https://yumelyrics.my.id",
-  "speakable": {
-    "@type": "SpeakableSpecification",
-    "cssSelector": [".hero-lead", ".eyebrow", "h1"]
-  },
-  "about": {
-    "@type": "Thing",
-    "name": "Lirik Lagu Jepang",
-    "description": "Terjemahan dan lirik romaji lagu Jepang dalam bahasa Indonesia"
-  }
-}
-</script>
-
-<!-- AEO — FAQ Schema: jawab pertanyaan umum langsung di search & AI -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Apa itu YumeLyrics?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "YumeLyrics (juga dikenal sebagai YumeSubs) adalah website yang menyediakan lirik lagu Jepang lengkap beserta romaji dan terjemahan bahasa Indonesia secara gratis. Tersedia lagu dari artis seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, dan ratusan artis lainnya."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Bagaimana cara membaca lirik lagu Jepang di YumeSubs?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Di YumeSubs, setiap lagu ditampilkan dalam tiga format sekaligus: lirik asli Jepang (kanji/kana), romaji (transliterasi latin), dan terjemahan bahasa Indonesia. Kamu bisa memilih tampilan yang diinginkan menggunakan tombol pilihan di halaman lagu."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Apakah YumeSubs gratis?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ya, YumeSubs sepenuhnya gratis. Kamu bisa membaca lirik lagu Jepang dengan romaji dan terjemahan Indonesia tanpa biaya apapun."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Apa saja fitur YumeSubs selain lirik?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "YumeSubs memiliki fitur Mode Uji Ingatan untuk latihan menghafal lirik, Bunpou N5-N1 untuk belajar tata bahasa Jepang dari lirik, Latihan Terjemahan interaktif, serta fitur Favorit untuk menyimpan lagu favorit dan melanjutkan bacaan."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Artis Jepang apa saja yang ada di YumeSubs?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "YumeSubs mencakup berbagai artis J-Pop dan J-Rock populer seperti Back Number, Yorushika, YOASOBI, Ado, Fujii Kaze, Amazarashi, Polkadot Stingray, Official HIGE DANdism, Aimer, Kenshi Yonezu, dan masih banyak lagi."
-      }
-    }
-  ]
-}
-</script>
-
-<!-- Font dimuat async agar tidak blokir render awal -->
+<!-- Font dimuat async — tidak blokir render, display=optional → zero CLS -->
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=optional" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=optional"></noscript>
 <style>
 :root{
-  /* 夢の夜 — warm parchment · gold · rose */
   --ink:#1a1612;--paper:#f5f0ea;--cream:#ede6dc;--smoke:#c4b8ac;--ash:#8a7d70;
   --gold:#b8923c;--gold2:#d4aa6a;--rose:#c4637a;--plum:#7c4d6e;
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(184,146,60,.1);
@@ -191,7 +181,6 @@
   --nm-transition: background .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease;
 }
 .no-transition,.no-transition *{transition:none!important}
-/* ── NIGHT MODE ── */
 [data-theme="dark"]{
   --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4038;--ash:#7a7068;
   --gold:#c9a96e;--gold2:#e8c890;--rose:#c4637a;--plum:#7c4d6e;
@@ -202,8 +191,6 @@
 }
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 [data-theme="dark"] nav{background:rgba(15,13,11,.90);border-bottom-color:rgba(201,169,110,.12)}
-[data-theme="dark"] body::before{opacity:.2}
-/* dark theme tambahan sesuai generate-songs.js */
 [data-theme="dark"] .cmi{color:var(--ink)}
 [data-theme="dark"] .sec-ln{background:linear-gradient(90deg,transparent,rgba(201,169,110,.3),transparent)}
 [data-theme="dark"] .lvcov{filter:sepia(.18) contrast(1.02) brightness(.86)}
@@ -215,28 +202,22 @@
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
 [data-theme="dark"] footer{background:#080604}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{margin:0;padding:0}html{scroll-behavior:smooth;background:var(--paper)}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--paper)}
 body,nav,.sc,footer,.toast{transition:var(--nm-transition)}
 body{background:var(--paper);color:var(--ink);font-family:var(--en);min-height:100dvh;overflow-x:hidden;position:relative;-webkit-touch-callout:none}
-body::before{display:none}
-[data-theme="dark"] body::before{opacity:.22}
 input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 @media(pointer:coarse){body{-webkit-user-select:none;-moz-user-select:none;user-select:none}}
 
-/* ── Mobile performance: reduce scroll jank ──
-   Banyak efek di bawah ini (fixed grain overlay, blur filter, backdrop-filter, transisi global)
-   bisa bikin “glitch” saat scroll di HP. Kita matikan khusus perangkat touch. */
-@media (pointer:coarse){
+/* Mobile: matikan efek berat yang bikin scroll jank */
+@media(pointer:coarse){
   html{scroll-behavior:auto}
   body,nav,.sc,footer,.toast{transition:none!important}
-  body::before{display:none!important}
   nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  /* Stop all continuous animations — biggest scroll-jank sources on mobile */
   .online-dot-ring{animation:none!important}
   .sc.reorder-anim{animation:none!important}
 }
-
-@media (prefers-reduced-motion: reduce){
+@media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -252,7 +233,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nb:hover,.nb.on{color:var(--ink);background:none}
 .nb.adm{border:1px solid var(--border);color:var(--rose)}
 .nb.adm:hover{background:var(--mist)}
-/* ── Hamburger Menu ── */
 #nav-menu-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;transition:var(--nm-transition);flex-shrink:0;gap:0;flex-direction:column;padding:0}
 #nav-menu-btn:hover{border-color:var(--ash)}
 #nav-menu-btn span{display:block;width:14px;height:1.5px;background:var(--ash);transition:transform .25s ease,opacity .2s ease,width .25s ease}
@@ -291,31 +271,23 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .search-clear{position:absolute;right:.8rem;background:none;border:none;color:var(--ash);cursor:pointer;font-size:.9rem;display:none;padding:0}
 .search-clear.vis{display:block}
 
-.sec-hd{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding:0 3rem}
-.sec-lb{font-size:.52rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;font-weight:700}
-.sec-ln{flex:1;height:1px;background:rgba(10,8,18,.1)}
+.sec-hd{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem;padding:1.5rem 3rem 0}
+.sec-lb{font-family:var(--serif);font-size:1.1rem;font-weight:300;font-style:italic;color:var(--ink);white-space:nowrap;letter-spacing:0}
+.sec-count{font-size:.52rem;color:var(--ash);letter-spacing:.2em;text-transform:uppercase;font-weight:700;font-family:var(--en)}
+.sec-ln{flex:1;height:1px;background:var(--border);margin-left:.5rem}
 [data-theme="dark"] .sec-ln{background:linear-gradient(90deg,transparent,rgba(201,169,110,.3),transparent)}
 
-/* KATALOG — manuskrip / daftar trek */
-.catalog-panel{position:relative;z-index:2}
-.catalog-panel::before{display:none}
+.catalog-panel{position:relative;z-index:2;contain:layout}
 .manuscript-sec-hd .sec-lb{font-family:var(--serif);font-weight:400;font-size:1.2rem;letter-spacing:.06em;text-transform:none;color:var(--ink)}
 .manuscript-sec-hd .sec-lb::before{content:'— ';color:var(--sakura);font-weight:300}
 .catalog-list-wrap{padding:0 3rem 4rem;max-width:1280px}
 .song-grid{display:flex;flex-direction:column;gap:0;padding:0;width:100%;max-width:none;overflow:visible}
 .sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0}
 .sc:first-of-type{border-top:1px solid var(--border)}
-.sc::before{display:none}
 .sc:hover{background:var(--sakura-dim);padding-left:.4rem;padding-right:.85rem;border-color:var(--border);box-shadow:none}
 .sc-img-wrap{width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;background:var(--cream);overflow:hidden;border:1px solid var(--border);align-self:center}
-.sc-img-wrap img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-  filter:sepia(.1) contrast(1.04);
-  transform:none;transition:transform .4s ease,filter .35s ease;
-  image-rendering:auto;
-}
+.sc-img-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.1) contrast(1.04);transform:none;transition:transform .4s ease,filter .35s ease;image-rendering:auto}
 .sc:hover .sc-img-wrap img{opacity:1;transform:scale(1.04);filter:sepia(0) contrast(1.06)}
-.sc-corner{display:none}
 .scb{padding:.1rem 0 .1rem 1.15rem;flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;min-width:0}
 .scn{font-size:.56rem;color:var(--smoke);letter-spacing:.22em;margin-bottom:.35rem;text-transform:uppercase;font-weight:700;font-variant-numeric:tabular-nums}
 .scn::before{content:'№ ';color:var(--gold);letter-spacing:.08em}
@@ -337,11 +309,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .scar{font-size:.58rem;color:var(--ash);letter-spacing:.14em;text-transform:uppercase;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scar-link{color:var(--ash);text-decoration:none;transition:color .2s}
 .scar-link:hover{color:var(--gold)}
-.scarr{
-  font-size:.75rem;color:var(--rose);transition:transform .2s,color .2s;
-  display:inline-flex;align-items:center;justify-content:center;
-  flex-shrink:0;width:1.1rem;position:relative;z-index:3;
-}
+.scarr{font-size:.75rem;color:var(--rose);transition:transform .2s,color .2s;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:1.1rem;position:relative;z-index:3}
 .sc:hover .scarr{transform:translateX(3px);color:var(--rose)}
 
 .no-result{padding:2rem 0;color:var(--ash);font-size:.8rem;font-style:italic;font-family:var(--serif)}
@@ -355,51 +323,163 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .gbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.45rem 1rem;cursor:pointer;transition:color .2s,border-color .2s,background-color .2s,opacity .2s;border-radius:0;font-weight:600;text-decoration:none}
 .gbtn:hover{border-color:var(--ink);color:var(--ink)}
 .lvt{font-family:var(--jp);font-size:1.5rem;font-weight:400;color:var(--ink);letter-spacing:.05em}
-/* [duplicate CSS removed] */
-/* [duplicate CSS removed] */
 
-/* ── PAGE HEADER (replaces hero) ── */
+/* PAGE HEADER */
 .page-header{padding:2rem 3rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
 .page-header-inner{max-width:1280px;margin:0 auto}
-.page-header-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem}
-.page-header-meta>span{font-size:.5rem;color:var(--ash);letter-spacing:.28em;text-transform:uppercase;font-weight:700;font-family:var(--en)}
-.page-header h1{font-family:var(--serif);font-size:clamp(1.4rem,4vw,2rem);font-weight:300;color:var(--ink);line-height:1.2;margin-bottom:.3rem}
-.page-header p{font-size:.78rem;color:var(--ash);font-family:var(--serif);font-style:italic;margin:0}
-#online-counter{display:inline-flex;align-items:center;gap:.55rem}
-.online-dot-wrap{position:relative;width:6px;height:6px;flex-shrink:0}
-.online-dot-core{width:6px;height:6px;border-radius:50%;background:#22c55e}
-.online-dot-ring{position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(34,197,94,.35);animation:onlineRing 2.2s ease-out infinite}
-.online-text{display:flex;align-items:baseline;gap:.35rem}
-.online-num{font-family:var(--serif);font-size:.9rem;font-weight:300;color:var(--ink);line-height:1}
-.online-sub{font-size:.45rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke)}
-@media(max-width:768px){.page-header{padding:1.25rem 1rem 1rem}}
-@media(min-width:769px) and (max-width:1024px){
-  .catalog-list-wrap{padding:0 2rem 3.5rem}
-}
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--smoke)}
-@media(max-width:900px){.lvgrid{grid-template-columns:1fr}}
-@media(max-width:760px){.lvgrid{grid-template-columns:1fr}}
+.page-header-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem;font-size:.6rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;font-weight:700}
+/* Stable-width online counter — cegah CLS saat angka berubah */
+#online-counter{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.online-dot-wrap{position:relative;width:8px;height:8px;flex-shrink:0}
+.online-dot-core{width:8px;height:8px;border-radius:50%;background:#4caf6e}
+.online-dot-ring{position:absolute;inset:0;border-radius:50%;background:#4caf6e;animation:onlineRing 2s ease-out infinite;opacity:0}
+.online-text{display:flex;align-items:baseline;gap:.3rem;font-size:.58rem;letter-spacing:.1em;color:var(--ash);font-weight:700}
+/* min-width mencegah layout shift saat "—" berganti jadi angka */
+.online-num{font-size:.72rem;color:var(--ink);min-width:2.5ch;display:inline-block;text-align:right}
+.online-sub{text-transform:uppercase;letter-spacing:.15em;font-size:.5rem}
+.page-header h1{font-family:var(--serif);font-size:1.75rem;font-weight:300;color:var(--ink);letter-spacing:.02em;line-height:1.25;margin-bottom:.4rem}
+.page-header p{font-size:.75rem;color:var(--ash);letter-spacing:.08em;font-family:var(--en);font-weight:600}
+/* Stable width for song count span — cegah CLS saat "—" berganti angka */
+.js-hero-song-count{min-width:3ch;display:inline-block;text-align:right}
 
-/* ── MOBILE & TABLET ── */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:var(--en);font-size:.68rem;letter-spacing:.1em;padding:.65rem 1.4rem;z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.on{opacity:1;pointer-events:auto}
+
+/* Lyric view */
+.lvgrid{display:grid;grid-template-columns:280px 1fr;gap:2.5rem;align-items:start}
+.lvcov{width:100%;height:auto;display:block;border:1px solid var(--border);filter:sepia(.08) contrast(1.03)}
+.lvmeta{margin-top:1rem}
+.ytwrap{margin-top:1.5rem}
+.ytlb{font-size:.5rem;letter-spacing:.25em;text-transform:uppercase;color:var(--ash);margin-bottom:.5rem;font-weight:700}
+.ytframe{width:100%;aspect-ratio:16/9;border:none;display:block}
+.lctrl{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.tpill{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.38rem .9rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;border-radius:0;font-weight:600}
+.tpill.on{border-color:var(--ink);color:var(--ink)}
+.llines{display:flex;flex-direction:column;gap:1.4rem}
+.ll-line{display:flex;flex-direction:column;gap:.2rem}
+.ljp{font-family:var(--jp);font-size:1.1rem;font-weight:400;color:var(--ink);line-height:1.6}
+.lro{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.5}
+.lid{font-size:.85rem;color:var(--rose);font-family:var(--serif);line-height:1.5;font-weight:300}
+.lro.h,.lid.h{display:none}
+.cmsec{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.cmtit{font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ash);margin-bottom:1rem;font-weight:700}
+.lva{font-size:.62rem;color:var(--ash);letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-top:.2rem}
+
+/* Continue-read */
+.continue-read{margin-top:.75rem;padding:.65rem .75rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;gap:.45rem;max-width:100%;overflow:hidden;box-sizing:border-box}
+.continue-read-top{display:flex;align-items:center;gap:.65rem;min-width:0;text-decoration:none;color:inherit}
+.continue-read-cover{width:3rem;height:3rem;flex-shrink:0;border:1px solid var(--border);background:var(--mist);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.continue-read-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.continue-read-cover-ph{font-size:1rem;color:var(--smoke);line-height:1}
+.continue-read-body{flex:1;min-width:0;overflow:hidden}
+.continue-read-label{font-size:.5rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:.15rem}
+.continue-read-title{display:block;font-size:.82rem;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continue-read-sub{font-size:.6rem;color:var(--ash);margin-top:.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.continue-read-btn{display:block;text-align:center;font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .75rem;background:var(--ink);color:var(--paper)!important;text-decoration:none}
+.continue-read-btn:hover{background:var(--gold);color:var(--ink)!important}
+[data-theme="dark"] .continue-read{background:var(--cream)}
+
+/* Skeleton loading */
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.sc-skel{background:transparent;border:none;border-bottom:1px solid var(--border);overflow:hidden;display:flex;flex-direction:row;align-items:stretch;pointer-events:none;padding:.75rem 0}
+.sc-skel-img{width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;background:linear-gradient(90deg,var(--cream) 25%,var(--smoke) 50%,var(--cream) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite linear;opacity:.4}
+[data-theme="dark"] .sc-skel-img{opacity:.15}
+.sc-skel-body{padding:1.1rem;display:flex;flex-direction:column;gap:.55rem}
+.sc-skel-line{height:.65rem;border-radius:0;background:linear-gradient(90deg,var(--cream) 25%,var(--smoke) 50%,var(--cream) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite linear;opacity:.35}
+[data-theme="dark"] .sc-skel-line{opacity:.12}
+.sc-skel-line.w80{width:80%}
+.sc-skel-line.w60{width:60%}
+.sc-skel-line.w45{width:45%}
+
+.spbtn{display:inline-flex;align-items:center;gap:.5rem;background:#1DB954;border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#000;padding:.6rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:opacity .2s;margin-top:1rem}
+.spbtn:hover{opacity:.85}
+.spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
+.rec-tag{display:inline-flex;align-items:center;gap:.35rem;font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);padding:.18rem 0;margin-bottom:.35rem;font-family:var(--en);font-weight:700}
+.rec-tag::before{content:'';display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--rose);flex-shrink:0}
+.pop-tag{color:var(--gold)}
+.pop-tag::before{background:var(--gold)}
+
+/* Filter */
+.filter-row{padding:.25rem 3rem .7rem;margin-bottom:0;max-width:100%}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-bottom:.35rem}
+.filter-grid .fbtn,.filter-grid .fbtn-artis-link{width:100%;margin:0;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:.45rem .5rem;text-align:center}
+.fbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;border-radius:0;overflow:hidden}
+.fbtn-inner{display:inline-flex;align-items:center;justify-content:center;position:relative;padding-bottom:3px;max-width:100%}
+.fbtn-inner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:center;transition:transform .25s ease}
+.fbtn:hover{color:var(--ash)}
+.fbtn.on{color:var(--ink)}
+.fbtn.on .fbtn-inner::after{transform:scaleX(1)}
+[data-theme="dark"] .fbtn.on{color:var(--ink)}
+.fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
+.fbtn.on .fbtn-indicator{opacity:1}
+#artistFilter{font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.5rem .75rem;cursor:pointer;width:100%;max-width:100%;min-height:40px;box-sizing:border-box;display:block}
+#artistFilter:focus{outline:none;border-color:var(--gold)}
+.fbtn-artis-link{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ash);text-decoration:none;background:var(--paper);transition:color .2s,border-color .2s,background .2s;font-family:var(--en)}
+.fbtn-artis-link:hover{color:var(--ink);border-color:var(--gold);background:rgba(201,169,110,.06)}
+@media(min-width:769px){
+  .filter-row{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1rem}
+  .filter-grid{display:contents;margin:0}
+  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{width:auto;min-height:auto;padding:.5rem 1rem .5rem 0;border-color:transparent}
+  #artistFilter{width:auto;min-width:9rem;max-width:12rem;margin-left:auto}
+}
+.footer-artists{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1rem}
+.footer-artists a{font-size:.68rem;color:var(--ash);text-decoration:none;letter-spacing:.04em;transition:color .2s}
+.footer-artists a:hover{color:var(--gold)}
+
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+@keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.sc.reorder-anim{animation:card-in .3s cubic-bezier(.25,.8,.25,1) both}
+
+/* Button interactions — GPU composited */
+.req-btn,.gbtn,.tpill,.sbtn,.nb,.fbtn{position:relative;overflow:hidden;transition:color .18s ease,border-color .18s ease,background-color .18s ease,opacity .18s ease,transform .22s cubic-bezier(.34,1.4,.64,1),box-shadow .22s cubic-bezier(.34,1.4,.64,1)}
+.req-btn:hover:not(:disabled){transform:translateZ(0) translateY(-3px);box-shadow:0 8px 24px rgba(201,169,110,.2)}
+.req-btn--primary:hover:not(:disabled){transform:translateZ(0) translateY(-3px);box-shadow:0 12px 32px var(--glow-pink)}
+.gbtn:hover:not(:disabled){transform:translateZ(0) translateY(-2px);box-shadow:0 4px 12px rgba(26,22,18,.07)}
+.tpill:hover{transform:translateZ(0) translateY(-1px)}
+.fbtn:hover{transform:translateZ(0) translateY(-1px)}
+.nb:hover{transform:translateZ(0) translateY(-1px)}
+.req-btn:active:not(:disabled){transform:translateZ(0) translateY(1px) scale(.97);transition-duration:.08s}
+.gbtn:active:not(:disabled){transform:translateZ(0) scale(.96);transition-duration:.08s}
+.tpill:active{transform:translateZ(0) scale(.95);transition-duration:.07s}
+.sbtn:active:not(:disabled){transform:translateZ(0) scale(.96);transition-duration:.08s}
+.fbtn:active{transform:translateZ(0) scale(.96);transition-duration:.07s}
+.nb:active{transform:translateZ(0) scale(.95);transition-duration:.07s}
+
+/* Ripple */
+@keyframes ym-ripple{
+  from{transform:translate(-50%,-50%) scale(0);opacity:.28}
+  60%{opacity:.1}
+  to{transform:translate(-50%,-50%) scale(var(--ripple-scale,35));opacity:0}
+}
+.ym-ripple-el{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);pointer-events:none;will-change:transform,opacity;animation:ym-ripple calc(.4s + var(--ripple-extra,0s)) cubic-bezier(.4,0,.2,1) forwards}
+
+/* Scroll entrance */
+@media(prefers-reduced-motion:no-preference){
+  .ym-reveal{opacity:0;transform:translate3d(0,20px,0);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1);will-change:opacity,transform}
+  .ym-reveal.ym-in{opacity:1;transform:translate3d(0,0,0)}
+  .ym-reveal.ym-delay-1{transition-delay:.04s}
+  .ym-reveal.ym-delay-2{transition-delay:.08s}
+  .ym-reveal.ym-delay-3{transition-delay:.12s}
+  .ym-reveal.ym-delay-4{transition-delay:.16s}
+  .ym-reveal.ym-delay-5{transition-delay:.20s}
+  .ym-reveal.ym-delay-6{transition-delay:.24s}
+  .ym-reveal.ym-delay-7{transition-delay:.28s}
+  .ym-reveal.ym-delay-8{transition-delay:.32s}
+  .sec-hd.ym-reveal,.filter-row.ym-reveal{transform:translate3d(0,8px,0)}
+}
+
+/* Responsive */
 @media(max-width:768px){
-  nav{padding:.85rem 1rem;position:sticky}
-  #nav-dropdown{right:1rem;left:auto;max-width:min(280px,calc(100vw - 2rem))}
-  .search-wrap,.filter-row,.sec-hd,.catalog-list-wrap,.catalog-aside-mobile,#lyrView,footer,.no-result,.loading-msg{padding-left:1rem;padding-right:1rem}
-  .catalog-panel::before{display:none}
-  .catalog-list-wrap{grid-template-columns:1fr;gap:0;padding-bottom:2rem}
-  .catalog-aside{display:none}
-  .catalog-aside-mobile{display:block}
-  #online-counter{align-self:flex-start}
-  .continue-read-cover{width:3.25rem;height:3.25rem}
-  .search-inp{font-size:16px;padding:.85rem 1rem .85rem 2.5rem;min-height:48px}
-  .filter-row{padding:.3rem 1rem .65rem}
-  .filter-grid{gap:.32rem;margin-bottom:.32rem}
-  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{
-    font-size:.52rem;letter-spacing:.1em;min-height:36px;padding:.4rem .35rem;
-    -webkit-tap-highlight-color:transparent;
-  }
+  nav{padding:.85rem 1.2rem}
+  #nav-dropdown{right:1.2rem}
+  .page-header{padding:1.25rem 1rem 1rem}
+  .search-wrap{padding:0 1rem 1rem}
+  .filter-row{padding:.15rem 1rem .6rem}
+  .catalog-list-wrap{padding:0 1rem 3rem}
+  .sec-hd{padding:1rem 1rem 0}
+  .page-header h1{font-size:1.3rem}
+  .page-header p{font-size:.68rem}
+  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{font-size:.52rem;letter-spacing:.1em;min-height:36px;padding:.4rem .35rem;-webkit-tap-highlight-color:transparent}
   #artistFilter{font-size:16px;min-height:42px;padding:.5rem .65rem}
   .fbtn-indicator{margin-right:.2rem}
   .sc:hover .sc-img-wrap img{opacity:1}
@@ -410,7 +490,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sc{flex-direction:row;align-items:stretch;padding:.65rem 0}
   .sc-img-wrap{width:4.1rem;min-width:4.1rem;padding-top:0;height:auto;align-self:stretch;min-height:4.1rem}
   .sc-img-wrap img{width:100%;height:100%;object-fit:cover}
-  .sc-corner{display:none}
   .scb{padding:.5rem .6rem;min-width:0;justify-content:center}
   .scn{display:none}
   .scjp{font-size:.86rem;line-height:1.25;margin-bottom:.12rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -424,8 +503,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sc-skel-body{padding:.5rem .6rem;flex:1;gap:.4rem}
   #lyrView{padding:0 1rem 4rem}
   .lvback{flex-wrap:wrap;padding:1.5rem 0 1.25rem}
+  .lvgrid{grid-template-columns:1fr}
   footer{padding:2rem 1rem 1.5rem!important}
-  .toast{left:1rem;right:1rem;bottom:max(5.5rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)))}
+  .toast{left:1rem;right:1rem;bottom:max(5.5rem,calc(4.5rem + env(safe-area-inset-bottom,0px)));transform:none}
   #catView{padding-bottom:calc(5.5rem + env(safe-area-inset-bottom,0px))}
 }
 @media(max-width:480px){
@@ -434,8 +514,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sc-skel-img{width:3.6rem;min-width:3.6rem;height:3.6rem}
   .scb{padding:.45rem .55rem}
   .scjp{font-size:.82rem}
-  .hero h1 br{display:none}
-  .hero h1{font-size:1.65rem}
   .filter-grid{gap:.28rem}
   .filter-grid .fbtn,.filter-grid .fbtn-artis-link{font-size:.5rem}
 }
@@ -445,194 +523,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   #nav-dropdown{right:.85rem}
   .nljp{font-size:.88rem}
 }
-
-/* ── SKELETON LOADING ── */
-@keyframes shimmer{
-  0%{background-position:-600px 0}
-  100%{background-position:600px 0}
-}
-.sc-skel{
-  background:transparent;border:none;border-bottom:1px solid var(--border);
-  overflow:hidden;display:flex;flex-direction:row;align-items:stretch;pointer-events:none;padding:.75rem 0;
-}
-.sc-skel-img{
-  width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;
-  background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
-  background-size:600px 100%;
-  animation:shimmer 1.4s infinite linear;
-  opacity:.4;
-}
-[data-theme="dark"] .sc-skel-img{opacity:.15}
-.sc-skel-body{padding:1.1rem;display:flex;flex-direction:column;gap:.55rem}
-.sc-skel-line{
-  height:.65rem;border-radius:0;
-  background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
-  background-size:600px 100%;
-  animation:shimmer 1.4s infinite linear;
-  opacity:.35;
-}
-[data-theme="dark"] .sc-skel-line{opacity:.12}
-.sc-skel-line.w80{width:80%}
-.sc-skel-line.w60{width:60%}
-.sc-skel-line.w45{width:45%}
-
-.spbtn{display:inline-flex;align-items:center;gap:.5rem;background:#1DB954;border:none;font-family:var(--en);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#000;padding:.6rem 1.1rem;cursor:pointer;text-decoration:none;font-weight:700;transition:opacity .2s;margin-top:1rem}
-.spbtn:hover{opacity:.85}
-.spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
-.rec-tag{display:inline-flex;align-items:center;gap:.35rem;font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);padding:.18rem 0;margin-bottom:.35rem;font-family:var(--en);font-weight:700}
-.rec-tag::before{content:'';display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--rose);flex-shrink:0}
-.pop-tag{color:var(--gold)}
-.pop-tag::before{background:var(--gold)}
-/* ── Filter Buttons ── */
-.filter-row{padding:.25rem 3rem .7rem;margin-bottom:0;max-width:100%}
-.filter-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:.35rem;
-  margin-bottom:.35rem;
-}
-.filter-grid .fbtn,.filter-grid .fbtn-artis-link{
-  width:100%;margin:0;box-sizing:border-box;
-  display:inline-flex;align-items:center;justify-content:center;
-  min-height:38px;padding:.45rem .5rem;text-align:center;
-}
-.fbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--smoke);padding:.42rem .75rem;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap;position:relative;font-weight:700;border-radius:0}
-.fbtn::after{display:none}
-.fbtn-inner{display:inline-flex;align-items:center;justify-content:center;position:relative;padding-bottom:3px;max-width:100%}
-.fbtn-inner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:center;transition:transform .25s ease}
-.fbtn:hover{color:var(--ash)}
-.fbtn.on{color:var(--ink)}
-.fbtn.on .fbtn-inner::after{transform:scaleX(1)}
-[data-theme="dark"] .fbtn.on{color:var(--ink)}
-.fbtn-indicator{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-right:.45rem;vertical-align:middle;opacity:0;transition:opacity .2s;flex-shrink:0}
-.fbtn.on .fbtn-indicator{opacity:1}
-.fbtn-ripple{display:none}
-#artistFilter{
-  font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
-  color:var(--ink);background:var(--paper);border:1px solid var(--border);padding:.5rem .75rem;
-  cursor:pointer;width:100%;max-width:100%;min-height:40px;box-sizing:border-box;display:block;
-}
-#artistFilter:focus{outline:none;border-color:var(--gold)}
-.fbtn-artis-link{
-  font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ash);
-  text-decoration:none;background:var(--paper);transition:color .2s,border-color .2s,background .2s;
-  font-family:var(--en);
-}
-.fbtn-artis-link:hover{color:var(--ink);border-color:var(--gold);background:rgba(201,169,110,.06)}
-@media(min-width:769px){
-  .filter-row{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1rem}
-  .filter-grid{display:contents;margin:0}
-  .filter-grid .fbtn,.filter-grid .fbtn-artis-link{width:auto;min-height:auto;padding:.5rem 1rem .5rem 0;border-color:transparent}
-  #artistFilter{width:auto;min-width:9rem;max-width:12rem;margin-left:auto}
-}
-.continue-read{margin-top:.75rem;padding:.65rem .75rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;gap:.45rem;max-width:100%;overflow:hidden;box-sizing:border-box}
-.continue-read-top{display:flex;align-items:center;gap:.65rem;min-width:0;text-decoration:none;color:inherit}
-.continue-read-cover{width:3rem;height:3rem;flex-shrink:0;border:1px solid var(--border);background:var(--mist);overflow:hidden;display:flex;align-items:center;justify-content:center}
-.continue-read-cover img{width:100%;height:100%;object-fit:cover;display:block}
-.continue-read-cover-ph{font-size:1rem;color:var(--smoke);line-height:1}
-.continue-read-body{flex:1;min-width:0;overflow:hidden}
-.continue-read-label{font-size:.5rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:.15rem}
-.continue-read-title{display:block;font-size:.82rem;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.continue-read-sub{font-size:.6rem;color:var(--ash);margin-top:.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.continue-read-btn{display:block;text-align:center;font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .75rem;background:var(--ink);color:var(--paper)!important;text-decoration:none}
-.continue-read-btn:hover{background:var(--gold);color:var(--ink)!important}
-[data-theme="dark"] .continue-read{background:var(--cream)}
-.scar-link{color:inherit;text-decoration:none;transition:color .2s}
-.scar-link:hover{color:var(--gold)}
-.footer-artists{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:1rem}
-.footer-artists a{font-size:.68rem;color:var(--ash);text-decoration:none;letter-spacing:.04em;transition:color .2s}
-.footer-artists a:hover{color:var(--gold)}
-
-/* ── Catalog Header ── */
-.sec-hd{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:1.8rem;padding:1.5rem 3rem 0}
-.sec-lb{font-family:var(--serif);font-size:1.1rem;font-weight:300;font-style:italic;color:var(--ink);white-space:nowrap;letter-spacing:0}
-.sec-count{font-size:.52rem;color:var(--ash);letter-spacing:.2em;text-transform:uppercase;font-weight:700;font-family:var(--en)}
-.sec-ln{flex:1;height:1px;background:var(--border);margin-left:.5rem}
-@keyframes ripple{to{transform:scale(4);opacity:0}}
-@keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.sc.reorder-anim{animation:card-in .3s cubic-bezier(.25,.8,.25,1) both}
-
-/* ── Button Interactions — GPU-composited, no animation conflicts ── */
-
-/* 1. Ripple keyframe — easing ala Material Design */
-@keyframes ym-ripple{
-  from{transform:translate(-50%,-50%) scale(0);opacity:.28}
-  to  {transform:translate(-50%,-50%) scale(1);opacity:0}
-}
-
-/* 2. Promote buttons ke GPU layer supaya transform composited */
-.req-btn,.gbtn,.tpill,.sbtn,.nb,.fbtn{
-  position:relative;overflow:hidden;
-  transition:
-    color .18s ease,
-    border-color .18s ease,
-    background-color .18s ease,
-    opacity .18s ease,
-    transform .22s cubic-bezier(.34,1.4,.64,1),
-    box-shadow .22s cubic-bezier(.34,1.4,.64,1);
-}
-
-/* 3. Hover — naik halus */
-.req-btn:hover:not(:disabled)         {transform:translateZ(0) translateY(-3px);box-shadow:0 8px 24px rgba(201,169,110,.2)}
-.req-btn--primary:hover:not(:disabled){transform:translateZ(0) translateY(-3px);box-shadow:0 12px 32px var(--glow-pink)}
-.gbtn:hover:not(:disabled)            {transform:translateZ(0) translateY(-2px);box-shadow:0 4px 12px rgba(26,22,18,.07)}
-.tpill:hover                          {transform:translateZ(0) translateY(-1px)}
-.fbtn:hover                           {transform:translateZ(0) translateY(-1px)}
-.nb:hover                             {transform:translateZ(0) translateY(-1px)}
-
-/* 4. Active — tekan ke bawah (pakai :active + transition, BUKAN animation keyframe) */
-/* Fast transition saat tekan, spring saat lepas */
-.req-btn:active:not(:disabled)  {transform:translateZ(0) translateY(1px) scale(.97);transition-duration:.08s}
-.gbtn:active:not(:disabled)     {transform:translateZ(0) scale(.96);transition-duration:.08s}
-.tpill:active                   {transform:translateZ(0) scale(.95);transition-duration:.07s}
-.sbtn:active:not(:disabled)     {transform:translateZ(0) scale(.96);transition-duration:.08s}
-.fbtn:active                    {transform:translateZ(0) scale(.96);transition-duration:.07s}
-.nb:active                      {transform:translateZ(0) scale(.95);transition-duration:.07s}
-
-/* 5. Ripple element — elemen kecil, scale besar, GPU only */
-.ym-ripple-el{
-  position:absolute;
-  /* Ukuran awal kecil — scale akan memperbesarnya */
-  width:6px;height:6px;border-radius:50%;
-  background:rgba(255,255,255,.5);
-  pointer-events:none;
-  will-change:transform,opacity;
-  animation:ym-ripple .55s cubic-bezier(.4,0,.2,1) forwards;
-  /* Gunakan dynamic --ripple-size dari JS */
-  --s:40;
-  animation-duration:calc(.4s + var(--ripple-extra, 0s));
-}
-@keyframes ym-ripple{
-  from{transform:translate(-50%,-50%) scale(0);opacity:.28}
-  60% {opacity:.1}
-  to  {transform:translate(-50%,-50%) scale(var(--ripple-scale,35));opacity:0}
-}
-
-/* ── Scroll Entrance Animations — GPU-composited ── */
-@media(prefers-reduced-motion:no-preference){
-  /* translate3d → GPU layer, tidak ada subpixel jitter */
-  .ym-reveal{
-    opacity:0;
-    transform:translate3d(0,20px,0);
-    transition:
-      opacity .6s cubic-bezier(.22,1,.36,1),
-      transform .6s cubic-bezier(.22,1,.36,1);
-    will-change:opacity,transform;
-  }
-  .ym-reveal.ym-in{opacity:1;transform:translate3d(0,0,0)}
-  /* Delay lebih kecil — stagger terasa ringan bukan aneh */
-  .ym-reveal.ym-delay-1{transition-delay:.04s}
-  .ym-reveal.ym-delay-2{transition-delay:.08s}
-  .ym-reveal.ym-delay-3{transition-delay:.12s}
-  .ym-reveal.ym-delay-4{transition-delay:.16s}
-  .ym-reveal.ym-delay-5{transition-delay:.20s}
-  .ym-reveal.ym-delay-6{transition-delay:.24s}
-  .ym-reveal.ym-delay-7{transition-delay:.28s}
-  .ym-reveal.ym-delay-8{transition-delay:.32s}
-  /* Section header: gerak lebih kecil */
-  .sec-hd.ym-reveal,.filter-row.ym-reveal{transform:translate3d(0,8px,0)}
-}
-
 </style>
 </head>
 <body>
@@ -666,7 +556,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </nav>
 
-
 <div id="catView" style="position:relative">
   <div class="page-header">
     <div class="page-header-inner">
@@ -682,6 +571,31 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
       <div id="continue-read" class="continue-read" style="display:none"></div>
     </div>
   </div>
+
+  <!-- Tampilkan continue-read dari localStorage SEKARANG — sebelum Firebase load,
+       cegah CLS karena div tidak tiba-tiba muncul setelah paint pertama -->
+  <script>
+  (function(){
+    try{
+      var b=document.getElementById('continue-read');
+      if(!b)return;
+      var r=localStorage.getItem('ym_last_read');
+      if(!r)return;
+      var l=JSON.parse(r);
+      if(!l.slug||Date.now()-(l.ts||0)>604800000)return;
+      var h='lagu/'+l.slug+'.html';
+      b.style.display='flex';
+      b.innerHTML='<a class="continue-read-top" href="'+h+'">'
+        +'<div class="continue-read-cover"><span class="continue-read-cover-ph">♪</span></div>'
+        +'<div class="continue-read-body">'
+          +'<div class="continue-read-label">Lanjutkan baca</div>'
+          +'<div class="continue-read-title">'+(l.title||'Lagu')+'</div>'
+          +'<div class="continue-read-sub">'+(l.artist||'')+'</div>'
+        +'</div></a>'
+        +'<a class="continue-read-btn" href="'+h+'">Lanjut baca →</a>';
+    }catch(e){}
+  })();
+  </script>
 
   <div class="catalog-panel manuscript-panel">
   <div class="search-wrap">
@@ -724,7 +638,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div class="lvgrid">
     <div>
-      <img class="lvcov" id="lv-cov" src="" alt="cover">
+      <img class="lvcov" id="lv-cov" src="" alt="cover" width="280" height="280" loading="lazy" decoding="async">
       <div class="lvmeta">
         <b id="lv-mt"></b>
         <div id="lv-ma" style="color:var(--rose);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-top:.25rem"></div>
@@ -762,20 +676,21 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </footer>
 </div>
 
+<!-- Isi hero song count dari cache sebelum Firebase merespons -->
 <script>
 (function(){
   try{
     var raw=localStorage.getItem('ym_songs_cache');
-    if(!raw) return;
+    if(!raw)return;
     var songs=JSON.parse(raw);
-    if(!Array.isArray(songs)||!songs.length) return;
+    if(!Array.isArray(songs)||!songs.length)return;
     document.querySelectorAll('.js-hero-song-count').forEach(function(el){el.textContent=songs.length;});
   }catch(e){}
 })();
 </script>
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, enableIndexedDbPersistence }
+import { getFirestore, collection, onSnapshot, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -787,15 +702,10 @@ const firebaseConfig = {
   appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
 };
 
-const app      = initializeApp(firebaseConfig);
-const db       = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
-// ── OFFLINE PERSISTENCE — cache Firestore di IndexedDB ──
-// Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
-// lalu otomatis update kalau ada perubahan di server.
-enableIndexedDbPersistence(db).catch(() => {});
-
-// ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
+// ── REALTIME ONLINE COUNTER (delayed init, throttled writes) ──
 (function() {
   function getOnlineSessionId() {
     let id = localStorage.getItem('ym_online_id');
@@ -837,15 +747,10 @@ enableIndexedDbPersistence(db).catch(() => {});
   }, delay);
 })();
 
-
-
-
-
 let songs = [];
 let cur   = null;
 let sro   = true, str = true;
 
-// ── Helpers ──
 function norm(s){
   return String(s||'').toLowerCase()
     .replace(/[.,\-–—!?'"()[\]{}]/g,' ')
@@ -946,9 +851,6 @@ window.onArtistFilter = val => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-/** URL gambar kartu — turunkan maxresdefault (200KB) ke hqdefault (30KB).
- *  Kartu terbesar hanya 280x280 — hqdefault (480x360) sudah lebih dari cukup.
- *  Ini menghemat ~150-170KB per gambar YouTube. */
 function hdImgUrl(url) {
   if (!url) return url;
   let u = String(url).trim();
@@ -957,10 +859,6 @@ function hdImgUrl(url) {
   if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
   if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '600x600');
   return u;
-}
-/** Thumbnail kecil di grid mobile — tetap cukup tajam untuk retina. */
-function optimizeCardImg(url) {
-  return hdImgUrl(url);
 }
 
 function songPreviewLine(s) {
@@ -1014,8 +912,6 @@ function updateHeroSongCounts() {
   document.querySelectorAll('.js-hero-song-count').forEach(el => { el.textContent = n; });
 }
 
-function renderHeroFeatured() {}
-
 function makeSkeleton(n=8) {
   return Array.from({length:n}, () =>
     `<div class="sc-skel" aria-hidden="true">
@@ -1039,7 +935,6 @@ function rc(filter='', animate=false){
 
   const grid = document.getElementById('songGrid');
 
-  // Kalau songs masih kosong sama sekali, tampilkan skeleton
   if(songs.length === 0) {
     if(!grid.querySelector('.sc-skel')) {
       grid.innerHTML = makeSkeleton(8);
@@ -1048,17 +943,11 @@ function rc(filter='', animate=false){
     return;
   }
   grid.setAttribute('aria-busy','false');
-
-  // Hapus skeleton kalau masih ada
   grid.querySelectorAll('.sc-skel').forEach(el => el.remove());
 
-  // Kartu yang sudah ada di DOM
-
-  // Kartu yang sudah ada di DOM
   const existing = new Map();
   grid.querySelectorAll('.sc[data-id]').forEach(el => existing.set(el.dataset.id, el));
 
-  // Tambah kartu baru yang belum ada (gunakan indeks dari songs untuk buildCard awal)
   songs.forEach((s, i) => {
     if (!existing.has(s.id)) {
       const card = buildCard(s, i);
@@ -1067,18 +956,14 @@ function rc(filter='', animate=false){
     }
   });
 
-  // Sembunyikan dulu semua kartu
   existing.forEach(el => { el.style.display = 'none'; });
 
-  // Reorder DOM sesuai urutan filtered, tampilkan yang lolos filter
   filtered.forEach((s, i) => {
     const el = existing.get(s.id);
     if (!el) return;
     el.style.display = '';
-    // Update nomor urut
     const numEl = el.querySelector('.scn');
     if (numEl) numEl.textContent = String(i + 1).padStart(2, '0');
-    // Update / hapus views tag
     const scb = el.querySelector('.scb');
     let viewsTag = el.querySelector('.views-tag');
     if (popOnly && (s.views||0) > 0) {
@@ -1092,16 +977,13 @@ function rc(filter='', animate=false){
     } else if (viewsTag) {
       viewsTag.remove();
     }
-    // Pindahkan ke posisi yang benar di DOM
     grid.appendChild(el);
-    // Kumpulkan dulu untuk animasi — jangan trigger reflow per-kartu
     if (animate) {
       el.classList.remove('reorder-anim');
       el.style.animationDelay = `${i * 0.03}s`;
     }
   });
 
-  // SATU forced reflow untuk semua kartu, bukan N kali
   if (animate && filtered.length) {
     void grid.offsetHeight;
     filtered.forEach(s => {
@@ -1119,7 +1001,6 @@ function rc(filter='', animate=false){
       : songs.length + ' lagu';
   }
   updateHeroSongCounts();
-  renderHeroFeatured();
 }
 
 function fbtnHtml(label) {
@@ -1190,9 +1071,6 @@ window.togglePop = (e) => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-// lazy load: pakai native loading="lazy"
-
-// ── Search ──
 window.onSearch = val => {
   rc(val);
   document.getElementById('searchClear').classList.toggle('vis', val.length>0);
@@ -1203,7 +1081,6 @@ window.clearSearch = () => {
   rc();
 };
 
-// ── View switcher ──
 window.sv = v => {
   const cat = document.getElementById('catView');
   if (cat) cat.style.display = v === 'cat' ? 'block' : 'none';
@@ -1222,9 +1099,6 @@ window.sv = v => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-
-
-// ── Slug generator (sama dengan generate-songs.js) ──
 function toSlug(titleRo, docId) {
   if (titleRo) {
     return titleRo.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,60);
@@ -1232,7 +1106,6 @@ function toSlug(titleRo, docId) {
   return docId;
 }
 
-// ── Open song → redirect ke halaman statis ──
 window._os = id => {
   const s = songs.find(x=>x.id===id);
   if(!s) return;
@@ -1240,7 +1113,6 @@ window._os = id => {
   window.location.href = '/lagu/' + slug + '.html';
 };
 
-// ── Toggle romaji/terjemahan ──
 window.tl = t => {
   if(t==='ro'){
     sro=!sro;
@@ -1253,97 +1125,6 @@ window.tl = t => {
   }
 };
 
-// ── Komentar: GraphComment di halaman /lagu/{slug}.html (generate-songs.js) ──
-
-// ── INSTANT CACHE — tampilkan dari localStorage sebelum Firebase merespons ──
-function showCachedSongs() {
-  try {
-    const raw = localStorage.getItem('ym_songs_cache');
-    if (!raw) return;
-    const cached = JSON.parse(raw);
-    if (!Array.isArray(cached) || !cached.length) return;
-    songs = cached;
-    refreshArtistFilter();
-    rc(document.getElementById('searchInp')?.value || '');
-    updateHeroSongCounts();
-    showContinueRead();
-  } catch(e) {}
-}
-
-// ── Load songs — getDocs (one-shot fetch) menggantikan onSnapshot ──
-// ALASAN: onSnapshot membuka Firestore WebChannel long-lived connection yang
-// menyebabkan rantai request 18 detik di Lighthouse. Songs tidak perlu realtime —
-// cukup fetch sekali, cache di localStorage, dan refresh background tiap 5 menit.
-let _unsubSongs = null;
-let _songsRefreshTimer = null;
-
-function _cacheSongs(arr) {
-  try {
-    const slim = arr.map(s => ({
-      id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
-      artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
-      recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
-      popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
-    }));
-    localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
-    localStorage.setItem('ym_songs_cache_ts', String(Date.now()));
-  } catch(e) {}
-}
-
-async function _fetchSongs() {
-  const grid = document.getElementById('songGrid');
-  try {
-    const snap = await getDocs(query(collection(db,'songs'), orderBy('order','desc')));
-    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    refreshArtistFilter();
-    _cacheSongs(songs);
-    rc(document.getElementById('searchInp').value||'');
-    showContinueRead();
-  } catch(err) {
-    // Fallback tanpa orderBy
-    try {
-      const snap2 = await getDocs(collection(db,'songs'));
-      songs = snap2.docs
-        .map(d=>({id:d.id, ...d.data()}))
-        .sort((a,b)=>(b.order??0)-(a.order??0));
-      refreshArtistFilter();
-      _cacheSongs(songs);
-      rc(document.getElementById('searchInp').value||'');
-      showContinueRead();
-    } catch(err2) {
-      if (!songs.length && grid) {
-        grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
-      }
-    }
-  }
-}
-
-function loadSongs() {
-  // Cek cache — kalau masih segar (< 5 menit), skip fetch dan cukup pakai cache
-  try {
-    const ts = parseInt(localStorage.getItem('ym_songs_cache_ts') || '0', 10);
-    const AGE_MS = 5 * 60 * 1000; // 5 menit
-    if (songs.length && Date.now() - ts < AGE_MS) {
-      // Cache masih segar, schedule background refresh saja
-      _songsRefreshTimer = setTimeout(_fetchSongs, AGE_MS - (Date.now() - ts));
-      return;
-    }
-  } catch(e) {}
-
-  _fetchSongs();
-
-  // Background refresh tiap 5 menit (tanpa onSnapshot long-running connection)
-  if (_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
-  _songsRefreshTimer = setTimeout(function refreshLoop() {
-    _fetchSongs();
-    _songsRefreshTimer = setTimeout(refreshLoop, 5 * 60 * 1000);
-  }, 5 * 60 * 1000);
-}
-// Tampilkan skeleton segera kalau belum ada localStorage cache
-if(songs.length === 0) {
-  const grid = document.getElementById('songGrid');
-  grid.innerHTML = makeSkeleton(8);
-}
 function showContinueRead() {
   try {
     const raw = localStorage.getItem('ym_last_read');
@@ -1371,7 +1152,7 @@ function showContinueRead() {
     } catch(e) {}
     const imgHd = hdImgUrl(img);
     const cover = imgHd
-      ? '<img src="' + escCard(imgHd) + '" alt="" width="112" height="112" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<span class=continue-read-cover-ph>♪</span>\'">'
+      ? '<img src="' + escCard(imgHd) + '" alt="" width="48" height="48" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<span class=continue-read-cover-ph>♪</span>\'">'
       : '<span class="continue-read-cover-ph">♪</span>';
     box.style.display = 'flex';
     box.innerHTML =
@@ -1393,16 +1174,93 @@ try {
   localStorage.removeItem('ym_hero_style');
 } catch (e) {}
 
+function _cacheSongs(arr) {
+  try {
+    const slim = arr.map(s => ({
+      id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
+      artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
+      recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
+      popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
+    }));
+    localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
+    localStorage.setItem('ym_songs_cache_ts', String(Date.now()));
+  } catch(e) {}
+}
+
+async function _fetchSongs() {
+  const grid = document.getElementById('songGrid');
+  try {
+    const snap = await getDocs(query(collection(db,'songs'), orderBy('order','desc')));
+    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    refreshArtistFilter();
+    _cacheSongs(songs);
+    rc(document.getElementById('searchInp').value||'');
+    showContinueRead();
+  } catch(err) {
+    try {
+      const snap2 = await getDocs(collection(db,'songs'));
+      songs = snap2.docs
+        .map(d=>({id:d.id, ...d.data()}))
+        .sort((a,b)=>(b.order??0)-(a.order??0));
+      refreshArtistFilter();
+      _cacheSongs(songs);
+      rc(document.getElementById('searchInp').value||'');
+      showContinueRead();
+    } catch(err2) {
+      if (!songs.length && grid) {
+        grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+      }
+    }
+  }
+}
+
+let _songsRefreshTimer = null;
+
+function loadSongs() {
+  try {
+    const ts = parseInt(localStorage.getItem('ym_songs_cache_ts') || '0', 10);
+    const AGE_MS = 5 * 60 * 1000;
+    if (songs.length && Date.now() - ts < AGE_MS) {
+      _songsRefreshTimer = setTimeout(_fetchSongs, AGE_MS - (Date.now() - ts));
+      return;
+    }
+  } catch(e) {}
+
+  _fetchSongs();
+
+  if (_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
+  _songsRefreshTimer = setTimeout(function refreshLoop() {
+    _fetchSongs();
+    _songsRefreshTimer = setTimeout(refreshLoop, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
+}
+
+function showCachedSongs() {
+  try {
+    const raw = localStorage.getItem('ym_songs_cache');
+    if (!raw) return;
+    const cached = JSON.parse(raw);
+    if (!Array.isArray(cached) || !cached.length) return;
+    songs = cached;
+    refreshArtistFilter();
+    rc(document.getElementById('searchInp')?.value || '');
+    updateHeroSongCounts();
+    showContinueRead();
+  } catch(e) {}
+}
+
+// Tampilkan skeleton kalau belum ada cache
+if(songs.length === 0) {
+  const grid = document.getElementById('songGrid');
+  grid.innerHTML = makeSkeleton(8);
+}
+
 showCachedSongs();
 loadSongs();
-
-(function initFeaturedKickerClock(){
-})();
 
 sv('cat');
 </script>
 <script>
-// ── Theme toggle ──
 (function(){
   const saved = localStorage.getItem('ym_theme');
   if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
@@ -1451,24 +1309,19 @@ document.addEventListener('click', function(e){
   const MARK = '\n\n© YumeSubs — yumelyrics.my.id';
   const LIM = 10;
   function isInput(el){var t=el.tagName;return t==='INPUT'||t==='TEXTAREA';}
-  /* blokir klik kanan */
   document.addEventListener('contextmenu',function(e){e.preventDefault();});
-  /* blokir shortcut keyboard */
   document.addEventListener('keydown',function(e){
     if((e.ctrlKey||e.metaKey)&&['a','c','u','s'].includes(e.key.toLowerCase()))e.preventDefault();
   });
-  /* intercept copy desktop */
   document.addEventListener('copy',function(e){
     var sel=window.getSelection().toString();
     if(sel.length>LIM){e.clipboardData.setData('text/plain',sel.substring(0,LIM)+MARK);e.preventDefault();}
   });
-  /* blokir selectstart di area lirik */
   document.addEventListener('selectstart',function(e){
     if(isInput(e.target))return;
     var el=e.target;
     while(el&&el!==document.body){if(el.id==='ll'){e.preventDefault();return;}el=el.parentElement;}
   });
-  /* mobile: blokir long-press */
   var tt=null;
   document.addEventListener('touchstart',function(e){
     if(isInput(e.target))return;
@@ -1476,7 +1329,6 @@ document.addEventListener('click', function(e){
   },{passive:true});
   document.addEventListener('touchend',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
   document.addEventListener('touchcancel',function(){if(tt){clearTimeout(tt);tt=null;}},{passive:true});
-  /* mobile: kalau seleksi terbentuk, clear */
   document.addEventListener('selectionchange',function(){
     var sel=window.getSelection();
     if(!sel||sel.isCollapsed)return;
