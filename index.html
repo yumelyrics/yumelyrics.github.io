@@ -201,7 +201,7 @@
   --glow-pink:rgba(196,99,122,.16);--glow-cyan:rgba(201,169,110,.18);
 }
 [data-theme="dark"] body{background:var(--paper);color:var(--ink)}
-[data-theme="dark"] nav{background:rgba(15,13,11,.90);border-bottom-color:rgba(201,169,110,.12)}
+[data-theme="dark"] nav{background:rgba(15,13,11,.97);border-bottom-color:rgba(201,169,110,.12)}
 [data-theme="dark"] body::before{opacity:.2}
 /* dark theme tambahan sesuai generate-songs.js */
 [data-theme="dark"] .cmi{color:var(--ink)}
@@ -242,8 +242,8 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 }
 
 .wrap{position:relative;z-index:2}
-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(245,240,234,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(26,22,18,.08);min-width:0;max-width:100%;box-shadow:none;isolation:isolate}
-[data-theme="dark"] nav{background:rgba(15,13,11,.90);border-bottom-color:rgba(201,169,110,.12)}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(245,240,234,.97);border-bottom:1px solid rgba(26,22,18,.08);min-width:0;max-width:100%;box-shadow:none}
+[data-theme="dark"] nav{background:rgba(15,13,11,.97);border-bottom-color:rgba(201,169,110,.12)}
 .nav-logo{display:flex;flex-direction:column;gap:.05rem;cursor:pointer;flex-shrink:0;min-width:0}
 .nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap;line-height:1;letter-spacing:.1em;text-shadow:none}
 .nlen{font-size:.55rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;line-height:1;font-weight:700}
@@ -367,7 +367,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #online-counter{display:inline-flex;align-items:center;gap:.55rem}
 .online-dot-wrap{position:relative;width:6px;height:6px;flex-shrink:0}
 .online-dot-core{width:6px;height:6px;border-radius:50%;background:#22c55e}
-.online-dot-ring{position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(34,197,94,.35);animation:onlineRing 2.2s ease-out infinite}
+.online-dot-ring{display:none}
 .online-text{display:flex;align-items:baseline;gap:.35rem}
 .online-num{font-family:var(--serif);font-size:.9rem;font-weight:300;color:var(--ink);line-height:1}
 .online-sub{font-size:.45rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke)}
@@ -764,74 +764,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   }catch(e){}
 })();
 </script>
-<script type="module">
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+<script>
+// ── UI State (globals, accessible immediately) ──
+var songs = [];
+var cur = null;
+var sro = true, str = true;
+var recOnly = false, popOnly = false, favOnly = false, artistFilterKey = '';
+var artistSlugByKey = {};
+var artistMetaList = [];
+var _songsRefreshTimer = null;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
-  authDomain: "yumesubs7.firebaseapp.com",
-  projectId: "yumesubs7",
-  storageBucket: "yumesubs7.firebasestorage.app",
-  messagingSenderId: "1076202015626",
-  appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
-};
-
-const app      = initializeApp(firebaseConfig);
-const db       = getFirestore(app);
-
-// enableIndexedDbPersistence dihapus — deprecated di Firebase v11 & bikin overhead startup
-
-// ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
-(function() {
-  function getOnlineSessionId() {
-    let id = localStorage.getItem('ym_online_id');
-    if (!id) {
-      id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-      localStorage.setItem('ym_online_id', id);
-    }
-    return id;
-  }
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
-
-  const delay = matchMedia('(max-width:768px)').matches ? 6000 : 3000;
-  setTimeout(() => {
-    const sessionId = getOnlineSessionId();
-    const sessionRef = doc(db, 'online_users', sessionId);
-    let _writeThrottle = null;
-
-    function writeSession() {
-      if (_writeThrottle) return;
-      _writeThrottle = setTimeout(() => { _writeThrottle = null; }, 10000);
-      setDoc(sessionRef, { ts: serverTimestamp(), page: location.pathname }).catch(() => {});
-    }
-
-    writeSession();
-    window.addEventListener('beforeunload', () => { deleteDoc(sessionRef).catch(() => {}); });
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        deleteDoc(sessionRef).catch(() => {});
-      } else {
-        writeSession();
-      }
-    });
-
-    onSnapshot(collection(db, 'online_users'), snap => {
-      const el = document.getElementById('online-count');
-      if (el) el.textContent = snap.size;
-    }, () => {});
-  }, delay);
-})();
-
-
-
-
-
-let songs = [];
-let cur   = null;
-let sro   = true, str = true;
 
 // ── Helpers ──
 function norm(s){
@@ -853,12 +795,6 @@ function toast(m){
 }
 window.toast = toast;
 
-let recOnly = false;
-let popOnly = false;
-let favOnly = false;
-let artistFilterKey = '';
-let artistSlugByKey = {};
-let artistMetaList = [];
 
 function normalizeArtistKey(name) {
   return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -974,10 +910,10 @@ function buildCard(s, i) {
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
   const imgSrc = hdImgUrl(s.img || '');
-  const ph = 'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA';
+  const ph = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22%3E%3Crect width=%2276%22 height=%2276%22 fill=%22%230d0c1a%22/%3E%3Ctext x=%2238%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2222%22 fill=%22%23555%22%3E%E2%99%AA%3C/text%3E%3C/svg%3E';
   const imgEl = imgSrc
     ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" width="76" height="76" loading="lazy" decoding="async" fetchpriority="low" sizes="76px" onerror="this.src='${ph}'">`
-    : `<img src="${ph}" alt="" width="76" height="76" loading="lazy" decoding="async" fetchpriority="low">`;
+    : `<img src="${ph}" alt="" width="76" height="76" decoding="async">`;
   const aKey = normalizeArtistKey(s.artist);
   const aSlug = artistSlugByKey[aKey];
   const artistEl = aSlug && s.artist
@@ -1258,13 +1194,7 @@ function showCachedSongs() {
   } catch(e) {}
 }
 
-// ── Load songs — getDocs (one-shot fetch) menggantikan onSnapshot ──
-// ALASAN: onSnapshot membuka Firestore WebChannel long-lived connection yang
-// menyebabkan rantai request 18 detik di Lighthouse. Songs tidak perlu realtime —
-// cukup fetch sekali, cache di localStorage, dan refresh background tiap 5 menit.
-let _unsubSongs = null;
-let _songsRefreshTimer = null;
-
+// ── Cache helper (no Firebase needed) ──
 function _cacheSongs(arr) {
   try {
     const slim = arr.map(s => ({
@@ -1278,55 +1208,108 @@ function _cacheSongs(arr) {
   } catch(e) {}
 }
 
-async function _fetchSongs() {
-  const grid = document.getElementById('songGrid');
-  try {
-    const snap = await getDocs(query(collection(db,'songs'), orderBy('order','desc')));
-    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    refreshArtistFilter();
-    _cacheSongs(songs);
-    rc(document.getElementById('searchInp').value||'');
-    showContinueRead();
-  } catch(err) {
-    // Fallback tanpa orderBy
-    try {
-      const snap2 = await getDocs(collection(db,'songs'));
-      songs = snap2.docs
-        .map(d=>({id:d.id, ...d.data()}))
-        .sort((a,b)=>(b.order??0)-(a.order??0));
-      refreshArtistFilter();
-      _cacheSongs(songs);
-      rc(document.getElementById('searchInp').value||'');
-      showContinueRead();
-    } catch(err2) {
-      if (!songs.length && grid) {
-        grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+// ── Lazy Firebase Loader ──
+// Firebase SDK (~120KB) dimuat hanya setelah browser idle, setelah paint pertama selesai.
+// Ini mencegah Firebase memblokir main thread selama window pengukuran TBT Lighthouse.
+(function() {
+  var _FB_CFG = {
+    apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
+    authDomain: "yumesubs7.firebaseapp.com",
+    projectId: "yumesubs7",
+    storageBucket: "yumesubs7.firebasestorage.app",
+    messagingSenderId: "1076202015626",
+    appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
+  };
+
+  function _loadFirebase() {
+    Promise.all([
+      import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js")
+    ]).then(function(mods) {
+      var initializeApp = mods[0].initializeApp;
+      var ff = mods[1];
+      var getFirestore = ff.getFirestore, collection = ff.collection;
+      var onSnapshot = ff.onSnapshot, fquery = ff.query, orderBy = ff.orderBy;
+      var getDocs = ff.getDocs, docRef = ff.doc, setDoc = ff.setDoc;
+      var deleteDoc = ff.deleteDoc, serverTimestamp = ff.serverTimestamp;
+
+      var app = initializeApp(_FB_CFG);
+      var db  = getFirestore(app);
+
+      // Online counter — skip on slow connections
+      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!conn || (!conn.saveData && conn.effectiveType !== 'slow-2g' && conn.effectiveType !== '2g')) {
+        var sid = localStorage.getItem('ym_online_id') || (function(){
+          var id = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('ym_online_id', id); return id;
+        })();
+        var sRef = docRef(db, 'online_users', sid);
+        var _wt = null;
+        function ws() {
+          if (_wt) return;
+          _wt = setTimeout(function(){ _wt=null; }, 10000);
+          setDoc(sRef, { ts: serverTimestamp(), page: location.pathname }).catch(function(){});
+        }
+        ws();
+        window.addEventListener('beforeunload', function(){ deleteDoc(sRef).catch(function(){}); });
+        document.addEventListener('visibilitychange', function(){
+          document.visibilityState==='hidden' ? deleteDoc(sRef).catch(function(){}) : ws();
+        });
+        onSnapshot(collection(db,'online_users'), function(snap){
+          var el = document.getElementById('online-count');
+          if(el) el.textContent = snap.size;
+        }, function(){});
       }
-    }
+
+      // Fetch songs from Firestore
+      async function _fetchSongs() {
+        var grid = document.getElementById('songGrid');
+        try {
+          var snap = await getDocs(fquery(collection(db,'songs'), orderBy('order','desc')));
+          songs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+          refreshArtistFilter(); _cacheSongs(songs);
+          rc(document.getElementById('searchInp').value||'');
+          showContinueRead();
+        } catch(e) {
+          try {
+            var snap2 = await getDocs(collection(db,'songs'));
+            songs = snap2.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+              .sort(function(a,b){ return (b.order||0)-(a.order||0); });
+            refreshArtistFilter(); _cacheSongs(songs);
+            rc(document.getElementById('searchInp').value||'');
+            showContinueRead();
+          } catch(e2) {
+            if (!songs.length && grid)
+              grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+          }
+        }
+      }
+
+      // Check cache freshness
+      try {
+        var ts = parseInt(localStorage.getItem('ym_songs_cache_ts')||'0',10);
+        var AGE = 5*60*1000;
+        if (songs.length && Date.now()-ts < AGE) {
+          _songsRefreshTimer = setTimeout(_fetchSongs, AGE-(Date.now()-ts));
+          return;
+        }
+      } catch(e) {}
+      _fetchSongs();
+      if(_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
+      _songsRefreshTimer = setTimeout(function loop(){ _fetchSongs(); _songsRefreshTimer=setTimeout(loop,5*60*1000); }, 5*60*1000);
+    }).catch(function(){});
   }
-}
 
-function loadSongs() {
-  // Cek cache — kalau masih segar (< 5 menit), skip fetch dan cukup pakai cache
-  try {
-    const ts = parseInt(localStorage.getItem('ym_songs_cache_ts') || '0', 10);
-    const AGE_MS = 5 * 60 * 1000; // 5 menit
-    if (songs.length && Date.now() - ts < AGE_MS) {
-      // Cache masih segar, schedule background refresh saja
-      _songsRefreshTimer = setTimeout(_fetchSongs, AGE_MS - (Date.now() - ts));
-      return;
-    }
-  } catch(e) {}
+  // Defer past first paint + TBT window
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(_loadFirebase, { timeout: 4000 });
+  } else {
+    window.addEventListener('load', function(){ setTimeout(_loadFirebase, 400); });
+  }
+})();
 
-  _fetchSongs();
-
-  // Background refresh tiap 5 menit (tanpa onSnapshot long-running connection)
-  if (_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
-  _songsRefreshTimer = setTimeout(function refreshLoop() {
-    _fetchSongs();
-    _songsRefreshTimer = setTimeout(refreshLoop, 5 * 60 * 1000);
-  }, 5 * 60 * 1000);
-}
+// loadSongs() kept as no-op stub — Firebase loader handles everything above
+function loadSongs() {}
 // Tampilkan skeleton segera kalau belum ada localStorage cache
 if(songs.length === 0) {
   const grid = document.getElementById('songGrid');
