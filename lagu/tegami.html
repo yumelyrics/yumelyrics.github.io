@@ -85,8 +85,6 @@
 <meta name="speakable" content="true">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional"></noscript>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 
@@ -109,8 +107,11 @@
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:var(--paper)}
+@media(min-width:768px){
+#bgwrap{background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
+}
 .wrap{position:relative;z-index:1}
 
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -151,8 +152,8 @@ nav{transition:var(--nm-transition)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(10,8,18,.15)}
 
 /* ── NAV ── */
-nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);position:sticky;top:0;z-index:100;background:rgba(245,240,234,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-@media(max-width:768px){nav{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 3rem;border-bottom:1px solid rgba(10,8,18,.08);position:sticky;top:0;z-index:100;background:var(--paper)}
+@media(min-width:769px){nav{background:rgba(245,240,234,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}}
 .nav-brand{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
 .nav-brand-jp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:.1em}
 .nav-brand-en{font-size:.55rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--ash)}
@@ -285,7 +286,7 @@ body:not(.mode-quiz):not(.mode-karaoke) .ll-item{cursor:default}
 /* ── Admin mode: dihandle via JS saja, bukan CSS class ── */
 /* CATATAN: class is-admin di body DIHAPUS dari applyAuthState untuk keamanan */
 .lyrics-container{display:flex;flex-direction:column;gap:0}
-.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s}
+.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s;content-visibility:auto;contain-intrinsic-size:0 60px}
 body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 2.75rem 1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
@@ -1016,27 +1017,27 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/hajimari-hajimari">
-    <img class="related-thumb" src="https://img.youtube.com/vi/lJ3lxWIs7pc/hqdefault.jpg" alt="Hajimari hajimari" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/one-room">
+    <img class="related-thumb" src="https://img.youtube.com/vi/gR61iTaAkcU/hqdefault.jpg" alt="One Room" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">はじまりはじまり</div>
-      <div class="related-ro">Hajimari hajimari</div>
+      <div class="related-title">One Room</div>
+      <div class="related-ro">One Room</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/watagashi">
-    <img class="related-thumb" src="https://i.scdn.co/image/ab67616d0000b27377658cd1e9731710b19762a1" alt="Watagashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/awato-hitsuji">
+    <img class="related-thumb" src="https://img.youtube.com/vi/O3wu44M9d_o/hqdefault.jpg" alt="Awato Hitsuji" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">わたがし (綿菓子)</div>
-      <div class="related-ro">Watagashi</div>
+      <div class="related-title">泡と羊</div>
+      <div class="related-ro">Awato Hitsuji</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kimi-no-koibito-ni-nattara">
-    <img class="related-thumb" src="https://img.youtube.com/vi/y035IcEPiIA/hqdefault.jpg" alt="Kimi no koibito ni nattara" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/daiji-na-koto">
+    <img class="related-thumb" src="https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg" alt="Daiji na koto" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">君の恋人になったら</div>
-      <div class="related-ro">Kimi no koibito ni nattara</div>
+      <div class="related-title">だいじなこと</div>
+      <div class="related-ro">Daiji na koto</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
@@ -1471,11 +1472,12 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, setDoc, doc, increment, getDoc, orderBy, limit, writeBatch, deleteDoc, onSnapshot, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, updateProfile }
-  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+let _fbLoaded=false;
+async function _initHeavy(){
+if(_fbLoaded)return;_fbLoaded=true;
+const{initializeApp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");
+const{getFirestore,collection,addDoc,query,where,getDocs,updateDoc,setDoc,doc,increment,getDoc,orderBy,limit,writeBatch,deleteDoc,onSnapshot,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+const{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged,updateProfile}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js");
 
 
 const _app = initializeApp({
@@ -3325,10 +3327,8 @@ window.deleteCm = async cmId => {
 };
 legacy comment UI removed */
 
-</script>
-<script type="module">
-import { init } from 'https://unpkg.com/@waline/client@3/dist/waline.js';
-window._walineAppInstance = init({
+const{init:_walineInit}=await import('https://unpkg.com/@waline/client@3/dist/waline.js');
+window._walineAppInstance = _walineInit({
   el: '#waline',
   serverURL: 'https://yumelyrics-comment.vercel.app',
   path: "/lagu/tegami",
@@ -3461,6 +3461,8 @@ window._ymPendingWalineSubmit = false;
   setTimeout(_fetchCount, 5000);
   setInterval(_fetchCount, 30000);
 })();
+}
+['scroll','touchstart','mousemove'].forEach(function(e){window.addEventListener(e,_initHeavy,{once:true,passive:true});});
 </script>
 <script>
 function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
@@ -3534,8 +3536,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   // kita naikkan noise/signal ratio dengan span bertumpuk.
   // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
 
-  // 6. Polling ringan sebagai fallback
-  setInterval(checkReaderMode, 800);
+  // 6. Polling ringan sebagai fallback — delayed agar tidak halangi render
+  window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode, 800);},4000);});
 })();
 </script>
 <script>
@@ -3644,15 +3646,17 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     sel.removeAllRanges();
   }, true);
 
-  /* 7. [MOBILE] Touch long-press */
-  document.addEventListener('touchend', function(e){
-    if(!isProtected()) return;
-    if(isInput(e.target)) return;
-    setTimeout(function(){
-      var sel = window.getSelection ? window.getSelection() : null;
-      if(sel) sel.removeAllRanges();
-    }, 0);
-  }, { passive: true, capture: true });
+  /* 7. [MOBILE] Touch long-press — delayed after render */
+  window.addEventListener('load',function(){setTimeout(function(){
+    document.addEventListener('touchend', function(e){
+      if(!isProtected()) return;
+      if(isInput(e.target)) return;
+      setTimeout(function(){
+        var sel = window.getSelection ? window.getSelection() : null;
+        if(sel) sel.removeAllRanges();
+      }, 0);
+    }, { passive: true, capture: true });
+  },4000);});
 
   /* 8. enforceNoSelect — paksa user-select:none via inline style !important */
   function enforceNoSelect(){
@@ -3679,8 +3683,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     });
   }
   enforceNoSelect();
-  // Interval 250ms — window bypass Ctrl+A makin sempit
-  var _enforceInterval = setInterval(enforceNoSelect, 1000);
+  // Interval delayed — tidak halangi render awal
+  window.addEventListener('load',function(){setTimeout(function(){setInterval(enforceNoSelect, 1000);},4000);});
 
   /* 9. MutationObserver — reset proteksi kalau style/class diubah dari DevTools */
   (function(){

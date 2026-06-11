@@ -35,8 +35,6 @@
 <meta name="speakable" content="true">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional"></noscript>
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <style>
 :root{
@@ -58,8 +56,11 @@
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:var(--paper)}
+@media(min-width:768px){
+#bgwrap{background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
+}
 .wrap{position:relative;z-index:1}
 body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
 .wrap{max-width:720px;margin:0 auto}
