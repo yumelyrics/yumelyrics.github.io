@@ -45,8 +45,8 @@
 <meta name="speakable" content="true">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional"></noscript>
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <style>
 
@@ -55,7 +55,7 @@
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --jp:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
   --ro:'DM Sans',sans-serif;
   --sans:var(--en);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
@@ -69,29 +69,9 @@
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
-[data-theme="dark"] #bgwrap{
-  background:
-    radial-gradient(ellipse 90% 55% at 12% -5%, rgba(154,138,184,.22) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(201,169,110,.12) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(196,99,122,.1) 0%, transparent 55%),
-    var(--paper);
-}
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
-  radial-gradient(ellipse 85% 50% at 8% -8%, rgba(232,180,200,.2) 0%, transparent 58%),
-  radial-gradient(ellipse 55% 40% at 92% 12%, rgba(201,169,110,.12) 0%, transparent 52%),
-  radial-gradient(ellipse 50% 35% at 50% 105%, rgba(107,91,122,.09) 0%, transparent 55%),
-  var(--paper)}
-#bgwrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;opacity:.2;pointer-events:none}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
-[data-theme="dark"] body::before{opacity:.22}
+[data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 .wrap{position:relative;z-index:1}
-/* ── MOBILE PERFORMANCE ── */
-@media(max-width:768px){
-  body::before{display:none}
-  #bgwrap::before{display:none}
-  #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
-  [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
-}
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--paper)}
