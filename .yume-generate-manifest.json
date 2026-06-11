@@ -133,10 +133,6 @@
       "slug": "muri-ni-warawanakute-ii-yo",
       "hash": "536da574b4ebf967"
     },
-    "eEh0AGneBiYybd0BG4oz": {
-      "slug": "one-room",
-      "hash": "88422ca4cbb72333"
-    },
     "EOEUiPh5Bb8usptbtNIK": {
       "slug": "doushitemo-doushitemo",
       "hash": "d3696af8a72bd855"
@@ -172,6 +168,10 @@
     "g8mxyj2RGpxsdiBaWG6Z": {
       "slug": "hikari-no-machi",
       "hash": "e9a026667bd5dd78"
+    },
+    "eEh0AGneBiYybd0BG4oz": {
+      "slug": "one-room",
+      "hash": "88422ca4cbb72333"
     },
     "fUYIFVNERvLUWQ4cF5kF": {
       "slug": "hairaito",
@@ -256,6 +256,10 @@
     "Org01ZVBtk0EGpqLaoC7": {
       "slug": "moshi-asu-ga-konai-to-shitara",
       "hash": "fb9631b9cf20d2bf"
+    },
+    "NX0CGONSbNKP2rocvf7I": {
+      "slug": "ano-natsu-no-itsuka-wa",
+      "hash": "0f46c3c6e1aadab3"
     }
   }
 }
