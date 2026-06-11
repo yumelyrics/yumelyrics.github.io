@@ -1398,7 +1398,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     var el=document.getElementById('heroFeatured');
     if(!el) return;
     function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-    function hdImg(u){if(!u) return u;u=String(u).trim();return u.includes('mqdefault')?u.replace('mqdefault','hqdefault'):u;}
+    function hdImg(u){if(!u) return u;u=String(u).trim();if(u.includes('maxresdefault'))u=u.replace('maxresdefault','hqdefault');if(u.includes('mqdefault'))u=u.replace('mqdefault','hqdefault');return u;}
     function toSlug(ro,id){if(ro) return ro.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').substring(0,60);return id;}
     var img=hdImg(pick.img||'');
     var slug=toSlug(pick.titleRo,pick.id);
@@ -1786,10 +1786,13 @@ window.onArtistFilter = val => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-/** URL gambar kartu — naikkan resolusi, jangan turunkan HD. */
+/** URL gambar kartu — turunkan maxresdefault (200KB) ke hqdefault (30KB).
+ *  Kartu terbesar hanya 280x280 — hqdefault (480x360) sudah lebih dari cukup.
+ *  Ini menghemat ~150-170KB per gambar YouTube. */
 function hdImgUrl(url) {
   if (!url) return url;
   let u = String(url).trim();
+  if (u.includes('maxresdefault')) u = u.replace('maxresdefault', 'hqdefault');
   if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
   if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
   if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '600x600');
@@ -1998,14 +2001,21 @@ function rc(filter='', animate=false){
     }
     // Pindahkan ke posisi yang benar di DOM
     grid.appendChild(el);
-    // Animasi saat reorder
+    // Kumpulkan dulu untuk animasi — jangan trigger reflow per-kartu
     if (animate) {
       el.classList.remove('reorder-anim');
-      void el.offsetWidth; // force reflow
       el.style.animationDelay = `${i * 0.03}s`;
-      el.classList.add('reorder-anim');
     }
   });
+
+  // SATU forced reflow untuk semua kartu, bukan N kali
+  if (animate && filtered.length) {
+    void grid.offsetHeight;
+    filtered.forEach(s => {
+      const el = existing.get(s.id);
+      if (el) el.classList.add('reorder-anim');
+    });
+  }
 
   document.getElementById('noResult').style.display =
     (filtered.length===0 && songs.length>0) ? 'block' : 'none';
@@ -2576,55 +2586,74 @@ function showCachedSongs() {
   } catch(e) {}
 }
 
-// ── Load songs — IndexedDB persistence + localStorage instant cache ──
+// ── Load songs — getDocs (one-shot fetch) menggantikan onSnapshot ──
+// ALASAN: onSnapshot membuka Firestore WebChannel long-lived connection yang
+// menyebabkan rantai request 18 detik di Lighthouse. Songs tidak perlu realtime —
+// cukup fetch sekali, cache di localStorage, dan refresh background tiap 5 menit.
 let _unsubSongs = null;
-function loadSongs() {
+let _songsRefreshTimer = null;
+
+function _cacheSongs(arr) {
+  try {
+    const slim = arr.map(s => ({
+      id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
+      artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
+      recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
+      popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
+    }));
+    localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
+    localStorage.setItem('ym_songs_cache_ts', String(Date.now()));
+  } catch(e) {}
+}
+
+async function _fetchSongs() {
   const grid = document.getElementById('songGrid');
-  // Coba ordered desc dulu
-  _unsubSongs = onSnapshot(
-    query(collection(db,'songs'), orderBy('order','desc')),
-    snap => {
-      songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  try {
+    const snap = await getDocs(query(collection(db,'songs'), orderBy('order','desc')));
+    songs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    refreshArtistFilter();
+    _cacheSongs(songs);
+    rc(document.getElementById('searchInp').value||'');
+    showContinueRead();
+  } catch(err) {
+    // Fallback tanpa orderBy
+    try {
+      const snap2 = await getDocs(collection(db,'songs'));
+      songs = snap2.docs
+        .map(d=>({id:d.id, ...d.data()}))
+        .sort((a,b)=>(b.order??0)-(a.order??0));
       refreshArtistFilter();
-      try {
-        const slim = songs.map(s => ({
-          id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
-          artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
-          recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
-          popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
-        }));
-        localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
-      } catch(e) {}
+      _cacheSongs(songs);
       rc(document.getElementById('searchInp').value||'');
       showContinueRead();
-    },
-    err => {
-      // Fallback tanpa orderBy
-      _unsubSongs = onSnapshot(
-        collection(db,'songs'),
-        snap => {
-          songs = snap.docs
-            .map(d=>({id:d.id, ...d.data()}))
-            .sort((a,b)=>(b.order??0)-(a.order??0));
-          try {
-            const slim = songs.map(s => ({
-              id:s.id, titleJp:s.titleJp, titleRo:s.titleRo, titleId:s.titleId,
-              artist:s.artist, artistSlug:s.artistSlug, img:s.img, order:s.order,
-              recommended:s.recommended, heroFeatured:s.heroFeatured, heroFeaturedUntil:s.heroFeaturedUntil,
-          popularLabel:s.popularLabel, views:s.views, jlpt:s.jlpt, difficulty:s.difficulty
-            }));
-            localStorage.setItem('ym_songs_cache', JSON.stringify(slim));
-          } catch(e) {}
-          refreshArtistFilter();
-          rc(document.getElementById('searchInp').value||'');
-      showContinueRead();
-        },
-        () => {
-          grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
-        }
-      );
+    } catch(err2) {
+      if (!songs.length && grid) {
+        grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+      }
     }
-  );
+  }
+}
+
+function loadSongs() {
+  // Cek cache — kalau masih segar (< 5 menit), skip fetch dan cukup pakai cache
+  try {
+    const ts = parseInt(localStorage.getItem('ym_songs_cache_ts') || '0', 10);
+    const AGE_MS = 5 * 60 * 1000; // 5 menit
+    if (songs.length && Date.now() - ts < AGE_MS) {
+      // Cache masih segar, schedule background refresh saja
+      _songsRefreshTimer = setTimeout(_fetchSongs, AGE_MS - (Date.now() - ts));
+      return;
+    }
+  } catch(e) {}
+
+  _fetchSongs();
+
+  // Background refresh tiap 5 menit (tanpa onSnapshot long-running connection)
+  if (_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
+  _songsRefreshTimer = setTimeout(function refreshLoop() {
+    _fetchSongs();
+    _songsRefreshTimer = setTimeout(refreshLoop, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
 }
 // Tampilkan skeleton segera kalau belum ada localStorage cache
 if(songs.length === 0) {
@@ -2764,12 +2793,18 @@ document.addEventListener('click', function(e){
 </script>
 <script>
 // Fix background gap saat Chrome address bar hide/show
+// Dibungkus rAF agar tidak trigger forced reflow sync (sebelumnya jadi 94ms reflow di line ini)
+var _fixBgRaf = null;
 function fixBg() {
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const w = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-  const bg = document.getElementById('bgwrap');
-  if (bg) { bg.style.height = h + 'px'; bg.style.width = w + 'px'; }
-  document.body.style.minHeight = h + 'px';
+  if (_fixBgRaf) return;
+  _fixBgRaf = requestAnimationFrame(function() {
+    _fixBgRaf = null;
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    var w = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    var bg = document.getElementById('bgwrap');
+    if (bg) { bg.style.height = h + 'px'; bg.style.width = w + 'px'; }
+    document.body.style.minHeight = h + 'px';
+  });
 }
 fixBg();
 if (window.visualViewport) {
