@@ -57,20 +57,30 @@ async function sendDiscordNotification(generatedSongs, success = true) {
     if (count > 10) lines.push(`_...dan ${count - 10} lagu baru lainnya_`);
     const songListValue = count > 0 ? lines.join('\n') : '_Tidak ada lagu baru._';
 
+    const firstImg = generatedSongs.length > 0 ? generatedSongs[0].img : '';
+    const embed = {
+      title,
+      description: desc,
+      color,
+      url: SITE_URL,
+      fields: [
+        { name: listTitle, value: songListValue, inline: false },
+        { name: '🔗 Website', value: `[yumelyrics.my.id](${SITE_URL})`, inline: true },
+      ],
+      footer: { text: 'yumelyrics.my.id' },
+      timestamp: new Date().toISOString(),
+    };
+    if (firstImg) {
+      if (count === 1) {
+        embed.image = { url: firstImg };
+      } else {
+        embed.thumbnail = { url: firstImg };
+      }
+    }
+
     const payload = {
       content: '<@&1513469865451716771>',
-      embeds: [{
-        title,
-        description: desc,
-        color,
-        url: SITE_URL,
-        fields: [
-          { name: listTitle, value: songListValue, inline: false },
-          { name: '🔗 Website', value: `[yumelyrics.my.id](${SITE_URL})`, inline: true },
-        ],
-        footer: { text: 'yumelyrics.my.id' },
-        timestamp: new Date().toISOString(),
-      }],
+      embeds: [embed],
     };
     const res = await fetch(DISCORD_WEBHOOK_URL, {
       method: 'POST',
@@ -215,7 +225,7 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
@@ -230,7 +240,7 @@ const CSS_TOKENS = `
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
+  --jp:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
   --ro:'DM Sans',sans-serif;
   --sans:var(--en);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
@@ -244,29 +254,9 @@ const CSS_TOKENS = `
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
-[data-theme="dark"] #bgwrap{
-  background:
-    radial-gradient(ellipse 90% 55% at 12% -5%, rgba(154,138,184,.22) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(201,169,110,.12) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(196,99,122,.1) 0%, transparent 55%),
-    var(--paper);
-}
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
-  radial-gradient(ellipse 85% 50% at 8% -8%, rgba(232,180,200,.2) 0%, transparent 58%),
-  radial-gradient(ellipse 55% 40% at 92% 12%, rgba(201,169,110,.12) 0%, transparent 52%),
-  radial-gradient(ellipse 50% 35% at 50% 105%, rgba(107,91,122,.09) 0%, transparent 55%),
-  var(--paper)}
-#bgwrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;opacity:.2;pointer-events:none}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.38}
-[data-theme="dark"] body::before{opacity:.22}
+[data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 .wrap{position:relative;z-index:1}
-/* ── MOBILE PERFORMANCE ── */
-@media(max-width:768px){
-  body::before{display:none}
-  #bgwrap::before{display:none}
-  #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
-  [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 100% 45% at 50% -8%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
-}
 `;
 
 function toSlug(titleRo, titleJp, docId) {
@@ -1154,10 +1144,10 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
   const lyricsHTML = lyrics.map((l, i) =>
     '<div class="ll-item" data-line="' + i + '">' +
     '<div class="lyric-left">' +
-    '<div class="ljp" data-obf="1">' + obfuscateLine(l.jp||'') + '</div>' +
-    (l.ro ? '<div class="lro" data-obf="1">' + obfuscateLine(l.ro) + '</div>' : '') +
+    '<div class="ljp">' + escHtml(l.jp||'') + '</div>' +
+    (l.ro ? '<div class="lro">' + escHtml(l.ro) + '</div>' : '') +
     '</div>' +
-    (l.id ? '<div class="lyric-right"><div class="lid" data-obf="1">' + obfuscateLine(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
+    (l.id ? '<div class="lyric-right"><div class="lid">' + escHtml(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
     '<div class="line-actions">' +
     '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
     '</div></div>'
@@ -1527,9 +1517,6 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .lro{font-family:var(--ro);font-size:.88rem;color:var(--dusk);font-style:normal;font-weight:400;letter-spacing:.01em;line-height:1.95;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 .lid{font-family:var(--ro);font-size:.93rem;color:var(--plum);font-weight:400;line-height:1.8;overflow:visible;visibility:hidden;padding-bottom:.3rem;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;align-items:baseline;gap:0;max-width:100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 .rdy .ljp,.rdy .lro,.rdy .lid{visibility:visible;transition:opacity .15s}
-[data-obf="1"]{display:inline-flex!important;flex-wrap:wrap!important;gap:0!important;width:100%;max-width:100%;overflow:visible;overflow-wrap:break-word;word-break:break-word;align-content:flex-start}
-[data-obf="1"] span[data-c]{white-space:nowrap;display:inline;position:relative}
-[data-obf="1"] span[data-sp]{white-space:pre;min-width:.25em;display:inline;flex-shrink:0}
 .lro.h,.lid.h,.ljp.h{visibility:hidden!important;pointer-events:none}
 .lyric-left,.lyric-right{display:flex;flex-direction:column;gap:.4rem}
 .lyric-right{padding-left:2rem;border-left:1px solid rgba(10,8,18,.06);min-width:0;overflow-wrap:break-word;word-break:break-word}
@@ -2279,7 +2266,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <!-- YT / Nico video -->
     ${song.ytId ? `<div id="yt-section" style="margin-bottom:2rem">
       <div style="font-size:.52rem;color:var(--smoke);letter-spacing:.28em;text-transform:uppercase;margin-bottom:.6rem;font-family:var(--sans);font-weight:700">Video</div>
-      <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <iframe class="ytframe" src="https://www.youtube.com/embed/${escHtml(song.ytId)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
     </div>` : ''}
 
   </main>
@@ -2714,17 +2701,9 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 <script>
-/* ── Restore urutan karakter lirik via CSS order — jalan SEGERA, tidak nunggu Firebase ── */
+/* ── Tampilkan lirik segera setelah DOM siap ── */
 (function(){
   function restoreLines(){
-    document.querySelectorAll('[data-obf="1"]').forEach(function(line){
-      // Restore urutan karakter di dalam tiap .obf-word
-      line.querySelectorAll('.obf-word').forEach(function(word){
-        var spans = Array.from(word.querySelectorAll('span[data-c]'));
-        if(!spans.length) return;
-        spans.forEach(function(s){ s.style.order = parseInt(s.dataset.c, 10); });
-      });
-    });
     document.body.classList.add('rdy');
   }
   if(document.readyState === 'loading'){
@@ -4965,7 +4944,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   }
   enforceNoSelect();
   // Interval 250ms — window bypass Ctrl+A makin sempit
-  var _enforceInterval = setInterval(enforceNoSelect, 250);
+  var _enforceInterval = setInterval(enforceNoSelect, 1000);
 
   /* 9. MutationObserver — reset proteksi kalau style/class diubah dari DevTools */
   (function(){
@@ -5205,6 +5184,7 @@ async function main() {
         artist: song.artist || '',
         slug: finalSlug,
         url: `${BASE_URL}/lagu/${finalSlug}.html`,
+        img: song.img || '',
       });
     }
     console.log(`  ✓ lagu/${finalSlug}.html`);
