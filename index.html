@@ -180,8 +180,8 @@
 <style>
 :root{
   /* 夢の夜 — warm parchment · gold · rose */
-  --ink:#1a1612;--paper:#f5f0ea;--cream:#ede6dc;--smoke:#c4b8ac;--ash:#8a7d70;
-  --gold:#b8923c;--gold2:#d4aa6a;--rose:#c4637a;--plum:#7c4d6e;
+  --ink:#1a1612;--paper:#f5f0ea;--cream:#ede6dc;--smoke:#c4b8ac;--ash:#5e5349;
+  --gold:#7d5e14;--gold2:#c49a40;--rose:#a8374e;--plum:#6b3d60;
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(184,146,60,.1);
   --mist:rgba(26,22,18,.05);--border:rgba(26,22,18,.1);
   --jp:'Noto Serif JP',serif;--en:'Syne',sans-serif;--serif:'Cormorant Garamond',Georgia,serif;
@@ -244,7 +244,8 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(245,240,234,.97);border-bottom:1px solid rgba(26,22,18,.08);min-width:0;max-width:100%;box-shadow:none}
 [data-theme="dark"] nav{background:rgba(15,13,11,.97);border-bottom-color:rgba(201,169,110,.12)}
-.nav-logo{display:flex;flex-direction:column;gap:.05rem;cursor:pointer;flex-shrink:0;min-width:0}
+.nav-logo{display:flex;flex-direction:column;gap:.05rem;cursor:pointer;flex-shrink:0;min-width:0;background:none;border:none;padding:0;font-family:inherit;text-align:left}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .nljp{font-family:var(--jp);font-size:1.05rem;font-weight:600;color:var(--ink);white-space:nowrap;line-height:1;letter-spacing:.1em;text-shadow:none}
 .nlen{font-size:.55rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;line-height:1;font-weight:700}
 .nav-links{display:flex;gap:.25rem;align-items:center;flex-shrink:0}
@@ -630,14 +631,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <div class="wrap">
 <nav>
-  <div class="nav-logo" onclick="sv('cat')">
-    <div class="nljp">夢Lyrics</div>
-    <div class="nlen">YumeSubs</div>
-  </div>
+  <button class="nav-logo" onclick="sv('cat')" aria-label="YumeLyrics — kembali ke katalog">
+    <div class="nljp" aria-hidden="true">夢Lyrics</div>
+    <div class="nlen" aria-hidden="true">YumeSubs</div>
+  </button>
   <div class="nav-links">
-    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Night/Light Mode" aria-label="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <button id="theme-toggle" onclick="toggleTheme()" aria-label="Ganti tema terang/gelap">
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <button id="nav-menu-btn" onclick="toggleNavMenu()" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -677,9 +678,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="catalog-panel manuscript-panel">
   <div class="search-wrap">
     <div class="search-box">
-      <span class="search-icon">&#x2315;</span>
-      <input class="search-inp" id="searchInp" placeholder="Cari judul, romaji, artis..." oninput="onSearch(this.value)">
-      <button class="search-clear" id="searchClear" onclick="clearSearch()">&#x2715;</button>
+      <label for="searchInp" class="sr-only">Cari lagu</label>
+      <span class="search-icon" aria-hidden="true">&#x2315;</span>
+      <input class="search-inp" id="searchInp" placeholder="Cari judul, romaji, artis..." oninput="onSearch(this.value)" autocomplete="off" spellcheck="false">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Hapus pencarian">&#x2715;</button>
     </div>
   </div>
   <div class="filter-row">
@@ -715,16 +717,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div class="lvgrid">
     <div>
-      <img class="lvcov" id="lv-cov" src="" alt="cover">
+      <img class="lvcov" id="lv-cov" src="" alt="" aria-hidden="true">
       <div class="lvmeta">
         <b id="lv-mt"></b>
         <div id="lv-ma" style="color:var(--rose);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-top:.25rem"></div>
       </div>
       <div class="ytwrap">
         <div class="ytlb">Video</div>
-        <iframe class="ytframe" id="ytf" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe class="ytframe" id="ytf" title="Video YouTube lagu" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <a class="spbtn" id="sp-btn" href="#" target="_blank" rel="noopener" style="display:none">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
           Dengarkan di Spotify
         </a>
       </div>
