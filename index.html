@@ -175,8 +175,8 @@
 </script>
 
 <!-- Font dimuat async agar tidak blokir render awal -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=optional" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600&display=optional"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Syne:wght@400;700&family=Noto+Serif+JP:wght@400&display=optional" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Syne:wght@400;700&family=Noto+Serif+JP:wght@400&display=optional"></noscript>
 <style>
 :root{
   /* 夢の夜 — warm parchment · gold · rose */
@@ -303,18 +303,17 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .manuscript-sec-hd .sec-lb::before{content:'— ';color:var(--sakura);font-weight:300}
 .catalog-list-wrap{padding:0 3rem 4rem;max-width:1280px}
 .song-grid{display:flex;flex-direction:column;gap:0;padding:0;width:100%;max-width:none;overflow:visible}
-.sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0}
+.sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0;content-visibility:auto;contain-intrinsic-size:0 76px}
 .sc:first-of-type{border-top:1px solid var(--border)}
 .sc::before{display:none}
 .sc:hover{background:var(--sakura-dim);padding-left:.4rem;padding-right:.85rem;border-color:var(--border);box-shadow:none}
 .sc-img-wrap{width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;background:var(--cream);overflow:hidden;border:1px solid var(--border);align-self:center}
 .sc-img-wrap img{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-  filter:sepia(.1) contrast(1.04);
-  transform:none;transition:transform .4s ease,filter .35s ease;
+  transform:none;transition:transform .4s ease;
   image-rendering:auto;
 }
-.sc:hover .sc-img-wrap img{opacity:1;transform:scale(1.04);filter:sepia(0) contrast(1.06)}
+.sc:hover .sc-img-wrap img{opacity:1;transform:scale(1.04)}
 .sc-corner{display:none}
 .scb{padding:.1rem 0 .1rem 1.15rem;flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;min-width:0}
 .scn{font-size:.56rem;color:var(--smoke);letter-spacing:.22em;margin-bottom:.35rem;text-transform:uppercase;font-weight:700;font-variant-numeric:tabular-nums}
@@ -554,12 +553,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 /* ── Button Interactions — GPU-composited, no animation conflicts ── */
 
-/* 1. Ripple keyframe — easing ala Material Design */
-@keyframes ym-ripple{
-  from{transform:translate(-50%,-50%) scale(0);opacity:.28}
-  to  {transform:translate(-50%,-50%) scale(1);opacity:0}
-}
-
 /* 2. Promote buttons ke GPU layer supaya transform composited */
 .req-btn,.gbtn,.tpill,.sbtn,.nb,.fbtn{
   position:relative;overflow:hidden;
@@ -596,7 +589,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   width:6px;height:6px;border-radius:50%;
   background:rgba(255,255,255,.5);
   pointer-events:none;
-  will-change:transform,opacity;
   animation:ym-ripple .55s cubic-bezier(.4,0,.2,1) forwards;
   /* Gunakan dynamic --ripple-size dari JS */
   --s:40;
@@ -617,7 +609,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     transition:
       opacity .6s cubic-bezier(.22,1,.36,1),
       transform .6s cubic-bezier(.22,1,.36,1);
-    will-change:opacity,transform;
   }
   .ym-reveal.ym-in{opacity:1;transform:translate3d(0,0,0)}
   /* Delay lebih kecil — stagger terasa ringan bukan aneh */
@@ -775,7 +766,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 </script>
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, updateDoc, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, enableIndexedDbPersistence }
+import { getFirestore, collection, onSnapshot, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -790,10 +781,7 @@ const firebaseConfig = {
 const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
 
-// ── OFFLINE PERSISTENCE — cache Firestore di IndexedDB ──
-// Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
-// lalu otomatis update kalau ada perubahan di server.
-enableIndexedDbPersistence(db).catch(() => {});
+// enableIndexedDbPersistence dihapus — deprecated di Firebase v11 & bikin overhead startup
 
 // ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
 (function() {
@@ -946,16 +934,16 @@ window.onArtistFilter = val => {
   rc(document.getElementById('searchInp').value, true);
 };
 
-/** URL gambar kartu — turunkan maxresdefault (200KB) ke hqdefault (30KB).
- *  Kartu terbesar hanya 280x280 — hqdefault (480x360) sudah lebih dari cukup.
- *  Ini menghemat ~150-170KB per gambar YouTube. */
+/** URL gambar kartu — gunakan mqdefault (320×180, ~8-15KB) untuk grid kecil.
+ *  Kartu terbesar hanya 76×76px — mqdefault sudah lebih dari cukup bahkan di layar retina.
+ *  mqdefault ~50% lebih kecil dari hqdefault, hemat bandwidth signifikan. */
 function hdImgUrl(url) {
   if (!url) return url;
   let u = String(url).trim();
-  if (u.includes('maxresdefault')) u = u.replace('maxresdefault', 'hqdefault');
-  if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
-  if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
-  if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '600x600');
+  if (u.includes('maxresdefault')) u = u.replace('maxresdefault', 'mqdefault');
+  if (u.includes('hqdefault')) u = u.replace('hqdefault', 'mqdefault');
+  if (u.includes('sddefault')) u = u.replace('sddefault', 'mqdefault');
+  if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '200x200');
   return u;
 }
 /** Thumbnail kecil di grid mobile — tetap cukup tajam untuk retina. */
@@ -988,8 +976,8 @@ function buildCard(s, i) {
   const imgSrc = hdImgUrl(s.img || '');
   const ph = 'https://placehold.co/400x400/0d0c1a/333?text=%E2%99%AA';
   const imgEl = imgSrc
-    ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" width="76" height="76" loading="lazy" decoding="async" sizes="76px" onerror="this.src='${ph}'">`
-    : `<img src="${ph}" alt="" width="76" height="76" loading="lazy" decoding="async">`;
+    ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" width="76" height="76" loading="lazy" decoding="async" fetchpriority="low" sizes="76px" onerror="this.src='${ph}'">`
+    : `<img src="${ph}" alt="" width="76" height="76" loading="lazy" decoding="async" fetchpriority="low">`;
   const aKey = normalizeArtistKey(s.artist);
   const aSlug = artistSlugByKey[aKey];
   const artistEl = aSlug && s.artist
