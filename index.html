@@ -40,10 +40,8 @@
 <link rel="alternate" hreflang="x-default" href="https://yumelyrics.my.id">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
@@ -392,7 +390,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .catalog-aside-mobile .jp-chip:last-child::after{content:''}
 [data-theme="dark"] .jp-vert--lg{opacity:.45}
 [data-theme="dark"] .catalog-aside-mobile-inner{background:linear-gradient(135deg,var(--cream) 0%,transparent 85%)}
-.sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;contain:layout style;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0}
+.sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0}
 .sc:first-of-type{border-top:1px solid var(--border)}
 .sc::before{display:none}
 .sc:hover{background:var(--sakura-dim);padding-left:.4rem;padding-right:.85rem;border-color:var(--border);box-shadow:none}
@@ -444,8 +442,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .gbtn{background:none;border:1px solid var(--border);font-family:var(--en);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);padding:.45rem 1rem;cursor:pointer;transition:color .2s,border-color .2s,background-color .2s,opacity .2s;border-radius:0;font-weight:600;text-decoration:none}
 .gbtn:hover{border-color:var(--ink);color:var(--ink)}
 .lvt{font-family:var(--jp);font-size:1.5rem;font-weight:400;color:var(--ink);letter-spacing:.05em}
-/* [duplicate CSS removed for performance] */
-/* [duplicate CSS removed for performance] */
+/* [duplicate CSS block removed — rules defined above] */
+/* [duplicate CSS block removed — rules defined above] */
 /* ── REPORT MODAL ── */
 #report-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(245,240,234,.92);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:1rem}
 #report-modal-overlay.open{display:flex}
@@ -483,7 +481,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 #report-notif-badge.show{display:flex}
 
 /* bgwrap — 夢の夜 · warm amber dusk */
-#bgwrap{content-visibility:auto;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
+#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:
   radial-gradient(ellipse 85% 50% at 8% -8%, rgba(184,146,60,.16) 0%, transparent 58%),
   radial-gradient(ellipse 55% 40% at 92% 12%, rgba(196,99,122,.12) 0%, transparent 52%),
   radial-gradient(ellipse 50% 35% at 50% 105%, rgba(124,77,110,.08) 0%, transparent 55%),
@@ -505,7 +503,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   0%,100%{opacity:.55;transform:scale(1)}
   50%{opacity:.85;transform:scale(1.06)}
 }
-@media(prefers-reduced-motion:reduce){.hero-aurora{animation:none!important}}
 @keyframes auroraShift{
   0%{transform:translate(-4%,-2%) scale(1)}
   50%{transform:translate(5%,3%) scale(1.08)}
@@ -527,13 +524,13 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   min-height:min(88vh,920px);display:flex;flex-direction:column;justify-content:center;
 }
 .hero-aurora{
-  position:absolute;inset:-20% -10%;z-index:0;pointer-events:none;will-change:transform;
+  position:absolute;inset:-20% -10%;z-index:0;pointer-events:none;
   background:
     radial-gradient(ellipse 55% 45% at 18% 35%, rgba(184,146,60,.22) 0%, transparent 58%),
     radial-gradient(ellipse 50% 40% at 82% 22%, rgba(196,99,122,.16) 0%, transparent 55%),
     radial-gradient(ellipse 40% 35% at 55% 88%, rgba(124,77,110,.10) 0%, transparent 60%);
-  filter:blur(1px);animation:auroraShift 22s ease-in-out infinite;
-  contain:strict;
+  filter:blur(2px);animation:auroraShift 18s ease-in-out infinite;
+  contain:layout style paint;
 }
 [data-theme="dark"] .hero-aurora{
   background:
@@ -623,6 +620,24 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .hero-featured-cta{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;margin-top:auto;padding-top:.65rem;color:var(--ink);font-family:var(--en);font-weight:700}
 .hero-featured-cta::after{content:' →';color:var(--rose)}
 .hero-featured-empty{font-family:var(--serif);font-size:.88rem;font-style:italic;color:var(--ash);line-height:1.5}
+/* ── Hero Featured Skeleton (prevents CLS) ── */
+.hero-featured--skel{cursor:default;pointer-events:none;animation:none}
+.hero-featured--skel .hf-sk-cover{
+  width:100%;aspect-ratio:1;border:1px solid var(--border);margin-bottom:.7rem;
+  background:linear-gradient(90deg,var(--cream) 25%,var(--smoke) 50%,var(--cream) 75%);
+  background-size:600px 100%;animation:shimmer 1.6s infinite linear;opacity:.25;
+}
+.hero-featured--skel .hf-sk-line{
+  height:.65rem;border-radius:2px;margin-bottom:.55rem;
+  background:linear-gradient(90deg,var(--cream) 25%,var(--smoke) 50%,var(--cream) 75%);
+  background-size:600px 100%;animation:shimmer 1.6s infinite linear;opacity:.18;
+}
+.hero-featured--skel .hf-sk-line.w80{width:80%}
+.hero-featured--skel .hf-sk-line.w55{width:55%}
+.hero-featured--skel .hf-sk-line.w35{width:35%}
+@media(prefers-reduced-motion:reduce){
+  .hero-featured--skel .hf-sk-cover,.hero-featured--skel .hf-sk-line{animation:none}
+}
 .req-btn{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;padding:.65rem 1.5rem;background:transparent;border:1px solid var(--ink);color:var(--ink);font-family:var(--en);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;transition:color .22s,border-color .22s,background-color .22s,transform .22s,box-shadow .22s;font-weight:700;-webkit-tap-highlight-color:transparent}
 .req-btn::after{display:none}
 .req-btn:hover,.req-btn:active{background:var(--gold);border-color:var(--gold);color:var(--ink)!important;transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,169,110,.25)}
@@ -658,7 +673,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 [data-theme="dark"] .hero-kanji--b{color:rgba(196,99,122,.06)}
 @media(max-width:768px){.hero-kanji--a{font-size:3.5rem;top:8%;right:.5rem;opacity:.5}.hero-kanji--b{display:none}}
 @media(prefers-reduced-motion:reduce){
-  .hero-aurora,.hero-badge,.hero-scroll-line,.petal{animation:none!important}
+  .hero-aurora,.hero-badge,.hero-scroll-line,.petal,.hf-sk-cover,.hf-sk-line{animation:none!important;opacity:.15}
   .hero-reveal > *{animation:none!important}
 }
 @media(max-width:900px){
@@ -765,7 +780,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 }
 
 /* ── SKELETON LOADING ── */
-@media(prefers-reduced-motion:reduce){.sc-skel,.sc-skel-img,.sc-skel-line,.petal,.ym-reveal{animation:none!important;opacity:1;transform:none!important}}
 @keyframes shimmer{
   0%{background-position:-600px 0}
   100%{background-position:600px 0}
@@ -853,7 +867,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 }
 .hero-feat:hover{transform:translateY(-2px);border-color:var(--rose);background:rgba(232,180,200,.15)}
 [data-theme="dark"] .hero-feat{background:rgba(232,226,217,.04)}
-.continue-read{margin-top:1rem;padding:.7rem .8rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;align-items:stretch;gap:.55rem;max-width:100%;overflow:hidden;box-sizing:border-box}
+.continue-read{margin-top:1rem;padding:.7rem .8rem;border:1px solid var(--border);background:var(--cream);display:flex;flex-direction:column;align-items:stretch;gap:.55rem;max-width:100%;overflow:hidden;box-sizing:border-box;min-height:0}
 .continue-read-top{display:flex;align-items:center;gap:.65rem;min-width:0;text-decoration:none;color:inherit}
 .continue-read-cover{width:3.5rem;height:3.5rem;flex-shrink:0;border:1px solid var(--border);background:var(--mist);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .continue-read-cover img{width:100%;height:100%;object-fit:cover;display:block}
@@ -893,7 +907,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 /* 2. Promote buttons ke GPU layer supaya transform composited */
 .req-btn,.gbtn,.tpill,.sbtn,.hero-feat,.hero-scroll,.nb,.fbtn{
   position:relative;overflow:hidden;
-  transform:translateZ(0);
   transition:
     color .18s ease,
     border-color .18s ease,
@@ -922,7 +935,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nb:active                      {transform:translateZ(0) scale(.95);transition-duration:.07s}
 .hero-feat:active               {transform:translateZ(0) scale(.94);transition-duration:.06s}
 /* hero-scroll sudah pakai translateX(-50%) — gabungkan */
-.hero-scroll                    {transform:translateX(-50%) translateZ(0)}
+.hero-scroll                    {will-change:transform;transform:translateX(-50%) translateZ(0)}
 .hero-scroll:active             {transform:translateX(-50%) translateZ(0) scale(.92);transition-duration:.07s}
 
 /* 5. Ripple element — elemen kecil, scale besar, GPU only */
@@ -932,6 +945,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   width:6px;height:6px;border-radius:50%;
   background:rgba(255,255,255,.5);
   pointer-events:none;
+  will-change:transform,opacity;
   animation:ym-ripple .55s cubic-bezier(.4,0,.2,1) forwards;
   /* Gunakan dynamic --ripple-size dari JS */
   --s:40;
@@ -952,6 +966,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     transition:
       opacity .6s cubic-bezier(.22,1,.36,1),
       transform .6s cubic-bezier(.22,1,.36,1);
+    will-change:opacity,transform;
   }
   .ym-reveal.ym-in{opacity:1;transform:translate3d(0,0,0)}
   /* Delay lebih kecil — stagger terasa ringan bukan aneh */
@@ -1244,7 +1259,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
     </div>
     </div>
-    <a id="heroFeatured" class="hero-featured" href="#" style="display:none" aria-label="Lagu pilihan"></a>
+    <a id="heroFeatured" class="hero-featured hero-featured--skel" href="#" aria-label="Lagu pilihan">
+  <div class="hf-sk-cover"></div>
+  <div class="hf-sk-line w80"></div>
+  <div class="hf-sk-line w55"></div>
+  <div class="hf-sk-line w35"></div>
+</a>
     </div>
     <button type="button" class="hero-scroll" onclick="document.querySelector('.catalog-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" aria-label="Scroll ke katalog">
       <span>Scroll</span>
@@ -1400,12 +1420,7 @@ async function uploadPhotoViaWorker(file, authUser) {
 // ── OFFLINE PERSISTENCE — cache Firestore di IndexedDB ──
 // Setelah aktif, onSnapshot langsung serve dari cache lokal dulu (0ms),
 // lalu otomatis update kalau ada perubahan di server.
-// Enable offline persistence only when supported and not on slow connections
-(function(){
-  const conn = navigator.connection;
-  const slowConn = conn && (conn.saveData || /2g/.test(conn.effectiveType));
-  if (!slowConn) enableIndexedDbPersistence(db).catch(() => {});
-})();
+enableIndexedDbPersistence(db).catch(() => {});
 
 // ── REALTIME ONLINE COUNTER (optimized: delayed init, throttled writes) ──
 (function() {
@@ -1838,7 +1853,7 @@ function renderHeroFeatured() {
   const el = document.getElementById('heroFeatured');
   if (!el) return;
   if (!songs.length) {
-    el.style.display = 'none';
+    // Keep skeleton visible — don't hide so space is preserved (prevents CLS)
     return;
   }
   const pick = getActiveAdminFeaturedSong() || pickDailyFeaturedSong() || songs[0];
@@ -1846,7 +1861,7 @@ function renderHeroFeatured() {
   const href = 'lagu/' + escCard(slug) + '.html';
   const img = hdImgUrl(pick.img || '');
   el.href = href;
-  el.style.display = 'flex';
+  el.classList.remove('hero-featured--skel');
   el.innerHTML =
     '<div class="hero-featured-kicker">' + escCard(heroFeaturedKickerFor(pick)) + '</div>' +
     (img ? '<img class="hero-featured-cover" src="' + escCard(img) + '" alt="" width="280" height="280" loading="eager" fetchpriority="high" decoding="async" onerror="this.style.display=\'none\'">' : '') +
@@ -2062,14 +2077,10 @@ window.sv = v => {
 function esc2(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // Tangani hasil redirect login (popup diblokir → signInWithRedirect)
-// Defer auth redirect check — not needed for first paint
+// Defer auth redirect check — runs after first paint, not blocking song load
 if ('requestIdleCallback' in window) {
-  requestIdleCallback(() => {
-    getRedirectResult(auth).catch(() => {});
-  }, { timeout: 3000 });
-} else {
-  setTimeout(() => { getRedirectResult(auth).catch(() => {}); }, 500);
-}
+  requestIdleCallback(() => { getRedirectResult(auth).catch(() => {}); }, { timeout: 4000 });
+} else { setTimeout(() => { getRedirectResult(auth).catch(() => {}); }, 800); }
 
 window.doLogin = async () => {
   try { await signInWithPopup(auth, provider); }
@@ -2621,7 +2632,7 @@ showContinueRead();
   const box = document.getElementById('sakuraPetals');
   if (!box || box.childElementCount) return;
   const isTouch = window.matchMedia('(pointer:coarse)').matches;
-  const n = (isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : (window.innerWidth < 768 ? 0 : 12);
+  const n = (isTouch || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : (window.innerWidth < 768 ? 0 : 10);
   for (let i = 0; i < n; i++) {
     const p = document.createElement('span');
     p.className = 'petal';
