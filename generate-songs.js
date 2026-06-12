@@ -4,7 +4,6 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import fs from 'fs';
 import { writeFile as fsWrite } from 'fs/promises';
 import path from 'path';
@@ -175,9 +174,9 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // JANGAN hapus dari manifest — biarkan prev.hash tetap ada supaya
-    // needsSongGenerate bisa skip lagu yang dirty tapi isinya belum berubah.
-    if (isHtmlDirty(song)) { continue; }
+    // Hapus entry manifest untuk lagu yang htmlDirty supaya needsSongGenerate
+    // pasti return true (prev === null) tanpa perlu hapus manifest file manual.
+    if (isHtmlDirty(song)) { delete manifest.songs[song.id]; continue; }
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -286,15 +285,12 @@ async function pConcurrent(n, tasks) {
   await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
 }
 
-/** HTML minification options — agresif tapi aman untuk output halaman lagu.
- *  minifyJS sengaja false: inline JS di halaman lagu sangat besar (Firebase SDK +
- *  template literals kompleks), Terser sering gagal dan bikin generateHTML throw
- *  sehingga lagu-lagu berikutnya di worker yang sama ikut ke-skip. */
+/** HTML minification options — agresif tapi aman untuk output halaman lagu. */
 const MINIFY_OPTIONS = {
   collapseWhitespace: true,
   removeComments: true,
   minifyCSS: true,
-  minifyJS: false,
+  minifyJS: true,
   keepClosingSlash: false,
   removeAttributeQuotes: true,
   removeEmptyAttributes: true,
@@ -5035,22 +5031,8 @@ async function main() {
   const fullMode = process.env.GENERATE_MODE === 'full' || process.argv.includes('--full');
   console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
   console.log('🔥 Menghubungkan ke Firebase...');
-  const app  = initializeApp(firebaseConfig);
-  const db   = getFirestore(app);
-  const auth = getAuth(app);
-
-  // Login sebagai admin supaya clearHtmlDirtyFlag bisa nulis ke Firestore.
-  // Set FIREBASE_ADMIN_EMAIL & FIREBASE_ADMIN_PASSWORD di GitHub Actions Secrets.
-  if (process.env.FIREBASE_ADMIN_EMAIL && process.env.FIREBASE_ADMIN_PASSWORD) {
-    try {
-      await signInWithEmailAndPassword(auth, process.env.FIREBASE_ADMIN_EMAIL, process.env.FIREBASE_ADMIN_PASSWORD);
-      console.log('✅ Script berhasil login sebagai Admin YumeSubs');
-    } catch (e) {
-      console.warn('⚠ Script gagal login Firebase Auth:', e.message, '— clearHtmlDirtyFlag mungkin gagal');
-    }
-  } else {
-    console.warn('⚠ FIREBASE_ADMIN_EMAIL/PASSWORD tidak di-set — clearHtmlDirtyFlag akan gagal (permission denied)');
-  }
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
   const snap = await getDocs(query(collection(db,'songs'), orderBy('order','asc')));
   const songs = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -5151,9 +5133,6 @@ async function main() {
 
   // ── Pass 2: parallel HTML generation with concurrency cap ──────────────────
   await pConcurrent(12, songMeta.map(({song, slug: finalSlug}) => async () => {
-    // Wrap per-song in try-catch so one failure doesn't stop the worker and
-    // cause all subsequent songs in that worker's queue to be silently skipped.
-    try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
       const skipHash = songContentHash(song);
@@ -5236,10 +5215,6 @@ async function main() {
     </video:video>` : '';
     urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
   </url>`);
-    } catch (err) {
-      // Log error tapi jangan throw — worker harus terus proses lagu berikutnya.
-      console.error(`  ✗ GAGAL generate lagu/${finalSlug}.html (id: ${song.id}):`, err.message || err);
-    }
   }));
 
   // Flush all dirty-flag Firestore updates in one parallel batch
