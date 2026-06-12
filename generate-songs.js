@@ -1971,7 +1971,9 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.hero-text>*{animation:fadeUp .6s ease both}
+/* heroFadeUp starts at opacity:.5 so LCP elements are painted immediately (not opacity:0) */
+@keyframes heroFadeUp{from{opacity:.5;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-text>*{animation:heroFadeUp .6s ease both}
 .hero-text .breadcrumb{animation-delay:.05s}
 .hero-text .song-type{animation-delay:.1s}
 .hero-text .song-title-jp{animation-delay:.15s}
@@ -1979,7 +1981,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .hero-text .song-title-id{animation-delay:.22s}
 .hero-text .meta-row{animation-delay:.28s}
 .hero-text .hero-actions{animation-delay:.35s}
-.hero-visual{animation:fadeUp .7s ease .2s both}
+.hero-visual{animation:heroFadeUp .7s ease .2s both}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
