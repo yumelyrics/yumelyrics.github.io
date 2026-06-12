@@ -285,16 +285,14 @@ async function pConcurrent(n, tasks) {
   await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
 }
 
-/** HTML minification options — agresif tapi aman untuk output halaman lagu. */
+/** HTML minification options — safe for page output; keeps comments out of markup. */
 const MINIFY_OPTIONS = {
   collapseWhitespace: true,
-  removeComments: true,
+  removeComments: false,
   minifyCSS: true,
-  minifyJS: true,
+  minifyJS: false,
   keepClosingSlash: false,
-  removeAttributeQuotes: true,
-  removeEmptyAttributes: true,
-  removeRedundantAttributes: true,
+  removeAttributeQuotes: false,
 };
 async function minifyHtml(html) {
   try { return await minifyHtmlTerser(html, MINIFY_OPTIONS); }
@@ -354,28 +352,24 @@ function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/**
- * Wrap URL gambar pakai wsrv.nl CDN proxy:
- * - Convert otomatis ke WebP (next-gen format, ~60-80% lebih kecil)
- * - Resize sesuai lebar target sebelum dikirim ke browser
- * - Tidak install dependency apapun — proxy gratis, zero-cost
- */
-function wsrvUrl(url, w, q = 80) {
+/** URL cover utama — pertahankan / naikkan resolusi (sama seperti admin HD). */
+function coverImgUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  const u = url.trim();
-  if (!u.startsWith('http')) return u; // skip relative / data URLs
-  return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=${q}`;
+  let u = url.trim();
+  if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
+  if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
+  return u;
 }
 
-function coverImgUrl(url, w = 480) {
+/** Thumbnail kecil (related) — boleh lebih ringan. */
+function thumbImgUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  return wsrvUrl(url.trim(), w, 82);
-}
-
-/** Thumbnail kecil (related) — lebih ringan, cukup 96px. */
-function thumbImgUrl(url, w = 96) {
-  if (!url || typeof url !== 'string') return url;
-  return wsrvUrl(url.trim(), w, 75);
+  let u = url.trim();
+  if (u.includes('img.youtube.com') && u.includes('maxresdefault')) u = u.replace('maxresdefault', 'hqdefault');
+  if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '300x300');
+  if (u.includes('mzstatic.com')) u = u.replace(/\/(\d+)x(\d+)(bb|cc)/, '/300x300$3');
+  if (u.includes('spotifycdn.com/image/ab67616d0000b273')) u = u.replace('0000b273', '00001e02');
+  return u;
 }
 
 function imgTag(src, alt, opts = {}) {
@@ -386,7 +380,7 @@ function imgTag(src, alt, opts = {}) {
   const hd = !!opts.hd;
   const sizes = opts.sizes || (hd ? '(max-width:600px) 100vw, 480px' : `${w}px`);
   if (!src) return '';
-  const u = hd ? coverImgUrl(src, w) : thumbImgUrl(src, w);
+  const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
   return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
 }
@@ -1184,11 +1178,6 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
-  // Build teks lirik mentah saat generate — dipakai doCopyLyric tanpa baca DOM
-  const rawLyricsText = lyricsPlain
-    .map(l => [l.jp, l.ro, l.id].filter(Boolean).join('\n'))
-    .filter(Boolean)
-    .join('\n\n') + '\n\n© YumeSubs — yumelyrics.my.id';
   const songSeedObj = {
     id: songId,
     titleJp: titleDisplay,
@@ -2228,7 +2217,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         </button>
         ${song.sp ? `<a class="spotify-card" href="${escHtml(song.sp)}" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
           ${song.img
-            ? `<img class="spotify-card-art" src="${escHtml(thumbImgUrl(song.img, 80))}" alt="Cover ${escHtml(titleMain)}" width="80" height="80" loading="lazy" decoding="async">`
+            ? `<img class="spotify-card-art" src="${escHtml(song.img)}" alt="Cover ${escHtml(titleMain)}" loading="lazy">`
             : `<div class="spotify-card-art-fallback"><svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg></div>`
           }
           <div class="spotify-card-body">
@@ -2826,7 +2815,6 @@ async function uploadPhotoViaWorker(file) {
 
 const SONG_ID = ${JSON.stringify(songId)};
 const SONG_SEED = ${JSON.stringify(songSeedObj)};
-const __YUME_RAW_LYRICS = ${JSON.stringify(rawLyricsText)};
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN: edit lagu di halaman ini ──
@@ -3765,11 +3753,31 @@ window.doCopyLyric = async () => {
     return;
   }
 
-  // Pakai data lirik yang sudah di-inject saat build — tidak baca dari DOM
-  const full = typeof __YUME_RAW_LYRICS === 'string' && __YUME_RAW_LYRICS.trim()
-    ? __YUME_RAW_LYRICS
-    : '';
-  if (!full) { toast('Tidak ada lirik untuk di-copy.'); return; }
+  // Kumpulkan semua teks lirik dari DOM (urutan sudah benar via CSS order)
+  const lines = [];
+  document.querySelectorAll('.ll-item').forEach(item => {
+    const jp  = item.querySelector('.ljp');
+    const ro  = item.querySelector('.lro');
+    const lid = item.querySelector('.lid');
+    function extractText(el) {
+      if (!el) return '';
+      // Reconstruct per kata: tiap .obf-word berisi span[data-c] yang diurutkan
+      const words = Array.from(el.querySelectorAll('.obf-word')).map(w =>
+        Array.from(w.querySelectorAll('span[data-c]'))
+          .sort((a,b) => +a.dataset.c - +b.dataset.c)
+          .map(s => s.textContent).join('')
+      );
+      return words.join(' ').trim();
+    }
+    const jpText  = extractText(jp);
+    const roText  = extractText(ro);
+    const lidText = extractText(lid);
+    const parts = [jpText, roText, lidText].filter(Boolean);
+    if (parts.length) lines.push(parts.join('\\n'));
+  });
+
+  if (!lines.length) { toast('Tidak ada lirik untuk di-copy.'); return; }
+  const full = lines.join('\\n\\n') + '\\n\\n© YumeSubs — yumelyrics.my.id';
 
   // Copy ke clipboard
   navigator.clipboard.writeText(full).then(() => {
