@@ -2,6 +2,7 @@
 // Jalankan via GitHub Actions — ambil data Firebase, generate HTML per lagu + sitemap.xml
 // Cek baris 20: harus ada "Cormorant" di FONT_URL (bukan Plus Jakarta)
 
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import fs from 'fs';
@@ -9,6 +10,11 @@ import { writeFile as fsWrite } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+
+// --- TAMBAH BARIS INI ---
+const GENERATE_MODE = process.env.GENERATE_MODE || 'incremental';
+// ------------------------
+
 let minifyHtmlTerser;
 try {
   ({ minify: minifyHtmlTerser } = await import('html-minifier-terser'));
@@ -27,6 +33,8 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
 const DISCORD_SERVER_URL = 'https://discord.gg/v9V35kNXdx';
 // ─────────────────────────────────────────────────────────────────────────────
+
+const GENERATE_MODE = process.env.GENERATE_MODE || 'incremental';
 
 function isHtmlDirty(song) {
   return song.htmlDirty === true || song.htmlDirty === 'true';
@@ -174,16 +182,15 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Hapus entry manifest untuk lagu yang htmlDirty supaya needsSongGenerate
-    // pasti return true (prev === null) tanpa perlu hapus manifest file manual.
-    if (isHtmlDirty(song)) { delete manifest.songs[song.id]; continue; }
     const fp = path.join('lagu', `${slug}.html`);
+    
+    // 1. Kalau file gak ada di disk, biarkan manifest kosong (biar ke-generate)
     if (!fs.existsSync(fp)) continue;
-    const hash = songContentHash(song);
-    const prev = manifest.songs[song.id];
-    if (!prev || prev.slug !== slug || prev.hash !== hash) {
-      manifest.songs[song.id] = { slug, hash };
-      seeded++;
+
+    // 2. JANGAN DELETE manifest.songs[song.id] meskipun htmlDirty true.
+    // Kita cuma perlu tahu kalau lagu ini punya record di manifest.
+    if (manifest.songs[song.id]) {
+        seeded++;
     }
   }
   return seeded;
@@ -195,16 +202,14 @@ function seedManifestFromDisk(manifest, songMeta) {
  * - slug berubah, atau
  * - htmlDirty === true DAN konten benar-benar berubah (hash berbeda dari manifest)
  */
-function needsSongGenerate(song, slug, manifest, fullMode) {
-  if (fullMode) return true;
+// Ganti fungsi lama dengan ini:
+function needsSongGenerate(song, slug, manifest, mode) {
+  if (mode === 'full') return true;
   const fp = path.join('lagu', `${slug}.html`);
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
   if (prev && prev.slug !== slug) return true;
   if (isHtmlDirty(song)) {
-    // Generate ulang hanya jika konten benar-benar berubah.
-    // Kalau flag dirty macet (clearHtmlDirtyFlag gagal di run sebelumnya),
-    // tapi isi lagu sama → skip, jangan generate ulang.
     const currentHash = songContentHash(song);
     return !prev || prev.hash !== currentHash;
   }
@@ -662,6 +667,8 @@ async function buildGlossaryPages(songMeta, today) {
   for (const term of GLOSSARY_TERM_DEFS) index[term.slug] = { term, examples: [] };
 
   for (const { song, slug } of songMeta) {
+    const prev = manifest.songs[song.id];
+    if (!needsSongGenerate(song, slug, manifest, GENERATE_MODE)) continue;
     (song.lyrics || []).forEach((line, i) => {
       const jp = line.jp || '';
       if (!jp) return;
