@@ -285,14 +285,16 @@ async function pConcurrent(n, tasks) {
   await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
 }
 
-/** HTML minification options — safe for page output; keeps comments out of markup. */
+/** HTML minification options — agresif tapi aman untuk output halaman lagu. */
 const MINIFY_OPTIONS = {
   collapseWhitespace: true,
-  removeComments: false,
+  removeComments: true,
   minifyCSS: true,
-  minifyJS: false,
+  minifyJS: true,
   keepClosingSlash: false,
-  removeAttributeQuotes: false,
+  removeAttributeQuotes: true,
+  removeEmptyAttributes: true,
+  removeRedundantAttributes: true,
 };
 async function minifyHtml(html) {
   try { return await minifyHtmlTerser(html, MINIFY_OPTIONS); }
@@ -1178,6 +1180,11 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
+  // Build teks lirik mentah saat generate — dipakai doCopyLyric tanpa baca DOM
+  const rawLyricsText = lyricsPlain
+    .map(l => [l.jp, l.ro, l.id].filter(Boolean).join('\n'))
+    .filter(Boolean)
+    .join('\n\n') + '\n\n© YumeSubs — yumelyrics.my.id';
   const songSeedObj = {
     id: songId,
     titleJp: titleDisplay,
@@ -2815,6 +2822,7 @@ async function uploadPhotoViaWorker(file) {
 
 const SONG_ID = ${JSON.stringify(songId)};
 const SONG_SEED = ${JSON.stringify(songSeedObj)};
+const __YUME_RAW_LYRICS = ${JSON.stringify(rawLyricsText)};
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
 
 // ── ADMIN: edit lagu di halaman ini ──
@@ -3753,31 +3761,11 @@ window.doCopyLyric = async () => {
     return;
   }
 
-  // Kumpulkan semua teks lirik dari DOM (urutan sudah benar via CSS order)
-  const lines = [];
-  document.querySelectorAll('.ll-item').forEach(item => {
-    const jp  = item.querySelector('.ljp');
-    const ro  = item.querySelector('.lro');
-    const lid = item.querySelector('.lid');
-    function extractText(el) {
-      if (!el) return '';
-      // Reconstruct per kata: tiap .obf-word berisi span[data-c] yang diurutkan
-      const words = Array.from(el.querySelectorAll('.obf-word')).map(w =>
-        Array.from(w.querySelectorAll('span[data-c]'))
-          .sort((a,b) => +a.dataset.c - +b.dataset.c)
-          .map(s => s.textContent).join('')
-      );
-      return words.join(' ').trim();
-    }
-    const jpText  = extractText(jp);
-    const roText  = extractText(ro);
-    const lidText = extractText(lid);
-    const parts = [jpText, roText, lidText].filter(Boolean);
-    if (parts.length) lines.push(parts.join('\\n'));
-  });
-
-  if (!lines.length) { toast('Tidak ada lirik untuk di-copy.'); return; }
-  const full = lines.join('\\n\\n') + '\\n\\n© YumeSubs — yumelyrics.my.id';
+  // Pakai data lirik yang sudah di-inject saat build — tidak baca dari DOM
+  const full = typeof __YUME_RAW_LYRICS === 'string' && __YUME_RAW_LYRICS.trim()
+    ? __YUME_RAW_LYRICS
+    : '';
+  if (!full) { toast('Tidak ada lirik untuk di-copy.'); return; }
 
   // Copy ke clipboard
   navigator.clipboard.writeText(full).then(() => {
