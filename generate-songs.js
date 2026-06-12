@@ -286,12 +286,15 @@ async function pConcurrent(n, tasks) {
   await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
 }
 
-/** HTML minification options — agresif tapi aman untuk output halaman lagu. */
+/** HTML minification options — agresif tapi aman untuk output halaman lagu.
+ *  minifyJS sengaja false: inline JS di halaman lagu sangat besar (Firebase SDK +
+ *  template literals kompleks), Terser sering gagal dan bikin generateHTML throw
+ *  sehingga lagu-lagu berikutnya di worker yang sama ikut ke-skip. */
 const MINIFY_OPTIONS = {
   collapseWhitespace: true,
   removeComments: true,
   minifyCSS: true,
-  minifyJS: true,
+  minifyJS: false,
   keepClosingSlash: false,
   removeAttributeQuotes: true,
   removeEmptyAttributes: true,
@@ -5148,6 +5151,9 @@ async function main() {
 
   // ── Pass 2: parallel HTML generation with concurrency cap ──────────────────
   await pConcurrent(12, songMeta.map(({song, slug: finalSlug}) => async () => {
+    // Wrap per-song in try-catch so one failure doesn't stop the worker and
+    // cause all subsequent songs in that worker's queue to be silently skipped.
+    try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
       const skipHash = songContentHash(song);
@@ -5230,6 +5236,10 @@ async function main() {
     </video:video>` : '';
     urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
   </url>`);
+    } catch (err) {
+      // Log error tapi jangan throw — worker harus terus proses lagu berikutnya.
+      console.error(`  ✗ GAGAL generate lagu/${finalSlug}.html (id: ${song.id}):`, err.message || err);
+    }
   }));
 
   // Flush all dirty-flag Firestore updates in one parallel batch
