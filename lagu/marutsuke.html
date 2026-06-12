@@ -985,7 +985,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <button class="ctrl-pill" data-view="tr">Terjemahan</button>
       <button class="ctrl-pill" id="focus-prev" type="button" onclick="focusStep(-1)" style="display:none">←</button>
       <button class="ctrl-pill" id="focus-next" type="button" onclick="focusStep(1)" style="display:none">→</button>
-      <button class="ctrl-pill" id="copy-lyric-btn" onclick="doCopyLyric()" style="margin-left:auto;opacity:.38;cursor:not-allowed" disabled title="Tinggalkan komentar untuk salin lirik">
+      <button class="ctrl-pill" id="copy-lyric-btn" onclick="doCopyLyric()" style="margin-left:auto" title="Copy semua lirik">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-.1em"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span id="copy-btn-label">Copy</span>
       </button>
@@ -1985,37 +1985,17 @@ function updateCopyGate() {
   const label= document.getElementById('copy-btn-label');
   if (!btn) return;
 
-  if (_isAdmin) {
-    btn.disabled = false;
-    btn.style.opacity = '';
-    btn.style.cursor = '';
-    btn.title = 'Copy semua lirik (Admin)';
-    if (label) label.textContent = 'Copy';
-    return;
-  }
-
   if (_currentUser && _isBanned) {
     btn.disabled = true;
     btn.style.opacity = '.38';
     btn.style.cursor = 'not-allowed';
     btn.title = 'Akunmu dibanned';
-    if (label) label.textContent = 'Copy';
-    return;
-  }
-
-  if (_hasCommented) {
+  } else {
     btn.disabled = false;
     btn.style.opacity = '';
     btn.style.cursor = '';
     btn.title = 'Copy semua lirik';
-    if (label) label.textContent = 'Copy';
-    return;
   }
-
-  btn.disabled = true;
-  btn.style.opacity = '.38';
-  btn.style.cursor = 'not-allowed';
-  btn.title = 'Tinggalkan komentar untuk salin lirik';
   if (label) label.textContent = 'Copy';
 }
 
@@ -2483,13 +2463,8 @@ document.addEventListener('click', e => {
   if (modal && modal.classList.contains('open') && e.target === modal) closeEditProfile();
 });
 
-/* ── Copy Lyric (aktif setelah komentar GraphComment) ── */
+/* ── Copy Lyric ── */
 window.doCopyLyric = async () => {
-  if (!_isAdmin && !_hasCommented) {
-    showCopyCommentToast();
-    toast('Tinggalkan komentar dulu untuk salin lirik.');
-    return;
-  }
   // Re-check ban status secara realtime sebelum copy (hanya jika login Firebase)
   const stillBanned = _currentUser ? await checkBanStatus(_currentUser.uid) : false;
   if (stillBanned) {
@@ -2564,9 +2539,8 @@ window.doCopyLyric = async () => {
   }
 
   document.addEventListener('copy', function(e) {
-    // Admin & pengguna yang sudah komentar (GraphComment) boleh salin seleksi asli
+    // Admin boleh salin seleksi asli
     if(typeof _isAdmin !== 'undefined' && _isAdmin) return;
-    if(typeof _hasCommented !== 'undefined' && _hasCommented) return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) return;
     const raw = sel.toString();
