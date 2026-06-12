@@ -541,14 +541,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(10,8,18,.15)}
 .toast.on{opacity:1;transform:translateY(0)}
 
-/* ── COPY HINT TOAST (GraphComment) ── */
-#copy-comment-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(12px);z-index:1000;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.34,1.2,.64,1);display:flex;align-items:center;gap:.75rem;max-width:min(360px,calc(100vw - 2rem));padding:.75rem 1rem .75rem 1.15rem;background:var(--ink);color:var(--paper);border:1px solid rgba(201,169,110,.28);box-shadow:0 10px 32px rgba(10,8,18,.22);font-family:var(--sans);font-size:.72rem;font-weight:500;letter-spacing:.04em;line-height:1.45}
-#copy-comment-toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-.cct-text{margin:0;flex:1}
-.cct-close{flex-shrink:0;background:none;border:none;color:var(--paper);font-size:1.15rem;line-height:1;cursor:pointer;opacity:.65;padding:0 .15rem;transition:opacity .2s}
-.cct-close:hover{opacity:1}
-[data-theme="dark"] #copy-comment-toast{border-color:rgba(201,169,110,.38)}
-@media(max-width:600px){#copy-comment-toast{bottom:1.2rem;font-size:.68rem}}
+
 
 /* ── MODALS ── */
 #img-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(10,8,18,.85);display:none;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px)}
@@ -1030,28 +1023,28 @@ Di balik liriknya yang kadang lucu dan berlebihan, ada rasa pengen dicintai dan 
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/suiheisen">
-    <img class="related-thumb" src="https://img.youtube.com/vi/qRGRcUTends/hqdefault.jpg" alt="Suiheisen" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/hajimari-hajimari">
+    <img class="related-thumb" src="https://img.youtube.com/vi/lJ3lxWIs7pc/hqdefault.jpg" alt="Hajimari hajimari" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">水平線</div>
-      <div class="related-ro">Suiheisen</div>
+      <div class="related-title">はじまりはじまり</div>
+      <div class="related-ro">Hajimari hajimari</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/stay-with-me">
-    <img class="related-thumb" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtfjbXQ65hmZQ0A6c6PtwLU8ZQGvQB0kh2ag&amp;s" alt="Stay with me" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/daiji-na-koto">
+    <img class="related-thumb" src="https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg" alt="Daiji na koto" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">Stay with me</div>
-      <div class="related-ro">Stay with me</div>
+      <div class="related-title">だいじなこと</div>
+      <div class="related-ro">Daiji na koto</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kowai-hanashi">
-    <img class="related-thumb" src="https://i.scdn.co/image/ab67616d0000b273783ed3c2af46af7ab7c671c0" alt="Kowai Hanashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kimi-no-kawari">
+    <img class="related-thumb" src="https://i.kfs.io/album/global/48289399,0v1/fit/500x500.jpg" alt="Kimi no kawari" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">こわいはなし</div>
-      <div class="related-ro">Kowai Hanashi</div>
-      <div class="related-artist">Back number</div>
+      <div class="related-title">君の代わり</div>
+      <div class="related-ro">Kimi no kawari</div>
+      <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
   </a></div>
@@ -1062,7 +1055,7 @@ Di balik liriknya yang kadang lucu dan berlebihan, ada rasa pengen dicintai dan 
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login. Tinggalkan komentar di lagu ini untuk mengaktifkan tombol salin lirik.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login.</p>
     </div>
   </div>
   <div id="waline"></div>
@@ -1120,11 +1113,6 @@ Di balik liriknya yang kadang lucu dan berlebihan, ada rasa pengen dicintai dan 
   <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
 </div>
 <div class="toast" id="toast"></div>
-<!-- ── Copy hint toast (GraphComment) ── -->
-<div id="copy-comment-toast" role="status" aria-live="polite">
-  <p class="cct-text">tinggalkan komentar untuk salin lirik</p>
-  <button type="button" class="cct-close" onclick="dismissCopyCommentToast()" aria-label="Tutup">×</button>
-</div>
 <!-- ── Lightbox ── -->
 <div id="img-lightbox" onclick="closeLightbox()">
   <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1957,25 +1945,11 @@ function markWalineCommented() {
   try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
   updateCopyGate();
   hideCopyCommentToast();
-  toast('Copy lirik aktif — terima kasih sudah berkomentar!');
+  toast('Terima kasih sudah berkomentar! 💬');
 }
 
-function showCopyCommentToast() {
-  if (_hasCommented || _isAdmin) return;
-  const el = document.getElementById('copy-comment-toast');
-  if (!el) return;
-  if (_copyToastTimer) clearTimeout(_copyToastTimer);
-  el.classList.add('on');
-  _copyToastTimer = setTimeout(() => hideCopyCommentToast(), 8000);
-}
-
-function hideCopyCommentToast() {
-  const el = document.getElementById('copy-comment-toast');
-  if (!el) return;
-  el.classList.remove('on');
-  if (_copyToastTimer) { clearTimeout(_copyToastTimer); _copyToastTimer = null; }
-}
-
+function showCopyCommentToast() { /* copy gate dihapus — semua user bisa copy */ }
+function hideCopyCommentToast() {}
 window.dismissCopyCommentToast = hideCopyCommentToast;
 window.__yumeMarkWalineCommented = markWalineCommented;
 
@@ -1989,12 +1963,14 @@ function updateCopyGate() {
     btn.style.opacity = '.38';
     btn.style.cursor = 'not-allowed';
     btn.title = 'Akunmu dibanned';
-  } else {
-    btn.disabled = false;
-    btn.style.opacity = '';
-    btn.style.cursor = '';
-    btn.title = 'Copy semua lirik';
+    if (label) label.textContent = 'Copy';
+    return;
   }
+
+  btn.disabled = false;
+  btn.style.opacity = '';
+  btn.style.cursor = '';
+  btn.title = 'Copy semua lirik';
   if (label) label.textContent = 'Copy';
 }
 
@@ -2151,7 +2127,6 @@ getRedirectResult(auth).then(result => {
 }).catch(()=>{});
 
 updateCopyGate();
-setTimeout(() => showCopyCommentToast(), 900);
 
 window.doLogin = async () => {
   try {
@@ -2538,8 +2513,9 @@ window.doCopyLyric = async () => {
   }
 
   document.addEventListener('copy', function(e) {
-    // Admin boleh salin seleksi asli
+    // Admin & pengguna yang sudah komentar (GraphComment) boleh salin seleksi asli
     if(typeof _isAdmin !== 'undefined' && _isAdmin) return;
+    if(typeof _hasCommented !== 'undefined' && _hasCommented) return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) return;
     const raw = sel.toString();
