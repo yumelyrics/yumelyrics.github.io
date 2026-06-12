@@ -5134,7 +5134,9 @@ async function main() {
   console.log('🎵 Generate halaman lagu...');
 
   // ── Pass 2: parallel HTML generation with concurrency cap ──────────────────
+  const songErrors = [];
   await pConcurrent(12, songMeta.map(({song, slug: finalSlug}) => async () => {
+    try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
       // Jika htmlDirty masih true tapi konten tidak berubah (di-skip karena hash sama),
@@ -5223,7 +5225,20 @@ async function main() {
     </video:video>` : '';
     urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
   </url>`);
+    } catch(e) {
+      // Lagu gagal di-generate — catat error tapi lanjut ke lagu berikutnya
+      songErrors.push({ slug: finalSlug, id: song.id, err: e.message || String(e) });
+      console.error(`  ✗ GAGAL lagu/${finalSlug}.html: ${e.message || e}`);
+    }
   }));
+
+  // Laporan lagu yang gagal (per-task error tidak menghentikan batch)
+  if (songErrors.length) {
+    console.warn(`\n⚠ ${songErrors.length} lagu GAGAL di-generate:`);
+    for (const { slug, id, err } of songErrors) {
+      console.warn(`  ✗ ${slug} (id: ${id}): ${err}`);
+    }
+  }
 
   // Flush all dirty-flag Firestore updates in one parallel batch
   if (dirtyFlagClears.length) {
