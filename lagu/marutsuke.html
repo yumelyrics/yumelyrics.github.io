@@ -683,7 +683,9 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.hero-text>*{animation:fadeUp .6s ease both}
+/* heroFadeUp starts at opacity:.5 so LCP elements are painted immediately (not opacity:0) */
+@keyframes heroFadeUp{from{opacity:.5;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-text>*{animation:heroFadeUp .6s ease both}
 .hero-text .breadcrumb{animation-delay:.05s}
 .hero-text .song-type{animation-delay:.1s}
 .hero-text .song-title-jp{animation-delay:.15s}
@@ -691,7 +693,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .hero-text .song-title-id{animation-delay:.22s}
 .hero-text .meta-row{animation-delay:.28s}
 .hero-text .hero-actions{animation-delay:.35s}
-.hero-visual{animation:fadeUp .7s ease .2s both}
+.hero-visual{animation:heroFadeUp .7s ease .2s both}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
@@ -1024,15 +1026,7 @@ Nuansa lagunya hangat tapi juga sendu, dengan lirik yang terasa sederhana namun 
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Given & dari ギヴン</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/yoru-ga-akeru">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02d3b27ed188ff76904ef0c300&amp;w=52&amp;output=webp&amp;q=75" alt="Yoru ga Akeru" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">夜が明ける</div>
-      <div class="related-ro">Yoru ga Akeru</div>
-      <div class="related-artist">Given</div>
-    </div>
-    <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/fuyu-no-hanashi">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/fuyu-no-hanashi">
     <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02d3b27ed188ff76904ef0c300&amp;w=52&amp;output=webp&amp;q=75" alt="Fuyu no Hanashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
       <div class="related-title">冬のはなし</div>
@@ -1045,6 +1039,14 @@ Nuansa lagunya hangat tapi juga sendu, dengan lirik yang terasa sederhana namun 
     <div class="related-info">
       <div class="related-title">うらがわの存在</div>
       <div class="related-ro">Uragawa no Sonzai</div>
+      <div class="related-artist">Given</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/yoru-ga-akeru">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02d3b27ed188ff76904ef0c300&amp;w=52&amp;output=webp&amp;q=75" alt="Yoru ga Akeru" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">夜が明ける</div>
+      <div class="related-ro">Yoru ga Akeru</div>
       <div class="related-artist">Given</div>
     </div>
     <div class="related-arr">→</div>

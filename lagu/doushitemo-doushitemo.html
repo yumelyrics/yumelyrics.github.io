@@ -691,7 +691,9 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.hero-text>*{animation:fadeUp .6s ease both}
+/* heroFadeUp starts at opacity:.5 so LCP elements are painted immediately (not opacity:0) */
+@keyframes heroFadeUp{from{opacity:.5;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-text>*{animation:heroFadeUp .6s ease both}
 .hero-text .breadcrumb{animation-delay:.05s}
 .hero-text .song-type{animation-delay:.1s}
 .hero-text .song-title-jp{animation-delay:.15s}
@@ -699,7 +701,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .hero-text .song-title-id{animation-delay:.22s}
 .hero-text .meta-row{animation-delay:.28s}
 .hero-text .hero-actions{animation-delay:.35s}
-.hero-visual{animation:fadeUp .7s ease .2s both}
+.hero-visual{animation:heroFadeUp .7s ease .2s both}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
@@ -1037,15 +1039,7 @@ Vibenya penuh semangat, tapi bukan tipe semangat yang ceria. Lebih kayak orang y
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/watagashi">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27377658cd1e9731710b19762a1&amp;w=52&amp;output=webp&amp;q=75" alt="Watagashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">わたがし (綿菓子)</div>
-      <div class="related-ro">Watagashi</div>
-      <div class="related-artist">Back Number</div>
-    </div>
-    <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kimi-no-koibito-ni-nattara">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/kimi-no-koibito-ni-nattara">
     <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2Fy035IcEPiIA%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Kimi no koibito ni nattara" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
       <div class="related-title">君の恋人になったら</div>
@@ -1053,11 +1047,19 @@ Vibenya penuh semangat, tapi bukan tipe semangat yang ceria. Lebih kayak orang y
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/happi-endo">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02e09353d6028fda18c3699085&amp;w=52&amp;output=webp&amp;q=75" alt="Happi Endo" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/daiji-na-koto">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fs3-aop.plusmember.jp%2Fprod%2Fpublic%2Fbacknumber%2Fcontents%2Fdiscography%2FUMCK5331_fix.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Daiji na koto" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">ハッピーエンド</div>
-      <div class="related-ro">Happi Endo</div>
+      <div class="related-title">だいじなこと</div>
+      <div class="related-ro">Daiji na koto</div>
+      <div class="related-artist">Back Number</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kimi-no-kawari">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fi.kfs.io%2Falbum%2Fglobal%2F48289399%2C0v1%2Ffit%2F500x500.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Kimi no kawari" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">君の代わり</div>
+      <div class="related-ro">Kimi no kawari</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
