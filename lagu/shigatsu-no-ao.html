@@ -3,11 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://image-cdn-fa.spotifycdn.com" crossorigin>
-<link rel="preload" href="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uQ.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=swap">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -27,7 +22,10 @@
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
 <style>html{-webkit-text-size-adjust:100%}</style>
-<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
 <title>Lirik Shigatsu no Ao - Mosawo + Terjemahan Indonesia | YumeLyrics</title>
@@ -85,6 +83,9 @@
 <meta name="dcterms.format" content="text/html">
 <!-- ── AEO: voice search / featured snippet signal ───────────── -->
 <meta name="speakable" content="true">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional"></noscript>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 
@@ -247,10 +248,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
 .progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
 .ll-item{position:relative;pointer-events:none}
+.line-actions{pointer-events:auto;position:relative;z-index:4}
 .lyric-left,.lyric-right,.ljp,.lro,.lid{pointer-events:none;-webkit-tap-highlight-color:transparent}
 body.mode-quiz .ll-item,body.mode-karaoke .ll-item{pointer-events:auto}
 body.mode-quiz .lyric-left,body.mode-quiz .lyric-right,body.mode-quiz .ljp,body.mode-quiz .lid,
 body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .ljp,body.mode-karaoke .lid{pointer-events:auto}
+.line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
+.line-share-btn{opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.7rem;padding:.15rem .35rem;transition:opacity .15s,color .15s}
+.ll-item:hover .line-share-btn{opacity:1}
+.line-share-btn:hover{color:var(--gold)}
+@media(max-width:768px){.line-actions{top:.4rem;right:.2rem}.line-share-btn{opacity:.55}}
 body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
 body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
 body.mode-quiz .ll-item{cursor:pointer}
@@ -399,8 +406,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .related-section{margin-top:0;padding:0}
 .related-label{display:none}
 .related-list{display:none}
-</style>
-<style id="nc-css" media="not all">
+
 /* ── ABOUT SECTION ── */
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
@@ -681,9 +687,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .se-foot-main{flex-direction:column}
   .se-save,.se-gen,.se-cancel{width:100%}
 }
-</style>
-<script>if(window.requestIdleCallback)requestIdleCallback(function(){document.getElementById('nc-css').media='all'},{timeout:2000});else setTimeout(function(){document.getElementById('nc-css').media='all'},300);</script>
-<style>
+
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 .hero-text>*{animation:fadeUp .6s ease both}
@@ -857,7 +861,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="kanji-bg">四</div>
     <div class="cover-wrap">
       <div class="cover-frame">
-        <img class="cover-img" src="https://yt3.googleusercontent.com/p61znZraiOz40J2PC2I_Vsm7xJ60wxPsuqj46_-wh9Uk8wTa9u7vxyq1eeMtF4lK6Thzzd_COp1WSZA=w544-h544-l90-rj" alt="Cover Shigatsu no Ao - Mosawo" width="480" height="480" loading="eager" decoding="sync" sizes="(max-width:600px) 100vw, 480px" crossorigin="anonymous" fetchpriority="high">
+        <img class="cover-img" src="https://yt3.googleusercontent.com/p61znZraiOz40J2PC2I_Vsm7xJ60wxPsuqj46_-wh9Uk8wTa9u7vxyq1eeMtF4lK6Thzzd_COp1WSZA=w544-h544-l90-rj" alt="Cover Shigatsu no Ao - Mosawo" width="480" height="480" loading="eager" decoding="async" sizes="(max-width:600px) 100vw, 480px" fetchpriority="high">
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
@@ -985,7 +989,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     </div>
 
     <div class="lyrics-container" id="ll">
-      <div class="ll-item" data-line="0"><div class="lyric-left"><div class="ljp">臆病風にシャツを揺らされて</div><div class="lro">Okubyou kaze ni shatsu wo yurasarete</div></div><div class="lyric-right"><div class="lid">Rasa takut ini aja udah cukup buat ngegoyahin aku</div></div></div><div class="ll-item" data-line="1"><div class="lyric-left"><div class="ljp">見えるものだけで恋を量っていたあの頃</div><div class="lro">Mieru mono dake de koi wo hakatte ita ano koro</div></div><div class="lyric-right"><div class="lid">Dulu aku cuma bisa nilai cinta dari yang keliatan mata</div></div></div><div class="ll-item" data-line="2"><div class="lyric-left"><div class="ljp">桜の下で強がって見栄を張ってたな</div><div class="lro">Sakura no shita de tsuyogatte mie wo hatteta na</div></div><div class="lyric-right"><div class="lid">Di bawah sakura, aku sok tegar padahal rapuh</div></div></div><div class="ll-item" data-line="3"><div class="lyric-left"><div class="ljp">記憶の奥底　むず痒くさせる</div><div class="lro">Kioku no okusoko muzugayuku saseru</div></div><div class="lyric-right"><div class="lid">Nyangkut di dalem ingatan, bikin ga bisa anteng</div></div></div><div class="ll-item" data-line="4"><div class="lyric-left"><div class="ljp">「一生」だとか「離さない」だとか</div><div class="lro">&quot;Isshou&quot; da toka &quot;hanasanai&quot; da toka</div></div><div class="lyric-right"><div class="lid">Kata &quot;selamanya&quot;, kata &quot;ga akan pergi&quot;</div></div></div><div class="ll-item" data-line="5"><div class="lyric-left"><div class="ljp">幼い私が顔を出してきて</div><div class="lro">Osanai watashi ga kao wo dashite kite</div></div><div class="lyric-right"><div class="lid">Diri aku yang dulu tiba-tiba muncul lagi</div></div></div><div class="ll-item" data-line="6"><div class="lyric-left"><div class="ljp">目を逸らした過去が鼻先を熱くした</div><div class="lro">Me wo sorashita kako ga hanasaki wo atsuku shita</div></div><div class="lyric-right"><div class="lid">Masa lalu yang aku hindari bikin mata ini panas</div></div></div><div class="ll-item" data-line="7"><div class="lyric-left"><div class="ljp">四月、青に触れて　春は瞬いた</div><div class="lro">Shigatsu, ao ni furete haru wa mataita</div></div><div class="lyric-right"><div class="lid">April, menyentuh warna biru, musim semi berkedip sebentar</div></div></div><div class="ll-item" data-line="8"><div class="lyric-left"><div class="ljp">見上げれば痛みさえも　淡くほぐれてゆく</div><div class="lro">Miagereba itami sae mo awaku hogrete yuku</div></div><div class="lyric-right"><div class="lid">Nengok ke langit, bahkan sakit itu perlahan mencair</div></div></div><div class="ll-item" data-line="9"><div class="lyric-left"><div class="ljp">散っていった恋も　枯れてしまった絆も</div><div class="lro">Chitte itta koi mo karete shimatta kizuna mo</div></div><div class="lyric-right"><div class="lid">Cinta yang udah pergi, ikatan yang udah layu</div></div></div><div class="ll-item" data-line="10"><div class="lyric-left"><div class="ljp">すべて今の私へ繋がっていた</div><div class="lro">Subete ima no watashi e tsunagatte ita</div></div><div class="lyric-right"><div class="lid">Semua itu yang bikin aku jadi aku sekarang</div></div></div><div class="ll-item" data-line="11"><div class="lyric-left"><div class="ljp">無邪気に舞う桜に　あなたを浮かべてる</div><div class="lro">Mujaki ni mau sakura ni anata wo ukabeiru</div></div><div class="lyric-right"><div class="lid">Ngeliat sakura melayang bebas, aku malah kebayang kamu</div></div></div><div class="ll-item" data-line="12"><div class="lyric-left"><div class="ljp">沈丁花の香りが胸を掠めるたび</div><div class="lro">Jinchoge no kaori ga mune wo kasumeru tabi</div></div><div class="lyric-right"><div class="lid">Tiap wangi jinchoge lewat, dada ini ikut nyeri</div></div></div><div class="ll-item" data-line="13"><div class="lyric-left"><div class="ljp">逃げ道だけを探す私は未熟だったな</div><div class="lro">Nigemichi dake wo sagasu watashi wa mijuku datta na</div></div><div class="lyric-right"><div class="lid">Aku yang dulu cuma tau kabur, emang belum siap</div></div></div><div class="ll-item" data-line="14"><div class="lyric-left"><div class="ljp">「秘密だよ」とか「理屈だから」とか</div><div class="lro">&quot;Himitsu da yo&quot; toka &quot;rikutsu dakara&quot; toka</div></div><div class="lyric-right"><div class="lid">&quot;Ini rahasia ya&quot;, &quot;ini masuk akal kok&quot;</div></div></div><div class="ll-item" data-line="15"><div class="lyric-left"><div class="ljp">語り合った夜はいくつもあって</div><div class="lro">Katariatta yoru wa ikutsu mo atte</div></div><div class="lyric-right"><div class="lid">Banyak banget malam yang kita habisin cuma ngobrol</div></div></div><div class="ll-item" data-line="16"><div class="lyric-left"><div class="ljp">人間の方程式はIやUじゃ解けなかった</div><div class="lro">Ningen no houteishiki wa I ya U ja tokenakatta</div></div><div class="lyric-right"><div class="lid">Hubungan itu ga bisa diselesaiin cuma pake &quot;aku&quot; atau &quot;kamu&quot;</div></div></div><div class="ll-item" data-line="17"><div class="lyric-left"><div class="ljp">四月、青が滲んで　春は振り向いた</div><div class="lro">Shigatsu, ao ga nijinde haru wa furimuite</div></div><div class="lyric-right"><div class="lid">April, birunya meleleh, musim semi menoleh</div></div></div><div class="ll-item" data-line="18"><div class="lyric-left"><div class="ljp">隠してた本音たちが　水面に揺らいでる</div><div class="lro">Kakushiteta honne tachi ga minamo ni yuraideru</div></div><div class="lyric-right"><div class="lid">Semua yang lama aku pendem mulai ngambang ke permukaan</div></div></div><div class="ll-item" data-line="19"><div class="lyric-left"><div class="ljp">言えなかった愛も　抱えすぎた想いも</div><div class="lro">Ienakatta ai mo kakaesugita omoi mo</div></div><div class="lyric-right"><div class="lid">Cinta yang ga pernah keucap, beban yang terlalu lama ditanggung</div></div></div><div class="ll-item" data-line="20"><div class="lyric-left"><div class="ljp">責めずに選び直して連れて行くよ</div><div class="lro">Semezu ni erabinаoshite tsurete iku yo</div></div><div class="lyric-right"><div class="lid">Tanpa nyalahin siapapun, aku pilih ulang dan bawa semuanya</div></div></div><div class="ll-item" data-line="21"><div class="lyric-left"><div class="ljp">ひらり舞う花影に　あなたを見てしまう</div><div class="lro">Hirari mau hanakage ni anata wo mite shimau</div></div><div class="lyric-right"><div class="lid">Di balik bayangan bunga yang melayang, ga sengaja aku ngeliat kamu lagi</div></div></div><div class="ll-item" data-line="22"><div class="lyric-left"><div class="ljp">傷つくことを恐れていた頃の私へ</div><div class="lro">Kizutsuku koto wo osorete ita koro no watashi e</div></div><div class="lyric-right"><div class="lid">Buat aku yang dulu takut banget sama rasa sakit</div></div></div><div class="ll-item" data-line="23"><div class="lyric-left"><div class="ljp">青の深さはこんなに尊いものだった</div><div class="lro">Ao no fukasa wa konnani toutoi mono datta</div></div><div class="lyric-right"><div class="lid">Ternyata dalamnya warna biru itu seberharga ini</div></div></div><div class="ll-item" data-line="24"><div class="lyric-left"><div class="ljp">今年はあの春に優しくなれる気がするよ</div><div class="lro">Kotoshi wa ano haru ni yasashiku nareru ki ga suru yo</div></div><div class="lyric-right"><div class="lid">Tahun ini kayaknya aku udah bisa berdamai sama musim semi itu</div></div></div><div class="ll-item" data-line="25"><div class="lyric-left"><div class="ljp">四月、青に触れて　春は瞬いた</div><div class="lro">Shigatsu, ao ni furete haru wa mataita</div></div><div class="lyric-right"><div class="lid">April, menyentuh warna biru, musim semi berkedip lagi</div></div></div><div class="ll-item" data-line="26"><div class="lyric-left"><div class="ljp">差し込む光の中で　花びらを手に乗せた</div><div class="lro">Sashikomu hikari no naka de hanabira wo te ni noseta</div></div><div class="lyric-right"><div class="lid">Di tengah cahaya yang nyeruak, aku naruh kelopak di telapak tangan</div></div></div><div class="ll-item" data-line="27"><div class="lyric-left"><div class="ljp">運命だと思う出逢いも　突然の別れも</div><div class="lro">Unmei da to omou deai mo totsuzen no wakare mo</div></div><div class="lyric-right"><div class="lid">Pertemuan yang kerasa takdir, perpisahan yang dateng tiba-tiba</div></div></div><div class="ll-item" data-line="28"><div class="lyric-left"><div class="ljp">これが私の生きた道</div><div class="lro">Kore ga watashi no ikita michi</div></div><div class="lyric-right"><div class="lid">Ini jalan yang udah aku pilih dan jalanin</div></div></div><div class="ll-item" data-line="29"><div class="lyric-left"><div class="ljp">綻びが引き寄せた　今日という春を生きる</div><div class="lro">Hokorobi ga hikiyoseta kyou to iu haru wo ikiru</div></div><div class="lyric-right"><div class="lid">Justru dari celah yang retak itu, aku ditarik buat hadir di musim semi hari ini</div></div></div>
+      <div class="ll-item" data-line="0"><div class="lyric-left"><div class="ljp">臆病風にシャツを揺らされて</div><div class="lro">Okubyou kaze ni shatsu wo yurasarete</div></div><div class="lyric-right"><div class="lid">Rasa takut ini aja udah cukup buat ngegoyahin aku</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(0)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="1"><div class="lyric-left"><div class="ljp">見えるものだけで恋を量っていたあの頃</div><div class="lro">Mieru mono dake de koi wo hakatte ita ano koro</div></div><div class="lyric-right"><div class="lid">Dulu aku cuma bisa nilai cinta dari yang keliatan mata</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(1)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="2"><div class="lyric-left"><div class="ljp">桜の下で強がって見栄を張ってたな</div><div class="lro">Sakura no shita de tsuyogatte mie wo hatteta na</div></div><div class="lyric-right"><div class="lid">Di bawah sakura, aku sok tegar padahal rapuh</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(2)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="3"><div class="lyric-left"><div class="ljp">記憶の奥底　むず痒くさせる</div><div class="lro">Kioku no okusoko muzugayuku saseru</div></div><div class="lyric-right"><div class="lid">Nyangkut di dalem ingatan, bikin ga bisa anteng</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(3)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="4"><div class="lyric-left"><div class="ljp">「一生」だとか「離さない」だとか</div><div class="lro">&quot;Isshou&quot; da toka &quot;hanasanai&quot; da toka</div></div><div class="lyric-right"><div class="lid">Kata &quot;selamanya&quot;, kata &quot;ga akan pergi&quot;</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(4)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="5"><div class="lyric-left"><div class="ljp">幼い私が顔を出してきて</div><div class="lro">Osanai watashi ga kao wo dashite kite</div></div><div class="lyric-right"><div class="lid">Diri aku yang dulu tiba-tiba muncul lagi</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(5)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="6"><div class="lyric-left"><div class="ljp">目を逸らした過去が鼻先を熱くした</div><div class="lro">Me wo sorashita kako ga hanasaki wo atsuku shita</div></div><div class="lyric-right"><div class="lid">Masa lalu yang aku hindari bikin mata ini panas</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(6)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="7"><div class="lyric-left"><div class="ljp">四月、青に触れて　春は瞬いた</div><div class="lro">Shigatsu, ao ni furete haru wa mataita</div></div><div class="lyric-right"><div class="lid">April, menyentuh warna biru, musim semi berkedip sebentar</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(7)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="8"><div class="lyric-left"><div class="ljp">見上げれば痛みさえも　淡くほぐれてゆく</div><div class="lro">Miagereba itami sae mo awaku hogrete yuku</div></div><div class="lyric-right"><div class="lid">Nengok ke langit, bahkan sakit itu perlahan mencair</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(8)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="9"><div class="lyric-left"><div class="ljp">散っていった恋も　枯れてしまった絆も</div><div class="lro">Chitte itta koi mo karete shimatta kizuna mo</div></div><div class="lyric-right"><div class="lid">Cinta yang udah pergi, ikatan yang udah layu</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(9)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="10"><div class="lyric-left"><div class="ljp">すべて今の私へ繋がっていた</div><div class="lro">Subete ima no watashi e tsunagatte ita</div></div><div class="lyric-right"><div class="lid">Semua itu yang bikin aku jadi aku sekarang</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(10)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="11"><div class="lyric-left"><div class="ljp">無邪気に舞う桜に　あなたを浮かべてる</div><div class="lro">Mujaki ni mau sakura ni anata wo ukabeiru</div></div><div class="lyric-right"><div class="lid">Ngeliat sakura melayang bebas, aku malah kebayang kamu</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(11)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="12"><div class="lyric-left"><div class="ljp">沈丁花の香りが胸を掠めるたび</div><div class="lro">Jinchoge no kaori ga mune wo kasumeru tabi</div></div><div class="lyric-right"><div class="lid">Tiap wangi jinchoge lewat, dada ini ikut nyeri</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(12)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="13"><div class="lyric-left"><div class="ljp">逃げ道だけを探す私は未熟だったな</div><div class="lro">Nigemichi dake wo sagasu watashi wa mijuku datta na</div></div><div class="lyric-right"><div class="lid">Aku yang dulu cuma tau kabur, emang belum siap</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(13)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="14"><div class="lyric-left"><div class="ljp">「秘密だよ」とか「理屈だから」とか</div><div class="lro">&quot;Himitsu da yo&quot; toka &quot;rikutsu dakara&quot; toka</div></div><div class="lyric-right"><div class="lid">&quot;Ini rahasia ya&quot;, &quot;ini masuk akal kok&quot;</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(14)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="15"><div class="lyric-left"><div class="ljp">語り合った夜はいくつもあって</div><div class="lro">Katariatta yoru wa ikutsu mo atte</div></div><div class="lyric-right"><div class="lid">Banyak banget malam yang kita habisin cuma ngobrol</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(15)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="16"><div class="lyric-left"><div class="ljp">人間の方程式はIやUじゃ解けなかった</div><div class="lro">Ningen no houteishiki wa I ya U ja tokenakatta</div></div><div class="lyric-right"><div class="lid">Hubungan itu ga bisa diselesaiin cuma pake &quot;aku&quot; atau &quot;kamu&quot;</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(16)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="17"><div class="lyric-left"><div class="ljp">四月、青が滲んで　春は振り向いた</div><div class="lro">Shigatsu, ao ga nijinde haru wa furimuite</div></div><div class="lyric-right"><div class="lid">April, birunya meleleh, musim semi menoleh</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(17)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="18"><div class="lyric-left"><div class="ljp">隠してた本音たちが　水面に揺らいでる</div><div class="lro">Kakushiteta honne tachi ga minamo ni yuraideru</div></div><div class="lyric-right"><div class="lid">Semua yang lama aku pendem mulai ngambang ke permukaan</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(18)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="19"><div class="lyric-left"><div class="ljp">言えなかった愛も　抱えすぎた想いも</div><div class="lro">Ienakatta ai mo kakaesugita omoi mo</div></div><div class="lyric-right"><div class="lid">Cinta yang ga pernah keucap, beban yang terlalu lama ditanggung</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(19)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="20"><div class="lyric-left"><div class="ljp">責めずに選び直して連れて行くよ</div><div class="lro">Semezu ni erabinаoshite tsurete iku yo</div></div><div class="lyric-right"><div class="lid">Tanpa nyalahin siapapun, aku pilih ulang dan bawa semuanya</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(20)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="21"><div class="lyric-left"><div class="ljp">ひらり舞う花影に　あなたを見てしまう</div><div class="lro">Hirari mau hanakage ni anata wo mite shimau</div></div><div class="lyric-right"><div class="lid">Di balik bayangan bunga yang melayang, ga sengaja aku ngeliat kamu lagi</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(21)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="22"><div class="lyric-left"><div class="ljp">傷つくことを恐れていた頃の私へ</div><div class="lro">Kizutsuku koto wo osorete ita koro no watashi e</div></div><div class="lyric-right"><div class="lid">Buat aku yang dulu takut banget sama rasa sakit</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(22)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="23"><div class="lyric-left"><div class="ljp">青の深さはこんなに尊いものだった</div><div class="lro">Ao no fukasa wa konnani toutoi mono datta</div></div><div class="lyric-right"><div class="lid">Ternyata dalamnya warna biru itu seberharga ini</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(23)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="24"><div class="lyric-left"><div class="ljp">今年はあの春に優しくなれる気がするよ</div><div class="lro">Kotoshi wa ano haru ni yasashiku nareru ki ga suru yo</div></div><div class="lyric-right"><div class="lid">Tahun ini kayaknya aku udah bisa berdamai sama musim semi itu</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(24)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="25"><div class="lyric-left"><div class="ljp">四月、青に触れて　春は瞬いた</div><div class="lro">Shigatsu, ao ni furete haru wa mataita</div></div><div class="lyric-right"><div class="lid">April, menyentuh warna biru, musim semi berkedip lagi</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(25)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="26"><div class="lyric-left"><div class="ljp">差し込む光の中で　花びらを手に乗せた</div><div class="lro">Sashikomu hikari no naka de hanabira wo te ni noseta</div></div><div class="lyric-right"><div class="lid">Di tengah cahaya yang nyeruak, aku naruh kelopak di telapak tangan</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(26)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="27"><div class="lyric-left"><div class="ljp">運命だと思う出逢いも　突然の別れも</div><div class="lro">Unmei da to omou deai mo totsuzen no wakare mo</div></div><div class="lyric-right"><div class="lid">Pertemuan yang kerasa takdir, perpisahan yang dateng tiba-tiba</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(27)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="28"><div class="lyric-left"><div class="ljp">これが私の生きた道</div><div class="lro">Kore ga watashi no ikita michi</div></div><div class="lyric-right"><div class="lid">Ini jalan yang udah aku pilih dan jalanin</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(28)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div><div class="ll-item" data-line="29"><div class="lyric-left"><div class="ljp">綻びが引き寄せた　今日という春を生きる</div><div class="lro">Hokorobi ga hikiyoseta kyou to iu haru wo ikiru</div></div><div class="lyric-right"><div class="lid">Justru dari celah yang retak itu, aku ditarik buat hadir di musim semi hari ini</div></div><div class="line-actions"><button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(29)" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button></div></div>
     </div>
 
 
@@ -1236,6 +1240,11 @@ document.addEventListener('DOMContentLoaded', function(){
   var studyMode = '';
   var focusIdx = 0;
 
+  function getPlainLine(i) {
+    var l = LYRICS_PLAIN[i] || {};
+    return { jp: l.jp || '', ro: l.ro || '', id: l.id || '' };
+  }
+
   window.setStudyMode = function(mode) {
     studyMode = mode || '';
     document.body.classList.remove('mode-quiz','mode-karaoke','mode-focus');
@@ -1281,6 +1290,17 @@ document.addEventListener('DOMContentLoaded', function(){
     if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
     saveProgress(focusIdx);
   }
+
+  window.shareLine = function(i) {
+    var l = getPlainLine(i);
+    var text = (l.jp ? l.jp + '\n' : '') + (l.ro ? l.ro + '\n' : '') + (l.id ? l.id + '\n' : '') +
+      '\n— ' + SONG_TITLE + ' · ' + SONG_ARTIST + '\n© YumeSubs yumelyrics.my.id';
+    if (navigator.share) {
+      navigator.share({ title: SONG_TITLE, text: text, url: location.href }).catch(function(){});
+      return;
+    }
+    navigator.clipboard.writeText(text).then(function(){ toast('Baris disalin 📋'); }).catch(function(){ toast('Gagal menyalin'); });
+  };
 
   function favMatches(f) {
     return f && (f.slug === SONG_SLUG || (f.id && f.id === SONG_ID));
@@ -1378,6 +1398,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.ll-item').forEach(function(row) {
       row.addEventListener('click', function(e) {
         if (studyMode !== 'quiz' && studyMode !== 'karaoke') return;
+        if (e.target.closest('.line-actions')) return;
         handleLinePick(row, parseInt(row.getAttribute('data-line'), 10));
       });
     });
@@ -2542,21 +2563,17 @@ window._smoothScrollTo = function(targetY, duration){
 window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
-  requestAnimationFrame(() => {
-    const y = target.getBoundingClientRect().top + window.scrollY - 80;
-    window._smoothScrollTo(y);
-    const btn = document.querySelector('.hero-actions .btn-primary');
-    if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
-  });
+  const y = target.getBoundingClientRect().top + window.scrollY - 80;
+  window._smoothScrollTo(y);
+  const btn = document.querySelector('.hero-actions .btn-primary');
+  if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
 };
 
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  requestAnimationFrame(() => {
-    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-    window._smoothScrollTo(y);
-  });
+  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+  window._smoothScrollTo(y);
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
@@ -3490,17 +3507,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   // kita naikkan noise/signal ratio dengan span bertumpuk.
   // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
 
-  // 6. Body observer — deteksi nav/bgwrap dibabat reader mode (0ms CPU, pasif)
-  window.addEventListener('load',function(){setTimeout(function(){
-    if(!window.MutationObserver) return;
-    var bodyObs=new MutationObserver(function(){
-      if(!document.querySelector('nav')||!document.getElementById('bgwrap')){
-        document.body.innerHTML='<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:#f5f0ea;color:#0a0812;font-family:sans-serif"><h2>Mode Sederhana Terdeteksi</h2><p style="margin-top:10px">Lirik tidak bisa ditampilkan di mode ini.<br>Matikan fitur ini dan muat ulang halaman.</p></div>';
-        bodyObs.disconnect();
-      }
-    });
-    bodyObs.observe(document.body,{childList:true});
-  },3000);});
+  // 6. Polling ringan sebagai fallback — delayed agar tidak halangi render
+  window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode, 800);},4000);});
 })();
 </script>
 <script>
