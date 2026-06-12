@@ -5,6 +5,8 @@
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://image-cdn-fa.spotifycdn.com" crossorigin>
+<link rel="preload" href="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uQ.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=swap">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -25,8 +27,7 @@
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
 <style>html{-webkit-text-size-adjust:100%}</style>
-<link rel="preconnect" href="https://www.gstatic.com">
-<link rel="preconnect" href="https://firestore.googleapis.com">
+<link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
 <title>Lirik Spiral - Longman + Terjemahan Indonesia | YumeLyrics</title>
@@ -856,7 +857,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="kanji-bg">S</div>
     <div class="cover-wrap">
       <div class="cover-frame">
-        <img class="cover-img" src="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0271f37528b331c70d38aec1fb" alt="Cover Spiral - Longman" width="480" height="480" loading="eager" decoding="sync" sizes="(max-width:600px) 100vw, 480px" fetchpriority="high">
+        <img class="cover-img" src="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0271f37528b331c70d38aec1fb" alt="Cover Spiral - Longman" width="480" height="480" loading="eager" decoding="sync" sizes="(max-width:600px) 100vw, 480px" crossorigin="anonymous" fetchpriority="high">
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
@@ -2549,17 +2550,21 @@ window._smoothScrollTo = function(targetY, duration){
 window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
-  const y = target.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
-  const btn = document.querySelector('.hero-actions .btn-primary');
-  if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
+  requestAnimationFrame(() => {
+    const y = target.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+    const btn = document.querySelector('.hero-actions .btn-primary');
+    if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
+  });
 };
 
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  requestAnimationFrame(() => {
+    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
