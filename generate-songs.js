@@ -1226,7 +1226,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const geoAeoMeta = buildGeoAeoMeta({
     title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeLyrics`,
     description: metaDesc,
-    url: `${BASE_URL}/lagu/${slug}`,
+    url: `${BASE_URL}/lagu/${slug}.html`,
     dateModified: today,
   });
   const schema = JSON.stringify([
@@ -1240,7 +1240,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       ...(song.genre ? {"genre": song.genre} : {}),
       "inLanguage":"ja",
       "description":metaDesc,
-      "url":`${BASE_URL}/lagu/${slug}`,
+      "url":`${BASE_URL}/lagu/${slug}.html`,
       ...(songType ? {"musicCompositionForm": songType} : {}),
       ...(anime ? {"isPartOf": {"@type":"TVSeries","name":anime,...(animeId||animeEn?{alternateName:[animeId,animeEn].filter(Boolean)}:{})}} : {}),
       ...(song.img ? {"image":{"@type":"ImageObject","url":song.img,"width":600,"height":600}} : {}),
@@ -1258,7 +1258,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "@type":"WebPage",
       "name":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
       "description":metaDesc,
-      "url":`${BASE_URL}/lagu/${slug}`,
+      "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
       "datePublished":"2025-01-01",
       "dateModified":today,
@@ -1285,7 +1285,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
         "itemListElement":[
           {"@type":"ListItem","position":1,"name":"Beranda","item":BASE_URL},
           {"@type":"ListItem","position":2,"name":"Katalog","item":`${BASE_URL}/index.html`},
-          {"@type":"ListItem","position":3,"name":`${titleMain} - ${artist}`,"item":`${BASE_URL}/lagu/${slug}`}
+          {"@type":"ListItem","position":3,"name":`${titleMain} - ${artist}`,"item":`${BASE_URL}/lagu/${slug}.html`}
         ]
       },
       "mainEntity":{
@@ -1299,7 +1299,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "@type":"Article",
       "headline":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
       "description":metaDesc,
-      "url":`${BASE_URL}/lagu/${slug}`,
+      "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
       "datePublished":"2025-01-01",
       "dateModified":today,
@@ -1377,7 +1377,7 @@ ${THEME_BOOT_SCRIPT}
 ].filter(Boolean).join(', ')}">
 <meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
 <meta property="og:description" content="${escHtml(metaDesc)}">
-<meta property="og:url" content="${BASE_URL}/lagu/${slug}">
+<meta property="og:url" content="${BASE_URL}/lagu/${slug}.html">
 <meta property="og:type" content="music.song">
 <meta property="og:site_name" content="YumeLyrics">
 <meta property="og:locale" content="id_ID">
@@ -1391,9 +1391,9 @@ ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
 <meta name="twitter:description" content="${escHtml(metaDesc)}">
 ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
-<link rel="canonical" href="${BASE_URL}/lagu/${slug}">
-<link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}">
-<link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}">
+<link rel="canonical" href="${BASE_URL}/lagu/${slug}.html">
+<link rel="alternate" hreflang="id" href="${BASE_URL}/lagu/${slug}.html">
+<link rel="alternate" hreflang="x-default" href="${BASE_URL}/lagu/${slug}.html">
 <link rel="icon" type="image/jpeg" href="../anime_icon.png">
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${faqSchema}</script>
