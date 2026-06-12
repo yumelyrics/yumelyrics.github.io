@@ -48,7 +48,7 @@ async function sendDiscordNotification(generatedSongs, success = true) {
       color = 15158332;
     } else {
       title = '🎵 Lagu Baru Diupload';
-      desc = `**${count}** lagu baru berhasil diupload ke website.`;
+      desc = `**${count}** lagu baru berhasil ditambahkan ke website.`;
       listTitle = '🎶 Lagu Baru';
       color = 3066993;
     }
@@ -225,9 +225,10 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${FONT_URL}">`;
 
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
 
@@ -1262,6 +1263,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 <head>
 <meta charset="UTF-8">
 ${THEME_BOOT_SCRIPT}
+${FONT_HEAD}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -1281,8 +1283,6 @@ ${THEME_BOOT_SCRIPT}
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
 <style>html{-webkit-text-size-adjust:100%}</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
@@ -1333,7 +1333,6 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
-${FONT_HEAD}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 ${CSS_TOKENS}
@@ -4779,8 +4778,17 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   // kita naikkan noise/signal ratio dengan span bertumpuk.
   // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
 
-  // 6. Polling ringan sebagai fallback — delayed agar tidak halangi render
-  window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode, 800);},4000);});
+  // 6. Body observer — deteksi nav/bgwrap dibabat reader mode (0ms CPU, pasif)
+  window.addEventListener('load',function(){setTimeout(function(){
+    if(!window.MutationObserver) return;
+    var bodyObs=new MutationObserver(function(){
+      if(!document.querySelector('nav')||!document.getElementById('bgwrap')){
+        document.body.innerHTML='<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:#f5f0ea;color:#0a0812;font-family:sans-serif"><h2>Mode Sederhana Terdeteksi</h2><p style="margin-top:10px">Lirik tidak bisa ditampilkan di mode ini.<br>Matikan fitur ini dan muat ulang halaman.</p></div>';
+        bodyObs.disconnect();
+      }
+    });
+    bodyObs.observe(document.body,{childList:true});
+  },3000);});
 })();
 </script>
 <script>
