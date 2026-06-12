@@ -47,8 +47,8 @@ async function sendDiscordNotification(generatedSongs, success = true) {
       listTitle = '🎶 Lagu';
       color = 15158332;
     } else {
-      title = '🎵 Lagu Baru Ditambahkan';
-      desc = `**${count}** lagu baru berhasil ditambahkan ke website.`;
+      title = '🎵 Lagu Baru Diupload';
+      desc = `**${count}** lagu baru berhasil diupload ke website.`;
       listTitle = '🎶 Lagu Baru';
       color = 3066993;
     }
@@ -225,10 +225,9 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONT_URL}">`;
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
 
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
 
@@ -335,7 +334,7 @@ function imgTag(src, alt, opts = {}) {
   if (!src) return '';
   const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
-  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="${eager ? 'sync' : 'async'}" sizes="${sizes}"${fp}>`;
+  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
 }
 
 function renderText(str) {
@@ -1151,7 +1150,9 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
     (l.ro ? '<div class="lro">' + escHtml(l.ro) + '</div>' : '') +
     '</div>' +
     (l.id ? '<div class="lyric-right"><div class="lid">' + escHtml(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
-    '</div>'
+    '<div class="line-actions">' +
+    '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
+    '</div></div>'
   ).join('');
 
 
@@ -1263,7 +1264,6 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
 <head>
 <meta charset="UTF-8">
 ${THEME_BOOT_SCRIPT}
-${FONT_HEAD}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -1283,6 +1283,8 @@ ${FONT_HEAD}
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
 <style>html{-webkit-text-size-adjust:100%}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
@@ -1333,6 +1335,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
+${FONT_HEAD}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 ${CSS_TOKENS}
@@ -1469,10 +1472,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
 .progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
 .ll-item{position:relative;pointer-events:none}
+.line-actions{pointer-events:auto;position:relative;z-index:4}
 .lyric-left,.lyric-right,.ljp,.lro,.lid{pointer-events:none;-webkit-tap-highlight-color:transparent}
 body.mode-quiz .ll-item,body.mode-karaoke .ll-item{pointer-events:auto}
 body.mode-quiz .lyric-left,body.mode-quiz .lyric-right,body.mode-quiz .ljp,body.mode-quiz .lid,
 body.mode-karaoke .lyric-left,body.mode-karaoke .lyric-right,body.mode-karaoke .ljp,body.mode-karaoke .lid{pointer-events:auto}
+.line-actions{position:absolute;top:.55rem;right:.35rem;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
+.line-share-btn{opacity:0;border:none;background:transparent;color:var(--smoke);cursor:pointer;font-size:.7rem;padding:.15rem .35rem;transition:opacity .15s,color .15s}
+.ll-item:hover .line-share-btn{opacity:1}
+.line-share-btn:hover{color:var(--gold)}
+@media(max-width:768px){.line-actions{top:.4rem;right:.2rem}.line-share-btn{opacity:.55}}
 body.mode-quiz .lid{opacity:0!important;filter:blur(6px);pointer-events:none;transition:opacity .25s,filter .25s}
 body.mode-quiz .ll-item.revealed .lid{opacity:1!important;filter:none!important;pointer-events:auto}
 body.mode-quiz .ll-item{cursor:pointer}
@@ -1621,8 +1630,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .related-section{margin-top:0;padding:0}
 .related-label{display:none}
 .related-list{display:none}
-</style>
-<style id="nc-css" media="not all">
+
 /* ── ABOUT SECTION ── */
 .cmsec{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);overflow:visible;height:auto;max-height:none}
 .cmtit{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
@@ -1903,9 +1911,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .se-foot-main{flex-direction:column}
   .se-save,.se-gen,.se-cancel{width:100%}
 }
-</style>
-<script>if(window.requestIdleCallback)requestIdleCallback(function(){document.getElementById('nc-css').media='all'},{timeout:2000});else setTimeout(function(){document.getElementById('nc-css').media='all'},300);</script>
-<style>
+
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 .hero-text>*{animation:fadeUp .6s ease both}
@@ -2528,6 +2534,11 @@ document.addEventListener('DOMContentLoaded', function(){
   var studyMode = '';
   var focusIdx = 0;
 
+  function getPlainLine(i) {
+    var l = LYRICS_PLAIN[i] || {};
+    return { jp: l.jp || '', ro: l.ro || '', id: l.id || '' };
+  }
+
   window.setStudyMode = function(mode) {
     studyMode = mode || '';
     document.body.classList.remove('mode-quiz','mode-karaoke','mode-focus');
@@ -2573,6 +2584,17 @@ document.addEventListener('DOMContentLoaded', function(){
     if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
     saveProgress(focusIdx);
   }
+
+  window.shareLine = function(i) {
+    var l = getPlainLine(i);
+    var text = (l.jp ? l.jp + '\\n' : '') + (l.ro ? l.ro + '\\n' : '') + (l.id ? l.id + '\\n' : '') +
+      '\\n— ' + SONG_TITLE + ' · ' + SONG_ARTIST + '\\n© YumeSubs yumelyrics.my.id';
+    if (navigator.share) {
+      navigator.share({ title: SONG_TITLE, text: text, url: location.href }).catch(function(){});
+      return;
+    }
+    navigator.clipboard.writeText(text).then(function(){ toast('Baris disalin 📋'); }).catch(function(){ toast('Gagal menyalin'); });
+  };
 
   function favMatches(f) {
     return f && (f.slug === SONG_SLUG || (f.id && f.id === SONG_ID));
@@ -2670,6 +2692,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.ll-item').forEach(function(row) {
       row.addEventListener('click', function(e) {
         if (studyMode !== 'quiz' && studyMode !== 'karaoke') return;
+        if (e.target.closest('.line-actions')) return;
         handleLinePick(row, parseInt(row.getAttribute('data-line'), 10));
       });
     });
@@ -4778,17 +4801,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   // kita naikkan noise/signal ratio dengan span bertumpuk.
   // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
 
-  // 6. Body observer — deteksi nav/bgwrap dibabat reader mode (0ms CPU, pasif)
-  window.addEventListener('load',function(){setTimeout(function(){
-    if(!window.MutationObserver) return;
-    var bodyObs=new MutationObserver(function(){
-      if(!document.querySelector('nav')||!document.getElementById('bgwrap')){
-        document.body.innerHTML='<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;background:#f5f0ea;color:#0a0812;font-family:sans-serif"><h2>Mode Sederhana Terdeteksi</h2><p style="margin-top:10px">Lirik tidak bisa ditampilkan di mode ini.<br>Matikan fitur ini dan muat ulang halaman.</p></div>';
-        bodyObs.disconnect();
-      }
-    });
-    bodyObs.observe(document.body,{childList:true});
-  },3000);});
+  // 6. Polling ringan sebagai fallback — delayed agar tidak halangi render
+  window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode, 800);},4000);});
 })();
 </script>
 <script>
