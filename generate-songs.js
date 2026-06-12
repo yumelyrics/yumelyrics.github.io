@@ -47,7 +47,7 @@ async function sendDiscordNotification(generatedSongs, success = true) {
       listTitle = '🎶 Lagu';
       color = 15158332;
     } else {
-      title = '🎵 Lagu Baru Diupload';
+      title = '🎵 Lagu Baru Ditambahkan';
       desc = `**${count}** lagu baru berhasil ditambahkan ke website.`;
       listTitle = '🎶 Lagu Baru';
       color = 3066993;
