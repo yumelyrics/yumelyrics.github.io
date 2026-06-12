@@ -5,9 +5,11 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import fs from 'fs';
+import { writeFile as fsWrite } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { minify as minifyHtmlTerser } from 'html-minifier-terser';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -229,6 +231,9 @@ const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:it
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
 
+/** Non-blocking font stylesheet — loaded via print media trick so it never blocks rendering. */
+const FONT_LINK = `<link rel="stylesheet" href="${FONT_URL}" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
 
 /** Token + latar — selaras dengan index.html (夢の夜 · sakura dusk). */
@@ -259,6 +264,43 @@ const CSS_TOKENS = `
 }
 .wrap{position:relative;z-index:1}
 `;
+
+// ── Performance helpers ──────────────────────────────────────────────────────
+
+/** Concurrency-limited Promise.all — runs at most `n` tasks at a time. */
+async function pConcurrent(n, tasks) {
+  let i = 0;
+  async function worker() {
+    while (i < tasks.length) {
+      const idx = i++;
+      await tasks[idx]();
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
+}
+
+/** HTML minification options — safe for page output; keeps comments out of markup. */
+const MINIFY_OPTIONS = {
+  collapseWhitespace: true,
+  removeComments: false,
+  minifyCSS: true,
+  minifyJS: false,
+  keepClosingSlash: false,
+  removeAttributeQuotes: false,
+};
+async function minifyHtml(html) {
+  try { return await minifyHtmlTerser(html, MINIFY_OPTIONS); }
+  catch { return html; }
+}
+
+/** Escape a string for XML/sitemap — escapes &, <, > (title) or just & (artist). */
+function sitemapEscape(str, escGt = true) {
+  let s = String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  if (escGt) s = s.replace(/>/g, '&gt;');
+  return s;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 function toSlug(titleRo, titleJp, docId) {
   if (titleRo) {
@@ -599,7 +641,7 @@ const GLOSSARY_TERM_DEFS = [
   { slug: 'tsutsu-aru', title: '〜つつある', match: 'つつある', desc: 'N1 · Sedang berlangsung (perubahan).' },
 ];
 
-function buildGlossaryPages(songMeta, today) {
+async function buildGlossaryPages(songMeta, today) {
   if (!fs.existsSync('kata')) fs.mkdirSync('kata');
   const old = fs.readdirSync('kata').filter(f => f.endsWith('.html'));
   for (const f of old) fs.unlinkSync(path.join('kata', f));
@@ -649,6 +691,7 @@ function buildGlossaryPages(songMeta, today) {
 <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: `Apa itu pola tata bahasa Jepang ${term.title}?`, acceptedAnswer: { '@type': 'Answer', text: term.desc + ' Temukan contoh penggunaan nyata dari lirik lagu Jepang di YumeLyrics.' } }, { '@type': 'Question', name: `Bagaimana cara menggunakan ${term.title} dalam bahasa Jepang?`, acceptedAnswer: { '@type': 'Answer', text: term.desc } }] })}</script>
 ${buildGeoAeoMeta({ title: `${term.title} — Glosarium | YumeLyrics`, description: term.desc + ' Contoh dari lirik lagu Jepang di YumeLyrics.', url: `${BASE_URL}/kata/${term.slug}.html` })}
 ${FONT_HEAD}
+${FONT_LINK}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:2rem 1.5rem 4rem}
 .wrap{max-width:720px;margin:0 auto}
@@ -679,6 +722,7 @@ ${exHtml}
 <link rel="canonical" href="${BASE_URL}/kata/">
 ${buildGeoAeoMeta({ title: 'Glosarium Tata Bahasa Jepang | YumeLyrics', description: 'Glosarium partikel dan pola bahasa Jepang dari lirik lagu — contoh nyata dari katalog YumeLyrics.', url: `${BASE_URL}/kata/` })}
 ${FONT_HEAD}
+${FONT_LINK}
 ${THEME_BOOT_SCRIPT}
 <style>${CSS_TOKENS}body{font-family:var(--sans);background:var(--paper);color:var(--ink);padding:3rem 1.5rem}
 .wrap{max-width:900px;margin:0 auto}
@@ -866,7 +910,7 @@ function buildArtistFAQSchema(artistName, count, metaDesc) {
   });
 }
 
-function generateArtistIndexHTML(artists) {
+async function generateArtistIndexHTML(artists) {
   const sorted = [...artists].sort((a, b) => a.name.localeCompare(b.name, 'id'));
   const totalSongs = sorted.reduce((n, a) => n + a.count, 0);
   const cards = sorted.map(a => `<a class="related-card" href="${escHtml(a.slug)}.html">
@@ -890,7 +934,7 @@ function generateArtistIndexHTML(artists) {
     isPartOf: { '@type': 'WebSite', name: 'YumeLyrics', alternateName: ['YumeSubs', 'Yume Lyrics'], url: BASE_URL },
   });
 
-  return `<!DOCTYPE html>
+  return minifyHtml(`<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -907,6 +951,7 @@ function generateArtistIndexHTML(artists) {
 <script type="application/ld+json">${schema}</script>
 ${buildGeoAeoMeta({ title: 'Daftar Artis — Lirik Jepang + Terjemahan Indonesia | YumeLyrics', description: sorted.length + ' artis dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.', url: BASE_URL + '/artis/' })}
 ${FONT_HEAD}
+${FONT_LINK}
 ${THEME_BOOT_SCRIPT}
 <style>
 ${CSS_TOKENS}
@@ -956,10 +1001,10 @@ ${buildSiteNav('../', 'artis')}
 </div>
 ${SITE_NAV_SCRIPT}
 </body>
-</html>`;
+</html>`);
 }
 
-function generateArtistHTML(artistName, songs, artistSlug) {
+async function generateArtistHTML(artistName, songs, artistSlug) {
   const count = songs.length;
   const metaDesc = `${count} lagu ${artistName} dengan lirik Jepang, romaji, dan terjemahan bahasa Indonesia di YumeLyrics.`;
   const cards = songs.map(r => `<a class="related-card" href="../lagu/${r.slug}.html">
@@ -989,7 +1034,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
     },
   });
 
-  return `<!DOCTYPE html>
+  return minifyHtml(`<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -1008,6 +1053,7 @@ function generateArtistHTML(artistName, songs, artistSlug) {
 <script type="application/ld+json">${buildArtistFAQSchema(artistName, count, metaDesc)}</script>
 ${buildGeoAeoMeta({ title: 'Lirik ' + artistName + ' — ' + count + ' Lagu + Terjemahan Indonesia | YumeLyrics', description: metaDesc, url: BASE_URL + '/artis/' + artistSlug + '.html' })}
 ${FONT_HEAD}
+${FONT_LINK}
 ${THEME_BOOT_SCRIPT}
 <style>
 ${CSS_TOKENS}
@@ -1090,10 +1136,10 @@ ${buildSiteNav('../', 'artis')}
 </div>
 ${SITE_NAV_SCRIPT}
 </body>
-</html>`;
+</html>`);
 }
 
-function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistSlug='') {
+async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistSlug='') {
   const titleDisplay = song.titleJp || '';
   const titleRo      = song.titleRo || '';
   const titleId      = song.titleId || '';
@@ -1259,7 +1305,7 @@ function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistS
     }
   ]);
 
-  return `<!DOCTYPE html>
+  return minifyHtml(`<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -1336,6 +1382,7 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
 ${FONT_HEAD}
+${FONT_LINK}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 ${CSS_TOKENS}
@@ -5028,10 +5075,11 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 })();
 </script>
 </body>
-</html>`;
+</html>`);
 }
 
 async function main() {
+  const t0 = Date.now();
   const fullMode = process.env.GENERATE_MODE === 'full' || process.argv.includes('--full');
   console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
   console.log('🔥 Menghubungkan ke Firebase...');
@@ -5059,12 +5107,11 @@ async function main() {
     `  <url><loc>${BASE_URL}/stories.html</loc><lastmod>${today}</lastmod><priority>0.65</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/contact.html</loc><lastmod>${today}</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/artis/</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>`,
-
   ];
   const slugMap = {};
 
-  // Build slug map dulu (pass 1) baru generate HTML (pass 2)
-  const songMeta = []; // [{song, slug}]
+  // Pass 1: build slug map (required before any HTML can reference other songs)
+  const songMeta = [];
   for(const song of songs){
     const slug = toSlug(song.titleRo, song.titleJp, song.id);
     let finalSlug=slug, counter=2;
@@ -5078,7 +5125,7 @@ async function main() {
     if (seeded) console.log(`📋 Manifest diisi dari ${seeded} file HTML yang sudah ada (tanpa generate ulang)`);
   }
 
-  // Build lookup: artist (normalized) -> songs, anime -> songs
+  // Build lookup maps: artist → songs, anime → songs
   const byArtist = {};
   const artistMeta = {};
   const byAnime  = {};
@@ -5132,9 +5179,12 @@ async function main() {
   let generatedSongCount = 0;
   let skippedSongCount = 0;
   const generatedSongs = [];
+  const dirtyFlagClears = []; // collected, flushed all at once after the loop
 
   console.log('🎵 Generate halaman lagu...');
-  for(const {song, slug: finalSlug} of songMeta){
+
+  // ── Pass 2: parallel HTML generation with concurrency cap ──────────────────
+  await pConcurrent(12, songMeta.map(({song, slug: finalSlug}) => async () => {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
       const skipHash = songContentHash(song);
@@ -5142,8 +5192,9 @@ async function main() {
       if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
         manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
       }
-      const skipTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const skipArtist = (song.artist||'').replace(/&/g,'&amp;');
+      // Precompute escaped values once (was duplicated in original)
+      const skipTitle  = sitemapEscape(song.titleRo||song.titleJp||'');
+      const skipArtist = sitemapEscape(song.artist||'', false);
       const skipImgBlock = song.img ? `
     <image:image>
       <image:loc>${song.img}</image:loc>
@@ -5160,7 +5211,7 @@ async function main() {
     </video:video>` : '';
       urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${skipImgBlock}${skipVideoBlock}
   </url>`);
-      continue;
+      return;
     }
 
     const artistKey = song.artist ? normalizeArtistKey(song.artist) : '';
@@ -5175,11 +5226,15 @@ async function main() {
     const songPath = path.join('lagu', `${finalSlug}.html`);
     const wasDirty = isHtmlDirty(song);
     const songKind = fullMode ? 'refresh' : (fs.existsSync(songPath) ? 'edit' : 'upload');
-    const html=generateHTML(song,finalSlug,relByArtist,relByAnime,artistKey ? artistSlugByKey[artistKey] : '');
-    fs.writeFileSync(songPath, html, 'utf8');
+
+    // generateHTML is now async (minification + async write overlap via await)
+    const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '');
+    await fsWrite(songPath, html, 'utf8'); // non-blocking file write
+
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
     if (!fullMode && wasDirty) {
-      await clearHtmlDirtyFlag(db, song.id);
+      // Collect Firebase updates — flush all at once after the loop (no serial awaiting)
+      dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
     }
     generatedSongCount++;
     if (shouldNotifyDiscord(song, songKind)) {
@@ -5193,8 +5248,9 @@ async function main() {
       });
     }
     console.log(`  ✓ lagu/${finalSlug}.html`);
-    const genTitle = (song.titleRo||song.titleJp||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const genArtist = (song.artist||'').replace(/&/g,'&amp;');
+    // Precompute escaped values once (was duplicated in original)
+    const genTitle  = sitemapEscape(song.titleRo||song.titleJp||'');
+    const genArtist = sitemapEscape(song.artist||'', false);
     const imgTag = song.img ? `
     <image:image>
       <image:loc>${song.img}</image:loc>
@@ -5211,38 +5267,42 @@ async function main() {
     </video:video>` : '';
     urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
   </url>`);
+  }));
+
+  // Flush all dirty-flag Firestore updates in one parallel batch
+  if (dirtyFlagClears.length) {
+    await Promise.all(dirtyFlagClears);
+    console.log(`   Cleared ${dirtyFlagClears.length} dirty flag(s) (batched)`);
   }
 
   const artistIndexList = [];
   console.log(`🎤 Halaman artis (${Object.keys(byArtist).length} total)...`);
+
+  // Generate artist pages with async writes (fan-out, then collect)
+  const artistWritePromises = [];
   for(const key of Object.keys(byArtist).sort((a, b) => artistMeta[a].displayName.localeCompare(artistMeta[b].displayName, 'id'))){
     const meta = artistMeta[key];
     const aSlug = meta.slug;
     const artistPath = path.join('artis', `${aSlug}.html`);
     const needArtist = fullMode || touchedArtistKeys.has(key) || !fs.existsSync(artistPath);
-    if (!needArtist) {
-      artistIndexList.push({
-        name: meta.displayName,
-        slug: aSlug,
-        count: byArtist[key].length,
-        img: byArtist[key][0]?.img || '',
-      });
-      urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
-      continue;
-    }
-    const artistHtml = generateArtistHTML(meta.displayName, byArtist[key], aSlug);
-    fs.writeFileSync(artistPath, artistHtml, 'utf8');
     artistIndexList.push({
       name: meta.displayName,
       slug: aSlug,
       count: byArtist[key].length,
       img: byArtist[key][0]?.img || '',
     });
-    console.log(`  ✓ artis/${aSlug}.html (${byArtist[key].length} lagu) — ${meta.displayName}`);
     urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
+    if (!needArtist) continue;
+    artistWritePromises.push(
+      generateArtistHTML(meta.displayName, byArtist[key], aSlug)
+        .then(html => fsWrite(artistPath, html, 'utf8'))
+        .then(() => console.log(`  ✓ artis/${aSlug}.html (${byArtist[key].length} lagu) — ${meta.displayName}`))
+    );
   }
+  await Promise.all(artistWritePromises);
 
-  fs.writeFileSync(path.join('artis', 'index.html'), generateArtistIndexHTML(artistIndexList), 'utf8');
+  const artistIndexHtml = await generateArtistIndexHTML(artistIndexList);
+  await fsWrite(path.join('artis', 'index.html'), artistIndexHtml, 'utf8');
   console.log(`  ✓ artis/index.html (${artistIndexList.length} artis)`);
 
   const currentSongIds = new Set(songs.map(s => s.id));
@@ -5261,7 +5321,7 @@ async function main() {
 
   if (fullMode || generatedSongCount > 0) {
     console.log('📖 Glosarium tata bahasa...');
-    const glossUrls = buildGlossaryPages(songMeta, today);
+    const glossUrls = await buildGlossaryPages(songMeta, today);
     urls.push(...glossUrls);
   } else {
     console.log('📖 Glosarium dilewati (tidak ada lagu yang di-generate ulang)');
@@ -5275,6 +5335,7 @@ async function main() {
   }
 
   saveManifest(manifest);
+
   if (generatedSongs.length > 0) {
     await sendDiscordNotification(generatedSongs, true);
     console.log(`   Notif Discord: ${generatedSongs.length} lagu baru`);
@@ -5282,8 +5343,10 @@ async function main() {
     console.log('   Notif Discord dilewati — tidak ada lagu baru.');
   }
 
-  fs.writeFileSync('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`,'utf8');
-  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir)`);
+  // Async sitemap write (no need to block before process.exit)
+  await fsWrite('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`, 'utf8');
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir) — ${elapsed}s`);
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
 }
