@@ -230,8 +230,7 @@ const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://image-cdn-fa.spotifycdn.com" crossorigin>
 <link rel="preload" href="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uQ.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${FONT_URL}" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+<link rel="stylesheet" href="${FONT_URL}">`;
 
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
 
@@ -247,7 +246,7 @@ const CSS_TOKENS = `
   --sans:var(--en);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
   --accent:var(--rose);--accent2:var(--gold);--accent3:var(--plum);--red:#c0392b;
-  --nm-transition:background .35s ease,border-color .35s ease,box-shadow .35s ease;
+  --nm-transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease;
 }
 [data-theme="dark"]{
   --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
@@ -1748,11 +1747,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .footer-links{display:flex;gap:2.5rem}
 .footer-col{display:flex;flex-direction:column;gap:.75rem}
 .footer-col-label{font-size:.5rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(200,191,176,.35);margin-bottom:.25rem}
-.footer-link{font-size:.72rem;color:rgba(200,191,176,.55);text-decoration:none;letter-spacing:.04em}
+.footer-link{font-size:.72rem;color:rgba(200,191,176,.55);text-decoration:none;transition:color .2s;letter-spacing:.04em}
 .footer-link:hover{color:var(--gold)}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none;box-shadow:0 4px 24px rgba(10,8,18,.15)}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;box-shadow:0 4px 24px rgba(10,8,18,.15)}
 .toast.on{opacity:1;transform:translateY(0)}
 
 /* ── COPY HINT TOAST (GraphComment) ── */
