@@ -4,6 +4,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import fs from 'fs';
 import { writeFile as fsWrite } from 'fs/promises';
 import path from 'path';
@@ -174,9 +175,9 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Hapus entry manifest untuk lagu yang htmlDirty supaya needsSongGenerate
-    // pasti return true (prev === null) tanpa perlu hapus manifest file manual.
-    if (isHtmlDirty(song)) { delete manifest.songs[song.id]; continue; }
+    // JANGAN hapus dari manifest — biarkan prev.hash tetap ada supaya
+    // needsSongGenerate bisa skip lagu yang dirty tapi isinya belum berubah.
+    if (isHtmlDirty(song)) { continue; }
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -5031,8 +5032,22 @@ async function main() {
   const fullMode = process.env.GENERATE_MODE === 'full' || process.argv.includes('--full');
   console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
   console.log('🔥 Menghubungkan ke Firebase...');
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Login sebagai admin supaya clearHtmlDirtyFlag bisa nulis ke Firestore.
+  // Set FIREBASE_ADMIN_EMAIL & FIREBASE_ADMIN_PASSWORD di GitHub Actions Secrets.
+  if (process.env.FIREBASE_ADMIN_EMAIL && process.env.FIREBASE_ADMIN_PASSWORD) {
+    try {
+      await signInWithEmailAndPassword(auth, process.env.FIREBASE_ADMIN_EMAIL, process.env.FIREBASE_ADMIN_PASSWORD);
+      console.log('✅ Script berhasil login sebagai Admin YumeSubs');
+    } catch (e) {
+      console.warn('⚠ Script gagal login Firebase Auth:', e.message, '— clearHtmlDirtyFlag mungkin gagal');
+    }
+  } else {
+    console.warn('⚠ FIREBASE_ADMIN_EMAIL/PASSWORD tidak di-set — clearHtmlDirtyFlag akan gagal (permission denied)');
+  }
 
   const snap = await getDocs(query(collection(db,'songs'), orderBy('order','asc')));
   const songs = snap.docs.map(d=>({id:d.id,...d.data()}));
