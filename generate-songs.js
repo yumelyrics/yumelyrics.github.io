@@ -228,6 +228,8 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://image-cdn-fa.spotifycdn.com" crossorigin>
+<link rel="preload" href="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uQ.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${FONT_URL}">`;
 
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
@@ -335,7 +337,7 @@ function imgTag(src, alt, opts = {}) {
   if (!src) return '';
   const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
-  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="${eager ? 'sync' : 'async'}" sizes="${sizes}"${fp}>`;
+  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="${eager ? 'sync' : 'async'}" sizes="${sizes}" crossorigin="anonymous"${fp}>`;
 }
 
 function renderText(str) {
@@ -1283,8 +1285,7 @@ ${FONT_HEAD}
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
 <style>html{-webkit-text-size-adjust:100%}</style>
-<link rel="preconnect" href="https://www.gstatic.com">
-<link rel="preconnect" href="https://firestore.googleapis.com">
+<link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
 <title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
@@ -3834,17 +3835,21 @@ window._smoothScrollTo = function(targetY, duration){
 window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
-  const y = target.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
-  const btn = document.querySelector('.hero-actions .btn-primary');
-  if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
+  requestAnimationFrame(() => {
+    const y = target.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+    const btn = document.querySelector('.hero-actions .btn-primary');
+    if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
+  });
 };
 
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  requestAnimationFrame(() => {
+    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
