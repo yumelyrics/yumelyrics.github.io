@@ -9,7 +9,13 @@ import { writeFile as fsWrite } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { minify as minifyHtmlTerser } from 'html-minifier-terser';
+let minifyHtmlTerser;
+try {
+  ({ minify: minifyHtmlTerser } = await import('html-minifier-terser'));
+} catch {
+  // html-minifier-terser tidak terinstall — fallback tanpa minifikasi
+  minifyHtmlTerser = async (html) => html;
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
