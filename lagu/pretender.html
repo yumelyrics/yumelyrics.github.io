@@ -1081,7 +1081,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   <div class="ep-box">
     <div class="ep-title">Edit Profil</div>
     <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
-      <img class="ep-avatar-big" id="ep-avatar-big" src="https://yumelyrics.my.id/profile-comment.jpg" alt="" referrerpolicy="no-referrer" decoding="async">
+      <div class="ep-avatar-big ep-avatar-placeholder-big" id="ep-avatar-big" aria-hidden="true"></div>
       <div class="ep-info">
         <div class="ep-name" id="ep-display-name-preview">—</div>
         <div class="ep-email" id="ep-email-preview">—</div>
@@ -1100,7 +1100,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
       <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Avatar default: profile-comment.jpg. Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
+    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -1890,7 +1890,7 @@ async function checkBanStatus(uid) {
   } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
 }
 
-const DEFAULT_COMMENT_PROFILE = "https://yumelyrics.my.id/profile-comment.jpg";
+const DEFAULT_COMMENT_PROFILE = "";
 try { window.__yumeDefaultCommentProfile = DEFAULT_COMMENT_PROFILE; } catch(e) {}
 const WALINE_COMMENT_KEY = 'ym_waline2_' + "pretender";
 let _hasCommented = false;
@@ -2282,8 +2282,8 @@ function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
     img.referrerPolicy = 'no-referrer';
     img.decoding = 'async';
     img.onerror = function(){
-      if (img.src !== DEFAULT_COMMENT_PROFILE) {
-        img.onerror = null;
+      img.onerror = null;
+      if (DEFAULT_COMMENT_PROFILE && img.src !== DEFAULT_COMMENT_PROFILE) {
         img.src = DEFAULT_COMMENT_PROFILE;
         return;
       }
@@ -2494,8 +2494,11 @@ window._smoothScrollTo = function(targetY, duration){
 window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
-  const y = target.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  // Use rAF so getBoundingClientRect() never forces a synchronous reflow
+  requestAnimationFrame(function(){
+    const y = target.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
   const btn = document.querySelector('.hero-actions .btn-primary');
   if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
 };
@@ -2503,8 +2506,10 @@ window._scrollToLyrics = function(){
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  requestAnimationFrame(function(){
+    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}

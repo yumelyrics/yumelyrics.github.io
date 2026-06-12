@@ -1015,19 +1015,11 @@ Liriknya menceritakan dilema seseorang (dari sudut pandang cowok) yang sedang ja
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/hanataba">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e024951a4f5f9d719dfa4ef3d75&amp;w=52&amp;output=webp&amp;q=75" alt="Hanataba" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/watagashi">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27377658cd1e9731710b19762a1&amp;w=52&amp;output=webp&amp;q=75" alt="Watagashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">花束</div>
-      <div class="related-ro">Hanataba</div>
-      <div class="related-artist">Back Number</div>
-    </div>
-    <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/hikari-no-machi">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FRhgTqqxxqds%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Hikari no Machi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">光の街</div>
-      <div class="related-ro">Hikari no Machi</div>
+      <div class="related-title">わたがし (綿菓子)</div>
+      <div class="related-ro">Watagashi</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
@@ -1037,6 +1029,14 @@ Liriknya menceritakan dilema seseorang (dari sudut pandang cowok) yang sedang ja
       <div class="related-title">こわいはなし</div>
       <div class="related-ro">Kowai Hanashi</div>
       <div class="related-artist">Back number</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/daiji-na-koto">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fs3-aop.plusmember.jp%2Fprod%2Fpublic%2Fbacknumber%2Fcontents%2Fdiscography%2FUMCK5331_fix.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Daiji na koto" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">だいじなこと</div>
+      <div class="related-ro">Daiji na koto</div>
+      <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
   </a></div>
@@ -1115,7 +1115,7 @@ Liriknya menceritakan dilema seseorang (dari sudut pandang cowok) yang sedang ja
   <div class="ep-box">
     <div class="ep-title">Edit Profil</div>
     <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
-      <img class="ep-avatar-big" id="ep-avatar-big" src="https://yumelyrics.my.id/profile-comment.jpg" alt="" referrerpolicy="no-referrer" decoding="async">
+      <div class="ep-avatar-big ep-avatar-placeholder-big" id="ep-avatar-big" aria-hidden="true"></div>
       <div class="ep-info">
         <div class="ep-name" id="ep-display-name-preview">—</div>
         <div class="ep-email" id="ep-email-preview">—</div>
@@ -1134,7 +1134,7 @@ Liriknya menceritakan dilema seseorang (dari sudut pandang cowok) yang sedang ja
       <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
       <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
     </div>
-    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Avatar default: profile-comment.jpg. Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
+    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
     <div class="ep-actions">
       <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
       <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
@@ -1924,7 +1924,7 @@ async function checkBanStatus(uid) {
   } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
 }
 
-const DEFAULT_COMMENT_PROFILE = "https://yumelyrics.my.id/profile-comment.jpg";
+const DEFAULT_COMMENT_PROFILE = "";
 try { window.__yumeDefaultCommentProfile = DEFAULT_COMMENT_PROFILE; } catch(e) {}
 const WALINE_COMMENT_KEY = 'ym_waline2_' + "hajimari-hajimari";
 let _hasCommented = false;
@@ -2316,8 +2316,8 @@ function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
     img.referrerPolicy = 'no-referrer';
     img.decoding = 'async';
     img.onerror = function(){
-      if (img.src !== DEFAULT_COMMENT_PROFILE) {
-        img.onerror = null;
+      img.onerror = null;
+      if (DEFAULT_COMMENT_PROFILE && img.src !== DEFAULT_COMMENT_PROFILE) {
         img.src = DEFAULT_COMMENT_PROFILE;
         return;
       }
@@ -2528,8 +2528,11 @@ window._smoothScrollTo = function(targetY, duration){
 window._scrollToLyrics = function(){
   const target = document.getElementById('lyrics') || document.querySelector('.ll-section');
   if(!target) return;
-  const y = target.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  // Use rAF so getBoundingClientRect() never forces a synchronous reflow
+  requestAnimationFrame(function(){
+    const y = target.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
   const btn = document.querySelector('.hero-actions .btn-primary');
   if(btn){ btn.style.transform='translateY(4px)'; setTimeout(()=>btn.style.transform='',300); }
 };
@@ -2537,8 +2540,10 @@ window._scrollToLyrics = function(){
 window._scrollToMV = function(){
   const sec = document.getElementById('yt-section');
   if(!sec) return;
-  const y = sec.getBoundingClientRect().top + window.scrollY - 80;
-  window._smoothScrollTo(y);
+  requestAnimationFrame(function(){
+    const y = sec.getBoundingClientRect().top + window.scrollY - 80;
+    window._smoothScrollTo(y);
+  });
 };
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
