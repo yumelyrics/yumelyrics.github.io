@@ -5155,7 +5155,7 @@ async function main() {
       const skipArtist = sitemapEscape(song.artist||'', false);
       const skipImgBlock = song.img ? `
     <image:image>
-      <image:loc>${song.img}</image:loc>
+      <image:loc>${sitemapEscape(song.img)}</image:loc>
       <image:title>${skipTitle} - ${skipArtist}</image:title>
       <image:caption>Lirik ${skipTitle} - ${skipArtist} | YumeLyrics</image:caption>
     </image:image>` : '';
@@ -5211,7 +5211,7 @@ async function main() {
     const genArtist = sitemapEscape(song.artist||'', false);
     const imgTag = song.img ? `
     <image:image>
-      <image:loc>${song.img}</image:loc>
+      <image:loc>${sitemapEscape(song.img)}</image:loc>
       <image:title>${genTitle} - ${genArtist}</image:title>
       <image:caption>Lirik ${genTitle} - ${genArtist} | YumeLyrics</image:caption>
     </image:image>` : '';
