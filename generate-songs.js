@@ -5028,7 +5028,23 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 
 async function main() {
   const t0 = Date.now();
-  const fullMode = process.env.GENERATE_MODE === 'full' || process.argv.includes('--full');
+  // ── Resolve generate mode ──────────────────────────────────────────────────
+  // Priority (highest → lowest):
+  //   1. GENERATE_MODE env var          — explicit override in workflow YAML
+  //   2. --full CLI flag                — local testing
+  //   3. GitHub Actions event payload   — workflow_dispatch inputs.mode
+  //      (read from GITHUB_EVENT_PATH so the YAML never needs to map inputs manually)
+  let _ghEventMode = '';
+  try {
+    if (process.env.GITHUB_EVENT_PATH) {
+      const _evt = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+      _ghEventMode = (_evt?.inputs?.mode || '').trim().toLowerCase();
+    }
+  } catch (_) { /* non-fatal — event file missing or malformed */ }
+
+  const fullMode = process.env.GENERATE_MODE === 'full'
+    || process.argv.includes('--full')
+    || _ghEventMode === 'full';
   console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
   console.log('🔥 Menghubungkan ke Firebase...');
   const app = initializeApp(firebaseConfig);
