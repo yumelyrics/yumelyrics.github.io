@@ -388,7 +388,7 @@ function imgTag(src, alt, opts = {}) {
   if (!src) return '';
   const u = hd ? coverImgUrl(src, w) : thumbImgUrl(src, w);
   const fp = eager ? ' fetchpriority="high"' : '';
-  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="${eager ? 'sync' : 'async'}" sizes="${sizes}"${fp}>`;
+  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
 }
 
 function renderText(str) {
@@ -1215,9 +1215,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
     (l.id ? '<div class="lyric-right"><div class="lid">' + escHtml(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
     '<div class="line-actions">' +
     '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
-    '</div>' +
-    '<div class="lyric-num">' + String(i + 1).padStart(2, '0') + '</div>' +
-    '</div>'
+    '</div></div>'
   ).join('');
 
 
@@ -1328,8 +1326,6 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(wsrvUrl(song.img, 480, 82))}" fetchpriority="high">` : ''}
-<link rel="preconnect" href="https://wsrv.nl">
 ${THEME_BOOT_SCRIPT}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -1412,7 +1408,7 @@ ${CSS_TOKENS}
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 [data-theme="dark"] .hero{background:var(--paper)}
 [data-theme="dark"] .hero-visual::before{background:radial-gradient(ellipse at 60% 40%,rgba(232,180,200,.1) 0%,transparent 60%),radial-gradient(ellipse at 60% 40%,rgba(212,169,110,.08) 0%,transparent 65%)}
-[data-theme="dark"] .cover-img.fi{filter:sepia(.15) contrast(1.05) brightness(.85)}
+[data-theme="dark"] .cover-img{filter:sepia(.15) contrast(1.05) brightness(.85)}
 [data-theme="dark"] .related-section{background:var(--cream)}
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
 [data-theme="dark"] footer{background:#070604}
@@ -1487,8 +1483,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 55% 35%,rgba(232,180,200,.14) 0%,transparent 55%),radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
 .cover-wrap{position:relative;z-index:1}
 .cover-frame{width:320px;height:320px;position:relative}
-.cover-img{width:100%;height:100%;object-fit:cover;display:block;box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
-.cover-img.fi{filter:sepia(.15) contrast(1.05)}
+.cover-img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15) contrast(1.05);box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
 .corner{position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid}
 .corner-tl{top:-8px;left:-8px;border-width:1px 0 0 1px}
 .corner-tr{top:-8px;right:-8px;border-width:1px 1px 0 0}
@@ -1496,7 +1491,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .corner-br{bottom:-8px;right:-8px;border-width:0 1px 1px 0}
 .cover-stats{display:flex;gap:2rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(10,8,18,.1)}
 .stat{display:flex;flex-direction:column;gap:.25rem;text-align:center}
-.stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:var(--ink);line-height:1;min-width:3ch;display:block}
+.stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:var(--ink);line-height:1}
 .stat-lbl{font-size:.5rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--smoke)}
 .kanji-bg{position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-family:var(--jp);font-size:14rem;font-weight:600;color:rgba(196,99,122,.05);line-height:1;pointer-events:none;user-select:none;z-index:0}
 
@@ -1580,7 +1575,7 @@ body:not(.mode-quiz):not(.mode-karaoke) .ll-item{cursor:default}
 /* ── Admin mode: dihandle via JS saja, bukan CSS class ── */
 /* CATATAN: class is-admin di body DIHAPUS dari applyAuthState untuk keamanan */
 .lyrics-container{display:flex;flex-direction:column;gap:0}
-.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s;content-visibility:auto;contain-intrinsic-size:auto 140px}
+.ll-item{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(10,8,18,.06);padding:1.5rem 2.75rem 1.5rem 0;position:relative;transition:background .15s;content-visibility:auto;contain-intrinsic-size:0 60px}
 body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(201,169,110,.04);margin:0 -1rem;padding:1.5rem 2.75rem 1.5rem 1rem}
 .ll-item:last-child{border-bottom:none}
 /* Sembunyikan lirik sampai JS selesai */
@@ -1975,17 +1970,18 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 }
 
 /* ── ANIMATIONS ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{transform:translateY(14px)}to{transform:translateY(0)}}
-.hero-text>*{animation:fadeUp .4s ease both}
-.hero-text .breadcrumb{animation-delay:.03s}
-.hero-text .song-type{animation-delay:.06s}
-.hero-text .song-title-jp{animation-delay:0s}
-.hero-text .song-title-ro{animation-delay:.06s}
-.hero-text .song-title-id{animation-delay:.08s}
-.hero-text .meta-row{animation-delay:.1s}
-.hero-text .hero-actions{animation-delay:.14s}
-.hero-visual{animation:slideUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+/* heroFadeUp starts at opacity:.5 so LCP elements are painted immediately (not opacity:0) */
+@keyframes heroFadeUp{from{opacity:.5;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-text>*{animation:heroFadeUp .6s ease both}
+.hero-text .breadcrumb{animation-delay:.05s}
+.hero-text .song-type{animation-delay:.1s}
+.hero-text .song-title-jp{animation-delay:.15s}
+.hero-text .song-title-ro{animation-delay:.2s}
+.hero-text .song-title-id{animation-delay:.22s}
+.hero-text .meta-row{animation-delay:.28s}
+.hero-text .hero-actions{animation-delay:.35s}
+.hero-visual{animation:heroFadeUp .7s ease .2s both}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
@@ -2545,12 +2541,13 @@ ${(()=>{
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
 document.addEventListener('DOMContentLoaded', function(){
-  // Apply cover-img filter after LCP paint (2 rAF cycles post-DOMContentLoaded)
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      var c = document.querySelector('.cover-img');
-      if (c) c.classList.add('fi');
-    });
+  // Generate nomor baris lirik otomatis seperti preview-lagu
+  var lineNum = 1;
+  document.querySelectorAll('.ll-item').forEach(function(item){
+    var numEl = document.createElement('div');
+    numEl.className = 'lyric-num';
+    numEl.textContent = String(lineNum++).padStart(2,'0');
+    item.appendChild(numEl);
   });
 
   var pills = document.querySelectorAll('.ctrl-pill[data-view]');
