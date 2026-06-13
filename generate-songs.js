@@ -1215,7 +1215,9 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
     (l.id ? '<div class="lyric-right"><div class="lid">' + escHtml(l.id) + '</div></div>' : '<div class="lyric-right"></div>') +
     '<div class="line-actions">' +
     '<button type="button" class="line-share-btn" onclick="event.stopPropagation();shareLine(' + i + ')" title="Bagikan baris ini" aria-label="Bagikan baris">↗</button>' +
-    '</div></div>'
+    '</div>' +
+    '<div class="lyric-num">' + String(i + 1).padStart(2, '0') + '</div>' +
+    '</div>'
   ).join('');
 
 
@@ -1326,7 +1328,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(wsrvUrl(song.img, 480, 82))}" fetchpriority="high" type="image/webp">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(wsrvUrl(song.img, 480, 82))}" fetchpriority="high">` : ''}
 <link rel="preconnect" href="https://wsrv.nl">
 ${THEME_BOOT_SCRIPT}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -1410,7 +1412,7 @@ ${CSS_TOKENS}
 [data-theme="dark"] nav{background:rgba(15,13,11,.92)}
 [data-theme="dark"] .hero{background:var(--paper)}
 [data-theme="dark"] .hero-visual::before{background:radial-gradient(ellipse at 60% 40%,rgba(232,180,200,.1) 0%,transparent 60%),radial-gradient(ellipse at 60% 40%,rgba(212,169,110,.08) 0%,transparent 65%)}
-[data-theme="dark"] .cover-img{filter:sepia(.15) contrast(1.05) brightness(.85)}
+[data-theme="dark"] .cover-img.fi{filter:sepia(.15) contrast(1.05) brightness(.85)}
 [data-theme="dark"] .related-section{background:var(--cream)}
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
 [data-theme="dark"] footer{background:#070604}
@@ -1485,7 +1487,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .hero-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 55% 35%,rgba(232,180,200,.14) 0%,transparent 55%),radial-gradient(ellipse at 60% 40%,rgba(201,169,110,.12) 0%,transparent 65%)}
 .cover-wrap{position:relative;z-index:1}
 .cover-frame{width:320px;height:320px;position:relative}
-.cover-img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.15) contrast(1.05);box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
+.cover-img{width:100%;height:100%;object-fit:cover;display:block;box-shadow:12px 16px 0 rgba(10,8,18,.08),24px 32px 0 rgba(10,8,18,.04)}
+.cover-img.fi{filter:sepia(.15) contrast(1.05)}
 .corner{position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid}
 .corner-tl{top:-8px;left:-8px;border-width:1px 0 0 1px}
 .corner-tr{top:-8px;right:-8px;border-width:1px 1px 0 0}
@@ -2542,13 +2545,12 @@ ${(()=>{
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
 document.addEventListener('DOMContentLoaded', function(){
-  // Generate nomor baris lirik otomatis seperti preview-lagu
-  var lineNum = 1;
-  document.querySelectorAll('.ll-item').forEach(function(item){
-    var numEl = document.createElement('div');
-    numEl.className = 'lyric-num';
-    numEl.textContent = String(lineNum++).padStart(2,'0');
-    item.appendChild(numEl);
+  // Apply cover-img filter after LCP paint (2 rAF cycles post-DOMContentLoaded)
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      var c = document.querySelector('.cover-img');
+      if (c) c.classList.add('fi');
+    });
   });
 
   var pills = document.querySelectorAll('.ctrl-pill[data-view]');
