@@ -25,7 +25,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Ganti URL di bawah dengan invite link Discord server kamu.
 // Contoh: 'https://discord.gg/abcdefg'
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
-const DISCORD_SERVER_URL = 'https://discord.gg/v9V35kNXdx';
+const DISCORD_SERVER_URL = 'https://discord.gg/SW9bTRHK8H';
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isHtmlDirty(song) {
