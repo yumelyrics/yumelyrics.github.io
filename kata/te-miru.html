@@ -17,7 +17,7 @@
 <meta name="citation_title" content="〜てみる — Glosarium | YumeLyrics">
 <meta name="citation_author" content="YumeLyrics">
 <meta name="citation_publisher" content="YumeLyrics — yumelyrics.my.id">
-<meta name="citation_online_date" content="2026-06-14">
+<meta name="citation_online_date" content="2026-06-15">
 <meta name="citation_language" content="id">
 <meta name="citation_abstract_html_url" content="https://yumelyrics.my.id/kata/te-miru.html">
 <!-- ── GEO: Dublin Core — machine-readable untuk AI generatif ─── -->
@@ -27,7 +27,7 @@
 <meta name="dcterms.creator" content="YumeLyrics">
 <meta name="dcterms.publisher" content="YumeLyrics — yumelyrics.my.id">
 <meta name="dcterms.rights" content="© YumeLyrics — yumelyrics.my.id">
-<meta name="dcterms.modified" content="2026-06-14">
+<meta name="dcterms.modified" content="2026-06-15">
 <meta name="dcterms.identifier" content="https://yumelyrics.my.id/kata/te-miru.html">
 <meta name="dcterms.type" content="Text">
 <meta name="dcterms.format" content="text/html">
@@ -35,9 +35,10 @@
 <meta name="speakable" content="true">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional"></noscript>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&display=swap"></noscript>
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <style>
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 :root{
   --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
@@ -57,9 +58,10 @@
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:var(--paper)}
+/* bgwrap: fixed layer hanya di desktop (gradient); mobile pakai bg body langsung */
+#bgwrap{display:none}
 @media(min-width:768px){
-#bgwrap{background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
+#bgwrap{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
 }
 .wrap{position:relative;z-index:1}
