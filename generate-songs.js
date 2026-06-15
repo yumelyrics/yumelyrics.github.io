@@ -1,4 +1,4 @@
-// generate-songs.js — v2026-05-21 (夢の夜 · Syne + Cormorant + sakura bgwrap)
+// generate-songs.js — v2026-06-15 (夢の夜 · Syne + Cormorant · perf-100 optimized)
 // Jalankan via GitHub Actions — ambil data Firebase, generate HTML per lagu + sitemap.xml
 // Cek baris 20: harus ada "Cormorant" di FONT_URL (bukan Plus Jakarta)
 
@@ -233,17 +233,18 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@600;700&family=DM+Sans:wght@400;500&display=optional';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
 
-/** Non-blocking font stylesheet — loaded via print media trick so it never blocks rendering. */
-const FONT_LINK = `<link rel="stylesheet" href="${FONT_URL}" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+/** Non-blocking font loading — preload trick prevents render-blocking */
+const FONT_LINK = `<link rel="preload" href="${FONT_URL}" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
 
 const THEME_BOOT_SCRIPT = `<script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
 
 /** Token + latar — selaras dengan index.html (夢の夜 · sakura dusk). */
 const CSS_TOKENS = `
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 :root{
   --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
@@ -263,9 +264,10 @@ const CSS_TOKENS = `
   --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);--red:#e05252;
 }
-#bgwrap{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:var(--paper)}
+/* bgwrap: fixed layer hanya di desktop (gradient); mobile pakai bg body langsung */
+#bgwrap{display:none}
 @media(min-width:768px){
-#bgwrap{background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
+#bgwrap{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 8% -8%,rgba(232,180,200,.18) 0%,transparent 60%),var(--paper)}
 [data-theme="dark"] #bgwrap{background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(154,138,184,.18) 0%,transparent 60%),var(--paper)}
 }
 .wrap{position:relative;z-index:1}
@@ -1330,7 +1332,6 @@ ${THEME_BOOT_SCRIPT}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="author" content="YumeLyrics">
 <meta name="theme-color" content="#f5f0ea">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1345,13 +1346,12 @@ ${THEME_BOOT_SCRIPT}
 <meta name="content-language" content="id">
 <meta name="classification" content="Entertainment/Music">
 <meta name="language" content="Indonesian">
-<style>html{-webkit-text-size-adjust:100%}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://www.gstatic.com">
-<link rel="preconnect" href="https://firestore.googleapis.com">
+${song.img ? '<link rel="preconnect" href="https://wsrv.nl" crossorigin>' : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 480))}" fetchpriority="high" imagesizes="(max-width:600px) 100vw, 480px">` : ''}
 <title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -1398,7 +1398,6 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${schema}</script>
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
-${FONT_HEAD}
 ${FONT_LINK}
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
@@ -2794,6 +2793,8 @@ document.addEventListener('DOMContentLoaded', function(){
 let _fbLoaded=false;
 async function _initHeavy(){
 if(_fbLoaded)return;_fbLoaded=true;
+// Preconnect Firebase tepat sebelum load — tidak di head agar tidak hambat koneksi awal
+['https://www.gstatic.com','https://firestore.googleapis.com'].forEach(h=>{const l=document.createElement('link');l.rel='preconnect';l.href=h;document.head.appendChild(l);});
 const{initializeApp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");
 const{getFirestore,collection,addDoc,query,where,getDocs,updateDoc,setDoc,doc,increment,getDoc,orderBy,limit,writeBatch,deleteDoc,onSnapshot,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
 const{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged,updateProfile}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js");
@@ -4594,68 +4595,90 @@ window.deleteCm = async cmId => {
 };
 legacy comment UI removed */
 
-const{init:_walineInit}=await import('https://unpkg.com/@waline/client@3/dist/waline.js');
-window._walineAppInstance = _walineInit({
-  el: '#waline',
-  serverURL: 'https://yumelyrics-comment.vercel.app',
-  path: ${JSON.stringify('/lagu/' + slug)},
-  comment: true,
-  pageview: false,
-  reaction: false,
-  dark: 'html[data-theme="dark"]',
-  meta: ['nick'],
-  requiredMeta: [],
-  imageUploader: function(file) {
-    return new Promise(function(resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var dataUrl = e.target.result;
-        var panel = document.getElementById('yume-img-preview');
-        if (!panel) {
-          panel = document.createElement('div');
-          panel.id = 'yume-img-preview';
-          panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
-          var wEl = document.getElementById('waline');
-          if (wEl) {
-            var editor = wEl.querySelector('.wl-editor');
-            if (editor) editor.appendChild(panel);
-            else wEl.prepend(panel);
-          }
-        }
-        var img = document.createElement('img');
-        img.src = dataUrl;
-        img.title = file.name;
-        img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer;';
-        img.onclick = function() {
-          if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
-        };
-        panel.appendChild(img);
-        resolve(dataUrl);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  },
-  locale: {
-    placeholder: 'Tulis komentarmu di sini...',
-    sofa: 'Jadilah yang pertama berkomentar!',
-    submit: 'Kirim',
-    nick: 'Nama',
-    preview: 'Pratinjau',
-    comment: 'Komentar',
-    reply: 'Balas',
-    more: 'Muat lebih banyak...',
-    admin: 'Admin',
-    word: '{0} kata',
-    anonymous: 'Tamu',
-    level0: 'Pendatang',
-    level1: 'Pengunjung',
-    level2: 'Reguler',
-    level3: 'Veteran',
-    level4: 'Master',
-    level5: 'Legenda',
-  },
-});
+// Defer Waline loading until comments section is visible (IntersectionObserver)
+(function(){
+  var walineLoaded = false;
+  function loadWaline(){
+    if(walineLoaded) return;
+    walineLoaded = true;
+    import('https://unpkg.com/@waline/client@3/dist/waline.js').then(function(m){
+      var _walineInit = m.init;
+      window._walineAppInstance = _walineInit({
+        el: '#waline',
+        serverURL: 'https://yumelyrics-comment.vercel.app',
+        path: ${JSON.stringify('/lagu/' + slug)},
+        comment: true,
+        pageview: false,
+        reaction: false,
+        dark: 'html[data-theme="dark"]',
+        meta: ['nick'],
+        requiredMeta: [],
+        imageUploader: function(file) {
+          return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              var dataUrl = e.target.result;
+              var panel = document.getElementById('yume-img-preview');
+              if (!panel) {
+                panel = document.createElement('div');
+                panel.id = 'yume-img-preview';
+                panel.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px 0;';
+                var wEl = document.getElementById('waline');
+                if (wEl) {
+                  var editor = wEl.querySelector('.wl-editor');
+                  if (editor) editor.appendChild(panel);
+                  else wEl.prepend(panel);
+                }
+              }
+              var img = document.createElement('img');
+              img.src = dataUrl;
+              img.title = file.name;
+              img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer;';
+              img.onclick = function() {
+                if (confirm('Hapus gambar ini dari pratinjau?')) { img.remove(); }
+              };
+              panel.appendChild(img);
+              resolve(dataUrl);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        },
+        locale: {
+          placeholder: 'Tulis komentarmu di sini...',
+          sofa: 'Jadilah yang pertama berkomentar!',
+          submit: 'Kirim',
+          nick: 'Nama',
+          preview: 'Pratinjau',
+          comment: 'Komentar',
+          reply: 'Balas',
+          more: 'Muat lebih banyak...',
+          admin: 'Admin',
+          word: '{0} kata',
+          anonymous: 'Tamu',
+          level0: 'Pendatang',
+          level1: 'Pengunjung',
+          level2: 'Reguler',
+          level3: 'Veteran',
+          level4: 'Master',
+          level5: 'Legenda',
+        },
+      });
+    }).catch(function(e){ console.error('Waline load error:', e); });
+  }
+  // Load when comments section is visible or after 3 seconds as fallback
+  if('IntersectionObserver' in window){
+    var observer = new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting){
+        observer.disconnect();
+        loadWaline();
+      }
+    }, {rootMargin: '200px'});
+    var commentsEl = document.querySelector('.comments-section');
+    if(commentsEl) observer.observe(commentsEl);
+  }
+  setTimeout(loadWaline, 3000);
+})();
 // ── Waline submit-click detector ─────────────────────────────────────────
 // Set flag HANYA ketika user benar-benar klik tombol Submit Waline,
 // bukan saat inisialisasi/fetch internal Waline yang juga POST ke /api/comment.
@@ -4732,7 +4755,8 @@ window._ymPendingWalineSubmit = false;
 ['scroll','touchstart','mousemove'].forEach(function(e){window.addEventListener(e,_initHeavy,{once:true,passive:true});});
 </script>
 <script>
-function fixBg(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;const bg=document.getElementById('bgwrap');if(bg){bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=h+'px';}
+/* fixBg: sesuaikan tinggi viewport — bgwrap hanya aktif di desktop (>=768px) */
+function fixBg(){const isMobile=window.innerWidth<768;const bg=document.getElementById('bgwrap');if(bg&&!isMobile){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=(window.visualViewport?window.visualViewport.height:window.innerHeight)+'px';}
 fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);}window.addEventListener('resize',fixBg);
 </script>
 <script>
@@ -4808,7 +4832,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 })();
 </script>
 <script>
-/* ── YumeSubs Copy Protection (v4) ── */
+/* ── YumeSubs Copy Protection (v4) - Deferred after initial render ── */
+setTimeout(function(){
 (function(){
   var WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
 
@@ -4950,8 +4975,8 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
     });
   }
   enforceNoSelect();
-  // Interval delayed — tidak halangi render awal
-  window.addEventListener('load',function(){setTimeout(function(){setInterval(enforceNoSelect, 1000);},4000);});
+  // Interval delayed — tidak halangi render awal; jarang (5s) agar tidak ganggu INP
+  window.addEventListener('load',function(){setTimeout(function(){setInterval(enforceNoSelect, 5000);},4000);});
 
   /* 9. MutationObserver — reset proteksi kalau style/class diubah dari DevTools */
   (function(){
@@ -5016,6 +5041,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
   })();
 
 })();
+}, 100); // Defer copy protection by 100ms after initial render
 </script>
 <div id="rm-decoy-wrap">
   <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan melalui browser tanpa Reader Mode aktif. Silakan kunjungi yumelyrics.my.id secara langsung untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta.</p></article>
