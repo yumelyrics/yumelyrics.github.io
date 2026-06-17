@@ -376,6 +376,22 @@ function coverImgUrl(url, w = 480) {
   return wsrvUrl(url.trim(), w, 82);
 }
 
+/** URL langsung untuk LCP — hindari proxy wsrv (lebih cepat di mobile). */
+function coverLcpUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const u = url.trim();
+  const yt = u.match(/(?:img\.youtube\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})/);
+  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/hqdefault.jpg`;
+  if (/ytimg\.com/i.test(u)) return u.replace(/\/(maxresdefault|sddefault|mqdefault|default)\.jpg/i, '/hqdefault.jpg');
+  return coverImgUrl(u, 320);
+}
+
+function coverUsesYtCdn(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  return /(?:img\.youtube\.com\/vi\/|ytimg\.com)/i.test(u);
+}
+
 /** Thumbnail kecil (related) — lebih ringan, cukup 96px. */
 function thumbImgUrl(url, w = 96) {
   if (!url || typeof url !== 'string') return url;
@@ -418,6 +434,8 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
 .discord-popup-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
 .discord-popup-fab.is-visible{display:flex}
+.discord-popup-fab.discord-fab-hint{animation:discordFabPulse 2s ease-in-out infinite}
+@keyframes discordFabPulse{0%,100%{box-shadow:0 6px 24px rgba(88,101,242,.45)}50%{box-shadow:0 6px 28px rgba(88,101,242,.75),0 0 0 8px rgba(88,101,242,.18)}}
 .discord-popup-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(88,101,242,.55)}
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
@@ -492,6 +510,19 @@ function buildDiscordPopupMarkup() {
       document.body.classList.add('discord-fab-active');
       return;
     }
+    var isMobile=window.matchMedia('(max-width:768px)').matches;
+    if(isMobile){
+      fab.classList.add('is-visible','discord-fab-hint');
+      document.body.classList.add('discord-fab-active');
+      fab.addEventListener('click',function onFabHint(e){
+        if(!fab.classList.contains('discord-fab-hint'))return;
+        e.preventDefault();
+        fab.classList.remove('discord-fab-hint');
+        fab.removeEventListener('click',onFabHint);
+        toModal();
+      });
+      return;
+    }
     toModal();
   }
   closeBtn.addEventListener('click',function(e){
@@ -509,9 +540,7 @@ function buildDiscordPopupMarkup() {
     }
   },true);
   function runInit(){
-    setTimeout(function(){
-      (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(init);
-    },2800);
+    (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(init);
   }
   if(document.readyState==='complete')runInit();
   else window.addEventListener('load',runInit,{once:true});
@@ -1474,10 +1503,10 @@ ${THEME_BOOT_SCRIPT}
 <meta name="language" content="Indonesian">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-${song.img ? '<link rel="preconnect" href="https://wsrv.nl" crossorigin>' : ''}
+${song.img ? (coverUsesYtCdn(song.img) ? '<link rel="preconnect" href="https://i.ytimg.com" crossorigin>' : '<link rel="preconnect" href="https://wsrv.nl" crossorigin>') : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 240))}" imagesrcset="${escHtml(coverImgUrl(song.img, 240))} 240w, ${escHtml(coverImgUrl(song.img, 320))} 320w, ${escHtml(coverImgUrl(song.img, 480))} 480w" imagesizes="(max-width:480px) 90vw, 480px" fetchpriority="high">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverLcpUrl(song.img))}" fetchpriority="high">` : ''}
 <title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -2097,6 +2126,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 .hero-visual{animation:heroFadeUp .7s ease .2s both}
 
 /* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hero-visual,.hero-text>*{animation:none!important}
+  .cover-img{filter:none;box-shadow:8px 10px 0 rgba(10,8,18,.08)}
+}
 @media(max-width:900px){
   nav{padding:1.2rem 1.5rem}
   /* Sembunyikan nav link desktop, tampilkan yg mobile-only */
@@ -2265,10 +2298,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <div class="cover-frame">
         ${song.img
           ? (() => {
-              const c240 = escHtml(coverImgUrl(song.img, 240));
+              const lcp = escHtml(coverLcpUrl(song.img));
               const c320 = escHtml(coverImgUrl(song.img, 320));
               const c480 = escHtml(coverImgUrl(song.img, 480));
-              return `<img class="cover-img" src="${c240}" srcset="${c240} 240w, ${c320} 320w, ${c480} 480w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
+              return `<img class="cover-img" src="${lcp}" srcset="${lcp} 480w, ${c320} 320w, ${c480} 480w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="sync" fetchpriority="high">`;
             })()
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
@@ -4888,9 +4921,35 @@ function _scheduleHeavy(){
 })();
 </script>
 <script>
-/* fixBg: sesuaikan tinggi viewport — bgwrap hanya aktif di desktop (>=768px) */
-function fixBg(){const isMobile=window.innerWidth<768;const bg=document.getElementById('bgwrap');if(bg&&!isMobile){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const w=window.visualViewport?window.visualViewport.width:window.innerWidth;bg.style.height=h+'px';bg.style.width=w+'px';}document.body.style.minHeight=(window.visualViewport?window.visualViewport.height:window.innerHeight)+'px';}
-fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize',fixBg);}window.addEventListener('resize',fixBg);
+/* fixBg: desktop only — mobile pakai min-height:100dvh dari CSS */
+(function(){
+  var scheduled=0;
+  function fixBg(){
+    if(window.innerWidth<768)return;
+    var bg=document.getElementById('bgwrap');
+    if(!bg)return;
+    var vh=(window.visualViewport&&window.visualViewport.height)||window.innerHeight;
+    var vw=(window.visualViewport&&window.visualViewport.width)||window.innerWidth;
+    bg.style.height=vh+'px';
+    bg.style.width=vw+'px';
+  }
+  function scheduleFixBg(){
+    if(scheduled)return;
+    scheduled=requestAnimationFrame(function(){
+      scheduled=0;
+      fixBg();
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',scheduleFixBg,{once:true});
+  }else{
+    scheduleFixBg();
+  }
+  window.addEventListener('resize',scheduleFixBg,{passive:true});
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',scheduleFixBg,{passive:true});
+  }
+})();
 </script>
 <script>
 /* ── Anti Reader Mode ── */
