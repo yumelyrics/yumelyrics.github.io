@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-<link rel="preload" as="image" href="https://i.ytimg.com/vi/NkDmqUv8FeE/maxresdefault.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="https://wsrv.nl/?url=https%3A%2F%2Fi.ytimg.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=480&amp;output=webp&amp;q=78" fetchpriority="high">
 <title>Lirik Marutsuke - Given + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="「まるつけ」 adalah lagu ending dari anime Given yang menggambarkan hubungan manusia dengan cara yang lembut dan jujur. Lagu ini membahas rasa kesepian, cinta, keragu">
 <meta name="keywords" content="lirik Marutsuke, lirik まるつけ, terjemahan Marutsuke, arti lagu Marutsuke, arti Memberi tanda lingkaran, Marutsuke romaji, lirik Marutsuke romaji, Marutsuke terjemahan indonesia, Given lirik, Given Marutsuke, lirik ost ギヴン, ギヴン Marutsuke, Given ost, ending ギヴン, lirik lagu jepang terjemahan indonesia, anime ost lirik, YumeLyrics, YumeSubs">
@@ -371,8 +371,6 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
 .discord-popup-fab{position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
 .discord-popup-fab.is-visible{display:flex}
-.discord-popup-fab.discord-fab-hint{animation:discordFabPulse 2s ease-in-out infinite}
-@keyframes discordFabPulse{0%,100%{box-shadow:0 6px 24px rgba(88,101,242,.45)}50%{box-shadow:0 6px 28px rgba(88,101,242,.75),0 0 0 8px rgba(88,101,242,.18)}}
 .discord-popup-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(88,101,242,.55)}
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
@@ -880,7 +878,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="kanji-bg">ま</div>
     <div class="cover-wrap">
       <div class="cover-frame">
-        <img class="cover-img" src="https://i.ytimg.com/vi/NkDmqUv8FeE/maxresdefault.jpg" srcset="https://i.ytimg.com/vi/NkDmqUv8FeE/maxresdefault.jpg 480w, https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=320&amp;output=webp&amp;q=82 320w, https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=480&amp;output=webp&amp;q=82 480w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Marutsuke - Given" width="480" height="480" loading="eager" decoding="sync" fetchpriority="high">
+        <img class="cover-img" src="https://wsrv.nl/?url=https%3A%2F%2Fi.ytimg.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=480&amp;output=webp&amp;q=78" srcset="https://wsrv.nl/?url=https%3A%2F%2Fi.ytimg.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=480&amp;output=webp&amp;q=78 480w, https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=320&amp;output=webp&amp;q=82 320w, https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=480&amp;output=webp&amp;q=82 480w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Marutsuke - Given" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
@@ -3910,12 +3908,13 @@ if(document.readyState==='complete'){
     }
     var isMobile=window.matchMedia('(max-width:768px)').matches;
     if(isMobile){
-      fab.classList.add('is-visible','discord-fab-hint');
+      var openModalFromFab = true;
+      fab.classList.add('is-visible');
       document.body.classList.add('discord-fab-active');
       fab.addEventListener('click',function onFabHint(e){
-        if(!fab.classList.contains('discord-fab-hint'))return;
+        if(!openModalFromFab)return;
         e.preventDefault();
-        fab.classList.remove('discord-fab-hint');
+        openModalFromFab = false;
         fab.removeEventListener('click',onFabHint);
         toModal();
       });

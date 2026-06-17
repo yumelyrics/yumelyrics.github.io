@@ -371,8 +371,6 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
 .discord-popup-fab{position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
 .discord-popup-fab.is-visible{display:flex}
-.discord-popup-fab.discord-fab-hint{animation:discordFabPulse 2s ease-in-out infinite}
-@keyframes discordFabPulse{0%,100%{box-shadow:0 6px 24px rgba(88,101,242,.45)}50%{box-shadow:0 6px 28px rgba(88,101,242,.75),0 0 0 8px rgba(88,101,242,.18)}}
 .discord-popup-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(88,101,242,.55)}
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
@@ -877,7 +875,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="kanji-bg">マ</div>
     <div class="cover-wrap">
       <div class="cover-frame">
-        <img class="cover-img" src="https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82" srcset="https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82 480w, https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82 320w, https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=480&amp;output=webp&amp;q=82 480w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Marigold - Aimyon" width="480" height="480" loading="eager" decoding="sync" fetchpriority="high">
+        <img class="cover-img" src="https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82" srcset="https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82 480w, https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=320&amp;output=webp&amp;q=82 320w, https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=480&amp;output=webp&amp;q=82 480w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Marigold - Aimyon" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
@@ -3897,12 +3895,13 @@ if(document.readyState==='complete'){
     }
     var isMobile=window.matchMedia('(max-width:768px)').matches;
     if(isMobile){
-      fab.classList.add('is-visible','discord-fab-hint');
+      var openModalFromFab = true;
+      fab.classList.add('is-visible');
       document.body.classList.add('discord-fab-active');
       fab.addEventListener('click',function onFabHint(e){
-        if(!fab.classList.contains('discord-fab-hint'))return;
+        if(!openModalFromFab)return;
         e.preventDefault();
-        fab.classList.remove('discord-fab-hint');
+        openModalFromFab = false;
         fab.removeEventListener('click',onFabHint);
         toModal();
       });
