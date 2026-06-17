@@ -382,10 +382,10 @@ function coverLcpUrl(url) {
   const u = url.trim();
   // Pertahankan varian thumbnail asli (maxres/sd/mq/hq) supaya framing tidak berubah.
   const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
-  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
+  if (ytFull) return wsrvUrl(`https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`, 480, 78);
   // Jika URL hanya sampai /vi/<id> tanpa file, pakai maxresdefault dulu.
   const yt = u.match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})(?:[/?#]|$)/);
-  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`;
+  if (yt) return wsrvUrl(`https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`, 480, 78);
   return coverImgUrl(u, 320);
 }
 
@@ -438,8 +438,6 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
 .discord-popup-fab{position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
 .discord-popup-fab.is-visible{display:flex}
-.discord-popup-fab.discord-fab-hint{animation:discordFabPulse 2s ease-in-out infinite}
-@keyframes discordFabPulse{0%,100%{box-shadow:0 6px 24px rgba(88,101,242,.45)}50%{box-shadow:0 6px 28px rgba(88,101,242,.75),0 0 0 8px rgba(88,101,242,.18)}}
 .discord-popup-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(88,101,242,.55)}
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
@@ -557,12 +555,13 @@ function buildDiscordPopupMarkup() {
     }
     var isMobile=window.matchMedia('(max-width:768px)').matches;
     if(isMobile){
-      fab.classList.add('is-visible','discord-fab-hint');
+      var openModalFromFab = true;
+      fab.classList.add('is-visible');
       document.body.classList.add('discord-fab-active');
       fab.addEventListener('click',function onFabHint(e){
-        if(!fab.classList.contains('discord-fab-hint'))return;
+        if(!openModalFromFab)return;
         e.preventDefault();
-        fab.classList.remove('discord-fab-hint');
+        openModalFromFab = false;
         fab.removeEventListener('click',onFabHint);
         toModal();
       });
@@ -2346,7 +2345,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
               const lcp = escHtml(coverLcpUrl(song.img));
               const c320 = escHtml(coverImgUrl(song.img, 320));
               const c480 = escHtml(coverImgUrl(song.img, 480));
-              return `<img class="cover-img" src="${lcp}" srcset="${lcp} 480w, ${c320} 320w, ${c480} 480w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="sync" fetchpriority="high">`;
+              return `<img class="cover-img" src="${lcp}" srcset="${lcp} 480w, ${c320} 320w, ${c480} 480w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
             })()
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
