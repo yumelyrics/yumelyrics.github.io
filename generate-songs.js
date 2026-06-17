@@ -27,6 +27,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
 const DISCORD_SERVER_URL = 'https://discord.gg/SW9bTRHK8H';
 const DISCORD_POPUP_IMAGE = 'https://images3.alphacoders.com/105/thumb-1920-1053832.jpg';
+const DISCORD_POPUP_IMAGE_OPT = `https://wsrv.nl/?url=${encodeURIComponent(DISCORD_POPUP_IMAGE)}&w=640&h=300&fit=cover&output=webp&q=70`;
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isHtmlDirty(song) {
@@ -448,12 +449,13 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 `;
 
 function buildDiscordPopupMarkup() {
-  const popupImg = escHtml(DISCORD_POPUP_IMAGE);
+  const popupImg = escHtml(DISCORD_POPUP_IMAGE_OPT);
+  const popupFallback = escHtml(DISCORD_POPUP_IMAGE);
   return `
 <div id="discord-popup-overlay" class="discord-popup-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="discord-popup-title" aria-hidden="true">
   <div class="discord-popup-row">
     <div class="discord-popup-card">
-      <img class="discord-popup-img" src="${popupImg}" alt="" width="380" height="180" loading="eager" decoding="async">
+      <img class="discord-popup-img" data-src="${popupImg}" data-fallback="${popupFallback}" alt="" width="380" height="180" loading="lazy" decoding="async">
       <p class="discord-popup-title" id="discord-popup-title">server discord yumelyrics</p>
       <a class="discord-popup-btn" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener noreferrer">
         ${DISCORD_SVG_ICON}
@@ -483,7 +485,17 @@ function buildDiscordPopupMarkup() {
       if(el)el.inert=on;
     });
   }
-  function loadPopupImg(){ return; }
+  function loadPopupImg(){
+    if(!popupImg || popupImg.src) return;
+    var src = popupImg.getAttribute('data-src');
+    var fallback = popupImg.getAttribute('data-fallback');
+    popupImg.onerror = function(){
+      if(fallback && popupImg.src !== fallback){
+        popupImg.src = fallback;
+      }
+    };
+    if(src) popupImg.src = src;
+  }
   function toFab(){
     ov.classList.add('is-hidden');
     ov.setAttribute('aria-hidden','true');
