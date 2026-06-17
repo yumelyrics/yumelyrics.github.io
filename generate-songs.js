@@ -372,34 +372,67 @@ function wsrvUrl(url, w, q = 80) {
   return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=${q}`;
 }
 
-function coverImgUrl(url, w = 480) {
-  if (!url || typeof url !== 'string') return url;
-  return wsrvUrl(url.trim(), w, 82);
-}
-
-/** URL langsung untuk LCP — hindari proxy wsrv (lebih cepat di mobile). */
-function coverLcpUrl(url) {
-  if (!url || typeof url !== 'string') return '';
-  const u = url.trim();
-  // Pertahankan varian thumbnail asli (maxres/sd/mq/hq) supaya framing tidak berubah.
-  const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
-  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
-  // Jika URL hanya sampai /vi/<id> tanpa file, pakai maxresdefault dulu.
-  const yt = u.match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})(?:[/?#]|$)/);
-  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`;
-  return coverImgUrl(u, 320);
+function ytVideoId(url) {
+  if (!url || typeof url !== 'string') return null;
+  const m = url.trim().match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})/i);
+  return m ? m[1] : null;
 }
 
 function coverUsesYtCdn(url) {
   if (!url || typeof url !== 'string') return false;
-  const u = url.trim();
-  return /(?:img\.youtube\.com\/vi\/|ytimg\.com)/i.test(u);
+  return /(?:img\.youtube\.com\/vi\/|ytimg\.com)/i.test(url.trim());
 }
 
-/** Thumbnail kecil (related) — lebih ringan, cukup 96px. */
+function coverUsesSpotifyCdn(url) {
+  if (!url || typeof url !== 'string') return false;
+  return /i\.scdn\.co\/image/i.test(url.trim());
+}
+
+/** URL gambar langsung dari CDN (copy image link) — tanpa proxy wsrv. */
+function coverDirectUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const u = url.trim();
+  const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
+  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
+  const id = ytVideoId(u);
+  if (id) return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+  if (u.startsWith('http')) return u;
+  return u;
+}
+
+function coverImgUrl(url, w = 480) {
+  if (!url || typeof url !== 'string') return url;
+  const u = url.trim();
+  if (coverUsesYtCdn(u) || coverUsesSpotifyCdn(u)) return coverDirectUrl(u);
+  return wsrvUrl(u, w, 82);
+}
+
+/** URL LCP hero — CDN langsung, ukuran cukup tajam untuk 320px display. */
+function coverLcpUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const u = url.trim();
+  const id = ytVideoId(u);
+  if (id) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  if (coverUsesSpotifyCdn(u) || u.startsWith('http')) return coverDirectUrl(u);
+  return wsrvUrl(u, 320, 82);
+}
+
+function coverHeroSrcset(url) {
+  if (!url || typeof url !== 'string') return '';
+  const id = ytVideoId(url.trim());
+  if (id) {
+    return `https://i.ytimg.com/vi/${id}/mqdefault.jpg 320w, https://i.ytimg.com/vi/${id}/hqdefault.jpg 480w, https://i.ytimg.com/vi/${id}/maxresdefault.jpg 1280w`;
+  }
+  const direct = coverDirectUrl(url);
+  return direct ? `${direct} 640w` : '';
+}
+
+/** Thumbnail kecil (related) — CDN langsung jika tersedia, else wsrv. */
 function thumbImgUrl(url, w = 96) {
   if (!url || typeof url !== 'string') return url;
-  return wsrvUrl(url.trim(), w, 75);
+  const u = url.trim();
+  if (coverUsesYtCdn(u) || coverUsesSpotifyCdn(u)) return coverDirectUrl(u);
+  return wsrvUrl(u, w, 75);
 }
 
 function imgTag(src, alt, opts = {}) {
@@ -1529,7 +1562,7 @@ ${THEME_BOOT_SCRIPT}
 <meta name="language" content="Indonesian">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-${song.img ? (coverUsesYtCdn(song.img) ? '<link rel="preconnect" href="https://i.ytimg.com" crossorigin>' : '<link rel="preconnect" href="https://wsrv.nl" crossorigin>') : ''}
+${song.img ? (coverUsesYtCdn(song.img) ? '<link rel="preconnect" href="https://i.ytimg.com" crossorigin>' : coverUsesSpotifyCdn(song.img) ? '<link rel="preconnect" href="https://i.scdn.co" crossorigin>' : '<link rel="preconnect" href="https://wsrv.nl" crossorigin>') : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
 ${song.img ? `<link rel="preload" as="image" href="${escHtml(coverLcpUrl(song.img))}" fetchpriority="high">` : ''}
@@ -1691,7 +1724,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ash);transition:all .2s}
 .toggle-switch.on::after{left:14px;background:#fff}
 .thumbs-block{display:flex;flex-direction:column;gap:.75rem;flex:1;min-width:320px}
-.thumbs-row{display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap}
+.thumbs-row{display:flex;flex-direction:column;align-items:stretch;gap:.75rem}
 
 /* ── LYRICS MAIN ── */
 .lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
@@ -1767,7 +1800,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .lsep{display:none}
 
 /* ── THUMBS (sidebar) ── */
-.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:auto;flex-shrink:0;white-space:nowrap;font-family:var(--sans);color:var(--ink)}
+.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;box-sizing:border-box;flex-shrink:0;white-space:nowrap;font-family:var(--sans);color:var(--ink)}
 .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
 .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.1)}
 .thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
@@ -1786,7 +1819,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spbtn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
 /* Discord-style Spotify card */
-.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;min-width:200px;max-width:340px;border-left:4px solid #1DB954;box-sizing:border-box}
+.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;width:100%;max-width:100%;min-width:0;border-left:4px solid #1DB954;box-sizing:border-box}
 .spotify-card:hover{background:#2a2b2f}
 .spotify-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0}
 .spotify-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
@@ -2042,9 +2075,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .lyrics-sidebar>div:last-child{grid-column:1/-1}
   /* Tombol suka & spotify: full width, tidak overflow keluar sidebar */
   .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-wrap:wrap;gap:.6rem}
-  .thumbs-btn{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
-  .spotify-card{flex:1;min-width:160px;max-width:100%;box-sizing:border-box}
   #online-counter{width:100%;box-sizing:border-box}
   .toggle-group{display:flex;flex-direction:column;gap:0;width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{min-width:0;overflow:hidden;box-sizing:border-box}
@@ -2081,9 +2111,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   }
   .lyrics-sidebar>div:last-child{grid-column:1}
   .thumbs-block{min-width:0;width:100%;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-direction:column;gap:.5rem}
-  .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
-  .spotify-card{flex:none;width:100%;max-width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   #online-counter{width:100%}
   .toggle-group{width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
@@ -2183,9 +2210,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         ${song.img
           ? (() => {
               const lcp = escHtml(coverLcpUrl(song.img));
-              const c320 = escHtml(coverImgUrl(song.img, 320));
-              const c480 = escHtml(coverImgUrl(song.img, 480));
-              return `<img class="cover-img" src="${lcp}" srcset="${c320} 320w, ${c480} 480w, ${lcp} 640w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
+              const srcset = escHtml(coverHeroSrcset(song.img));
+              return `<img class="cover-img" src="${lcp}" srcset="${srcset}" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
             })()
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
@@ -2265,7 +2291,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         </button>
         ${song.sp ? `<a class="spotify-card" href="${escHtml(song.sp)}" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
           ${song.img
-            ? `<img class="spotify-card-art" src="${escHtml(thumbImgUrl(song.img, 80))}" alt="Cover ${escHtml(titleMain)}" width="80" height="80" loading="lazy" decoding="async">`
+            ? `<img class="spotify-card-art" src="${escHtml(coverDirectUrl(song.img))}" alt="Cover ${escHtml(titleMain)}" width="72" height="72" loading="lazy" decoding="async">`
             : `<div class="spotify-card-art-fallback"><svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg></div>`
           }
           <div class="spotify-card-body">
