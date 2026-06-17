@@ -1033,19 +1033,19 @@ Nuansa lagunya hangat, melankolis, dan penuh rasa sayang yang tenang. Sangat coc
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Given & dari ギヴン</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/marutsuke">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Marutsuke" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">まるつけ</div>
-      <div class="related-ro">Marutsuke</div>
-      <div class="related-artist">Given</div>
-    </div>
-    <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/fuyu-no-hanashi">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/fuyu-no-hanashi">
     <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02d3b27ed188ff76904ef0c300&amp;w=52&amp;output=webp&amp;q=75" alt="Fuyu no Hanashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
       <div class="related-title">冬のはなし</div>
       <div class="related-ro">Fuyu no Hanashi</div>
+      <div class="related-artist">Given</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/marutsuke">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FNkDmqUv8FeE%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Marutsuke" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">まるつけ</div>
+      <div class="related-ro">Marutsuke</div>
       <div class="related-artist">Given</div>
     </div>
     <div class="related-arr">→</div>
@@ -3808,7 +3808,7 @@ if(document.readyState==='complete'){
 <div id="discord-popup-overlay" class="discord-popup-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="discord-popup-title" aria-hidden="true">
   <div class="discord-popup-row">
     <div class="discord-popup-card">
-      <img class="discord-popup-img" data-src="https://images3.alphacoders.com/105/thumb-400-1053832.jpg" alt="" width="380" height="180" loading="lazy" decoding="async">
+      <img class="discord-popup-img" src="https://images3.alphacoders.com/105/thumb-1920-1053832.jpg" alt="" width="380" height="180" loading="eager" decoding="async">
       <p class="discord-popup-title" id="discord-popup-title">server discord yumelyrics</p>
       <a class="discord-popup-btn" href="https://discord.gg/SW9bTRHK8H" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" aria-hidden="true"><path fill="currentColor" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
@@ -3838,11 +3838,7 @@ if(document.readyState==='complete'){
       if(el)el.inert=on;
     });
   }
-  function loadPopupImg(){
-    if(!popupImg||popupImg.src)return;
-    var src=popupImg.getAttribute('data-src');
-    if(src)popupImg.src=src;
-  }
+  function loadPopupImg(){ return; }
   function toFab(){
     ov.classList.add('is-hidden');
     ov.setAttribute('aria-hidden','true');
