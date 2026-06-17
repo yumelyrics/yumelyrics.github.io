@@ -716,6 +716,35 @@ function buildLearnMetaHTML(song) {
   return `<div class="learn-meta-row">${chips.join('')}</div>`;
 }
 
+function buildSongPageTitle(titleMain, artist) {
+  const t = String(titleMain || '').trim();
+  const a = String(artist || '').trim();
+  if (a) return `${t} - ${a} | Terjemahan Indonesia`;
+  return `${t} | Terjemahan Indonesia`;
+}
+
+/** Meta description: tentang lagu (ID) → cuplikan terjemahan lirik → fallback singkat. */
+function buildSongMetaDesc(song, lyrics, titleMain, artist) {
+  const descId = String(song.descId || '').replace(/\s+/g, ' ').trim();
+  if (descId) return descId.substring(0, 160);
+
+  const idLines = (lyrics || []).map(l => String(l.id || '').trim()).filter(Boolean);
+  if (idLines.length) {
+    const fromLyrics = idLines.slice(0, 5).join(' ').replace(/\s+/g, ' ').trim();
+    if (fromLyrics) return fromLyrics.substring(0, 160);
+  }
+
+  const roLines = (lyrics || []).map(l => String(l.ro || l.jp || '').trim()).filter(Boolean);
+  if (roLines.length) {
+    const fromRo = roLines.slice(0, 5).join(' ').replace(/\s+/g, ' ').trim();
+    if (fromRo) return fromRo.substring(0, 160);
+  }
+
+  const t = String(titleMain || '').trim();
+  const a = String(artist || '').trim();
+  return `Lirik ${t}${a ? ` - ${a}` : ''} dengan terjemahan bahasa Indonesia.`.substring(0, 160);
+}
+
 const GLOSSARY_TERM_DEFS = [
   { slug: 'te-shimau', title: '〜てしまう', match: 'てしまう', desc: 'N5 · Menyelesaikan aksi; sering ada nuansa "akhirnya" atau penyesalan ringan.' },
   { slug: 'te-iru', title: '〜ている', match: 'ている', desc: 'N5 · Keadaan berlangsung atau hasil masih ada.' },
@@ -1334,22 +1363,11 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const songId       = song.id;
 
   const titleMain    = titleRo || titleDisplay;
-  const firstLines   = lyrics.slice(0,3).map(l=>l.id||l.ro||l.jp).filter(Boolean).join(' / ');
   const descId       = song.descId || '';
   const descJp       = song.descJp || '';
 
-  // Metadesc — pakai descId kalau admin udah isi, fallback ke auto-generated
-  let metaDesc;
-  if (descId) {
-    metaDesc = descId.substring(0, 160);
-  } else {
-    const animeCtx   = anime ? ` dari anime ${animeDisplay}` : '';
-    const typeCtx    = songType ? ` (${songType})` : '';
-    const titleIdCtx = titleId ? ` Artinya: "${titleId}".` : '';
-    metaDesc = `Lirik ${titleMain}${animeCtx}${typeCtx} - ${artist} lengkap: teks Jepang, romaji, dan terjemahan bahasa Indonesia.${titleIdCtx} ${firstLines ? firstLines + '.' : ''} Baca arti dan makna lagu di YumeSubs.`.substring(0, 160);
-  }
-
-
+  const pageTitle    = buildSongPageTitle(titleMain, artist);
+  const metaDesc     = buildSongMetaDesc(song, lyrics, titleMain, artist);
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
@@ -1393,7 +1411,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
   const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
   const geoAeoMeta = buildGeoAeoMeta({
-    title: `Lirik ${titleMain} - ${artist} + Terjemahan Indonesia | YumeLyrics`,
+    title: pageTitle,
     description: metaDesc,
     url: `${BASE_URL}/lagu/${slug}.html`,
     dateModified: today,
@@ -1425,7 +1443,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
     {
       "@context":"https://schema.org",
       "@type":"WebPage",
-      "name":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
+      "name": pageTitle,
       "description":metaDesc,
       "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
@@ -1466,7 +1484,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
     {
       "@context":"https://schema.org",
       "@type":"Article",
-      "headline":`Lirik ${titleMain} - ${artist} + Terjemahan Indonesia`,
+      "headline": pageTitle,
       "description":metaDesc,
       "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
@@ -1523,7 +1541,7 @@ ${song.img && /i\.scdn\.co/i.test(song.img) ? '<link rel="preconnect" href="http
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
 ${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img))}" fetchpriority="high">` : ''}
-<title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
+<title>${escHtml(pageTitle)}</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
   `lirik ${escHtml(titleMain)}`,
@@ -1546,7 +1564,7 @@ ${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.im
   'YumeLyrics',
   'YumeSubs',
 ].filter(Boolean).join(', ')}">
-<meta property="og:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
+<meta property="og:title" content="${escHtml(pageTitle)}">
 <meta property="og:description" content="${escHtml(metaDesc)}">
 <meta property="og:url" content="${BASE_URL}/lagu/${slug}.html">
 <meta property="og:type" content="music.song">
@@ -1559,7 +1577,7 @@ ${song.img?`<meta property="og:image" content="${escHtml(song.img)}">
 <meta property="og:image:height" content="600">` : `<meta property="og:image" content="${BASE_URL}/anime_icon.png">`}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@YumeSubs">
-<meta name="twitter:title" content="Lirik ${escHtml(titleMain)} - ${escHtml(artist)} | YumeLyrics">
+<meta name="twitter:title" content="${escHtml(pageTitle)}">
 <meta name="twitter:description" content="${escHtml(metaDesc)}">
 ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta name="twitter:image" content="${BASE_URL}/anime_icon.png">`}
 <link rel="canonical" href="${BASE_URL}/lagu/${slug}.html">
