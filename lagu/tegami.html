@@ -358,13 +358,13 @@ body.discord-popup-lock #nav-avatar-bubble,
 body.discord-popup-lock #nav-user-dropdown,
 body.discord-fab-active #nav-avatar-bubble,
 body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hidden!important;pointer-events:none!important}
-.discord-popup-row{display:flex;flex-direction:row;align-items:flex-start;gap:.65rem;max-width:min(96vw,430px)}
-.discord-popup-card{width:min(92vw,380px);flex-shrink:0;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1)}
+.discord-popup-row{display:flex;flex-direction:row;align-items:flex-start;gap:.65rem;width:min(92vw,380px)}
+.discord-popup-card{width:100%;flex-shrink:0;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1);contain:layout paint}
 @keyframes discordPopIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
 .discord-popup-close{flex-shrink:0;width:40px;height:40px;border:2px solid rgba(255,255,255,.28);border-radius:50%;background:#2c2f33;color:#fff;font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,transform .15s;box-shadow:0 4px 16px rgba(0,0,0,.35);margin-top:.15rem}
 .discord-popup-close:hover{background:#5865F2;border-color:rgba(255,255,255,.4);transform:scale(1.05)}
 .discord-popup-close[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none;transform:none}
-.discord-popup-img{display:block;width:100%;height:180px;object-fit:cover;background:#1e2124}
+.discord-popup-img{display:block;width:100%;height:auto;aspect-ratio:19/9;object-fit:cover;background:#1e2124}
 .discord-popup-title{margin:0;padding:1rem 1.1rem .25rem;font-family:var(--sans);font-size:.95rem;font-weight:700;letter-spacing:.04em;text-transform:lowercase;color:#eeeef2;text-align:center}
 .discord-popup-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;margin:1rem 1.1rem 1.25rem;padding:.85rem 1rem;background:#5865F2;color:#fff;text-decoration:none;border-radius:8px;font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,transform .15s}
 .discord-popup-btn:hover{background:#4752c4;transform:translateY(-1px)}
@@ -375,9 +375,8 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
 .discord-popup-overlay{padding:1.25rem;backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,8,18,.9)}
-.discord-popup-row{position:relative;max-width:min(92vw,380px)}
-.discord-popup-card{width:100%}
-.discord-popup-img{height:132px}
+.discord-popup-row{position:relative}
+.discord-popup-img{aspect-ratio:21/9}
 .discord-popup-close{position:absolute;top:-12px;right:-12px;z-index:5;width:34px;height:34px;font-size:.95rem;margin-top:0}
 }
 @media(prefers-reduced-motion:reduce){.discord-popup-card{animation:none}}
@@ -1022,28 +1021,28 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/happi-endo">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02e09353d6028fda18c3699085&amp;w=52&amp;output=webp&amp;q=75" alt="Happi Endo" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/hanataba">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e024951a4f5f9d719dfa4ef3d75&amp;w=52&amp;output=webp&amp;q=75" alt="Hanataba" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">ハッピーエンド</div>
-      <div class="related-ro">Happi Endo</div>
+      <div class="related-title">花束</div>
+      <div class="related-ro">Hanataba</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kurisumasu-songu">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-fa.spotifycdn.com%2Fimage%2Fab67616d00001e0259a14a1d53eb5610f84c8382&amp;w=52&amp;output=webp&amp;q=75" alt="Kurisumasu Songu" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/suiheisen">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FqRGRcUTends%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Suiheisen" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">クリスマスソング</div>
-      <div class="related-ro">Kurisumasu Songu</div>
+      <div class="related-title">水平線</div>
+      <div class="related-ro">Suiheisen</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/kowai-hanashi">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273783ed3c2af46af7ab7c671c0&amp;w=52&amp;output=webp&amp;q=75" alt="Kowai Hanashi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/mabataki">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02ce51ffc5c742ed217779cb9d&amp;w=52&amp;output=webp&amp;q=75" alt="Mabataki" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">こわいはなし</div>
-      <div class="related-ro">Kowai Hanashi</div>
-      <div class="related-artist">Back number</div>
+      <div class="related-title">瞬き</div>
+      <div class="related-ro">Mabataki</div>
+      <div class="related-artist">Back NUmber</div>
     </div>
     <div class="related-arr">→</div>
   </a></div>
