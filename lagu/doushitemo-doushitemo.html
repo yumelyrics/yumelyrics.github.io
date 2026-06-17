@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://wsrv.nl" crossorigin>
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-<link rel="preload" as="image" href="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=320&amp;output=webp&amp;q=82" fetchpriority="high">
+<link rel="preload" as="image" href="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026742a4c3db5d172a98733e91" fetchpriority="high">
 <title>Lirik Doushitemo Doushitemo - Back Number + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="Lagu ini ngomongin soal perjalanan hidup, mimpi, sama perjuangan buat tetap maju walau berkali-kali gagal atau kehilangan arah.
 
@@ -232,7 +232,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ash);transition:all .2s}
 .toggle-switch.on::after{left:14px;background:#fff}
 .thumbs-block{display:flex;flex-direction:column;gap:.75rem;flex:1;min-width:320px}
-.thumbs-row{display:flex;flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap}
+.thumbs-row{display:flex;flex-direction:column;align-items:stretch;gap:.75rem}
 
 /* ── LYRICS MAIN ── */
 .lyrics-main{padding:4rem 4rem 6rem 4rem;position:relative}
@@ -308,7 +308,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .lsep{display:none}
 
 /* ── THUMBS (sidebar) ── */
-.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:auto;flex-shrink:0;white-space:nowrap;font-family:var(--sans);color:var(--ink)}
+.thumbs-btn{display:flex;align-items:center;gap:.75rem;background:none;border:1.5px solid var(--border);padding:.6rem 1rem;cursor:pointer;transition:all .2s;width:100%;box-sizing:border-box;flex-shrink:0;white-space:nowrap;font-family:var(--sans);color:var(--ink)}
 .thumbs-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.06)}
 .thumbs-btn.voted{border-color:var(--gold);background:rgba(201,169,110,.1)}
 .thumbs-btn.pop svg{animation:thumbpop .35s cubic-bezier(.34,1.56,.64,1)}
@@ -327,7 +327,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .spbtn:hover{opacity:.87}
 .spbtn svg{width:14px;height:14px;fill:#000;flex-shrink:0}
 /* Discord-style Spotify card */
-.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;min-width:200px;max-width:340px;border-left:4px solid #1DB954;box-sizing:border-box}
+.spotify-card{display:flex;align-items:center;gap:0;background:#1e1f22;border-radius:8px;overflow:hidden;text-decoration:none;color:#fff;transition:background .15s;position:relative;flex:none;width:100%;max-width:100%;min-width:0;border-left:4px solid #1DB954;box-sizing:border-box}
 .spotify-card:hover{background:#2a2b2f}
 .spotify-card-art{width:72px;height:72px;min-width:72px;object-fit:cover;display:block;flex-shrink:0}
 .spotify-card-art-fallback{width:72px;height:72px;min-width:72px;flex-shrink:0;background:#2a2b2f;display:flex;align-items:center;justify-content:center}
@@ -610,9 +610,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   .lyrics-sidebar>div:last-child{grid-column:1/-1}
   /* Tombol suka & spotify: full width, tidak overflow keluar sidebar */
   .thumbs-block{display:flex;flex-direction:column;gap:.6rem;min-width:0;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-wrap:wrap;gap:.6rem}
-  .thumbs-btn{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
-  .spotify-card{flex:1;min-width:160px;max-width:100%;box-sizing:border-box}
   #online-counter{width:100%;box-sizing:border-box}
   .toggle-group{display:flex;flex-direction:column;gap:0;width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{min-width:0;overflow:hidden;box-sizing:border-box}
@@ -649,9 +646,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   }
   .lyrics-sidebar>div:last-child{grid-column:1}
   .thumbs-block{min-width:0;width:100%;overflow:hidden;box-sizing:border-box}
-  .thumbs-row{flex-direction:column;gap:.5rem}
-  .thumbs-btn{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
-  .spotify-card{flex:none;width:100%;max-width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
   #online-counter{width:100%}
   .toggle-group{width:100%;overflow:hidden;box-sizing:border-box}
   .toggle-item{width:100%;box-sizing:border-box;min-width:0;overflow:hidden}
@@ -742,7 +736,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="kanji-bg">ど</div>
     <div class="cover-wrap">
       <div class="cover-frame">
-        <img class="cover-img" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=320&amp;output=webp&amp;q=82" srcset="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=320&amp;output=webp&amp;q=82 320w, https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=480&amp;output=webp&amp;q=82 480w, https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=320&amp;output=webp&amp;q=82 640w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Doushitemo Doushitemo - Back Number" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">
+        <img class="cover-img" src="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026742a4c3db5d172a98733e91" srcset="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026742a4c3db5d172a98733e91 640w" sizes="(max-width:480px) 90vw, 480px" alt="Cover Doushitemo Doushitemo - Back Number" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
@@ -807,7 +801,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
           <span id="thumbs-label">Suka lagu ini?</span>
         </button>
         <a class="spotify-card" href="https://open.spotify.com/intl-id/track/6hlYmR30RGaHIz4UlVOG2U?si=f2e971804fa3476b" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
-          <img class="spotify-card-art" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e026742a4c3db5d172a98733e91&amp;w=80&amp;output=webp&amp;q=75" alt="Cover Doushitemo Doushitemo" width="80" height="80" loading="lazy" decoding="async">
+          <img class="spotify-card-art" src="https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026742a4c3db5d172a98733e91" alt="Cover Doushitemo Doushitemo" width="72" height="72" loading="lazy" decoding="async">
           <div class="spotify-card-body">
             <span class="spotify-card-label">
               <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg>
@@ -904,27 +898,27 @@ Vibenya penuh semangat, tapi bukan tipe semangat yang ceria. Lebih kayak orang y
     <div class="section-title">Lagu Lainnya</div>
     <div class="section-subtitle">dari Back Number</div>
   </div>
-  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/mabataki">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02ce51ffc5c742ed217779cb9d&amp;w=52&amp;output=webp&amp;q=75" alt="Mabataki" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  <div class="related-grid"><a class="related-card" href="https://yumelyrics.my.id/lagu/hanataba">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e024951a4f5f9d719dfa4ef3d75&amp;w=52&amp;output=webp&amp;q=75" alt="Hanataba" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">瞬き</div>
-      <div class="related-ro">Mabataki</div>
-      <div class="related-artist">Back NUmber</div>
-    </div>
-    <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/one-room">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FgR61iTaAkcU%2Fmaxresdefault.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="One Room" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">One Room</div>
-      <div class="related-ro">One Room</div>
+      <div class="related-title">花束</div>
+      <div class="related-ro">Hanataba</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/tegami">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e0259a14a1d53eb5610f84c8382&amp;w=52&amp;output=webp&amp;q=75" alt="Tegami" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/hikari-no-machi">
+    <img class="related-thumb" src="https://i.ytimg.com/vi/RhgTqqxxqds/maxresdefault.jpg" alt="Hikari no Machi" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
-      <div class="related-title">手紙</div>
-      <div class="related-ro">Tegami</div>
+      <div class="related-title">光の街</div>
+      <div class="related-ro">Hikari no Machi</div>
+      <div class="related-artist">Back Number</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/happi-endo">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e02e09353d6028fda18c3699085&amp;w=52&amp;output=webp&amp;q=75" alt="Happi Endo" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">ハッピーエンド</div>
+      <div class="related-ro">Happi Endo</div>
       <div class="related-artist">Back Number</div>
     </div>
     <div class="related-arr">→</div>
