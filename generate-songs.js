@@ -379,9 +379,12 @@ function coverImgUrl(url, w = 480) {
 function coverLcpUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const u = url.trim();
-  const yt = u.match(/(?:img\.youtube\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})/);
-  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/hqdefault.jpg`;
-  if (/ytimg\.com/i.test(u)) return u.replace(/\/(maxresdefault|sddefault|mqdefault|default)\.jpg/i, '/hqdefault.jpg');
+  // Pertahankan varian thumbnail asli (maxres/sd/mq/hq) supaya framing tidak berubah.
+  const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
+  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
+  // Jika URL hanya sampai /vi/<id> tanpa file, pakai maxresdefault dulu.
+  const yt = u.match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})(?:[/?#]|$)/);
+  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`;
   return coverImgUrl(u, 320);
 }
 
@@ -431,7 +434,7 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;margin:1rem 1.1rem 1.25rem;padding:.85rem 1rem;background:#5865F2;color:#fff;text-decoration:none;border-radius:8px;font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,transform .15s}
 .discord-popup-btn:hover{background:#4752c4;transform:translateY(-1px)}
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
-.discord-popup-fab{position:fixed;bottom:5.5rem;right:1.4rem;z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
+.discord-popup-fab{position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s,box-shadow .2s}
 .discord-popup-fab.is-visible{display:flex}
 .discord-popup-fab.discord-fab-hint{animation:discordFabPulse 2s ease-in-out infinite}
 @keyframes discordFabPulse{0%,100%{box-shadow:0 6px 24px rgba(88,101,242,.45)}50%{box-shadow:0 6px 28px rgba(88,101,242,.75),0 0 0 8px rgba(88,101,242,.18)}}
