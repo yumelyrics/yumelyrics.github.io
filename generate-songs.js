@@ -368,71 +368,28 @@ function escHtml(str) {
 function wsrvUrl(url, w, q = 80) {
   if (!url || typeof url !== 'string') return url;
   const u = url.trim();
-  if (!u.startsWith('http')) return u; // skip relative / data URLs
+  if (!u.startsWith('http')) return u;
   return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=${q}`;
 }
 
-function ytVideoId(url) {
-  if (!url || typeof url !== 'string') return null;
-  const m = url.trim().match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})/i);
-  return m ? m[1] : null;
-}
-
-function coverUsesYtCdn(url) {
-  if (!url || typeof url !== 'string') return false;
-  return /(?:img\.youtube\.com\/vi\/|ytimg\.com)/i.test(url.trim());
-}
-
-function coverUsesSpotifyCdn(url) {
-  if (!url || typeof url !== 'string') return false;
-  return /i\.scdn\.co\/image/i.test(url.trim());
-}
-
-/** URL gambar langsung dari CDN (copy image link) — tanpa proxy wsrv. */
-function coverDirectUrl(url) {
-  if (!url || typeof url !== 'string') return '';
-  const u = url.trim();
-  const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
-  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
-  const id = ytVideoId(u);
-  if (id) return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-  if (u.startsWith('http')) return u;
+/** URL cover utama — link langsung, naikkan resolusi YouTube kecil saja. */
+function coverImgUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  let u = url.trim();
+  if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
+  if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
   return u;
 }
 
-function coverImgUrl(url, w = 480) {
+/** Thumbnail kecil (related, spotify card). */
+function thumbImgUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  const u = url.trim();
-  if (coverUsesYtCdn(u) || coverUsesSpotifyCdn(u)) return coverDirectUrl(u);
-  return wsrvUrl(u, w, 82);
-}
-
-/** URL LCP hero — CDN langsung, ukuran cukup tajam untuk 320px display. */
-function coverLcpUrl(url) {
-  if (!url || typeof url !== 'string') return '';
-  const u = url.trim();
-  const id = ytVideoId(u);
-  if (id) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  if (coverUsesSpotifyCdn(u) || u.startsWith('http')) return coverDirectUrl(u);
-  return wsrvUrl(u, 320, 82);
-}
-
-function coverHeroSrcset(url) {
-  if (!url || typeof url !== 'string') return '';
-  const id = ytVideoId(url.trim());
-  if (id) {
-    return `https://i.ytimg.com/vi/${id}/mqdefault.jpg 320w, https://i.ytimg.com/vi/${id}/hqdefault.jpg 480w, https://i.ytimg.com/vi/${id}/maxresdefault.jpg 1280w`;
-  }
-  const direct = coverDirectUrl(url);
-  return direct ? `${direct} 640w` : '';
-}
-
-/** Thumbnail kecil (related) — CDN langsung jika tersedia, else wsrv. */
-function thumbImgUrl(url, w = 96) {
-  if (!url || typeof url !== 'string') return url;
-  const u = url.trim();
-  if (coverUsesYtCdn(u) || coverUsesSpotifyCdn(u)) return coverDirectUrl(u);
-  return wsrvUrl(u, w, 75);
+  let u = url.trim();
+  if (u.includes('img.youtube.com') && u.includes('maxresdefault')) u = u.replace('maxresdefault', 'hqdefault');
+  if (u.includes('genius.com') && /1000x\d+x\d/.test(u)) u = u.replace(/1000x\d+x\d+[^/]*/, '300x300');
+  if (u.includes('mzstatic.com')) u = u.replace(/\/(\d+)x(\d+)(bb|cc)/, '/300x300$3');
+  if (u.includes('scdn.co/image/ab67616d0000b273')) u = u.replace('0000b273', '00001e02');
+  return u;
 }
 
 function imgTag(src, alt, opts = {}) {
@@ -441,11 +398,10 @@ function imgTag(src, alt, opts = {}) {
   const h = opts.h || 52;
   const eager = !!opts.eager;
   const hd = !!opts.hd;
-  const sizes = opts.sizes || (hd ? '(max-width:600px) 100vw, 480px' : `${w}px`);
   if (!src) return '';
-  const u = hd ? coverImgUrl(src, w) : thumbImgUrl(src, w);
+  const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
-  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" sizes="${sizes}"${fp}>`;
+  return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${fp}>`;
 }
 
 const DISCORD_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" aria-hidden="true"><path fill="currentColor" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>`;
@@ -1562,10 +1518,11 @@ ${THEME_BOOT_SCRIPT}
 <meta name="language" content="Indonesian">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-${song.img ? (coverUsesYtCdn(song.img) ? '<link rel="preconnect" href="https://i.ytimg.com" crossorigin>' : coverUsesSpotifyCdn(song.img) ? '<link rel="preconnect" href="https://i.scdn.co" crossorigin>' : '<link rel="preconnect" href="https://wsrv.nl" crossorigin>') : ''}
+${song.img && /ytimg\.com|img\.youtube\.com/i.test(song.img) ? '<link rel="preconnect" href="https://i.ytimg.com" crossorigin>' : ''}
+${song.img && /i\.scdn\.co/i.test(song.img) ? '<link rel="preconnect" href="https://i.scdn.co" crossorigin>' : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(coverLcpUrl(song.img))}" fetchpriority="high">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img))}" fetchpriority="high">` : ''}
 <title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -2208,11 +2165,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? (() => {
-              const lcp = escHtml(coverLcpUrl(song.img));
-              const srcset = escHtml(coverHeroSrcset(song.img));
-              return `<img class="cover-img" src="${lcp}" srcset="${srcset}" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
-            })()
+          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
@@ -2291,7 +2244,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
         </button>
         ${song.sp ? `<a class="spotify-card" href="${escHtml(song.sp)}" target="_blank" rel="noopener" aria-label="Dengarkan di Spotify">
           ${song.img
-            ? `<img class="spotify-card-art" src="${escHtml(coverDirectUrl(song.img))}" alt="Cover ${escHtml(titleMain)}" width="72" height="72" loading="lazy" decoding="async">`
+            ? `<img class="spotify-card-art" src="${escHtml(thumbImgUrl(song.img))}" alt="Cover ${escHtml(titleMain)}" width="72" height="72" loading="lazy" decoding="async">`
             : `<div class="spotify-card-art-fallback"><svg viewBox="0 0 24 24" fill="#1DB954" width="24" height="24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.712 1.115.294.18.387.563.207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .519-.972c3.632-1.102 8.147-.568 11.234 1.329a.78.78 0 0 1 .257 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.582-1.782c3.532-1.155 9.404-.932 13.115 1.338a.937.937 0 0 1-.916 1.6z"/></svg></div>`
           }
           <div class="spotify-card-body">
