@@ -27,6 +27,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
 const DISCORD_SERVER_URL = 'https://discord.gg/SW9bTRHK8H';
 const DISCORD_POPUP_IMAGE_RAW = 'https://images3.alphacoders.com/105/thumb-1920-1053832.jpg';
+const DISCORD_POPUP_IMAGE = DISCORD_POPUP_IMAGE_RAW.replace('thumb-1920', 'thumb-400');
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isHtmlDirty(song) {
@@ -398,14 +399,18 @@ const DISCORD_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1
 
 const DISCORD_POPUP_CSS = `
 /* ── DISCORD POPUP ── */
-.discord-popup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.25rem 3.25rem 1.25rem 1.25rem;background:rgba(10,8,18,.72);backdrop-filter:blur(8px)}
+.discord-popup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.72);backdrop-filter:blur(8px)}
 .discord-popup-overlay.is-hidden{display:none!important}
 body.discord-popup-lock{overflow:hidden}
-.discord-popup-shell{position:relative;width:min(92vw,380px);flex-shrink:0}
-.discord-popup-close{position:absolute;top:0;right:-2.75rem;z-index:3;width:38px;height:38px;border:2px solid rgba(255,255,255,.22);border-radius:50%;background:#2c2f33;color:#fff;font-size:1.05rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,transform .15s;box-shadow:0 4px 16px rgba(0,0,0,.35)}
-.discord-popup-close:hover{background:#5865F2;border-color:rgba(255,255,255,.35);transform:scale(1.05)}
-.discord-popup-card{width:100%;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1)}
+body.discord-popup-lock #nav-avatar-bubble,
+body.discord-popup-lock #nav-user-dropdown,
+body.discord-fab-active #nav-avatar-bubble,
+body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.discord-popup-row{display:flex;flex-direction:row;align-items:flex-start;gap:.65rem;max-width:min(96vw,430px)}
+.discord-popup-card{width:min(92vw,380px);flex-shrink:0;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1)}
 @keyframes discordPopIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
+.discord-popup-close{flex-shrink:0;width:40px;height:40px;border:2px solid rgba(255,255,255,.28);border-radius:50%;background:#2c2f33;color:#fff;font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,transform .15s;box-shadow:0 4px 16px rgba(0,0,0,.35);margin-top:.15rem}
+.discord-popup-close:hover{background:#5865F2;border-color:rgba(255,255,255,.4);transform:scale(1.05)}
 .discord-popup-img{display:block;width:100%;height:180px;object-fit:cover;background:#1e2124}
 .discord-popup-title{margin:0;padding:1rem 1.1rem .25rem;font-family:var(--sans);font-size:.95rem;font-weight:700;letter-spacing:.04em;text-transform:lowercase;color:#eeeef2;text-align:center}
 .discord-popup-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;margin:1rem 1.1rem 1.25rem;padding:.85rem 1rem;background:#5865F2;color:#fff;text-decoration:none;border-radius:8px;font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,transform .15s}
@@ -416,19 +421,17 @@ body.discord-popup-lock{overflow:hidden}
 .discord-popup-fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(88,101,242,.55)}
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
-.discord-popup-overlay{padding:3rem 1.25rem 1.25rem;backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,8,18,.88)}
-.discord-popup-shell{padding-top:2.75rem}
-.discord-popup-close{top:-2.75rem;right:0}
+.discord-popup-overlay{padding:1.25rem;backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,8,18,.9)}
+.discord-popup-close{width:36px;height:36px;font-size:1rem}
 }
 @media(prefers-reduced-motion:reduce){.discord-popup-card{animation:none}}
 `;
 
 function buildDiscordPopupMarkup() {
-  const popupImg = escHtml(`${wsrvUrl(DISCORD_POPUP_IMAGE_RAW, 400, 75)}&h=180&fit=cover`);
+  const popupImg = escHtml(DISCORD_POPUP_IMAGE);
   return `
 <div id="discord-popup-overlay" class="discord-popup-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="discord-popup-title" aria-hidden="true">
-  <div class="discord-popup-shell">
-    <button type="button" class="discord-popup-close" id="discord-popup-close" aria-label="Tutup notifikasi">✕</button>
+  <div class="discord-popup-row">
     <div class="discord-popup-card">
       <img class="discord-popup-img" data-src="${popupImg}" alt="" width="380" height="180" loading="lazy" decoding="async">
       <p class="discord-popup-title" id="discord-popup-title">server discord yumelyrics</p>
@@ -437,6 +440,7 @@ function buildDiscordPopupMarkup() {
         <span>Gabung Discord</span>
       </a>
     </div>
+    <button type="button" class="discord-popup-close" id="discord-popup-close" aria-label="Tutup notifikasi">✕</button>
   </div>
 </div>
 <a class="discord-popup-fab" id="discord-popup-fab" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener noreferrer" aria-label="Server Discord YumeLyrics" title="Server Discord YumeLyrics">
@@ -468,6 +472,7 @@ function buildDiscordPopupMarkup() {
     ov.classList.add('is-hidden');
     ov.setAttribute('aria-hidden','true');
     fab.classList.add('is-visible');
+    document.body.classList.add('discord-fab-active');
     lockPage(false);
     try{localStorage.setItem(KEY,'1');}catch(e){}
   }
@@ -476,12 +481,17 @@ function buildDiscordPopupMarkup() {
     ov.classList.remove('is-hidden');
     ov.setAttribute('aria-hidden','false');
     fab.classList.remove('is-visible');
+    document.body.classList.remove('discord-fab-active');
     lockPage(true);
   }
   function init(){
     var dismissed=false;
     try{dismissed=localStorage.getItem(KEY)==='1';}catch(e){}
-    if(dismissed){fab.classList.add('is-visible');return;}
+    if(dismissed){
+      fab.classList.add('is-visible');
+      document.body.classList.add('discord-fab-active');
+      return;
+    }
     toModal();
   }
   closeBtn.addEventListener('click',function(e){
@@ -499,7 +509,9 @@ function buildDiscordPopupMarkup() {
     }
   },true);
   function runInit(){
-    (window.requestIdleCallback||function(cb){setTimeout(cb,120)})(init);
+    setTimeout(function(){
+      (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(init);
+    },2800);
   }
   if(document.readyState==='complete')runInit();
   else window.addEventListener('load',runInit,{once:true});
@@ -1465,7 +1477,7 @@ ${THEME_BOOT_SCRIPT}
 ${song.img ? '<link rel="preconnect" href="https://wsrv.nl" crossorigin>' : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 320))}" imagesrcset="${escHtml(coverImgUrl(song.img, 320))} 320w, ${escHtml(coverImgUrl(song.img, 480))} 480w" imagesizes="(max-width:600px) 100vw, 480px" fetchpriority="high">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 240))}" imagesrcset="${escHtml(coverImgUrl(song.img, 240))} 240w, ${escHtml(coverImgUrl(song.img, 320))} 320w, ${escHtml(coverImgUrl(song.img, 480))} 480w" imagesizes="(max-width:480px) 90vw, 480px" fetchpriority="high">` : ''}
 <title>Lirik ${escHtml(titleMain)} - ${escHtml(artist)} + Terjemahan Indonesia | YumeLyrics</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -1513,7 +1525,6 @@ ${song.img?`<meta name="twitter:image" content="${escHtml(song.img)}">` : `<meta
 <script type="application/ld+json">${faqSchema}</script>
 ${geoAeoMeta}
 ${FONT_LINK}
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://unpkg.com/@waline/client@3/dist/waline.css"></noscript>
 <style>
 ${CSS_TOKENS}
 /* ── NIGHT MODE (halaman lagu) ── */
@@ -2254,9 +2265,10 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <div class="cover-frame">
         ${song.img
           ? (() => {
+              const c240 = escHtml(coverImgUrl(song.img, 240));
               const c320 = escHtml(coverImgUrl(song.img, 320));
               const c480 = escHtml(coverImgUrl(song.img, 480));
-              return `<img class="cover-img" src="${c320}" srcset="${c320} 320w, ${c480} 480w" sizes="(max-width:600px) 100vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
+              return `<img class="cover-img" src="${c240}" srcset="${c240} 240w, ${c320} 320w, ${c480} 480w" sizes="(max-width:480px) 90vw, 480px" alt="${escHtml(`Cover ${titleMain} - ${artist}`)}" width="480" height="480" loading="eager" decoding="async" fetchpriority="high">`;
             })()
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
@@ -2635,8 +2647,7 @@ ${(()=>{
 </div>
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
-document.addEventListener('DOMContentLoaded', function(){
-  // Generate nomor baris lirik otomatis seperti preview-lagu
+function _initLyricPills(){
   var lineNum = 1;
   document.querySelectorAll('.ll-item').forEach(function(item){
     var numEl = document.createElement('div');
@@ -2644,23 +2655,24 @@ document.addEventListener('DOMContentLoaded', function(){
     numEl.textContent = String(lineNum++).padStart(2,'0');
     item.appendChild(numEl);
   });
-
   var pills = document.querySelectorAll('.ctrl-pill[data-view]');
   pills.forEach(function(pill){
     pill.addEventListener('click', function(){
       var view = pill.dataset.view;
-      // Reset semua ke off dulu, lalu aktifkan sesuai view
       var targets = {jp: view==='all'||view==='jp', ro: view==='all'||view==='ro', tr: view==='all'||view==='tr'};
-      // Paksa set state langsung lewat window supaya sync dengan sidebar
       if(window._lyricSetView) window._lyricSetView(targets.jp, targets.ro, targets.tr);
       pills.forEach(function(p){ p.classList.remove('active'); });
       pill.classList.add('active');
     });
   });
-  // thumbs-count-sb sudah di-update langsung oleh onSnapshot di loadThumb()
-  // MutationObserver dihapus agar tidak double-update count
-
-});
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',function(){
+    (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(_initLyricPills);
+  },{once:true});
+}else{
+  (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(_initLyricPills);
+}
 </script>
 <script>
 /* ── Fitur belajar YumeSubs: mode uji, karaoke, tata bahasa, favorit ── */
@@ -3417,7 +3429,8 @@ function applyAuthLoggedInUISync(user){
   _currentUser = user;
   _isAdmin = ADMIN_EMAILS.includes(user.email);
   const bubble = document.getElementById('nav-avatar-bubble');
-  if(bubble) bubble.style.display = 'block';
+  const hideBubble = document.body.classList.contains('discord-popup-lock') || document.body.classList.contains('discord-fab-active');
+  if(bubble) bubble.style.display = hideBubble ? 'none' : 'block';
   const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
   const nudName = document.getElementById('nud-name');
   const nudEmail = document.getElementById('nud-email');
@@ -4697,6 +4710,13 @@ legacy comment UI removed */
   function loadWaline(){
     if(walineLoaded) return;
     walineLoaded = true;
+    if(!document.getElementById('waline-css')){
+      var wlCss=document.createElement('link');
+      wlCss.id='waline-css';
+      wlCss.rel='stylesheet';
+      wlCss.href='https://unpkg.com/@waline/client@3/dist/waline.css';
+      document.head.appendChild(wlCss);
+    }
     import('https://unpkg.com/@waline/client@3/dist/waline.js').then(function(m){
       var _walineInit = m.init;
       window._walineAppInstance = _walineInit({
@@ -4773,7 +4793,7 @@ legacy comment UI removed */
     var commentsEl = document.querySelector('.comments-section');
     if(commentsEl) observer.observe(commentsEl);
   }
-  setTimeout(loadWaline, 3000);
+  setTimeout(loadWaline, 5000);
 })();
 // ── Waline submit-click detector ─────────────────────────────────────────
 // Set flag HANYA ketika user benar-benar klik tombol Submit Waline,
@@ -4848,7 +4868,24 @@ window._ymPendingWalineSubmit = false;
   setInterval(_fetchCount, 30000);
 })();
 }
-['scroll','touchstart','mousemove'].forEach(function(e){window.addEventListener(e,_initHeavy,{once:true,passive:true});});
+function _scheduleHeavy(){
+  if(_fbLoaded)return;
+  (window.requestIdleCallback||function(cb){setTimeout(cb,1)})(_initHeavy);
+}
+(function(){
+  var fired=false;
+  function go(){if(fired)return;fired=true;_scheduleHeavy();}
+  var cmSec=document.querySelector('.cmsec');
+  if(cmSec&&'IntersectionObserver' in window){
+    new IntersectionObserver(function(entries,o){
+      if(entries.some(function(e){return e.isIntersecting;})){
+        o.disconnect();
+        go();
+      }
+    },{rootMargin:'300px'}).observe(cmSec);
+  }
+  setTimeout(go,8000);
+})();
 </script>
 <script>
 /* fixBg: sesuaikan tinggi viewport — bgwrap hanya aktif di desktop (>=768px) */
@@ -4929,7 +4966,7 @@ fixBg();if(window.visualViewport){window.visualViewport.addEventListener('resize
 </script>
 <script>
 /* ── YumeSubs Copy Protection (v4) - Deferred after initial render ── */
-setTimeout(function(){
+function _startCopyProtect(){
 (function(){
   var WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
 
@@ -5137,7 +5174,12 @@ setTimeout(function(){
   })();
 
 })();
-}, 100); // Defer copy protection by 100ms after initial render
+}
+if(document.readyState==='complete'){
+  setTimeout(_startCopyProtect,3500);
+}else{
+  window.addEventListener('load',function(){setTimeout(_startCopyProtect,3500);},{once:true});
+}
 </script>
 <div id="rm-decoy-wrap">
   <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan melalui browser tanpa Reader Mode aktif. Silakan kunjungi yumelyrics.my.id secara langsung untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta.</p></article>
