@@ -382,10 +382,10 @@ function coverLcpUrl(url) {
   const u = url.trim();
   // Pertahankan varian thumbnail asli (maxres/sd/mq/hq) supaya framing tidak berubah.
   const ytFull = u.match(/https?:\/\/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([A-Za-z0-9_-]{11})\/([^/?#]+\.jpg)/i);
-  if (ytFull) return wsrvUrl(`https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`, 640, 84);
+  if (ytFull) return `https://i.ytimg.com/vi/${ytFull[1]}/${ytFull[2]}`;
   // Jika URL hanya sampai /vi/<id> tanpa file, pakai maxresdefault dulu.
   const yt = u.match(/(?:img\.youtube\.com\/vi\/|i\.ytimg\.com\/vi\/|\/vi\/)([A-Za-z0-9_-]{11})(?:[/?#]|$)/);
-  if (yt) return wsrvUrl(`https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`, 640, 84);
+  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/maxresdefault.jpg`;
   return coverImgUrl(u, 320);
 }
 
@@ -442,7 +442,10 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .discord-popup-fab svg{width:26px;height:20px}
 @media(max-width:768px){
 .discord-popup-overlay{padding:1.25rem;backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,8,18,.9)}
-.discord-popup-close{width:36px;height:36px;font-size:1rem}
+.discord-popup-row{position:relative;max-width:min(92vw,380px)}
+.discord-popup-card{width:100%}
+.discord-popup-img{height:132px}
+.discord-popup-close{position:absolute;top:-12px;right:-12px;z-index:5;width:34px;height:34px;font-size:.95rem;margin-top:0}
 }
 @media(prefers-reduced-motion:reduce){.discord-popup-card{animation:none}}
 `;
