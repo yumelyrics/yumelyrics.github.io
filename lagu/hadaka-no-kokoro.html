@@ -2,6 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://unpkg.com https://static.cloudflareinsights.com; connect-src 'self' https://firestore.googleapis.com https://yumelyrics-comment.vercel.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.youtube.com;">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <script>(function(){if(localStorage.getItem('ym_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -121,8 +124,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 [data-theme="dark"] .related-section{background:var(--cream)}
 [data-theme="dark"] .related-card{background:rgba(232,226,217,.03)}
 [data-theme="dark"] footer{background:#070604}
-[data-theme="dark"] #nav-user-dropdown{background:var(--cream)}
-[data-theme="dark"] .ep-box{background:var(--cream)}
 [data-theme="dark"] .cmi{color:var(--ink)}
 [data-theme="dark"] .lyric-item:hover{background:rgba(201,169,110,.04)}
 [data-theme="dark"] .kanji-bg{color:rgba(212,169,110,.06)}
@@ -354,10 +355,6 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .discord-popup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.72);backdrop-filter:blur(8px)}
 .discord-popup-overlay.is-hidden{display:none!important}
 body.discord-popup-lock{overflow:hidden}
-body.discord-popup-lock #nav-avatar-bubble,
-body.discord-popup-lock #nav-user-dropdown,
-body.discord-fab-active #nav-avatar-bubble,
-body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .discord-popup-row{display:flex;flex-direction:row;align-items:flex-start;gap:.65rem;width:min(92vw,380px)}
 .discord-popup-card{width:100%;flex-shrink:0;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1);contain:layout paint}
 @keyframes discordPopIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
@@ -464,9 +461,6 @@ body.discord-fab-active #nav-user-dropdown{display:none!important;visibility:hid
 .sbtn>*{position:relative;z-index:1}
 .sbtn:disabled{opacity:.35;cursor:not-allowed}
 .sbtn:disabled::after{display:none}
-/* login gate inside comments */
-#cm-login-gate{border:1px solid var(--border)!important;background:var(--mist)!important;display:flex;flex-direction:column;gap:.75rem}
-.cm-login-gate-hidden{display:none!important}
 
 /* ── COMMENT LIST ── */
 .cmlist{display:flex;flex-direction:column;gap:0}
@@ -562,141 +556,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 #img-lightbox img{max-width:90vw;max-height:88vh;object-fit:contain;box-shadow:0 8px 48px rgba(0,0,0,.4);user-select:none}
 #img-lightbox-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;opacity:.7;transition:opacity .15s;z-index:10;line-height:1}
 #img-lightbox-close:hover{opacity:1}
-#editProfileModal{position:fixed;inset:0;z-index:300;background:rgba(10,8,18,.6);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-#editProfileModal.open{display:flex}
-.ep-box{width:100%;max-width:380px;padding:2rem;border:1px solid var(--border);background:var(--paper);display:flex;flex-direction:column;gap:.9rem;margin:1rem;box-shadow:0 16px 48px rgba(10,8,18,.15)}
-.ep-title{font-family:var(--jp);font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:.08em}
-.ep-avatar-wrap{display:flex;align-items:center;gap:.9rem;padding:.65rem;background:var(--mist);border:1px solid var(--border)}
-.ep-avatar-big{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
-.ep-avatar-placeholder-big{width:46px;height:46px;border-radius:50%;background:rgba(10,8,18,.06);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.2rem;color:var(--ash);border:1px solid var(--border)}
-.ep-info{display:flex;flex-direction:column;gap:.15rem}
-.ep-name{font-size:.85rem;color:var(--ink);font-weight:500}
-.ep-email{font-size:.62rem;color:var(--ash)}
-.ep-field{display:flex;flex-direction:column;gap:.28rem}
-.ep-lbl{font-size:.52rem;color:var(--smoke);letter-spacing:.25em;text-transform:uppercase;font-weight:700}
-.ep-inp{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--ink);font-family:var(--sans);font-size:.8rem;padding:.55rem 0;outline:none;transition:border-color .2s;width:100%}
-.ep-inp:focus{border-color:var(--ink)}
-.ep-inp::placeholder{color:var(--smoke)}
-.ep-note{font-size:.62rem;color:var(--ash);line-height:1.6;font-family:var(--serif)}
-.ep-actions{display:flex;gap:.55rem;margin-top:.2rem}
-.ep-save{background:var(--ink);border:none;font-family:var(--sans);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--paper);padding:.6rem 1.1rem;cursor:pointer;font-weight:700;transition:all .2s;flex:1}
-.ep-save:hover{background:var(--gold);color:var(--ink)}
-.ep-save:disabled{opacity:.4;cursor:not-allowed}
-.ep-cancel{background:none;border:1px solid var(--border);font-family:var(--sans);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);padding:.55rem .9rem;cursor:pointer;transition:all .2s;font-weight:600}
-.ep-cancel:hover{border-color:var(--red);color:var(--red)}
-.ep-img-row{display:flex;align-items:center;gap:.55rem}
-.ep-img-btn{background:var(--mist);border:1px solid var(--border);color:var(--ink);font-family:var(--sans);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;font-weight:600}
-.ep-img-btn:hover{background:rgba(10,8,18,.08)}
-.ep-img-status{font-size:.62rem;color:var(--ash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* ── FLOATING AVATAR BUBBLE ── */
-#nav-avatar-bubble{position:fixed;bottom:1.4rem;right:1.4rem;z-index:200;display:none;cursor:pointer;user-select:none}
-.nav-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(10,8,18,.2);object-fit:cover;box-shadow:0 2px 16px rgba(10,8,18,.15);transition:transform .18s,box-shadow .18s;display:block}
-.nav-avatar:hover{transform:scale(1.07);box-shadow:0 4px 24px rgba(10,8,18,.2)}
-.nav-avatar-placeholder{width:44px;height:44px;border-radius:50%;border:2px solid rgba(10,8,18,.2);background:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.05rem;color:var(--ash);box-shadow:0 2px 16px rgba(10,8,18,.1);transition:transform .18s,box-shadow .18s}
-.nav-avatar-placeholder:hover{transform:scale(1.07)}
-#nav-avatar-bubble.is-banned .nav-avatar,
-#nav-avatar-bubble.is-banned .nav-avatar-placeholder{border-color:var(--red)!important}
-#nav-banned-overlay{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;border:2px solid var(--paper);display:none;align-items:center;justify-content:center;font-size:.6rem;z-index:5;pointer-events:none}
-#nav-avatar-bubble.is-banned #nav-banned-overlay{display:flex}
-
-/* ── USER DROPDOWN ── */
-#nav-user-dropdown{position:fixed;bottom:5.2rem;right:1.4rem;z-index:201;background:var(--paper);border:1px solid var(--border);padding:.8rem;display:none;flex-direction:column;gap:.4rem;min-width:220px;box-shadow:0 8px 32px rgba(10,8,18,.12);animation:dropUp .15s ease}
-@keyframes dropUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-#nav-user-dropdown.open{display:flex}
-.nud-name{font-size:.95rem;color:var(--ink);font-weight:600;padding:.4rem .8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.nud-email{font-size:.72rem;color:var(--ash);padding:0 .8rem .5rem;border-bottom:1px solid var(--border);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.nud-btn{background:none;border:none;font-family:var(--sans);font-size:.72rem;color:var(--ash);cursor:pointer;padding:.6rem .8rem;text-align:left;letter-spacing:.08em;text-transform:uppercase;transition:color .18s,background .18s;width:100%;font-weight:600}
-.nud-btn:hover{color:var(--ink);background:rgba(10,8,18,.04)}
-.nud-btn.logout{color:var(--red)}
-.nud-btn.logout:hover{background:rgba(192,57,43,.06)}
-.nud-role{padding:.1rem .8rem .55rem;display:flex;align-items:center;gap:.4rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
-.nud-role-label{font-size:.6rem;color:var(--ash);letter-spacing:.12em;text-transform:uppercase}
-.nud-notif-header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .8rem .3rem;border-top:1px solid var(--border);margin-top:.3rem}
-.nud-notif-title{font-size:.6rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;font-weight:700}
-.nud-notif-clear{background:none;border:none;font-size:.6rem;color:var(--ash);cursor:pointer;padding:0;letter-spacing:.08em;text-transform:uppercase;transition:color .15s;font-weight:600}
-.nud-notif-clear:hover{color:var(--rose)}
-#nud-notif-list{display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;margin:0 -.1rem}
-.nud-notif-item{padding:.7rem .8rem;cursor:pointer;transition:background .15s;border-left:3px solid transparent;margin:.15rem 0}
-.nud-notif-item:hover{background:rgba(10,8,18,.03)}
-.nud-notif-item.unread{border-left-color:var(--rose);background:rgba(196,99,122,.04)}
-.nud-notif-from{font-size:.78rem;color:var(--rose);font-weight:600;margin-bottom:.2rem}
-.nud-notif-msg{font-size:.74rem;color:var(--ink);line-height:1.5;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.nud-notif-meta{font-size:.66rem;color:var(--ash)}
-.nud-notif-empty{font-size:.76rem;color:var(--ash);font-style:italic;padding:.6rem .8rem;font-family:var(--serif)}
-
-/* ── ROLE BADGES ── */
-.role-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;font-weight:700;padding:.15rem .48rem;border-radius:0;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;white-space:nowrap;line-height:1.4}
-.role-0{background:var(--mist);border:1px solid var(--border);color:var(--ash)}
-.role-1{background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.28);color:#27ae60}
-.role-2{background:rgba(41,128,185,.08);border:1px solid rgba(41,128,185,.28);color:#2980b9}
-.role-3{background:rgba(124,77,110,.1);border:1px solid rgba(124,77,110,.3);color:var(--plum)}
-.role-4{background:rgba(196,99,122,.1);border:1px solid rgba(196,99,122,.3);color:var(--rose)}
-.role-5{background:rgba(211,84,0,.1);border:1px solid rgba(211,84,0,.3);color:#d35400}
-.role-6{background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.4);color:var(--gold)}
-.role-7{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.4);color:var(--red)}
-.role-custom{background:rgba(124,77,110,.12);border:1px solid rgba(124,77,110,.4);color:var(--plum)}
-.cm-banned-badge{display:inline-flex;align-items:center;gap:.2rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);padding:.1rem .38rem;font-weight:600;vertical-align:middle}
-
-/* ── ADMIN INLINE EDIT (halaman lagu) ── */
-.admin-edit-song-btn{border-color:rgba(201,169,110,.45)!important;color:var(--gold)!important}
-.admin-edit-song-btn:hover{background:rgba(201,169,110,.1)!important;border-color:var(--gold)!important}
-#songEditOverlay{position:fixed;inset:0;z-index:450;background:rgba(10,8,18,.55);backdrop-filter:blur(10px);display:none;align-items:flex-start;justify-content:center;padding:1rem;padding-top:max(1rem,env(safe-area-inset-top));padding-bottom:max(1rem,env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
-#songEditOverlay.open{display:flex}
-.se-modal{width:100%;max-width:720px;background:var(--paper);border:1px solid var(--border);box-shadow:0 24px 80px rgba(10,8,18,.18);margin:auto 0;animation:fadeUp .25s ease}
-[data-theme="dark"] .se-modal{background:var(--cream);box-shadow:0 24px 80px rgba(0,0,0,.45)}
-.se-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.15rem 1.25rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--paper);z-index:2}
-[data-theme="dark"] .se-head{background:var(--cream)}
-.se-tit{font-family:var(--serif);font-size:1.15rem;font-style:italic;color:var(--ink)}
-.se-sub{font-size:.68rem;color:var(--ash);margin-top:.25rem;line-height:1.5}
-.se-close{background:none;border:1px solid var(--border);color:var(--ash);font-size:1rem;width:36px;height:36px;cursor:pointer;flex-shrink:0;border-radius:8px}
-.se-close:hover{border-color:var(--red);color:var(--red)}
-.se-body{padding:1.15rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem;max-height:calc(100dvh - 8rem);overflow-y:auto}
-.se-sec{font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.15rem}
-.se-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.se-field{display:flex;flex-direction:column;gap:.3rem;min-width:0}
-.se-field.full{grid-column:1/-1}
-.se-lbl{font-size:.58rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ash)}
-.se-inp,.se-ta{background:rgba(10,8,18,.03);border:1px solid var(--border);border-radius:8px;color:var(--ink);font-family:var(--sans);font-size:.85rem;padding:.65rem .75rem;outline:none;width:100%;transition:border-color .2s}
-[data-theme="dark"] .se-inp,[data-theme="dark"] .se-ta{background:rgba(232,226,217,.04)}
-.se-inp:focus,.se-ta:focus{border-color:var(--gold)}
-.se-ta{resize:vertical;min-height:4.5rem;line-height:1.55}
-.se-lyrics{display:flex;flex-direction:column;gap:.55rem}
-.se-lrow{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding:.65rem .65rem .65rem 2.5rem;background:var(--cream);border:1px solid var(--border);border-radius:8px;position:relative}
-[data-theme="dark"] .se-lrow{background:rgba(232,226,217,.03)}
-.se-lrow .se-inp{font-size:.8rem}
-.se-lrow-del{position:absolute;top:.4rem;right:.4rem;width:30px;height:30px;border:1px solid rgba(185,64,64,.3);background:var(--paper);color:var(--red);border-radius:6px;cursor:pointer;font-size:.85rem;line-height:1}
-.se-add-row{background:none;border:1px dashed var(--border);color:var(--ash);font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.55rem;cursor:pointer;border-radius:8px;width:100%}
-.se-add-row:hover{border-color:var(--gold);color:var(--gold)}
-.se-foot{display:flex;gap:.5rem;padding:1rem 1.25rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--paper);flex-wrap:wrap}
-[data-theme="dark"] .se-foot{background:var(--cream)}
-.se-save{flex:1;min-width:140px;background:var(--ink);border:none;color:var(--paper);font-family:var(--sans);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
-.se-save:hover{background:var(--gold);color:var(--ink)}
-.se-save:disabled{opacity:.45;cursor:not-allowed}
-.se-cancel{background:none;border:1px solid var(--border);color:var(--ash);font-family:var(--sans);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
-.se-cancel:hover{border-color:var(--red);color:var(--red)}
-.se-gen{flex:1;min-width:140px;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.4);color:var(--gold);font-family:var(--sans);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 1rem;border-radius:8px;cursor:pointer;min-height:44px}
-.se-gen:hover{background:rgba(201,169,110,.22);border-color:var(--gold)}
-.se-gen:disabled{opacity:.45;cursor:not-allowed}
-.se-foot-main{display:flex;gap:.5rem;flex-wrap:wrap;width:100%}
-.se-gh-status{display:none;align-items:center;gap:.55rem;width:100%;font-size:.72rem;color:var(--ash);flex-wrap:wrap;padding:.35rem 0 0}
-.se-gh-status.on{display:flex}
-.se-gh-dot{width:8px;height:8px;border-radius:50%;background:var(--ash);flex-shrink:0}
-.se-gh-dot.blink{animation:seGhBlink 1s infinite}
-@keyframes seGhBlink{0%,100%{opacity:1}50%{opacity:.35}}
-.se-gh-link{color:var(--gold);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(201,169,110,.35);padding:.2rem .55rem;border-radius:6px}
-.se-gh-link:hover{border-color:var(--gold)}
-.se-gh-token{margin-top:.35rem;width:100%}
-.se-gh-token summary{font-size:.62rem;color:var(--ash);cursor:pointer;letter-spacing:.06em}
-.se-gh-token-inp{margin-top:.45rem;width:100%;background:rgba(10,8,18,.03);border:1px solid var(--border);border-radius:8px;color:var(--ink);font-family:var(--sans);font-size:.8rem;padding:.55rem .65rem}
-[data-theme="dark"] .se-gh-token-inp{background:rgba(232,226,217,.04)}
-@media(max-width:768px){
-  .se-grid,.se-lrow{grid-template-columns:1fr}
-  .se-body{max-height:none}
-  .se-foot{flex-direction:column}
-  .se-foot-main{flex-direction:column}
-  .se-save,.se-gen,.se-cancel{width:100%}
-}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -826,7 +685,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
-    <div id="nav-user-slot" style="display:none" class="nav-user"></div>
   </div>
 </nav>
 
@@ -860,7 +718,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     
     <div class="hero-actions">
       <button class="btn-primary" onclick="window._scrollToLyrics()">↓ Baca Lirik</button>
-      <button class="btn-ghost admin-edit-song-btn" id="admin-edit-song-btn" type="button" style="display:none" onclick="openSongEditModal()" title="Edit lagu (admin)">✏ Edit Lagu</button>
       <a class="btn-ghost" href="../latihan.html?song=R7jHc2CEccN9dJdjeY3b&amp;slug=hadaka-no-kokoro" style="text-decoration:none">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         Latihan Terjemah
@@ -1029,19 +886,19 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <div class="related-artist">Aimyon</div>
     </div>
     <div class="related-arr">→</div>
-  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/futaba">
-    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e023baf45bc783428f905c5fd66&amp;w=52&amp;output=webp&amp;q=75" alt="Futaba" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
-    <div class="related-info">
-      <div class="related-title">双葉</div>
-      <div class="related-ro">Futaba</div>
-      <div class="related-artist">Aimyon</div>
-    </div>
-    <div class="related-arr">→</div>
   </a><a class="related-card" href="https://yumelyrics.my.id/lagu/marigold">
     <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FMusic124%2Fv4%2F3c%2F3b%2Ff6%2F3c3bf6e8-1947-347e-f6f0-c857ca4c026f%2F190295490089.jpg%2F800x800cc.jpg&amp;w=52&amp;output=webp&amp;q=75" alt="Marigold" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
     <div class="related-info">
       <div class="related-title">マリーゴールド</div>
       <div class="related-ro">Marigold</div>
+      <div class="related-artist">Aimyon</div>
+    </div>
+    <div class="related-arr">→</div>
+  </a><a class="related-card" href="https://yumelyrics.my.id/lagu/futaba">
+    <img class="related-thumb" src="https://wsrv.nl/?url=https%3A%2F%2Fimage-cdn-ak.spotifycdn.com%2Fimage%2Fab67616d00001e023baf45bc783428f905c5fd66&amp;w=52&amp;output=webp&amp;q=75" alt="Futaba" width="52" height="52" loading="lazy" decoding="async" sizes="52px">
+    <div class="related-info">
+      <div class="related-title">双葉</div>
+      <div class="related-ro">Futaba</div>
       <div class="related-artist">Aimyon</div>
     </div>
     <div class="related-arr">→</div>
@@ -1053,7 +910,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu atau setelah login.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu, tanpa perlu login.</p>
     </div>
   </div>
   <div id="waline"></div>
@@ -1085,138 +942,11 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 
 </div><!-- .wrap -->
 
-<!-- ── Floating Avatar Bubble ── -->
-<div id="nav-avatar-bubble" onclick="toggleUserDropdown()">
-  <div id="nav-avatar-wrap"></div>
-  <div id="notif-badge"></div>
-  <div id="nav-banned-overlay" title="Akunmu dibanned">🚫</div>
-</div>
-<!-- ── User Dropdown ── -->
-<div id="nav-user-dropdown">
-  <div class="nud-name" id="nud-name">—</div>
-  <div class="nud-email" id="nud-email">—</div>
-  <div class="nud-role" id="nud-role" style="display:none">
-    <span class="nud-role-label">Role</span>
-    <span id="nud-role-badge"></span>
-  </div>
-  <button class="nud-btn" onclick="openEditProfile();closeUserDropdown()">✏ Edit Profil</button>
-  <div class="nud-notif-header">
-    <span class="nud-notif-title">🔔 Notifikasi</span>
-    <div style="display:flex;gap:.5rem;align-items:center">
-      <button class="nud-notif-clear" onclick="markAllNotifsRead()" id="notif-clear-btn" style="display:none">Tandai dibaca</button>
-      <button class="nud-notif-clear" onclick="deleteReadNotifs()" id="notif-delete-btn" style="display:none;color:var(--red)">Hapus semua</button>
-    </div>
-  </div>
-  <div id="nud-notif-list"><div class="nud-notif-empty">Tidak ada notifikasi.</div></div>
-  <button class="nud-btn logout" onclick="doLogout()">↩ Keluar</button>
-</div>
 <div class="toast" id="toast"></div>
 <!-- ── Lightbox ── -->
 <div id="img-lightbox" onclick="closeLightbox()">
   <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="img-lightbox-img" src="" alt="foto komentar">
-</div>
-<!-- ── Edit Profile Modal ── -->
-<div id="editProfileModal">
-  <div class="ep-box">
-    <div class="ep-title">Edit Profil</div>
-    <div class="ep-avatar-wrap" id="ep-avatar-wrap-big">
-      <div class="ep-avatar-big ep-avatar-placeholder-big" id="ep-avatar-big" aria-hidden="true"></div>
-      <div class="ep-info">
-        <div class="ep-name" id="ep-display-name-preview">—</div>
-        <div class="ep-email" id="ep-email-preview">—</div>
-      </div>
-    </div>
-    <div class="ep-field">
-      <div class="ep-lbl">Nama Tampilan</div>
-      <input class="ep-inp" id="ep-displayname" type="text" placeholder="Nama yang tampil di komentar">
-    </div>
-    <div class="ep-field">
-      <div class="ep-lbl">Foto Profil</div>
-      <div class="ep-img-row">
-        <button class="ep-img-btn" onclick="document.getElementById('ep-img-input').click()">📷 Upload Foto</button>
-        <span class="ep-img-status" id="ep-img-status">Atau isi URL di bawah</span>
-      </div>
-      <input type="file" id="ep-img-input" accept="image/*" style="display:none" onchange="handleEpImg(this)">
-      <input class="ep-inp" id="ep-photourl" type="url" placeholder="https://i.imgur.com/xxx.jpg (opsional)" style="margin-top:.4rem">
-    </div>
-    <div class="ep-note">Nama &amp; foto di sini untuk profil situs (bubble kanan bawah). Komentar GraphComment pakai akun tamu/login di panel GraphComment — upload foto di sana jika ingin beda.</div>
-    <div class="ep-actions">
-      <button class="ep-save" onclick="saveEditProfile()">Simpan</button>
-      <button class="ep-cancel" onclick="closeEditProfile()">Batal</button>
-    </div>
-  </div>
-</div>
-<!-- ── Admin: edit lagu di halaman ini ── -->
-<div id="songEditOverlay" onclick="if(event.target===this)closeSongEditModal()">
-  <div class="se-modal" role="dialog" aria-labelledby="se-modal-title">
-    <div class="se-head">
-      <div>
-        <div class="se-tit" id="se-modal-title">Edit Lagu</div>
-        <div class="se-sub">Simpan = update Firestore. Agar lirik &amp; SEO di file HTML publik ikut baru, jalankan <strong>Generate Song Pages</strong> (sama seperti di admin) lalu deploy.</div>
-      </div>
-      <button type="button" class="se-close" onclick="closeSongEditModal()" aria-label="Tutup">✕</button>
-    </div>
-    <div class="se-body">
-      <div class="se-sec">Info utama</div>
-      <div class="se-grid">
-        <div class="se-field"><label class="se-lbl" for="se-jt">Judul Jepang *</label><input class="se-inp" id="se-jt" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-it">Judul Indonesia</label><input class="se-inp" id="se-it" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-ar">Artis *</label><input class="se-inp" id="se-ar" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-ro">Romaji</label><input class="se-inp" id="se-ro" type="text"></div>
-        <div class="se-field full"><label class="se-lbl" for="se-artist-slug">Slug artis</label><input class="se-inp" id="se-artist-slug" type="text" placeholder="kosongkan = otomatis"></div>
-      </div>
-      <div class="se-sec">Anime &amp; tag</div>
-      <div class="se-grid">
-        <div class="se-field"><label class="se-lbl" for="se-anime">Anime (JP)</label><input class="se-inp" id="se-anime" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-anime-id">Anime (ID)</label><input class="se-inp" id="se-anime-id" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-anime-en">Anime (EN)</label><input class="se-inp" id="se-anime-en" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-type">Tipe</label>
-          <select class="se-inp" id="se-type">
-            <option value="">— Bukan OST —</option>
-            <option value="opening">Opening</option>
-            <option value="ending">Ending</option>
-            <option value="insert">Insert</option>
-            <option value="ost">OST</option>
-          </select>
-        </div>
-        <div class="se-field"><label class="se-lbl" for="se-genre">Genre</label><input class="se-inp" id="se-genre" type="text"></div>
-        <div class="se-field full"><label class="se-lbl" for="se-mood">Mood (pisah koma)</label><input class="se-inp" id="se-mood" type="text"></div>
-      </div>
-      <div class="se-sec">Media</div>
-      <div class="se-grid">
-        <div class="se-field"><label class="se-lbl" for="se-yt">YouTube ID</label><input class="se-inp" id="se-yt" type="text"></div>
-        <div class="se-field"><label class="se-lbl" for="se-nico">Niconico ID</label><input class="se-inp" id="se-nico" type="text"></div>
-        <div class="se-field full"><label class="se-lbl" for="se-sp">Spotify URL</label><input class="se-inp" id="se-sp" type="url"></div>
-        <div class="se-field full"><label class="se-lbl" for="se-img">Cover URL</label><input class="se-inp" id="se-img" type="url"></div>
-      </div>
-      <div class="se-sec">SEO</div>
-      <div class="se-grid">
-        <div class="se-field full"><label class="se-lbl" for="se-descid">Deskripsi ID</label><textarea class="se-ta" id="se-descid" rows="3"></textarea></div>
-        <div class="se-field full"><label class="se-lbl" for="se-descjp">Deskripsi JP</label><textarea class="se-ta" id="se-descjp" rows="3"></textarea></div>
-      </div>
-      <div class="se-sec">Baris lirik</div>
-      <div class="se-lyrics" id="se-lyrics"></div>
-      <button type="button" class="se-add-row" onclick="addSongEditLyricRow()">+ Tambah baris</button>
-    </div>
-    <div class="se-foot">
-      <div class="se-foot-main">
-        <button type="button" class="se-save" id="se-save-btn" onclick="saveSongEdit()">Simpan perubahan</button>
-        <button type="button" class="se-gen" id="se-gen-btn" onclick="triggerSongPageGenerate()">▶ Generate HTML</button>
-        <button type="button" class="se-cancel" onclick="closeSongEditModal()">Batal</button>
-      </div>
-      <div class="se-gh-status" id="se-gh-status">
-        <span class="se-gh-dot" id="se-gh-dot"></span>
-        <span id="se-gh-text">—</span>
-        <a class="se-gh-link" id="se-gh-actions-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener">↗ GitHub Actions</a>
-        <a class="se-gh-link" id="se-gh-result-link" href="https://yumelyrics.my.id/lagu/" target="_blank" rel="noopener" style="display:none">↗ Lihat hasil</a>
-      </div>
-      <details class="se-gh-token">
-        <summary>Token GitHub (sama dengan admin, disimpan di browser)</summary>
-        <input class="se-gh-token-inp" id="se-gh-token-inp" type="password" placeholder="github_pat_... (kosongkan jika sudah diisi di admin)" autocomplete="off">
-      </details>
-    </div>
-  </div>
 </div>
 <script>
 /* ── Ctrl Pills (Semua / Jepang / Romaji / Terjemahan) ── */
@@ -1477,9 +1207,7 @@ if(_fbLoaded)return;_fbLoaded=true;
 // Preconnect Firebase tepat sebelum load — tidak di head agar tidak hambat koneksi awal
 ['https://www.gstatic.com','https://firestore.googleapis.com'].forEach(h=>{const l=document.createElement('link');l.rel='preconnect';l.href=h;document.head.appendChild(l);});
 const{initializeApp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");
-const{getFirestore,collection,addDoc,query,where,getDocs,updateDoc,setDoc,doc,increment,getDoc,orderBy,limit,writeBatch,deleteDoc,onSnapshot,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-const{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged,updateProfile}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js");
-
+const{getFirestore,doc,increment,updateDoc,setDoc,deleteDoc,onSnapshot,serverTimestamp,collection}=await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
 
 const _app = initializeApp({
   apiKey:"AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -1489,267 +1217,12 @@ const _app = initializeApp({
   messagingSenderId:"1076202015626",
   appId:"1:1076202015626:web:ce89fb668eb6b2bd021673"
 });
-const db       = getFirestore(_app);
-const auth     = getAuth(_app);
-const provider = new GoogleAuthProvider();
-const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
-async function uploadPhotoViaWorker(file) {
-  if (!_currentUser) throw new Error('Login dulu');
-  const fd = new FormData();
-  fd.append('image', file);
-  const token = await _currentUser.getIdToken();
-  const res = await fetch(UPLOAD_WORKER + '/upload-img', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + token },
-    body: fd
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error('Upload gagal');
-  return imgbbDirectUrl(json);
-}
+const db = getFirestore(_app);
 
 const SONG_ID = "R7jHc2CEccN9dJdjeY3b";
 const SONG_SEED = {"id":"R7jHc2CEccN9dJdjeY3b","titleJp":"裸の心","titleRo":"Hadaka no kokoro","titleId":"Hati yang terbuka","artist":"Aimyon","artistSlug":"","ytId":"yOAwvRmVIyo","nicoId":"","img":"https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024cf57a2df30a90a9a3fc39ef","sp":"https://open.spotify.com/intl-ja/track/2cTaSKEc8OZdF6Tpg2QQsS?si=3f2f193da87d47dd","descId":"Lagu ini menceritakan seseorang yang kembali jatuh cinta setelah melewati berbagai kekecewaan, keraguan, dan kesepian. Meski pernah berpikir bahwa akan lebih baik jika tidak jatuh cinta lagi, ia tetap memilih untuk membuka hatinya dan menghadapi perasaannya dengan jujur. Dengan membawa \"hati yang apa adanya\", ia memberanikan diri untuk berharap, mencintai, dan menyampaikan perasaannya, meskipun tidak tahu bagaimana akhir dari cinta tersebut.","descJp":"この曲は、孤独や失恋を経験しながらも、再び誰かを好きになった主人公の心情を描いた楽曲です。恋をしなければよかったと思った過去がありながらも、もう一度自分の気持ちと向き合い、ありのままの心で恋をしています。恋の行方は分からなくても、その想いを相手に伝えたいという勇気と、「この恋が実りますように」という切実な願いが込められた、素直で温かいラブソングです。","anime":"","animeId":"","animeEn":"","type":"","genre":"","mood":"","lyrics":[{"jp":"いったいこのままいつまで","ro":"Ittai kono mama itsu made","id":"Sampai kapan aku akan terus seperti ini,","ans":""},{"jp":"1人でいるつもりだろう","ro":"Hitori de iru tsumori darou","id":"dan tetap sendirian?","ans":""},{"jp":"だんだん自分を憎んだり","ro":"Dandan jibun wo nikundari","id":"Perlahan aku membenci diriku sendiri,","ans":""},{"jp":"誰かを羨んだり","ro":"Dareka wo urayandari","id":"dan iri pada orang lain.","ans":""},{"jp":"いつかいつかと","ro":"Itsuka itsuka to","id":"Sambil terus berkata,","ans":""},{"jp":"言い聞かせながら","ro":"Iikikasenagara","id":"\"suatu hari nanti, suatu hari nanti,\"","ans":""},{"jp":"今日まで沢山愛してきた","ro":"Kyou made takusan aishite kita","id":"aku terus mencintai sampai hari ini.","ans":""},{"jp":"そして今も","ro":"Soshite ima mo","id":"Dan bahkan sekarang pun,","ans":""},{"jp":"この恋が実りますように","ro":"Kono koi ga minorimasu you ni","id":"semoga cinta ini berbuah.","ans":""},{"jp":"少しだけ少しだけ","ro":"Sukoshi dake sukoshi dake","id":"Walau cuma sedikit,","ans":""},{"jp":"そう思わせて","ro":"Sou omowasete","id":"izinkan aku berharap begitu.","ans":""},{"jp":"今、私 恋をしている","ro":"Ima, watashi koi wo shite iru","id":"Sekarang, aku sedang jatuh cinta.","ans":""},{"jp":"裸の心 抱えて","ro":"Hadaka no kokoro kakaete","id":"Sambil memeluk hati yang apa adanya ini.","ans":""},{"jp":"バイバイ愛しの思い出と","ro":"Baibai itoshi no omoide to","id":"Selamat tinggal, kenangan yang kucintai.","ans":""},{"jp":"私の夢見がちな憧れ","ro":"Watashi no yumemigachi na akogare","id":"Dan angan-anganku yang penuh mimpi.","ans":""},{"jp":"優しくなれたよ 少しね","ro":"Yasashiku nareta yo sukoshi ne","id":"Aku jadi lebih lembut, sedikit sih.","ans":""},{"jp":"強くもなれたみたい","ro":"Tsuyoku mo nareta mitai","id":"Dan sepertinya juga jadi lebih kuat.","ans":""},{"jp":"どんな未来も","ro":"Donna mirai mo","id":"Masa depan seperti apa pun,","ans":""},{"jp":"受け止めてきたの","ro":"Uketomete kita no","id":"telah kuhadapi sampai sekarang.","ans":""},{"jp":"今まで沢山夜を越えた","ro":"Ima made takusan yoru wo koeta","id":"Aku sudah melewati begitu banyak malam.","ans":""},{"jp":"そして今も","ro":"Soshite ima mo","id":"Dan bahkan sekarang pun,","ans":""},{"jp":"この恋の行く先なんて","ro":"Kono koi no yukusaki nante","id":"aku tak tahu ke mana cinta ini akan berakhir.","ans":""},{"jp":"分からない 分からない","ro":"Wakaranai wakaranai","id":"Aku benar-benar gak tahu.","ans":""},{"jp":"ただ想いを","ro":"Tada omoi wo","id":"Tapi perasaan ini,","ans":""},{"jp":"今、私 伝えに行くから","ro":"Ima, watashi tsutae ni iku kara","id":"sekarang akan kusampaikan.","ans":""},{"jp":"裸の心 受けとめて","ro":"Hadaka no kokoro uketomete","id":"Tolong terima perasaanku yang apa adanya ini.","ans":""},{"jp":"恋なんてしなきゃよかったと","ro":"Koi nante shinakya yokatta to","id":"Aku pernah berpikir,","ans":""},{"jp":"あの時も あの夜も","ro":"Ano toki mo ano yoru mo","id":"di saat itu, di malam itu juga,","ans":""},{"jp":"思っていたの","ro":"Omotte ita no","id":"bahwa lebih baik aku gak jatuh cinta.","ans":""},{"jp":"今、私 また恋をしている","ro":"Ima, watashi mata koi wo shite iru","id":"Tapi sekarang, aku jatuh cinta lagi.","ans":""},{"jp":"裸の心 震わせて","ro":"Hadaka no kokoro furuwasete","id":"Dengan hati yang apa adanya ini yang terus bergetar.","ans":""},{"jp":"この恋が実りますように","ro":"Kono koi ga minorimasu you ni","id":"Semoga cinta ini berbuah.","ans":""},{"jp":"少しだけ少しだけ","ro":"Sukoshi dake sukoshi dake","id":"Walau cuma sedikit,","ans":""},{"jp":"そう思わせて","ro":"Sou omowasete","id":"izinkan aku berharap begitu.","ans":""},{"jp":"今、私 恋をしている","ro":"Ima, watashi koi wo shite iru","id":"Sekarang, aku sedang jatuh cinta.","ans":""},{"jp":"裸の心 抱えて","ro":"Hadaka no kokoro kakaete","id":"Sambil memeluk hati yang apa adanya ini.","ans":""}]};
 const __YUME_RAW_LYRICS = "いったいこのままいつまで\nIttai kono mama itsu made\nSampai kapan aku akan terus seperti ini,\n\n1人でいるつもりだろう\nHitori de iru tsumori darou\ndan tetap sendirian?\n\nだんだん自分を憎んだり\nDandan jibun wo nikundari\nPerlahan aku membenci diriku sendiri,\n\n誰かを羨んだり\nDareka wo urayandari\ndan iri pada orang lain.\n\nいつかいつかと\nItsuka itsuka to\nSambil terus berkata,\n\n言い聞かせながら\nIikikasenagara\n\"suatu hari nanti, suatu hari nanti,\"\n\n今日まで沢山愛してきた\nKyou made takusan aishite kita\naku terus mencintai sampai hari ini.\n\nそして今も\nSoshite ima mo\nDan bahkan sekarang pun,\n\nこの恋が実りますように\nKono koi ga minorimasu you ni\nsemoga cinta ini berbuah.\n\n少しだけ少しだけ\nSukoshi dake sukoshi dake\nWalau cuma sedikit,\n\nそう思わせて\nSou omowasete\nizinkan aku berharap begitu.\n\n今、私 恋をしている\nIma, watashi koi wo shite iru\nSekarang, aku sedang jatuh cinta.\n\n裸の心 抱えて\nHadaka no kokoro kakaete\nSambil memeluk hati yang apa adanya ini.\n\nバイバイ愛しの思い出と\nBaibai itoshi no omoide to\nSelamat tinggal, kenangan yang kucintai.\n\n私の夢見がちな憧れ\nWatashi no yumemigachi na akogare\nDan angan-anganku yang penuh mimpi.\n\n優しくなれたよ 少しね\nYasashiku nareta yo sukoshi ne\nAku jadi lebih lembut, sedikit sih.\n\n強くもなれたみたい\nTsuyoku mo nareta mitai\nDan sepertinya juga jadi lebih kuat.\n\nどんな未来も\nDonna mirai mo\nMasa depan seperti apa pun,\n\n受け止めてきたの\nUketomete kita no\ntelah kuhadapi sampai sekarang.\n\n今まで沢山夜を越えた\nIma made takusan yoru wo koeta\nAku sudah melewati begitu banyak malam.\n\nそして今も\nSoshite ima mo\nDan bahkan sekarang pun,\n\nこの恋の行く先なんて\nKono koi no yukusaki nante\naku tak tahu ke mana cinta ini akan berakhir.\n\n分からない 分からない\nWakaranai wakaranai\nAku benar-benar gak tahu.\n\nただ想いを\nTada omoi wo\nTapi perasaan ini,\n\n今、私 伝えに行くから\nIma, watashi tsutae ni iku kara\nsekarang akan kusampaikan.\n\n裸の心 受けとめて\nHadaka no kokoro uketomete\nTolong terima perasaanku yang apa adanya ini.\n\n恋なんてしなきゃよかったと\nKoi nante shinakya yokatta to\nAku pernah berpikir,\n\nあの時も あの夜も\nAno toki mo ano yoru mo\ndi saat itu, di malam itu juga,\n\n思っていたの\nOmotte ita no\nbahwa lebih baik aku gak jatuh cinta.\n\n今、私 また恋をしている\nIma, watashi mata koi wo shite iru\nTapi sekarang, aku jatuh cinta lagi.\n\n裸の心 震わせて\nHadaka no kokoro furuwasete\nDengan hati yang apa adanya ini yang terus bergetar.\n\nこの恋が実りますように\nKono koi ga minorimasu you ni\nSemoga cinta ini berbuah.\n\n少しだけ少しだけ\nSukoshi dake sukoshi dake\nWalau cuma sedikit,\n\nそう思わせて\nSou omowasete\nizinkan aku berharap begitu.\n\n今、私 恋をしている\nIma, watashi koi wo shite iru\nSekarang, aku sedang jatuh cinta.\n\n裸の心 抱えて\nHadaka no kokoro kakaete\nSambil memeluk hati yang apa adanya ini.\n\n© YumeSubs — yumelyrics.my.id";
 try { updateDoc(doc(db,'songs',SONG_ID), { views: increment(1) }); } catch(e){}
-
-// ── ADMIN: edit lagu di halaman ini ──
-let _adminTokenVerified = false;
-async function refreshAdminTokenVerify(user){
-  _adminTokenVerified = false;
-  if(!user || !ADMIN_EMAILS.includes(user.email)) return;
-  try {
-    const tr = await user.getIdTokenResult(true);
-    const email = tr.claims.email || user.email || '';
-    _adminTokenVerified = ADMIN_EMAILS.includes(email);
-  } catch(e){
-    _adminTokenVerified = ADMIN_EMAILS.includes(user.email);
-  }
-}
-function isVerifiedAdmin(){
-  return !!(_currentUser && _adminTokenVerified);
-}
-async function updateAdminSongUI(){
-  const btn = document.getElementById('admin-edit-song-btn');
-  if(btn) btn.style.display = isVerifiedAdmin() ? 'inline-flex' : 'none';
-}
-function escSongEdit(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fillSongEditForm(data){
-  const d = data || SONG_SEED;
-  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v ?? ''; };
-  set('se-jt', d.titleJp); set('se-it', d.titleId); set('se-ar', d.artist);
-  set('se-ro', d.titleRo); set('se-artist-slug', d.artistSlug);
-  set('se-anime', d.anime); set('se-anime-id', d.animeId); set('se-anime-en', d.animeEn);
-  set('se-type', d.type); set('se-genre', d.genre); set('se-mood', d.mood);
-  set('se-yt', d.ytId); set('se-nico', d.nicoId); set('se-sp', d.sp); set('se-img', d.img);
-  set('se-descid', d.descId); set('se-descjp', d.descJp);
-  const wrap = document.getElementById('se-lyrics');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-  (d.lyrics || []).forEach(l => addSongEditLyricRow(l.jp, l.ro, l.id, l.ans));
-  if(!wrap.children.length) addSongEditLyricRow();
-}
-window.addSongEditLyricRow = function(jp='', ro='', id='', ans=''){
-  const wrap = document.getElementById('se-lyrics');
-  if(!wrap) return;
-  const row = document.createElement('div');
-  row.className = 'se-lrow';
-  row.innerHTML =
-    '<button type="button" class="se-lrow-del" onclick="this.parentElement.remove()" title="Hapus baris">✕</button>' +
-    '<input class="se-inp se-ljp" placeholder="Jepang" value="'+escSongEdit(jp)+'">' +
-    '<input class="se-inp se-lro" placeholder="Romaji" value="'+escSongEdit(ro)+'">' +
-    '<input class="se-inp se-lid" placeholder="Terjemahan" value="'+escSongEdit(id)+'">' +
-    '<input class="se-inp se-lans" placeholder="Jawaban latihan (opsional)" value="'+escSongEdit(ans)+'">';
-  wrap.appendChild(row);
-};
-window.openSongEditModal = async function(){
-  await refreshAdminTokenVerify(_currentUser);
-  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa mengedit lagu.'); return; }
-  fillSongEditForm(SONG_SEED);
-  try {
-    const snap = await getDoc(doc(db,'songs', SONG_ID));
-    if(snap.exists()) fillSongEditForm({ ...SONG_SEED, ...snap.data(), id: SONG_ID });
-  } catch(e){ console.warn('load song for edit', e); }
-  const ghInp = document.getElementById('se-gh-token-inp');
-  if(ghInp && !ghInp._bound){
-    ghInp._bound = true;
-    ghInp.addEventListener('input', function(){ seGhTokenSet(this.value.trim()); });
-  }
-  if(ghInp) ghInp.value = seGhTokenGet();
-  document.getElementById('songEditOverlay')?.classList.add('open');
-  document.body.style.overflow = 'hidden';
-};
-window.closeSongEditModal = function(){
-  document.getElementById('songEditOverlay')?.classList.remove('open');
-  document.body.style.overflow = '';
-};
-window.saveSongEdit = async function(){
-  await refreshAdminTokenVerify(_currentUser);
-  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menyimpan.'); return; }
-  const jt = document.getElementById('se-jt')?.value.trim();
-  const ar = document.getElementById('se-ar')?.value.trim();
-  if(!jt || !ar){ toast('Judul JP & artis wajib diisi.'); return; }
-  const lyrics = [];
-  document.querySelectorAll('#se-lyrics .se-lrow').forEach(r=>{
-    const jp = r.querySelector('.se-ljp')?.value.trim() || '';
-    const ro = r.querySelector('.se-lro')?.value.trim() || '';
-    const id = r.querySelector('.se-lid')?.value.trim() || '';
-    const ans = r.querySelector('.se-lans')?.value.trim() || '';
-    if(jp) lyrics.push({ jp, ro, id, ans });
-  });
-  const payload = {
-    titleJp: jt,
-    titleId: document.getElementById('se-it')?.value.trim() || '',
-    artist: ar,
-    artistSlug: document.getElementById('se-artist-slug')?.value.trim() || '',
-    titleRo: document.getElementById('se-ro')?.value.trim() || '',
-    ytId: document.getElementById('se-yt')?.value.trim() || '',
-    nicoId: document.getElementById('se-nico')?.value.trim() || '',
-    img: document.getElementById('se-img')?.value.trim() || '',
-    sp: document.getElementById('se-sp')?.value.trim() || '',
-    descId: document.getElementById('se-descid')?.value.trim() || '',
-    descJp: document.getElementById('se-descjp')?.value.trim() || '',
-    anime: document.getElementById('se-anime')?.value.trim() || '',
-    animeId: document.getElementById('se-anime-id')?.value.trim() || '',
-    animeEn: document.getElementById('se-anime-en')?.value.trim() || '',
-    type: document.getElementById('se-type')?.value.trim() || '',
-    genre: document.getElementById('se-genre')?.value.trim() || '',
-    mood: document.getElementById('se-mood')?.value.trim() || '',
-    lyrics,
-    htmlDirty: true,
-    htmlEditedAt: new Date().toISOString()
-  };
-  const btn = document.getElementById('se-save-btn');
-  if(btn) btn.disabled = true;
-  try {
-    await updateDoc(doc(db,'songs', SONG_ID), payload);
-    toast('Tersimpan. Klik Generate HTML (hanya lagu ini yang di-build ulang).');
-  } catch(e){
-    const code = e && (e.code || e.name || '');
-    if(code === 'permission-denied'){
-      toast('Ditolak server: hanya akun admin yang boleh mengubah lagu. (Firestore Rules)');
-    } else {
-      toast('Gagal simpan: ' + (e.message || e));
-    }
-    if(btn) btn.disabled = false;
-  }
-};
-
-// ── ADMIN: trigger GitHub generate-pages (sama key token dengan admin.html) ──
-const SE_GH_OWNER = 'yumelyrics';
-const SE_GH_REPO = 'yumelyrics.github.io';
-const SE_GH_WORKFLOW = 'generate-pages.yml';
-const SE_GH_DOT = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
-let _seGhPollTimer = null;
-function seGhTokenGet(){ return localStorage.getItem('yume_gh_token') || ''; }
-function seGhTokenSet(t){ if(t) localStorage.setItem('yume_gh_token', t); else localStorage.removeItem('yume_gh_token'); }
-function seGhHeaders(token){
-  return { Authorization:'Bearer '+(token||seGhTokenGet()), Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
-}
-function seGhSetStatus(visible, conclusion, text){
-  const box = document.getElementById('se-gh-status');
-  const dot = document.getElementById('se-gh-dot');
-  const txt = document.getElementById('se-gh-text');
-  const res = document.getElementById('se-gh-result-link');
-  if(!box) return;
-  box.classList.toggle('on', !!visible);
-  if(!visible) return;
-  if(dot){
-    dot.style.background = SE_GH_DOT[conclusion] || 'var(--ash)';
-    dot.classList.toggle('blink', conclusion === 'in_progress' || conclusion === 'queued');
-  }
-  if(txt) txt.textContent = text || '';
-  if(res) res.style.display = conclusion === 'success' ? 'inline-flex' : 'none';
-}
-async function seGhLatestRunId(token){
-  const r = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/workflows/'+SE_GH_WORKFLOW+'/runs?per_page=1', { headers: seGhHeaders(token) });
-  if(!r.ok) return null;
-  const d = await r.json();
-  return d.workflow_runs?.[0]?.id || null;
-}
-async function seGhPollRun(runId, token){
-  clearTimeout(_seGhPollTimer);
-  try {
-    const r = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/runs/'+runId, { headers: seGhHeaders(token) });
-    if(!r.ok) return;
-    const run = await r.json();
-    if(run.status !== 'completed'){
-      const label = run.status === 'in_progress' ? 'Generate sedang berjalan...' : 'Antri di GitHub...';
-      seGhSetStatus(true, run.status, label);
-      _seGhPollTimer = setTimeout(() => seGhPollRun(runId, token), 6000);
-    } else {
-      const labels = { success:'Selesai! HTML lagu di-generate ulang.', failure:'Workflow gagal — cek log di GitHub.', cancelled:'Workflow dibatalkan.', skipped:'Workflow dilewati.' };
-      seGhSetStatus(true, run.conclusion, labels[run.conclusion] || run.conclusion);
-      const btn = document.getElementById('se-gen-btn');
-      if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
-    }
-  } catch(e){ /* silent */ }
-}
-window.triggerSongPageGenerate = async function(){
-  await refreshAdminTokenVerify(_currentUser);
-  if(!isVerifiedAdmin()){ toast('Hanya admin yang bisa menjalankan generate.'); return; }
-  const inp = document.getElementById('se-gh-token-inp');
-  const token = (inp && inp.value.trim()) || seGhTokenGet();
-  if(!token){ toast('Isi token GitHub di modal atau di admin (API Keys).'); if(inp) inp.focus(); return; }
-  seGhTokenSet(token);
-  const btn = document.getElementById('se-gen-btn');
-  if(btn){ btn.disabled = true; btn.textContent = 'Mengirim...'; }
-  seGhSetStatus(true, 'queued', 'Mengirim trigger ke GitHub...');
-  try {
-    const res = await fetch('https://api.github.com/repos/'+SE_GH_OWNER+'/'+SE_GH_REPO+'/actions/workflows/'+SE_GH_WORKFLOW+'/dispatches', {
-      method: 'POST',
-      headers: { ...seGhHeaders(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main', inputs: { mode: 'incremental' } })
-    });
-    if(res.status === 204){
-      toast('Generate Song Pages di-trigger!');
-      seGhSetStatus(true, 'queued', 'Antri, menunggu runner GitHub...');
-      setTimeout(async () => {
-        const runId = await seGhLatestRunId(token);
-        if(runId) seGhPollRun(runId, token);
-        else seGhSetStatus(true, 'queued', 'Run diantri — pantau di GitHub Actions.');
-      }, 3500);
-    } else {
-      const err = await res.json().catch(() => ({}));
-      toast('Gagal trigger: ' + (err.message || res.status));
-      seGhSetStatus(false);
-      if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
-    }
-  } catch(e){
-    toast('Error: ' + (e.message || e));
-    seGhSetStatus(false);
-    if(btn){ btn.disabled = false; btn.textContent = '▶ Generate HTML'; }
-  }
-};
-
-// ── ADMIN NOTIF HELPER ──
-// Email admin di-encode biar tidak plaintext di source (bukan enkripsi, tapi obstacle)
-const NOTIF_ADMIN_EMAILS = (function(){
-  var e=[107,104,111,105,114,117,115,116,115,97,110,105,49,52,51,64,103,109,97,105,108,46,99,111,109];
-  var f=[97,100,109,105,110,64,121,117,109,101,115,117,98,115,46,99,111,109];
-  return [e.map(c=>String.fromCharCode(c)).join(''), f.map(c=>String.fromCharCode(c)).join('')];
-})();
-async function notifyAdmins({ songId, songTitle, commenterName, commentText, isReply, parentName }) {
-  try {
-    const snap = await getDocs(query(collection(db,'user_profiles'), where('email','in', NOTIF_ADMIN_EMAILS)));
-    if (snap.empty) return;
-    const fmtDate = d => d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
-    const notifBase = {
-      type: isReply ? 'admin_reply' : 'admin_comment',
-      songId,
-      songTitle,
-      songSlug: location.pathname.replace('/lagu/','').replace('.html',''),
-      fromUid: _currentUser ? _currentUser.uid : null,
-      fromName: commenterName,
-      replyText: commentText.substring(0, 100),
-      parentName: parentName || null,
-      date: fmtDate(new Date()),
-      ts: Date.now(),
-      read: false
-    };
-    await Promise.all(snap.docs.map(d => addDoc(collection(db,'notifications'), { ...notifBase, toUid: d.id })));
-  } catch(e) {}
-}
 
 // ── REALTIME ONLINE COUNTER ──
 (function(){
@@ -1779,18 +1252,9 @@ async function notifyAdmins({ songId, songTitle, commenterName, commentText, isR
 })();
 
 /* ── THUMBS (Suka) ── */
-// Visitor ID permanent untuk guest (tidak login)
-function getVisitorId(){
-  let id = localStorage.getItem('ym_visitor_id');
-  if(!id){
-    id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-    localStorage.setItem('ym_visitor_id', id);
-  }
-  return id;
-}
-
 let _thumbVoted = false;
 let _unsubSongStats = null;
+const SONG_THUMB_KEY = 'ym_song_thumb_' + SONG_ID;
 
 function fmtNum(n){ return n >= 1000 ? (n/1000).toFixed(1).replace(/.0$/,'')+'k' : String(n||0); }
 
@@ -1799,7 +1263,7 @@ function loadThumb(){
   if(_unsubSongStats) _unsubSongStats();
   _unsubSongStats = onSnapshot(doc(db,'songs',SONG_ID), snap => {
     const data = snap.exists() ? snap.data() : {};
-    const total = data.thumbs || 0;
+    const total = (typeof data.thumbsUp === 'number' ? data.thumbsUp : (data.thumbs || 0));
     const views = data.views || 0;
     const tcEl = document.getElementById('thumbs-count');
     const tcSbEl = document.getElementById('thumbs-count-sb');
@@ -1810,28 +1274,24 @@ function loadThumb(){
     if(vcEl) animateCount(vcEl, fmtNum(views));
   }, ()=>{});
 
-  // Cek status vote user — selalu cek ulang dengan uid yang benar (visitor vs logged-in)
-  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
-  // Reset dulu supaya getDoc bisa override dengan state yang benar dari Firestore
+  // Status vote disimpan lokal (tanpa login), supaya klik tetap ringan
   _thumbVoted = false;
-  getDoc(doc(db,'song_thumbs',SONG_ID,'votes',uid)).then(voteSnap => {
-    _thumbVoted = voteSnap.exists();
-    const btn = document.getElementById('thumbs-btn');
-    if(!btn) return;
-    if(_thumbVoted){
-      btn.classList.add('voted');
-      const lbl = document.getElementById('thumbs-label');
-      if(lbl) lbl.textContent = 'Kamu sudah suka lagu ini';
-      const iconEl = btn.querySelector('.thumbs-icon');
-      if(iconEl) iconEl.textContent = '♥';
-    } else {
-      btn.classList.remove('voted');
-      const lbl = document.getElementById('thumbs-label');
-      if(lbl) lbl.textContent = 'Suka lagu ini?';
-      const iconEl = btn.querySelector('.thumbs-icon');
-      if(iconEl) iconEl.textContent = '♡';
-    }
-  }).catch(()=>{});
+  try { _thumbVoted = localStorage.getItem(SONG_THUMB_KEY) === '1'; } catch(e){}
+  const btn = document.getElementById('thumbs-btn');
+  if(!btn) return;
+  if(_thumbVoted){
+    btn.classList.add('voted');
+    const lbl = document.getElementById('thumbs-label');
+    if(lbl) lbl.textContent = 'Kamu sudah suka lagu ini';
+    const iconEl = btn.querySelector('.thumbs-icon');
+    if(iconEl) iconEl.textContent = '♥';
+  } else {
+    btn.classList.remove('voted');
+    const lbl = document.getElementById('thumbs-label');
+    if(lbl) lbl.textContent = 'Suka lagu ini?';
+    const iconEl = btn.querySelector('.thumbs-icon');
+    if(iconEl) iconEl.textContent = '♡';
+  }
 }
 
 // Animasi angka count naik/turun dengan flip singkat
@@ -1857,18 +1317,15 @@ window.doThumb = async function(){
   const btn = document.getElementById('thumbs-btn');
   if(!btn || btn.disabled) return;
   btn.disabled = true;
-
-  const uid = auth.currentUser ? auth.currentUser.uid : getVisitorId();
-  const voteRef = doc(db,'song_thumbs',SONG_ID,'votes',uid);
   const songRef = doc(db,'songs',SONG_ID);
   const labelEl = document.getElementById('thumbs-label');
 
   try {
     if(!_thumbVoted){
-      // Tambah vote
-      await setDoc(voteRef, { ts: Date.now(), uid });
-      await updateDoc(songRef, { thumbs: increment(1) });
+      // Tambah vote (tanpa login)
+      await updateDoc(songRef, { thumbsUp: increment(1) });
       _thumbVoted = true;
+      try { localStorage.setItem(SONG_THUMB_KEY, '1'); } catch(e){}
       btn.classList.add('voted','pop');
       setTimeout(()=>btn.classList.remove('pop'),400);
       // JANGAN update count manual di sini — onSnapshot di loadThumb() sudah handle ini
@@ -1878,9 +1335,9 @@ window.doThumb = async function(){
       if(iconEl) iconEl.textContent = '♥';
     } else {
       // Hapus vote (toggle)
-      await deleteDoc(voteRef);
-      await updateDoc(songRef, { thumbs: increment(-1) });
+      await updateDoc(songRef, { thumbsUp: increment(-1) });
       _thumbVoted = false;
+      try { localStorage.removeItem(SONG_THUMB_KEY); } catch(e){}
       btn.classList.remove('voted');
       // JANGAN update count manual — biarkan onSnapshot yang sync dari Firestore
       labelEl.textContent = 'Suka lagu ini?';
@@ -1898,571 +1355,42 @@ loadThumb();
 // Event listener thumbs sudah di-handle via onclick="window.doThumb()" di HTML
 // TIDAK perlu addEventListener lagi di sini — akan double-fire jika ditambah ulang
 
-/* ── Auth: Google Login Gate ── */
-let _currentUser = null;
-let _isBanned = false;
-let _banReason = '';
-let _banUntil = undefined; // undefined = belum dicek, null = permanen, number = timestamp ms
-let _isAdmin = false;
-let _customPhotoURL = null;
-// Email admin di-encode — tidak plaintext di source
-const ADMIN_EMAILS = (function(){
-  var e=[107,104,111,105,114,117,115,116,115,97,110,105,49,52,51,64,103,109,97,105,108,46,99,111,109];
-  var f=[97,100,109,105,110,64,121,117,109,101,115,117,98,115,46,99,111,109];
-  return [e.map(c=>String.fromCharCode(c)).join(''), f.map(c=>String.fromCharCode(c)).join('')];
-})();
-const ADMIN_EMAIL = ADMIN_EMAILS[0]; // backward compat
-
-async function checkBanStatus(uid) {
-  try {
-    if (uid && _currentUser && ADMIN_EMAILS.includes(_currentUser.email)) return false;
-    const banDoc = await getDoc(doc(db, 'banned_users', uid));
-    if (banDoc.exists()) {
-      const data = banDoc.data();
-      // Cek apakah ban sementara sudah expired
-      if (data.bannedUntil !== null && data.bannedUntil !== undefined && Date.now() > data.bannedUntil) {
-        _banReason = ''; _banUntil = undefined; return false; // ban sudah berakhir
-      }
-      _banReason = data.reason || '';
-      _banUntil = data.bannedUntil !== undefined ? data.bannedUntil : null;
-      return true;
-    }
-    _banReason = ''; _banUntil = undefined;
-    return false;
-  } catch(e) { _banReason = ''; _banUntil = undefined; return false; }
-}
-
-const DEFAULT_COMMENT_PROFILE = "";
-try { window.__yumeDefaultCommentProfile = DEFAULT_COMMENT_PROFILE; } catch(e) {}
 const WALINE_COMMENT_KEY = 'ym_waline2_' + "hadaka-no-kokoro";
 let _hasCommented = false;
 try { _hasCommented = !!localStorage.getItem(WALINE_COMMENT_KEY); } catch(e) {}
-
-let _copyToastTimer = null;
 
 function markWalineCommented() {
   if (_hasCommented) return;
   _hasCommented = true;
   try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
   updateCopyGate();
-  hideCopyCommentToast();
   toast('Terima kasih sudah berkomentar! 💬');
 }
-
-function showCopyCommentToast() { /* copy gate dihapus — semua user bisa copy */ }
-function hideCopyCommentToast() {}
-window.dismissCopyCommentToast = hideCopyCommentToast;
 window.__yumeMarkWalineCommented = markWalineCommented;
 
 function updateCopyGate() {
-  const btn  = document.getElementById('copy-lyric-btn');
-  const label= document.getElementById('copy-btn-label');
+  const btn = document.getElementById('copy-lyric-btn');
+  const label = document.getElementById('copy-btn-label');
   if (!btn) return;
-
-  if (_currentUser && _isBanned) {
-    btn.disabled = true;
-    btn.style.opacity = '.38';
-    btn.style.cursor = 'not-allowed';
-    btn.title = 'Akunmu dibanned';
-    if (label) label.textContent = 'Copy';
-    return;
-  }
-
   btn.disabled = false;
   btn.style.opacity = '';
   btn.style.cursor = '';
   btn.title = 'Copy semua lirik';
   if (label) label.textContent = 'Copy';
 }
-
-let _authNullTimer = null;
-let _authUiGen = 0;
-let _authBusy = false;
-let _lastAuthUserAt = 0;
-
-async function applyAuthLoggedOut(){
-  _currentUser = null;
-  const navSlot= document.getElementById('nav-user-slot');
-  _isAdmin = false;
-  _adminTokenVerified = false;
-  try{ window.__yumeAuthBridge = false; } catch(ex){}
-  await updateAdminSongUI();
-  closeSongEditModal();
-  if(navSlot) navSlot.style.display = 'none';
-  const bubbleEl = document.getElementById('nav-avatar-bubble');
-  if (bubbleEl) bubbleEl.style.display = 'none';
-  closeUserDropdown();
-  _isBanned = false;
-  _banReason = '';
-  _banUntil = undefined;
-  updateCopyGate();
-}
-
-function applyAuthLoggedInUISync(user){
-  _currentUser = user;
-  _isAdmin = ADMIN_EMAILS.includes(user.email);
-  const bubble = document.getElementById('nav-avatar-bubble');
-  const hideBubble = document.body.classList.contains('discord-popup-lock') || document.body.classList.contains('discord-fab-active');
-  if(bubble) bubble.style.display = hideBubble ? 'none' : 'block';
-  const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
-  const nudName = document.getElementById('nud-name');
-  const nudEmail = document.getElementById('nud-email');
-  if(nudName) nudName.textContent = user.displayName || 'Kamu';
-  if(nudEmail) nudEmail.textContent = user.email || '';
-  _customPhotoURL = user.photoURL || null;
-  renderAvatarEl(
-    document.getElementById('nav-avatar-wrap'),
-    _customPhotoURL,
-    displayName,
-    'nav-avatar',
-    'nav-avatar-placeholder'
-  );
-}
-
-async function applyAuthLoggedIn(user, gen){
-  applyAuthLoggedInUISync(user);
-
-  if (user) {
-    _isBanned = await checkBanStatus(user.uid);
-    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
-    if (_isBanned) startBanTicker();
-
-    // FIX: Deteksi admin DULU sebelum updateCopyGate() supaya bypass admin bekerja
-    _isAdmin = ADMIN_EMAILS.includes(user.email);
-    await refreshAdminTokenVerify(user);
-    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
-    if(_isAdmin && !_adminTokenVerified) _isAdmin = false;
-    // JANGAN ekspose _isAdmin ke window — gampang di-override dari DevTools
-    // Kirim ke protection layer via one-time bridge yang langsung self-destruct
-    try{ window.__yumeAuthBridge = _isAdmin; } catch(ex){}
-    // Hapus is-admin class dari body — dieksploitasi via DevTools ("document.body.classList.add('is-admin')")
-    // Proteksi admin sekarang murni via Firebase Auth + _verifiedAdmin closure
-    document.body.classList.remove('is-admin');
-
-    // Update copy gate (setelah _isAdmin sudah diset)
-    updateCopyGate();
-
-    // (admin detection already done above)
-
-    // Load custom photoURL dari Firestore user_profiles
-    _customPhotoURL = user.photoURL || null;
-    try {
-      const upSnap = await getDoc(doc(db, 'user_profiles', user.uid));
-      if (upSnap.exists() && upSnap.data().photoURL) _customPhotoURL = upSnap.data().photoURL;
-      // Jangan updateProfile saat login — memicu auth flicker (user=null) khusus akun biasa
-      if (upSnap.exists() && upSnap.data().displayName && !_isAdmin && upSnap.data().displayName !== user.displayName) {
-        const syncedDisplayName = upSnap.data().displayName;
-        setTimeout(() => {
-          if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
-          updateProfile(auth.currentUser, { displayName: syncedDisplayName }).catch(()=>{});
-        }, 2500);
-      }
-    } catch(e) {}
-    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
-
-    const displayName = _isAdmin ? 'YumeSubs' : (user.displayName || 'Anonim');
-    const bubble = document.getElementById('nav-avatar-bubble');
-    if(bubble) bubble.classList.toggle('is-banned', _isBanned);
-    renderAvatarEl(
-      document.getElementById('nav-avatar-wrap'),
-      _customPhotoURL,
-      displayName,
-      'nav-avatar',
-      'nav-avatar-placeholder'
-    );
-    if(!_isAdmin) loadAndShowUserRoleSong(user.uid);
-    await updateAdminSongUI();
-  }
-}
-
-function afterAuthLoggedOutCleanup(){
-  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-  _thumbVoted = false;
-  const _thumbBtn = document.getElementById('thumbs-btn');
-  if(_thumbBtn){ _thumbBtn.classList.remove('voted'); }
-  const _thumbLbl = document.getElementById('thumbs-label');
-  if(_thumbLbl) _thumbLbl.textContent = 'Suka lagu ini?';
-  const _thumbIcon = _thumbBtn ? _thumbBtn.querySelector('.thumbs-icon') : null;
-  if(_thumbIcon) _thumbIcon.textContent = '♡';
-  loadThumb();
-}
-
-function scheduleAuthLoggedOutCheck(){
-  if(_authNullTimer) clearTimeout(_authNullTimer);
-  _authNullTimer = setTimeout(() => {
-    _authNullTimer = null;
-    if(auth.currentUser) return;
-    if(Date.now() - _lastAuthUserAt < 3000) return;
-    if(_authBusy){
-      scheduleAuthLoggedOutCheck();
-      return;
-    }
-    setTimeout(() => {
-      if(auth.currentUser) return;
-      if(Date.now() - _lastAuthUserAt < 3000) return;
-      applyAuthLoggedOut().then(() => {
-        afterAuthLoggedOutCleanup();
-      }).catch(e => console.warn('[auth logout]', e));
-    }, 500);
-  }, 1200);
-}
-
-onAuthStateChanged(auth, (user) => {
-  if(user){
-    _lastAuthUserAt = Date.now();
-    if(_authNullTimer){ clearTimeout(_authNullTimer); _authNullTimer = null; }
-    const uid = user.uid;
-    _authBusy = true;
-    applyAuthLoggedIn(user, 0).then(() => {
-      if(!auth.currentUser || auth.currentUser.uid !== uid) return;
-      loadNotifs(uid);
-      loadThumb();
-    }).catch(e => console.warn('[auth]', e)).finally(() => { _authBusy = false; });
-    return;
-  }
-  scheduleAuthLoggedOutCheck();
-});
-
-/* Tangani hasil redirect login (jika sebelumnya popup diblokir dan pakai redirect) */
-getRedirectResult(auth).then(result => {
-  // onAuthStateChanged otomatis terpicu jika redirect berhasil
-}).catch(()=>{});
-
 updateCopyGate();
-
-window.doLogin = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch(e) {
-    if (
-      e.code === 'auth/popup-blocked' ||
-      e.code === 'auth/operation-not-supported-in-this-environment' ||
-      e.code === 'auth/popup-closed-by-user' && false
-    ) {
-      try { await signInWithRedirect(auth, provider); } catch(e2) { toast('Login gagal. Coba lagi.'); }
-    } else if (e.code === 'auth/unauthorized-domain') {
-      toast('Domain belum diizinkan di Firebase. Hubungi admin.');
-    } else if (e.code !== 'auth/popup-closed-by-user') {
-      toast('Login gagal: ' + (e.code || e.message));
-    }
-  }
-};
-
-window.doLogout = async () => {
-  closeUserDropdown();
-  await signOut(auth);
-  const nr = document.getElementById('nud-role');
-  if(nr) nr.style.display = 'none';
-  toast('Berhasil keluar.');
-};
-
-// ── ROLE SYSTEM ──
-const ROLE_DEFS_SONG = [
-  { id:0, icon:'🌫️', name:'Wanderer',  threshold:0,   cls:'role-0' },
-  { id:1, icon:'🌿', name:'Scout',      threshold:5,   cls:'role-1' },
-  { id:2, icon:'🏹', name:'Ranger',     threshold:15,  cls:'role-2' },
-  { id:3, icon:'🔮', name:'Mystic',     threshold:30,  cls:'role-3' },
-  { id:4, icon:'⚔️', name:'Champion',   threshold:50,  cls:'role-4' },
-  { id:5, icon:'🔥', name:'Warlord',    threshold:80,  cls:'role-5' },
-  { id:6, icon:'✨', name:'Archmage',   threshold:120, cls:'role-6' },
-  { id:7, icon:'💀', name:'Overlord',   threshold:200, cls:'role-7' },
-];
-let _roleDefs = [...ROLE_DEFS_SONG];
-
-async function _loadRoleDefsSong(){
-  try {
-    const snap = await getDoc(doc(db,'role_config','levels'));
-    if(snap.exists() && Array.isArray(snap.data().roles)){
-      _roleDefs = snap.data().roles.map((r,i)=>({...ROLE_DEFS_SONG[i],...r,id:i}));
-    }
-  } catch(e){}
-}
-
-// ── CUSTOM ROLES CACHE (CR: prefix) ──
-const _customRolesCache = {}; // id -> data
-async function _getCustomRole(crId){
-  if(_customRolesCache[crId] !== undefined) return _customRolesCache[crId];
-  try {
-    const snap = await getDoc(doc(db,'custom_roles',crId));
-    _customRolesCache[crId] = snap.exists() ? snap.data() : null;
-  } catch(e){ _customRolesCache[crId] = null; }
-  return _customRolesCache[crId];
-}
-
-function _getRoleBadgeSong(commentCount, customRole){
-  let role;
-  if(customRole !== null && customRole !== undefined){
-    // Object langsung (dari roleName shortcut)
-    if(typeof customRole === 'object' && customRole.name){
-      const iconHtml = customRole.iconType === 'img' && customRole.iconImg
-        ? `<img src="${customRole.iconImg}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">`
-        : (customRole.icon || '🎭');
-      const styleAttr = customRole.bgColor
-        ? ` style="background:${customRole.bgColor};color:${customRole.textColor||'#c4b0ff'};border:1px solid ${customRole.textColor||'#c4b0ff'}33"`
-        : '';
-      return `<span class="role-badge role-custom"${styleAttr} title="${customRole.name}">${iconHtml} ${customRole.name}</span>`;
-    }
-    // CR: prefix = custom_roles collection (resolved async, fallback ke icon dulu)
-    if(typeof customRole === 'string' && customRole.startsWith('CR:')){
-      // Return placeholder — akan di-replace async oleh _resolveCustomRoleBadges
-      return `<span class="role-badge role-custom" data-cr-id="${customRole.slice(3)}" title="Custom Role">🎨 ...</span>`;
-    }
-    role = typeof customRole === 'number'
-      ? (_roleDefs.find(r=>r.id===customRole) || _roleDefs[0])
-      : { id:'custom', icon:'🎭', name:String(customRole), cls:'role-custom' };
-  } else {
-    role = _roleDefs[0];
-    for(const r of _roleDefs){ if(commentCount >= r.threshold) role = r; else break; }
-  }
-  return `<span class="role-badge ${role.cls}" title="${role.name}">${role.icon} ${role.name}</span>`;
-}
-
-// Setelah render, resolve semua CR: badge yang masih placeholder
-async function _resolveCustomRoleBadges(){
-  const placeholders = document.querySelectorAll('.role-badge[data-cr-id]');
-  if(!placeholders.length) return;
-  await Promise.all([...placeholders].map(async el => {
-    const crId = el.dataset.crId;
-    const cr = await _getCustomRole(crId);
-    if(!cr){ el.remove(); return; }
-    const iconHtml = cr.iconType === 'img' && cr.iconImg
-      ? `<img src="${cr.iconImg}" style="width:12px;height:12px;object-fit:cover;border-radius:50%;vertical-align:middle;display:inline-block">`
-      : (cr.icon || '🎭');
-    el.style.background = cr.bgColor || 'rgba(167,139,250,.18)';
-    el.style.color = cr.textColor || '#c4b0ff';
-    el.style.border = `1px solid ${cr.textColor||'#c4b0ff'}33`;
-    el.title = cr.name;
-    el.innerHTML = `${iconHtml} ${cr.name}`;
-    delete el.dataset.crId;
-  }));
-}
-
-const _roleCache = {};
-
-async function _getRoleBadgeForUser(uid){
-  if(!uid) return '';
-  if(_roleCache[uid] !== undefined) return _roleCache[uid];
-  try {
-    const [songSnap, storySnap, overSnap] = await Promise.all([
-      getDocs(query(collection(db,'comments'), where('uid','==',uid))),
-      getDocs(query(collection(db,'story_comments'), where('uid','==',uid))),
-      getDoc(doc(db,'user_roles',uid))
-    ]);
-    const cnt = songSnap.size + storySnap.size;
-    let custom = null;
-    if(overSnap.exists()){
-      const d = overSnap.data();
-      // Gunakan roleName (nama langsung) jika tersedia, fallback ke role ID
-      if(d.roleName){
-        custom = { id:'custom', icon: d.icon||'🎭', name: d.roleName, cls:'role-custom',
-                   bgColor: d.bgColor||null, textColor: d.textColor||null };
-      } else {
-        custom = d.role ?? null;
-      }
-    }
-    const badge = _getRoleBadgeSong(cnt, custom);
-    _roleCache[uid] = badge;
-    return badge;
-  } catch(e){ return ''; }
-}
-
-async function loadAndShowUserRoleSong(uid){
-  const nudRole = document.getElementById('nud-role');
-  const nudRoleBadge = document.getElementById('nud-role-badge');
-  if(!nudRole || !nudRoleBadge) return;
-  try {
-    if(_roleDefs.length <= 1) await _loadRoleDefsSong();
-    const badge = await _getRoleBadgeForUser(uid);
-    nudRoleBadge.innerHTML = badge;
-    nudRole.style.display = '';
-  } catch(e){}
-}
-
-window.toggleUserDropdown = () => {
-  const dd = document.getElementById('nav-user-dropdown');
-  if (!dd) return;
-  dd.classList.toggle('open');
-};
-
-window.closeUserDropdown = () => {
-  const dd = document.getElementById('nav-user-dropdown');
-  if (dd) dd.classList.remove('open');
-};
-
-// Tutup dropdown kalau klik di luar
-document.addEventListener('click', e => {
-  const bubble = document.getElementById('nav-avatar-bubble');
-  const dd = document.getElementById('nav-user-dropdown');
-  if (!dd || !dd.classList.contains('open')) return;
-  if (!bubble?.contains(e.target) && !dd.contains(e.target)) closeUserDropdown();
-});
-
-/* ── Edit Profile ── */
-let _epImgFile = null;
-
-function imgbbDirectUrl(json){
-  const d = json && json.data;
-  if(!d) return '';
-  return d.display_url || (d.image && d.image.url) || d.url || '';
-}
-
-function resolveCommentProfilePhoto(photoURL) {
-  const url = String(photoURL || '').trim();
-  if (url && !url.startsWith('data:') && /^https?:\/\//i.test(url)) return url;
-  return DEFAULT_COMMENT_PROFILE;
-}
-
-function renderAvatarEl(wrap, photoURL, displayName, imgClass, phClass){
-  if(!wrap) return;
-  const initial = (displayName||'U')[0].toUpperCase();
-  wrap.innerHTML = '';
-  const url = resolveCommentProfilePhoto(photoURL);
-  if(url){
-    const img = document.createElement('img');
-    img.className = imgClass;
-    img.src = url;
-    img.alt = '';
-    img.referrerPolicy = 'no-referrer';
-    img.decoding = 'async';
-    img.onerror = function(){
-      img.onerror = null;
-      if (DEFAULT_COMMENT_PROFILE && img.src !== DEFAULT_COMMENT_PROFILE) {
-        img.src = DEFAULT_COMMENT_PROFILE;
-        return;
-      }
-      wrap.innerHTML = '';
-      const ph = document.createElement('div');
-      ph.className = phClass;
-      ph.textContent = initial;
-      wrap.appendChild(ph);
-    };
-    wrap.appendChild(img);
-  } else {
-    const ph = document.createElement('div');
-    ph.className = phClass;
-    ph.textContent = initial;
-    wrap.appendChild(ph);
-  }
-}
-
-window.handleEpImg = inp => {
-  const file = inp.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { toast('Foto max 5MB.'); inp.value = ''; return; }
-  _epImgFile = file;
-  document.getElementById('ep-img-status').textContent = '✅ ' + file.name;
-  document.getElementById('ep-photourl').value = '';
-  const reader = new FileReader();
-  reader.onload = e => {
-    const av = document.getElementById('ep-avatar-big');
-    if (av) av.outerHTML = `<img class="ep-avatar-big" src="${e.target.result}" alt="preview" referrerpolicy="no-referrer" id="ep-avatar-big">`;
-  };
-  reader.readAsDataURL(file);
-  inp.value = '';
-};
-
-window.openEditProfile = async () => {
-  if (!_currentUser) return;
-  const modal = document.getElementById('editProfileModal');
-  if (!modal) return;
-  _epImgFile = null;
-  const statusEl = document.getElementById('ep-img-status');
-  if (statusEl) statusEl.textContent = 'Atau isi URL di bawah';
-  let photoPreview = _customPhotoURL || _currentUser.photoURL || '';
-  document.getElementById('ep-display-name-preview').textContent = _currentUser.displayName || '(nama tidak ada)';
-  document.getElementById('ep-email-preview').textContent = _currentUser.email || '';
-  document.getElementById('ep-displayname').value = _currentUser.displayName || (_isAdmin ? 'YumeSubs' : '');
-  try {
-    const userSnap = await getDoc(doc(db, 'user_profiles', _currentUser.uid));
-    const customPhoto = userSnap.exists() ? (userSnap.data().photoURL || '') : '';
-    if(customPhoto) photoPreview = customPhoto;
-    document.getElementById('ep-photourl').value = customPhoto || '';
-  } catch(e) {
-    document.getElementById('ep-photourl').value = '';
-  }
-  const bigWrap = document.getElementById('ep-avatar-wrap-big');
-  let bigSlot = document.getElementById('ep-avatar-big');
-  if(!bigSlot){
-    bigSlot = document.createElement('div');
-    bigSlot.id = 'ep-avatar-big';
-    bigSlot.className = 'ep-avatar-placeholder-big';
-    bigWrap.insertBefore(bigSlot, bigWrap.querySelector('.ep-info'));
-  }
-  renderAvatarEl(bigSlot, photoPreview, _currentUser.displayName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
-  modal.classList.add('open');
-  setTimeout(() => document.getElementById('ep-displayname').focus(), 80);
-};
-
-window.closeEditProfile = () => {
-  const modal = document.getElementById('editProfileModal');
-  if (modal) modal.classList.remove('open');
-  _epImgFile = null;
-};
-
-window.saveEditProfile = async () => {
-  if (!_currentUser) return;
-  const newName = document.getElementById('ep-displayname').value.trim();
-  if (!newName) { toast('Nama tidak boleh kosong.'); return; }
-  const btn = document.querySelector('.ep-save');
-  if (btn) btn.disabled = true;
-  try {
-    let newPhoto = document.getElementById('ep-photourl').value.trim();
-    if (_epImgFile) {
-      const statusEl = document.getElementById('ep-img-status');
-      if (statusEl) statusEl.textContent = 'Uploading...';
-      newPhoto = await uploadPhotoViaWorker(_epImgFile);
-      if (!newPhoto) throw new Error('URL foto tidak valid');
-      if (statusEl) statusEl.textContent = '✅ Upload berhasil';
-    }
-    if (newPhoto && !/^https?:\/\//i.test(newPhoto)) { toast('URL avatar harus link gambar (https://...)'); if(btn) btn.disabled=false; return; }
-    const finalPhoto = newPhoto || _currentUser.photoURL || null;
-    await updateProfile(_currentUser, { displayName: newName, photoURL: finalPhoto });
-    await setDoc(doc(db, 'user_profiles', _currentUser.uid), { displayName: newName, photoURL: newPhoto || null }, { merge: true });
-    _customPhotoURL = newPhoto || null;
-    renderAvatarEl(document.getElementById('nav-avatar-wrap'), finalPhoto, newName, 'nav-avatar', 'nav-avatar-placeholder');
-    const nudName = document.getElementById('nud-name');
-    const epPrev  = document.getElementById('ep-display-name-preview');
-    if (nudName) nudName.textContent = newName;
-    if (epPrev)  epPrev.textContent  = newName;
-    const epSlot = document.getElementById('ep-avatar-big');
-    if (epSlot) renderAvatarEl(epSlot, finalPhoto, newName, 'ep-avatar-big', 'ep-avatar-placeholder-big');
-    _epImgFile = null;
-    toast('Profil berhasil diperbarui! ✨');
-    closeEditProfile();
-  } catch(e) { toast('Gagal simpan: ' + (e.message || e.code)); }
-  if (btn) btn.disabled = false;
-};
-
-// Tutup modal kalau klik backdrop
-document.addEventListener('click', e => {
-  const modal = document.getElementById('editProfileModal');
-  if (modal && modal.classList.contains('open') && e.target === modal) closeEditProfile();
-});
 
 /* ── Copy Lyric ── */
 window.doCopyLyric = async () => {
-  // Re-check ban status secara realtime sebelum copy (hanya jika login Firebase)
-  const stillBanned = _currentUser ? await checkBanStatus(_currentUser.uid) : false;
-  if (stillBanned) {
-    _isBanned = true;
-    updateCopyGate();
-    toast('🚫 Akunmu dibanned, tidak bisa copy lirik.');
-    return;
-  }
-
-  // Pakai data lirik yang sudah di-inject saat build — tidak baca dari DOM
   const full = typeof __YUME_RAW_LYRICS === 'string' && __YUME_RAW_LYRICS.trim()
     ? __YUME_RAW_LYRICS
     : '';
   if (!full) { toast('Tidak ada lirik untuk di-copy.'); return; }
-
-  // Copy ke clipboard
   navigator.clipboard.writeText(full).then(() => {
     toast('✓ Lirik berhasil di-copy!');
     const badge = document.getElementById('copy-done-badge');
     if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 3000); }
   }).catch(() => {
-    // Fallback untuk browser lama
     const ta = document.createElement('textarea');
     ta.value = full; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
     document.body.appendChild(ta); ta.select();
@@ -2496,7 +1424,6 @@ window.doCopyLyric = async () => {
 
   document.addEventListener('copy', function(e) {
     // Admin & pengguna yang sudah komentar (GraphComment) boleh salin seleksi asli
-    if(typeof _isAdmin !== 'undefined' && _isAdmin) return;
     if(typeof _hasCommented !== 'undefined' && _hasCommented) return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) return;
@@ -2582,650 +1509,6 @@ window.tl = function(type){
   else window._lyricSetView(sjp, sro, !str);
 };
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function renderText(str){return esc(str||'').replace(/(^|s)(@[^s<]{1,40})/g,'$1<span class="cm-mention">$2</span>');}
-
-// Format tanggal + jam menit
-function fmtDate(d){
-  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-}
-
-// Hitung sisa waktu ban untuk ditampilkan ke user
-function formatEndDate(ts){
-  const d = new Date(ts);
-  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  return days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+' pukul '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-}
-
-function formatBanCountdown(rem){
-  // rem = ms tersisa
-  if(rem <= 0) return null;
-  const totalSec = Math.floor(rem / 1000);
-  const d = Math.floor(totalSec / 86400);
-  const h = Math.floor((totalSec % 86400) / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if(d > 0) return d+'h '+String(h).padStart(2,'0')+'j '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'d';
-  if(h > 0) return h+'j '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'d';
-  return m+'m '+String(s).padStart(2,'0')+'d';
-}
-
-function formatBanRemaining(bannedUntil){
-  if(bannedUntil === null || bannedUntil === undefined) return 'permanen';
-  const rem = bannedUntil - Date.now();
-  if(rem <= 0) return null;
-  const countdown = formatBanCountdown(rem);
-  return countdown + ' — ' + formatEndDate(bannedUntil);
-}
-
-// ── Realtime countdown ticker untuk semua badge & notice banned ──
-let _banTickerStarted = false;
-function startBanTicker(){
-  if(_banTickerStarted) return;
-  _banTickerStarted = true;
-  setInterval(()=>{
-    // Badge di komentar orang lain
-    document.querySelectorAll('.cm-banned-badge[data-banned-until]').forEach(badge=>{
-      const until = parseInt(badge.dataset.bannedUntil, 10);
-      if(isNaN(until)) return;
-      const rem = until - Date.now();
-      const countdownEl = badge.querySelector('.ban-countdown');
-      if(!countdownEl) return;
-      if(rem <= 0){
-        countdownEl.textContent = 'expired';
-        badge.style.opacity = '0.5';
-      } else {
-        countdownEl.textContent = formatBanCountdown(rem);
-      }
-    });
-    // Notice di form komentar & copy gate untuk user yang kena ban
-    document.querySelectorAll('.ban-countdown-notice[data-banned-until]').forEach(el=>{
-      const until = parseInt(el.dataset.bannedUntil, 10);
-      if(isNaN(until)) return;
-      const rem = until - Date.now();
-      if(rem <= 0){
-        el.textContent = 'expired';
-      } else {
-        el.textContent = formatBanCountdown(rem);
-      }
-    });
-  }, 1000);
-}
-
-/* Komentar: GraphComment (lihat script di bawah halaman) */
-void 0; /* removed renderComment
-function __REMOVE_START_renderComment(id, c, replies){
-  const isAdm=c.isAdmin;
-  const canDelete = _currentUser && (c.uid===_currentUser.uid || _isAdmin);
-  let repHtml='';
-  if(replies&&replies.length){
-    repHtml='<div class="replies">'+replies.map(r=>{
-      const rCanDelete = _currentUser && (r.uid===_currentUser.uid || _isAdmin);
-      const rDelBtn = rCanDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(r.id)+'">🗑</button>' : '';
-      // Hanya tampilkan imgUrl dari http/https — skip base64 (terlalu besar untuk Firestore)
-      const rImgHtml = r.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(r.imgUrl)+'" alt="foto" loading="lazy" referrerpolicy="no-referrer">' : '';
-      if(r.isAdmin) return '<div class="ritem is-admin"><div class="admin-reply-block"><div class="admin-badge-wrap"><span class="admin-badge">Admin</span><span class="admin-name">YumeSubs</span><span class="admin-cm-date">'+esc(r.date)+'</span></div><div class="admin-reply-text">'+esc(r.text)+rImgHtml+'</div></div>'+rDelBtn+'</div>';
-      const rAv = (r.photoURL && !r.photoURL.startsWith('data:')) ? '<img class="cm-avatar" src="'+esc(r.photoURL)+'" alt="av" referrerpolicy="no-referrer">' : '<div class="cm-avatar-ph">'+(r.name||'A')[0].toUpperCase()+'</div>';
-      const rBannedBadge = r.isBanned ? (()=>{
-        if(r.bannedUntil === null || r.bannedUntil === undefined){
-          return '<span class="cm-banned-badge">🚫 permanen</span>';
-        }
-        const rem = r.bannedUntil - Date.now();
-        if(rem <= 0) return '<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>';
-        const endStr = formatEndDate(r.bannedUntil);
-        return '<span class="cm-banned-badge" data-banned-until="'+r.bannedUntil+'" title="Berakhir '+endStr+'">🚫 <span class="ban-countdown">'+formatBanCountdown(rem)+'</span> — '+endStr+'</span>';
-      })() : '';
-      // Tombol balas reply → parentId tetap id komentar utama (flat thread)
-      const rReplyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
-      const rReplyBtn = _currentUser ? '<button class="reply-btn" data-togglereply="ritem-'+esc(r.id)+'">↩ Balas</button>' : '';
-      const rReplyForm = _currentUser ? (
-        '<div class="reply-form" id="rf-ritem-'+esc(r.id)+'">'+
-        '<div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">'+rReplyAsLabel+'</span></div>'+
-        '<textarea class="cmi" id="rt-ritem-'+esc(r.id)+'" rows="2" placeholder="Balas @'+esc(r.name)+'..."></textarea>'+
-        '<div class="reply-row">'+
-        '<button class="sbtn" style="padding:.5rem 1rem" data-postReply="'+esc(id)+'" data-mentionName="'+esc(r.name)+'">Kirim Balasan</button>'+
-        '<button class="rbtn-cancel" data-togglereply="ritem-'+esc(r.id)+'">✕ Batal</button>'+
-        '</div></div>'
-      ) : '';
-      return '<div class="ritem"><div class="chdr" style="margin-bottom:.25rem"><div class="chdr-left">'+rAv+'<span class="cname">'+esc(r.name)+rBannedBadge+(r._roleBadge||'')+'</span><span class="cdate">'+esc(r.date)+'</span>'+rDelBtn+'</div>'+rReplyBtn+'</div><div class="ctxt">'+renderText(r.text)+rImgHtml+'</div><div class="cm-thumbs"><button class="cm-thumb-btn" data-cmthumb="'+esc(r.id)+'">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' + '<span class="cm-thumb-count" id="cmtc-'+esc(r.id)+'">…</span></button></div>'+rReplyForm+'</div>';
-    }).join('')+'</div>';
-  }
-  const replyAsLabel = _isAdmin ? 'YumeSubs' : (_currentUser?(_currentUser.displayName||'Kamu'):'(login dulu)');
-  const delBtn = canDelete ? '<button class="cm-delete-btn" data-cmid="'+esc(id)+'">🗑 Hapus</button>' : '';
-  const imgHtml = c.imgUrl ? '<br><img class="cm-posted-img cm-lightbox-img" src="'+esc(c.imgUrl)+'" alt="foto" loading="lazy" referrerpolicy="no-referrer">' : '';
-  if (isAdm) {
-    return `<div class="citem is-admin">
-      <div class="admin-cm-header">
-        <div class="admin-cm-crown">👑</div>
-        <div class="admin-cm-info">
-          <div class="admin-cm-name-row">
-            <span class="admin-cm-name">YumeSubs</span>
-            <span class="admin-cm-badge">Admin</span>
-          </div>
-          <span class="admin-cm-date">${esc(c.date)}</span>
-        </div>
-        ${delBtn}
-      </div>
-      <div class="ctxt" style="padding:.1rem 0 .4rem">${renderText(c.text)}${imgHtml}</div>
-      <div class="cm-thumbs"><button class="cm-thumb-btn" data-cmthumb="${id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg><span class="cm-thumb-count" id="cmtc-${id}">…</span></button></div>
-      ${repHtml}
-      <div class="reply-form" id="rf-${id}">
-        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">${replyAsLabel}</span></div>
-        <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-        <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-${id}" data-repid="${id}">
-        <div id="rp-img-preview-wrap-${id}" class="cm-img-preview-wrap" style="display:none">
-          <img id="rp-img-preview-${id}" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
-          <button class="cm-img-remove" data-repid="${id}" title="Hapus foto">✕</button>
-        </div>
-        <div class="reply-row">
-          <button class="sbtn" style="padding:.5rem 1rem" data-postReply="${id}">Kirim Balasan</button>
-          <button class="cm-photo-btn" data-pickphoto="${id}">📷 Foto</button>
-          <button class="rbtn-cancel" data-togglereply="${id}">✕ Batal</button>
-        </div>
-      </div>
-    </div>`;
-  }
-  // Avatar untuk komentar biasa
-  let avHtml;
-  if (c.photoURL && !c.photoURL.startsWith('data:')) {
-    avHtml = `<img class="cm-avatar" src="${esc(c.photoURL)}" alt="av" referrerpolicy="no-referrer">`;
-  } else {
-    avHtml = `<div class="cm-avatar-ph">${(c.name||'A')[0].toUpperCase()}</div>`;
-  }
-  const bannedBadgeHtml = c.isBanned ? (()=>{
-    if(c.bannedUntil === null || c.bannedUntil === undefined){
-      return `<span class="cm-banned-badge">🚫 permanen</span>`;
-    }
-    const rem = c.bannedUntil - Date.now();
-    if(rem <= 0) return `<span class="cm-banned-badge" style="opacity:.5">🚫 expired</span>`;
-    const endStr = formatEndDate(c.bannedUntil);
-    return `<span class="cm-banned-badge" data-banned-until="${c.bannedUntil}" title="Berakhir ${endStr}">🚫 <span class="ban-countdown">${formatBanCountdown(rem)}</span> — ${endStr}</span>`;
-  })() : '';
-  return `<div class="citem">
-    <div class="chdr"><div class="chdr-left">${avHtml}<div class="cname">${esc(c.name)}${bannedBadgeHtml}${c._roleBadge||''}</div><div class="cdate">${esc(c.date)}</div>${delBtn}</div>
-    <button class="reply-btn" data-togglereply="${id}">↩ Balas</button></div>
-    <div class="ctxt">${renderText(c.text)}${imgHtml}</div>
-    <div class="cm-thumbs"><button class="cm-thumb-btn" data-cmthumb="${id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg><span class="cm-thumb-count" id="cmtc-${id}">…</span></button></div>
-    ${repHtml}
-    <div class="reply-form" id="rf-${id}">
-      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Membalas sebagai <span style="color:var(--accent)">${replyAsLabel}</span></div>
-      <textarea class="cmi" id="rt-${id}" rows="2" placeholder="Balas komentar ini..."></textarea>
-      <input type="file" accept="image/*" class="cm-photo-input" id="rp-photo-input-${id}" data-repid="${id}">
-      <div id="rp-img-preview-wrap-${id}" class="cm-img-preview-wrap" style="display:none">
-        <img id="rp-img-preview-${id}" class="cm-img-preview cm-lightbox-img" src="" alt="preview">
-        <button class="cm-img-remove" data-repid="${id}" title="Hapus foto">✕</button>
-      </div>
-      <div class="reply-row">
-        <button class="sbtn" style="padding:.5rem 1rem" data-postReply="${id}">Kirim Balasan</button>
-        <button class="cm-photo-btn" data-pickphoto="${id}">📷 Foto</button>
-        <button class="rbtn-cancel" data-togglereply="${id}">✕ Batal</button>
-      </div>
-    </div>
-  </div>`;
-}
-removed renderComment */
-
-/* ── NOTIFIKASI REALTIME ── */
-let _unsubNotif = null;
-function loadNotifs(uid){
-  if(_unsubNotif){ _unsubNotif(); _unsubNotif=null; }
-  const q = query(collection(db,'notifications'), where('toUid','==',uid));
-  _unsubNotif = onSnapshot(q, snap => {
-    const all = snap.docs.map(d=>({id:d.id,_ref:d.ref,...d.data()}))
-      .sort((a,b)=>(b.ts||0)-(a.ts||0));
-
-    // Auto-delete yang sudah dibaca > 14 hari
-    const cutoff = Date.now() - (14*24*60*60*1000);
-    const toDelete = all.filter(n=>n.read && (n.ts||0)<cutoff);
-    if(toDelete.length){
-      const batch=writeBatch(db);
-      toDelete.forEach(n=>batch.delete(n._ref));
-      batch.commit().catch(()=>{});
-    }
-
-    const notifs = all.filter(n=>!(n.read&&(n.ts||0)<cutoff)).slice(0,20);
-    const unread = notifs.filter(n=>!n.read);
-
-    const badge    = document.getElementById('notif-badge');
-    const clearBtn = document.getElementById('notif-clear-btn');
-    const deleteBtn= document.getElementById('notif-delete-btn');
-    if(unread.length>0){
-      badge.textContent=unread.length>9?'9+':unread.length;
-      badge.classList.add('show');
-      if(clearBtn) clearBtn.style.display='';
-    } else {
-      badge.classList.remove('show');
-      if(clearBtn) clearBtn.style.display='none';
-    }
-    if(notifs.length>0){ if(deleteBtn) deleteBtn.style.display=''; }
-    else { if(deleteBtn) deleteBtn.style.display='none'; }
-
-    const list=document.getElementById('nud-notif-list');
-    if(!notifs.length){
-      list.innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
-      return;
-    }
-    list.innerHTML=notifs.map(function(n){
-      var cls='nud-notif-item'+(n.read?'':' unread');
-      return '<div class="'+cls+'" data-nid="'+esc(n.id)+'" data-slug="'+esc(n.songSlug||'')+'" onclick="_onNotif(this)">'+
-        '<div class="nud-notif-from">💬 '+esc(n.fromName||'Seseorang')+' membalas komentarmu</div>'+
-        '<div class="nud-notif-msg">&ldquo;'+esc(n.replyText||'')+'&rdquo;</div>'+
-        '<div class="nud-notif-meta">'+esc(n.songTitle||'')+' &middot; '+esc(n.date||'')+'</div>'+
-        '</div>';
-    }).join('');
-  }, ()=>{});
-}
-
-window._onNotif = function(el) {
-  const nid = el.dataset.nid;
-  const slug = el.dataset.slug;
-  window.goToNotif(nid, slug, el);
-};
-window.goToNotif = async (notifId, songSlug, el) => {
-  // Tandai sudah dibaca
-  try{
-    await updateDoc(doc(db,'notifications',notifId),{read:true});
-    el.classList.remove('unread');
-    // Update badge
-    const remaining=document.querySelectorAll('.nud-notif-item.unread').length;
-    const badge=document.getElementById('notif-badge');
-    const clearBtn=document.getElementById('notif-clear-btn');
-    if(remaining===0){ badge.classList.remove('show'); if(clearBtn) clearBtn.style.display='none'; }
-    else { badge.textContent=remaining>9?'9+':remaining; }
-  }catch(e){}
-  // Navigasi ke halaman lagu
-  if(songSlug){
-    const currentSlug=location.pathname.split('/').pop().replace('.html','');
-    if(songSlug===currentSlug){
-      closeUserDropdown();
-      document.querySelector('.comments-section')?.scrollIntoView({behavior:'smooth',block:'start'});
-    } else {
-      location.href='../lagu/'+songSlug+'.html';
-    }
-  }
-};
-
-window.markAllNotifsRead = async () => {
-  if(!_currentUser) return;
-  try{
-    const snap=await getDocs(query(
-      collection(db,'notifications'),
-      where('toUid','==',_currentUser.uid),
-      where('read','==',false)
-    ));
-    if(snap.empty) return;
-    const batch=writeBatch(db);
-    snap.docs.forEach(d=>batch.update(d.ref,{read:true}));
-    await batch.commit();
-    document.querySelectorAll('.nud-notif-item.unread').forEach(el=>el.classList.remove('unread'));
-    document.getElementById('notif-badge').classList.remove('show');
-    const clearBtn=document.getElementById('notif-clear-btn');
-    if(clearBtn) clearBtn.style.display='none';
-    toast('Semua notifikasi ditandai dibaca.');
-  }catch(e){}
-};
-
-async function deleteReadNotifs(){
-  if(!_currentUser) return;
-  try{
-    const snap=await getDocs(query(
-      collection(db,'notifications'),
-      where('toUid','==',_currentUser.uid)
-    ));
-    if(snap.empty) return;
-    const batch=writeBatch(db);
-    snap.docs.forEach(d=>batch.delete(d.ref));
-    await batch.commit();
-    document.getElementById('nud-notif-list').innerHTML='<div class="nud-notif-empty">Tidak ada notifikasi.</div>';
-    document.getElementById('notif-badge').classList.remove('show');
-    const clearBtn=document.getElementById('notif-clear-btn');
-    const deleteBtn=document.getElementById('notif-delete-btn');
-    if(clearBtn) clearBtn.style.display='none';
-    if(deleteBtn) deleteBtn.style.display='none';
-    toast('Semua notifikasi dihapus.');
-  }catch(e){}
-}
-
-async function rcm(){ /* GraphComment */ }
-
-void 0; /*
-    if(ccEl) ccEl.textContent = topCount >= 1000 ? (topCount/1000).toFixed(1).replace(/.0$/,'')+'k' : topCount;
-    if(!allDocs.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
-
-    // Fetch user_profiles semua uid unik — ambil foto & nama terbaru
-    const uids=[...new Set(allDocs.filter(c=>c.uid&&!c.isAdmin).map(c=>c.uid))];
-    const profileMap={};
-    const banMap={};
-    const roleMap={};
-    // Hitung comment count dari allDocs sebagai fallback kalau Firestore fetch gagal
-    const localCountMap={};
-    allDocs.filter(c=>c.uid&&!c.isAdmin).forEach(c=>{ localCountMap[c.uid]=(localCountMap[c.uid]||0)+1; });
-    try { if(_roleDefs.length <= 1) await _loadRoleDefsSong(); } catch(e){}
-    await Promise.all(uids.map(async uid=>{
-      // Fetch profil & ban — dua query ringan, cukup untuk render komentar
-      try {
-        const [pSnap, bSnap] = await Promise.all([
-          getDoc(doc(db,'user_profiles',uid)),
-          getDoc(doc(db,'banned_users',uid))
-        ]);
-        if(pSnap.exists()) profileMap[uid]=pSnap.data();
-        if(bSnap.exists()){
-          const bd=bSnap.data();
-          const isActiveBan=bd.bannedUntil===null||bd.bannedUntil===undefined||Date.now()<=bd.bannedUntil;
-          if(isActiveBan) banMap[uid]={bannedUntil: bd.bannedUntil !== undefined ? bd.bannedUntil : null};
-        }
-      } catch(e){}
-
-      // Role badge: pakai localCountMap dari allDocs — tidak perlu query count ke seluruh koleksi
-      // Query where('uid','==',uid) di comments/story_comments sangat lambat tanpa composite index
-      if(_roleCache[uid] !== undefined){
-        roleMap[uid] = _roleCache[uid];
-      } else {
-        try {
-          const rSnap = await getDoc(doc(db,'user_roles',uid));
-          const custom = rSnap.exists() ? (rSnap.data().role ?? null) : null;
-          _roleCache[uid] = _getRoleBadgeSong(localCountMap[uid]||0, custom);
-        } catch(e){
-          _roleCache[uid] = _getRoleBadgeSong(localCountMap[uid]||0, null);
-        }
-        roleMap[uid] = _roleCache[uid];
-      }
-    }));
-
-    // Inject foto & nama terbaru dari profil ke setiap komentar/reply
-    const enriched=allDocs.map(c=>{
-      if(c.isAdmin||!c.uid) return c;
-      const p=profileMap[c.uid];
-      return {
-        ...c,
-        photoURL:(p&&p.photoURL)?p.photoURL:null,
-        name:(p&&p.displayName)?p.displayName:(c.name||'Anonim'),
-        isBanned:!!banMap[c.uid],
-        bannedUntil: banMap[c.uid] ? banMap[c.uid].bannedUntil : undefined,
-        _roleBadge: roleMap[c.uid] || ''
-      };
-    });
-
-    const parents=enriched.filter(c=>!c.parentId);
-    const replyMap={};
-    enriched.filter(c=>!!c.parentId).forEach(r=>{if(!replyMap[r.parentId])replyMap[r.parentId]=[];replyMap[r.parentId].push(r);});
-    if(!parents.length){el.innerHTML='<div class="nocm">Belum ada komentar. Jadi yang pertama!</div>';return;}
-    el.innerHTML=parents.map(c=>renderComment(c.id,c,replyMap[c.id]||[])).join('');
-    startBanTicker();
-    _resolveCustomRoleBadges(); // resolve CR: custom role badges async
-    // Load thumbs untuk semua komentar + reply
-    const allIds = enriched.map(c => c.id);
-    loadCommentThumbs(allIds);
-  }catch(e){
-    console.error('[rcm] error:', e.code, e.message, e);
-*/
-
-void 0; /* legacy comment UI removed
-document.getElementById('cmlist').addEventListener('click', e => {
-  // Hapus komentar
-  const delBtn = e.target.closest('[data-cmid]');
-  if (delBtn) { window.deleteCm(delBtn.dataset.cmid); return; }
-
-  // Toggle reply form
-  const toggleBtn = e.target.closest('[data-togglereply]');
-  if (toggleBtn) { window.toggleReplyForm(toggleBtn.dataset.togglereply); return; }
-
-  // Kirim balasan
-  const postBtn = e.target.closest('[data-postreply]');
-  if (postBtn) { const srcTa = postBtn.closest('.reply-form') ? postBtn.closest('.reply-form').querySelector('textarea') : null; window.postReply(postBtn.dataset.postreply, srcTa ? srcTa.id : null, postBtn.dataset.mentionname || null); return; }
-
-  // Pilih foto reply
-  const pickBtn = e.target.closest('[data-pickphoto]');
-  if (pickBtn) {
-    const inp = document.getElementById('rp-photo-input-'+pickBtn.dataset.pickphoto);
-    if(inp) inp.click();
-    return;
-  }
-
-  // Hapus preview foto reply
-  const removeBtn = e.target.closest('.cm-img-remove[data-repid]');
-  if (removeBtn) { window.removeReplyPhoto(removeBtn.dataset.repid); return; }
-
-  // Lightbox foto
-  const imgEl = e.target.closest('.cm-lightbox-img');
-  if (imgEl && imgEl.src) { window.openLightbox(imgEl.src); return; }
-
-  // Thumbs komentar
-  const thumbBtn = e.target.closest('[data-cmthumb]');
-  if (thumbBtn) { window.doCommentThumb(thumbBtn.dataset.cmthumb, thumbBtn); return; }
-});
-
-// Input file reply — pakai event delegation juga
-document.getElementById('cmlist').addEventListener('change', e => {
-  const inp = e.target.closest('.cm-photo-input[data-repid]');
-  if (inp) { window.handleReplyPhoto(inp.dataset.repid, inp); }
-});
-
-window.postReply = async (parentId, srcTaId, mentionName) => {
-  if (!_currentUser) { toast('Login dulu untuk membalas.'); return; }
-  if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
-  const rateLimitErr = checkRateLimit('reply');
-  if(rateLimitErr){ toast(rateLimitErr); return; }
-  // Baca teks dari textarea aktif (bisa dari form ritem atau form utama)
-  const taId = srcTaId || ('rt-'+parentId);
-  const taEl = document.getElementById(taId);
-  let t = taEl ? taEl.value.trim() : '';
-  // Kalau dari form ritem, prepend @mention supaya jelas reply ke siapa
-  if(t && mentionName && !t.startsWith('@')) t = '@'+mentionName+' '+t;
-  const replyImg = _replyImgMap[parentId] || null;
-  if(!t && !replyImg)return;
-  try{
-    const repName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
-    // Upload foto reply ke Storage jika ada
-    let replyImgUrl = null;
-    const replyImgData = _replyImgMap[parentId] || null;
-    if (replyImgData && replyImgData.file) {
-      try {
-        toast('Mengupload foto...');
-        replyImgUrl = await uploadCommentPhoto(replyImgData.file, _currentUser.uid);
-      } catch(uploadErr) {
-        toast('Gagal upload foto. Coba lagi.');
-        return;
-      }
-    }
-    await addDoc(collection(db,'comments'),{
-      songId:SONG_ID,
-      parentId,
-      name:repName,
-      uid:_currentUser.uid,
-      photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
-      text:t,
-      imgUrl:replyImgUrl,
-      date:fmtDate(new Date()),
-      ts:Date.now(),
-      isAdmin:_isAdmin
-    });
-    await saveRateLimit(_currentUser.uid, 'reply');
-    if (!_isAdmin) {
-      const parentSnap2 = await getDoc(doc(db,'comments',parentId)).catch(()=>null);
-      const parentName = parentSnap2?.exists() ? (parentSnap2.data().name||'') : '';
-      notifyAdmins({ songId: SONG_ID, songTitle: document.querySelector('.lvt')?.textContent||SONG_ID, commenterName: repName, commentText: t, isReply: true, parentName });
-    }
-    if(taEl) taEl.value='';
-    removeReplyPhoto(parentId);
-    // Tutup semua reply form yang terbuka di thread ini
-    document.querySelectorAll('[id^="rf-"]').forEach(rf=>{
-      const rid=rf.id.replace('rf-','');
-      if(rid===parentId||rid.startsWith('ritem-')) rf.classList.remove('open');
-    });
-    // Notifikasi ke semua peserta thread (pemilik parent + semua replier sebelumnya)
-    try{
-      const currentSlug=location.pathname.split('/').pop().replace('.html','');
-      const songTitle=document.title.split(' - ')[0].replace('Lirik ','');
-      const [parentSnap, threadSnap]=await Promise.all([
-        getDoc(doc(db,'comments',parentId)),
-        getDocs(query(collection(db,'comments'),where('parentId','==',parentId)))
-      ]);
-      const notifTargets=new Map();
-      if(parentSnap.exists()){
-        const pd=parentSnap.data();
-        if(pd.uid&&pd.uid!==_currentUser.uid) notifTargets.set(pd.uid,pd.name||'');
-      }
-      threadSnap.docs.forEach(d=>{
-        const rd=d.data();
-        if(rd.uid&&rd.uid!==_currentUser.uid&&!notifTargets.has(rd.uid)) notifTargets.set(rd.uid,rd.name||'');
-      });
-      await Promise.all([...notifTargets.entries()].map(([uid,name])=>sendNotif(uid,name,t,currentSlug,songTitle)));
-    }catch(e){}
-    toast(_isAdmin ? 'Balasan admin terkirim! 👑' : 'Balasan terkirim! 💬');
-    rcm();
-  }catch(e){toast('Gagal kirim.');}
-};
-
-window.postCm = async () => {
-  if (!_currentUser) { toast('Login dulu untuk berkomentar.'); return; }
-  if (_isBanned && !_isAdmin) { toast('🚫 Akunmu dibanned, tidak bisa berkomentar.'); return; }
-  const rateLimitErr = checkRateLimit('comment');
-  if(rateLimitErr){ toast(rateLimitErr); return; }
-  const t=document.getElementById('cm-t').value.trim();
-  const btn=document.getElementById('cm-btn');
-  if(!t && !_cmImgFile)return;btn.disabled=true;
-  const cmName = _isAdmin ? 'YumeSubs' : (_currentUser.displayName||'Anonim');
-  try{
-    // Upload foto ke Storage dulu, dapatkan URL publik
-    let imgUrl = null;
-    if (_cmImgFile) {
-      try {
-        toast('Mengupload foto...');
-        imgUrl = await uploadCommentPhoto(_cmImgFile, _currentUser.uid);
-      } catch(uploadErr) {
-        toast('Gagal upload foto. Coba lagi.');
-        btn.disabled = false;
-        return;
-      }
-    }
-    await addDoc(collection(db,'comments'),{
-      songId:SONG_ID,
-      parentId:null,
-      name:cmName,
-      uid:_currentUser.uid,
-      photoURL:_isAdmin ? null : (_customPhotoURL||_currentUser.photoURL||null),
-      text:t,
-      imgUrl:imgUrl,
-      date:fmtDate(new Date()),
-      ts:Date.now(),
-      isAdmin:_isAdmin
-    });
-    await saveRateLimit(_currentUser.uid, 'comment');
-    if (!_isAdmin) {
-      notifyAdmins({ songId: SONG_ID, songTitle: document.querySelector('.lvt')?.textContent||SONG_ID, commenterName: cmName, commentText: t, isReply: false });
-    }
-    document.getElementById('cm-t').value='';
-    removeCmPhoto();
-    // Langsung aktifkan tombol copy setelah komentar berhasil — tanpa tunggu Firestore
-    if (!_isAdmin && !_hasCommented) {
-      _hasCommented = true;
-      try { localStorage.setItem(WALINE_COMMENT_KEY, String(Date.now())); } catch(e) {}
-      updateCopyGate();
-    }
-    if (_isAdmin) {
-      toast('Komentar admin terkirim! 👑');
-    } else {
-      toast('Komentar terkirim! 💬');
-    }
-    rcm();
-  }catch(e){toast('Gagal kirim komentar.');}
-  btn.disabled=false;
-};
-
-// ── State foto komentar utama ──
-let _cmImgDataUrl = null;  // preview lokal (base64)
-let _cmImgFile    = null;  // file asli untuk upload
-// State foto per reply (key = parentId)
-const _replyImgMap = {};   // { parentId: { dataUrl, file } }
-
-// Limit ukuran file: 2MB
-const IMG_MAX_BYTES = 2 * 1024 * 1024;
-// Resize preview lokal: max 800px sisi terpanjang
-const IMG_MAX_PX = 800;
-
-// Convert file ke base64 DataURL untuk preview lokal
-function fileToDataUrl(file, cb){
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if(w > IMG_MAX_PX || h > IMG_MAX_PX){
-        if(w > h){ h = Math.round(h * IMG_MAX_PX/w); w = IMG_MAX_PX; }
-        else { w = Math.round(w * IMG_MAX_PX/h); h = IMG_MAX_PX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      cb(canvas.toDataURL('image/jpeg', 0.82));
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-// Upload foto via Cloudflare Worker (kunci ImgBB di server)
-async function uploadCommentPhoto(file, uid){
-  return uploadPhotoViaWorker(file);
-}
-
-window.handleCmPhoto = input => {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > IMG_MAX_BYTES) {
-    toast(`Foto max ${IMG_MAX_BYTES/1024/1024}MB. Pilih foto yang lebih kecil.`);
-    input.value = '';
-    return;
-  }
-  _cmImgFile = file;
-  fileToDataUrl(file, dataUrl => {
-    _cmImgDataUrl = dataUrl;
-    const wrap = document.getElementById('cm-img-preview-wrap');
-    const prev = document.getElementById('cm-img-preview');
-    prev.src = dataUrl;
-    wrap.style.display = 'inline-block';
-  });
-  input.value = '';
-};
-
-window.removeCmPhoto = () => {
-  _cmImgDataUrl = null;
-  _cmImgFile    = null;
-  const wrap = document.getElementById('cm-img-preview-wrap');
-  const prev = document.getElementById('cm-img-preview');
-  if(wrap) wrap.style.display = 'none';
-  if(prev) prev.src = '';
-};
-
-window.handleReplyPhoto = (parentId, input) => {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > IMG_MAX_BYTES) {
-    toast(`Foto max ${IMG_MAX_BYTES/1024/1024}MB. Pilih foto yang lebih kecil.`);
-    input.value = '';
-    return;
-  }
-  fileToDataUrl(file, dataUrl => {
-    _replyImgMap[parentId] = { dataUrl, file };
-    const wrap = document.getElementById('rp-img-preview-wrap-'+parentId);
-    const prev = document.getElementById('rp-img-preview-'+parentId);
-    if(prev) prev.src = dataUrl;
-    if(wrap) wrap.style.display = 'inline-block';
-  });
-  input.value = '';
-};
-
-window.removeReplyPhoto = parentId => {
-  delete _replyImgMap[parentId];
-  const wrap = document.getElementById('rp-img-preview-wrap-'+parentId);
-  const prev = document.getElementById('rp-img-preview-'+parentId);
-  if(wrap) wrap.style.display = 'none';
-  if(prev) prev.src = '';
-};
-
 // ── Lightbox foto ──
 window.openLightbox = src => {
   const lb = document.getElementById('img-lightbox');
@@ -3241,41 +1524,6 @@ window.closeLightbox = () => {
   document.body.style.overflow = '';
 };
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
-// Lightbox untuk preview foto di form komentar utama
-document.addEventListener('click', e => {
-  const imgEl = e.target.closest('#cm-img-preview-wrap .cm-lightbox-img');
-  if (imgEl && imgEl.src) { window.openLightbox(imgEl.src); }
-});
-
-// ── Hapus komentar ──
-window.deleteCm = async cmId => {
-  if (!_currentUser) return;
-  if (!confirm('Hapus komentar ini?')) return;
-  try {
-    const cmSnap = await getDoc(doc(db, 'comments', cmId));
-    if (!cmSnap.exists()) { toast('Komentar tidak ditemukan.'); return; }
-    const cmData = cmSnap.data();
-    // Hanya pemilik atau admin yang boleh hapus
-    if (cmData.uid !== _currentUser.uid && !_isAdmin) { toast('Kamu tidak bisa menghapus komentar ini.'); return; }
-    // Kalau ini komentar parent, hapus juga semua replynya
-    if (!cmData.parentId) {
-      const repliesSnap = await getDocs(query(collection(db,'comments'), where('parentId','==',cmId)));
-      if (!repliesSnap.empty) {
-        const batch = writeBatch(db);
-        repliesSnap.docs.forEach(d => batch.delete(d.ref));
-        batch.delete(doc(db,'comments',cmId));
-        await batch.commit();
-      } else {
-        await deleteDoc(doc(db,'comments',cmId));
-      }
-    } else {
-      await deleteDoc(doc(db,'comments',cmId));
-    }
-    toast('Komentar dihapus.');
-    rcm();
-  } catch(e) { toast('Gagal hapus komentar.'); }
-};
-legacy comment UI removed */
 
 // Defer Waline loading until comments section is visible (IntersectionObserver)
 (function(){
@@ -3366,8 +1614,9 @@ legacy comment UI removed */
     var commentsEl = document.querySelector('.comments-section');
     if(commentsEl) observer.observe(commentsEl);
   }
-  setTimeout(loadWaline, 5000);
+  setTimeout(loadWaline, 3000);
 })();
+
 // ── Waline submit-click detector ─────────────────────────────────────────
 // Set flag HANYA ketika user benar-benar klik tombol Submit Waline,
 // bukan saat inisialisasi/fetch internal Waline yang juga POST ke /api/comment.
@@ -3388,6 +1637,7 @@ window._ymPendingWalineSubmit = false;
     }
   }, true);
 })();
+
 // ── Fetch interceptor: unlock copy HANYA jika user benar-benar submit ────
 (function() {
   var _orig = window.fetch;
@@ -3410,6 +1660,7 @@ window._ymPendingWalineSubmit = false;
     return p;
   };
 })();
+
 (function() {
   var _path = "/lagu/hadaka-no-kokoro";
   var _api = 'https://yumelyrics-comment.vercel.app/api/comment?path=' + encodeURIComponent(_path) + '&pageSize=1&page=1&lang=id';
@@ -3826,7 +2077,7 @@ if(document.readyState==='complete'){
   function lockPage(on){
     document.body.classList.toggle('discord-popup-lock',on);
     if(wrap)wrap.inert=on;
-    ['nav-avatar-bubble','nav-user-dropdown','editProfileModal','img-lightbox','songEditOverlay'].forEach(function(id){
+    ['img-lightbox'].forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.inert=on;
     });
