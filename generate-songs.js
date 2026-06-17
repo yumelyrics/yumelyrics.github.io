@@ -26,8 +26,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Contoh: 'https://discord.gg/abcdefg'
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
 const DISCORD_SERVER_URL = 'https://discord.gg/SW9bTRHK8H';
-const DISCORD_POPUP_IMAGE_RAW = 'https://images3.alphacoders.com/105/thumb-1920-1053832.jpg';
-const DISCORD_POPUP_IMAGE = DISCORD_POPUP_IMAGE_RAW.replace('thumb-1920', 'thumb-400');
+const DISCORD_POPUP_IMAGE = 'https://images3.alphacoders.com/105/thumb-1920-1053832.jpg';
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isHtmlDirty(song) {
@@ -451,7 +450,7 @@ function buildDiscordPopupMarkup() {
 <div id="discord-popup-overlay" class="discord-popup-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="discord-popup-title" aria-hidden="true">
   <div class="discord-popup-row">
     <div class="discord-popup-card">
-      <img class="discord-popup-img" data-src="${popupImg}" alt="" width="380" height="180" loading="lazy" decoding="async">
+      <img class="discord-popup-img" src="${popupImg}" alt="" width="380" height="180" loading="eager" decoding="async">
       <p class="discord-popup-title" id="discord-popup-title">server discord yumelyrics</p>
       <a class="discord-popup-btn" href="${DISCORD_SERVER_URL}" target="_blank" rel="noopener noreferrer">
         ${DISCORD_SVG_ICON}
@@ -481,11 +480,7 @@ function buildDiscordPopupMarkup() {
       if(el)el.inert=on;
     });
   }
-  function loadPopupImg(){
-    if(!popupImg||popupImg.src)return;
-    var src=popupImg.getAttribute('data-src');
-    if(src)popupImg.src=src;
-  }
+  function loadPopupImg(){ return; }
   function toFab(){
     ov.classList.add('is-hidden');
     ov.setAttribute('aria-hidden','true');
