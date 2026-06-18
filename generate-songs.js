@@ -26,7 +26,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 // Contoh: 'https://discord.gg/abcdefg'
 // Kalau server sudah punya vanity URL, ganti juga bagian ini.
 const DISCORD_SERVER_URL = 'https://discord.gg/SW9bTRHK8H';
-const DISCORD_POPUP_IMAGE = 'https://images3.alphacoders.com/105/thumb-1920-1053832.jpg';
+const DISCORD_POPUP_IMAGE = 'https://raw.githubusercontent.com/yumelyrics/yumelyrics.github.io/refs/heads/main/images/miku.jpg';
 const DISCORD_POPUP_IMAGE_OPT = `https://wsrv.nl/?url=${encodeURIComponent(DISCORD_POPUP_IMAGE)}&w=640&h=300&fit=cover&output=webp&q=70`;
 // ─────────────────────────────────────────────────────────────────────────────
 
