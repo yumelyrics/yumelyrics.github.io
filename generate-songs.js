@@ -313,6 +313,58 @@ function sitemapEscape(str, escGt = true) {
   return s;
 }
 
+function sitemapDate(d = new Date()) {
+  return d.toISOString().split('T')[0];
+}
+
+function sitemapLastmodFromPath(filePath, fallback) {
+  try {
+    if (fs.existsSync(filePath)) return sitemapDate(fs.statSync(filePath).mtime);
+  } catch (_) { /* ignore */ }
+  return fallback;
+}
+
+function buildSitemapImageBlock(song, title, artist) {
+  if (!song.img) return '';
+  return `
+    <image:image>
+      <image:loc>${sitemapEscape(song.img)}</image:loc>
+      <image:title>${title} - ${artist}</image:title>
+      <image:caption>Lirik ${title} - ${artist} | YumeLyrics</image:caption>
+    </image:image>`;
+}
+
+/** YouTube embed — player_loc saja (tanpa content_loc ke youtube.com, sesuai panduan Google). */
+function buildSitemapVideoBlock(song, title, artist) {
+  if (!song.ytId) return '';
+  return `
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>${title} - ${artist}</video:title>
+      <video:description>Lirik ${title} - ${artist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/${song.ytId}</video:player_loc>
+    </video:video>`;
+}
+
+function buildSitemapSongUrl(song, slug, today) {
+  const title = sitemapEscape(song.titleRo || song.titleJp || '');
+  const artist = sitemapEscape(song.artist || '', false);
+  const lastmod = sitemapLastmodFromPath(path.join('lagu', `${slug}.html`), today);
+  const imgBlock = buildSitemapImageBlock(song, title, artist);
+  const videoBlock = buildSitemapVideoBlock(song, title, artist);
+  return `  <url><loc>${BASE_URL}/lagu/${slug}.html</loc><lastmod>${lastmod}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgBlock}${videoBlock}
+  </url>`;
+}
+
+function artistSitemapLastmod(artistSongs, aSlug, today) {
+  let best = sitemapLastmodFromPath(path.join('artis', `${aSlug}.html`), today);
+  for (const ref of artistSongs) {
+    const lm = sitemapLastmodFromPath(path.join('lagu', `${ref.slug}.html`), today);
+    if (lm > best) best = lm;
+  }
+  return best;
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 
 function toSlug(titleRo, titleJp, docId) {
@@ -3672,25 +3724,7 @@ async function main() {
       if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
         manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
       }
-      // Precompute escaped values once (was duplicated in original)
-      const skipTitle  = sitemapEscape(song.titleRo||song.titleJp||'');
-      const skipArtist = sitemapEscape(song.artist||'', false);
-      const skipImgBlock = song.img ? `
-    <image:image>
-      <image:loc>${sitemapEscape(song.img)}</image:loc>
-      <image:title>${skipTitle} - ${skipArtist}</image:title>
-      <image:caption>Lirik ${skipTitle} - ${skipArtist} | YumeLyrics</image:caption>
-    </image:image>` : '';
-      const skipVideoBlock = song.ytId ? `
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>${skipTitle} - ${skipArtist}</video:title>
-      <video:description>Lirik ${skipTitle} - ${skipArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
-      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
-    </video:video>` : '';
-      urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${skipImgBlock}${skipVideoBlock}
-  </url>`);
+      urls.push(buildSitemapSongUrl(song, finalSlug, today));
       return;
     }
 
@@ -3728,25 +3762,7 @@ async function main() {
       });
     }
     console.log(`  ✓ lagu/${finalSlug}.html`);
-    // Precompute escaped values once (was duplicated in original)
-    const genTitle  = sitemapEscape(song.titleRo||song.titleJp||'');
-    const genArtist = sitemapEscape(song.artist||'', false);
-    const imgTag = song.img ? `
-    <image:image>
-      <image:loc>${sitemapEscape(song.img)}</image:loc>
-      <image:title>${genTitle} - ${genArtist}</image:title>
-      <image:caption>Lirik ${genTitle} - ${genArtist} | YumeLyrics</image:caption>
-    </image:image>` : '';
-    const videoTag = song.ytId ? `
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>${genTitle} - ${genArtist}</video:title>
-      <video:description>Lirik ${genTitle} - ${genArtist} lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:content_loc>https://www.youtube.com/watch?v=${song.ytId}</video:content_loc>
-      <video:player_loc>https://www.youtube.com/embed/${song.ytId}</video:player_loc>
-    </video:video>` : '';
-    urls.push(`  <url><loc>${BASE_URL}/lagu/${finalSlug}.html</loc><lastmod>${today}</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>${imgTag}${videoTag}
-  </url>`);
+    urls.push(buildSitemapSongUrl(song, finalSlug, today));
     } catch(e) {
       // Lagu gagal di-generate — catat error tapi lanjut ke lagu berikutnya
       songErrors.push({ slug: finalSlug, id: song.id, err: e.message || String(e) });
@@ -3784,7 +3800,7 @@ async function main() {
       count: byArtist[key].length,
       img: byArtist[key][0]?.img || '',
     });
-    urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${today}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
+    urls.push(`  <url><loc>${BASE_URL}/artis/${aSlug}.html</loc><lastmod>${artistSitemapLastmod(byArtist[key], aSlug, today)}</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>`);
     if (!needArtist) continue;
     artistWritePromises.push(
       generateArtistHTML(meta.displayName, byArtist[key], aSlug)
@@ -3822,7 +3838,8 @@ async function main() {
       for (const f of fs.readdirSync('kata').filter(x => x.endsWith('.html'))) {
         const slug = f.replace(/\.html$/, '');
         const loc = slug === 'index' ? `${BASE_URL}/kata/` : `${BASE_URL}/kata/${slug}.html`;
-        urls.push(`  <url><loc>${loc}</loc><lastmod>${today}</lastmod><priority>0.55</priority></url>`);
+        const lastmod = sitemapLastmodFromPath(path.join('kata', f), today);
+        urls.push(`  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod><priority>0.55</priority></url>`);
       }
     }
   }
@@ -3837,7 +3854,7 @@ async function main() {
   }
 
   // Async sitemap write (no need to block before process.exit)
-  await fsWrite('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"\n        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>`, 'utf8');
+  await fsWrite('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${urls.join('\n')}\n</urlset>`, 'utf8');
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir) — ${elapsed}s`);
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
