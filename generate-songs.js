@@ -176,36 +176,25 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Lagu htmlDirty / belum pernah di-generate setelah edit: jangan sync hash dari Firebase.
-    if (isHtmlDirty(song) || songNeedsHtmlRebuild(song, manifest.songs[song.id])) continue;
+    // Lagu htmlDirty: jangan timpa hash manifest dengan Firebase — biarkan needsSongGenerate yang putuskan.
+    if (isHtmlDirty(song)) continue;
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
     const prev = manifest.songs[song.id];
-    const generatedAt = fs.statSync(fp).mtime.toISOString();
-    if (!prev || prev.slug !== slug || prev.hash !== hash || prev.generatedAt !== generatedAt) {
-      manifest.songs[song.id] = { slug, hash, generatedAt };
+    if (!prev || prev.slug !== slug || prev.hash !== hash) {
+      manifest.songs[song.id] = { slug, hash };
       seeded++;
     }
   }
   return seeded;
 }
 
-/** Apakah HTML perlu di-build ulang? (incremental / lagu diedit) */
-function songNeedsHtmlRebuild(song, prev) {
-  if (isHtmlDirty(song)) return true;
-  const editedAt = String(song.htmlEditedAt || '');
-  if (!editedAt) return false;
-  const generatedAt = String(prev?.generatedAt || song.htmlGeneratedAt || '');
-  return !generatedAt || editedAt > generatedAt;
-}
-
 /**
  * Incremental: generate hanya jika
  * - file HTML belum ada (lagu baru), atau
  * - slug berubah, atau
- * - htmlDirty === true, atau
- * - htmlEditedAt lebih baru dari HTML terakhir di-generate (manifest / Firebase)
+ * - htmlDirty === true (lagu diedit di admin — satu-satunya trigger edit)
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
@@ -213,12 +202,13 @@ function needsSongGenerate(song, slug, manifest, fullMode) {
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
   if (prev && prev.slug !== slug) return true;
-  return songNeedsHtmlRebuild(song, prev);
+  if (isHtmlDirty(song)) return true;
+  return false;
 }
 
-async function clearHtmlDirtyFlag(db, songId, generatedAt = new Date().toISOString()) {
+async function clearHtmlDirtyFlag(db, songId) {
   try {
-    await updateDoc(doc(db, 'songs', songId), { htmlDirty: false, htmlGeneratedAt: generatedAt });
+    await updateDoc(doc(db, 'songs', songId), { htmlDirty: false });
   } catch (e) {
     console.warn(`  ⚠ htmlDirty tidak bisa di-clear untuk ${songId}: ${e.message || e}`);
   }
@@ -3719,7 +3709,7 @@ async function main() {
       const skipHash = songContentHash(song);
       const prev = manifest.songs[song.id];
       if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
-        manifest.songs[song.id] = { slug: finalSlug, hash: skipHash, generatedAt: prev?.generatedAt || '' };
+        manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
       }
       urls.push(buildSitemapSongUrl(song, finalSlug, today));
       return;
@@ -3742,10 +3732,9 @@ async function main() {
     const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '');
     await fsWrite(songPath, html, 'utf8'); // non-blocking file write
 
-    const generatedAt = new Date().toISOString();
-    manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song), generatedAt };
-    if (!fullMode && (wasDirty || song.htmlEditedAt)) {
-      dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id, generatedAt));
+    manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
+    if (!fullMode && wasDirty) {
+      dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
     }
     generatedSongCount++;
     if (shouldNotifyDiscord(song, songKind)) {
