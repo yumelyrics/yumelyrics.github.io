@@ -176,9 +176,10 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Jangan hapus manifest entry untuk lagu htmlDirty — biarkan needsSongGenerate
-    // yang membandingkan hash. Kalau konten tidak berubah, hash sama → skip.
-    // Kalau dihapus, prev jadi null → needsSongGenerate selalu generate ulang.
+    // Lagu htmlDirty: manifest hash harus tetap = hash HTML terakhir yang di-deploy,
+    // bukan hash Firebase terbaru. Kalau di-sync dulu, needsSongGenerate melihat hash
+    // sama → skip generate padahal file HTML masih lama.
+    if (isHtmlDirty(song)) continue;
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
@@ -3713,15 +3714,14 @@ async function main() {
     try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
-      // Jika htmlDirty masih true tapi konten tidak berubah (di-skip karena hash sama),
-      // tetap clear flag-nya supaya di run berikutnya manifest-nya tidak ikut dihapus
-      // oleh seedManifestFromDisk → yang akan memicu generate ulang tanpa alasan.
+      // htmlDirty + hash sama manifest = flag macet, konten Firebase tidak berubah → clear saja.
       if (!fullMode && isHtmlDirty(song)) {
         dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
       }
       const skipHash = songContentHash(song);
       const prev = manifest.songs[song.id];
-      if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
+      // Jangan timpa manifest hash untuk htmlDirty yang di-skip — hash manifest = HTML terakhir.
+      if (!isHtmlDirty(song) && (!prev || prev.slug !== finalSlug || prev.hash !== skipHash)) {
         manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
       }
       urls.push(buildSitemapSongUrl(song, finalSlug, today));
