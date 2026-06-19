@@ -421,13 +421,19 @@ function wsrvUrl(url, w, q = 80) {
   return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=${q}`;
 }
 
-/** URL cover utama — link langsung, naikkan resolusi YouTube kecil saja. */
-function coverImgUrl(url) {
+/** URL cover utama — WebP via wsrv untuk LCP lebih ringan (terutama mobile). */
+function normalizeCoverUrl(url) {
   if (!url || typeof url !== 'string') return url;
   let u = url.trim();
   if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
   if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
   return u;
+}
+
+function coverImgUrl(url, w) {
+  const u = normalizeCoverUrl(url);
+  if (!u) return u;
+  return w ? wsrvUrl(u, w, 75) : u;
 }
 
 /** Thumbnail kecil (related, spotify card). */
@@ -447,7 +453,16 @@ function imgTag(src, alt, opts = {}) {
   const h = opts.h || 52;
   const eager = !!opts.eager;
   const hd = !!opts.hd;
+  const responsive = !!opts.responsive;
   if (!src) return '';
+  if (hd && responsive) {
+    const raw = normalizeCoverUrl(src);
+    const sm = Math.min(320, w);
+    const uSm = wsrvUrl(raw, sm, 70);
+    const uMd = wsrvUrl(raw, Math.min(480, w), 75);
+    const uLg = wsrvUrl(raw, w, 80);
+    return `<img class="${cls}" src="${escHtml(uMd)}" srcset="${escHtml(uSm)} ${sm}w, ${escHtml(uMd)} 480w, ${escHtml(uLg)} ${w}w" sizes="(max-width:600px) min(88vw,320px), 320px" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="eager" decoding="async" fetchpriority="high">`;
+  }
   const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
   return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${fp}>`;
@@ -1589,7 +1604,7 @@ ${song.img && /ytimg\.com|img\.youtube\.com/i.test(song.img) ? '<link rel="preco
 ${song.img && /i\.scdn\.co/i.test(song.img) ? '<link rel="preconnect" href="https://i.scdn.co" crossorigin>' : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img))}" fetchpriority="high">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 480))}" fetchpriority="high">` : ''}
 <title>${escHtml(pageTitle)}</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -2075,6 +2090,8 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 }
 @media(max-width:900px){
   nav{padding:1.2rem 1.5rem}
+  .kanji-bg{display:none}
+  .comments-section,.related-section-block,.cmsec{content-visibility:auto;contain-intrinsic-size:auto 400px}
   /* Sembunyikan nav link desktop, tampilkan yg mobile-only */
   .nav-link{display:none}
   .nav-link-mobile{display:inline-flex}
@@ -2232,7 +2249,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
+          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true, responsive: true })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
@@ -2695,8 +2712,16 @@ if(document.readyState==='loading'){
     });
 
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initYumeFeatures);
-  else initYumeFeatures();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootYumeFeatures);
+  else bootYumeFeatures();
+  function bootYumeFeatures() {
+    var run = function(){ initYumeFeatures(); };
+    if (window.matchMedia('(max-width:768px)').matches) {
+      (window.requestIdleCallback || function(cb){ setTimeout(cb, 1); })(run);
+    } else {
+      run();
+    }
+  }
 })();
 </script>
 <script>
@@ -3136,18 +3161,19 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox()
       });
     }).catch(function(e){ console.error('Waline load error:', e); });
   }
-  // Load when comments section is visible or after 3 seconds as fallback
+  // Load when comments section is visible — fallback lebih lambat di mobile
+  var _walineMobile = window.matchMedia('(max-width:768px)').matches;
   if('IntersectionObserver' in window){
     var observer = new IntersectionObserver(function(entries){
       if(entries[0].isIntersecting){
         observer.disconnect();
         loadWaline();
       }
-    }, {rootMargin: '200px'});
+    }, {rootMargin: _walineMobile ? '120px' : '200px'});
     var commentsEl = document.querySelector('.comments-section');
     if(commentsEl) observer.observe(commentsEl);
   }
-  setTimeout(loadWaline, 3000);
+  setTimeout(loadWaline, _walineMobile ? 9000 : 3000);
 })();
 
 // ── Waline submit-click detector ─────────────────────────────────────────
@@ -3231,6 +3257,7 @@ function _scheduleHeavy(){
 }
 (function(){
   var fired=false;
+  var isMobile=window.matchMedia('(max-width:768px)').matches;
   function go(){if(fired)return;fired=true;_scheduleHeavy();}
   var cmSec=document.querySelector('.cmsec');
   if(cmSec&&'IntersectionObserver' in window){
@@ -3239,9 +3266,9 @@ function _scheduleHeavy(){
         o.disconnect();
         go();
       }
-    },{rootMargin:'300px'}).observe(cmSec);
+    },{rootMargin:isMobile?'80px':'300px'}).observe(cmSec);
   }
-  setTimeout(go,8000);
+  setTimeout(go,isMobile?12000:8000);
 })();
 </script>
 <script>
@@ -3276,212 +3303,163 @@ function _scheduleHeavy(){
 })();
 </script>
 <script>
-/* ── Anti Reader Mode ── */
+/* ── Anti Reader Mode (ringan dulu, polling ditunda) ── */
 (function(){
-  // 1. Deteksi Firefox Reader Mode via about:reader
   if(location.href.indexOf('about:reader')===0||document.documentElement.getAttribute('data-is-reader-mode')){
     document.body.innerHTML='<div style="font-family:sans-serif;padding:2rem;text-align:center"><h2>Konten tidak tersedia di Reader Mode</h2><p>Silakan matikan Reader Mode untuk melihat lirik ini di <a href="${BASE_URL}/lagu/${slug}">YumeSubs</a>.</p></div>';
     return;
   }
-
-  // 2. Inject "poison" paragraphs — reader mode akan mengambil teks ini
-  // karena ia mencari elemen <p> dengan banyak teks.
-  // Teks ini hanya muncul di reader mode (elemen hidden dari render normal).
-  const poison = [
-    'Konten ini hanya dapat dilihat di YumeSubs secara langsung.',
-    'Reader Mode tidak didukung. Kunjungi yumelyrics.my.id untuk melihat lirik lengkap.',
-    'Lirik dilindungi hak cipta © YumeSubs — yumelyrics.my.id',
-    'Untuk melihat lirik dengan benar, matikan Reader Mode di browser Anda.',
-    'Teks yang Anda lihat di sini tidak lengkap karena proteksi konten YumeSubs.',
-  ];
-  const fakeArticle = document.createElement('article');
-  fakeArticle.className = 'rm-decoy';
-  fakeArticle.setAttribute('aria-hidden','true');
-  poison.forEach(function(txt){
-    const p = document.createElement('p');
-    // Teks diacak karakter agar tidak terbaca tapi reader mode mengambilnya
-    p.setAttribute('data-rm','1');
-    p.textContent = txt;
-    fakeArticle.appendChild(p);
-  });
-  document.body.appendChild(fakeArticle);
-
-  // 3. Deteksi perubahan DOM yang dilakukan reader mode (Firefox/Safari injeksi class)
-  var readerModeDetected = false;
+  var isMobile=window.matchMedia('(max-width:768px)').matches;
+  var readerModeDetected=false;
   function checkReaderMode(){
-    var html = document.documentElement;
-    // Firefox menambahkan attribute / class saat reader mode aktif
+    var html=document.documentElement;
     if(
-      html.classList.contains('readability-mode') ||
-      html.getAttribute('readability') !== null ||
-      document.body.classList.contains('moz-reader-content') ||
-      document.getElementById('moz-reader-content') ||
+      html.classList.contains('readability-mode')||
+      html.getAttribute('readability')!==null||
+      document.body.classList.contains('moz-reader-content')||
+      document.getElementById('moz-reader-content')||
       document.querySelector('.reader-content, #reader-estimated-time, .readability-styled')
     ){
       if(!readerModeDetected){
-        readerModeDetected = true;
-        // Hapus semua konten lirik dari DOM
-        var ll = document.getElementById('ll');
-        if(ll) ll.innerHTML = '<p style="color:red;font-family:sans-serif">Lirik tidak tersedia di Reader Mode. Kunjungi <a href="${BASE_URL}/lagu/${slug}">yumelyrics.my.id</a> untuk melihat konten lengkap.</p>';
+        readerModeDetected=true;
+        var ll=document.getElementById('ll');
+        if(ll) ll.innerHTML='<p style="color:red;font-family:sans-serif">Lirik tidak tersedia di Reader Mode. Kunjungi <a href="${BASE_URL}/lagu/${slug}">yumelyrics.my.id</a> untuk melihat konten lengkap.</p>';
       }
     }
   }
-
-  // 4. Observer untuk deteksi perubahan DOM yang disebabkan reader mode
-  if(window.MutationObserver){
-    var obs = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        if(m.type==='attributes'||m.type==='childList') checkReaderMode();
-      });
+  function initReaderGuard(){
+    var poison=[
+      'Konten ini hanya dapat dilihat di YumeSubs secara langsung.',
+      'Reader Mode tidak didukung. Kunjungi yumelyrics.my.id untuk melihat lirik lengkap.',
+      'Lirik dilindungi hak cipta © YumeSubs — yumelyrics.my.id',
+      'Untuk melihat lirik dengan benar, matikan Reader Mode di browser Anda.',
+      'Teks yang Anda lihat di sini tidak lengkap karena proteksi konten YumeSubs.',
+    ];
+    var fakeArticle=document.createElement('article');
+    fakeArticle.className='rm-decoy';
+    fakeArticle.setAttribute('aria-hidden','true');
+    poison.forEach(function(txt){
+      var p=document.createElement('p');
+      p.setAttribute('data-rm','1');
+      p.textContent=txt;
+      fakeArticle.appendChild(p);
     });
-    obs.observe(document.documentElement,{attributes:true,childList:true,subtree:false});
-    obs.observe(document.body,{attributes:true,childList:false});
+    document.body.appendChild(fakeArticle);
+    if(window.MutationObserver){
+      var obs=new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.type==='attributes'||m.type==='childList') checkReaderMode();
+        });
+      });
+      obs.observe(document.documentElement,{attributes:true,childList:true,subtree:false});
+      obs.observe(document.body,{attributes:true,childList:false});
+    }
+    var pollDelay=isMobile?8000:4000;
+    var pollMs=isMobile?1500:800;
+    window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode,pollMs);},pollDelay);},{once:true});
   }
-
-  // 5. Tambahkan banyak elemen non-semantik di sekitar lirik
-  // Reader mode parser (Readability.js) skip konten jika score rendah —
-  // kita naikkan noise/signal ratio dengan span bertumpuk.
-  // (sudah dilakukan oleh obfuscateLine, ini backup tambahan)
-
-  // 6. Polling ringan sebagai fallback — delayed agar tidak halangi render
-  window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode, 800);},4000);});
+  (window.requestIdleCallback||function(cb){setTimeout(cb,isMobile?1200:1);})(initReaderGuard);
 })();
 </script>
 <script>
-/* ── YumeSubs Copy Protection (v4) - Deferred after initial render ── */
-function _startCopyProtect(){
+/* ── YumeSubs Copy Protection (v5) — lite segera, full ditunda ── */
 (function(){
-  var WATERMARK = '\\n\\n© YumeSubs — yumelyrics.my.id';
+  var WATERMARK='\\n\\n© YumeSubs — yumelyrics.my.id';
+  var _verifiedAdmin=false;
+  var _bridgeUsed=false;
+  var _liteDone=false;
+  var _fullDone=false;
+  var isMobile=window.matchMedia('(max-width:768px)').matches;
 
-  /* Admin check: murni via closure — tidak ada satupun property yang diekspose ke window.
-     _verifiedAdmin hanya bisa diset lewat __yumeAuthBridge yang di-delete setelah dipakai
-     satu kali oleh applyAuthState(). Setelah itu channel tertutup selamanya. */
-  var _verifiedAdmin = false;
-  var _bridgeUsed = false;
-  // Bridge satu kali pakai — setelah applyAuthState() memanggil ini, langsung dihapus dari window
-  Object.defineProperty(window, '__yumeAuthBridge', {
-    configurable: true,
-    get: function(){ return undefined; },
-    set: function(val){
-      if(_bridgeUsed) return; // tolak semua call setelah pertama
-      _bridgeUsed = true;
-      _verifiedAdmin = (val === true);
-      // Hapus bridge dari window supaya tidak bisa dipanggil lagi dari DevTools
-      try{ delete window.__yumeAuthBridge; } catch(ex){}
+  Object.defineProperty(window,'__yumeAuthBridge',{
+    configurable:true,
+    get:function(){return undefined;},
+    set:function(val){
+      if(_bridgeUsed) return;
+      _bridgeUsed=true;
+      _verifiedAdmin=(val===true);
+      try{delete window.__yumeAuthBridge;}catch(ex){}
     }
   });
 
-  function isProtected(){ return !_verifiedAdmin; }
-  function isInput(el){ var t=el&&el.tagName; return t==='INPUT'||t==='TEXTAREA'; }
+  function isProtected(){return !_verifiedAdmin;}
+  function isInput(el){var t=el&&el.tagName;return t==='INPUT'||t==='TEXTAREA';}
 
-  /* 1. Blokir klik kanan */
-  document.addEventListener('contextmenu', function(e){
-    if(!isProtected()) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true); // capture phase — jalan sebelum listener lain
+  function _startCopyProtectLite(){
+    if(_liteDone) return;
+    _liteDone=true;
 
-  /* 2. Blokir keyboard shortcut — capture phase, stopImmediatePropagation */
-  document.addEventListener('keydown', function(e){
-    if(!isProtected()) return;
-    var k = e.key ? e.key.toLowerCase() : '';
-    var code = e.code ? e.code.toLowerCase() : '';
-    if(e.ctrlKey||e.metaKey){
-      // Tangkap via key DAN code — handle edge case browser tertentu
-      var keyOrCode = k || code;
-      if(['a','c','u','s','p','i','j','x','keya','keyc','keyu','keys','keyp','keyi','keyj','keyx'].indexOf(keyOrCode)!==-1){
-        // Kalau target adalah input/textarea, izinkan Ctrl+A (select all di field)
-        if((k==='a'||code==='keya') && isInput(e.target)) return;
+    document.addEventListener('contextmenu',function(e){
+      if(!isProtected()) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+    },true);
+
+    document.addEventListener('keydown',function(e){
+      if(!isProtected()) return;
+      var k=e.key?e.key.toLowerCase():'';
+      var code=e.code?e.code.toLowerCase():'';
+      if(e.ctrlKey||e.metaKey){
+        var keyOrCode=k||code;
+        if(['a','c','u','s','p','i','j','x','keya','keyc','keyu','keys','keyp','keyi','keyj','keyx'].indexOf(keyOrCode)!==-1){
+          if((k==='a'||code==='keya')&&isInput(e.target)) return;
+          e.preventDefault(); e.stopImmediatePropagation(); return;
+        }
+        if(e.shiftKey&&['i','j','c','k','s'].indexOf(k)!==-1){
+          e.preventDefault(); e.stopImmediatePropagation(); return;
+        }
+      }
+      if(k==='f12'||k==='printscreen'||k==='contextmenu'){
         e.preventDefault(); e.stopImmediatePropagation(); return;
       }
-      if(e.shiftKey && ['i','j','c','k','s'].indexOf(k)!==-1){
-        e.preventDefault(); e.stopImmediatePropagation(); return;
-      }
-    }
-    if(k==='f12'||k==='printscreen'||k==='contextmenu'){
-      e.preventDefault(); e.stopImmediatePropagation(); return;
-    }
-  }, true); // capture phase
+    },true);
 
-  /* 3. Blokir copy — inject watermark */
-  document.addEventListener('copy', function(e){
-    if(!isProtected()) return;
-    try{ e.clipboardData.setData('text/plain', WATERMARK); } catch(ex){}
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true);
+    document.addEventListener('copy',function(e){
+      if(!isProtected()) return;
+      try{e.clipboardData.setData('text/plain',WATERMARK);}catch(ex){}
+      e.preventDefault(); e.stopImmediatePropagation();
+    },true);
 
-  /* 3b. Blokir cut */
-  document.addEventListener('cut', function(e){
-    if(!isProtected()) return;
-    try{ e.clipboardData.setData('text/plain', WATERMARK); } catch(ex){}
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true);
+    document.addEventListener('cut',function(e){
+      if(!isProtected()) return;
+      try{e.clipboardData.setData('text/plain',WATERMARK);}catch(ex){}
+      e.preventDefault(); e.stopImmediatePropagation();
+    },true);
 
-  /* 4. Blokir selectstart — capture phase */
-  document.addEventListener('selectstart', function(e){
-    if(!isProtected()) return;
-    if(isInput(e.target)) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true);
-
-  /* 5. Blokir drag */
-  document.addEventListener('dragstart', function(e){
-    if(!isProtected()) return;
-    if(isInput(e.target)) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true);
-
-  /* 6. selectionchange — clear seleksi di luar input.
-     stopImmediatePropagation() blokir listener lain yang mungkin run duluan. */
-  document.addEventListener('selectionchange', function(e){
-    if(!isProtected()) return;
-    if(e && e.stopImmediatePropagation) e.stopImmediatePropagation();
-    var sel = window.getSelection ? window.getSelection() : null;
-    if(!sel || sel.isCollapsed) return;
-    var node = sel.anchorNode;
-    if(!node) { sel.removeAllRanges(); return; }
-    var el = node.nodeType===3 ? node.parentElement : node;
-    // Cek seluruh ancestor chain — input bisa nested di div
-    var cur = el;
-    while(cur && cur !== document.body){
-      if(isInput(cur)) return;
-      cur = cur.parentElement;
-    }
-    sel.removeAllRanges();
-  }, true);
-
-  /* 7. [MOBILE] Touch long-press — delayed after render */
-  window.addEventListener('load',function(){setTimeout(function(){
-    document.addEventListener('touchend', function(e){
+    document.addEventListener('selectstart',function(e){
       if(!isProtected()) return;
       if(isInput(e.target)) return;
-      setTimeout(function(){
-        var sel = window.getSelection ? window.getSelection() : null;
-        if(sel) sel.removeAllRanges();
-      }, 0);
-    }, { passive: true, capture: true });
-  },4000);});
+      e.preventDefault(); e.stopImmediatePropagation();
+    },true);
 
-  /* 8. enforceNoSelect — paksa user-select:none via inline style !important */
+    document.addEventListener('dragstart',function(e){
+      if(!isProtected()) return;
+      if(isInput(e.target)) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+    },true);
+
+    try{Object.defineProperty(window,'print',{value:function(){return false;},writable:false,configurable:false});}catch(ex){}
+
+    (function(){
+      var STYLE_ID='yume-noselect-v4';
+      var STYLE_CSS='html,body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right,[data-obf]{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}input,textarea,*[contenteditable]{-webkit-user-select:text!important;-moz-user-select:text!important;user-select:text!important;}';
+      var s=document.getElementById(STYLE_ID);
+      if(!s){s=document.createElement('style');s.id=STYLE_ID;s.textContent=STYLE_CSS;document.head.appendChild(s);}
+    })();
+  }
+
   function enforceNoSelect(){
     if(!isProtected()) return;
-    // Clear selection setiap tick — sempitkan window bypass Ctrl+A
-    var sel = window.getSelection ? window.getSelection() : null;
-    if(sel && !sel.isCollapsed){
-      var node = sel.anchorNode;
-      var el = node ? (node.nodeType===3 ? node.parentElement : node) : null;
-      var inInput = false;
-      var cur = el;
-      while(cur && cur !== document.body){ if(isInput(cur)){inInput=true;break;} cur=cur.parentElement; }
+    var sel=window.getSelection?window.getSelection():null;
+    if(sel&&!sel.isCollapsed){
+      var node=sel.anchorNode;
+      var el=node?(node.nodeType===3?node.parentElement:node):null;
+      var inInput=false;
+      var cur=el;
+      while(cur&&cur!==document.body){if(isInput(cur)){inInput=true;break;}cur=cur.parentElement;}
       if(!inInput) sel.removeAllRanges();
     }
-    var targets = [document.body, document.getElementById('ll')].filter(Boolean);
-    var lyricEls = document.querySelectorAll('.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right');
-    lyricEls.forEach(function(el){ targets.push(el); });
+    var targets=[document.body,document.getElementById('ll')].filter(Boolean);
+    document.querySelectorAll('.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right').forEach(function(el){targets.push(el);});
     targets.forEach(function(el){
       el.style.setProperty('-webkit-user-select','none','important');
       el.style.setProperty('-moz-user-select','none','important');
@@ -3490,79 +3468,86 @@ function _startCopyProtect(){
       el.style.setProperty('-webkit-touch-callout','none','important');
     });
   }
-  enforceNoSelect();
-  // Interval delayed — tidak halangi render awal; jarang (5s) agar tidak ganggu INP
-  window.addEventListener('load',function(){setTimeout(function(){setInterval(enforceNoSelect, 5000);},4000);});
 
-  /* 9. MutationObserver — reset proteksi kalau style/class diubah dari DevTools */
-  (function(){
-    if(!window.MutationObserver) return;
-    var obs = new MutationObserver(function(){
-      if(isProtected()) enforceNoSelect();
-    });
-    var ll = document.getElementById('ll');
-    if(ll) obs.observe(ll, { attributes:true, attributeFilter:['style','class'], subtree:true, childList:true });
-    obs.observe(document.body, { attributes:true, attributeFilter:['style','class'] });
-    // Pantau juga html element (kalau DevTools nambah is-admin class di root)
-    obs.observe(document.documentElement, { attributes:true, attributeFilter:['class'] });
-  })();
+  function _startCopyProtectFull(){
+    if(_fullDone) return;
+    _fullDone=true;
 
-  /* 10. Blokir window.print() */
-  try{ Object.defineProperty(window, 'print', { value:function(){return false;}, writable:false, configurable:false }); } catch(ex){}
+    document.addEventListener('selectionchange',function(e){
+      if(!isProtected()) return;
+      if(e&&e.stopImmediatePropagation) e.stopImmediatePropagation();
+      var sel=window.getSelection?window.getSelection():null;
+      if(!sel||sel.isCollapsed) return;
+      var node=sel.anchorNode;
+      if(!node){sel.removeAllRanges();return;}
+      var el=node.nodeType===3?node.parentElement:node;
+      var cur=el;
+      while(cur&&cur!==document.body){if(isInput(cur)) return;cur=cur.parentElement;}
+      sel.removeAllRanges();
+    },true);
 
-  /* 11. CSS injection via <style> tag dengan guard ketat */
-  (function(){
-    var STYLE_ID = 'yume-noselect-v4';
-    var STYLE_CSS = 'html,body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right,[data-obf]{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}input,textarea,*[contenteditable]{-webkit-user-select:text!important;-moz-user-select:text!important;user-select:text!important;}';
+    document.addEventListener('touchend',function(e){
+      if(!isProtected()) return;
+      if(isInput(e.target)) return;
+      setTimeout(function(){
+        var sel=window.getSelection?window.getSelection():null;
+        if(sel) sel.removeAllRanges();
+      },0);
+    },{passive:true,capture:true});
 
-    function injectStyle(){
-      var existing = document.getElementById(STYLE_ID);
-      if(existing){
-        // Pastikan konten tidak diubah
-        if(existing.textContent !== STYLE_CSS) existing.textContent = STYLE_CSS;
-        return;
-      }
-      var s = document.createElement('style');
-      s.id = STYLE_ID;
-      s.textContent = STYLE_CSS;
-      document.head.appendChild(s);
-    }
-    injectStyle();
+    enforceNoSelect();
+    setInterval(enforceNoSelect,isMobile?8000:5000);
 
-    // Guard: kalau style tag dihapus atau dimodifikasi, inject ulang
     if(window.MutationObserver){
-      var headObs = new MutationObserver(function(muts){
-        if(!isProtected()) return;
-        var needReInject = false;
-        muts.forEach(function(m){
-          m.removedNodes.forEach(function(n){ if(n.id===STYLE_ID) needReInject=true; });
-          // Kalau ada childList change di head, cek juga konten style
-          if(m.type==='childList') needReInject = true;
-        });
-        if(needReInject) injectStyle();
-      });
-      headObs.observe(document.head, { childList:true, subtree:false });
-      // Pantau juga perubahan textContent style tag
-      var styleEl = document.getElementById(STYLE_ID);
-      if(styleEl){
-        headObs.observe(styleEl, { characterData:true, childList:true });
-      }
+      var obs=new MutationObserver(function(){if(isProtected()) enforceNoSelect();});
+      var ll=document.getElementById('ll');
+      if(ll) obs.observe(ll,{attributes:true,attributeFilter:['style','class'],subtree:true,childList:true});
+      obs.observe(document.body,{attributes:true,attributeFilter:['style','class']});
+      obs.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
     }
-  })();
 
-  /* 12. Proteksi tambahan: disable window.getSelection override */
-  (function(){
-    var _origGetSel = window.getSelection.bind(window);
-    // Tidak kita override — biarkan native, tapi selectionchange sudah handle clear
-  })();
+    (function(){
+      var STYLE_ID='yume-noselect-v4';
+      var STYLE_CSS='html,body,#ll,.ljp,.lro,.lid,.ll-item,.lyric-left,.lyric-right,[data-obf]{-webkit-user-select:none!important;-moz-user-select:none!important;-ms-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}input,textarea,*[contenteditable]{-webkit-user-select:text!important;-moz-user-select:text!important;user-select:text!important;}';
+      function injectStyle(){
+        var existing=document.getElementById(STYLE_ID);
+        if(existing){if(existing.textContent!==STYLE_CSS) existing.textContent=STYLE_CSS;return;}
+        var s=document.createElement('style');s.id=STYLE_ID;s.textContent=STYLE_CSS;document.head.appendChild(s);
+      }
+      if(window.MutationObserver){
+        var headObs=new MutationObserver(function(muts){
+          if(!isProtected()) return;
+          var need=false;
+          muts.forEach(function(m){
+            m.removedNodes.forEach(function(n){if(n.id===STYLE_ID) need=true;});
+            if(m.type==='childList') need=true;
+          });
+          if(need) injectStyle();
+        });
+        headObs.observe(document.head,{childList:true,subtree:false});
+        var styleEl=document.getElementById(STYLE_ID);
+        if(styleEl) headObs.observe(styleEl,{characterData:true,childList:true});
+      }
+    })();
+  }
 
+  function _scheduleLite(){
+    (window.requestIdleCallback||function(cb){setTimeout(cb,1);})(_startCopyProtectLite);
+  }
+  function _scheduleFull(){
+    var delay=isMobile?2500:1500;
+    function run(){(window.requestIdleCallback||function(cb){setTimeout(cb,50);})(_startCopyProtectFull);}
+    if(document.readyState==='complete') setTimeout(run,delay);
+    else window.addEventListener('load',function(){setTimeout(run,delay);},{once:true});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',_scheduleLite,{once:true});
+  } else {
+    _scheduleLite();
+  }
+  _scheduleFull();
 })();
-}
-if(document.readyState==='complete'){
-  setTimeout(_startCopyProtect,3500);
-}else{
-  window.addEventListener('load',function(){setTimeout(_startCopyProtect,3500);},{once:true});
-}
 </script>
 <div id="rm-decoy-wrap">
   <article class="rm-poison" id="rm-a1"><p>Halaman ini menggunakan teknologi interaktif yang tidak dapat ditampilkan dalam Reader Mode. Lirik dilindungi dengan enkripsi DOM berbasis JavaScript dan hanya dapat ditampilkan melalui browser tanpa Reader Mode aktif. Silakan kunjungi yumelyrics.my.id secara langsung untuk melihat lirik lengkap beserta terjemahan Indonesia.</p><p>© YumeSubs — yumelyrics.my.id — Semua lirik dilindungi hak cipta.</p></article>
