@@ -176,27 +176,36 @@ function saveManifest(manifest) {
 function seedManifestFromDisk(manifest, songMeta) {
   let seeded = 0;
   for (const { song, slug } of songMeta) {
-    // Lagu htmlDirty: manifest hash harus tetap = hash HTML terakhir yang di-deploy,
-    // bukan hash Firebase terbaru. Kalau di-sync dulu, needsSongGenerate melihat hash
-    // sama → skip generate padahal file HTML masih lama.
-    if (isHtmlDirty(song)) continue;
+    // Lagu htmlDirty / belum pernah di-generate setelah edit: jangan sync hash dari Firebase.
+    if (isHtmlDirty(song) || songNeedsHtmlRebuild(song, manifest.songs[song.id])) continue;
     const fp = path.join('lagu', `${slug}.html`);
     if (!fs.existsSync(fp)) continue;
     const hash = songContentHash(song);
     const prev = manifest.songs[song.id];
-    if (!prev || prev.slug !== slug || prev.hash !== hash) {
-      manifest.songs[song.id] = { slug, hash };
+    const generatedAt = fs.statSync(fp).mtime.toISOString();
+    if (!prev || prev.slug !== slug || prev.hash !== hash || prev.generatedAt !== generatedAt) {
+      manifest.songs[song.id] = { slug, hash, generatedAt };
       seeded++;
     }
   }
   return seeded;
 }
 
+/** Apakah HTML perlu di-build ulang? (incremental / lagu diedit) */
+function songNeedsHtmlRebuild(song, prev) {
+  if (isHtmlDirty(song)) return true;
+  const editedAt = String(song.htmlEditedAt || '');
+  if (!editedAt) return false;
+  const generatedAt = String(prev?.generatedAt || song.htmlGeneratedAt || '');
+  return !generatedAt || editedAt > generatedAt;
+}
+
 /**
  * Incremental: generate hanya jika
  * - file HTML belum ada (lagu baru), atau
  * - slug berubah, atau
- * - htmlDirty === true DAN konten benar-benar berubah (hash berbeda dari manifest)
+ * - htmlDirty === true, atau
+ * - htmlEditedAt lebih baru dari HTML terakhir di-generate (manifest / Firebase)
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
@@ -204,19 +213,12 @@ function needsSongGenerate(song, slug, manifest, fullMode) {
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
   if (prev && prev.slug !== slug) return true;
-  if (isHtmlDirty(song)) {
-    // Generate ulang hanya jika konten benar-benar berubah.
-    // Kalau flag dirty macet (clearHtmlDirtyFlag gagal di run sebelumnya),
-    // tapi isi lagu sama → skip, jangan generate ulang.
-    const currentHash = songContentHash(song);
-    return !prev || prev.hash !== currentHash;
-  }
-  return false;
+  return songNeedsHtmlRebuild(song, prev);
 }
 
-async function clearHtmlDirtyFlag(db, songId) {
+async function clearHtmlDirtyFlag(db, songId, generatedAt = new Date().toISOString()) {
   try {
-    await updateDoc(doc(db, 'songs', songId), { htmlDirty: false });
+    await updateDoc(doc(db, 'songs', songId), { htmlDirty: false, htmlGeneratedAt: generatedAt });
   } catch (e) {
     console.warn(`  ⚠ htmlDirty tidak bisa di-clear untuk ${songId}: ${e.message || e}`);
   }
@@ -3714,15 +3716,10 @@ async function main() {
     try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
-      // htmlDirty + hash sama manifest = flag macet, konten Firebase tidak berubah → clear saja.
-      if (!fullMode && isHtmlDirty(song)) {
-        dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
-      }
       const skipHash = songContentHash(song);
       const prev = manifest.songs[song.id];
-      // Jangan timpa manifest hash untuk htmlDirty yang di-skip — hash manifest = HTML terakhir.
-      if (!isHtmlDirty(song) && (!prev || prev.slug !== finalSlug || prev.hash !== skipHash)) {
-        manifest.songs[song.id] = { slug: finalSlug, hash: skipHash };
+      if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
+        manifest.songs[song.id] = { slug: finalSlug, hash: skipHash, generatedAt: prev?.generatedAt || '' };
       }
       urls.push(buildSitemapSongUrl(song, finalSlug, today));
       return;
@@ -3745,10 +3742,10 @@ async function main() {
     const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '');
     await fsWrite(songPath, html, 'utf8'); // non-blocking file write
 
-    manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
-    if (!fullMode && wasDirty) {
-      // Collect Firebase updates — flush all at once after the loop (no serial awaiting)
-      dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
+    const generatedAt = new Date().toISOString();
+    manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song), generatedAt };
+    if (!fullMode && (wasDirty || song.htmlEditedAt)) {
+      dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id, generatedAt));
     }
     generatedSongCount++;
     if (shouldNotifyDiscord(song, songKind)) {
@@ -3761,7 +3758,7 @@ async function main() {
         img: song.img || '',
       });
     }
-    console.log(`  ✓ lagu/${finalSlug}.html`);
+    console.log(`  ✓ lagu/${finalSlug}.html (${fullMode ? 'full' : songKind})`);
     urls.push(buildSitemapSongUrl(song, finalSlug, today));
     } catch(e) {
       // Lagu gagal di-generate — catat error tapi lanjut ke lagu berikutnya
