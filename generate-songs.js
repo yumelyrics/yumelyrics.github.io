@@ -421,19 +421,13 @@ function wsrvUrl(url, w, q = 80) {
   return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&output=webp&q=${q}`;
 }
 
-/** URL cover utama — WebP via wsrv untuk LCP lebih ringan (terutama mobile). */
-function normalizeCoverUrl(url) {
+/** URL cover utama — link langsung HD (Spotify/YouTube), naikkan resolusi YouTube kecil saja. */
+function coverImgUrl(url) {
   if (!url || typeof url !== 'string') return url;
   let u = url.trim();
   if (u.includes('mqdefault')) u = u.replace('mqdefault', 'hqdefault');
   if (u.includes('sddefault')) u = u.replace('sddefault', 'hqdefault');
   return u;
-}
-
-function coverImgUrl(url, w) {
-  const u = normalizeCoverUrl(url);
-  if (!u) return u;
-  return w ? wsrvUrl(u, w, 75) : u;
 }
 
 /** Thumbnail kecil (related, spotify card). */
@@ -453,16 +447,7 @@ function imgTag(src, alt, opts = {}) {
   const h = opts.h || 52;
   const eager = !!opts.eager;
   const hd = !!opts.hd;
-  const responsive = !!opts.responsive;
   if (!src) return '';
-  if (hd && responsive) {
-    const raw = normalizeCoverUrl(src);
-    const sm = Math.min(320, w);
-    const uSm = wsrvUrl(raw, sm, 70);
-    const uMd = wsrvUrl(raw, Math.min(480, w), 75);
-    const uLg = wsrvUrl(raw, w, 80);
-    return `<img class="${cls}" src="${escHtml(uMd)}" srcset="${escHtml(uSm)} ${sm}w, ${escHtml(uMd)} 480w, ${escHtml(uLg)} ${w}w" sizes="(max-width:600px) min(88vw,320px), 320px" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="eager" decoding="async" fetchpriority="high">`;
-  }
   const u = hd ? coverImgUrl(src) : thumbImgUrl(src);
   const fp = eager ? ' fetchpriority="high"' : '';
   return `<img class="${cls}" src="${escHtml(u)}" alt="${escHtml(alt)}" width="${w}" height="${h}" loading="${eager ? 'eager' : 'lazy'}" decoding="async"${fp}>`;
@@ -1469,8 +1454,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
     '</div></div>'
   ).join('');
 
-
-
+  const lyricsHTMLJson = JSON.stringify(lyricsHTML);
   const dateModified = generatedAt || new Date().toISOString();
   // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
   const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
@@ -1604,7 +1588,7 @@ ${song.img && /ytimg\.com|img\.youtube\.com/i.test(song.img) ? '<link rel="preco
 ${song.img && /i\.scdn\.co/i.test(song.img) ? '<link rel="preconnect" href="https://i.scdn.co" crossorigin>' : ''}
 <link rel="dns-prefetch" href="https://www.youtube.com">
 <link rel="dns-prefetch" href="https://nicovideo.cdn.nimg.jp">
-${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img, 480))}" fetchpriority="high">` : ''}
+${song.img ? `<link rel="preload" as="image" href="${escHtml(coverImgUrl(song.img))}" fetchpriority="high">` : ''}
 <title>${escHtml(pageTitle)}</title>
 <meta name="description" content="${escHtml(metaDesc)}">
 <meta name="keywords" content="${[
@@ -1676,6 +1660,11 @@ ${CSS_TOKENS}
 [data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
 [data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1) rotate(0)}
 /* ── Anti Reader Mode ── */
+.combx{position:relative}
+.ll-item,.ljp,.lro,.lid{-webkit-user-modify:read-only}
+html.readability-mode #ll,html.readability-mode .lyrics-main,html.readability-mode .lyrics-section,
+body.moz-reader-content #ll,body.moz-reader-content .lyrics-section,
+#moz-reader-content #ll,.readability-styled #ll{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
 .rm-poison{font-size:1px;line-height:1px;color:transparent;background:transparent;border:none;padding:0;margin:0;max-height:1px;overflow:hidden}
 .rm-decoy{font-size:1px;color:transparent;overflow:hidden;max-height:1px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
@@ -2249,7 +2238,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true, responsive: true })
+          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
@@ -2380,7 +2369,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
 </div>
 
 <!-- ── LYRICS ── -->
-<section class="lyrics-section" id="lyrics">
+<section class="lyrics-section combx supplemental" id="lyrics" data-nosnippet translate="no">
 
   <main class="lyrics-main">
     <div class="lyrics-controls">
@@ -2396,11 +2385,50 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       </button>
     </div>
 
-    <div class="lyrics-container" id="ll">
-      ${lyricsHTML}
-    </div>
-
-
+    <div class="lyrics-container combx" id="ll" data-nosnippet translate="no" role="presentation" aria-label="Lirik interaktif"></div>
+    <noscript><div class="lyrics-container lyrics-noscript">${lyricsHTML}</div></noscript>
+    <script>
+    (function(){
+      var ll=document.getElementById('ll');
+      if(ll) ll.innerHTML=${lyricsHTMLJson};
+      document.body.classList.add('rdy');
+    })();
+    </script>
+    <script>
+    (function(){
+      var RM_MSG='<p style="color:var(--ash);font-family:var(--sans);font-size:.9rem;line-height:1.7;padding:2rem 0">Lirik tidak tersedia di Reader Mode. Matikan Reader Mode lalu buka <a href="${BASE_URL}/lagu/${slug}.html" style="color:var(--gold)">yumelyrics.my.id</a> untuk melihat lirik lengkap.</p>';
+      var RM_SEL='.readability-mode,.moz-reader-content,#moz-reader-content,.readability-styled,.reader-content,#reader-estimated-time';
+      if(location.href.indexOf('about:reader')===0||document.documentElement.getAttribute('data-is-reader-mode')){
+        document.body.innerHTML='<div style="font-family:sans-serif;padding:2rem;text-align:center;max-width:480px;margin:4rem auto"><h2>Konten tidak tersedia di Reader Mode</h2><p>Silakan matikan Reader Mode untuk melihat lirik di <a href="${BASE_URL}/lagu/${slug}">YumeSubs</a>.</p></div>';
+        return;
+      }
+      var blocked=false;
+      function isReaderActive(){
+        var html=document.documentElement, body=document.body;
+        if(html.classList.contains('readability-mode')||html.getAttribute('readability')!==null) return true;
+        if(body.classList.contains('moz-reader-content')||document.getElementById('moz-reader-content')) return true;
+        if(document.querySelector(RM_SEL)) return true;
+        return false;
+      }
+      function blockLyrics(){
+        if(blocked) return;
+        blocked=true;
+        var ll=document.getElementById('ll');
+        if(ll) ll.innerHTML=RM_MSG;
+        document.querySelectorAll('.lyrics-noscript').forEach(function(el){el.innerHTML='';});
+      }
+      function guard(){ if(isReaderActive()) blockLyrics(); }
+      guard();
+      if(window.MutationObserver){
+        var obs=new MutationObserver(guard);
+        obs.observe(document.documentElement,{attributes:true,attributeFilter:['class','data-is-reader-mode','readability'],childList:true,subtree:true});
+        obs.observe(document.body,{attributes:true,attributeFilter:['class'],childList:true,subtree:false});
+      }
+      document.addEventListener('visibilitychange',guard,{passive:true});
+      window.addEventListener('pageshow',guard,{passive:true});
+      setInterval(guard,800);
+    })();
+    </script>
 
     <!-- Tentang Lagu -->
     <div class="cmsec" style="margin-bottom:2rem">
@@ -2721,19 +2749,6 @@ if(document.readyState==='loading'){
     } else {
       run();
     }
-  }
-})();
-</script>
-<script>
-/* ── Tampilkan lirik segera setelah DOM siap ── */
-(function(){
-  function restoreLines(){
-    document.body.classList.add('rdy');
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', restoreLines);
-  } else {
-    restoreLines();
   }
 })();
 </script>
@@ -3300,65 +3315,6 @@ function _scheduleHeavy(){
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',scheduleFixBg,{passive:true});
   }
-})();
-</script>
-<script>
-/* ── Anti Reader Mode (ringan dulu, polling ditunda) ── */
-(function(){
-  if(location.href.indexOf('about:reader')===0||document.documentElement.getAttribute('data-is-reader-mode')){
-    document.body.innerHTML='<div style="font-family:sans-serif;padding:2rem;text-align:center"><h2>Konten tidak tersedia di Reader Mode</h2><p>Silakan matikan Reader Mode untuk melihat lirik ini di <a href="${BASE_URL}/lagu/${slug}">YumeSubs</a>.</p></div>';
-    return;
-  }
-  var isMobile=window.matchMedia('(max-width:768px)').matches;
-  var readerModeDetected=false;
-  function checkReaderMode(){
-    var html=document.documentElement;
-    if(
-      html.classList.contains('readability-mode')||
-      html.getAttribute('readability')!==null||
-      document.body.classList.contains('moz-reader-content')||
-      document.getElementById('moz-reader-content')||
-      document.querySelector('.reader-content, #reader-estimated-time, .readability-styled')
-    ){
-      if(!readerModeDetected){
-        readerModeDetected=true;
-        var ll=document.getElementById('ll');
-        if(ll) ll.innerHTML='<p style="color:red;font-family:sans-serif">Lirik tidak tersedia di Reader Mode. Kunjungi <a href="${BASE_URL}/lagu/${slug}">yumelyrics.my.id</a> untuk melihat konten lengkap.</p>';
-      }
-    }
-  }
-  function initReaderGuard(){
-    var poison=[
-      'Konten ini hanya dapat dilihat di YumeSubs secara langsung.',
-      'Reader Mode tidak didukung. Kunjungi yumelyrics.my.id untuk melihat lirik lengkap.',
-      'Lirik dilindungi hak cipta © YumeSubs — yumelyrics.my.id',
-      'Untuk melihat lirik dengan benar, matikan Reader Mode di browser Anda.',
-      'Teks yang Anda lihat di sini tidak lengkap karena proteksi konten YumeSubs.',
-    ];
-    var fakeArticle=document.createElement('article');
-    fakeArticle.className='rm-decoy';
-    fakeArticle.setAttribute('aria-hidden','true');
-    poison.forEach(function(txt){
-      var p=document.createElement('p');
-      p.setAttribute('data-rm','1');
-      p.textContent=txt;
-      fakeArticle.appendChild(p);
-    });
-    document.body.appendChild(fakeArticle);
-    if(window.MutationObserver){
-      var obs=new MutationObserver(function(muts){
-        muts.forEach(function(m){
-          if(m.type==='attributes'||m.type==='childList') checkReaderMode();
-        });
-      });
-      obs.observe(document.documentElement,{attributes:true,childList:true,subtree:false});
-      obs.observe(document.body,{attributes:true,childList:false});
-    }
-    var pollDelay=isMobile?8000:4000;
-    var pollMs=isMobile?1500:800;
-    window.addEventListener('load',function(){setTimeout(function(){setInterval(checkReaderMode,pollMs);},pollDelay);},{once:true});
-  }
-  (window.requestIdleCallback||function(cb){setTimeout(cb,isMobile?1200:1);})(initReaderGuard);
 })();
 </script>
 <script>
