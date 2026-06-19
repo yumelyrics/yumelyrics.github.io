@@ -194,7 +194,7 @@ function seedManifestFromDisk(manifest, songMeta) {
  * Incremental: generate hanya jika
  * - file HTML belum ada (lagu baru), atau
  * - slug berubah, atau
- * - htmlDirty === true (lagu diedit di admin — satu-satunya trigger edit)
+ * - htmlDirty === true DAN hash manifest belum sama dengan Firebase (belum sync)
  */
 function needsSongGenerate(song, slug, manifest, fullMode) {
   if (fullMode) return true;
@@ -202,7 +202,11 @@ function needsSongGenerate(song, slug, manifest, fullMode) {
   if (!fs.existsSync(fp)) return true;
   const prev = manifest.songs[song.id];
   if (prev && prev.slug !== slug) return true;
-  if (isHtmlDirty(song)) return true;
+  if (isHtmlDirty(song)) {
+    const currentHash = songContentHash(song);
+    // Flag macet / sudah pernah di-generate: hash manifest sudah = Firebase → skip
+    return !prev || prev.hash !== currentHash;
+  }
   return false;
 }
 
@@ -3700,6 +3704,21 @@ async function main() {
   const generatedSongs = [];
   const dirtyFlagClears = []; // collected, flushed all at once after the loop
 
+  if (!fullMode) {
+    const dirtySongs = songs.filter(isHtmlDirty);
+    const dirtyNeedGen = dirtySongs.filter(s => {
+      const meta = songMeta.find(m => m.song.id === s.id);
+      if (!meta) return false;
+      const prev = manifest.songs[s.id];
+      const hash = songContentHash(s);
+      return !prev || prev.slug !== meta.slug || prev.hash !== hash;
+    });
+    console.log(`📝 htmlDirty: ${dirtySongs.length} total, ${dirtyNeedGen.length} perlu generate (hash belum sync)`);
+    if (dirtySongs.length > dirtyNeedGen.length) {
+      console.log(`   ${dirtySongs.length - dirtyNeedGen.length} flag macet — akan di-clear tanpa generate ulang`);
+    }
+  }
+
   console.log('🎵 Generate halaman lagu...');
 
   // ── Pass 2: parallel HTML generation with concurrency cap ──────────────────
@@ -3708,6 +3727,10 @@ async function main() {
     try {
     if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
       skippedSongCount++;
+      // htmlDirty tapi hash sudah sync → clear flag macet (mis. clear Firebase gagal run sebelumnya)
+      if (!fullMode && isHtmlDirty(song)) {
+        dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
+      }
       const skipHash = songContentHash(song);
       const prev = manifest.songs[song.id];
       if (!prev || prev.slug !== finalSlug || prev.hash !== skipHash) {
@@ -3735,7 +3758,7 @@ async function main() {
     await fsWrite(songPath, html, 'utf8'); // non-blocking file write
 
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
-    if (!fullMode && wasDirty) {
+    if (wasDirty) {
       dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
     }
     generatedSongCount++;
