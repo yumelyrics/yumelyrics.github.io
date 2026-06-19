@@ -33,19 +33,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/GpADSdd68UI</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg</image:loc>
-      <image:title>Daiji na koto - Back Number</image:title>
-      <image:caption>Lirik Daiji na koto - Back Number | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/GnIm3kkCYo4/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Daiji na koto - Back Number</video:title>
-      <video:description>Lirik Daiji na koto - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/GnIm3kkCYo4</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b7bcfdc5aef6069d15f3aa5e</image:loc>
@@ -70,6 +57,19 @@
       <video:title>Shigatsu no Ao - Mosawo</video:title>
       <video:description>Lirik Shigatsu no Ao - Mosawo lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/VvnZVCT2HzU</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/daiji-na-koto.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://s3-aop.plusmember.jp/prod/public/backnumber/contents/discography/UMCK5331_fix.jpg</image:loc>
+      <image:title>Daiji na koto - Back Number</image:title>
+      <image:caption>Lirik Daiji na koto - Back Number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/GnIm3kkCYo4/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Daiji na koto - Back Number</video:title>
+      <video:description>Lirik Daiji na koto - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/GnIm3kkCYo4</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -111,19 +111,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/8VhmbbzsiC0</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://i.scdn.co/image/ab67616d0000b273783ed3c2af46af7ab7c671c0</image:loc>
-      <image:title>Kowai Hanashi - Back number</image:title>
-      <image:caption>Lirik Kowai Hanashi - Back number | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/CVOauFxtpks/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Kowai Hanashi - Back number</video:title>
-      <video:description>Lirik Kowai Hanashi - Back number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/CVOauFxtpks</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/kotoba-no-tsuzuki.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.ytimg.com/vi/HIytijrapTw/mqdefault.jpg</image:loc>
@@ -135,6 +122,19 @@
       <video:title>Kotoba no tsuzuki - Rokudenashi</video:title>
       <video:description>Lirik Kotoba no tsuzuki - Rokudenashi lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/S0WRUA8JewY</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kowai-hanashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b273783ed3c2af46af7ab7c671c0</image:loc>
+      <image:title>Kowai Hanashi - Back number</image:title>
+      <image:caption>Lirik Kowai Hanashi - Back number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/CVOauFxtpks/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kowai Hanashi - Back number</video:title>
+      <video:description>Lirik Kowai Hanashi - Back number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/CVOauFxtpks</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/amanojaku.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -202,19 +202,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/LU3Ra_pB3rg</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://cdn-images.dzcdn.net/images/cover/7c7cefd881f531c02c94d988f631dcb8/1900x1900-000000-80-0-0.jpg</image:loc>
-      <image:title>Yuigon - Centimillimental</image:title>
-      <image:caption>Lirik Yuigon - Centimillimental | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/VYSrhiOgfBk/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Yuigon - Centimillimental</video:title>
-      <video:description>Lirik Yuigon - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/VYSrhiOgfBk</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i1.sndcdn.com/artworks-000121515830-ifl6e0-t500x500.jpg</image:loc>
@@ -241,6 +228,19 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/ZHAnZTVF_10</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/yuigon.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://cdn-images.dzcdn.net/images/cover/7c7cefd881f531c02c94d988f631dcb8/1900x1900-000000-80-0-0.jpg</image:loc>
+      <image:title>Yuigon - Centimillimental</image:title>
+      <image:caption>Lirik Yuigon - Centimillimental | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/VYSrhiOgfBk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yuigon - Centimillimental</video:title>
+      <video:description>Lirik Yuigon - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/VYSrhiOgfBk</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0271f37528b331c70d38aec1fb</image:loc>
@@ -254,17 +254,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/fE9trKOuT3Q</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-hanashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://i.scdn.co/image/ab67616d0000b27377658cd1e9731710b19762a1</image:loc>
-      <image:title>Watagashi - Back Number</image:title>
-      <image:caption>Lirik Watagashi - Back Number | YumeLyrics</image:caption>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
+      <image:title>Fuyu no Hanashi - Given</image:title>
+      <image:caption>Lirik Fuyu no Hanashi - Given | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/uy_BaRBJIzQ/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Watagashi - Back Number</video:title>
-      <video:description>Lirik Watagashi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/uy_BaRBJIzQ</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NL8Y9-g6jrw/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Fuyu no Hanashi - Given</video:title>
+      <video:description>Lirik Fuyu no Hanashi - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NL8Y9-g6jrw</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/marigold.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -278,19 +278,6 @@
       <video:title>Marigold - Aimyon</video:title>
       <video:description>Lirik Marigold - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/0xSiBpUdW4E</video:player_loc>
-    </video:video>
-  </url>
-  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-hanashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
-      <image:title>Fuyu no Hanashi - Given</image:title>
-      <image:caption>Lirik Fuyu no Hanashi - Given | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/NL8Y9-g6jrw/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Fuyu no Hanashi - Given</video:title>
-      <video:description>Lirik Fuyu no Hanashi - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NL8Y9-g6jrw</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/answer.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -319,17 +306,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/sAuEeM_6zpk</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-present.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/watagashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://img.youtube.com/vi/CePgforHlTs/maxresdefault.jpg</image:loc>
-      <image:title>Fuyu no present - もさを</image:title>
-      <image:caption>Lirik Fuyu no present - もさを | YumeLyrics</image:caption>
+      <image:loc>https://i.scdn.co/image/ab67616d0000b27377658cd1e9731710b19762a1</image:loc>
+      <image:title>Watagashi - Back Number</image:title>
+      <image:caption>Lirik Watagashi - Back Number | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/CePgforHlTs/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Fuyu no present - もさを</video:title>
-      <video:description>Lirik Fuyu no present - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/CePgforHlTs</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/uy_BaRBJIzQ/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Watagashi - Back Number</video:title>
+      <video:description>Lirik Watagashi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/uy_BaRBJIzQ</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/sakura-koi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -345,17 +332,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/DqbU4rz6fyc</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/sarishinohara.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/fuyu-no-present.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://i1.sndcdn.com/artworks-rJUEaFHsXGS5dpxA-WCAwXA-t500x500.jpg</image:loc>
-      <image:title>Sarishinohara - みきとP</image:title>
-      <image:caption>Lirik Sarishinohara - みきとP | YumeLyrics</image:caption>
+      <image:loc>https://img.youtube.com/vi/CePgforHlTs/maxresdefault.jpg</image:loc>
+      <image:title>Fuyu no present - もさを</image:title>
+      <image:caption>Lirik Fuyu no present - もさを | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/fAbO6CV7Qko/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Sarishinohara - みきとP</video:title>
-      <video:description>Lirik Sarishinohara - みきとP lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/fAbO6CV7Qko</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/CePgforHlTs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Fuyu no present - もさを</video:title>
+      <video:description>Lirik Fuyu no present - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/CePgforHlTs</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/tabako.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -369,6 +356,19 @@
       <video:title>Tabako - コレサワ</video:title>
       <video:description>Lirik Tabako - コレサワ lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/7B_PVsPvcg0</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/sarishinohara.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i1.sndcdn.com/artworks-rJUEaFHsXGS5dpxA-WCAwXA-t500x500.jpg</image:loc>
+      <image:title>Sarishinohara - みきとP</image:title>
+      <image:caption>Lirik Sarishinohara - みきとP | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/fAbO6CV7Qko/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Sarishinohara - みきとP</video:title>
+      <video:description>Lirik Sarishinohara - みきとP lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/fAbO6CV7Qko</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/umi-he.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -397,19 +397,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/gqiRJn7me-s</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/ikite-ita-nda-yo-na.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://i.ibb.co.com/XfrPvpZ7/Seishuneki.webp</image:loc>
-      <image:title>Ikite Ita Nda Yo Na - Aimyon</image:title>
-      <image:caption>Lirik Ikite Ita Nda Yo Na - Aimyon | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/EEMwA8KZAqg/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Ikite Ita Nda Yo Na - Aimyon</video:title>
-      <video:description>Lirik Ikite Ita Nda Yo Na - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/EEMwA8KZAqg</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/futaba.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e023baf45bc783428f905c5fd66</image:loc>
@@ -421,6 +408,19 @@
       <video:title>Futaba - Aimyon</video:title>
       <video:description>Lirik Futaba - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/6lgT4zBr8eY</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/ikite-ita-nda-yo-na.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i.ibb.co.com/XfrPvpZ7/Seishuneki.webp</image:loc>
+      <image:title>Ikite Ita Nda Yo Na - Aimyon</image:title>
+      <image:caption>Lirik Ikite Ita Nda Yo Na - Aimyon | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/EEMwA8KZAqg/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Ikite Ita Nda Yo Na - Aimyon</video:title>
+      <video:description>Lirik Ikite Ita Nda Yo Na - Aimyon lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/EEMwA8KZAqg</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/muri-ni-warawanakute-ii-yo.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -488,17 +488,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/GWkLAGlEcxg</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/yoru-ga-akeru.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/marutsuke.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
-      <image:title>Yoru ga Akeru - Given</image:title>
-      <image:caption>Lirik Yoru ga Akeru - Given | YumeLyrics</image:caption>
+      <image:loc>https://img.youtube.com/vi/NkDmqUv8FeE/maxresdefault.jpg</image:loc>
+      <image:title>Marutsuke - Given</image:title>
+      <image:caption>Lirik Marutsuke - Given | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/_UE3NNYOAxs/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Yoru ga Akeru - Given</video:title>
-      <video:description>Lirik Yoru ga Akeru - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/_UE3NNYOAxs</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NkDmqUv8FeE/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Marutsuke - Given</video:title>
+      <video:description>Lirik Marutsuke - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NkDmqUv8FeE</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/uragawa-no-sonzai.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -514,17 +514,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/IQx36UHWi10</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/himawari.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/yoru-ga-akeru.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02671de38d1c3375a90ea25a15</image:loc>
-      <image:title>Himawari - Ado</image:title>
-      <image:caption>Lirik Himawari - Ado | YumeLyrics</image:caption>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d3b27ed188ff76904ef0c300</image:loc>
+      <image:title>Yoru ga Akeru - Given</image:title>
+      <image:caption>Lirik Yoru ga Akeru - Given | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/aOKa-5AHCtU/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Himawari - Ado</video:title>
-      <video:description>Lirik Himawari - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/aOKa-5AHCtU</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/_UE3NNYOAxs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yoru ga Akeru - Given</video:title>
+      <video:description>Lirik Yoru ga Akeru - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/_UE3NNYOAxs</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/totte.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -538,6 +538,19 @@
       <video:title>Totte - Centimillimental</video:title>
       <video:description>Lirik Totte - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/bWvSiZpbj04</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/himawari.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02671de38d1c3375a90ea25a15</image:loc>
+      <image:title>Himawari - Ado</image:title>
+      <image:caption>Lirik Himawari - Ado | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/aOKa-5AHCtU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Himawari - Ado</video:title>
+      <video:description>Lirik Himawari - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/aOKa-5AHCtU</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/hikari-no-machi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -564,19 +577,6 @@
       <video:title>Hairaito - Centimillimental</video:title>
       <video:description>Lirik Hairaito - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/oA3FK0C_-l0</video:player_loc>
-    </video:video>
-  </url>
-  <url><loc>https://yumelyrics.my.id/lagu/marutsuke.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://img.youtube.com/vi/NkDmqUv8FeE/maxresdefault.jpg</image:loc>
-      <image:title>Marutsuke - Given</image:title>
-      <image:caption>Lirik Marutsuke - Given | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/NkDmqUv8FeE/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Marutsuke - Given</video:title>
-      <video:description>Lirik Marutsuke - Given lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NkDmqUv8FeE</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/hoshi-ga-furu.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -631,19 +631,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/3Fz17pPuI4k</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/RTzkD3FLvFSbPGXMcHrE.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0203d3216d6c463f993c96c9c7</image:loc>
-      <image:title>KICKBACK - Kenshi Yonezu</image:title>
-      <image:caption>Lirik KICKBACK - Kenshi Yonezu | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/M2cckDmNLMI/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>KICKBACK - Kenshi Yonezu</video:title>
-      <video:description>Lirik KICKBACK - Kenshi Yonezu lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/M2cckDmNLMI</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/kurisumasu-songu.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0259a14a1d53eb5610f84c8382</image:loc>
@@ -657,17 +644,30 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/7zBeQezaz4U</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/mabataki.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/RTzkD3FLvFSbPGXMcHrE.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ce51ffc5c742ed217779cb9d</image:loc>
-      <image:title>Mabataki - Back NUmber</image:title>
-      <image:caption>Lirik Mabataki - Back NUmber | YumeLyrics</image:caption>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0203d3216d6c463f993c96c9c7</image:loc>
+      <image:title>KICKBACK - Kenshi Yonezu</image:title>
+      <image:caption>Lirik KICKBACK - Kenshi Yonezu | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/h-KuoHHjGRs/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Mabataki - Back NUmber</video:title>
-      <video:description>Lirik Mabataki - Back NUmber lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/h-KuoHHjGRs</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/M2cckDmNLMI/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>KICKBACK - Kenshi Yonezu</video:title>
+      <video:description>Lirik KICKBACK - Kenshi Yonezu lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/M2cckDmNLMI</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/takane-no-hanako-san.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02219616165557d9d7c71b007e</image:loc>
+      <image:title>Takane no Hanako-san - Back Number</image:title>
+      <image:caption>Lirik Takane no Hanako-san - Back Number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/SII-S-zCg-c/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Takane no Hanako-san - Back Number</video:title>
+      <video:description>Lirik Takane no Hanako-san - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/SII-S-zCg-c</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/happi-endo.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -683,17 +683,17 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/T8y_RsF4TSw</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/takane-no-hanako-san.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+  <url><loc>https://yumelyrics.my.id/lagu/mabataki.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02219616165557d9d7c71b007e</image:loc>
-      <image:title>Takane no Hanako-san - Back Number</image:title>
-      <image:caption>Lirik Takane no Hanako-san - Back Number | YumeLyrics</image:caption>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ce51ffc5c742ed217779cb9d</image:loc>
+      <image:title>Mabataki - Back NUmber</image:title>
+      <image:caption>Lirik Mabataki - Back NUmber | YumeLyrics</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/SII-S-zCg-c/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Takane no Hanako-san - Back Number</video:title>
-      <video:description>Lirik Takane no Hanako-san - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/SII-S-zCg-c</video:player_loc>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/h-KuoHHjGRs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Mabataki - Back NUmber</video:title>
+      <video:description>Lirik Mabataki - Back NUmber lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/h-KuoHHjGRs</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/awato-hitsuji.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -761,19 +761,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/y035IcEPiIA</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/raise-de-aou.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e027c249f4f7e25e26f05ff4c04</image:loc>
-      <image:title>Raise de aou - Sayuri</image:title>
-      <image:caption>Lirik Raise de aou - Sayuri | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/9LhUlEeeSF0/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Raise de aou - Sayuri</video:title>
-      <video:description>Lirik Raise de aou - Sayuri lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/9LhUlEeeSF0</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/hanataba.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024951a4f5f9d719dfa4ef3d75</image:loc>
@@ -785,6 +772,19 @@
       <video:title>Hanataba - Back Number</video:title>
       <video:description>Lirik Hanataba - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/meZPD28Y7xE</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/raise-de-aou.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e027c249f4f7e25e26f05ff4c04</image:loc>
+      <image:title>Raise de aou - Sayuri</image:title>
+      <image:caption>Lirik Raise de aou - Sayuri | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/9LhUlEeeSF0/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Raise de aou - Sayuri</video:title>
+      <video:description>Lirik Raise de aou - Sayuri lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/9LhUlEeeSF0</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/atarashii-koibito-tachi-ni.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -826,19 +826,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/yOAwvRmVIyo</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/ano-natsu-no-itsuka-wa.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://img.youtube.com/vi/igg0iHG8MR4/maxresdefault.jpg</image:loc>
-      <image:title>Ano natsu no itsuka wa - Luna</image:title>
-      <image:caption>Lirik Ano natsu no itsuka wa - Luna | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/_hWBcf4jSJs/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Ano natsu no itsuka wa - Luna</video:title>
-      <video:description>Lirik Ano natsu no itsuka wa - Luna lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/_hWBcf4jSJs</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/moshi-asu-ga-konai-to-shitara.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e029d670d4aad845632d53d1fcf</image:loc>
@@ -850,6 +837,19 @@
       <video:title>Moshi asu ga konai to shitara - Misaki</video:title>
       <video:description>Lirik Moshi asu ga konai to shitara - Misaki lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/cfS4YBuKgEw</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/ano-natsu-no-itsuka-wa.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://img.youtube.com/vi/igg0iHG8MR4/maxresdefault.jpg</image:loc>
+      <image:title>Ano natsu no itsuka wa - Luna</image:title>
+      <image:caption>Lirik Ano natsu no itsuka wa - Luna | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/_hWBcf4jSJs/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Ano natsu no itsuka wa - Luna</video:title>
+      <video:description>Lirik Ano natsu no itsuka wa - Luna lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/_hWBcf4jSJs</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/burizaado.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
