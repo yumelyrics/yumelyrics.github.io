@@ -1394,7 +1394,7 @@ ${SITE_NAV_SCRIPT}
 </html>`);
 }
 
-async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistSlug='') {
+async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], artistSlug='', generatedAt='') {
   const titleDisplay = song.titleJp || '';
   const titleRo      = song.titleRo || '';
   const titleId      = song.titleId || '';
@@ -1452,14 +1452,14 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
 
 
 
-  const today      = new Date().toISOString().split('T')[0];
+  const dateModified = generatedAt || new Date().toISOString();
   // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
   const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
   const geoAeoMeta = buildGeoAeoMeta({
     title: pageTitle,
     description: metaDesc,
     url: `${BASE_URL}/lagu/${slug}.html`,
-    dateModified: today,
+    dateModified,
   });
   const schema = JSON.stringify([
     {
@@ -1493,7 +1493,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
       "datePublished":"2025-01-01",
-      "dateModified":today,
+      "dateModified":dateModified,
       "isPartOf":{
         "@type":"WebSite",
         "name":"YumeLyrics",
@@ -1534,7 +1534,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "url":`${BASE_URL}/lagu/${slug}.html`,
       "inLanguage":"id",
       "datePublished":"2025-01-01",
-      "dateModified":today,
+      "dateModified":dateModified,
       "author":{"@type":"Organization","name":"YumeLyrics","url":BASE_URL},
       "publisher":{
         "@type":"Organization",
@@ -3573,6 +3573,7 @@ if(document.readyState==='complete'){
 })();
 </script>
 ${buildDiscordPopupMarkup()}
+<!-- yume-gen:${dateModified} -->
 </body>
 </html>`);
 }
@@ -3618,6 +3619,7 @@ async function main() {
   }
 
   const today = new Date().toISOString().split('T')[0];
+  const batchGeneratedAt = new Date().toISOString();
   const urls = [
     `  <url><loc>${BASE_URL}/</loc><lastmod>${today}</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>`,
     `  <url><loc>${BASE_URL}/latihan.html</loc><lastmod>${today}</lastmod><priority>0.7</priority><changefreq>monthly</changefreq></url>`,
@@ -3729,7 +3731,7 @@ async function main() {
     const songKind = fullMode ? 'refresh' : (fs.existsSync(songPath) ? 'edit' : 'upload');
 
     // generateHTML is now async (minification + async write overlap via await)
-    const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '');
+    const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '', batchGeneratedAt);
     await fsWrite(songPath, html, 'utf8'); // non-blocking file write
 
     manifest.songs[song.id] = { slug: finalSlug, hash: songContentHash(song) };
@@ -3843,6 +3845,9 @@ async function main() {
   await fsWrite('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${urls.join('\n')}\n</urlset>`, 'utf8');
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir) — ${elapsed}s`);
+  if (fullMode) {
+    console.log(`   Mode FULL: ${songs.length} lagu diproses, ${songErrors.length} gagal`);
+  }
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);
 }
