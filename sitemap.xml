@@ -46,19 +46,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/GnIm3kkCYo4</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b7bcfdc5aef6069d15f3aa5e</image:loc>
-      <image:title>Haru ni mau - Ado</image:title>
-      <image:caption>Lirik Haru ni mau - Ado | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/NCGL-YdhNCA/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Haru ni mau - Ado</video:title>
-      <video:description>Lirik Haru ni mau - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NCGL-YdhNCA</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/shigatsu-no-ao.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://yt3.googleusercontent.com/p61znZraiOz40J2PC2I_Vsm7xJ60wxPsuqj46_-wh9Uk8wTa9u7vxyq1eeMtF4lK6Thzzd_COp1WSZA=w544-h544-l90-rj</image:loc>
@@ -70,6 +57,19 @@
       <video:title>Shigatsu no Ao - Mosawo</video:title>
       <video:description>Lirik Shigatsu no Ao - Mosawo lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/VvnZVCT2HzU</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/haru-ni-mau.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b7bcfdc5aef6069d15f3aa5e</image:loc>
+      <image:title>Haru ni mau - Ado</image:title>
+      <image:caption>Lirik Haru ni mau - Ado | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/NCGL-YdhNCA/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Haru ni mau - Ado</video:title>
+      <video:description>Lirik Haru ni mau - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/NCGL-YdhNCA</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/renairon.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -215,19 +215,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/VYSrhiOgfBk</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://i1.sndcdn.com/artworks-000121515830-ifl6e0-t500x500.jpg</image:loc>
-      <image:title>Kokoronashi - Chouchou-P</image:title>
-      <image:caption>Lirik Kokoronashi - Chouchou-P | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/3SkNrZnoK5w/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Kokoronashi - Chouchou-P</video:title>
-      <video:description>Lirik Kokoronashi - Chouchou-P lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/3SkNrZnoK5w</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/eien-no-akuruhi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.ytimg.com/vi/ZHAnZTVF_10/maxresdefault.jpg</image:loc>
@@ -239,6 +226,19 @@
       <video:title>Eien no Akuruhi - Ado</video:title>
       <video:description>Lirik Eien no Akuruhi - Ado lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/ZHAnZTVF_10</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kokoronashi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://i1.sndcdn.com/artworks-000121515830-ifl6e0-t500x500.jpg</image:loc>
+      <image:title>Kokoronashi - Chouchou-P</image:title>
+      <image:caption>Lirik Kokoronashi - Chouchou-P | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/3SkNrZnoK5w/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kokoronashi - Chouchou-P</video:title>
+      <video:description>Lirik Kokoronashi - Chouchou-P lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/3SkNrZnoK5w</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/spiral.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -332,19 +332,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/CePgforHlTs</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/sakura-koi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://img.youtube.com/vi/DqbU4rz6fyc/maxresdefault.jpg</image:loc>
-      <image:title>Sakura koi - もさを</image:title>
-      <image:caption>Lirik Sakura koi - もさを | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/DqbU4rz6fyc/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Sakura koi - もさを</video:title>
-      <video:description>Lirik Sakura koi - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/DqbU4rz6fyc</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/tabako.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://i.scdn.co/image/ab67616d0000b27355d5b8010eea441036383ee5</image:loc>
@@ -356,6 +343,19 @@
       <video:title>Tabako - コレサワ</video:title>
       <video:description>Lirik Tabako - コレサワ lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/7B_PVsPvcg0</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/sakura-koi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://img.youtube.com/vi/DqbU4rz6fyc/maxresdefault.jpg</image:loc>
+      <image:title>Sakura koi - もさを</image:title>
+      <image:caption>Lirik Sakura koi - もさを | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/DqbU4rz6fyc/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Sakura koi - もさを</video:title>
+      <video:description>Lirik Sakura koi - もさを lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/DqbU4rz6fyc</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/sarishinohara.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -553,19 +553,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/aOKa-5AHCtU</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/hikari-no-machi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://img.youtube.com/vi/RhgTqqxxqds/maxresdefault.jpg</image:loc>
-      <image:title>Hikari no Machi - Back Number</image:title>
-      <image:caption>Lirik Hikari no Machi - Back Number | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/RhgTqqxxqds/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Hikari no Machi - Back Number</video:title>
-      <video:description>Lirik Hikari no Machi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/RhgTqqxxqds</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/hairaito.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://img.youtube.com/vi/oA3FK0C_-l0/maxresdefault.jpg</image:loc>
@@ -577,6 +564,19 @@
       <video:title>Hairaito - Centimillimental</video:title>
       <video:description>Lirik Hairaito - Centimillimental lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/oA3FK0C_-l0</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/hikari-no-machi.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://img.youtube.com/vi/RhgTqqxxqds/maxresdefault.jpg</image:loc>
+      <image:title>Hikari no Machi - Back Number</image:title>
+      <image:caption>Lirik Hikari no Machi - Back Number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/RhgTqqxxqds/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hikari no Machi - Back Number</video:title>
+      <video:description>Lirik Hikari no Machi - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/RhgTqqxxqds</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/hoshi-ga-furu.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
@@ -787,19 +787,6 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/meZPD28Y7xE</video:player_loc>
     </video:video>
   </url>
-  <url><loc>https://yumelyrics.my.id/lagu/atarashii-koibito-tachi-ni.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
-    <image:image>
-      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0266681c9936b8e02441bcfb5f</image:loc>
-      <image:title>Atarashii koibito tachi ni - Back Number</image:title>
-      <image:caption>Lirik Atarashii koibito tachi ni - Back Number | YumeLyrics</image:caption>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://i.ytimg.com/vi/euBPUj8CkbA/hqdefault.jpg</video:thumbnail_loc>
-      <video:title>Atarashii koibito tachi ni - Back Number</video:title>
-      <video:description>Lirik Atarashii koibito tachi ni - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/euBPUj8CkbA</video:player_loc>
-    </video:video>
-  </url>
   <url><loc>https://yumelyrics.my.id/lagu/orenji.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
     <image:image>
       <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e021e80ff49846a5654e005d411</image:loc>
@@ -811,6 +798,19 @@
       <video:title>Orenji - Seven Oops</video:title>
       <video:description>Lirik Orenji - Seven Oops lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/nf-L5R8U-Q0</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/atarashii-koibito-tachi-ni.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0266681c9936b8e02441bcfb5f</image:loc>
+      <image:title>Atarashii koibito tachi ni - Back Number</image:title>
+      <image:caption>Lirik Atarashii koibito tachi ni - Back Number | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/euBPUj8CkbA/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Atarashii koibito tachi ni - Back Number</video:title>
+      <video:description>Lirik Atarashii koibito tachi ni - Back Number lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/euBPUj8CkbA</video:player_loc>
     </video:video>
   </url>
   <url><loc>https://yumelyrics.my.id/lagu/hadaka-no-kokoro.html</loc><lastmod>2026-06-19</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
