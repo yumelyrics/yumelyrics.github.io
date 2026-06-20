@@ -1,11 +1,8 @@
 # Deploy Cloudflare Worker untuk upload cover ke ImgBB.
 # GitHub Secrets:
-#   CF_API_TOKEN   — sudah ada di repo
-#   IMGBB_API_KEY  — tambahkan dari https://api.imgbb.com/
-#
-# CARA UPLOAD KE GITHUB:
-#   Taruh file ini di: .github/workflows/deploy-img-upload-worker.yml
-#   (BUKAN di root repo — harus di dalam folder .github/workflows/)
+#   CF_API_TOKEN   — sudah ada
+#   CF_ZONE_ID     — sudah ada (dipakai ambil Account ID)
+#   IMGBB_API_KEY  — dari https://api.imgbb.com/
 
 name: Deploy ImgBB Upload Worker
 
@@ -34,15 +31,57 @@ jobs:
         id: cf
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CF_API_TOKEN" ]; then
             echo "::error::Secret CF_API_TOKEN belum di-set"
             exit 1
           fi
-          ACCOUNT_ID=$(curl -fsS \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts" \
-            | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);if(!j.success||!j.result?.[0]?.id){console.error('Gagal ambil Account ID:',d);process.exit(1)}console.log(j.result[0].id)})")
+          ACCOUNT_ID=$(node <<'NODE'
+          const token = process.env.CF_API_TOKEN;
+          const zoneId = process.env.CF_ZONE_ID || '';
+          const preset = process.env.CLOUDFLARE_ACCOUNT_ID || '';
+
+          async function cfGet(url) {
+            const res = await fetch(url, {
+              headers: { Authorization: 'Bearer ' + token },
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || !json.success) {
+              throw new Error('Cloudflare API gagal: ' + JSON.stringify(json));
+            }
+            return json;
+          }
+
+          (async () => {
+            if (preset) {
+              console.log(preset);
+              return;
+            }
+            if (zoneId) {
+              const z = await cfGet('https://api.cloudflare.com/client/v4/zones/' + zoneId);
+              const id = z.result?.account?.id;
+              if (id) {
+                console.log(id);
+                return;
+              }
+            }
+            const a = await cfGet('https://api.cloudflare.com/client/v4/accounts');
+            const id = a.result?.[0]?.id;
+            if (id) {
+              console.log(id);
+              return;
+            }
+            console.error('Account ID tidak ketemu. Token mungkin tidak punya akses Workers.');
+            console.error('Solusi: tambah secret CLOUDFLARE_ACCOUNT_ID (dari Cloudflare dashboard → Workers).');
+            process.exit(1);
+          })().catch((e) => {
+            console.error(e.message || e);
+            process.exit(1);
+          });
+          NODE
+          )
           echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
 
       - name: Install Wrangler
@@ -55,7 +94,7 @@ jobs:
           IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
         run: |
           if [ -z "$IMGBB_API_KEY" ]; then
-            echo "::error::Secret IMGBB_API_KEY belum di-set — buat di Settings → Secrets → New repository secret"
+            echo "::error::Secret IMGBB_API_KEY belum di-set"
             exit 1
           fi
           printf '%s' "$IMGBB_API_KEY" | npx wrangler secret put IMGBB_API_KEY
