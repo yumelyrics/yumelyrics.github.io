@@ -11,16 +11,45 @@ function json(body, status = 200) {
   });
 }
 
-async function uploadToImgbb(file, apiKey) {
-  const fd = new FormData();
-  fd.append('key', apiKey);
-  fd.append('image', file, file.name || 'cover.jpg');
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
 
-  const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
+async function uploadToImgbb(file, apiKey) {
+  const key = String(apiKey || '').trim();
+  if (!key) throw new Error('IMGBB_API_KEY kosong');
+
+  const name = (file.name || 'cover.jpg').replace(/[^\w.\-]+/g, '_') || 'cover.jpg';
+  const base64 = arrayBufferToBase64(await file.arrayBuffer());
+
+  // ImgBB docs: key di query string, image sebagai base64 di body (POST)
+  const url = 'https://api.imgbb.com/1/upload?key=' + encodeURIComponent(key);
+  const body = new URLSearchParams();
+  body.set('image', base64);
+  body.set('name', name);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+
   const data = await res.json().catch(() => ({}));
 
-  if (!res.ok || !data.success) {
+  if (!data.success) {
     const msg = data.error?.message || data.status_txt || ('ImgBB HTTP ' + res.status);
+    if (/forbidden/i.test(msg)) {
+      throw new Error(
+        'ImgBB menolak upload dari server. Coba buat API key baru di api.imgbb.com, ' +
+        'atau pastikan akun ImgBB tidak dibatasi.'
+      );
+    }
     throw new Error(msg);
   }
 
@@ -68,7 +97,7 @@ export default {
     if (pathname === '/health' && request.method === 'GET') {
       return json({
         ok: true,
-        imgbb_configured: Boolean(env.IMGBB_API_KEY),
+        imgbb_configured: Boolean(String(env.IMGBB_API_KEY || '').trim()),
       });
     }
 
