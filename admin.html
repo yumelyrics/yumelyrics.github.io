@@ -1251,6 +1251,7 @@ const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+const UPLOAD_FALLBACK = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/uploadImg';
 // false = tanpa Cloud Functions (gratis). true = setelah deploy verifyAdminGate + Blaze plan
 const GATE_USE_SERVER = false;
 const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
@@ -2334,9 +2335,21 @@ window.onArtistKeydown = (e) => {
   if(_artistFocusIdx >= 0) items[_artistFocusIdx].scrollIntoView({block:'nearest'});
 };
 
-// ── COVER UPLOAD (via Cloudflare Worker → ImgBB; IMGBB_API_KEY di GitHub Secrets) ──
+// ── COVER UPLOAD (Worker → ImgBB; fallback Firebase jika ImgBB blokir IP Cloudflare) ──
 
-async function uploadImageFile(file) {
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      resolve(typeof result === 'string' ? (result.split(',')[1] || '') : '');
+    };
+    reader.onerror = () => reject(new Error('Gagal baca file gambar'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageViaWorker(file) {
   const fd = new FormData();
   fd.append('image', file);
   const headers = {};
@@ -2352,7 +2365,7 @@ async function uploadImageFile(file) {
   const raw = await res.text();
   let json;
   try { json = JSON.parse(raw); } catch (e) {
-    throw new Error('Server upload error (' + res.status + '). Deploy worker dengan secret IMGBB_API_KEY.');
+    throw new Error('Server upload error (' + res.status + ').');
   }
   if (!res.ok || !json.success) {
     throw new Error(json.error || json.message || ('Upload gagal (' + res.status + ')'));
@@ -2360,6 +2373,42 @@ async function uploadImageFile(file) {
   const url = json.data?.url || json.data?.display_url;
   if (!url) throw new Error('URL gambar tidak ada di respons server');
   return url;
+}
+
+async function uploadImageViaFirebase(file) {
+  const base64 = await fileToBase64(file);
+  if (!base64) throw new Error('File gambar kosong atau tidak terbaca');
+  const name = (file.name || 'cover.jpg').replace(/[^\w.\-]+/g, '_') || 'cover.jpg';
+  const res = await fetch(UPLOAD_FALLBACK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64, name }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || 'Upload via Firebase gagal (' + res.status + ')');
+  }
+  const url = json.data?.url || json.data?.display_url;
+  if (!url) throw new Error('URL gambar tidak ada di respons Firebase');
+  return url;
+}
+
+async function uploadImageFile(file) {
+  try {
+    return await uploadImageViaWorker(file);
+  } catch (e) {
+    const msg = String(e.message || '');
+    if (/forbidden|imgbb menolak|upload via firebase/i.test(msg)) {
+      try {
+        const url = await uploadImageViaFirebase(file);
+        toast('Upload via server cadangan (Firebase) ✅');
+        return url;
+      } catch (e2) {
+        throw new Error(msg + ' — Cadangan juga gagal: ' + e2.message);
+      }
+    }
+    throw e;
+  }
 }
 window.uploadImageFile = uploadImageFile;
 
