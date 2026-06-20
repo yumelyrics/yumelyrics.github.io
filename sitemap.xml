@@ -917,6 +917,32 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/2b1IexhKPz4</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/akaito.html</loc><lastmod>2026-06-20</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://img.youtube.com/vi/LPQ7ufeBK2M/maxresdefault.jpg</image:loc>
+      <image:title>Akaito - みきとP</image:title>
+      <image:caption>Lirik Akaito - みきとP | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/LPQ7ufeBK2M/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Akaito - みきとP</video:title>
+      <video:description>Lirik Akaito - みきとP lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/LPQ7ufeBK2M</video:player_loc>
+    </video:video>
+  </url>
+  <url><loc>https://yumelyrics.my.id/lagu/yonjyuunana.html</loc><lastmod>2026-06-20</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5FKOmutdjfFjvIcmIS3VEmgPXqQBNwhjMChLhxhGAU1KRklZs-kt0dTwB&amp;s=10</image:loc>
+      <image:title>Yonjyuunana - みきとP</image:title>
+      <image:caption>Lirik Yonjyuunana - みきとP | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/oDyizPvIavk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Yonjyuunana - みきとP</video:title>
+      <video:description>Lirik Yonjyuunana - みきとP lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/oDyizPvIavk</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-20</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
