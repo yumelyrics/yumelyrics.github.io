@@ -291,6 +291,24 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .badd,.bsave,.login-btn{min-height:48px}
 .cover-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
 .cover-actions button{border-radius:2rem!important;min-height:36px;padding:.35rem .75rem!important}
+.cover-crop-overlay{position:fixed;inset:0;z-index:350;background:rgba(10,8,18,.82);display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px)}
+.cover-crop-overlay.open{display:flex}
+.cover-crop-modal{background:var(--cream);border:1px solid var(--border);width:min(560px,100%);max-height:min(92vh,720px);display:flex;flex-direction:column;border-radius:10px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45)}
+.cover-crop-hdr{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+.cover-crop-hdr h3{margin:0;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.cover-crop-body{padding:1rem;display:flex;flex-direction:column;gap:.75rem;overflow:auto}
+.cover-crop-stage-wrap{position:relative;width:100%;max-width:100%;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.cover-crop-canvas{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:6px;cursor:grab;background:#0a0812}
+.cover-crop-canvas.dragging{cursor:grabbing}
+.cover-crop-hint{font-size:.62rem;color:var(--muted);line-height:1.5;text-align:center}
+.cover-crop-zoom{display:flex;align-items:center;gap:.6rem;font-size:.62rem;color:var(--muted)}
+.cover-crop-zoom input[type=range]{flex:1;accent-color:var(--accent)}
+.cover-crop-ft{display:flex;gap:.5rem;padding:.85rem 1rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.cover-crop-ft button{flex:1;min-height:42px;border-radius:8px;font-family:var(--sans);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.55rem .75rem}
+.cover-crop-ft .cc-cancel{background:none;border:1px solid var(--border);color:var(--muted)}
+.cover-crop-ft .cc-skip{background:none;border:1px solid rgba(201,169,110,.35);color:var(--accent2)}
+.cover-crop-ft .cc-apply{background:var(--accent);border:none;color:var(--paper)}
+.cover-crop-ft .cc-apply:disabled{opacity:.45;cursor:not-allowed}
 .sticky-form-bar{position:relative;padding:1.25rem 0 .5rem;margin-top:.75rem}
 
 /* ── MOBILE FRIENDLY ── */
@@ -697,6 +715,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         <div class="cover-actions">
             <button type="button" id="cover-sp-btn" onclick="fetchSpotifyCover()" style="background:none;border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:none" title="Ambil cover dari Spotify">🎵 Spotify</button>
             <button type="button" id="cover-yt-btn" onclick="fetchYoutubeCover()" style="background:none;border:1px solid rgba(255,0,0,.3);color:#ff4444;font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:none" title="Ambil thumbnail dari YouTube">▶ YouTube</button>
+            <button type="button" id="cover-crop-btn" onclick="openCoverCropFromField()" style="background:none;border:1px solid rgba(201,169,110,.35);color:var(--accent2);font-family:var(--en);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:none" title="Potong cover jadi persegi 1:1">✂️ Crop</button>
         </div>
         <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap;margin-top:.4rem">
           <div style="flex:1;min-width:0;width:100%;max-width:100%;display:flex;flex-direction:column;gap:.5rem">
@@ -710,7 +729,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
             </div>
           </div>
           <div id="cover-preview-wrap" style="display:none;flex-shrink:0">
-            <img id="cover-preview-img" src="" alt="preview" style="width:80px;height:80px;object-fit:cover;border:1px solid var(--border);border-radius:3px;display:block">
+            <img id="cover-preview-img" src="" alt="preview" referrerpolicy="no-referrer" style="width:80px;height:80px;object-fit:cover;border:1px solid var(--border);border-radius:3px;display:block;background:var(--mist)">
             <button type="button" onclick="clearCoverPreview()" style="background:none;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;padding:.2rem 0;width:100%;text-align:center" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕ hapus</button>
           </div>
         </div>
@@ -1228,6 +1247,30 @@ Paragraf dipisah dengan enter 2x.
       <div class="login-err" id="l-err"></div>
       <button type="button" class="login-btn" id="loginBtn" onclick="doLogin()">Masuk</button>
       <button type="button" class="login-back" onclick="resetAdminGate()">← Ganti kata kunci</button>
+    </div>
+  </div>
+</div>
+
+<div id="cover-crop-overlay" class="cover-crop-overlay" aria-hidden="true">
+  <div class="cover-crop-modal" role="dialog" aria-labelledby="cover-crop-title">
+    <div class="cover-crop-hdr">
+      <h3 id="cover-crop-title">✂️ Crop Cover (1:1)</h3>
+      <button type="button" onclick="closeCoverCrop()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--ash);padding:.2rem .45rem" aria-label="Tutup">✕</button>
+    </div>
+    <div class="cover-crop-body">
+      <div class="cover-crop-stage-wrap">
+        <canvas id="cover-crop-canvas" class="cover-crop-canvas" width="480" height="360"></canvas>
+      </div>
+      <div class="cover-crop-zoom">
+        <span>Zoom</span>
+        <input type="range" id="cover-crop-zoom" min="40" max="100" value="100">
+      </div>
+      <p class="cover-crop-hint">Geser kotak untuk pilih bagian cover. Cocok untuk thumbnail YouTube / gambar 16:9.</p>
+    </div>
+    <div class="cover-crop-ft">
+      <button type="button" class="cc-cancel" onclick="closeCoverCrop()">Batal</button>
+      <button type="button" class="cc-skip" id="cover-crop-skip-btn" onclick="skipCoverCropUpload()" style="display:none">Upload tanpa crop</button>
+      <button type="button" class="cc-apply" id="cover-crop-apply-btn" onclick="applyCoverCrop()">Crop &amp; Upload</button>
     </div>
   </div>
 </div>
@@ -2343,7 +2386,20 @@ window.onArtistKeydown = (e) => {
   if(_artistFocusIdx >= 0) items[_artistFocusIdx].scrollIntoView({block:'nearest'});
 };
 
-// ── COVER UPLOAD (Worker → ImgBB; fallback Firebase jika ImgBB blokir IP Cloudflare) ──
+// ── COVER UPLOAD (Worker → ImgBB; fallback browser jika ImgBB blokir IP Cloudflare) ──
+
+function pickImgbbDirectUrl(data) {
+  if (!data) return '';
+  if (data.image?.url) return data.image.url;
+  const candidates = [data.url, data.display_url, data.url_viewer].filter(Boolean);
+  for (const u of candidates) {
+    if (/^https?:\/\/i\.ibb\.co\//i.test(u)) return u;
+    if (/^https?:\/\/i\.postimg\.cc\//i.test(u)) return u;
+  }
+  const u = data.url || data.display_url || '';
+  if (u && !/^https?:\/\/ibb\.co\//i.test(u)) return u;
+  return '';
+}
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -2378,7 +2434,7 @@ async function uploadImageViaWorker(file) {
   if (!res.ok || !json.success) {
     throw new Error(json.error || json.message || ('Upload gagal (' + res.status + ')'));
   }
-  const url = json.data?.url || json.data?.display_url;
+  const url = pickImgbbDirectUrl(json.data) || json.data?.url || json.data?.display_url;
   if (!url) throw new Error('URL gambar tidak ada di respons server');
   return url;
 }
@@ -2401,7 +2457,7 @@ async function uploadImageViaImgbbDirect(file) {
   if (!json.success) {
     throw new Error(json.error?.message || json.status_txt || ('ImgBB error ' + res.status));
   }
-  const url = json.data?.display_url || json.data?.url;
+  const url = pickImgbbDirectUrl(json.data);
   if (!url) throw new Error('URL gambar tidak ada di respons ImgBB');
   return url;
 }
@@ -2441,12 +2497,335 @@ async function uploadImageFile(file) {
 }
 window.uploadImageFile = uploadImageFile;
 
+// ── COVER CROP (1:1, untuk thumbnail 16:9 / landscape) ──
+const _coverCrop = {
+  img: null,
+  blobUrl: null,
+  pendingFile: null,
+  dx: 0, dy: 0, dw: 0, dh: 0,
+  cx: 0, cy: 0, cs: 0,
+  minCs: 40,
+  maxCs: 0,
+  dragging: false,
+  ptrId: null,
+};
+
+function updateCoverCropBtn() {
+  const btn = document.getElementById('cover-crop-btn');
+  if (!btn) return;
+  const url = document.getElementById('f-img')?.value.trim();
+  btn.style.display = url && sanitizeUrl(url) !== '#' ? 'inline-flex' : 'none';
+}
+
+function _coverCropRevoke() {
+  if (_coverCrop.blobUrl) {
+    try { URL.revokeObjectURL(_coverCrop.blobUrl); } catch (e) {}
+    _coverCrop.blobUrl = null;
+  }
+}
+
+function closeCoverCrop() {
+  const ov = document.getElementById('cover-crop-overlay');
+  if (ov) { ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); }
+  _coverCrop.img = null;
+  _coverCrop.pendingFile = null;
+  _coverCropRevoke();
+}
+
+function loadImageElement(src, useCors) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (useCors) img.crossOrigin = 'anonymous';
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Gagal memuat gambar'));
+    img.src = src;
+  });
+}
+
+async function loadImageForCrop(source) {
+  if (source instanceof File || source instanceof Blob) {
+    _coverCropRevoke();
+    _coverCrop.blobUrl = URL.createObjectURL(source);
+    return loadImageElement(_coverCrop.blobUrl, false);
+  }
+  const url = String(source || '').trim();
+  if (!url) throw new Error('URL gambar kosong');
+  try {
+    return await loadImageElement(url, true);
+  } catch (e) {
+    const proxy = UPLOAD_WORKER + '/fetch?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy);
+    if (!res.ok) throw new Error('Gambar tidak bisa dimuat (CORS). Coba download lalu upload file.');
+    const blob = await res.blob();
+    if (!blob.type.startsWith('image/')) throw new Error('URL bukan gambar');
+    _coverCropRevoke();
+    _coverCrop.blobUrl = URL.createObjectURL(blob);
+    return loadImageElement(_coverCrop.blobUrl, false);
+  }
+}
+
+function _coverCropLayout() {
+  const canvas = document.getElementById('cover-crop-canvas');
+  if (!canvas || !_coverCrop.img) return;
+  const iw = _coverCrop.img.naturalWidth || _coverCrop.img.width;
+  const ih = _coverCrop.img.naturalHeight || _coverCrop.img.height;
+  const maxW = Math.min(480, (canvas.parentElement?.clientWidth || 480) - 2);
+  const maxH = 360;
+  const scale = Math.min(maxW / iw, maxH / ih, 1);
+  _coverCrop.dw = Math.round(iw * scale);
+  _coverCrop.dh = Math.round(ih * scale);
+  canvas.width = _coverCrop.dw;
+  canvas.height = _coverCrop.dh;
+  _coverCrop.dx = 0;
+  _coverCrop.dy = 0;
+  _coverCrop.maxCs = Math.min(_coverCrop.dw, _coverCrop.dh);
+  _coverCrop.minCs = Math.max(48, Math.round(_coverCrop.maxCs * 0.25));
+  const zoomEl = document.getElementById('cover-crop-zoom');
+  const zoomPct = zoomEl ? parseInt(zoomEl.value, 10) || 100 : 100;
+  _coverCrop.cs = Math.round(_coverCrop.maxCs * (zoomPct / 100));
+  _coverCrop.cx = Math.round((_coverCrop.dw - _coverCrop.cs) / 2);
+  _coverCrop.cy = Math.round((_coverCrop.dh - _coverCrop.cs) / 2);
+}
+
+function _coverCropClamp() {
+  _coverCrop.cs = Math.max(_coverCrop.minCs, Math.min(_coverCrop.maxCs, _coverCrop.cs));
+  _coverCrop.cx = Math.max(0, Math.min(_coverCrop.dw - _coverCrop.cs, _coverCrop.cx));
+  _coverCrop.cy = Math.max(0, Math.min(_coverCrop.dh - _coverCrop.cs, _coverCrop.cy));
+}
+
+function renderCoverCropCanvas() {
+  const canvas = document.getElementById('cover-crop-canvas');
+  if (!canvas || !_coverCrop.img) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  _coverCropClamp();
+  const { img, dx, dy, dw, dh, cx, cy, cs } = _coverCrop;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, dx, dy, dw, dh);
+  ctx.fillStyle = 'rgba(8,6,14,.58)';
+  ctx.fillRect(0, 0, canvas.width, cy);
+  ctx.fillRect(0, cy + cs, canvas.width, canvas.height - cy - cs);
+  ctx.fillRect(0, cy, cx, cs);
+  ctx.fillRect(cx + cs, cy, canvas.width - cx - cs, cs);
+  ctx.strokeStyle = '#ff6eb4';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx + 0.5, cy + 0.5, cs - 1, cs - 1);
+  ctx.strokeStyle = 'rgba(255,255,255,.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx + 4.5, cy + 4.5, cs - 9, cs - 9);
+}
+
+function _coverCropPtrPos(e) {
+  const canvas = document.getElementById('cover-crop-canvas');
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width;
+  const sy = canvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * sx,
+    y: (e.clientY - rect.top) * sy,
+  };
+}
+
+function _coverCropBindCanvas() {
+  const canvas = document.getElementById('cover-crop-canvas');
+  const zoomEl = document.getElementById('cover-crop-zoom');
+  if (!canvas || canvas.dataset.cropBound) return;
+  canvas.dataset.cropBound = '1';
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!_coverCrop.img) return;
+    const p = _coverCropPtrPos(e);
+    if (p.x < _coverCrop.cx || p.x > _coverCrop.cx + _coverCrop.cs ||
+        p.y < _coverCrop.cy || p.y > _coverCrop.cy + _coverCrop.cs) return;
+    _coverCrop.dragging = true;
+    _coverCrop.ptrId = e.pointerId;
+    _coverCrop.dragOffX = p.x - _coverCrop.cx;
+    _coverCrop.dragOffY = p.y - _coverCrop.cy;
+    canvas.classList.add('dragging');
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!_coverCrop.dragging || e.pointerId !== _coverCrop.ptrId) return;
+    const p = _coverCropPtrPos(e);
+    _coverCrop.cx = p.x - _coverCrop.dragOffX;
+    _coverCrop.cy = p.y - _coverCrop.dragOffY;
+    renderCoverCropCanvas();
+  });
+
+  const endDrag = (e) => {
+    if (!_coverCrop.dragging || (_coverCrop.ptrId != null && e.pointerId !== _coverCrop.ptrId)) return;
+    _coverCrop.dragging = false;
+    _coverCrop.ptrId = null;
+    canvas.classList.remove('dragging');
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  if (zoomEl) {
+    zoomEl.addEventListener('input', () => {
+      const pct = parseInt(zoomEl.value, 10) || 100;
+      const prevCx = _coverCrop.cx + _coverCrop.cs / 2;
+      const prevCy = _coverCrop.cy + _coverCrop.cs / 2;
+      _coverCrop.cs = Math.round(_coverCrop.maxCs * (pct / 100));
+      _coverCrop.cx = Math.round(prevCx - _coverCrop.cs / 2);
+      _coverCrop.cy = Math.round(prevCy - _coverCrop.cs / 2);
+      renderCoverCropCanvas();
+    });
+  }
+}
+
+async function openCoverCropWithSource(source, opts) {
+  opts = opts || {};
+  const statusEl = document.getElementById('cover-upload-status');
+  if (statusEl) statusEl.textContent = '⏳ Memuat gambar...';
+  try {
+    const img = await loadImageForCrop(source);
+    _coverCrop.img = img;
+    _coverCrop.pendingFile = opts.file || null;
+    const skipBtn = document.getElementById('cover-crop-skip-btn');
+    if (skipBtn) skipBtn.style.display = _coverCrop.pendingFile ? 'inline-flex' : 'none';
+    const zoomEl = document.getElementById('cover-crop-zoom');
+    if (zoomEl) zoomEl.value = '100';
+    _coverCropLayout();
+    _coverCropBindCanvas();
+    renderCoverCropCanvas();
+    const ov = document.getElementById('cover-crop-overlay');
+    if (ov) { ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); }
+    if (statusEl) statusEl.textContent = '';
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '';
+    toast('Crop: ' + e.message);
+    if (opts.file && opts.uploadIfFail) {
+      await uploadCoverFileDirect(opts.file);
+    }
+  }
+}
+
+window.openCoverCropFromField = async function () {
+  if (!auth.currentUser) { toast('Login admin dulu.'); return; }
+  const url = document.getElementById('f-img')?.value.trim();
+  if (!url || sanitizeUrl(url) === '#') { toast('Isi URL cover dulu atau upload gambar.'); return; }
+  await openCoverCropWithSource(url, {});
+};
+
+function coverCropExportBlob() {
+  const { img, dw, dh, cx, cy, cs } = _coverCrop;
+  if (!img || !cs) throw new Error('Crop belum siap');
+  const scale = (img.naturalWidth || img.width) / dw;
+  const sx = Math.round(cx * scale);
+  const sy = Math.round(cy * scale);
+  const ss = Math.round(cs * scale);
+  const outSize = Math.min(1024, ss);
+  const out = document.createElement('canvas');
+  out.width = outSize;
+  out.height = outSize;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(img, sx, sy, ss, ss, 0, 0, outSize, outSize);
+  return new Promise((resolve, reject) => {
+    out.toBlob((blob) => {
+      if (!blob) reject(new Error('Gagal export crop'));
+      else resolve(blob);
+    }, 'image/jpeg', 0.92);
+  });
+}
+
+async function uploadCoverFileDirect(file, statusEl) {
+  statusEl = statusEl || document.getElementById('cover-upload-status');
+  if (statusEl) { statusEl.textContent = '⏳ Uploading ke ImgBB...'; statusEl.style.color = 'var(--muted)'; }
+  try {
+    const url = await uploadImageFile(file);
+    document.getElementById('f-img').value = url;
+    showCoverPreview(url);
+    if (statusEl) { statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color = '#4caf7d'; }
+    updateSpotifyBtn();
+    return url;
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = '❌ Gagal upload: ' + e.message; statusEl.style.color = 'var(--red)'; }
+    toast('Upload cover gagal: ' + e.message);
+    throw e;
+  }
+}
+
+window.applyCoverCrop = async function () {
+  if (!auth.currentUser) { toast('Login admin dulu.'); return; }
+  const btn = document.getElementById('cover-crop-apply-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const blob = await coverCropExportBlob();
+    const file = new File([blob], 'cover-crop.jpg', { type: 'image/jpeg' });
+    closeCoverCrop();
+    await uploadCoverFileDirect(file);
+    toast('Cover di-crop & di-upload ✅');
+  } catch (e) {
+    toast('Crop gagal: ' + e.message);
+  }
+  if (btn) btn.disabled = false;
+};
+
+window.skipCoverCropUpload = async function () {
+  const file = _coverCrop.pendingFile;
+  if (!file) return;
+  closeCoverCrop();
+  await uploadCoverFileDirect(file);
+};
+
+window.closeCoverCrop = closeCoverCrop;
+
+async function maybeAutoOpenCoverCrop(source, opts) {
+  opts = opts || {};
+  try {
+    const img = await loadImageForCrop(source);
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    const ratio = w / h;
+    if (Math.abs(ratio - 1) > 0.06) {
+      _coverCrop.img = img;
+      _coverCrop.pendingFile = opts.file || null;
+      const skipBtn = document.getElementById('cover-crop-skip-btn');
+      if (skipBtn) skipBtn.style.display = _coverCrop.pendingFile ? 'inline-flex' : 'none';
+      const zoomEl = document.getElementById('cover-crop-zoom');
+      if (zoomEl) zoomEl.value = '100';
+      _coverCropLayout();
+      _coverCropBindCanvas();
+      renderCoverCropCanvas();
+      const ov = document.getElementById('cover-crop-overlay');
+      if (ov) { ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); }
+      return true;
+    }
+    _coverCrop.img = null;
+    _coverCropRevoke();
+  } catch (e) {
+    if (opts.uploadIfFail && opts.file) {
+      await uploadCoverFileDirect(opts.file);
+      return true;
+    }
+  }
+  return false;
+}
+
+(function () {
+  document.getElementById('cover-crop-overlay')?.addEventListener('click', (e) => {
+    if (e.target?.id === 'cover-crop-overlay') closeCoverCrop();
+  });
+})();
+
 function showCoverPreview(url) {
   const wrap = document.getElementById('cover-preview-wrap');
   const img  = document.getElementById('cover-preview-img');
   const safe = sanitizeUrl(url);
-  if (url && safe !== '#') { img.src = safe; wrap.style.display = 'block'; }
-  else { img.src = ''; wrap.style.display = 'none'; }
+  if (url && safe !== '#') {
+    img.referrerPolicy = 'no-referrer';
+    img.alt = 'preview';
+    img.src = safe;
+    wrap.style.display = 'block';
+  } else {
+    img.removeAttribute('src');
+    img.alt = 'preview';
+    wrap.style.display = 'none';
+  }
+  updateCoverCropBtn();
 }
 
 window.onImgUrlInput = () => {
@@ -2466,25 +2845,12 @@ window.clearCoverPreview = () => {
 window.handleCoverUpload = async (input) => {
   if (!auth.currentUser) { toast('Login admin dulu sebelum upload cover.'); input.value = ''; return; }
   const file = input.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) { toast('File harus berupa gambar (JPG, PNG, WebP, dll).'); input.value = ''; return; }
-  if (file.size > 5 * 1024 * 1024) { toast('File terlalu besar! Maks 5MB.'); input.value = ''; return; }
-  const statusEl = document.getElementById('cover-upload-status');
-  statusEl.textContent = '⏳ Uploading ke ImgBB...';
-  statusEl.style.color = 'var(--muted)';
-  try {
-    const url = await uploadImageFile(file);
-    document.getElementById('f-img').value = url;
-    showCoverPreview(url);
-    statusEl.textContent = '✅ Upload berhasil!';
-    statusEl.style.color = '#4caf7d';
-    updateSpotifyBtn();
-  } catch(e) {
-    statusEl.textContent = '❌ Gagal upload: ' + e.message;
-    statusEl.style.color = 'var(--red)';
-    toast('Upload cover gagal: ' + e.message);
-  }
   input.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('File harus berupa gambar (JPG, PNG, WebP, dll).'); return; }
+  if (file.size > 5 * 1024 * 1024) { toast('File terlalu besar! Maks 5MB.'); return; }
+  const opened = await maybeAutoOpenCoverCrop(file, { file, uploadIfFail: true });
+  if (!opened) await uploadCoverFileDirect(file);
 };
 
 // Spotify cover fetch via oEmbed (tidak butuh API key)
@@ -2544,9 +2910,10 @@ window.fetchYoutubeCover = async () => {
       document.getElementById('f-img').value = url;
       showCoverPreview(url);
       toast('✅ Thumbnail berhasil diambil dari YouTube!');
-      document.getElementById('cover-upload-status').textContent = '(dari YouTube)';
+      document.getElementById('cover-upload-status').textContent = '(dari YouTube — crop?)';
       document.getElementById('cover-upload-status').style.color = '#ff4444';
       success = true;
+      await maybeAutoOpenCoverCrop(url, {});
       break;
     }
   }
