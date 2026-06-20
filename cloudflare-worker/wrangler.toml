@@ -1,0 +1,6 @@
+name = "rough-snowflake-e4dc"
+main = "src/index.js"
+compatibility_date = "2024-06-01"
+
+# IMGBB_API_KEY diset via GitHub Secret saat deploy:
+# wrangler secret put IMGBB_API_KEY
