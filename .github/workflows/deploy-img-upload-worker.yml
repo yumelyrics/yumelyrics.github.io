@@ -1,8 +1,10 @@
 # Deploy Cloudflare Worker untuk upload cover ke ImgBB.
 # GitHub Secrets:
 #   CF_API_TOKEN   — sudah ada
-#   CF_ZONE_ID     — sudah ada (dipakai ambil Account ID)
+#   CF_ZONE_ID     — sudah ada
 #   IMGBB_API_KEY  — dari https://api.imgbb.com/
+#
+# Token CF_API_TOKEN harus punya permission: Account → Workers Scripts → Edit
 
 name: Deploy ImgBB Upload Worker
 
@@ -55,31 +57,18 @@ jobs:
           }
 
           (async () => {
-            if (preset) {
-              console.log(preset);
-              return;
-            }
+            if (preset) { console.log(preset); return; }
             if (zoneId) {
               const z = await cfGet('https://api.cloudflare.com/client/v4/zones/' + zoneId);
               const id = z.result?.account?.id;
-              if (id) {
-                console.log(id);
-                return;
-              }
+              if (id) { console.log(id); return; }
             }
             const a = await cfGet('https://api.cloudflare.com/client/v4/accounts');
             const id = a.result?.[0]?.id;
-            if (id) {
-              console.log(id);
-              return;
-            }
-            console.error('Account ID tidak ketemu. Token mungkin tidak punya akses Workers.');
-            console.error('Solusi: tambah secret CLOUDFLARE_ACCOUNT_ID (dari Cloudflare dashboard → Workers).');
+            if (id) { console.log(id); return; }
+            console.error('Account ID tidak ketemu.');
             process.exit(1);
-          })().catch((e) => {
-            console.error(e.message || e);
-            process.exit(1);
-          });
+          })().catch((e) => { console.error(e.message || e); process.exit(1); });
           NODE
           )
           echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
@@ -87,28 +76,27 @@ jobs:
       - name: Install Wrangler
         run: npm install
 
-      - name: Set ImgBB secret on Worker
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ steps.cf.outputs.account_id }}
-          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
-        run: |
-          if [ -z "$IMGBB_API_KEY" ]; then
-            echo "::error::Secret IMGBB_API_KEY belum di-set"
-            exit 1
-          fi
-          printf '%s' "$IMGBB_API_KEY" | npx wrangler secret put IMGBB_API_KEY
-
-      - name: Deploy Worker
+      - name: Deploy Worker + set ImgBB secret
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ steps.cf.outputs.account_id }}
-          command: deploy
           workingDirectory: cloudflare-worker
+          command: deploy
+          secrets: IMGBB_API_KEY
+        env:
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
 
       - name: Health check
         run: |
-          sleep 3
-          curl -fsS "https://rough-snowflake-e4dc.khoirustsani143.workers.dev/health" | tee health.json
-          node -e "const j=require('./health.json'); if(!j.ok||!j.imgbb_configured) process.exit(1)"
+          sleep 5
+          for i in 1 2 3; do
+            if curl -fsS "https://rough-snowflake-e4dc.khoirustsani143.workers.dev/health" | tee health.json | node -e "const j=JSON.parse(require('fs').readFileSync('health.json','utf8')); if(j.ok&&j.imgbb_configured) process.exit(0); process.exit(1)"; then
+              cat health.json
+              exit 0
+            fi
+            echo "Health check attempt $i failed, retry..."
+            sleep 4
+          done
+          echo "::error::Worker belum healthy — cek permission token Workers Scripts: Edit"
+          exit 1
