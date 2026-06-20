@@ -564,8 +564,16 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
         </div>
         <input class="fi" id="genius-api-key-inp" type="password" placeholder="genius_token...">
       </div>
+      <div class="fg" style="flex:1;min-width:0;width:100%;margin:0">
+        <div class="fl" style="display:flex;align-items:center;justify-content:space-between">
+          <span>ImgBB API Key <span style="color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0">— upload cover</span></span>
+          <span id="imgbb-key-status" style="font-size:.52rem;color:#4caf7d;display:none">✓ Tersimpan</span>
+        </div>
+        <input class="fi" id="imgbb-api-key-inp" type="password" placeholder="59554a... (dari api.imgbb.com)">
+      </div>
     </div>
-    <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">Disimpan lokal di browser. GitHub: <code style="color:var(--accent2)">workflow</code> · YT: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Google Cloud</a></div>
+    <div style="font-size:.58rem;color:var(--muted);margin-top:.6rem;line-height:1.6">Disimpan lokal di browser. ImgBB: <a href="https://api.imgbb.com/" target="_blank" rel="noopener" style="color:var(--accent2)">api.imgbb.com</a> · GitHub: <code style="color:var(--accent2)">workflow</code> · YT: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--accent2)">Google Cloud</a></div>
+    <div style="font-size:.58rem;color:var(--muted);margin-top:.35rem;line-height:1.55">Upload cover lewat browser kamu (ImgBB sering blokir server Cloudflare). Isi key ImgBB di atas lalu upload cover.</div>
     <div style="font-size:.58rem;color:var(--muted);margin-top:.5rem;line-height:1.65;padding:.65rem .75rem;background:rgba(88,101,242,.06);border:1px solid rgba(88,101,242,.15);border-radius:8px">
       <strong style="color:var(--ink);font-weight:600">Discord webhooks (GitHub Secrets):</strong><br>
       <code style="color:var(--accent2)">DISCORD_WEBHOOK_URL</code> → #new-post (notif lagu baru otomatis)<br>
@@ -2375,6 +2383,29 @@ async function uploadImageViaWorker(file) {
   return url;
 }
 
+async function uploadImageViaImgbbDirect(file) {
+  const key = imgbbKeyGet().trim();
+  if (!key) {
+    throw new Error('Isi ImgBB API Key di panel 🔑 API Keys & Tokens (api.imgbb.com), lalu coba upload lagi.');
+  }
+  const fd = new FormData();
+  fd.append('key', key);
+  fd.append('image', file, file.name || 'cover.jpg');
+  let res;
+  try {
+    res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
+  } catch (e) {
+    throw new Error('Tidak bisa hubungi ImgBB. Cek koneksi internet.');
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!json.success) {
+    throw new Error(json.error?.message || json.status_txt || ('ImgBB error ' + res.status));
+  }
+  const url = json.data?.display_url || json.data?.url;
+  if (!url) throw new Error('URL gambar tidak ada di respons ImgBB');
+  return url;
+}
+
 async function uploadImageViaFirebase(file) {
   const base64 = await fileToBase64(file);
   if (!base64) throw new Error('File gambar kosong atau tidak terbaca');
@@ -2394,18 +2425,16 @@ async function uploadImageViaFirebase(file) {
 }
 
 async function uploadImageFile(file) {
+  // ImgBB memblokir IP Cloudflare — upload langsung dari browser jika key ada
+  if (imgbbKeyGet().trim()) {
+    return await uploadImageViaImgbbDirect(file);
+  }
   try {
     return await uploadImageViaWorker(file);
   } catch (e) {
     const msg = String(e.message || '');
-    if (/forbidden|imgbb menolak|upload via firebase/i.test(msg)) {
-      try {
-        const url = await uploadImageViaFirebase(file);
-        toast('Upload via server cadangan (Firebase) ✅');
-        return url;
-      } catch (e2) {
-        throw new Error(msg + ' — Cadangan juga gagal: ' + e2.message);
-      }
+    if (/forbidden|imgbb menolak|invalid api/i.test(msg)) {
+      throw new Error('ImgBB menolak upload dari server. Buka 🔑 API Keys & Tokens → isi ImgBB API Key → upload lagi.');
     }
     throw e;
   }
@@ -2542,6 +2571,8 @@ function ytKeyGet(){ return sessionStorage.getItem('yume_yt_key')||''; }
 function ytKeySet(k){ sessionStorage.setItem('yume_yt_key', k); }
 function geniusKeyGet(){ return sessionStorage.getItem('yume_genius_key')||''; }
 function geniusKeySet(k){ sessionStorage.setItem('yume_genius_key', k); }
+function imgbbKeyGet(){ return sessionStorage.getItem('yume_imgbb_key')||''; }
+function imgbbKeySet(k){ sessionStorage.setItem('yume_imgbb_key', k); }
 document.getElementById('yt-api-key-inp').addEventListener('input', function(){
   ytKeySet(this.value.trim());
   updateKeyStatus();
@@ -2554,6 +2585,11 @@ document.getElementById('genius-api-key-inp').addEventListener('input', function
   updateKeyStatus();
 });
 (function(){ const k=geniusKeyGet(); if(k) document.getElementById('genius-api-key-inp').value=k; updateKeyStatus(); })();
+document.getElementById('imgbb-api-key-inp').addEventListener('input', function(){
+  imgbbKeySet(this.value.trim());
+  updateKeyStatus();
+});
+(function(){ const k=imgbbKeyGet(); if(k) document.getElementById('imgbb-api-key-inp').value=k; updateKeyStatus(); })();
 
 function updateAutofillBadges(){
   const hasKey = !!ytKeyGet();
@@ -2804,6 +2840,7 @@ window.toggleKeyVisibility = function(){
   document.getElementById('gh-token-inp').type = type;
   document.getElementById('yt-api-key-inp').type = type;
   document.getElementById('genius-api-key-inp').type = type;
+  document.getElementById('imgbb-api-key-inp').type = type;
   document.getElementById('key-toggle-btn').textContent = _keysVisible ? '🙈 Sembunyikan' : '👁 Tampilkan';
 };
 
@@ -2812,9 +2849,11 @@ window.clearAllKeys = function(){
   sessionStorage.removeItem('yume_gh_token');
   sessionStorage.removeItem('yume_yt_key');
   sessionStorage.removeItem('yume_genius_key');
+  sessionStorage.removeItem('yume_imgbb_key');
   document.getElementById('gh-token-inp').value = '';
   document.getElementById('yt-api-key-inp').value = '';
   document.getElementById('genius-api-key-inp').value = '';
+  document.getElementById('imgbb-api-key-inp').value = '';
   updateKeyStatus();
   toast('Semua key dihapus.');
 };
@@ -2823,9 +2862,11 @@ function updateKeyStatus(){
   const ghEl = document.getElementById('gh-key-status');
   const ytEl = document.getElementById('yt-key-status');
   const gnEl = document.getElementById('genius-key-status');
+  const ibEl = document.getElementById('imgbb-key-status');
   if(ghEl) ghEl.style.display = ghTokenGet() ? 'inline' : 'none';
   if(ytEl) ytEl.style.display = ytKeyGet() ? 'inline' : 'none';
   if(gnEl) gnEl.style.display = geniusKeyGet() ? 'inline' : 'none';
+  if(ibEl) ibEl.style.display = imgbbKeyGet() ? 'inline' : 'none';
 }
 
 document.getElementById('gh-token-inp').addEventListener('input', function(){
