@@ -2488,7 +2488,7 @@ ${(()=>{
   <div class="comment-intro">
     <div class="comment-heading">Apa yang kamu<br>rasakan dari lagu ini?</div>
     <div>
-      <p class="comment-desc">Bagikan pendapatmu lewat Waline — bebas sebagai tamu, tanpa perlu login.</p>
+      <p class="comment-desc">Bagikan pendapatmu lewat Komentar — bebas sebagai tamu, tanpa perlu login.</p>
     </div>
   </div>
   <div id="waline"></div>
