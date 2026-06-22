@@ -956,6 +956,19 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/SX_ViT4Ra7k</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/CcIos8RbDqX9ZRtZ5TTu.html</loc><lastmod>2026-06-22</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02e2a3788f1a9dea9028099d4e</image:loc>
+      <image:title>NIGHT DANCER - Imase</image:title>
+      <image:caption>Lirik NIGHT DANCER - Imase | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/kagoEGKHZvU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>NIGHT DANCER - Imase</video:title>
+      <video:description>Lirik NIGHT DANCER - Imase lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/kagoEGKHZvU</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
@@ -968,6 +981,7 @@
   <url><loc>https://yumelyrics.my.id/artis/hanyuu-maigo.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ico.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ikuta-lilas.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/imase.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/inai.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/iyowa.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/kenshi-yonezu.html</loc><lastmod>2026-06-22</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
