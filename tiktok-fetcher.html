@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Video Fetcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #080808;
+  --s1:      #111;
+  --s2:      #191919;
+  --s3:      #222;
+  --border:  #2a2a2a;
+  --border2: #383838;
+  --text:    #ededed;
+  --muted:   #777;
+  --muted2:  #444;
+  --teal:    #25d5c8;
+  --teal-d:  #18a9a0;
+  --teal-g:  rgba(37,213,200,0.12);
+  --pink:    #ee2d6e;
+  --green:   #22c55e;
+  --amber:   #f59e0b;
+  --radius:  9px;
+  --rsm:     5px;
+}
+
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+
+/* ── Header ── */
+header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 32px; padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: #000; border: 1.5px solid var(--border2);
+  display: grid; place-items: center; flex-shrink: 0;
+  box-shadow: 0 0 22px var(--teal-g);
+  position: relative; overflow: hidden;
+}
+/* TikTok-style icon: layered note */
+.logo svg { width: 22px; height: 22px; }
+header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+header h1 span { color: var(--teal); }
+header small { color: var(--muted); font-size: 0.78rem; display: block; margin-top: 1px; }
+
+/* ── Info banner ── */
+.info-banner {
+  background: rgba(37,213,200,0.06); border: 1px solid rgba(37,213,200,0.2);
+  border-radius: var(--radius); padding: 12px 16px;
+  font-size: 0.78rem; color: #88e8e4; margin-bottom: 12px;
+  line-height: 1.6;
+}
+.info-banner strong { color: var(--teal); }
+.info-banner a { color: var(--teal); text-decoration: none; border-bottom: 1px solid rgba(37,213,200,0.4); }
+.info-banner a:hover { border-bottom-color: var(--teal); }
+
+/* ── Cards ── */
+.card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; }
+.card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; }
+
+/* ── Inputs ── */
+input[type=text], input[type=password], input[type=date], select {
+  width: 100%; background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--rsm); color: var(--text);
+  padding: 9px 13px; font-size: 0.875rem; font-family: inherit;
+  outline: none; transition: border-color 0.18s;
+}
+input:focus, select:focus { border-color: var(--teal); }
+input[type=password] { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; }
+input[type=date] { color-scheme: dark; }
+select { cursor: pointer; }
+
+/* ── API Key row ── */
+.key-row { display: flex; gap: 8px; align-items: center; }
+.key-row .iw { position: relative; flex: 1; }
+.key-row .iw input { padding-right: 40px; }
+.eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 15px; line-height: 1; }
+.eye:hover { color: var(--text); }
+.key-status { font-size: 0.75rem; color: var(--green); margin-top: 6px; height: 16px; }
+
+/* ── Channel row ── */
+.ch-row { display: flex; gap: 8px; }
+.ch-row input { flex: 1; }
+.hint { font-size: 0.72rem; color: var(--muted); margin-top: 7px; line-height: 1.6; }
+.hint code { background: var(--s3); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; }
+
+/* ── Filters ── */
+.filters-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 780px) { .filters-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .filters-grid { grid-template-columns: 1fr; } }
+.field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.presets span { font-size: 0.72rem; color: var(--muted2); }
+.preset-btn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--rsm); padding: 4px 10px; font-size: 0.72rem; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.preset-btn:hover { border-color: var(--teal); color: var(--text); }
+
+/* ── Buttons ── */
+button.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--teal); color: #000; border: none;
+  border-radius: var(--rsm); padding: 9px 18px;
+  font-size: 0.875rem; font-weight: 700; font-family: inherit;
+  cursor: pointer; white-space: nowrap; transition: background 0.15s, opacity 0.15s;
+}
+button.btn:hover { background: var(--teal-d); }
+button.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+button.btn-ghost {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--rsm); padding: 9px 14px; font-size: 0.8rem; font-weight: 500;
+  font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+button.btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Error ── */
+.err {
+  background: rgba(238,45,110,0.08); border: 1px solid rgba(238,45,110,0.3);
+  border-radius: var(--rsm); color: #fca5a5;
+  padding: 9px 13px; font-size: 0.8rem; margin-top: 8px; display: none;
+}
+.err.show { display: block; }
+
+/* ── Results ── */
+.results-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+.results-stat { font-size: 0.8rem; color: var(--muted); }
+.results-stat strong { color: var(--text); }
+.results-actions { display: flex; gap: 8px; }
+
+/* ── Video list ── */
+.video-list { display: flex; flex-direction: column; gap: 6px; }
+.video-row {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid; grid-template-columns: 68px 1fr auto;
+  gap: 14px; align-items: center; padding: 10px;
+  transition: border-color 0.15s;
+}
+.video-row:hover { border-color: var(--border2); }
+@media (max-width: 580px) { .video-row { grid-template-columns: 60px 1fr; } .video-row .vactions { display: none; } }
+
+.video-thumb-wrap {
+  width: 68px; aspect-ratio: 9/16; position: relative;
+  border-radius: 5px; overflow: hidden; background: var(--s3); flex-shrink: 0;
+}
+.video-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-fallback {
+  position: absolute; inset: 0; display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--muted2);
+}
+
+.video-body { min-width: 0; }
+.video-title { font-size: 0.875rem; font-weight: 500; line-height: 1.45; margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.video-title a { color: var(--text); text-decoration: none; }
+.video-title a:hover { color: var(--teal); }
+
+.video-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+.badge-video     { background: rgba(37,213,200,0.15); color: #7de8e2; border: 1px solid rgba(37,213,200,0.3); }
+.badge-slideshow { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.badge-live      { background: rgba(238,45,110,0.15); color: #fca5a5; border: 1px solid rgba(238,45,110,0.3); }
+
+.meta-pill { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+
+.stat-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.stat-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.75rem; color: var(--muted);
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--rsm); padding: 2px 8px;
+}
+
+.vactions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.copy-btn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--rsm); padding: 5px 11px; font-size: 0.72rem; font-weight: 500;
+  font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--teal); color: var(--teal); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); }
+.open-link { font-size: 0.72rem; color: var(--muted2); text-decoration: none; transition: color 0.15s; }
+.open-link:hover { color: var(--text); }
+
+/* ── State ── */
+.state-box { text-align: center; padding: 50px 20px; color: var(--muted); }
+.state-box p { font-size: 0.875rem; margin-top: 8px; }
+.spinner { width: 30px; height: 30px; border: 2.5px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loadmore-wrap { text-align: center; margin-top: 14px; }
+.quota-note { font-size: 0.7rem; color: var(--muted2); text-align: right; margin-top: 8px; }
+.prog-note { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 6px; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none">
+        <!-- TikTok music note icon -->
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.05a8.27 8.27 0 0 0 4.84 1.55V7.15a4.85 4.85 0 0 1-1.07-.46z" fill="var(--teal)"/>
+      </svg>
+    </div>
+    <div>
+      <h1>TikTok <span>Video</span> Fetcher</h1>
+      <small>Ambil data video TikTok lewat RapidAPI</small>
+    </div>
+  </header>
+
+  <!-- Info banner -->
+  <div class="info-banner">
+    <strong>ℹ️ Cara pakai:</strong> TikTok tidak punya public API gratis. Tool ini pakai
+    <strong>tiktok-scraper7</strong> via <a href="https://rapidapi.com/Lundehund/api/tiktok-scraper7" target="_blank" rel="noopener">RapidAPI</a>
+    (free tier ~500 req/bulan). Daftar → Subscribe → copy <strong>X-RapidAPI-Key</strong> dari dashboard.
+    <br>⚠️ Filter tanggal diproses di sisi client. Untuk range lama di akun besar, butuh lebih banyak API calls.
+  </div>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-label">RapidAPI Key</div>
+    <div class="key-row">
+      <div class="iw">
+        <input type="password" id="apiKey" placeholder="Paste RapidAPI key di sini…" autocomplete="off" spellcheck="false">
+        <button class="eye" onclick="toggleKey()">👁</button>
+      </div>
+      <button class="btn-ghost" onclick="saveKey()">Simpan</button>
+    </div>
+    <div class="key-status" id="keyStatus"></div>
+  </div>
+
+  <!-- Username -->
+  <div class="card">
+    <div class="card-label">Akun TikTok</div>
+    <div class="ch-row">
+      <input type="text" id="userInput" placeholder="@username atau URL profil TikTok" autocomplete="off">
+      <button class="btn" id="fetchBtn" onclick="startFetch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Fetch
+      </button>
+    </div>
+    <div class="err" id="userErr"></div>
+    <div class="hint">
+      Contoh: <code>@bungajesika</code> &nbsp;·&nbsp;
+      <code>bungajesika</code> &nbsp;·&nbsp;
+      <code>https://www.tiktok.com/@bungajesika</code>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card">
+    <div class="card-label">Filter &amp; Pengaturan</div>
+    <div class="filters-grid">
+      <div class="field">
+        <label>Dari tanggal</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="field">
+        <label>Sampai tanggal</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="field">
+        <label>Tipe konten</label>
+        <select id="typeFilter" onchange="reRender()">
+          <option value="all">Semua tipe</option>
+          <option value="video">Video</option>
+          <option value="slideshow">Slideshow</option>
+          <option value="live">Live (VOD)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Urutkan</label>
+        <select id="sortBy" onchange="reRender()">
+          <option value="date_desc">Terbaru dulu</option>
+          <option value="date_asc">Terlama dulu</option>
+          <option value="views_desc">Views terbanyak</option>
+          <option value="likes_desc">Likes terbanyak</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Maks. hasil</label>
+        <select id="maxResults">
+          <option value="30">30 video</option>
+          <option value="60" selected>60 video</option>
+          <option value="120">120 video</option>
+          <option value="300">300 video</option>
+        </select>
+      </div>
+    </div>
+    <div class="presets">
+      <span>Cepat:</span>
+      <button class="preset-btn" onclick="setRange(7)">7 hari</button>
+      <button class="preset-btn" onclick="setRange(30)">30 hari</button>
+      <button class="preset-btn" onclick="setRange(90)">3 bulan</button>
+      <button class="preset-btn" onclick="setRange(180)">6 bulan</button>
+      <button class="preset-btn" onclick="setRange(365)">1 tahun</button>
+      <button class="preset-btn" onclick="setRange(0)">Semua waktu</button>
+    </div>
+    <div class="quota-note">💡 Setiap halaman = 1 API call. ~30 video per call. Free tier RapidAPI: biasanya 500 req/bulan.</div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSec" style="display:none">
+    <div class="results-top">
+      <div class="results-stat" id="resultsStat"></div>
+      <div class="results-actions">
+        <button class="btn-ghost" onclick="exportCSV()">↓ CSV</button>
+        <button class="btn-ghost" onclick="copyAllLinks()">📋 Copy semua link</button>
+      </div>
+    </div>
+    <div id="videoList" class="video-list"></div>
+    <div class="loadmore-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn-ghost" id="loadMoreBtn" onclick="loadMore()" style="padding:9px 24px">Muat lebih banyak…</button>
+      <p class="prog-note" id="progNote"></p>
+    </div>
+  </div>
+
+  <!-- State placeholder -->
+  <div id="stateSec">
+    <div class="state-box">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.05a8.27 8.27 0 0 0 4.84 1.55V7.15a4.85 4.85 0 0 1-1.07-.46z"/>
+      </svg>
+      <p>Masukkan akun TikTok dan klik Fetch untuk mulai</p>
+    </div>
+  </div>
+
+</div>
+<script>
+const API_HOST = 'tiktok-scraper7.p.rapidapi.com';
+const API_BASE = `https://${API_HOST}`;
+
+let apiKey     = '';
+let allVideos  = [];
+let cursor     = 0;
+let hasMore    = false;
+let username   = '';
+let fetching   = false;
+
+/* ─── Init ─── */
+addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('ttf_apikey');
+  if (saved) { apiKey = saved; document.getElementById('apiKey').value = saved; setKeyStatus('✓ API key tersimpan'); }
+  setRange(30);
+  document.getElementById('userInput').addEventListener('keydown', e => { if (e.key === 'Enter') startFetch(); });
+});
+
+/* ─── API Key ─── */
+function toggleKey() {
+  const el = document.getElementById('apiKey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  apiKey = k;
+  localStorage.setItem('ttf_apikey', k);
+  setKeyStatus('✓ Tersimpan!');
+  setTimeout(() => setKeyStatus(''), 2000);
+}
+function setKeyStatus(msg) { document.getElementById('keyStatus').textContent = msg; }
+
+/* ─── Date presets ─── */
+function setRange(days) {
+  const now = new Date();
+  document.getElementById('dateTo').value = fmtDate(now);
+  if (days === 0) { document.getElementById('dateFrom').value = ''; }
+  else {
+    const from = new Date(); from.setDate(from.getDate() - days);
+    document.getElementById('dateFrom').value = fmtDate(from);
+  }
+}
+function fmtDate(d) { return d.toISOString().split('T')[0]; }
+
+/* ─── Username resolve ─── */
+function resolveUsername(raw) {
+  raw = raw.trim();
+  // URL: tiktok.com/@handle
+  const m = raw.match(/tiktok\.com\/@([\w.-]+)/);
+  if (m) return m[1];
+  // bare @handle
+  if (raw.startsWith('@')) return raw.slice(1);
+  return raw;
+}
+
+/* ─── API helpers ─── */
+async function apiFetch(path, params) {
+  const url = new URL(API_BASE + path);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url, {
+    headers: {
+      'X-RapidAPI-Key': apiKey,
+      'X-RapidAPI-Host': API_HOST,
+    }
+  });
+
+  if (res.status === 401 || res.status === 403) throw new Error('API key tidak valid atau tidak punya akses. Cek RapidAPI dashboard.');
+  if (res.status === 429) throw new Error('Rate limit tercapai. Coba lagi nanti atau upgrade plan RapidAPI.');
+  if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+
+  const data = await res.json();
+  if (data.code !== undefined && data.code !== 0 && data.code !== 200) {
+    throw new Error(data.msg || `API error code ${data.code}`);
+  }
+  return data;
+}
+
+async function fetchPage(user, cur) {
+  return apiFetch('/user/posts', {
+    unique_id: '@' + user,
+    count: 30,
+    cursor: cur,
+  });
+}
+
+/* ─── Type detection ─── */
+function detectType(item) {
+  // aweme_type 55 = live stream VOD (approximate)
+  if (item.aweme_type === 55 || item.aweme_type === 267) return 'live';
+  // image_post_info present = slideshow / photo post
+  if (item.image_post_info !== null && item.image_post_info !== undefined) return 'slideshow';
+  return 'video';
+}
+
+/* ─── Process raw item ─── */
+function processItem(item, user) {
+  const type = detectType(item);
+  const videoId = item.video_id || item.aweme_id || '';
+  return {
+    id:          videoId,
+    title:       item.title || item.desc || '(tanpa caption)',
+    cover:       item.cover || item.origin_cover || '',
+    createTime:  item.create_time || 0,
+    views:       parseInt(item.play_count || 0),
+    likes:       parseInt(item.digg_count || 0),
+    comments:    parseInt(item.comment_count || 0),
+    shares:      parseInt(item.share_count || 0),
+    collect:     parseInt(item.collect_count || 0),
+    duration:    parseInt(item.duration || 0),
+    type,
+    url: `https://www.tiktok.com/@${user}/video/${videoId}`,
+  };
+}
+
+/* ─── Main fetch ─── */
+async function startFetch() {
+  if (fetching) return;
+  const input = document.getElementById('userInput').value.trim();
+  if (!input) { showErr('Masukkan username dulu.'); return; }
+  if (!apiKey) { showErr('RapidAPI key belum diisi.'); return; }
+
+  clearErr();
+  allVideos = []; cursor = 0; hasMore = false;
+  username = resolveUsername(input);
+
+  hide('resultsSec');
+  showState('loading', 'Menghubungi API…');
+
+  await doFetch(false);
+}
+
+async function loadMore() {
+  if (!hasMore || fetching) return;
+  document.getElementById('loadMoreBtn').disabled = true;
+  await doFetch(true);
+  document.getElementById('loadMoreBtn').disabled = false;
+}
+
+async function doFetch(append) {
+  if (fetching) return;
+  fetching = true;
+
+  const target   = parseInt(document.getElementById('maxResults').value);
+  const fromVal  = document.getElementById('dateFrom').value;
+  const toVal    = document.getElementById('dateTo').value;
+  const fromTs   = fromVal ? new Date(fromVal).getTime() / 1000 : 0;
+  const toTs     = toVal   ? (new Date(toVal + 'T23:59:59').getTime() / 1000) : Infinity;
+
+  if (!append) showState('loading', 'Mengambil video…');
+
+  try {
+    let reachedStart = false;
+    let calls = 0;
+    const MAX_CALLS = 20; // safety cap
+
+    while (allVideos.length < target && !reachedStart && calls < MAX_CALLS) {
+      if (calls > 0) showState('loading', `Memuat halaman ${calls + 1}… (${allVideos.length} video terkumpul)`);
+
+      const data  = await fetchPage(username, cursor);
+      const items = (data.data?.videos || data.data?.aweme_list || []);
+      calls++;
+
+      if (!items.length) break;
+
+      for (const item of items) {
+        const ts = item.create_time || 0;
+
+        // TikTok returns newest first — stop if we go past the start date
+        if (fromTs && ts < fromTs) { reachedStart = true; break; }
+
+        // Skip if newer than 'to' date
+        if (ts > toTs) continue;
+
+        allVideos.push(processItem(item, username));
+      }
+
+      cursor  = data.data?.cursor  || data.data?.max_cursor  || 0;
+      hasMore = data.data?.hasMore ?? data.data?.has_more ?? false;
+
+      if (!hasMore) break;
+      if (allVideos.length >= target) break;
+
+      // small delay to be nice to the API
+      await sleep(250);
+    }
+
+    renderVideos();
+    showState('done');
+    show('resultsSec');
+
+    const canLoadMore = hasMore && !reachedStart && allVideos.length < target;
+    document.getElementById('loadMoreWrap').style.display = canLoadMore ? '' : 'none';
+    if (canLoadMore) {
+      document.getElementById('progNote').textContent = `${allVideos.length} video diambil. Klik untuk lanjut.`;
+    }
+
+  } catch (e) {
+    showState('idle');
+    showErr(e.message);
+  } finally {
+    fetching = false;
+  }
+}
+
+/* ─── Render ─── */
+function reRender() { if (allVideos.length) renderVideos(); }
+
+function renderVideos() {
+  const type = document.getElementById('typeFilter').value;
+  const sort = document.getElementById('sortBy').value;
+
+  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+
+  if (sort === 'date_desc')  list.sort((a,b) => b.createTime - a.createTime);
+  if (sort === 'date_asc')   list.sort((a,b) => a.createTime - b.createTime);
+  if (sort === 'views_desc') list.sort((a,b) => b.views - a.views);
+  if (sort === 'likes_desc') list.sort((a,b) => b.likes - a.likes);
+
+  const cnt = { all: allVideos.length, video: 0, slideshow: 0, live: 0 };
+  allVideos.forEach(v => cnt[v.type]++);
+
+  document.getElementById('resultsStat').innerHTML =
+    `Menampilkan <strong>${list.length}</strong> dari <strong>${allVideos.length}</strong> konten &nbsp;·&nbsp; ` +
+    `🎬 ${cnt.video} video &nbsp; 🖼 ${cnt.slideshow} slideshow &nbsp; 🔴 ${cnt.live} live`;
+
+  const el = document.getElementById('videoList');
+  el.innerHTML = '';
+
+  if (!list.length) {
+    el.innerHTML = '<div class="state-box"><p>Tidak ada konten yang cocok dengan filter ini.</p></div>';
+    return;
+  }
+
+  list.forEach(v => {
+    const row = document.createElement('div');
+    row.className = 'video-row';
+
+    const badgeLabel = v.type === 'live' ? '🔴 Live' : v.type === 'slideshow' ? '🖼 Slideshow' : '🎬 Video';
+    const durStr     = v.duration ? fmtDur(v.duration) : '';
+    const dateStr    = fmtDateDisplay(v.createTime);
+
+    row.innerHTML = `
+      <a href="${v.url}" target="_blank" rel="noopener noreferrer">
+        <div class="video-thumb-wrap">
+          <img class="video-thumb" src="${esc(v.cover)}"
+            loading="lazy"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+            alt="">
+          <div class="thumb-fallback">🎵</div>
+        </div>
+      </a>
+      <div class="video-body">
+        <div class="video-title">
+          <a href="${v.url}" target="_blank" rel="noopener noreferrer">${esc(v.title)}</a>
+        </div>
+        <div class="video-meta">
+          <span class="badge badge-${v.type}">${badgeLabel}</span>
+          <span class="meta-pill">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            ${dateStr}
+          </span>
+          ${durStr ? `<span class="meta-pill">⏱ ${durStr}</span>` : ''}
+        </div>
+        <div class="stat-pills">
+          <span class="stat-pill">👁 ${fmtNum(v.views)}</span>
+          <span class="stat-pill">❤️ ${fmtNum(v.likes)}</span>
+          <span class="stat-pill">💬 ${fmtNum(v.comments)}</span>
+          <span class="stat-pill">↗ ${fmtNum(v.shares)}</span>
+          ${v.collect ? `<span class="stat-pill">🔖 ${fmtNum(v.collect)}</span>` : ''}
+        </div>
+      </div>
+      <div class="vactions">
+        <button class="copy-btn" onclick="copyLink('${v.url}', this)">Copy link</button>
+        <a class="open-link" href="${v.url}" target="_blank" rel="noopener noreferrer">Buka ↗</a>
+      </div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+/* ─── Copy & export ─── */
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy link'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function copyAllLinks() {
+  const type = document.getElementById('typeFilter').value;
+  const list = type === 'all' ? allVideos : allVideos.filter(v => v.type === type);
+  navigator.clipboard.writeText(list.map(v => v.url).join('\n'))
+    .then(() => alert(`${list.length} link disalin ke clipboard!`));
+}
+
+function exportCSV() {
+  const type = document.getElementById('typeFilter').value;
+  const sort = document.getElementById('sortBy').value;
+  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+  if (sort === 'date_desc')  list.sort((a,b) => b.createTime - a.createTime);
+  if (sort === 'date_asc')   list.sort((a,b) => a.createTime - b.createTime);
+  if (sort === 'views_desc') list.sort((a,b) => b.views - a.views);
+  if (sort === 'likes_desc') list.sort((a,b) => b.likes - a.likes);
+
+  const rows = [
+    ['Caption','URL','Type','Date','Views','Likes','Comments','Shares','Bookmarks','Duration (sec)'],
+    ...list.map(v => [
+      `"${(v.title||'').replace(/"/g,'""')}"`,
+      v.url, v.type,
+      new Date(v.createTime * 1000).toISOString(),
+      v.views, v.likes, v.comments, v.shares, v.collect, v.duration
+    ])
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `tiktok-${username}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+/* ─── UI helpers ─── */
+function showState(mode, msg) {
+  const s = document.getElementById('stateSec');
+  if (mode === 'loading') {
+    s.innerHTML = `<div class="state-box"><div class="spinner"></div><p>${esc(msg || 'Memuat…')}</p></div>`;
+    show('stateSec');
+  } else if (mode === 'done') {
+    hide('stateSec');
+  } else {
+    s.innerHTML = `<div class="state-box">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.05a8.27 8.27 0 0 0 4.84 1.55V7.15a4.85 4.85 0 0 1-1.07-.46z"/>
+      </svg>
+      <p>Masukkan akun TikTok dan klik Fetch untuk mulai</p>
+    </div>`;
+    show('stateSec');
+  }
+}
+function show(id) { document.getElementById(id).style.display = ''; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function showErr(msg) { const e = document.getElementById('userErr'); e.textContent = '⚠ ' + msg; e.classList.add('show'); }
+function clearErr() { const e = document.getElementById('userErr'); e.textContent = ''; e.classList.remove('show'); }
+
+/* ─── Formatters ─── */
+function fmtNum(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  return n.toLocaleString('id-ID');
+}
+function fmtDateDisplay(ts) {
+  return new Date(ts * 1000).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDur(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
