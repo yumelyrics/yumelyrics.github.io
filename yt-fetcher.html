@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Video Fetcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #080808;
+  --s1:       #111111;
+  --s2:       #191919;
+  --s3:       #222222;
+  --border:   #2c2c2c;
+  --border2:  #3a3a3a;
+  --text:     #ededed;
+  --muted:    #777;
+  --muted2:   #555;
+  --red:      #ff2d2d;
+  --red-dim:  #c41e1e;
+  --red-glow: rgba(255,45,45,0.15);
+  --green:    #22c55e;
+  --blue:     #3b82f6;
+  --purple:   #a855f7;
+  --amber:    #f59e0b;
+  --radius:   9px;
+  --radius-sm: 5px;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+
+/* ── Header ── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  width: 40px; height: 40px;
+  background: var(--red);
+  border-radius: 10px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px var(--red-glow);
+}
+.logo svg { width: 22px; height: 22px; fill: white; }
+header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+header h1 span { color: var(--red); }
+header small { color: var(--muted); font-size: 0.78rem; margin-left: 2px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+.card-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ── API Key row ── */
+.apikey-row { display: flex; gap: 8px; align-items: center; }
+.apikey-row .input-wrap { position: relative; flex: 1; }
+.apikey-row input { padding-right: 40px; }
+.eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  padding: 4px; line-height: 1; font-size: 15px; }
+.eye:hover { color: var(--text); }
+.apikey-status { font-size: 0.75rem; color: var(--green); margin-top: 6px; height: 16px; }
+
+/* ── Inputs ── */
+input[type=text], input[type=password], input[type=date], select, textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 9px 13px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s;
+}
+input:focus, select:focus { border-color: var(--red); }
+input[type=password] { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; }
+select { cursor: pointer; }
+input[type=date] { color-scheme: dark; }
+
+/* ── Channel row ── */
+.channel-row { display: flex; gap: 8px; }
+.channel-row input { flex: 1; }
+.hint { font-size: 0.72rem; color: var(--muted); margin-top: 7px; line-height: 1.5; }
+.hint code { background: var(--s3); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; }
+
+/* ── Filters ── */
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 780px) { .filters-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .filters-grid { grid-template-columns: 1fr; } }
+.field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; }
+
+.presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.presets span { font-size: 0.72rem; color: var(--muted2); }
+.preset-btn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--radius-sm); padding: 4px 10px; font-size: 0.72rem; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.preset-btn:hover { border-color: var(--red); color: var(--text); }
+
+/* ── Buttons ── */
+btn, .btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--red); color: white; border: none;
+  border-radius: var(--radius-sm); padding: 9px 18px;
+  font-size: 0.875rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; white-space: nowrap; transition: background 0.15s, opacity 0.15s;
+}
+button.btn:hover, .btn:hover { background: var(--red-dim); }
+button.btn:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+button.btn-ghost {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--radius-sm); padding: 9px 14px; font-size: 0.8rem; font-weight: 500;
+  font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+/* ── Error / alert ── */
+.err {
+  background: rgba(255,45,45,0.08); border: 1px solid rgba(255,45,45,0.3);
+  border-radius: var(--radius-sm); color: #fca5a5;
+  padding: 9px 13px; font-size: 0.8rem; margin-top: 8px; display: none;
+}
+.err.show { display: block; }
+
+/* ── Results header ── */
+.results-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; gap: 10px; flex-wrap: wrap;
+}
+.results-stat { font-size: 0.8rem; color: var(--muted); }
+.results-stat strong { color: var(--text); }
+.results-actions { display: flex; gap: 8px; }
+
+/* ── Video list ── */
+.video-list { display: flex; flex-direction: column; gap: 6px; }
+
+.video-row {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  grid-template-columns: 130px 1fr auto;
+  gap: 14px; align-items: center;
+  padding: 10px;
+  transition: border-color 0.15s;
+}
+.video-row:hover { border-color: var(--border2); }
+@media (max-width: 580px) {
+  .video-row { grid-template-columns: 90px 1fr; }
+  .video-row .video-actions { display: none; }
+}
+
+.video-thumb {
+  width: 100%; aspect-ratio: 16/9;
+  object-fit: cover; border-radius: 5px;
+  background: var(--s3); display: block; flex-shrink: 0;
+}
+
+.video-body { min-width: 0; }
+
+.video-title {
+  font-size: 0.875rem; font-weight: 500; line-height: 1.45;
+  margin-bottom: 7px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.video-title a { color: var(--text); text-decoration: none; }
+.video-title a:hover { color: var(--red); }
+
+.video-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.badge {
+  font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.badge-video   { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); }
+.badge-shorts  { background: rgba(168,85,247,0.2); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.35); }
+.badge-live    { background: rgba(255,45,45,0.2);  color: #fca5a5; border: 1px solid rgba(255,45,45,0.35); }
+
+.meta-pill { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+
+.video-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.copy-btn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: var(--radius-sm); padding: 5px 11px; font-size: 0.72rem; font-weight: 500;
+  font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--red); color: var(--red); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+.open-link {
+  font-size: 0.72rem; color: var(--muted2); text-decoration: none;
+  transition: color 0.15s;
+}
+.open-link:hover { color: var(--text); }
+
+/* ── State ── */
+.state-box {
+  text-align: center; padding: 50px 20px; color: var(--muted);
+}
+.state-box p { font-size: 0.875rem; margin-top: 8px; }
+.spinner {
+  width: 30px; height: 30px; border: 2.5px solid var(--border);
+  border-top-color: var(--red); border-radius: 50%;
+  animation: spin 0.75s linear infinite; margin: 0 auto 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Load more ── */
+.loadmore-wrap { text-align: center; margin-top: 14px; }
+
+/* ── Quota note ── */
+.quota-note {
+  font-size: 0.7rem; color: var(--muted2); text-align: right;
+  margin-top: 8px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.6V8.4L15.8 12l-6.3 3.6z"/></svg>
+    </div>
+    <div>
+      <h1>YT <span>Video</span> Fetcher</h1>
+      <small>Ambil data video YouTube dengan cepat</small>
+    </div>
+  </header>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-label">YouTube Data API v3 Key</div>
+    <div class="apikey-row">
+      <div class="input-wrap">
+        <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off" spellcheck="false">
+        <button class="eye" onclick="toggleKey()" title="Tampilkan/sembunyikan">👁</button>
+      </div>
+      <button class="btn-ghost" onclick="saveKey()">Simpan</button>
+    </div>
+    <div class="apikey-status" id="keyStatus"></div>
+  </div>
+
+  <!-- Channel -->
+  <div class="card">
+    <div class="card-label">Channel YouTube</div>
+    <div class="channel-row">
+      <input type="text" id="channelInput" placeholder="URL, @handle, atau Channel ID (UC…)" autocomplete="off">
+      <button class="btn" id="fetchBtn" onclick="startFetch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Fetch
+      </button>
+    </div>
+    <div class="err" id="channelErr"></div>
+    <div class="hint">
+      Contoh: <code>https://www.youtube.com/@NijisanjiID</code> &nbsp;·&nbsp;
+      <code>@NijisanjiID</code> &nbsp;·&nbsp;
+      <code>UCX6OQ3DkcsbYNE6H8uQQuVA</code>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card">
+    <div class="card-label">Filter &amp; Pengaturan</div>
+    <div class="filters-grid">
+      <div class="field">
+        <label>Dari tanggal</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="field">
+        <label>Sampai tanggal</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="field">
+        <label>Tipe video</label>
+        <select id="typeFilter" onchange="reRender()">
+          <option value="all">Semua tipe</option>
+          <option value="video">Video</option>
+          <option value="shorts">Shorts</option>
+          <option value="live">Live</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Urutkan</label>
+        <select id="sortBy" onchange="reRender()">
+          <option value="date_desc">Terbaru dulu</option>
+          <option value="date_asc">Terlama dulu</option>
+          <option value="views_desc">Views terbanyak</option>
+          <option value="views_asc">Views tersedikit</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Maks. hasil</label>
+        <select id="maxResults">
+          <option value="25">25 video</option>
+          <option value="50" selected>50 video</option>
+          <option value="100">100 video</option>
+          <option value="200">200 video</option>
+          <option value="500">500 video</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="presets">
+      <span>Cepat:</span>
+      <button class="preset-btn" onclick="setRange(7)">7 hari</button>
+      <button class="preset-btn" onclick="setRange(30)">30 hari</button>
+      <button class="preset-btn" onclick="setRange(90)">3 bulan</button>
+      <button class="preset-btn" onclick="setRange(180)">6 bulan</button>
+      <button class="preset-btn" onclick="setRange(365)">1 tahun</button>
+      <button class="preset-btn" onclick="setRange(0)">Semua waktu</button>
+    </div>
+    <div class="quota-note">💡 Setiap fetch ~3–6 unit quota per video. Batas default API: 10.000 unit/hari.</div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSec" style="display:none">
+    <div class="results-top">
+      <div class="results-stat" id="resultsStat"></div>
+      <div class="results-actions">
+        <button class="btn-ghost" onclick="exportCSV()">↓ CSV</button>
+        <button class="btn-ghost" onclick="copyAllLinks()">📋 Copy semua link</button>
+      </div>
+    </div>
+    <div id="videoList" class="video-list"></div>
+    <div class="loadmore-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn-ghost" onclick="loadMore()" style="padding:9px 24px">Muat lebih banyak…</button>
+    </div>
+  </div>
+
+  <!-- State placeholder -->
+  <div id="stateSec">
+    <div class="state-box">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <p>Masukkan channel dan klik Fetch untuk mulai</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const YT = 'https://www.googleapis.com/youtube/v3';
+
+let apiKey = '';
+let allVideos   = [];
+let nextToken   = null;
+let channelId   = '';
+let fetching    = false;
+
+/* ─── Init ─── */
+addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('ytf_apikey');
+  if (saved) { apiKey = saved; document.getElementById('apiKey').value = saved; showKeyStatus('✓ API key tersimpan'); }
+  setRange(30);
+  document.getElementById('channelInput').addEventListener('keydown', e => { if (e.key === 'Enter') startFetch(); });
+});
+
+/* ─── API Key ─── */
+function toggleKey() {
+  const el = document.getElementById('apiKey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  apiKey = k;
+  localStorage.setItem('ytf_apikey', k);
+  showKeyStatus('✓ Tersimpan!');
+  setTimeout(() => showKeyStatus(''), 2000);
+}
+function showKeyStatus(msg) {
+  document.getElementById('keyStatus').textContent = msg;
+}
+
+/* ─── Date presets ─── */
+function setRange(days) {
+  const now = new Date();
+  document.getElementById('dateTo').value = fmtDate(now);
+  if (days === 0) { document.getElementById('dateFrom').value = ''; }
+  else {
+    const from = new Date(); from.setDate(from.getDate() - days);
+    document.getElementById('dateFrom').value = fmtDate(from);
+  }
+}
+function fmtDate(d) { return d.toISOString().split('T')[0]; }
+
+/* ─── Channel Resolution ─── */
+async function resolveChannel(raw) {
+  raw = raw.trim();
+
+  // Direct UC… ID
+  if (/^UC[\w-]{21,22}$/.test(raw)) return raw;
+
+  // URL: /channel/UCxxx
+  const m1 = raw.match(/youtube\.com\/channel\/(UC[\w-]{21,22})/);
+  if (m1) return m1[1];
+
+  // URL: /@handle
+  const m2 = raw.match(/youtube\.com\/@([\w.-]+)/);
+  if (m2) return await channelByHandle('@' + m2[1]);
+
+  // URL: /user/xxx
+  const m3 = raw.match(/youtube\.com\/user\/([\w.-]+)/);
+  if (m3) return await channelByUsername(m3[1]);
+
+  // Bare @handle
+  if (raw.startsWith('@')) return await channelByHandle(raw);
+
+  // Try as username last resort
+  return await channelByUsername(raw);
+}
+
+async function channelByHandle(handle) {
+  const url = `${YT}/channels?part=id&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`;
+  const d = await apiFetch(url);
+  if (!d.items?.length) throw new Error(`Channel "${handle}" tidak ditemukan`);
+  return d.items[0].id;
+}
+async function channelByUsername(name) {
+  const url = `${YT}/channels?part=id&forUsername=${encodeURIComponent(name)}&key=${apiKey}`;
+  const d = await apiFetch(url);
+  if (!d.items?.length) throw new Error(`Channel "${name}" tidak ditemukan. Coba pakai URL lengkap atau @handle.`);
+  return d.items[0].id;
+}
+
+/* ─── API helpers ─── */
+async function apiFetch(url) {
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.error) throw new Error(`API error ${data.error.code}: ${data.error.message}`);
+  return data;
+}
+
+/* ─── Search & fetch details ─── */
+async function searchVideos(chId, pageToken) {
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+
+  let url = `${YT}/search?part=snippet&channelId=${chId}&type=video&maxResults=50&order=date&key=${apiKey}`;
+  if (from) url += `&publishedAfter=${new Date(from).toISOString()}`;
+  if (to)   {
+    const t = new Date(to); t.setHours(23,59,59,999);
+    url += `&publishedBefore=${t.toISOString()}`;
+  }
+  if (pageToken) url += `&pageToken=${pageToken}`;
+  return apiFetch(url);
+}
+
+async function fetchDetails(ids) {
+  const url = `${YT}/videos?part=statistics,contentDetails,liveStreamingDetails,snippet&id=${ids.join(',')}&key=${apiKey}`;
+  const d = await apiFetch(url);
+  return Object.fromEntries((d.items || []).map(v => [v.id, v]));
+}
+
+/* ─── Type detection ─── */
+function parseSec(dur) {
+  const m = (dur || '').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (+m[1]||0)*3600 + (+m[2]||0)*60 + (+m[3]||0);
+}
+
+function detectType(detail) {
+  if (detail.liveStreamingDetails) return 'live';
+  const secs  = parseSec(detail.contentDetails?.duration);
+  const tags  = (detail.snippet?.tags || []).join(' ').toLowerCase();
+  const title = (detail.snippet?.title || '').toLowerCase();
+  const desc  = (detail.snippet?.description || '').toLowerCase();
+  const isShorts = secs > 0 && secs <= 180 &&
+    (tags.includes('#shorts') || title.includes('#shorts') || desc.includes('#shorts') || secs <= 60);
+  if (isShorts) return 'shorts';
+  return 'video';
+}
+
+/* ─── Main fetch ─── */
+async function startFetch() {
+  if (fetching) return;
+  const input = document.getElementById('channelInput').value.trim();
+  if (!input) { showErr('Masukkan channel dulu.'); return; }
+  if (!apiKey) { showErr('API key belum diisi / disimpan.'); return; }
+
+  clearErr();
+  allVideos = []; nextToken = null;
+  hide('resultsSec'); showState('loading');
+
+  try {
+    channelId = await resolveChannel(input);
+    await doFetch(false);
+  } catch(e) {
+    showState('idle');
+    showErr(e.message);
+  }
+}
+
+async function loadMore() {
+  if (!nextToken || fetching) return;
+  await doFetch(true);
+}
+
+async function doFetch(append) {
+  fetching = true;
+  const target = parseInt(document.getElementById('maxResults').value);
+
+  if (!append) showState('loading');
+
+  try {
+    while (allVideos.length < target) {
+      const data  = await searchVideos(channelId, nextToken);
+      const items = data.items || [];
+      if (!items.length) break;
+
+      const ids     = items.map(i => i.id.videoId).filter(Boolean);
+      const details = await fetchDetails(ids);
+
+      items.forEach(item => {
+        const vid = item.id.videoId;
+        if (!vid) return;
+        const d   = details[vid] || {};
+        allVideos.push({
+          id:          vid,
+          title:       item.snippet.title,
+          thumb:       item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+          publishedAt: item.snippet.publishedAt,
+          views:       d.statistics?.viewCount  || '0',
+          likes:       d.statistics?.likeCount  || '0',
+          type:        detectType(d),
+          url:         `https://www.youtube.com/watch?v=${vid}`,
+          duration:    parseSec(d.contentDetails?.duration),
+        });
+      });
+
+      nextToken = data.nextPageToken || null;
+      if (!nextToken) break;
+      if (allVideos.length >= target) break;
+    }
+
+    renderVideos();
+    showState('done');
+    show('resultsSec');
+    document.getElementById('loadMoreWrap').style.display = nextToken ? '' : 'none';
+  } catch(e) {
+    showState('idle');
+    showErr(e.message);
+  } finally {
+    fetching = false;
+  }
+}
+
+/* ─── Render ─── */
+function reRender() { if (allVideos.length) renderVideos(); }
+
+function renderVideos() {
+  const type = document.getElementById('typeFilter').value;
+  const sort = document.getElementById('sortBy').value;
+
+  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+
+  if (sort === 'date_desc') list.sort((a,b) => +new Date(b.publishedAt) - +new Date(a.publishedAt));
+  if (sort === 'date_asc')  list.sort((a,b) => +new Date(a.publishedAt) - +new Date(b.publishedAt));
+  if (sort === 'views_desc') list.sort((a,b) => +b.views - +a.views);
+  if (sort === 'views_asc')  list.sort((a,b) => +a.views - +b.views);
+
+  const cnt = { all: allVideos.length, video: 0, shorts: 0, live: 0 };
+  allVideos.forEach(v => cnt[v.type]++);
+
+  document.getElementById('resultsStat').innerHTML =
+    `Menampilkan <strong>${list.length}</strong> dari <strong>${allVideos.length}</strong> video &nbsp;·&nbsp; ` +
+    `▶ ${cnt.video} video &nbsp; ⚡ ${cnt.shorts} shorts &nbsp; 🔴 ${cnt.live} live`;
+
+  const el = document.getElementById('videoList');
+  el.innerHTML = '';
+
+  if (!list.length) {
+    el.innerHTML = '<div class="state-box"><p>Tidak ada video yang cocok dengan filter ini.</p></div>';
+    return;
+  }
+
+  list.forEach(v => {
+    const row = document.createElement('div');
+    row.className = 'video-row';
+    row.innerHTML = `
+      <a href="${v.url}" target="_blank" rel="noopener noreferrer">
+        <img class="video-thumb" src="${esc(v.thumb)}" loading="lazy"
+          onerror="this.style.opacity='0'" alt="">
+      </a>
+      <div class="video-body">
+        <div class="video-title">
+          <a href="${v.url}" target="_blank" rel="noopener noreferrer">${esc(v.title)}</a>
+        </div>
+        <div class="video-meta">
+          <span class="badge badge-${v.type}">
+            ${v.type === 'live' ? '🔴 Live' : v.type === 'shorts' ? '⚡ Shorts' : '▶ Video'}
+          </span>
+          <span class="meta-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            ${fmtDateDisplay(v.publishedAt)}
+          </span>
+          <span class="meta-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${fmtNum(v.views)}
+          </span>
+          ${v.duration ? `<span class="meta-pill">⏱ ${fmtDur(v.duration)}</span>` : ''}
+        </div>
+      </div>
+      <div class="video-actions">
+        <button class="copy-btn" onclick="copyLink('${v.url}', this)">Copy link</button>
+        <a class="open-link" href="${v.url}" target="_blank" rel="noopener noreferrer">Buka ↗</a>
+      </div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+/* ─── Copy & export ─── */
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy link'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function copyAllLinks() {
+  const type = document.getElementById('typeFilter').value;
+  const list = type === 'all' ? allVideos : allVideos.filter(v => v.type === type);
+  const text = list.map(v => v.url).join('\n');
+  navigator.clipboard.writeText(text).then(() => alert(`${list.length} link disalin ke clipboard!`));
+}
+
+function exportCSV() {
+  const type = document.getElementById('typeFilter').value;
+  const sort = document.getElementById('sortBy').value;
+  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+  if (sort === 'date_desc') list.sort((a,b) => +new Date(b.publishedAt) - +new Date(a.publishedAt));
+  if (sort === 'date_asc')  list.sort((a,b) => +new Date(a.publishedAt) - +new Date(b.publishedAt));
+  if (sort === 'views_desc') list.sort((a,b) => +b.views - +a.views);
+  if (sort === 'views_asc')  list.sort((a,b) => +a.views - +b.views);
+
+  const rows = [
+    ['Title','URL','Type','Published At','Views','Duration (sec)'],
+    ...list.map(v => [
+      `"${v.title.replace(/"/g,'""')}"`,
+      v.url, v.type, v.publishedAt, v.views, v.duration
+    ])
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `yt-videos-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+/* ─── UI helpers ─── */
+function showState(mode) {
+  const s = document.getElementById('stateSec');
+  if (mode === 'loading') {
+    s.innerHTML = '<div class="state-box"><div class="spinner"></div><p>Mengambil data dari YouTube API…</p></div>';
+    show('stateSec');
+  } else if (mode === 'done') {
+    hide('stateSec');
+  } else {
+    s.innerHTML = '<div class="state-box"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>Masukkan channel dan klik Fetch untuk mulai</p></div>';
+    show('stateSec');
+  }
+}
+function show(id) { document.getElementById(id).style.display = ''; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+function showErr(msg) {
+  const el = document.getElementById('channelErr');
+  el.textContent = '⚠ ' + msg; el.classList.add('show');
+}
+function clearErr() {
+  const el = document.getElementById('channelErr');
+  el.textContent = ''; el.classList.remove('show');
+}
+
+/* ─── Formatters ─── */
+function fmtNum(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toLocaleString('id-ID');
+}
+function fmtDateDisplay(iso) {
+  return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDur(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if (h) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
