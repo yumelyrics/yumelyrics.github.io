@@ -232,9 +232,9 @@ button.btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
   <!-- Info banner -->
   <div class="info-banner">
-    <strong>ℹ️ Cara pakai:</strong> TikTok tidak punya public API gratis. Tool ini pakai
-    <strong>tiktok-scraper7</strong> via <a href="https://rapidapi.com/Lundehund/api/tiktok-scraper7" target="_blank" rel="noopener">RapidAPI</a>
-    (free tier ~500 req/bulan). Daftar → Subscribe → copy <strong>X-RapidAPI-Key</strong> dari dashboard.
+    <strong>ℹ️ Cara pakai:</strong> Tool ini pakai
+    <strong>TikTok API by apibox</strong> via <a href="https://rapidapi.com/apiby/api/tiktok-api23" target="_blank" rel="noopener">RapidAPI</a>
+    (free tier tersedia). Daftar → cari "TikTok API" by apibox → Subscribe → copy <strong>X-RapidAPI-Key</strong> dari tab Header Parameters.
     <br>⚠️ Filter tanggal diproses di sisi client. Untuk range lama di akun besar, butuh lebih banyak API calls.
   </div>
 
@@ -349,7 +349,7 @@ button.btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
 </div>
 <script>
-const API_HOST = 'tiktok-scraper7.p.rapidapi.com';
+const API_HOST = 'tiktok-api23.p.rapidapi.com';
 const API_BASE = `https://${API_HOST}`;
 
 let apiKey     = '';
@@ -428,7 +428,7 @@ async function apiFetch(path, params) {
 }
 
 async function fetchPage(user, cur) {
-  return apiFetch('/user/posts', {
+  return apiFetch('/api/user/posts', {
     unique_id: '@' + user,
     count: 30,
     cursor: cur,
@@ -446,19 +446,21 @@ function detectType(item) {
 
 /* ─── Process raw item ─── */
 function processItem(item, user) {
-  const type = detectType(item);
-  const videoId = item.video_id || item.aweme_id || '';
+  const type    = detectType(item);
+  const videoId = item.video_id || item.id || item.aweme_id || '';
+  // apibox nests stats in item.stats, fallback ke flat fields (scraper lain)
+  const stats   = item.stats || {};
   return {
     id:          videoId,
-    title:       item.title || item.desc || '(tanpa caption)',
-    cover:       item.cover || item.origin_cover || '',
-    createTime:  item.create_time || 0,
-    views:       parseInt(item.play_count || 0),
-    likes:       parseInt(item.digg_count || 0),
-    comments:    parseInt(item.comment_count || 0),
-    shares:      parseInt(item.share_count || 0),
-    collect:     parseInt(item.collect_count || 0),
-    duration:    parseInt(item.duration || 0),
+    title:       item.title || item.desc || item.description || '(tanpa caption)',
+    cover:       item.cover || item.video?.cover || item.origin_cover || '',
+    createTime:  item.create_time || item.createTime || 0,
+    views:       parseInt(stats.playCount   || item.play_count    || 0),
+    likes:       parseInt(stats.diggCount   || item.digg_count    || 0),
+    comments:    parseInt(stats.commentCount|| item.comment_count || 0),
+    shares:      parseInt(stats.shareCount  || item.share_count   || 0),
+    collect:     parseInt(stats.collectCount|| item.collect_count || 0),
+    duration:    parseInt(item.video?.duration || item.duration   || 0),
     type,
     url: `https://www.tiktok.com/@${user}/video/${videoId}`,
   };
@@ -509,7 +511,7 @@ async function doFetch(append) {
       if (calls > 0) showState('loading', `Memuat halaman ${calls + 1}… (${allVideos.length} video terkumpul)`);
 
       const data  = await fetchPage(username, cursor);
-      const items = (data.data?.videos || data.data?.aweme_list || []);
+      const items = (data.data?.itemList || data.data?.videos || data.data?.aweme_list || []);
       calls++;
 
       if (!items.length) break;
@@ -526,7 +528,7 @@ async function doFetch(append) {
         allVideos.push(processItem(item, username));
       }
 
-      cursor  = data.data?.cursor  || data.data?.max_cursor  || 0;
+      cursor  = data.data?.cursor ?? data.data?.max_cursor ?? 0;
       hasMore = data.data?.hasMore ?? data.data?.has_more ?? false;
 
       if (!hasMore) break;

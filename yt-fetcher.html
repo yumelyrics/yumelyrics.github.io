@@ -387,6 +387,7 @@ let apiKey = '';
 let allVideos   = [];
 let nextToken   = null;
 let channelId   = '';
+let channelName = '';
 let fetching    = false;
 
 /* ─── Init ─── */
@@ -465,6 +466,14 @@ async function channelByUsername(name) {
   return d.items[0].id;
 }
 
+async function fetchChannelName(chId) {
+  try {
+    const url = `${YT}/channels?part=snippet&id=${chId}&key=${apiKey}`;
+    const d = await apiFetch(url);
+    return d.items?.[0]?.snippet?.title || chId;
+  } catch(e) { return chId; }
+}
+
 /* ─── API helpers ─── */
 async function apiFetch(url) {
   const res = await fetch(url);
@@ -526,6 +535,7 @@ async function startFetch() {
 
   try {
     channelId = await resolveChannel(input);
+    channelName = await fetchChannelName(channelId);
     await doFetch(false);
   } catch(e) {
     showState('idle');
@@ -662,9 +672,30 @@ function copyLink(url, btn) {
 
 function copyAllLinks() {
   const type = document.getElementById('typeFilter').value;
-  const list = type === 'all' ? allVideos : allVideos.filter(v => v.type === type);
-  const text = list.map(v => v.url).join('\n');
-  navigator.clipboard.writeText(text).then(() => alert(`${list.length} link disalin ke clipboard!`));
+  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+
+  // Urutkan dari terlama ke terbaru
+  list.sort((a, b) => +new Date(a.publishedAt) - +new Date(b.publishedAt));
+
+  const typeLabelMap = { video: '▶ Video', shorts: '⚡ Shorts', live: '🔴 Live' };
+  const totalLabel = `Channel  : ${channelName}\nTotal    : ${list.length} video\n`;
+  const separator  = '─'.repeat(60);
+
+  const lines = list.map((v, i) => {
+    const no      = String(i + 1).padStart(list.length >= 100 ? 3 : 2, ' ');
+    const tipe    = typeLabelMap[v.type] || v.type;
+    const tanggal = fmtDateCopy(v.publishedAt);
+    const views   = fmtNum(v.views) + ' views';
+    return [
+      `${no}. ${v.title}`,
+      `    🔗 ${v.url}`,
+      `    📅 ${tanggal}  |  👁 ${views}  |  ${tipe}`,
+      `    📺 ${channelName}`,
+    ].join('\n');
+  });
+
+  const text = `${totalLabel}${separator}\n${lines.join('\n' + separator + '\n')}`;
+  navigator.clipboard.writeText(text).then(() => alert(`${list.length} link + info disalin ke clipboard!`));
 }
 
 function exportCSV() {
@@ -716,14 +747,40 @@ function clearErr() {
 }
 
 /* ─── Formatters ─── */
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  KONFIGURASI PEMISAH RIBUAN VIEWS                       ║
+// ║  Ubah nilai VIEW_SEPARATOR di bawah ini:               ║
+// ║    ','  → pakai koma   contoh: 5,407                   ║
+// ║    '.'  → pakai titik  contoh: 5.407                   ║
+// ╚══════════════════════════════════════════════════════════╝
+const VIEW_SEPARATOR = ','; // ← GANTI DI SINI jika ingin pakai titik
+
 function fmtNum(n) {
   n = parseInt(n) || 0;
-  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
-  if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
-  return n.toLocaleString('id-ID');
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, VIEW_SEPARATOR);
 }
 function fmtDateDisplay(iso) {
-  return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+  const d = new Date(iso);
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const dd  = String(d.getDate()).padStart(2,'0');
+  const mm  = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  const monthName = monthNames[d.getMonth()];
+  // Format 1: DD/MM/YYYY
+  const fmt1 = `${dd}/${mm}/${yyyy}`;
+  // Format 2: DD/NamaBulan/YYYY
+  const fmt2 = `${dd}/${monthName}/${yyyy}`;
+  return `${fmt1} <span style="color:var(--muted2);font-size:0.68rem">(${fmt2})</span>`;
+}
+function fmtDateCopy(iso) {
+  const d = new Date(iso);
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const dd  = String(d.getDate()).padStart(2,'0');
+  const mm  = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  const monthName = monthNames[d.getMonth()];
+  return `${dd}/${mm}/${yyyy} (${dd}/${monthName}/${yyyy})`;
 }
 function fmtDur(s) {
   const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
