@@ -337,6 +337,15 @@ button.btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
     </div>
   </div>
 
+  <!-- Debug panel -->
+  <div id="debugSec" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:0.72rem;color:var(--muted)">🔍 Raw API Response (debug)</span>
+      <button class="btn-ghost" style="padding:3px 8px;font-size:0.7rem" onclick="document.getElementById('debugSec').style.display='none'">Tutup</button>
+    </div>
+    <div class="debug-box" id="debugBox"></div>
+  </div>
+
   <!-- State placeholder -->
   <div id="stateSec">
     <div class="state-box">
@@ -437,10 +446,11 @@ async function fetchPage(user, cur) {
 
 /* ─── Type detection ─── */
 function detectType(item) {
-  // aweme_type 55 = live stream VOD (approximate)
+  // live VOD: aweme_type 55/267, atau ada liveStreamingDetails
   if (item.aweme_type === 55 || item.aweme_type === 267) return 'live';
-  // image_post_info present = slideshow / photo post
-  if (item.image_post_info !== null && item.image_post_info !== undefined) return 'slideshow';
+  // slideshow: apibox pakai imagePost, scraper lain pakai image_post_info
+  const hasImg = item.imagePost ?? item.image_post_info ?? null;
+  if (hasImg !== null) return 'slideshow';
   return 'video';
 }
 
@@ -454,7 +464,10 @@ function processItem(item, user) {
     id:          videoId,
     title:       item.title || item.desc || item.description || '(tanpa caption)',
     cover:       item.cover || item.video?.cover || item.origin_cover || '',
-    createTime:  item.create_time || item.createTime || 0,
+    createTime:  (() => {
+      let t = item.create_time || item.createTime || item.createtime || 0;
+      return t > 1e12 ? Math.floor(t / 1000) : t;
+    })(),
     views:       parseInt(stats.playCount   || item.play_count    || 0),
     likes:       parseInt(stats.diggCount   || item.digg_count    || 0),
     comments:    parseInt(stats.commentCount|| item.comment_count || 0),
@@ -514,15 +527,41 @@ async function doFetch(append) {
       const items = (data.data?.itemList || data.data?.videos || data.data?.aweme_list || []);
       calls++;
 
+      // tampilkan raw response di debug panel (hanya call pertama)
+      if (calls === 1) {
+        const dbSec = document.getElementById('debugSec');
+        const dbBox = document.getElementById('debugBox');
+        dbSec.style.display = '';
+        dbBox.textContent = JSON.stringify({
+          keys_data: Object.keys(data.data || {}),
+          total_items: items.length,
+          first_item_keys: items[0] ? Object.keys(items[0]) : [],
+          first_item_sample: items[0] ? {
+            create_time: items[0].create_time,
+            createTime:  items[0].createTime,
+            id: items[0].id || items[0].video_id || items[0].aweme_id,
+          } : null,
+        }, null, 2);
+      }
+
       if (!items.length) break;
 
       for (const item of items) {
-        const ts = item.create_time || 0;
+        // handle camelCase (apibox) vs snake_case (scraper lain)
+        let ts = item.create_time || item.createTime || item.createtime || 0;
+        // normalize milliseconds ke seconds (ms > 1e12, misal 1700000000000)
+        if (ts > 1e12) ts = Math.floor(ts / 1000);
 
-        // TikTok returns newest first — stop if we go past the start date
+        // kalau ts invalid/0, tetap masukkan tanpa filter tanggal
+        if (ts === 0) {
+          allVideos.push(processItem(item, username));
+          continue;
+        }
+
+        // TikTok returns newest first: stop kalau sudah melewati tanggal awal
         if (fromTs && ts < fromTs) { reachedStart = true; break; }
 
-        // Skip if newer than 'to' date
+        // skip kalau lebih baru dari 'to' date
         if (ts > toTs) continue;
 
         allVideos.push(processItem(item, username));
