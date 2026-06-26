@@ -366,7 +366,8 @@ let allVideos  = [];
 let cursor     = 0;
 let hasMore    = false;
 let username   = '';
-let fetching   = false;
+let fetching    = false;
+let secUid      = '';
 
 /* ─── Init ─── */
 addEventListener('DOMContentLoaded', () => {
@@ -430,15 +431,33 @@ async function apiFetch(path, params) {
   if (!res.ok) throw new Error(`HTTP error ${res.status}`);
 
   const data = await res.json();
+  // apibox format: { success: false, error: { issues: [...] } }
+  if (data.success === false) {
+    const issue = data.error?.issues?.[0]?.message || data.error?.name || 'Unknown error';
+    throw new Error(`API error: ${issue}`);
+  }
+  // scraper lain: { code: non-zero }
   if (data.code !== undefined && data.code !== 0 && data.code !== 200) {
     throw new Error(data.msg || `API error code ${data.code}`);
   }
   return data;
 }
 
+async function fetchSecUid(user) {
+  const data = await apiFetch('/api/user/info', { unique_id: '@' + user });
+  // coba berbagai kemungkinan lokasi secUid di response
+  const su = data.data?.user?.secUid
+          || data.data?.userInfo?.user?.secUid
+          || data.data?.secUid
+          || data.secUid
+          || null;
+  if (!su) throw new Error(`Tidak bisa resolve secUid untuk @${user}. Pastikan username benar.`);
+  return su;
+}
+
 async function fetchPage(user, cur) {
   return apiFetch('/api/user/posts', {
-    unique_id: '@' + user,
+    secUid: secUid,
     count: 30,
     cursor: cur,
   });
@@ -493,7 +512,16 @@ async function startFetch() {
   hide('resultsSec');
   showState('loading', 'Menghubungi API…');
 
-  await doFetch(false);
+  try {
+    showState('loading', `Resolving @${username}…`);
+    secUid = await fetchSecUid(username);
+    await doFetch(false);
+  } catch(e) {
+    showState('idle');
+    showErr(e.message);
+  }
+  return;
+  // (doFetch dipanggil di atas, baris ini tidak dieksekusi)
 }
 
 async function loadMore() {
@@ -533,8 +561,17 @@ async function doFetch(append) {
         const dbBox = document.getElementById('debugBox');
         dbSec.style.display = '';
         dbBox.textContent = JSON.stringify({
-          root_keys: Object.keys(data),
-          raw_preview: JSON.stringify(data).substring(0, 800),
+          root_keys:   Object.keys(data),
+          items_count: items.length,
+          cursor:      data.data?.cursor ?? data.cursor ?? null,
+          hasMore:     data.data?.hasMore ?? data.hasMore ?? null,
+          first_item:  items[0] ? {
+            keys:        Object.keys(items[0]),
+            id:          items[0].id || items[0].video_id || items[0].aweme_id,
+            create_time: items[0].create_time,
+            createTime:  items[0].createTime,
+          } : null,
+          raw_preview: JSON.stringify(data).substring(0, 600),
         }, null, 2);
       }
 
