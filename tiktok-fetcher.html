@@ -533,14 +533,8 @@ async function doFetch(append) {
         const dbBox = document.getElementById('debugBox');
         dbSec.style.display = '';
         dbBox.textContent = JSON.stringify({
-          keys_data: Object.keys(data.data || {}),
-          total_items: items.length,
-          first_item_keys: items[0] ? Object.keys(items[0]) : [],
-          first_item_sample: items[0] ? {
-            create_time: items[0].create_time,
-            createTime:  items[0].createTime,
-            id: items[0].id || items[0].video_id || items[0].aweme_id,
-          } : null,
+          root_keys: Object.keys(data),
+          raw_preview: JSON.stringify(data).substring(0, 800),
         }, null, 2);
       }
 
