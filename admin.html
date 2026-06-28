@@ -508,12 +508,14 @@ textarea.fi{min-height:5rem;line-height:1.55}
 /* ── NOTIF ADMIN SECTION ── */
 .ym-notif-preview-wrap{margin-top:.85rem;overflow:hidden;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;min-height:80px;justify-content:center}
 [data-theme="dark"] .ym-notif-preview-wrap{background:rgba(232,226,217,.02)}
-.ym-notif-preview-bar{display:flex;align-items:center;gap:.65rem;background:rgba(245,240,234,.88);border:1px solid rgba(201,169,110,.45);border-top:none;border-radius:0 0 14px 14px;box-shadow:0 6px 24px rgba(10,8,18,.1),0 2px 0 rgba(201,169,110,.25) inset;padding:.6rem 1rem .6rem 1.35rem;max-width:540px;width:100%;opacity:.35;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.34,1.28,.64,1);transform:translateY(-12px)}
-[data-theme="dark"] .ym-notif-preview-bar{background:rgba(26,23,20,.88);border-color:rgba(212,169,110,.35)}
+.ym-notif-preview-bar{display:flex;align-items:center;gap:.65rem;background:rgba(245,240,234,.92);border:1px solid rgba(201,169,110,.45);border-radius:14px;box-shadow:0 12px 32px rgba(10,8,18,.1);padding:.6rem 1rem .6rem 1.35rem;max-width:540px;width:100%;opacity:.35;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.34,1.28,.64,1);transform:translateY(-8px)}
+[data-theme="dark"] .ym-notif-preview-bar{background:rgba(26,23,20,.92);border-color:rgba(212,169,110,.35)}
 .ym-notif-preview-bar.pv-active{opacity:1;transform:translateY(0)}
 .ym-notif-preview-deco{flex-shrink:0;font-size:.9rem;color:var(--gold);line-height:1;user-select:none}
 .ym-notif-preview-text{flex:1;font-family:var(--serif,'Cormorant Garamond',Georgia,serif);font-size:.88rem;font-style:italic;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1.4}
-[data-theme="dark"] .ym-notif-preview-text{color:var(--ink)}
+.ym-notif-preview-text a,.ym-notif-preview-text .ym-notif-link{color:var(--gold);font-weight:600;font-style:normal;text-decoration:underline;text-decoration-color:rgba(201,169,110,.45);text-underline-offset:2px}
+.ym-notif-preview-text a:hover{color:var(--accent);text-decoration-color:currentColor}
+[data-theme="dark"] .ym-notif-preview-text a,[data-theme="dark"] .ym-notif-preview-text .ym-notif-link{color:var(--gold2,#e8c98a)}
 .ym-notif-preview-close{flex-shrink:0;background:none;border:1px solid rgba(201,169,110,.35);color:var(--ash);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;pointer-events:none}
 .ym-notif-toggle-row{display:flex;align-items:center;gap:.85rem}
 .ym-notif-toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer}
@@ -1281,11 +1283,24 @@ Paragraf dipisah dengan enter 2x.
 
           <div class="fg" style="margin-bottom:1rem">
             <label class="fl" for="notif-text">Teks Notifikasi</label>
-            <textarea class="fi" id="notif-text" rows="3" maxlength="200"
-              placeholder="Cth: Update baru! Cek lagu-lagu terbaru kami ✦"
+            <p class="form-card-hint" style="margin:0 0 .5rem">Link klikable: <code style="font-size:.68rem">[teks](https://url.com)</code> — contoh: Cek <code style="font-size:.68rem">[lagu baru](https://yumelyrics.my.id)</code></p>
+            <div class="dc-link-form" id="notif-link-form">
+              <div style="font-size:.62rem;color:var(--muted);margin-bottom:.15rem">Sisipkan link ke teks notifikasi</div>
+              <input class="fi" id="notif-link-text" placeholder="Teks yang tampil" style="padding:.5rem .7rem!important;font-size:.82rem!important">
+              <input class="fi" id="notif-link-url" placeholder="https://yumelyrics.my.id/..." style="padding:.5rem .7rem!important;font-size:.82rem!important">
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <button type="button" class="bsave" onclick="notifInsertLink()" style="padding:.5rem 1rem;font-size:.6rem;min-height:0;flex:none">Sisipkan</button>
+                <button type="button" class="bcancel" onclick="toggleDcLinkForm('notif')" style="padding:.5rem .75rem;font-size:.6rem;min-height:0">✕</button>
+              </div>
+            </div>
+            <textarea class="fi" id="notif-text" rows="3" maxlength="280"
+              placeholder="Cth: Update baru! Cek [lagu terbaru](https://yumelyrics.my.id) ✦"
               oninput="notifSync();document.getElementById('notif-chr').textContent=this.value.length"
               style="resize:vertical;min-height:76px;font-family:var(--serif);font-style:italic;font-size:.95rem"></textarea>
-            <div class="ym-notif-char"><span id="notif-chr">0</span>/200 karakter</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.35rem;flex-wrap:wrap">
+              <button type="button" class="bcancel" onclick="toggleDcLinkForm('notif')" style="padding:.35rem .7rem;font-size:.58rem;min-height:0">🔗 Sisipkan Link</button>
+              <div class="ym-notif-char"><span id="notif-chr">0</span>/280 karakter</div>
+            </div>
           </div>
 
           <div class="fg" style="margin-bottom:1.25rem">
@@ -1314,14 +1329,14 @@ Paragraf dipisah dengan enter 2x.
               <span class="ym-notif-preview-text" id="notif-pv-txt">Teks notifikasi akan tampil di sini…</span>
               <span class="ym-notif-preview-close">✕</span>
             </div>
-            <span style="font-size:.6rem;color:var(--ash);font-style:italic;text-align:center">↑ Slide dari atas halaman lagu, bisa ditutup pengunjung</span>
+            <span style="font-size:.6rem;color:var(--ash);font-style:italic;text-align:center">↑ Mengambang di atas halaman — muncul lagi setiap refresh, tetap tampil saat popup Discord</span>
           </div>
 
           <div class="ym-notif-info" style="margin-top:1rem;border:none;background:transparent;padding:0">
             <strong style="color:var(--ink);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase">Cara kerja</strong><br>
             Admin menyimpan ke Firestore <code style="font-size:.7rem;background:rgba(10,8,18,.06);padding:.05rem .3rem;border-radius:3px">settings/notification</code> — sama seperti katalog lagu, tanpa GitHub Token.
             Tiap halaman lagu membaca dokumen itu secara async setelah halaman selesai render — skor Lighthouse tidak berubah.
-            Perubahan langsung aktif, tanpa generate ulang HTML. Pengunjung yang sudah menutup banner tidak akan melihatnya lagi di sesi yang sama.
+            Perubahan langsung aktif, tanpa generate ulang HTML. Pengunjung yang menutup banner hanya menyembunyikannya di kunjungan itu — muncul lagi saat halaman di-refresh.
           </div>
         </div>
       </div>
@@ -3611,6 +3626,29 @@ window.triggerWorkflow = async (type, mode = 'incremental') => {
 const NOTIF_DOC = doc(db, 'settings', 'notification');
 let _notifSaving = false;
 
+function notifHasLink(raw) {
+  return /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/.test(String(raw || ''));
+}
+
+function notifRenderText(raw) {
+  const s = String(raw || '');
+  if (!s) return '';
+  let out = '';
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(s)) !== null) {
+    out += escHtml(s.slice(last, m.index));
+    const href = sanitizeUrl(m[2]);
+    out += href !== '#'
+      ? `<a href="${escHtml(href)}" target="_blank" rel="noopener noreferrer">${escHtml(m[1])}</a>`
+      : escHtml(m[0]);
+    last = re.lastIndex;
+  }
+  out += escHtml(s.slice(last));
+  return out;
+}
+
 function notifSetBusy(busy) {
   const saveBtn = document.getElementById('notif-save-btn');
   const reloadBtn = document.getElementById('notif-reload-btn');
@@ -3638,7 +3676,8 @@ function notifApplyData(data) {
 }
 
 window.notifSync = function() {
-  const txt = (document.getElementById('notif-text').value || '').trim();
+  const raw = document.getElementById('notif-text').value || '';
+  const txt = raw.trim();
   const active = document.getElementById('notif-active').checked;
   const durEl = document.getElementById('notif-duration');
   const durLbl = document.getElementById('notif-duration-lbl');
@@ -3646,11 +3685,36 @@ window.notifSync = function() {
   const pvTxt = document.getElementById('notif-pv-txt');
   const dot = document.getElementById('notif-dot');
   const lbl = document.getElementById('notif-lbl');
-  if (pvTxt) pvTxt.textContent = txt || 'Teks notifikasi akan tampil di sini…';
+  if (pvTxt) {
+    pvTxt.innerHTML = txt ? notifRenderText(txt) : 'Teks notifikasi akan tampil di sini…';
+    pvTxt.classList.toggle('ym-has-link', notifHasLink(txt));
+  }
   if (pv) pv.classList.toggle('pv-active', active && !!txt);
   if (dot) dot.classList.toggle('on', active);
   if (lbl) lbl.textContent = active ? 'Aktif' : 'Nonaktif';
   if (durLbl && durEl) durLbl.textContent = notifDurationLabel(durEl.value);
+};
+
+window.notifInsertLink = function() {
+  const textEl = document.getElementById('notif-link-text');
+  const urlEl = document.getElementById('notif-link-url');
+  const taEl = document.getElementById('notif-text');
+  if (!textEl || !urlEl || !taEl) return;
+  const text = textEl.value.trim();
+  const url = urlEl.value.trim();
+  if (!text) { toast('Isi teks link dulu!'); textEl.focus(); return; }
+  if (!url || sanitizeUrl(url) === '#') { toast('URL harus valid (http/https).'); urlEl.focus(); return; }
+  const link = `[${text}](${sanitizeUrl(url)})`;
+  const start = taEl.selectionStart;
+  const end = taEl.selectionEnd;
+  taEl.value = taEl.value.slice(0, start) + link + taEl.value.slice(end);
+  taEl.focus();
+  taEl.setSelectionRange(start + link.length, start + link.length);
+  document.getElementById('notif-chr').textContent = String(taEl.value.length);
+  textEl.value = '';
+  urlEl.value = '';
+  notifSync();
+  toast('Link berhasil disisipkan!');
 };
 
 window.notifLoad = async function() {

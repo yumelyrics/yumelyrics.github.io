@@ -485,17 +485,18 @@ body.discord-popup-lock{overflow:hidden}
 `;
 
 const NOTIF_BAR_CSS = `
-/* ── YM NOTIFICATION BANNER ── */
+/* ── YM NOTIFICATION BANNER (floating) ── */
 #ym-notif{
-  position:fixed;top:0;left:50%;
-  transform:translateX(-50%) translateY(-120%);
-  z-index:9998;
-  background:rgba(245,240,234,.88);
+  position:fixed;
+  top:max(1rem,env(safe-area-inset-top,0px));
+  left:50%;
+  transform:translateX(-50%) translateY(calc(-130% - 1rem));
+  z-index:10001;
+  background:rgba(245,240,234,.92);
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:1px solid rgba(201,169,110,.45);
-  border-top:none;
-  border-radius:0 0 16px 16px;
-  box-shadow:0 8px 32px rgba(10,8,18,.12),0 2px 0 rgba(201,169,110,.3) inset;
+  border-radius:14px;
+  box-shadow:0 12px 40px rgba(10,8,18,.14),0 4px 16px rgba(10,8,18,.08);
   padding:.65rem 1.1rem .65rem 1.5rem;
   display:flex;align-items:center;gap:.75rem;
   max-width:min(94vw,620px);min-width:260px;
@@ -503,9 +504,9 @@ const NOTIF_BAR_CSS = `
   will-change:transform,opacity;
 }
 [data-theme="dark"] #ym-notif{
-  background:rgba(26,23,20,.88);
+  background:rgba(26,23,20,.92);
   border-color:rgba(212,169,110,.35);
-  box-shadow:0 8px 32px rgba(0,0,0,.35),0 2px 0 rgba(212,169,110,.2) inset;
+  box-shadow:0 12px 40px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
 }
 #ym-notif.ym-in{
   pointer-events:auto;
@@ -516,13 +517,13 @@ const NOTIF_BAR_CSS = `
   animation:ymNotifOut .38s cubic-bezier(.4,0,.6,1) forwards;
 }
 @keyframes ymNotifIn{
-  from{transform:translateX(-50%) translateY(-120%);opacity:0}
+  from{transform:translateX(-50%) translateY(calc(-130% - 1rem));opacity:0}
   60%{opacity:1}
   to{transform:translateX(-50%) translateY(0);opacity:1}
 }
 @keyframes ymNotifOut{
   from{transform:translateX(-50%) translateY(0);opacity:1}
-  to{transform:translateX(-50%) translateY(-120%);opacity:0}
+  to{transform:translateX(-50%) translateY(calc(-130% - 1rem));opacity:0}
 }
 #ym-notif-deco{
   flex-shrink:0;font-family:var(--jp);font-size:.95rem;
@@ -535,7 +536,22 @@ const NOTIF_BAR_CSS = `
   font-size:.9rem;font-style:italic;font-weight:400;
   color:var(--ink,#0a0812);line-height:1.45;letter-spacing:.02em;min-width:0;
 }
+#ym-notif-text a{
+  color:var(--gold,#c9a96e);
+  font-weight:600;
+  font-style:normal;
+  text-decoration:underline;
+  text-decoration-color:rgba(201,169,110,.45);
+  text-underline-offset:2px;
+  transition:color .2s,text-decoration-color .2s;
+}
+#ym-notif-text a:hover{
+  color:#a8843a;
+  text-decoration-color:currentColor;
+}
 [data-theme="dark"] #ym-notif-text{color:var(--ink,#e8e2d9)}
+[data-theme="dark"] #ym-notif-text a{color:var(--gold2,#e8c98a)}
+[data-theme="dark"] #ym-notif-text a:hover{color:#f0d9a8}
 #ym-notif-close{
   flex-shrink:0;background:none;
   border:1px solid rgba(201,169,110,.35);
@@ -558,7 +574,11 @@ const NOTIF_BAR_CSS = `
   #ym-notif.ym-out{display:none!important}
 }
 @media(max-width:600px){
-  #ym-notif{max-width:calc(100vw - 2rem);min-width:0;padding:.55rem .85rem .55rem 1.1rem;gap:.55rem;border-radius:0 0 12px 12px}
+  #ym-notif{
+    top:max(.75rem,env(safe-area-inset-top,0px));
+    max-width:calc(100vw - 1.5rem);min-width:0;
+    padding:.55rem .85rem .55rem 1.1rem;gap:.55rem;border-radius:12px;
+  }
   #ym-notif-text{font-size:.82rem}
   #ym-notif-deco{font-size:.85rem}
 }
@@ -698,24 +718,49 @@ function buildNotifBar() {
 </div>
 <script>
 (function(){
-  var SK='ym_notif_v1';
   var bar=document.getElementById('ym-notif');
   var txt=document.getElementById('ym-notif-text');
   var cls=document.getElementById('ym-notif-close');
   var autoTimer=null;
   if(!bar||!txt||!cls)return;
+  function esc(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function safeUrl(u){
+    try{
+      var p=new URL(String(u||'').trim());
+      if(p.protocol!=='http:'&&p.protocol!=='https:')return '';
+      return p.href;
+    }catch(e){return '';}
+  }
+  function renderText(raw){
+    if(!raw)return '';
+    var out='',re=/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)\\s]+)\\)/g,last=0,m;
+    while((m=re.exec(raw))!==null){
+      out+=esc(raw.slice(last,m.index));
+      var href=safeUrl(m[2]);
+      out+=href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(m[1])+'</a>':esc(m[0]);
+      last=re.lastIndex;
+    }
+    out+=esc(raw.slice(last));
+    return out;
+  }
+  function hasLink(raw){
+    return /\\[([^\\]]+)\\]\\((https?:\\/\\/[^)\\s]+)\\)/.test(raw||'');
+  }
   function dismiss(){
     if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
     bar.classList.remove('ym-in');
     bar.classList.add('ym-out');
-    sessionStorage.setItem(SK,'1');
     bar.addEventListener('animationend',function h(){
       bar.hidden=true;bar.removeEventListener('animationend',h);
     },{once:true});
   }
   function show(text,durationSec){
-    txt.textContent=text;
+    txt.innerHTML=renderText(text);
+    bar.classList.toggle('ym-has-link',hasLink(text));
     bar.hidden=false;
+    bar.classList.remove('ym-out');
     requestAnimationFrame(function(){requestAnimationFrame(function(){bar.classList.add('ym-in');});});
     if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
     var dur=parseInt(durationSec,10);
@@ -724,7 +769,6 @@ function buildNotifBar() {
     }
   }
   function init(){
-    if(sessionStorage.getItem(SK))return;
     (window.requestIdleCallback||function(cb){setTimeout(cb,200)})(async function(){
       try{
         var fb=await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js');
