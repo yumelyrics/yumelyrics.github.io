@@ -484,6 +484,86 @@ body.discord-popup-lock{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.discord-popup-card{animation:none}}
 `;
 
+const NOTIF_BAR_CSS = `
+/* ── YM NOTIFICATION BANNER ── */
+#ym-notif{
+  position:fixed;top:0;left:50%;
+  transform:translateX(-50%) translateY(-120%);
+  z-index:9998;
+  background:rgba(245,240,234,.88);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(201,169,110,.45);
+  border-top:none;
+  border-radius:0 0 16px 16px;
+  box-shadow:0 8px 32px rgba(10,8,18,.12),0 2px 0 rgba(201,169,110,.3) inset;
+  padding:.65rem 1.1rem .65rem 1.5rem;
+  display:flex;align-items:center;gap:.75rem;
+  max-width:min(94vw,620px);min-width:260px;
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+[data-theme="dark"] #ym-notif{
+  background:rgba(26,23,20,.88);
+  border-color:rgba(212,169,110,.35);
+  box-shadow:0 8px 32px rgba(0,0,0,.35),0 2px 0 rgba(212,169,110,.2) inset;
+}
+#ym-notif.ym-in{
+  pointer-events:auto;
+  animation:ymNotifIn .55s cubic-bezier(.34,1.28,.64,1) forwards;
+}
+#ym-notif.ym-out{
+  pointer-events:none;
+  animation:ymNotifOut .38s cubic-bezier(.4,0,.6,1) forwards;
+}
+@keyframes ymNotifIn{
+  from{transform:translateX(-50%) translateY(-120%);opacity:0}
+  60%{opacity:1}
+  to{transform:translateX(-50%) translateY(0);opacity:1}
+}
+@keyframes ymNotifOut{
+  from{transform:translateX(-50%) translateY(0);opacity:1}
+  to{transform:translateX(-50%) translateY(-120%);opacity:0}
+}
+#ym-notif-deco{
+  flex-shrink:0;font-family:var(--jp);font-size:.95rem;
+  color:var(--gold,#c9a96e);line-height:1;user-select:none;opacity:.85;
+}
+[data-theme="dark"] #ym-notif-deco{color:var(--gold2,#e8c98a)}
+#ym-notif-text{
+  flex:1;
+  font-family:var(--serif,'Cormorant Garamond',Georgia,serif);
+  font-size:.9rem;font-style:italic;font-weight:400;
+  color:var(--ink,#0a0812);line-height:1.45;letter-spacing:.02em;min-width:0;
+}
+[data-theme="dark"] #ym-notif-text{color:var(--ink,#e8e2d9)}
+#ym-notif-close{
+  flex-shrink:0;background:none;
+  border:1px solid rgba(201,169,110,.35);
+  color:var(--ash,#8c8278);
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;line-height:1;
+  transition:background .2s,border-color .2s,color .2s,transform .15s;
+  padding:0;font-family:sans-serif;
+}
+#ym-notif-close:hover{
+  background:rgba(201,169,110,.12);border-color:rgba(201,169,110,.7);
+  color:var(--ink,#0a0812);transform:scale(1.08) rotate(90deg);
+}
+[data-theme="dark"] #ym-notif-close{border-color:rgba(212,169,110,.3);color:rgba(232,226,217,.55)}
+[data-theme="dark"] #ym-notif-close:hover{color:var(--ink,#e8e2d9);border-color:rgba(212,169,110,.6)}
+@media(prefers-reduced-motion:reduce){
+  #ym-notif.ym-in,#ym-notif.ym-out{animation:none!important}
+  #ym-notif.ym-in{transform:translateX(-50%) translateY(0)!important;opacity:1!important;pointer-events:auto}
+  #ym-notif.ym-out{display:none!important}
+}
+@media(max-width:600px){
+  #ym-notif{max-width:calc(100vw - 2rem);min-width:0;padding:.55rem .85rem .55rem 1.1rem;gap:.55rem;border-radius:0 0 12px 12px}
+  #ym-notif-text{font-size:.82rem}
+  #ym-notif-deco{font-size:.85rem}
+}
+`;
+
 function buildDiscordPopupMarkup() {
   const popupImg = escHtml(DISCORD_POPUP_IMAGE_OPT);
   const popupFallback = escHtml(DISCORD_POPUP_IMAGE);
@@ -607,6 +687,53 @@ function buildDiscordPopupMarkup() {
   else window.addEventListener('load',runInit,{once:true});
 })();
 </script>`;
+}
+
+function buildNotifBar() {
+  return `
+<div id="ym-notif" role="status" aria-live="polite" aria-atomic="true" hidden>
+  <span id="ym-notif-deco" aria-hidden="true">✦</span>
+  <span id="ym-notif-text"></span>
+  <button id="ym-notif-close" aria-label="Tutup notifikasi" title="Tutup">✕</button>
+</div>
+<script>
+(function(){
+  var SK='ym_notif_v1';
+  var bar=document.getElementById('ym-notif');
+  var txt=document.getElementById('ym-notif-text');
+  var cls=document.getElementById('ym-notif-close');
+  if(!bar||!txt||!cls)return;
+  function dismiss(){
+    bar.classList.remove('ym-in');
+    bar.classList.add('ym-out');
+    sessionStorage.setItem(SK,'1');
+    bar.addEventListener('animationend',function h(){
+      bar.hidden=true;bar.removeEventListener('animationend',h);
+    },{once:true});
+  }
+  function show(text){
+    txt.textContent=text;
+    bar.hidden=false;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){bar.classList.add('ym-in');});});
+  }
+  function init(){
+    if(sessionStorage.getItem(SK))return;
+    var ck=Math.floor(Date.now()/3e5);
+    fetch('../notification.json?v='+ck,{cache:'force-cache',priority:'low'})
+      .then(function(r){return r.ok?r.json():null})
+      .then(function(d){if(d&&d.active&&d.text)setTimeout(function(){show(d.text);},900);})
+      .catch(function(){});
+  }
+  cls.addEventListener('click',dismiss);
+  if(document.readyState==='complete'){
+    (window.requestIdleCallback||function(cb){setTimeout(cb,200)})(init);
+  } else {
+    window.addEventListener('load',function(){
+      (window.requestIdleCallback||function(cb){setTimeout(cb,200)})(init);
+    },{once:true});
+  }
+})();
+<\/script>`;
 }
 
 function renderText(str) {
@@ -1879,6 +2006,7 @@ body.mode-quiz .ll-item:hover,body.mode-karaoke .ll-item:hover{background:rgba(2
 .card-duo{display:flex;flex-direction:row;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
 .card-duo .nico-card{flex:1;min-width:200px;max-width:100%;margin-top:0}
 ${DISCORD_POPUP_CSS}
+${NOTIF_BAR_CSS}
 
 /* ── ONLINE COUNTER ── */
 /* ── ONLINE COUNTER ── */
@@ -3518,6 +3646,7 @@ function _scheduleHeavy(){
 })();
 </script>
 ${buildDiscordPopupMarkup()}
+${buildNotifBar()}
 <!-- yume-gen:${dateModified} -->
 </body>
 </html>`);

@@ -504,6 +504,30 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .dc-check{display:flex;align-items:center;gap:.55rem;font-size:.78rem;color:var(--ash);cursor:pointer;user-select:none}
 .dc-check input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
 .dc-char{font-size:.58rem;color:var(--muted);text-align:right;margin-top:.25rem}
+
+/* ── NOTIF ADMIN SECTION ── */
+.ym-notif-preview-wrap{margin-top:.85rem;overflow:hidden;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;min-height:80px;justify-content:center}
+[data-theme="dark"] .ym-notif-preview-wrap{background:rgba(232,226,217,.02)}
+.ym-notif-preview-bar{display:flex;align-items:center;gap:.65rem;background:rgba(245,240,234,.88);border:1px solid rgba(201,169,110,.45);border-top:none;border-radius:0 0 14px 14px;box-shadow:0 6px 24px rgba(10,8,18,.1),0 2px 0 rgba(201,169,110,.25) inset;padding:.6rem 1rem .6rem 1.35rem;max-width:540px;width:100%;opacity:.35;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.34,1.28,.64,1);transform:translateY(-12px)}
+[data-theme="dark"] .ym-notif-preview-bar{background:rgba(26,23,20,.88);border-color:rgba(212,169,110,.35)}
+.ym-notif-preview-bar.pv-active{opacity:1;transform:translateY(0)}
+.ym-notif-preview-deco{flex-shrink:0;font-size:.9rem;color:var(--gold);line-height:1;user-select:none}
+.ym-notif-preview-text{flex:1;font-family:var(--serif,'Cormorant Garamond',Georgia,serif);font-size:.88rem;font-style:italic;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1.4}
+[data-theme="dark"] .ym-notif-preview-text{color:var(--ink)}
+.ym-notif-preview-close{flex-shrink:0;background:none;border:1px solid rgba(201,169,110,.35);color:var(--ash);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;pointer-events:none}
+.ym-notif-toggle-row{display:flex;align-items:center;gap:.85rem}
+.ym-notif-toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer}
+.ym-notif-toggle input{opacity:0;width:0;height:0;position:absolute}
+.ym-notif-slider{position:absolute;inset:0;background:var(--smoke);border-radius:24px;transition:background .25s}
+.ym-notif-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;left:3px;top:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(10,8,18,.2)}
+.ym-notif-toggle input:checked ~ .ym-notif-slider{background:#4caf7d}
+.ym-notif-toggle input:checked ~ .ym-notif-slider::before{transform:translateX(20px)}
+.ym-notif-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--smoke);transition:background .25s;vertical-align:middle;margin-right:.25rem}
+.ym-notif-dot.on{background:#4caf7d}
+.ym-notif-char{font-size:.58rem;color:var(--ash);text-align:right;margin-top:.25rem}
+.ym-notif-status{font-size:.72rem;min-height:1.1rem;margin-top:.5rem;font-style:italic;line-height:1.4}
+.ym-notif-status.ok{color:#4caf7d}
+.ym-notif-status.err{color:var(--red)}
 </style>
 <script>
 // Kuroshiro dimuat secara dinamis saat pertama kali dibutuhkan
@@ -608,6 +632,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <button class="adm-tab" id="tab-rules" onclick="switchTab('rules')">📜 Rules</button>
     <button class="adm-tab" id="tab-announcements" onclick="switchTab('announcements')">📣 Announcements</button>
     <button class="adm-tab" id="tab-webhook" onclick="switchTab('webhook')">💬 Chat Webhook</button>
+    <button class="adm-tab" id="tab-notif" onclick="switchTab('notif');notifLoad()">🔔 Notifikasi</button>
   </div>
 
   <div id="sec-katalog" class="adm-section on">
@@ -1210,6 +1235,71 @@ Paragraf dipisah dengan enter 2x.
     </div>
     </div><!-- end sec-webhook -->
 
+    <div id="sec-notif" class="adm-section">
+      <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="page-header-deco">通知</div>
+          <h2 class="admtit">Notifikasi Website</h2>
+          <p class="admsub">Banner pop-up di setiap halaman lagu. Aktif dalam ~1–2 menit setelah disimpan, tanpa perlu generate ulang HTML.</p>
+        </div>
+      </div>
+
+      <div class="form-card" style="max-width:640px">
+        <div class="form-card-title">Pengaturan Banner</div>
+
+        <div class="fg" style="margin-bottom:1.25rem">
+          <span class="fl">Status</span>
+          <div class="ym-notif-toggle-row">
+            <label class="ym-notif-toggle">
+              <input type="checkbox" id="notif-active" onchange="notifSync()">
+              <span class="ym-notif-slider"></span>
+            </label>
+            <span style="font-size:.82rem;color:var(--ink)">
+              <span class="ym-notif-dot" id="notif-dot"></span>
+              <span id="notif-lbl">Nonaktif</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-bottom:1rem">
+          <label class="fl" for="notif-text">Teks Notifikasi</label>
+          <textarea class="fi" id="notif-text" rows="3" maxlength="200"
+            placeholder="Cth: Update baru! Cek lagu-lagu terbaru kami ✦"
+            oninput="notifSync();document.getElementById('notif-chr').textContent=this.value.length"
+            style="resize:vertical;min-height:76px;font-family:var(--serif);font-style:italic;font-size:.95rem"></textarea>
+          <div class="ym-notif-char"><span id="notif-chr">0</span>/200 karakter</div>
+        </div>
+
+        <div class="fg" style="margin-bottom:1.5rem">
+          <span class="fl">Preview Banner</span>
+          <div class="ym-notif-preview-wrap">
+            <div class="ym-notif-preview-bar" id="notif-pv">
+              <span class="ym-notif-preview-deco" aria-hidden="true">✦</span>
+              <span class="ym-notif-preview-text" id="notif-pv-txt">Teks notifikasi akan tampil di sini…</span>
+              <span class="ym-notif-preview-close">✕</span>
+            </div>
+            <span style="font-size:.6rem;color:var(--ash);font-style:italic">↑ Slide dari atas halaman lagu, bisa ditutup pengunjung</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+          <button class="bsave" id="notif-save-btn" onclick="notifSave()" style="flex:1;min-width:140px" disabled>
+            💾 Simpan ke Repo
+          </button>
+          <button class="bcancel" onclick="notifLoad()" style="white-space:nowrap">↺ Muat Ulang</button>
+        </div>
+        <div class="ym-notif-status" id="notif-status"></div>
+      </div>
+
+      <div style="max-width:640px;margin-top:.85rem;padding:.85rem 1.1rem;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;font-size:.7rem;color:var(--ash);line-height:1.75">
+        <strong style="color:var(--ink);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase">Cara kerja</strong><br>
+        Admin menyimpan ke <code style="font-size:.7rem;background:rgba(10,8,18,.06);padding:.05rem .3rem;border-radius:3px">notification.json</code> di root repo via GitHub API.
+        Tiap halaman lagu mengambil file itu secara async (<code style="font-size:.7rem;background:rgba(10,8,18,.06);padding:.05rem .3rem;border-radius:3px">requestIdleCallback</code> setelah halaman selesai render) — skor Lighthouse tidak berubah sama sekali.
+        Pengunjung yang sudah menutup banner tidak akan melihatnya lagi di sesi yang sama.<br><br>
+        <strong style="color:var(--ink)">⚠</strong> GitHub Token harus sudah di-set di bagian <em>🔑 API Keys & Tokens</em> di atas agar tombol Simpan aktif.
+      </div>
+    </div><!-- end sec-notif -->
+
 <div class="toast" id="toast-ui"></div>
 
 
@@ -1592,7 +1682,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 window.switchTab = (tab) => {
-  ['katalog','cerita','resources','rules','announcements','webhook'].forEach(t=>{
+  ['katalog','cerita','resources','rules','announcements','webhook','notif'].forEach(t=>{
     document.getElementById('sec-'+t).classList.toggle('on', t===tab);
     document.getElementById('tab-'+t).classList.toggle('on', t===tab);
   });
@@ -3903,6 +3993,118 @@ function geniusFetchLyrics(url, fullTitle){
     if(res) res.innerHTML = '<div style="font-size:.78rem;color:var(--red)">Gagal ambil lirik: ' + _escH(e.message) + '</div>';
   });
 }
+
+// ── NOTIFICATION ADMIN ────────────────────────────────────────────────────
+var _notifSha = null;
+
+window.notifSync = function() {
+  var txt    = (document.getElementById('notif-text').value || '').trim();
+  var active = document.getElementById('notif-active').checked;
+  var pv     = document.getElementById('notif-pv');
+  var pvTxt  = document.getElementById('notif-pv-txt');
+  var dot    = document.getElementById('notif-dot');
+  var lbl    = document.getElementById('notif-lbl');
+  var btn    = document.getElementById('notif-save-btn');
+  if (pvTxt) pvTxt.textContent = txt || 'Teks notifikasi akan tampil di sini…';
+  if (pv)    pv.classList.toggle('pv-active', active && !!txt);
+  if (dot)   dot.classList.toggle('on', active);
+  if (lbl)   lbl.textContent = active ? 'Aktif' : 'Nonaktif';
+  if (btn)   btn.disabled = !ghTokenGet();
+};
+
+window.notifLoad = async function() {
+  var st  = document.getElementById('notif-status');
+  var btn = document.getElementById('notif-save-btn');
+  if (st) { st.textContent = '⏳ Memuat data dari repo…'; st.className = 'ym-notif-status'; }
+  var token = ghTokenGet();
+  if (!token) {
+    if (st) { st.textContent = '⚠ Set GitHub Token dulu di bagian 🔑 API Keys & Tokens.'; st.className = 'ym-notif-status err'; }
+    return;
+  }
+  try {
+    var res = await fetch(
+      'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/notification.json',
+      { headers: ghHeaders(token) }
+    );
+    if (res.status === 404) {
+      _notifSha = null;
+      document.getElementById('notif-active').checked = false;
+      document.getElementById('notif-text').value = '';
+      document.getElementById('notif-chr').textContent = '0';
+      notifSync();
+      if (st) { st.textContent = 'ℹ notification.json belum ada di repo — simpan untuk membuatnya.'; st.className = 'ym-notif-status'; }
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var json = await res.json();
+    _notifSha = json.sha;
+    var data = JSON.parse(atob(json.content.replace(/\n/g, '')));
+    document.getElementById('notif-active').checked = !!data.active;
+    document.getElementById('notif-text').value = data.text || '';
+    document.getElementById('notif-chr').textContent = (data.text || '').length;
+    notifSync();
+    if (st) { st.textContent = '✅ Data dimuat. Terakhir diperbarui: ' + (data.updatedAt || '-'); st.className = 'ym-notif-status ok'; }
+  } catch(e) {
+    if (st) { st.textContent = '❌ Gagal muat: ' + e.message; st.className = 'ym-notif-status err'; }
+  }
+};
+
+window.notifSave = async function() {
+  var token = ghTokenGet();
+  if (!token) { toast('Set GitHub Token dulu!'); return; }
+  var txt    = (document.getElementById('notif-text').value || '').trim();
+  var active = document.getElementById('notif-active').checked;
+  var st     = document.getElementById('notif-status');
+  var btn    = document.getElementById('notif-save-btn');
+  if (active && !txt) {
+    toast('Isi teks notifikasi dulu sebelum mengaktifkan.');
+    document.getElementById('notif-text').focus();
+    return;
+  }
+  if (st) { st.textContent = '⏳ Menyimpan…'; st.className = 'ym-notif-status'; }
+  btn.disabled = true;
+  try {
+    var payload = { active: active, text: txt, updatedAt: new Date().toISOString().split('T')[0] };
+    var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2) + '\n')));
+    var body = {
+      message: active
+        ? 'notif: aktifkan banner — "' + txt.substring(0, 50) + '"'
+        : 'notif: nonaktifkan banner',
+      content: encoded,
+      branch: 'main'
+    };
+    if (_notifSha) body.sha = _notifSha;
+    var res = await fetch(
+      'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/notification.json',
+      {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders(token)),
+        body: JSON.stringify(body)
+      }
+    );
+    if (!res.ok) {
+      var err = 'HTTP ' + res.status;
+      try { var ej = await res.json(); if (ej.message) err = ej.message; } catch(_) {}
+      throw new Error(err);
+    }
+    var rj = await res.json();
+    _notifSha = rj.content.sha;
+    if (st) {
+      st.textContent = active
+        ? '✅ Tersimpan! Banner aktif di semua halaman lagu dalam ~1–2 menit.'
+        : '✅ Tersimpan! Banner dinonaktifkan.';
+      st.className = 'ym-notif-status ok';
+    }
+    toast(active ? '✅ Notifikasi diaktifkan!' : '✅ Notifikasi dinonaktifkan!');
+  } catch(e) {
+    if (st) { st.textContent = '❌ Gagal simpan: ' + e.message; st.className = 'ym-notif-status err'; }
+    toast('Gagal: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+};
+// ── END NOTIFICATION ADMIN ────────────────────────────────────────────────
 </script>
 </body>
 </html>
