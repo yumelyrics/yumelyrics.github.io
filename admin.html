@@ -533,8 +533,10 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .ym-notif-layout .form-card{margin-bottom:0;width:100%;max-width:none;box-sizing:border-box}
 .ym-notif-info{font-size:.7rem;color:var(--ash);line-height:1.75;padding:.85rem 1.1rem;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;width:100%;max-width:none;box-sizing:border-box}
 [data-theme="dark"] .ym-notif-info{background:rgba(232,226,217,.02)}
-.ym-notif-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:stretch;width:100%}
-.ym-notif-actions .bsave,.ym-notif-actions .bcancel{flex:1 1 200px;min-height:44px;justify-content:center}
+.ym-notif-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:stretch;width:100%;position:relative;z-index:3;pointer-events:auto}
+.ym-notif-actions .bsave,.ym-notif-actions .bcancel{flex:1 1 200px;min-height:44px;justify-content:center;pointer-events:auto;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.ym-notif-actions .bsave.no-token{opacity:.55}
+.ym-notif-actions .bsave.is-busy,.ym-notif-actions .bcancel.is-busy{opacity:.7;cursor:wait}
 .ym-notif-duration-row{display:flex;align-items:center;gap:1rem;margin-top:.35rem}
 .ym-notif-duration-row input[type=range]{flex:1;min-width:0;accent-color:var(--gold);height:6px;cursor:pointer}
 .ym-notif-duration-val{flex-shrink:0;font-size:.82rem;color:var(--ink);min-width:5.5rem;text-align:right;font-variant-numeric:tabular-nums}
@@ -648,7 +650,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <button class="adm-tab" id="tab-rules" onclick="switchTab('rules')">📜 Rules</button>
     <button class="adm-tab" id="tab-announcements" onclick="switchTab('announcements')">📣 Announcements</button>
     <button class="adm-tab" id="tab-webhook" onclick="switchTab('webhook')">💬 Chat Webhook</button>
-    <button class="adm-tab" id="tab-notif" onclick="switchTab('notif');notifLoad()">🔔 Notifikasi</button>
+    <button class="adm-tab" id="tab-notif" onclick="switchTab('notif')">🔔 Notifikasi</button>
   </div>
 
   <div id="sec-katalog" class="adm-section on">
@@ -1297,10 +1299,10 @@ Paragraf dipisah dengan enter 2x.
           </div>
 
           <div class="ym-notif-actions">
-            <button type="button" class="bsave" id="notif-save-btn" onclick="notifSave()">
+            <button type="button" class="bsave" id="notif-save-btn">
               💾 Simpan ke Repo
             </button>
-            <button type="button" class="bcancel" id="notif-reload-btn" onclick="notifLoad()">↺ Muat Ulang</button>
+            <button type="button" class="bcancel" id="notif-reload-btn">↺ Muat Ulang</button>
           </div>
           <div class="ym-notif-status" id="notif-status"></div>
         </div>
@@ -1713,6 +1715,9 @@ window.switchTab = (tab) => {
     document.getElementById('sec-'+t).classList.toggle('on', t===tab);
     document.getElementById('tab-'+t).classList.toggle('on', t===tab);
   });
+  var stickyBar = document.querySelector('#sec-katalog .sticky-form-bar');
+  if (stickyBar) stickyBar.style.display = tab === 'katalog' ? '' : 'none';
+  if (tab === 'notif' && typeof window.notifLoad === 'function') window.notifLoad();
 };
 
 window.doLogin = async () => {
@@ -4025,6 +4030,7 @@ function geniusFetchLyrics(url, fullTitle){
 // ── NOTIFICATION ADMIN ────────────────────────────────────────────────────
 var _notifSha = null;
 var _notifLoadGen = 0;
+var _notifSaving = false;
 
 function notifFetch(url, opts, timeoutMs) {
   timeoutMs = timeoutMs || 15000;
@@ -4032,6 +4038,13 @@ function notifFetch(url, opts, timeoutMs) {
   var timer = setTimeout(function(){ ctrl.abort(); }, timeoutMs);
   return fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal }))
     .finally(function(){ clearTimeout(timer); });
+}
+
+function notifSetBusy(busy) {
+  var saveBtn = document.getElementById('notif-save-btn');
+  var reloadBtn = document.getElementById('notif-reload-btn');
+  if (saveBtn) saveBtn.classList.toggle('is-busy', !!busy);
+  if (reloadBtn) reloadBtn.classList.toggle('is-busy', !!busy);
 }
 
 function notifApplyData(data) {
@@ -4070,11 +4083,28 @@ window.notifSync = function() {
   if (durLbl && durEl) durLbl.textContent = notifDurationLabel(durEl.value);
   if (btn) {
     var hasToken = !!ghTokenGet();
-    btn.disabled = false;
-    btn.style.opacity = hasToken ? '1' : '.55';
+    btn.classList.toggle('no-token', !hasToken);
     btn.title = hasToken ? '' : 'Set GitHub Token di bagian API Keys & Tokens';
   }
 };
+
+async function notifFetchPublicJson() {
+  var urls = [
+    '/notification.json?v=' + Date.now(),
+    'https://yumelyrics.my.id/notification.json?v=' + Date.now()
+  ];
+  var lastErr = null;
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      var res = await notifFetch(urls[i], { cache: 'no-store' }, 8000);
+      if (res.ok) return await res.json();
+      lastErr = 'HTTP ' + res.status;
+    } catch (e) {
+      lastErr = e.name === 'AbortError' ? 'timeout' : e.message;
+    }
+  }
+  throw new Error(lastErr || 'gagal muat notification.json');
+}
 
 async function notifFetchSha(token) {
   var res = await notifFetch(
@@ -4094,88 +4124,82 @@ async function notifFetchSha(token) {
 
 window.notifLoad = async function() {
   var st  = document.getElementById('notif-status');
-  var reloadBtn = document.getElementById('notif-reload-btn');
-  var saveBtn = document.getElementById('notif-save-btn');
   var gen = ++_notifLoadGen;
+  notifSetBusy(true);
   if (st) { st.textContent = '⏳ Memuat data…'; st.className = 'ym-notif-status'; }
-  if (reloadBtn) reloadBtn.disabled = true;
-  if (saveBtn) saveBtn.disabled = true;
-
-  var publicData = null;
-  var publicErr = null;
 
   try {
-    var pubRes = await notifFetch('/notification.json?v=' + Date.now(), { cache: 'no-store' }, 10000);
-    if (pubRes.ok) publicData = await pubRes.json();
-    else publicErr = 'HTTP ' + pubRes.status;
-  } catch (e) {
-    publicErr = e.name === 'AbortError' ? 'timeout' : e.message;
-  }
-
-  if (gen !== _notifLoadGen) return;
-
-  if (publicData) {
-    notifApplyData(publicData);
-    if (st) {
-      st.textContent = '✅ Data dimuat dari website. Terakhir diperbarui: ' + (publicData.updatedAt || '-');
-      st.className = 'ym-notif-status ok';
+    var publicData = null;
+    try {
+      publicData = await notifFetchPublicJson();
+    } catch (e) {
+      if (gen !== _notifLoadGen) return;
+      if (st) {
+        st.textContent = '⚠ Gagal muat dari website (' + e.message + ').';
+        st.className = 'ym-notif-status err';
+      }
     }
-  } else if (st) {
-    st.textContent = '⚠ Gagal muat dari website' + (publicErr ? ' (' + publicErr + ')' : '') + '.';
-    st.className = 'ym-notif-status err';
-  }
 
-  var token = ghTokenGet();
-  if (!token) {
-    if (st && !publicData) {
-      st.textContent = '⚠ Set GitHub Token dulu di bagian 🔑 API Keys & Tokens.';
-      st.className = 'ym-notif-status err';
-    } else if (st && publicData) {
-      st.textContent += ' Simpan ke repo butuh GitHub Token.';
-    }
-    if (reloadBtn) reloadBtn.disabled = false;
-    notifSync();
-    return;
-  }
-
-  if (st && publicData) {
-    st.textContent = '⏳ Menyinkronkan SHA dari GitHub…';
-    st.className = 'ym-notif-status';
-  }
-
-  try {
-    var gh = await notifFetchSha(token);
     if (gen !== _notifLoadGen) return;
-    if (gh.data) notifApplyData(gh.data);
-    if (st) {
-      if (gh.missing) {
-        st.textContent = 'ℹ notification.json belum ada di repo — simpan untuk membuatnya.';
-        st.className = 'ym-notif-status';
-      } else {
-        st.textContent = '✅ Data dimuat & siap disimpan. Terakhir diperbarui: ' + ((gh.data && gh.data.updatedAt) || '-');
+
+    if (publicData) {
+      notifApplyData(publicData);
+      if (st) {
+        st.textContent = '✅ Data dimuat dari website. Terakhir diperbarui: ' + (publicData.updatedAt || '-');
         st.className = 'ym-notif-status ok';
       }
     }
-  } catch (e) {
-    if (gen !== _notifLoadGen) return;
+
+    var token = ghTokenGet();
+    if (!token) {
+      if (st && publicData) {
+        st.textContent += ' Simpan ke repo butuh GitHub Token.';
+      } else if (st && !publicData) {
+        st.textContent = '⚠ Set GitHub Token dulu di bagian 🔑 API Keys & Tokens.';
+        st.className = 'ym-notif-status err';
+      }
+      return;
+    }
+
     if (st) {
-      if (publicData) {
-        st.textContent = '⚠ Data dari website OK, tapi GitHub timeout/error — simpan mungkin gagal tanpa SHA. (' + e.message + ')';
-        st.className = 'ym-notif-status err';
-      } else {
-        st.textContent = '❌ Gagal muat dari GitHub: ' + e.message;
-        st.className = 'ym-notif-status err';
+      st.textContent = publicData
+        ? '⏳ Menyinkronkan SHA dari GitHub…'
+        : '⏳ Memuat dari GitHub…';
+      st.className = 'ym-notif-status';
+    }
+
+    try {
+      var gh = await notifFetchSha(token);
+      if (gen !== _notifLoadGen) return;
+      if (gh.data) notifApplyData(gh.data);
+      if (st) {
+        if (gh.missing) {
+          st.textContent = 'ℹ notification.json belum ada di repo — simpan untuk membuatnya.';
+          st.className = 'ym-notif-status';
+        } else {
+          st.textContent = '✅ Data dimuat & siap disimpan. Terakhir diperbarui: ' + ((gh.data && gh.data.updatedAt) || '-');
+          st.className = 'ym-notif-status ok';
+        }
+      }
+    } catch (e) {
+      if (gen !== _notifLoadGen) return;
+      if (st) {
+        if (publicData) {
+          st.textContent = '⚠ Data dari website OK, tapi GitHub error — coba Simpan (SHA akan diambil ulang). (' + e.message + ')';
+          st.className = 'ym-notif-status err';
+        } else {
+          st.textContent = '❌ Gagal muat dari GitHub: ' + e.message;
+          st.className = 'ym-notif-status err';
+        }
       }
     }
   } finally {
-    if (gen === _notifLoadGen) {
-      if (reloadBtn) reloadBtn.disabled = false;
-      notifSync();
-    }
+    if (gen === _notifLoadGen) notifSetBusy(false);
   }
 };
 
 window.notifSave = async function() {
+  if (_notifSaving) return;
   var token = ghTokenGet();
   if (!token) { toast('Set GitHub Token dulu di bagian 🔑 API Keys & Tokens!'); return; }
   var txt    = (document.getElementById('notif-text').value || '').trim();
@@ -4184,17 +4208,16 @@ window.notifSave = async function() {
   var durationSec = durEl ? parseInt(durEl.value, 10) : 8;
   if (isNaN(durationSec) || durationSec < 0) durationSec = 0;
   if (durationSec > 120) durationSec = 120;
-  var st     = document.getElementById('notif-status');
-  var btn    = document.getElementById('notif-save-btn');
-  var reloadBtn = document.getElementById('notif-reload-btn');
+  var st = document.getElementById('notif-status');
   if (active && !txt) {
     toast('Isi teks notifikasi dulu sebelum mengaktifkan.');
     document.getElementById('notif-text').focus();
     return;
   }
+
+  _notifSaving = true;
+  notifSetBusy(true);
   if (st) { st.textContent = '⏳ Menyimpan…'; st.className = 'ym-notif-status'; }
-  btn.disabled = true;
-  if (reloadBtn) reloadBtn.disabled = true;
 
   async function doPut() {
     var payload = {
@@ -4243,30 +4266,48 @@ window.notifSave = async function() {
     }
     toast(active ? '✅ Notifikasi diaktifkan!' : '✅ Notifikasi dinonaktifkan!');
   } catch(e) {
-    if ((e.message || '').indexOf('422') !== -1 || (e.message || '').toLowerCase().indexOf('sha') !== -1) {
-      try {
-        await notifFetchSha(token);
-        var rj2 = await doPut();
-        _notifSha = rj2.content.sha;
-        if (st) {
-          st.textContent = active
-            ? '✅ Tersimpan! Banner aktif di semua halaman lagu dalam ~1–2 menit.'
-            : '✅ Tersimpan! Banner dinonaktifkan.';
-          st.className = 'ym-notif-status ok';
-        }
-        toast(active ? '✅ Notifikasi diaktifkan!' : '✅ Notifikasi dinonaktifkan!');
-        return;
-      } catch (e2) {
-        e = e2;
+    try {
+      await notifFetchSha(token);
+      var rj2 = await doPut();
+      _notifSha = rj2.content.sha;
+      if (st) {
+        st.textContent = active
+          ? '✅ Tersimpan! Banner aktif di semua halaman lagu dalam ~1–2 menit.'
+          : '✅ Tersimpan! Banner dinonaktifkan.';
+        st.className = 'ym-notif-status ok';
       }
+      toast(active ? '✅ Notifikasi diaktifkan!' : '✅ Notifikasi dinonaktifkan!');
+      return;
+    } catch (e2) {
+      e = e2;
     }
     if (st) { st.textContent = '❌ Gagal simpan: ' + e.message; st.className = 'ym-notif-status err'; }
     toast('Gagal: ' + e.message);
   } finally {
-    if (reloadBtn) reloadBtn.disabled = false;
-    notifSync();
+    _notifSaving = false;
+    notifSetBusy(false);
   }
 };
+
+(function notifInit(){
+  var saveBtn = document.getElementById('notif-save-btn');
+  var reloadBtn = document.getElementById('notif-reload-btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.notifSave();
+    });
+  }
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.notifLoad();
+    });
+  }
+  notifSync();
+})();
 // ── END NOTIFICATION ADMIN ────────────────────────────────────────────────
 </script>
 </body>
