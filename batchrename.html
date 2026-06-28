@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batch Rename File Online — Ganti Nama Banyak File Sekaligus</title>
+
+<!-- SEO Primary -->
+<meta name="description" content="Rename banyak file sekaligus secara gratis, tanpa install, langsung di browser. Ganti nama file, tambah nomor urut otomatis, dan download hasilnya sebagai ZIP. 100% offline & aman.">
+<meta name="keywords" content="batch rename file, rename file online, ganti nama file massal, rename banyak file, file renamer gratis, rename file tanpa install, batch file rename indonesia">
+<meta name="author" content="Batch File Renamer">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yumelyrics.github.io/batchrename.html">
+
+<!-- Open Graph (WhatsApp, Facebook, Discord preview) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Batch Rename File — Ganti Nama Banyak File Sekaligus">
+<meta property="og:description" content="Rename ratusan file dalam hitungan detik. Tambah nomor urut otomatis, kustomisasi nama, download ZIP. Gratis, tanpa login, 100% offline.">
+<meta property="og:url" content="https://yumelyrics.github.io/batchrename.html">
+<meta property="og:locale" content="id_ID">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Batch Rename File — Ganti Nama Banyak File Sekaligus">
+<meta name="twitter:description" content="Rename ratusan file dalam hitungan detik. Gratis, tanpa login, 100% offline.">
+
+<!-- Schema.org structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Batch File Renamer",
+  "description": "Aplikasi web gratis untuk rename banyak file sekaligus. Mendukung nomor urut otomatis, padding nol, pemisah kustom, dan download ZIP. Berjalan 100% di browser tanpa kirim data ke server.",
+  "url": "https://yumelyrics.github.io/batchrename.html",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "IDR"
+  },
+  "featureList": [
+    "Rename banyak file sekaligus",
+    "Tambah nomor urut otomatis di depan nama file",
+    "Padding nol untuk nomor urut",
+    "Preview hasil rename secara live",
+    "Download semua file dalam ZIP",
+    "100% offline setelah pertama kali dibuka",
+    "Tidak ada data yang dikirim ke server"
+  ],
+  "inLanguage": "id"
+}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #18181c;
+    --surface2: #222228;
+    --border: #2e2e38;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --text: #e8e8f0;
+    --muted: #7a7a8c;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+
+  body { display: flex; flex-direction: column; align-items: center; padding: 48px 16px 64px; }
+
+  header { text-align: center; margin-bottom: 48px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1e1b30; border: 1px solid #3b3170; border-radius: 999px;
+    padding: 4px 14px; font-size: 11px; font-family: var(--mono);
+    color: var(--accent2); letter-spacing: .04em; margin-bottom: 20px;
+  }
+
+  .badge span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 44px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px;
+  }
+
+  .sub { color: var(--muted); font-size: 15px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 680px; margin-bottom: 16px; }
+
+  .card-title { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; }
+
+  .dropzone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 40px 24px;
+    text-align: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative;
+  }
+
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: #1a1830; }
+
+  .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+  .drop-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+  .drop-label { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .drop-hint { font-size: 13px; color: var(--muted); }
+
+  .controls { display: flex; flex-direction: column; gap: 14px; }
+  .field-row { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 13px; color: var(--muted); font-weight: 500; }
+
+  input[type="text"], input[type="number"] {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; color: var(--text); font-family: var(--mono); font-size: 14px;
+    outline: none; transition: border-color .15s; width: 100%;
+  }
+
+  input:focus { border-color: var(--accent); }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface2); border-radius: 10px; padding: 12px 16px; border: 1px solid var(--border);
+  }
+
+  .toggle-info { flex: 1; }
+  .toggle-label { font-size: 14px; font-weight: 500; }
+  .toggle-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute; inset: 0; background: var(--surface); border-radius: 999px;
+    cursor: pointer; border: 1px solid var(--border); transition: background .2s;
+  }
+
+  .slider::before {
+    content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+    background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s;
+  }
+
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); background: white; }
+
+  .number-opts {
+    display: none; background: #1a1830; border: 1px solid #3b3170;
+    border-radius: 10px; padding: 14px 16px; gap: 12px; flex-direction: column;
+  }
+
+  .number-opts.show { display: flex; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .file-list-wrap { max-height: 300px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); }
+  .file-list-wrap::-webkit-scrollbar { width: 6px; }
+  .file-list-wrap::-webkit-scrollbar-track { background: transparent; }
+  .file-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .file-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .file-item:last-child { border-bottom: none; }
+  .file-idx { font-family: var(--mono); font-size: 11px; color: var(--muted); min-width: 24px; }
+  .file-orig { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .arrow { color: var(--accent); flex-shrink: 0; }
+  .file-new { flex: 1; font-family: var(--mono); color: var(--accent2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .file-ext { font-family: var(--mono); font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+  .empty-state { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+  .file-count { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  button {
+    font-family: var(--sans); font-weight: 600; font-size: 14px; border: none;
+    border-radius: 10px; cursor: pointer; padding: 12px 20px;
+    transition: opacity .15s, transform .1s; display: flex; align-items: center; gap: 7px;
+  }
+
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: white; flex: 1; }
+  .btn-primary:hover { opacity: .9; }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .progress-wrap { margin-top: 12px; display: none; }
+  .progress-wrap.show { display: block; }
+  .progress-bar-bg { background: var(--surface2); border-radius: 999px; height: 6px; overflow: hidden; margin-bottom: 8px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 999px; transition: width .2s; width: 0%; }
+  .progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .result-banner { display: none; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-top: 12px; }
+  .result-banner.success { display: flex; background: #0d2e20; border: 1px solid #1a5c3a; color: var(--green); }
+  .result-banner.error { display: flex; background: #2e0d0d; border: 1px solid #5c1a1a; color: var(--red); }
+
+  .preview-tag { display: inline-block; background: #1e1b30; border: 1px solid #3b3170; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-family: var(--mono); color: var(--accent2); margin-left: 8px; vertical-align: middle; }
+
+  .sort-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+  select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; cursor: pointer; }
+  select:focus { border-color: var(--accent); }
+
+  footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--muted); }
+
+  /* Offline toast */
+  #offlineToast {
+    display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1a1830; border: 1px solid #3b3170; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; color: var(--accent2);
+    font-family: var(--mono); z-index: 999; white-space: nowrap;
+    animation: fadeup .3s ease;
+  }
+
+  @keyframes fadeup { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge"><span></span> 100% Offline · Tidak Ada Data Keluar</div>
+  <h1>File Renamer</h1>
+  <p class="sub">Rename banyak file sekaligus — nama & ekstensi tetap aman</p>
+</header>
+
+<div class="card">
+  <div class="card-title">① Pilih File</div>
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" multiple>
+    <span class="drop-icon">📂</span>
+    <div class="drop-label">Klik atau drag file ke sini</div>
+    <div class="drop-hint">Bisa pilih banyak file sekaligus (Ctrl+A di dialog)</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">② Atur Nama Baru</div>
+  <div class="controls">
+    <div class="field-row">
+      <label>Nama baru untuk semua file</label>
+      <input type="text" id="baseName" placeholder="contoh: foto_liburan" oninput="refreshPreview()">
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">Tambah nomor urut di depan</div>
+        <div class="toggle-desc">Misal: 1_foto_liburan.jpg, 2_foto_liburan.jpg ...</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="useNumber" onchange="toggleNumberOpts()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="number-opts" id="numberOpts">
+      <div class="row-2">
+        <div class="field-row">
+          <label>Mulai dari angka</label>
+          <input type="number" id="startNum" value="1" min="0" oninput="refreshPreview()">
+        </div>
+        <div class="field-row">
+          <label>Padding nol (digit)</label>
+          <input type="number" id="padLen" value="0" min="0" max="6" placeholder="0 = tanpa padding" oninput="refreshPreview()">
+        </div>
+      </div>
+      <div class="field-row">
+        <label>Pemisah antara angka dan nama</label>
+        <input type="text" id="separator" value="_" maxlength="5" oninput="refreshPreview()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">③ Preview Hasil <span class="preview-tag">live</span></div>
+  <div class="sort-row">
+    <label style="margin:0">Urutan:</label>
+    <select id="sortMode" onchange="resortAndRefresh()">
+      <option value="original">Urutan pilih asli</option>
+      <option value="az">Nama A → Z</option>
+      <option value="za">Nama Z → A</option>
+    </select>
+  </div>
+  <div class="file-count" id="fileCount"></div>
+  <div class="file-list-wrap">
+    <div id="fileList"><div class="empty-state">Belum ada file dipilih</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">④ Download</div>
+  <div class="btn-row">
+    <button class="btn-ghost" onclick="clearAll()">🗑 Reset</button>
+    <button class="btn-primary" id="downloadBtn" onclick="doDownload()" disabled>⬇ Download Semua (.zip)</button>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Memproses...</div>
+  </div>
+  <div class="result-banner" id="resultBanner"></div>
+</div>
+
+<footer>Semua file diproses langsung di browser kamu — tidak ada data yang dikirim ke server.</footer>
+
+<div id="offlineToast">✅ App tersimpan — sekarang bisa dipakai offline!</div>
+
+<script>
+// ── Service Worker registration ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('batchrename-sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      reg.installing.addEventListener('statechange', e => {
+        if (e.target.state === 'installed' && !navigator.serviceWorker.controller) {
+          const toast = document.getElementById('offlineToast');
+          toast.style.display = 'block';
+          setTimeout(() => toast.style.display = 'none', 3500);
+        }
+      });
+    });
+  }).catch(err => console.warn('SW registration failed:', err));
+}
+
+// ── JSZip loader (CDN dengan fallback) ───────────────────────────────────────
+(function loadJSZip() {
+  const s = document.createElement('script');
+  s.src = 'jszip.min.js';
+  s.onerror = () => {
+    // fallback ke CDN kalau file lokal tidak ada
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+})();
+
+// ── App logic ────────────────────────────────────────────────────────────────
+let files = [];
+
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFiles([...e.dataTransfer.files]); });
+document.getElementById('fileInput').addEventListener('change', e => { handleFiles([...e.target.files]); e.target.value = ''; });
+
+function handleFiles(newFiles) { files = newFiles.map(f => ({ file: f })); applySort(); refreshPreview(); }
+
+function toggleNumberOpts() {
+  document.getElementById('numberOpts').classList.toggle('show', document.getElementById('useNumber').checked);
+  refreshPreview();
+}
+
+function resortAndRefresh() { applySort(); refreshPreview(); }
+
+function applySort() {
+  const mode = document.getElementById('sortMode').value;
+  if (mode === 'az') files.sort((a,b) => a.file.name.localeCompare(b.file.name));
+  else if (mode === 'za') files.sort((a,b) => b.file.name.localeCompare(a.file.name));
+}
+
+function getExt(name) { const i = name.lastIndexOf('.'); return i >= 0 ? name.slice(i) : ''; }
+
+function getNewName(index) {
+  const base = document.getElementById('baseName').value.trim() || 'file';
+  const useNum = document.getElementById('useNumber').checked;
+  const startNum = parseInt(document.getElementById('startNum').value) || 1;
+  const padLen = parseInt(document.getElementById('padLen').value) || 0;
+  const sep = document.getElementById('separator').value;
+  if (!useNum) return base;
+  const num = startNum + index;
+  const numStr = padLen > 0 ? String(num).padStart(padLen, '0') : String(num);
+  return `${numStr}${sep}${base}`;
+}
+
+function refreshPreview() {
+  const list = document.getElementById('fileList');
+  const countEl = document.getElementById('fileCount');
+  const dlBtn = document.getElementById('downloadBtn');
+
+  if (files.length === 0) {
+    list.innerHTML = '<div class="empty-state">Belum ada file dipilih</div>';
+    countEl.textContent = '';
+    dlBtn.disabled = true;
+    return;
+  }
+
+  countEl.textContent = `${files.length} file dipilih`;
+  dlBtn.disabled = false;
+
+  list.innerHTML = files.map(({ file }, i) => {
+    const ext = getExt(file.name);
+    const newName = getNewName(i);
+    return `<div class="file-item">
+      <span class="file-idx">${i+1}</span>
+      <span class="file-orig" title="${file.name}">${file.name}</span>
+      <span class="arrow">→</span>
+      <span class="file-new">${newName}</span>
+      <span class="file-ext">${ext || '(no ext)'}</span>
+    </div>`;
+  }).join('');
+}
+
+async function doDownload() {
+  if (files.length === 0) return;
+  if (typeof JSZip === 'undefined') {
+    const banner = document.getElementById('resultBanner');
+    banner.className = 'result-banner error';
+    banner.innerHTML = '❌ JSZip belum siap. Tunggu sebentar lalu coba lagi.';
+    return;
+  }
+
+  const btn = document.getElementById('downloadBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  const banner = document.getElementById('resultBanner');
+
+  btn.disabled = true;
+  progressWrap.classList.add('show');
+  banner.className = 'result-banner';
+  fill.style.width = '0%';
+  label.textContent = 'Mempersiapkan ZIP...';
+
+  try {
+    const zip = new JSZip();
+    for (let i = 0; i < files.length; i++) {
+      const { file } = files[i];
+      const ext = getExt(file.name);
+      const newName = getNewName(i) + ext;
+      zip.file(newName, await file.arrayBuffer());
+      fill.style.width = Math.round(((i+1) / files.length) * 80) + '%';
+      label.textContent = `Memproses file ${i+1} dari ${files.length}...`;
+    }
+
+    label.textContent = 'Membuat file ZIP...';
+    fill.style.width = '90%';
+
+    const blob = await zip.generateAsync({ type: 'blob' }, m => {
+      fill.style.width = (90 + m.percent * 0.1).toFixed(0) + '%';
+    });
+
+    fill.style.width = '100%';
+    label.textContent = 'Selesai!';
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'renamed_files.zip'; a.click();
+    URL.revokeObjectURL(url);
+
+    banner.className = 'result-banner success';
+    banner.innerHTML = `✅ ${files.length} file berhasil di-rename dan dikemas dalam ZIP!`;
+  } catch (err) {
+    banner.className = 'result-banner error';
+    banner.innerHTML = `❌ Error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function clearAll() {
+  files = [];
+  document.getElementById('fileInput').value = '';
+  document.getElementById('baseName').value = '';
+  document.getElementById('useNumber').checked = false;
+  document.getElementById('numberOpts').classList.remove('show');
+  document.getElementById('startNum').value = '1';
+  document.getElementById('padLen').value = '0';
+  document.getElementById('separator').value = '_';
+  document.getElementById('progressWrap').classList.remove('show');
+  document.getElementById('resultBanner').className = 'result-banner';
+  refreshPreview();
+}
+</script>
+</body>
+</html>
