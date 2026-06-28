@@ -725,16 +725,28 @@ function buildNotifBar() {
   }
   function init(){
     if(sessionStorage.getItem(SK))return;
-    var ck=Math.floor(Date.now()/3e5);
-    fetch('../notification.json?v='+ck,{cache:'force-cache',priority:'low'})
-      .then(function(r){return r.ok?r.json():null})
-      .then(function(d){
+    (window.requestIdleCallback||function(cb){setTimeout(cb,200)})(async function(){
+      try{
+        var fb=await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js');
+        var fs=await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
+        var app=fb.initializeApp({
+          apiKey:'AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8',
+          authDomain:'yumesubs7.firebaseapp.com',
+          projectId:'yumesubs7',
+          storageBucket:'yumesubs7.firebasestorage.app',
+          messagingSenderId:'1076202015626',
+          appId:'1:1076202015626:web:ce89fb668eb6b2bd021673'
+        });
+        var db=fs.getFirestore(app);
+        var snap=await fs.getDoc(fs.doc(db,'settings','notification'));
+        if(!snap.exists())return;
+        var d=snap.data();
         if(d&&d.active&&d.text){
           var dur=(typeof d.durationSec==='number')?d.durationSec:8;
           setTimeout(function(){show(d.text,dur);},900);
         }
-      })
-      .catch(function(){});
+      }catch(e){}
+    });
   }
   cls.addEventListener('click',dismiss);
   if(document.readyState==='complete'){
