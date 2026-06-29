@@ -1008,6 +1008,19 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/kxs9Su_mbpU</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/hachigatsu-no-hotaru.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e023d2ca41bfd7c5e0b002b9fde</image:loc>
+      <image:title>Hachigatsu no Hotaru - Hachi</image:title>
+      <image:caption>Lirik Hachigatsu no Hotaru - Hachi | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/A4GBW9GvfCY/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Hachigatsu no Hotaru - Hachi</video:title>
+      <video:description>Lirik Hachigatsu no Hotaru - Hachi lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/A4GBW9GvfCY</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimer.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
@@ -1018,6 +1031,7 @@
   <url><loc>https://yumelyrics.my.id/artis/chouchou-p.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/eve.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/given.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/hachi.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/hanyuu-maigo.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ico.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ikuta-lilas.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
