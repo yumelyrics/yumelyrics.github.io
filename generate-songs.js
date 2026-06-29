@@ -232,7 +232,7 @@ function removeOrphanHtml(dir, validNames, ext = '.html') {
   return removed;
 }
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&family=Syne:wght@400;500;600;700&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
 
@@ -485,37 +485,59 @@ body.discord-popup-lock{overflow:hidden}
 `;
 
 const NOTIF_BAR_CSS = `
-/* ── YM NOTIFICATION BANNER (floating) ── */
+/* ── YM NOTIF BAR (same tokens as admin preview) ── */
+.ym-notif-bar{
+  display:flex;align-items:center;gap:.65rem;
+  background:#f5f0ea;
+  border:1px solid rgba(201,169,110,.5);
+  border-radius:14px;
+  box-shadow:0 12px 32px rgba(10,8,18,.1);
+  padding:.75rem 1rem .75rem 1.25rem;
+  max-width:540px;width:100%;box-sizing:border-box;
+}
+[data-theme="dark"] .ym-notif-bar{background:#1a1714;border-color:rgba(212,169,110,.4)}
+.ym-notif-deco{flex-shrink:0;font-size:1rem;color:var(--gold,#c9a96e);line-height:1;user-select:none;opacity:.9;font-family:var(--jp);font-style:normal;font-weight:400}
+[data-theme="dark"] .ym-notif-deco{color:var(--gold2,#e8c98a)}
+.ym-notif-text{
+  flex:1;min-width:0;
+  font-family:var(--sans,'Syne',sans-serif);
+  font-size:.9375rem;font-style:normal;font-weight:500;
+  color:var(--ink,#0a0812);
+  letter-spacing:.01em;line-height:1.55;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+.ym-notif-text a{
+  color:var(--gold,#c9a96e);font-weight:700;font-style:normal;
+  text-decoration:underline;text-decoration-color:rgba(201,169,110,.55);text-underline-offset:2px;
+}
+.ym-notif-text a:hover{color:#a8843a;text-decoration-color:currentColor}
+[data-theme="dark"] .ym-notif-text{color:var(--ink,#e8e2d9)}
+[data-theme="dark"] .ym-notif-text a{color:var(--gold2,#e8c98a)}
+[data-theme="dark"] .ym-notif-text a:hover{color:#f0d9a8}
+.ym-notif-close{
+  flex-shrink:0;background:none;
+  border:1px solid rgba(201,169,110,.35);color:var(--ash,#8c8278);
+  width:24px;height:24px;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;line-height:1;padding:0;
+  font-family:var(--sans,'Syne',sans-serif);font-style:normal;font-weight:400;
+  transition:background .2s,border-color .2s,color .2s,transform .15s;
+}
+.ym-notif-close:hover{background:rgba(201,169,110,.12);border-color:rgba(201,169,110,.7);color:var(--ink,#0a0812);transform:scale(1.08) rotate(90deg)}
+[data-theme="dark"] .ym-notif-close{border-color:rgba(212,169,110,.3);color:rgba(232,226,217,.55)}
+[data-theme="dark"] .ym-notif-close:hover{color:var(--ink,#e8e2d9);border-color:rgba(212,169,110,.6)}
 #ym-notif{
   position:fixed;
   top:max(1rem,env(safe-area-inset-top,0px));
   left:50%;
   transform:translateX(-50%) translateY(calc(-130% - 1rem));
   z-index:10001;
-  background:#f5f0ea;
-  border:1px solid rgba(201,169,110,.5);
-  border-radius:14px;
-  box-shadow:0 12px 40px rgba(10,8,18,.14),0 4px 16px rgba(10,8,18,.08);
-  padding:.75rem 1.15rem .75rem 1.35rem;
-  display:flex;align-items:center;gap:.75rem;
-  max-width:min(94vw,620px);min-width:260px;
+  max-width:min(94vw,540px);min-width:260px;
   pointer-events:none;
   will-change:transform,opacity;
-  isolation:isolate;
 }
-[data-theme="dark"] #ym-notif{
-  background:#1a1714;
-  border-color:rgba(212,169,110,.4);
-  box-shadow:0 12px 40px rgba(0,0,0,.45),0 4px 16px rgba(0,0,0,.28);
-}
-#ym-notif.ym-in{
-  pointer-events:auto;
-  animation:ymNotifIn .55s cubic-bezier(.34,1.28,.64,1) forwards;
-}
-#ym-notif.ym-out{
-  pointer-events:none;
-  animation:ymNotifOut .38s cubic-bezier(.4,0,.6,1) forwards;
-}
+#ym-notif.ym-in{pointer-events:auto;animation:ymNotifIn .55s cubic-bezier(.34,1.28,.64,1) forwards}
+#ym-notif.ym-out{pointer-events:none;animation:ymNotifOut .38s cubic-bezier(.4,0,.6,1) forwards}
 @keyframes ymNotifIn{
   from{transform:translateX(-50%) translateY(calc(-130% - 1rem));opacity:0}
   60%{opacity:1}
@@ -525,70 +547,15 @@ const NOTIF_BAR_CSS = `
   from{transform:translateX(-50%) translateY(0);opacity:1}
   to{transform:translateX(-50%) translateY(calc(-130% - 1rem));opacity:0}
 }
-#ym-notif-deco{
-  flex-shrink:0;font-family:var(--jp);font-size:1rem;
-  color:var(--gold,#c9a96e);line-height:1;user-select:none;opacity:.9;
-}
-[data-theme="dark"] #ym-notif-deco{color:var(--gold2,#e8c98a)}
-#ym-notif-text{
-  flex:1;
-  font-family:var(--sans,'DM Sans',system-ui,-apple-system,sans-serif);
-  font-size:.9375rem;
-  font-style:normal;
-  font-weight:500;
-  color:var(--ink,#0a0812);
-  line-height:1.55;
-  letter-spacing:.01em;
-  min-width:0;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  text-rendering:optimizeLegibility;
-}
-#ym-notif-text a{
-  color:var(--gold,#c9a96e);
-  font-weight:700;
-  font-style:normal;
-  text-decoration:underline;
-  text-decoration-color:rgba(201,169,110,.55);
-  text-underline-offset:2px;
-  transition:color .2s,text-decoration-color .2s;
-}
-#ym-notif-text a:hover{
-  color:#a8843a;
-  text-decoration-color:currentColor;
-}
-[data-theme="dark"] #ym-notif-text{color:var(--ink,#e8e2d9)}
-[data-theme="dark"] #ym-notif-text a{color:var(--gold2,#e8c98a)}
-[data-theme="dark"] #ym-notif-text a:hover{color:#f0d9a8}
-#ym-notif-close{
-  flex-shrink:0;background:none;
-  border:1px solid rgba(201,169,110,.35);
-  color:var(--ash,#8c8278);
-  width:26px;height:26px;border-radius:50%;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.65rem;line-height:1;
-  transition:background .2s,border-color .2s,color .2s,transform .15s;
-  padding:0;font-family:var(--sans,system-ui,sans-serif);
-}
-#ym-notif-close:hover{
-  background:rgba(201,169,110,.12);border-color:rgba(201,169,110,.7);
-  color:var(--ink,#0a0812);transform:scale(1.08) rotate(90deg);
-}
-[data-theme="dark"] #ym-notif-close{border-color:rgba(212,169,110,.3);color:rgba(232,226,217,.55)}
-[data-theme="dark"] #ym-notif-close:hover{color:var(--ink,#e8e2d9);border-color:rgba(212,169,110,.6)}
 @media(prefers-reduced-motion:reduce){
   #ym-notif.ym-in,#ym-notif.ym-out{animation:none!important}
   #ym-notif.ym-in{transform:translateX(-50%) translateY(0)!important;opacity:1!important;pointer-events:auto}
   #ym-notif.ym-out{display:none!important}
 }
 @media(max-width:600px){
-  #ym-notif{
-    top:max(.75rem,env(safe-area-inset-top,0px));
-    max-width:calc(100vw - 1.5rem);min-width:0;
-    padding:.65rem .9rem .65rem 1.05rem;gap:.6rem;border-radius:12px;
-  }
-  #ym-notif-text{font-size:.875rem;line-height:1.5}
-  #ym-notif-deco{font-size:.9rem}
+  #ym-notif{top:max(.75rem,env(safe-area-inset-top,0px));max-width:calc(100vw - 1.5rem);min-width:0}
+  .ym-notif-text{font-size:.875rem;line-height:1.5}
+  .ym-notif-deco{font-size:.9rem}
 }
 `;
 
@@ -719,10 +686,10 @@ function buildDiscordPopupMarkup() {
 
 function buildNotifBar() {
   return `
-<div id="ym-notif" role="status" aria-live="polite" aria-atomic="true" hidden>
-  <span id="ym-notif-deco" aria-hidden="true">✦</span>
-  <span id="ym-notif-text"></span>
-  <button id="ym-notif-close" aria-label="Tutup notifikasi" title="Tutup">✕</button>
+<div id="ym-notif" class="ym-notif-bar" role="status" aria-live="polite" aria-atomic="true" hidden>
+  <span class="ym-notif-deco" aria-hidden="true">✦</span>
+  <span class="ym-notif-text" id="ym-notif-text"></span>
+  <button type="button" class="ym-notif-close" id="ym-notif-close" aria-label="Tutup notifikasi" title="Tutup">✕</button>
 </div>
 <script>
 (function(){
@@ -1979,10 +1946,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .learn-chip.diff-easy{color:#2d7a4a;border-color:rgba(45,122,74,.35);background:rgba(45,122,74,.08)}
 .learn-chip.diff-med{color:var(--dusk);border-color:rgba(107,91,122,.3);background:rgba(107,91,122,.08)}
 .learn-chip.diff-hard{color:var(--rose);border-color:rgba(196,99,122,.35);background:rgba(196,99,122,.1)}
-.progress-panel{margin-top:.5rem;padding-top:1rem;border-top:1px solid var(--border)}
-.progress-bar{height:4px;background:var(--border);margin:.5rem 0 .4rem;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--sakura),var(--gold));transition:width .35s ease}
-.progress-text{font-size:.62rem;color:var(--ash);line-height:1.45}
 .ll-item{position:relative;pointer-events:none}
 .line-actions{pointer-events:auto;position:relative;z-index:4}
 .lyric-left,.lyric-right,.ljp,.lro,.lid{pointer-events:none;-webkit-tap-highlight-color:transparent}
@@ -2512,12 +2475,6 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
       <p class="study-hint" id="study-hint">Mode normal — semua teks tampil.</p>
     </div>
 
-    <div class="progress-panel" id="progress-panel">
-      <span class="sidebar-section-label">Progres baca</span>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <p class="progress-text" id="progress-text">Memuat…</p>
-    </div>
-
     <div class="thumbs-block">
       <span class="sidebar-section-label">Apresiasi</span>
       <div class="thumbs-row">
@@ -2770,7 +2727,6 @@ if(document.readyState==='loading'){
 /* ── Fitur belajar YumeSubs: mode uji, karaoke, tata bahasa, favorit ── */
 (function(){
   var SONG_SLUG = ${JSON.stringify(slug)};
-  var PROG_KEY = 'ym_prog_' + SONG_SLUG;
   var SONG_ID = ${JSON.stringify(songId)};
   var SONG_TITLE = ${JSON.stringify(titleMain)};
   var SONG_ARTIST = ${JSON.stringify(artist)};
@@ -2835,7 +2791,6 @@ if(document.readyState==='loading'){
     });
     var vis = document.querySelector('.ll-item.focus-visible');
     if (vis) vis.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    saveProgress(focusIdx);
   }
 
   window.shareLine = function(i) {
@@ -2882,42 +2837,7 @@ if(document.readyState==='loading'){
     btn.textContent = on ? '★ Favorit' : '☆ Favorit';
   }
 
-  function loadProgress() {
-    try { return JSON.parse(localStorage.getItem(PROG_KEY) || 'null'); } catch(e) { return null; }
-  }
-
-  function saveProgress(lineIdx) {
-    if (lineIdx < 0 || TOTAL_LINES < 1) return;
-    var data = {
-      line: lineIdx,
-      mode: studyMode || 'normal',
-      total: TOTAL_LINES,
-      ts: Date.now()
-    };
-    try { localStorage.setItem(PROG_KEY, JSON.stringify(data)); } catch(e) {}
-    renderProgressUI(data);
-  }
-
-  function renderProgressUI(data) {
-    var fill = document.getElementById('progress-fill');
-    var text = document.getElementById('progress-text');
-    if (!fill || !text) return;
-    var line = (data && typeof data.line === 'number') ? data.line : -1;
-    var total = (data && data.total) ? data.total : TOTAL_LINES;
-    var pct = total > 0 && line >= 0 ? Math.round(((line + 1) / total) * 100) : 0;
-    fill.style.width = pct + '%';
-    if (line < 0) {
-      text.textContent = total ? 'Belum ada progres — ketuk baris saat belajar.' : '—';
-      return;
-    }
-    var modeLabel = (data && data.mode === 'quiz') ? 'Mode uji'
-      : (data.mode === 'karaoke') ? 'Mode karaoke'
-      : (data.mode === 'focus') ? 'Mode fokus' : 'Mode normal';
-    text.textContent = 'Baris ' + (line + 1) + ' / ' + total + ' · ' + pct + '% · ' + modeLabel;
-  }
-
   function initYumeFeatures() {
-    renderProgressUI(loadProgress());
     updateFavBtn();
     var favBtn = document.getElementById('fav-btn');
     if (favBtn && !favBtn.dataset.bound) {
@@ -2939,7 +2859,6 @@ if(document.readyState==='loading'){
         row.classList.add('karaoke-active');
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      saveProgress(idx);
     }
 
     document.querySelectorAll('.ll-item').forEach(function(row) {
