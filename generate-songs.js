@@ -492,21 +492,21 @@ const NOTIF_BAR_CSS = `
   left:50%;
   transform:translateX(-50%) translateY(calc(-130% - 1rem));
   z-index:10001;
-  background:rgba(245,240,234,.92);
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border:1px solid rgba(201,169,110,.45);
+  background:#f5f0ea;
+  border:1px solid rgba(201,169,110,.5);
   border-radius:14px;
   box-shadow:0 12px 40px rgba(10,8,18,.14),0 4px 16px rgba(10,8,18,.08);
-  padding:.65rem 1.1rem .65rem 1.5rem;
+  padding:.75rem 1.15rem .75rem 1.35rem;
   display:flex;align-items:center;gap:.75rem;
   max-width:min(94vw,620px);min-width:260px;
   pointer-events:none;
   will-change:transform,opacity;
+  isolation:isolate;
 }
 [data-theme="dark"] #ym-notif{
-  background:rgba(26,23,20,.92);
-  border-color:rgba(212,169,110,.35);
-  box-shadow:0 12px 40px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
+  background:#1a1714;
+  border-color:rgba(212,169,110,.4);
+  box-shadow:0 12px 40px rgba(0,0,0,.45),0 4px 16px rgba(0,0,0,.28);
 }
 #ym-notif.ym-in{
   pointer-events:auto;
@@ -526,22 +526,30 @@ const NOTIF_BAR_CSS = `
   to{transform:translateX(-50%) translateY(calc(-130% - 1rem));opacity:0}
 }
 #ym-notif-deco{
-  flex-shrink:0;font-family:var(--jp);font-size:.95rem;
-  color:var(--gold,#c9a96e);line-height:1;user-select:none;opacity:.85;
+  flex-shrink:0;font-family:var(--jp);font-size:1rem;
+  color:var(--gold,#c9a96e);line-height:1;user-select:none;opacity:.9;
 }
 [data-theme="dark"] #ym-notif-deco{color:var(--gold2,#e8c98a)}
 #ym-notif-text{
   flex:1;
-  font-family:var(--serif,'Cormorant Garamond',Georgia,serif);
-  font-size:.9rem;font-style:italic;font-weight:400;
-  color:var(--ink,#0a0812);line-height:1.45;letter-spacing:.02em;min-width:0;
+  font-family:var(--sans,'DM Sans',system-ui,-apple-system,sans-serif);
+  font-size:.9375rem;
+  font-style:normal;
+  font-weight:500;
+  color:var(--ink,#0a0812);
+  line-height:1.55;
+  letter-spacing:.01em;
+  min-width:0;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
 }
 #ym-notif-text a{
   color:var(--gold,#c9a96e);
-  font-weight:600;
+  font-weight:700;
   font-style:normal;
   text-decoration:underline;
-  text-decoration-color:rgba(201,169,110,.45);
+  text-decoration-color:rgba(201,169,110,.55);
   text-underline-offset:2px;
   transition:color .2s,text-decoration-color .2s;
 }
@@ -560,7 +568,7 @@ const NOTIF_BAR_CSS = `
   display:flex;align-items:center;justify-content:center;
   font-size:.65rem;line-height:1;
   transition:background .2s,border-color .2s,color .2s,transform .15s;
-  padding:0;font-family:sans-serif;
+  padding:0;font-family:var(--sans,system-ui,sans-serif);
 }
 #ym-notif-close:hover{
   background:rgba(201,169,110,.12);border-color:rgba(201,169,110,.7);
@@ -577,10 +585,10 @@ const NOTIF_BAR_CSS = `
   #ym-notif{
     top:max(.75rem,env(safe-area-inset-top,0px));
     max-width:calc(100vw - 1.5rem);min-width:0;
-    padding:.55rem .85rem .55rem 1.1rem;gap:.55rem;border-radius:12px;
+    padding:.65rem .9rem .65rem 1.05rem;gap:.6rem;border-radius:12px;
   }
-  #ym-notif-text{font-size:.82rem}
-  #ym-notif-deco{font-size:.85rem}
+  #ym-notif-text{font-size:.875rem;line-height:1.5}
+  #ym-notif-deco{font-size:.9rem}
 }
 `;
 
@@ -757,15 +765,22 @@ function buildNotifBar() {
     },{once:true});
   }
   function show(text,durationSec){
-    txt.innerHTML=renderText(text);
-    bar.classList.toggle('ym-has-link',hasLink(text));
-    bar.hidden=false;
-    bar.classList.remove('ym-out');
-    requestAnimationFrame(function(){requestAnimationFrame(function(){bar.classList.add('ym-in');});});
-    if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
-    var dur=parseInt(durationSec,10);
-    if(!isNaN(dur)&&dur>0){
-      autoTimer=setTimeout(dismiss,dur*1000);
+    function reveal(){
+      txt.innerHTML=renderText(text);
+      bar.classList.toggle('ym-has-link',hasLink(text));
+      bar.hidden=false;
+      bar.classList.remove('ym-out');
+      requestAnimationFrame(function(){requestAnimationFrame(function(){bar.classList.add('ym-in');});});
+      if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
+      var dur=parseInt(durationSec,10);
+      if(!isNaN(dur)&&dur>0){
+        autoTimer=setTimeout(dismiss,dur*1000);
+      }
+    }
+    if(document.fonts&&document.fonts.ready){
+      document.fonts.ready.then(reveal).catch(reveal);
+    }else{
+      reveal();
     }
   }
   function init(){
