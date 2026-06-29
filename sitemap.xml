@@ -995,8 +995,22 @@
       <video:player_loc allow_embed="yes">https://www.youtube.com/embed/6fMCnKhS1Jw</video:player_loc>
     </video:video>
   </url>
+  <url><loc>https://yumelyrics.my.id/lagu/kataomoi.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority><changefreq>monthly</changefreq>
+    <image:image>
+      <image:loc>https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b56ada0ba61d7787fb213f72</image:loc>
+      <image:title>Kataomoi - Aimer</image:title>
+      <image:caption>Lirik Kataomoi - Aimer | YumeLyrics</image:caption>
+    </image:image>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/kxs9Su_mbpU/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Kataomoi - Aimer</video:title>
+      <video:description>Lirik Kataomoi - Aimer lengkap dengan romaji dan terjemahan Indonesia di YumeLyrics.</video:description>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/kxs9Su_mbpU</video:player_loc>
+    </video:video>
+  </url>
   <url><loc>https://yumelyrics.my.id/artis/164.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/ado.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://yumelyrics.my.id/artis/aimer.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/aimyon.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/atsu-mizuno.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://yumelyrics.my.id/artis/back-number.html</loc><lastmod>2026-06-29</lastmod><priority>0.75</priority><changefreq>monthly</changefreq></url>
