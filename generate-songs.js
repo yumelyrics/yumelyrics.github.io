@@ -195,23 +195,77 @@ function seedManifestFromDisk(manifest, songMeta) {
 }
 
 /**
- * Incremental: generate hanya jika
- * - file HTML belum ada (lagu baru), atau
- * - slug berubah, atau
- * - htmlDirty === true DAN hash manifest belum sama dengan Firebase (belum sync)
+ * Mode generate:
+ * - full        : semua lagu
+ * - new         : hanya file HTML belum ada
+ * - edited      : hanya htmlDirty + hash belum sync (atau slug berubah)
+ * - incremental : new + edited (legacy)
  */
-function needsSongGenerate(song, slug, manifest, fullMode) {
-  if (fullMode) return true;
-  const fp = path.join('lagu', `${slug}.html`);
-  if (!fs.existsSync(fp)) return true;
-  const prev = manifest.songs[song.id];
-  if (prev && prev.slug !== slug) return true;
-  if (isHtmlDirty(song)) {
-    const currentHash = songContentHash(song);
-    // Flag macet / sudah pernah di-generate: hash manifest sudah = Firebase → skip
-    return !prev || prev.hash !== currentHash;
+function resolveGenerateMode() {
+  let ghEventMode = '';
+  try {
+    if (process.env.GITHUB_EVENT_PATH) {
+      const evt = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+      ghEventMode = (evt?.inputs?.mode || '').trim().toLowerCase();
+    }
+  } catch (_) { /* non-fatal */ }
+
+  if (process.argv.includes('--full')) return 'full';
+  if (process.argv.includes('--new')) return 'new';
+  if (process.argv.includes('--edited')) return 'edited';
+
+  const fromEnv = (process.env.GENERATE_MODE || '').trim().toLowerCase();
+  const mode = fromEnv || ghEventMode || 'incremental';
+  if (mode === 'full' || mode === 'new' || mode === 'edited' || mode === 'incremental') return mode;
+  return 'incremental';
+}
+
+function generateModeLabel(mode) {
+  switch (mode) {
+    case 'full': return 'FULL (semua lagu)';
+    case 'new': return 'NEW (lagu baru saja)';
+    case 'edited': return 'EDITED (lagu diedit saja)';
+    default: return 'INCREMENTAL (baru + diedit)';
   }
+}
+
+function needsSongGenerate(song, slug, manifest, generateMode) {
+  const fp = path.join('lagu', `${slug}.html`);
+  const fileExists = fs.existsSync(fp);
+  const prev = manifest.songs[song.id];
+  const slugChanged = !!(prev && prev.slug !== slug);
+  const dirty = isHtmlDirty(song);
+  const currentHash = songContentHash(song);
+  const hashMismatch = !prev || prev.hash !== currentHash;
+
+  if (generateMode === 'full') return true;
+
+  if (generateMode === 'new') {
+    return !fileExists;
+  }
+
+  if (generateMode === 'edited') {
+    if (!fileExists) return false;
+    if (slugChanged) return true;
+    if (dirty && hashMismatch) return true;
+    return false;
+  }
+
+  // incremental (legacy): baru + diedit
+  if (!fileExists) return true;
+  if (slugChanged) return true;
+  if (dirty && hashMismatch) return true;
   return false;
+}
+
+/** htmlDirty macet: hash manifest sudah sama dengan Firebase — aman di-clear tanpa generate ulang */
+function shouldClearStuckDirtyFlag(song, slug, manifest) {
+  if (!isHtmlDirty(song)) return false;
+  const fp = path.join('lagu', `${slug}.html`);
+  if (!fs.existsSync(fp)) return false;
+  const prev = manifest.songs[song.id];
+  if (!prev || prev.slug !== slug) return false;
+  return prev.hash === songContentHash(song);
 }
 
 async function clearHtmlDirtyFlag(db, songId) {
@@ -3678,24 +3732,9 @@ ${buildNotifBar()}
 
 async function main() {
   const t0 = Date.now();
-  // ── Resolve generate mode ──────────────────────────────────────────────────
-  // Priority (highest → lowest):
-  //   1. GENERATE_MODE env var          — explicit override in workflow YAML
-  //   2. --full CLI flag                — local testing
-  //   3. GitHub Actions event payload   — workflow_dispatch inputs.mode
-  //      (read from GITHUB_EVENT_PATH so the YAML never needs to map inputs manually)
-  let _ghEventMode = '';
-  try {
-    if (process.env.GITHUB_EVENT_PATH) {
-      const _evt = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-      _ghEventMode = (_evt?.inputs?.mode || '').trim().toLowerCase();
-    }
-  } catch (_) { /* non-fatal — event file missing or malformed */ }
-
-  const fullMode = process.env.GENERATE_MODE === 'full'
-    || process.argv.includes('--full')
-    || _ghEventMode === 'full';
-  console.log(fullMode ? '🔥 Mode: FULL (semua lagu)' : '⚡ Mode: INCREMENTAL (baru + diedit saja)');
+  const generateMode = resolveGenerateMode();
+  const fullMode = generateMode === 'full';
+  console.log(`⚙️  Mode: ${generateModeLabel(generateMode)}`);
   console.log('🔥 Menghubungkan ke Firebase...');
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
@@ -3798,19 +3837,20 @@ async function main() {
   const generatedSongs = [];
   const dirtyFlagClears = []; // collected, flushed all at once after the loop
 
-  if (!fullMode) {
+  if (!fullMode && (generateMode === 'edited' || generateMode === 'incremental')) {
     const dirtySongs = songs.filter(isHtmlDirty);
     const dirtyNeedGen = dirtySongs.filter(s => {
       const meta = songMeta.find(m => m.song.id === s.id);
       if (!meta) return false;
-      const prev = manifest.songs[s.id];
-      const hash = songContentHash(s);
-      return !prev || prev.slug !== meta.slug || prev.hash !== hash;
+      return needsSongGenerate(s, meta.slug, manifest, generateMode);
     });
-    console.log(`📝 htmlDirty: ${dirtySongs.length} total, ${dirtyNeedGen.length} perlu generate (hash belum sync)`);
+    console.log(`📝 htmlDirty: ${dirtySongs.length} total, ${dirtyNeedGen.length} perlu generate (mode: ${generateMode})`);
     if (dirtySongs.length > dirtyNeedGen.length) {
       console.log(`   ${dirtySongs.length - dirtyNeedGen.length} flag macet — akan di-clear tanpa generate ulang`);
     }
+  } else if (generateMode === 'new') {
+    const newCount = songMeta.filter(({ slug }) => !fs.existsSync(path.join('lagu', `${slug}.html`))).length;
+    console.log(`🆕 Lagu baru (belum punya HTML): ${newCount}`);
   }
 
   console.log('🎵 Generate halaman lagu...');
@@ -3819,10 +3859,9 @@ async function main() {
   const songErrors = [];
   await pConcurrent(12, songMeta.map(({song, slug: finalSlug}) => async () => {
     try {
-    if (!needsSongGenerate(song, finalSlug, manifest, fullMode)) {
+    if (!needsSongGenerate(song, finalSlug, manifest, generateMode)) {
       skippedSongCount++;
-      // htmlDirty tapi hash sudah sync → clear flag macet (mis. clear Firebase gagal run sebelumnya)
-      if (!fullMode && isHtmlDirty(song)) {
+      if (shouldClearStuckDirtyFlag(song, finalSlug, manifest)) {
         dirtyFlagClears.push(clearHtmlDirtyFlag(db, song.id));
       }
       const skipHash = songContentHash(song);
@@ -3845,8 +3884,9 @@ async function main() {
       : [];
 
     const songPath = path.join('lagu', `${finalSlug}.html`);
+    const fileExistedBefore = fs.existsSync(songPath);
     const wasDirty = isHtmlDirty(song);
-    const songKind = fullMode ? 'refresh' : (fs.existsSync(songPath) ? 'edit' : 'upload');
+    const songKind = fullMode ? 'refresh' : (fileExistedBefore ? 'edit' : 'upload');
 
     // generateHTML is now async (minification + async write overlap via await)
     const html = await generateHTML(song, finalSlug, relByArtist, relByAnime, artistKey ? artistSlugByKey[artistKey] : '', batchGeneratedAt);
@@ -3868,7 +3908,7 @@ async function main() {
         img: song.img || '',
       });
     }
-    console.log(`  ✓ lagu/${finalSlug}.html (${fullMode ? 'full' : songKind})`);
+    console.log(`  ✓ lagu/${finalSlug}.html (${generateMode === 'full' ? 'full' : songKind})`);
     urls.push(buildSitemapSongUrl(song, finalSlug, today));
     } catch(e) {
       // Lagu gagal di-generate — catat error tapi lanjut ke lagu berikutnya
@@ -3883,6 +3923,9 @@ async function main() {
     for (const { slug, id, err } of songErrors) {
       console.warn(`  ✗ ${slug} (id: ${id}): ${err}`);
     }
+  }
+  if (generatedSongCount === 0 && songErrors.length > 0) {
+    throw new Error(`${songErrors.length} lagu gagal di-generate — cek log di atas`);
   }
 
   // Flush all dirty-flag Firestore updates in one parallel batch
@@ -3963,9 +4006,11 @@ async function main() {
   // Async sitemap write (no need to block before process.exit)
   await fsWrite('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${urls.join('\n')}\n</urlset>`, 'utf8');
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati (sudah mutakhir) — ${elapsed}s`);
+  console.log(`\n✅ Selesai! ${generatedSongCount} lagu di-upload, ${skippedSongCount} dilewati — ${elapsed}s`);
   if (fullMode) {
     console.log(`   Mode FULL: ${songs.length} lagu diproses, ${songErrors.length} gagal`);
+  } else {
+    console.log(`   Mode ${generateMode.toUpperCase()}: ${generatedSongCount} di-generate, ${skippedSongCount} dilewati`);
   }
   console.log(`   Total katalog: ${songs.length} lagu · ${Object.keys(byArtist).length} artis · sitemap.xml`);
   process.exit(0);

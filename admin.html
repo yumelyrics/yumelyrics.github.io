@@ -375,8 +375,8 @@ textarea.fi{min-height:5rem;line-height:1.55}
   .login-inp{font-size:16px}
   .toast{bottom:calc(5rem + env(safe-area-inset-bottom));left:1rem;right:1rem;text-align:center}
   .catalog-search-inp{font-size:16px}
-  div[style*="gh-run-btn"]{flex-direction:column;width:100%}
-  div[style*="gh-run-btn"] .bsave,div[style*="gh-run-btn"] a{width:100%}
+  div.gh-songs-actions{flex-direction:column;width:100%}
+  div.gh-songs-actions .bsave,div.gh-songs-actions .bcancel,div.gh-songs-actions a{width:100%}
 }
 
 @media(max-width:400px){
@@ -844,11 +844,13 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
       <button class="bcancel" id="bcancelBtn" style="display:none" onclick="cancelEdit()">✕ Batal Edit</button>
     </div>
     </div>
-    <div style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
-      <button class="bsave" id="gh-run-btn" onclick="triggerWorkflow('songs','incremental')" style="flex:1;min-width:200px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)">▶ Generate (baru &amp; diedit)</button>
-      <button class="bcancel" id="gh-run-full-btn" onclick="triggerWorkflow('songs','full')" style="font-size:.62rem;padding:.55rem .9rem" title="Generate ulang semua lagu — lama">Generate semua</button>
-      <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.my.id/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;gap:.35rem">↗ GitHub</a>
+    <div class="gh-songs-actions" style="grid-column:1/-1;margin-top:.5rem;display:flex;gap:.55rem;align-items:stretch;flex-wrap:wrap">
+      <button class="bsave" id="gh-run-new-btn" data-label="▶ Generate Lagu Baru" onclick="triggerWorkflow('songs','new')" style="flex:1;min-width:160px;background:rgba(76,175,125,.12);color:#3d9468;border:1px solid rgba(76,175,125,.35)" title="Hanya lagu yang belum punya halaman HTML">▶ Generate Lagu Baru</button>
+      <button class="bsave" id="gh-run-edited-btn" data-label="▶ Generate Lagu Diedit" onclick="triggerWorkflow('songs','edited')" style="flex:1;min-width:160px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" title="Hanya lagu dengan flag edit (htmlDirty)">▶ Generate Lagu Diedit</button>
+      <button class="bcancel" id="gh-run-full-btn" data-label="Generate Semua Lagu" onclick="triggerWorkflow('songs','full')" style="flex:1;min-width:140px;font-size:.62rem;padding:.55rem .9rem" title="Generate ulang semua lagu — lama">Generate Semua Lagu</button>
+      <a id="gh-songs-link" href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-pages.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;flex:none">↗ GitHub</a>
     </div>
+    <p style="grid-column:1/-1;font-size:.62rem;color:var(--muted);margin:-.15rem 0 .35rem;line-height:1.55">Baru = belum ada file HTML · Diedit = lagu yang kamu update di admin · Semua = rebuild penuh</p>
     <div id="gh-songs-status" style="grid-column:1/-1;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:.6rem;flex-wrap:wrap">
       <span id="gh-songs-status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
       <span id="gh-songs-status-text"></span>
@@ -2248,12 +2250,12 @@ window.saveSong = async () => {
   try {
     if(editId){
       await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,coverArtist,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,htmlEditedAt,...songMeta});
-      toast('Lagu berhasil diupdate! Jalankan Generate (baru & diedit) untuk update HTML.');
+      toast('Lagu berhasil diupdate! Klik Generate Lagu Diedit untuk update HTML.');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
       await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,coverArtist,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,htmlEditedAt,...songMeta});
-      toast('Lagu berhasil ditambah!');
+      toast('Lagu berhasil ditambah! Klik Generate Lagu Baru untuk buat halaman HTML.');
       clearForm();
     }
   } catch(e){ toast('Gagal menyimpan: '+e.message); }
@@ -3331,11 +3333,38 @@ window.resetResForm = () => {
   document.getElementById('resSaveBtn').textContent='Simpan Resource';
 };
 
+const GH_SONG_BTN_IDS = ['gh-run-new-btn', 'gh-run-edited-btn', 'gh-run-full-btn'];
+const GH_SONG_MODE_LABELS = {
+  new: 'lagu baru',
+  edited: 'lagu diedit',
+  full: 'semua lagu',
+  incremental: 'baru & diedit'
+};
+const GH_SONG_BTN_BY_MODE = {
+  new: 'gh-run-new-btn',
+  edited: 'gh-run-edited-btn',
+  full: 'gh-run-full-btn',
+  incremental: 'gh-run-new-btn'
+};
+
+function setSongGenerateButtons(disabled, activeBtnId) {
+  GH_SONG_BTN_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = !!disabled;
+    if (!disabled) el.textContent = el.dataset.label || el.textContent;
+  });
+  if (disabled && activeBtnId) {
+    const active = document.getElementById(activeBtnId);
+    if (active) active.textContent = 'Mengirim...';
+  }
+}
+
 // ── GITHUB WORKFLOW ──
 const GH_OWNER = 'yumelyrics';
 const GH_REPO  = 'yumelyrics.github.io';
 const GH_WORKFLOWS = {
-  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-btn',     statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: '▶ Generate (baru & diedit)',     dlUrl: 'https://yumelyrics.my.id/lagu/' },
+  songs:     { file: 'generate-pages.yml',    btn: 'gh-run-new-btn', statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: '▶ Generate Lagu Baru', dlUrl: 'https://yumelyrics.my.id/lagu/' },
   resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.my.id/resources/' },
   stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' }
 };
@@ -3573,10 +3602,12 @@ async function pollRunStatus(type, runId){
     } else {
       const labels = { success:'✅ Selesai! Halaman berhasil di-generate.', failure:'❌ Workflow gagal. Cek log di GitHub.', cancelled:'⚠️ Workflow dibatalkan.', skipped:'— Dilewati.' };
       setStatus(type, true, conclusion, labels[conclusion] || conclusion);
-      document.getElementById(cfg.btn).disabled = false;
-      document.getElementById(cfg.btn).textContent = cfg.label;
-      const fullBtn = type === 'songs' ? document.getElementById('gh-run-full-btn') : null;
-      if (fullBtn) fullBtn.disabled = false;
+      if (type === 'songs') {
+        setSongGenerateButtons(false);
+      } else {
+        document.getElementById(cfg.btn).disabled = false;
+        document.getElementById(cfg.btn).textContent = cfg.label;
+      }
     }
   } catch(e){ /* silent */ }
 }
@@ -3588,16 +3619,19 @@ async function getLatestRunId(workflowFile, token){
   return d.workflow_runs?.[0]?.id || null;
 }
 
-window.triggerWorkflow = async (type, mode = 'incremental') => {
+window.triggerWorkflow = async (type, mode = 'new') => {
   const cfg = GH_WORKFLOWS[type];
   const token = ghTokenGet();
   if(!token){ toast('Token belum diisi!'); return; }
-  const btn = document.getElementById(cfg.btn);
-  const fullBtn = type === 'songs' ? document.getElementById('gh-run-full-btn') : null;
-  btn.disabled = true;
-  if (fullBtn) fullBtn.disabled = true;
-  btn.textContent = 'Mengirim...';
-  const modeLabel = mode === 'full' ? 'semua lagu' : 'baru & diedit';
+  const activeBtnId = type === 'songs' ? (GH_SONG_BTN_BY_MODE[mode] || 'gh-run-new-btn') : cfg.btn;
+  const btn = document.getElementById(activeBtnId) || document.getElementById(cfg.btn);
+  if (type === 'songs') {
+    setSongGenerateButtons(true, activeBtnId);
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Mengirim...';
+  }
+  const modeLabel = GH_SONG_MODE_LABELS[mode] || mode;
   setStatus(type, true, 'queued', `Mengirim trigger (${modeLabel})...`);
   const dispatchBody = { ref: 'main' };
   if (type === 'songs') dispatchBody.inputs = { mode };
@@ -3610,7 +3644,6 @@ window.triggerWorkflow = async (type, mode = 'incremental') => {
     if(res.status === 204){
       toast('Workflow di-trigger (' + modeLabel + ')! 🚀');
       setStatus(type, true, 'queued', 'Antri (' + modeLabel + ')...');
-      // Tunggu sebentar baru poll (GH butuh ~2-3 detik buat buat run baru)
       setTimeout(async () => {
         const runId = await getLatestRunId(cfg.file, token);
         if(runId) pollRunStatus(type, runId);
@@ -3620,16 +3653,14 @@ window.triggerWorkflow = async (type, mode = 'incremental') => {
       const err = await res.json().catch(()=>({}));
       toast('Gagal: ' + (err.message||res.status));
       setStatus(type, false);
-      btn.disabled = false;
-      if (fullBtn) fullBtn.disabled = false;
-      btn.textContent = cfg.label;
+      if (type === 'songs') setSongGenerateButtons(false);
+      else { btn.disabled = false; btn.textContent = cfg.label; }
     }
   } catch(e){
     toast('Error: ' + e.message);
     setStatus(type, false);
-    btn.disabled = false;
-    if (fullBtn) fullBtn.disabled = false;
-    btn.textContent = cfg.label;
+    if (type === 'songs') setSongGenerateButtons(false);
+    else { btn.disabled = false; btn.textContent = cfg.label; }
   }
 };
 
