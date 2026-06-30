@@ -41,8 +41,11 @@ function shouldNotifyDiscord(_song, kind) {
 
 function formatDiscordSongLine(s) {
   const t = s.titleRo || s.titleJp || s.slug;
-  const a = s.artist ? ` — ${s.artist}` : '';
-  return `• [${t}${a}](${s.url})`;
+  if (s.artist && s.coverArtist) {
+    return `• [${t} — ${s.artist} (cover: ${s.coverArtist})](${s.url})`;
+  }
+  const a = s.artist || s.coverArtist || '';
+  return `• [${t}${a ? ` — ${a}` : ''}](${s.url})`;
 }
 
 async function sendDiscordNotification(generatedSongs, success = true) {
@@ -137,6 +140,7 @@ function songContentHash(song) {
     titleRo: song.titleRo || '',
     titleId: song.titleId || '',
     artist: song.artist || '',
+    coverArtist: song.coverArtist || '',
     artistSlug: song.artistSlug || '',
     ytId: song.ytId || '',
     nicoId: song.nicoId || '',
@@ -487,7 +491,7 @@ body.discord-popup-lock{overflow:hidden}
 const NOTIF_BAR_CSS = `
 /* ── YM NOTIF BAR (same tokens as admin preview) ── */
 .ym-notif-bar{
-  display:flex;align-items:center;gap:.65rem;
+  display:flex;align-items:flex-start;gap:.65rem;
   background:#f5f0ea;
   border:1px solid rgba(201,169,110,.5);
   border-radius:14px;
@@ -495,7 +499,7 @@ const NOTIF_BAR_CSS = `
   padding:.9rem 1rem 1rem 1.25rem;
   max-width:540px;width:100%;box-sizing:border-box;
   overflow:visible;
-  min-height:3.25rem;
+  min-height:0;
 }
 [data-theme="dark"] .ym-notif-bar{background:#1a1714;border-color:rgba(212,169,110,.4)}
 .ym-notif-deco{flex-shrink:0;font-size:1rem;color:var(--gold,#c9a96e);line-height:1.2;user-select:none;opacity:.9;font-family:var(--jp);font-style:normal;font-weight:400;align-self:flex-start;margin-top:.12rem}
@@ -509,7 +513,10 @@ const NOTIF_BAR_CSS = `
   color:var(--ink,#0a0812);
   letter-spacing:.01em;
   line-height:1.65;
-  padding:.08rem 0 .12rem;
+  padding:.1rem 0 .18rem;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  text-wrap:pretty;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 .ym-notif-text a{
@@ -562,7 +569,7 @@ const NOTIF_BAR_CSS = `
 @media(max-width:600px){
   #ym-notif{top:max(.75rem,env(safe-area-inset-top,0px));max-width:calc(100vw - 1.5rem);min-width:0}
   .ym-notif-bar{padding:.85rem .9rem .95rem 1.05rem}
-  .ym-notif-text{font-size:.875rem;line-height:1.65;padding:.06rem 0 .1rem}
+  .ym-notif-text{font-size:.875rem;line-height:1.65;padding:.08rem 0 .16rem}
   .ym-notif-deco{font-size:.9rem}
 }
 `;
@@ -1588,6 +1595,8 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const titleRo      = song.titleRo || '';
   const titleId      = song.titleId || '';
   const artist       = song.artist  || '';
+  const coverArtist  = song.coverArtist || '';
+  const displayArtist = artist || coverArtist;
   const anime        = song.anime   || '';
   const animeId      = song.animeId || '';
   const animeEn      = song.animeEn || '';
@@ -1600,8 +1609,8 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const descId       = song.descId || '';
   const descJp       = song.descJp || '';
 
-  const pageTitle    = buildSongPageTitle(titleMain, artist);
-  const metaDesc     = buildSongMetaDesc(song, lyrics, titleMain, artist);
+  const pageTitle    = buildSongPageTitle(titleMain, displayArtist);
+  const metaDesc     = buildSongMetaDesc(song, lyrics, titleMain, displayArtist);
   const moodChipsHTML = buildMoodChipsHTML(song.mood);
   const learnMetaHTML = buildLearnMetaHTML(song);
   const lyricsPlain = lyrics.map(l => ({ jp: l.jp || '', ro: l.ro || '', id: l.id || '' }));
@@ -1613,7 +1622,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const songSeedObj = {
     id: songId,
     titleJp: titleDisplay,
-    titleRo, titleId, artist,
+    titleRo, titleId, artist, coverArtist,
     artistSlug: song.artistSlug || '',
     ytId: song.ytId || '',
     nicoId: song.nicoId || '',
@@ -1642,7 +1651,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
   const lyricsHTMLJson = JSON.stringify(lyricsHTML);
   const dateModified = generatedAt || new Date().toISOString();
   // AEO / GEO: FAQ schema + meta block untuk halaman lagu ini
-  const faqSchema  = buildFAQSchema(titleMain, titleId, artist, animeDisplay, metaDesc);
+  const faqSchema  = buildFAQSchema(titleMain, titleId, displayArtist, animeDisplay, metaDesc);
   const geoAeoMeta = buildGeoAeoMeta({
     title: pageTitle,
     description: metaDesc,
@@ -1655,8 +1664,8 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "@type":"MusicComposition",
       "name": titleMain,
       "alternateName": [titleDisplay, titleRo, titleId, anime, animeId, animeEn].filter(Boolean),
-      "composer":{"@type":"MusicGroup","name":artist,"url":artistSlug ? `${BASE_URL}/artis/${artistSlug}.html` : `${BASE_URL}/index.html?q=${encodeURIComponent(artist)}`},
-      "lyricist":{"@type":"MusicGroup","name":artist},
+      "composer":{"@type":"MusicGroup","name":displayArtist,"url":artistSlug ? `${BASE_URL}/artis/${artistSlug}.html` : `${BASE_URL}/index.html?q=${encodeURIComponent(displayArtist)}`},
+      "lyricist":{"@type":"MusicGroup","name":displayArtist},
       ...(song.genre ? {"genre": song.genre} : {}),
       "inLanguage":"ja",
       "description":metaDesc,
@@ -1668,7 +1677,7 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "recordedAs":{
         "@type":"MusicRecording",
         "name": titleMain,
-        "byArtist":{"@type":"MusicGroup","name":artist},
+        "byArtist":{"@type":"MusicGroup","name":coverArtist || displayArtist},
         "inLanguage":"ja",
         ...(song.sp ? {"url": Array.isArray(song.sp)?song.sp[0]:song.sp} : {})
       }
@@ -1705,13 +1714,13 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
         "itemListElement":[
           {"@type":"ListItem","position":1,"name":"Beranda","item":BASE_URL},
           {"@type":"ListItem","position":2,"name":"Katalog","item":`${BASE_URL}/index.html`},
-          {"@type":"ListItem","position":3,"name":`${titleMain} - ${artist}`,"item":`${BASE_URL}/lagu/${slug}.html`}
+          {"@type":"ListItem","position":3,"name":`${titleMain} - ${displayArtist}`,"item":`${BASE_URL}/lagu/${slug}.html`}
         ]
       },
       "mainEntity":{
         "@type":"MusicComposition",
         "name":titleMain,
-        "composer":{"@type":"MusicGroup","name":artist}
+        "composer":{"@type":"MusicGroup","name":displayArtist}
       }
     },
     {
@@ -1733,10 +1742,11 @@ async function generateHTML(song, slug, relatedByArtist=[], relatedByAnime=[], a
       "image": song.img ? {"@type":"ImageObject","url":song.img,"width":600,"height":600} : {"@type":"ImageObject","url":`${BASE_URL}/anime_icon.png`,"width":512,"height":512},
       "about":[
         {"@type":"Thing","name":titleMain},
-        {"@type":"Thing","name":artist},
+        {"@type":"Thing","name":displayArtist},
+        ...(coverArtist && artist ? [{"@type":"Thing","name":coverArtist}] : []),
         ...(anime ? [{"@type":"Thing","name":animeDisplay}] : [])
       ],
-      "keywords":[titleMain, artist, anime, animeId, animeEn, "lirik jepang", "terjemahan indonesia", "romaji"].filter(Boolean).join(", "),
+      "keywords":[titleMain, displayArtist, coverArtist, artist, anime, animeId, animeEn, "lirik jepang", "terjemahan indonesia", "romaji"].filter(Boolean).join(", "),
       "articleSection":"Lirik Lagu Jepang",
       "isAccessibleForFree":true
     }
@@ -2385,10 +2395,14 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     ${titleId ? `<div class="song-title-id">${escHtml(titleId)}</div>` : ''}
 
     <div class="meta-row">
-      <div class="meta-item">
+      ${artist ? `<div class="meta-item">
         <span class="meta-label">Artis</span>
         <span class="meta-value"><a href="${artistSlug ? `../artis/${artistSlug}.html` : `../index.html?q=${encodeURIComponent(artist)}`}">${escHtml(artist)}</a></span>
-      </div>
+      </div>` : ''}
+      ${coverArtist ? `<div class="meta-item">
+        <span class="meta-label">Cover Artis</span>
+        <span class="meta-value">${artist ? escHtml(coverArtist) : `<a href="${artistSlug ? `../artis/${artistSlug}.html` : `../index.html?q=${encodeURIComponent(coverArtist)}`}">${escHtml(coverArtist)}</a>`}</span>
+      </div>` : ''}
       ${anime ? `<div class="meta-item">
         <span class="meta-label">Anime</span>
         <span class="meta-value"><a href="../index.html?q=${encodeURIComponent(anime)}">${escHtml(animeDisplay)}</a>${anime && animeId && anime !== animeId ? `<span style="display:block;font-size:.72rem;color:var(--ash);font-weight:400;margin-top:.15rem;font-family:var(--jp)">${escHtml(anime)}</span>` : ''}${animeEn && animeEn !== animeDisplay ? `<span style="display:block;font-size:.68rem;color:var(--smoke);margin-top:.1rem">${escHtml(animeEn)}</span>` : ''}</span>
@@ -2420,7 +2434,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cover-wrap">
       <div class="cover-frame">
         ${song.img
-          ? imgTag(song.img, `Cover ${titleMain} - ${artist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
+          ? imgTag(song.img, `Cover ${titleMain} - ${displayArtist}`, { cls: 'cover-img', w: 480, h: 480, eager: true, hd: true })
           : `<svg class="cover-img" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="background:#1a1020">
               <defs>
                 <radialGradient id="g1" cx="40%" cy="35%">
@@ -2610,7 +2624,7 @@ footer{background:var(--ink);color:var(--ash);padding:3.5rem;display:flex;align-
     <div class="cmsec" style="margin-bottom:2rem">
       <div class="cmtit">Tentang Lagu Ini</div>
       <p style="font-size:.82rem;color:var(--muted);line-height:1.8;font-weight:300">
-        ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu dari <strong style="color:var(--text)">${escHtml(artist)}</strong>${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(animeDisplay)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}${animeId && anime !== animeId ? ` — <em style="color:var(--muted)">${escHtml(anime)}</em>` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia.`}
+        ${descId ? escHtml(descId) : `<strong style="color:var(--text)">${escHtml(titleMain)}</strong>${titleDisplay && titleRo ? ` (${escHtml(titleDisplay)})` : ''} adalah lagu${displayArtist ? ` dari <strong style="color:var(--text)">${escHtml(displayArtist)}</strong>` : ''}${coverArtist && artist ? ` (cover oleh <strong style="color:var(--text)">${escHtml(coverArtist)}</strong>)` : ''}${anime ? ` yang digunakan sebagai ${songType||'lagu'} dalam anime <strong style="color:var(--accent)">${escHtml(animeDisplay)}</strong>${animeEn ? ` (${escHtml(animeEn)})` : ''}${animeId && anime !== animeId ? ` — <em style="color:var(--muted)">${escHtml(anime)}</em>` : ''}` : ''}.${titleId ? ` Dalam bahasa Indonesia, judul lagu ini berarti "<strong style="color:var(--accent)">${escHtml(titleId)}</strong>".` : ''} Di halaman ini kamu bisa membaca lirik lengkap ${escHtml(titleMain)} dengan teks Jepang asli, romaji, dan terjemahan bahasa Indonesia.`}
       </p>
       ${descJp ? `<p style="font-size:.78rem;color:var(--muted);line-height:1.8;font-weight:300;margin-top:.8rem;font-family:var(--jp)">${escHtml(descJp)}</p>` : ''}
     </div>
@@ -2634,7 +2648,7 @@ ${(()=>{
 
   if(!allRelated.length) return '';
 
-  const artistLabel = relatedByArtist.length ? `dari ${escHtml(artist)}` : '';
+  const artistLabel = relatedByArtist.length ? `dari ${escHtml(displayArtist)}` : '';
   const animeLabel  = relatedByAnime.length  ? `dari ${escHtml(animeDisplay)}`  : '';
   const subtitle    = [artistLabel, animeLabel].filter(Boolean).join(' & ');
 
@@ -3743,7 +3757,7 @@ async function main() {
       anime: song.anime||'',
       animeId: song.animeId||'',
     };
-    const rawArtist = (song.artist || '').trim();
+    const rawArtist = (song.artist || song.coverArtist || '').trim();
     if(rawArtist){
       const key = normalizeArtistKey(rawArtist);
       if(!byArtist[key]) byArtist[key] = [];
@@ -3820,7 +3834,7 @@ async function main() {
       return;
     }
 
-    const artistKey = song.artist ? normalizeArtistKey(song.artist) : '';
+    const artistKey = rawArtist ? normalizeArtistKey(rawArtist) : '';
     if (artistKey) touchedArtistKeys.add(artistKey);
     const relByArtist = artistKey
       ? (byArtist[artistKey]||[]).filter(r=>r.slug!==finalSlug)
@@ -3847,6 +3861,7 @@ async function main() {
         kind: songKind,
         titleRo: song.titleRo || song.titleJp || '',
         artist: song.artist || '',
+        coverArtist: song.coverArtist || '',
         slug: finalSlug,
         url: `${BASE_URL}/lagu/${finalSlug}.html`,
         img: song.img || '',

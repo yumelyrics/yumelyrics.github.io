@@ -506,14 +506,14 @@ textarea.fi{min-height:5rem;line-height:1.55}
 .dc-char{font-size:.58rem;color:var(--muted);text-align:right;margin-top:.25rem}
 
 /* ── NOTIF ADMIN SECTION (shared .ym-notif-* with halaman lagu) ── */
-.ym-notif-preview-wrap{margin-top:.85rem;overflow:hidden;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;min-height:80px;justify-content:center}
+.ym-notif-preview-wrap{margin-top:.85rem;overflow:visible;background:rgba(10,8,18,.025);border:1px solid var(--border);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;min-height:80px;justify-content:center}
 [data-theme="dark"] .ym-notif-preview-wrap{background:rgba(232,226,217,.02)}
-.ym-notif-bar{display:flex;align-items:center;gap:.65rem;background:#f5f0ea;border:1px solid rgba(201,169,110,.5);border-radius:14px;box-shadow:0 12px 32px rgba(10,8,18,.1);padding:.9rem 1rem 1rem 1.25rem;max-width:540px;width:100%;box-sizing:border-box;overflow:visible;min-height:3.25rem}
+.ym-notif-bar{display:flex;align-items:flex-start;gap:.65rem;background:#f5f0ea;border:1px solid rgba(201,169,110,.5);border-radius:14px;box-shadow:0 12px 32px rgba(10,8,18,.1);padding:.9rem 1rem 1rem 1.25rem;max-width:540px;width:100%;box-sizing:border-box;overflow:visible;min-height:0}
 [data-theme="dark"] .ym-notif-bar{background:#1a1714;border-color:rgba(212,169,110,.4)}
 .ym-notif-preview-bar{opacity:.35;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.34,1.28,.64,1);transform:translateY(-8px)}
 .ym-notif-preview-bar.pv-active{opacity:1;transform:translateY(0)}
 .ym-notif-deco{flex-shrink:0;font-size:1rem;color:var(--gold);line-height:1.2;user-select:none;opacity:.9;font-family:var(--jp);font-style:normal;font-weight:400;align-self:flex-start;margin-top:.12rem}
-.ym-notif-text{flex:1;min-width:0;display:block;overflow:visible;font-family:var(--sans,'Syne',sans-serif);font-size:.9375rem;font-style:normal;font-weight:500;color:var(--ink);letter-spacing:.01em;line-height:1.65;padding:.08rem 0 .12rem;-webkit-font-smoothing:antialiased}
+.ym-notif-text{flex:1;min-width:0;display:block;overflow:visible;font-family:var(--sans,'Syne',sans-serif);font-size:.9375rem;font-style:normal;font-weight:500;color:var(--ink);letter-spacing:.01em;line-height:1.65;padding:.1rem 0 .18rem;word-break:break-word;overflow-wrap:break-word;text-wrap:pretty;-webkit-font-smoothing:antialiased}
 .ym-notif-text a{color:var(--gold);font-weight:700;font-style:normal;text-decoration:underline;text-decoration-color:rgba(201,169,110,.55);text-underline-offset:2px}
 .ym-notif-text a:hover{color:#a8843a;text-decoration-color:currentColor}
 [data-theme="dark"] .ym-notif-text a{color:var(--gold2,#e8c98a)}
@@ -662,16 +662,21 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
 
     <section class="form-card">
       <div class="form-card-title">1 · Info Lagu</div>
-      <p class="form-card-hint">Judul & artis dulu. Field * wajib diisi.</p>
+      <p class="form-card-hint">Judul JP wajib. Isi artis asli <em>atau</em> cover artis — minimal salah satu.</p>
     <div class="song-form-grid" style="margin-bottom:0">
       <div class="fg"><div class="fl">Judul Jepang *</div><input class="fi" id="f-jt" placeholder="例: 夜に駆ける"></div>
       <div class="fg"><div class="fl">Judul Indonesia</div><input class="fi" id="f-it" placeholder="Contoh: Berlari di Malam"></div>
       <div class="fg">
-        <div class="fl">Artis *</div>
+        <div class="fl">Artis Asli</div>
         <div class="artist-wrap">
-          <input class="fi" id="f-ar" placeholder="Nama artis / grup" autocomplete="off" oninput="onArtistInput(this)" onkeydown="onArtistKeydown(event)" onblur="closeArtistSuggestions()">
+          <input class="fi" id="f-ar" placeholder="Artis asli lagu (opsional kalau cuma cover)" autocomplete="off" oninput="onArtistInput(this)" onkeydown="onArtistKeydown(event)" onblur="closeArtistSuggestions()">
           <div class="artist-suggestions" id="artist-suggestions"></div>
         </div>
+      </div>
+      <div class="fg">
+        <div class="fl">Cover Artis</div>
+        <input class="fi" id="f-cover-artist" placeholder="Nama penampil cover (opsional)">
+        <p class="fg-hint">Isi salah satu: artis asli di atas, atau cover artis di sini (boleh cuma cover saja).</p>
       </div>
       <div class="fg"><div class="fl">Romaji Judul</div><input class="fi" id="f-ro" placeholder="Romaji judul"></div>
     </div>
@@ -2208,6 +2213,7 @@ window.saveSong = async () => {
   const jt=document.getElementById('f-jt').value.trim();
   const it=document.getElementById('f-it').value.trim();
   const ar=document.getElementById('f-ar').value.trim();
+  const coverArtist=document.getElementById('f-cover-artist').value.trim();
   const artistSlug=document.getElementById('f-artist-slug').value.trim();
   const ro=document.getElementById('f-ro').value.trim();
   const yt=document.getElementById('f-yt').value.trim();
@@ -2225,7 +2231,8 @@ window.saveSong = async () => {
   const jlpt=document.getElementById('f-jlpt').value.trim();
   const difficulty=document.getElementById('f-difficulty').value.trim();
   const editId=document.getElementById('f-editid').value;
-  if(!jt||!ar){ toast('Judul JP & Artis wajib diisi!'); return; }
+  if(!jt){ toast('Judul JP wajib diisi!'); return; }
+  if(!ar && !coverArtist){ toast('Isi Artis Asli atau Cover Artis (minimal salah satu)!'); return; }
   const songMeta = { anime, animeId, animeEn, type: songType, genre, mood, jlpt, difficulty };
   const lyrics=[];
   document.querySelectorAll('#lrows .lrow').forEach(r=>{
@@ -2240,12 +2247,12 @@ window.saveSong = async () => {
   const htmlEditedAt=new Date().toISOString();
   try {
     if(editId){
-      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,htmlEditedAt,...songMeta});
+      await updateDoc(doc(db,'songs',editId),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,coverArtist,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,htmlDirty:true,htmlEditedAt,...songMeta});
       toast('Lagu berhasil diupdate! Jalankan Generate (baru & diedit) untuk update HTML.');
       cancelEdit();
     } else {
       const snap=await getCountFromServer(collection(db,'songs'));
-      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,htmlEditedAt,...songMeta});
+      await addDoc(collection(db,'songs'),{titleJp:jt,titleRo:ro,titleId:it,artist:ar,coverArtist,artistSlug,ytId:yt,nicoId:nico,img,sp,lyrics,descId:descid,descJp:descjp,order:snap.data().count,htmlDirty:true,htmlEditedAt,...songMeta});
       toast('Lagu berhasil ditambah!');
       clearForm();
     }
@@ -2254,7 +2261,7 @@ window.saveSong = async () => {
 };
 
 function clearForm(){
-  ['f-jt','f-it','f-ar','f-artist-slug','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-mood','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
+  ['f-jt','f-it','f-ar','f-cover-artist','f-artist-slug','f-ro','f-anime','f-anime-id','f-anime-en','f-genre','f-mood','f-yt','f-nico','f-img','f-sp','f-descid','f-descjp'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f-type').value='';
   document.getElementById('f-jlpt').value='';
   document.getElementById('f-difficulty').value='';
@@ -2270,6 +2277,7 @@ window.editSong = id => {
   document.getElementById('f-jt').value=s.titleJp||'';
   document.getElementById('f-it').value=s.titleId||'';
   document.getElementById('f-ar').value=s.artist||'';
+  document.getElementById('f-cover-artist').value=s.coverArtist||'';
   document.getElementById('f-artist-slug').value=s.artistSlug||'';
   document.getElementById('f-ro').value=s.titleRo||'';
   document.getElementById('f-yt').value=s.ytId||'';
@@ -2361,7 +2369,7 @@ function renderCatalogTable(list, page){
         <div class="ct-romaji">${escHtml(s.titleRo||'')}</div>
         ${badges ? `<div style="margin-top:.25rem;display:flex;gap:.3rem;flex-wrap:wrap">${badges}</div>` : ''}
       </td>
-      <td class="ct-artist">${escHtml(s.artist||'')}${s.anime?`<div style="font-size:.65rem;color:var(--plum);margin-top:.15rem">📺 ${escHtml(s.anime)}${s.animeId?` · ${escHtml(s.animeId)}`:''}${s.type?` · ${escHtml(s.type.toUpperCase())}`:''}</div>`:''}${s.titleId?`<div style="font-size:.65rem;color:var(--smoke)">${escHtml(s.titleId)}</div>`:''}</td>
+      <td class="ct-artist">${escHtml(s.artist||s.coverArtist||'')}${s.artist&&s.coverArtist?`<div style="font-size:.65rem;color:var(--accent2);margin-top:.15rem">🎤 Cover: ${escHtml(s.coverArtist)}</div>`:''}${!s.artist&&s.coverArtist?`<div style="font-size:.65rem;color:var(--accent2);margin-top:.15rem">🎤 Versi cover</div>`:''}${s.anime?`<div style="font-size:.65rem;color:var(--plum);margin-top:.15rem">📺 ${escHtml(s.anime)}${s.animeId?` · ${escHtml(s.animeId)}`:''}${s.type?` · ${escHtml(s.type.toUpperCase())}`:''}</div>`:''}${s.titleId?`<div style="font-size:.65rem;color:var(--smoke)">${escHtml(s.titleId)}</div>`:''}</td>
       <td style="white-space:nowrap;font-size:.68rem;color:var(--ash)">👁 ${s.views||0}</td>
       <td>
         <div class="ct-actions">
@@ -3189,6 +3197,7 @@ window.filterCatalog = (q) => {
     (s.titleRo||'').toLowerCase().includes(ql) ||
     (s.titleId||'').toLowerCase().includes(ql) ||
     (s.artist||'').toLowerCase().includes(ql) ||
+    (s.coverArtist||'').toLowerCase().includes(ql) ||
     (s.anime||'').toLowerCase().includes(ql) ||
     (s.animeId||'').toLowerCase().includes(ql) ||
     (s.animeEn||'').toLowerCase().includes(ql) ||
