@@ -3834,6 +3834,7 @@ async function main() {
       return;
     }
 
+    const rawArtist = (song.artist || song.coverArtist || '').trim();
     const artistKey = rawArtist ? normalizeArtistKey(rawArtist) : '';
     if (artistKey) touchedArtistKeys.add(artistKey);
     const relByArtist = artistKey
