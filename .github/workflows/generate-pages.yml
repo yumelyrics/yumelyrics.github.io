@@ -6,12 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'incremental = baru & diedit saja · full = semua lagu'
+        description: 'new = lagu baru · edited = diedit · full = semua · incremental = legacy (baru+diedit)'
         type: choice
         options:
-          - incremental
+          - new
+          - edited
           - full
-        default: incremental
+          - incremental
+        default: new
 
 jobs:
   generate:
