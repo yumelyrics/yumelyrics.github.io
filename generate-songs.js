@@ -90,9 +90,9 @@ async function sendDiscordNotification(generatedSongs, success = true) {
         embed.thumbnail = { url: firstImg };
       }
     }
-
+/** Tag Roles notif discord */
     const payload = {
-      content: '<@&1513469865451716771>',
+      content: '<@&................>', /** ganti yang ini*/
       embeds: [embed],
     };
     const res = await fetch(DISCORD_WEBHOOK_URL, {
