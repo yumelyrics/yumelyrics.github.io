@@ -1,0 +1,48 @@
+name: Generate Manga Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode generate'
+        required: false
+        default: 'new'
+        type: choice
+        options:
+          - new
+          - full
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --prefer-offline || npm install
+
+      - name: Generate manga pages
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          GENERATE_MODE: ${{ github.event.inputs.mode || 'new' }}
+        run: node scripts/generate-manga.js
+
+      - name: Commit generated files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: generate manga pages [skip ci]"
+            git push
+          fi
