@@ -180,7 +180,7 @@ async function sendDiscordNotification(newChapters, success = true) {
 }
 
 // ── CSS shared constants ──────────────────────────────────────────────────────
-const FONT_URL  = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&family=Syne:wght@400;500;600;700&display=swap';
+const FONT_URL  = 'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@400;500;600;700&display=swap';
 const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
 const FONT_LINK = `<link rel="preload" href="${FONT_URL}" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
 const THEME_BOOT = `<script>(function(){var t=localStorage.getItem('ym_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
@@ -192,7 +192,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
   --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
   --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);
-  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Syne',system-ui,sans-serif;--ro:'DM Sans',system-ui,sans-serif;
+  --serif:'Lora',Georgia,serif;--sans:'Syne',system-ui,sans-serif;--ro:'DM Sans',system-ui,sans-serif;
   --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
   --accent:var(--rose);--accent2:var(--gold);
   --nm:background .35s ease,color .35s ease,border-color .35s ease;
@@ -361,7 +361,7 @@ const WALINE_CSS = `
 .comments-section{padding:3rem 2.5rem 7rem;border-top:1px solid var(--border);background:var(--paper);transition:var(--nm)}
 [data-theme="dark"] .comments-section{background:var(--paper)}
 .cm-inner{max-width:760px;margin:0 auto}
-.cm-heading{font-family:var(--serif);font-size:1.8rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:.35rem}
+.cm-heading{font-family:var(--serif);font-size:1.8rem;font-weight:600;color:var(--ink);margin-bottom:.35rem}
 .cm-sub{font-size:.75rem;color:var(--ash);font-family:var(--ro);margin-bottom:2rem}
 #waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
 [data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
@@ -488,11 +488,11 @@ const READER_HUD_CSS = `
 #chapter-drawer.drawer-open{transform:translateY(0);opacity:1;pointer-events:auto}
 .drawer-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:.75rem auto .4rem;flex-shrink:0}
 .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:2;background:rgba(6,5,10,.99)}
-.drawer-title{font-size:.6rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,192,208,.5);font-family:var(--sans)}
+.drawer-title{font-size:.6rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,192,208,.5);font-family:system-ui,-apple-system,sans-serif}
 .drawer-close{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:rgba(200,192,208,.55);cursor:pointer;font-size:.7rem;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
 .drawer-close:hover{background:rgba(255,255,255,.14);color:#fff}
 .drawer-list{padding:.3rem 0 .8rem}
-.drawer-ch-item{display:flex;align-items:center;gap:.9rem;padding:.62rem 1.4rem;text-decoration:none;color:rgba(200,192,208,.6);font-family:var(--ro);font-size:.82rem;transition:background .14s,color .14s;border-bottom:1px solid rgba(255,255,255,.025)}
+.drawer-ch-item{display:flex;align-items:center;gap:.9rem;padding:.62rem 1.4rem;text-decoration:none;color:rgba(200,192,208,.6);font-family:system-ui,-apple-system,sans-serif;font-size:.82rem;transition:background .14s,color .14s;border-bottom:1px solid rgba(255,255,255,.025)}
 .drawer-ch-item:last-child{border-bottom:none}
 .drawer-ch-item:hover{background:rgba(255,255,255,.045);color:#e8e2d9}
 .drawer-ch-item.current{color:var(--gold);background:rgba(201,169,110,.06)}
@@ -509,8 +509,16 @@ const READER_HUD_CSS = `
 }
 `;
 
+const READER_SCROLL_TOP_SCRIPT = `<script>
+(function(){
+  if('scrollRestoration' in window.history) window.history.scrollRestoration='manual';
+  window.scrollTo(0,0);
+})();
+<\/script>`;
+
 const READER_HUD_SCRIPT = `<script>
 (function(){
+  window.scrollTo(0,0);
   var hud=document.getElementById('reader-hud');
   var drawer=document.getElementById('chapter-drawer');
   var backdrop=document.getElementById('drawer-backdrop');
@@ -676,13 +684,13 @@ ${READER_HUD_CSS}
 .breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.55rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#4a4550;margin-bottom:1.5rem;flex-wrap:wrap}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
 .breadcrumb-sep{color:#2a2535}
-.chap-series{font-family:var(--serif);font-size:1rem;font-weight:300;font-style:italic;color:#7a6880;margin-bottom:.3rem}
+.chap-series{font-family:var(--serif);font-size:1rem;font-weight:500;color:#7a6880;margin-bottom:.3rem}
 .chap-title{font-family:var(--sans);font-size:clamp(1.3rem,3.5vw,2.2rem);font-weight:700;color:#e8e2d9;line-height:1.2;margin-bottom:.7rem}
 .chap-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.65rem;color:#5a5060;letter-spacing:.08em}
 .chap-meta strong{color:#9a9098}
 
 /* ── Manga reader ── */
-.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:1rem 0 6rem;gap:2px;cursor:pointer;user-select:none;overflow-x:hidden}
+.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden}
 .manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
 .manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a}
 
@@ -694,12 +702,13 @@ footer{display:flex;justify-content:space-between;align-items:flex-start;gap:2re
 
 @media(max-width:768px){
   .chap-header{padding:1.5rem 1rem 1.25rem}
-  .manga-reader{gap:1px}
+  .manga-reader{gap:0}
   footer{padding:2rem 1rem 4rem}
 }
 </style>
 </head>
 <body>
+${READER_SCROLL_TOP_SCRIPT}
 ${buildNav('../', 'manga')}
 
 <div class="chap-header">
@@ -850,7 +859,9 @@ ${NAV_CSS}
 .breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:1.5rem;flex-wrap:wrap}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
 .breadcrumb-sep{color:var(--smoke)}
-.series-title{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.2;margin-bottom:1rem}
+.series-back-link{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--sans);font-size:.75rem;font-weight:600;color:var(--ash);text-decoration:none;margin-bottom:1.25rem;transition:color .18s}
+.series-back-link:hover{color:var(--rose)}
+.series-title{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:600;color:var(--ink);line-height:1.2;margin-bottom:1rem}
 .series-meta{display:flex;gap:1rem 1.5rem;flex-wrap:wrap;font-size:.7rem;color:var(--ash);letter-spacing:.08em;align-items:center;margin-bottom:1rem}
 .series-meta strong{color:var(--ink)}
 .series-meta-sep{color:var(--smoke);font-size:.8rem}
@@ -860,7 +871,7 @@ ${NAV_CSS}
 /* ── Chapter list — full width ── */
 .chapter-list-wrap{padding:2.5rem 4rem 6rem;width:100%}
 .chapter-list-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
-.chapter-list-head h2{font-family:var(--serif);font-size:1.6rem;font-weight:300;font-style:italic;color:var(--ink)}
+.chapter-list-head h2{font-family:var(--serif);font-size:1.6rem;font-weight:600;color:var(--ink)}
 .ch-count{font-size:.62rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
 .chapter-card{display:flex;align-items:center;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:padding-left .18s,background .18s}
 .chapter-card:hover{background:rgba(201,169,110,.05);padding-left:.5rem}
@@ -868,8 +879,8 @@ ${NAV_CSS}
 .cc-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
 .cc-thumb-ph{width:52px;height:72px;background:linear-gradient(160deg,#1a1020,#3d1f3a)}
 .cc-body{flex:1;display:flex;flex-direction:column;gap:.18rem;min-width:0}
-.cc-num{font-family:var(--sans);font-size:.68rem;font-weight:700;color:var(--ash);letter-spacing:.1em;text-transform:uppercase}
-.cc-title{font-size:.9rem;color:var(--ink);font-family:var(--ro);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-num{font-family:system-ui,-apple-system,sans-serif;font-size:.68rem;font-weight:700;color:var(--ash);letter-spacing:.1em;text-transform:uppercase}
+.cc-title{font-size:.9rem;color:var(--ink);font-family:system-ui,-apple-system,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-pages{font-size:.62rem;color:var(--smoke);flex-shrink:0;white-space:nowrap}
 .cc-arr{color:var(--gold);font-family:var(--serif);margin-left:.5rem;flex-shrink:0;font-size:1.05rem}
 
@@ -910,6 +921,7 @@ ${buildNav('../','manga')}
       <span class="breadcrumb-sep">›</span>
       <span>${escHtml(title)}</span>
     </div>
+    <a class="series-back-link" href="index.html">← Kembali ke Katalog</a>
     <h1 class="series-title">${escHtml(title)}</h1>
     <div class="series-meta">
       <span>📚 <strong>${chapters.length}</strong> chapter</span>
@@ -982,7 +994,7 @@ html{scroll-behavior:smooth;background:var(--paper)}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm)}
 ${NAV_CSS}
 .page-hero{padding:4rem 3.5rem 2.5rem}
-.page-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.5rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.3;margin-bottom:.6rem}
+.page-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.5rem);font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:.6rem}
 .page-sub{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
 .series-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.5rem;padding:0 3.5rem 5rem}
 .series-card{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:.75rem;transition:opacity .2s}
