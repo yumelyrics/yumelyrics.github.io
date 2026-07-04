@@ -654,6 +654,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
     <button class="adm-tab" id="tab-announcements" onclick="switchTab('announcements')">📣 Announcements</button>
     <button class="adm-tab" id="tab-webhook" onclick="switchTab('webhook')">💬 Chat Webhook</button>
     <button class="adm-tab" id="tab-notif" onclick="switchTab('notif')">🔔 Notifikasi</button>
+    <button class="adm-tab" id="tab-manga" onclick="switchTab('manga')">📖 Manga</button>
   </div>
 
   <div id="sec-katalog" class="adm-section on">
@@ -1351,6 +1352,148 @@ Paragraf dipisah dengan enter 2x.
       </div>
     </div><!-- end sec-notif -->
 
+  <!-- ══════════════════════════════════════════ MANGA ══════════════════════════════════════════ -->
+  <div id="sec-manga" class="adm-section">
+    <h2 style="font-size:.85rem;font-weight:600;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.2rem">📖 Manga Admin</h2>
+
+    <!-- Inner sub-tabs -->
+    <div style="display:flex;gap:.4rem;margin-bottom:1.4rem;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <button class="adm-tab on" id="mtab-series" onclick="switchMangaTab('series')" style="font-size:.65rem">📚 Series</button>
+      <button class="adm-tab" id="mtab-chapter" onclick="switchMangaTab('chapter')" style="font-size:.65rem">📄 Chapter</button>
+    </div>
+
+    <!-- ── SERIES FORM ── -->
+    <div id="msec-series">
+      <div class="edit-banner" id="mangaSeriesBanner" style="display:none">✏️ <strong style="font-weight:500">Mode Edit Series</strong> — Ubah data lalu klik Update.</div>
+      <input type="hidden" id="ms-editid" value="">
+
+      <section class="form-card">
+        <div class="form-card-title">Info Series Manga</div>
+        <div class="song-form-grid">
+          <div class="fg"><div class="fl">Judul Series *</div><input class="fi" id="ms-title" placeholder="Contoh: Kaguya-sama wa Kokurasetai"></div>
+          <div class="fg"><div class="fl">Slug (URL) *</div><input class="fi" id="ms-slug" placeholder="kaguya-sama-wa-kokurasetai"></div>
+          <div class="fg"><div class="fl">Pengarang</div><input class="fi" id="ms-author" placeholder="Nama pengarang"></div>
+          <div class="fg">
+            <div class="fl">Status</div>
+            <select class="fi" id="ms-status">
+              <option value="ongoing">Ongoing</option>
+              <option value="completed">Completed</option>
+              <option value="hiatus">Hiatus</option>
+              <option value="dropped">Dropped</option>
+            </select>
+          </div>
+          <div class="fg" style="grid-column:1/-1"><div class="fl">Genre (pisah koma)</div><input class="fi" id="ms-genres" placeholder="Action, Romance, Comedy"></div>
+          <div class="fg" style="grid-column:1/-1">
+            <div class="fl">Cover URL</div>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+              <input class="fi" id="ms-cover" placeholder="https://i.ibb.co/..." style="flex:1;min-width:200px" oninput="showMangaSeriesCoverPreview()">
+              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem">
+                📤 Upload
+                <input type="file" accept="image/*" style="display:none" onchange="handleMangaSeriesCoverUpload(this)">
+              </label>
+            </div>
+            <div id="ms-cover-status" style="font-size:.68rem;margin-top:.3rem;color:var(--muted)"></div>
+            <div id="ms-cover-preview-wrap" style="display:none;margin-top:.5rem">
+              <img id="ms-cover-preview-img" alt="preview" style="max-height:120px;max-width:200px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">
+            </div>
+          </div>
+          <div class="fg" style="grid-column:1/-1"><div class="fl">Deskripsi</div><textarea class="fi" id="ms-desc" rows="3" placeholder="Sinopsis series..." style="resize:vertical"></textarea></div>
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem">
+          <button class="bsave" id="ms-saveBtn" onclick="saveMangaSeries()">Simpan Series</button>
+          <button class="bdels" id="ms-cancelBtn" style="display:none" onclick="cancelMangaSeriesEdit()">Batal</button>
+        </div>
+      </section>
+
+      <!-- GitHub Actions trigger for manga -->
+      <section class="form-card" style="margin-top:1rem">
+        <div class="form-card-title">⚡ Generate Manga Pages</div>
+        <p class="form-card-hint">Trigger GitHub Actions untuk generate HTML manga dari Firestore ke repository. Butuh GitHub token di panel 🔑 API Keys.</p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+          <button class="bsave" id="gh-manga-run-btn" onclick="triggerWorkflow('manga','new')" data-label="▶ Generate Manga">▶ Generate Manga</button>
+        </div>
+        <div id="gh-manga-status" style="display:none;align-items:center;gap:.6rem;margin-top:.7rem;font-size:.72rem;color:var(--text)">
+          <span id="gh-manga-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0"></span>
+          <span id="gh-manga-status-text"></span>
+          <a id="gh-manga-dl" style="display:none;margin-left:.3rem" class="bsave" href="#" target="_blank" rel="noopener">↗ Lihat</a>
+        </div>
+      </section>
+
+      <!-- Series List -->
+      <section class="form-card" style="margin-top:1rem">
+        <div class="form-card-title">Daftar Series (<span id="mangaSeriesCount">0</span>)</div>
+        <div id="mangaSeriesList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
+      </section>
+    </div>
+
+    <!-- ── CHAPTER FORM ── -->
+    <div id="msec-chapter" style="display:none">
+      <div class="edit-banner" id="mangaChapterBanner" style="display:none">✏️ <strong style="font-weight:500">Mode Edit Chapter</strong> — Ubah data lalu klik Update.</div>
+      <input type="hidden" id="mc-editid" value="">
+
+      <section class="form-card">
+        <div class="form-card-title">Info Chapter Manga</div>
+        <div class="song-form-grid">
+          <div class="fg">
+            <div class="fl">Series *</div>
+            <select class="fi" id="mc-seriesId">
+              <option value="">— Pilih Series —</option>
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Nomor Chapter *</div><input class="fi" id="mc-num" type="number" min="0" step="0.1" placeholder="1"></div>
+          <div class="fg"><div class="fl">Judul Chapter</div><input class="fi" id="mc-title" placeholder="(opsional)"></div>
+          <div class="fg"><div class="fl">Translator</div><input class="fi" id="mc-translator" placeholder="Nama translator"></div>
+          <div class="fg">
+            <div class="fl">Status</div>
+            <select class="fi" id="mc-status">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          <div class="fg" style="grid-column:1/-1">
+            <div class="fl">Cover Chapter URL</div>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+              <input class="fi" id="mc-cover" placeholder="https://i.ibb.co/... (opsional)" style="flex:1;min-width:200px" oninput="showMangaChapterCoverPreview()">
+              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem">
+                📤 Upload
+                <input type="file" accept="image/*" style="display:none" onchange="handleMangaChapterCoverUpload(this)">
+              </label>
+            </div>
+            <div id="mc-cover-status" style="font-size:.68rem;margin-top:.3rem;color:var(--muted)"></div>
+            <div id="mc-cover-preview-wrap" style="display:none;margin-top:.5rem">
+              <img id="mc-cover-preview-img" alt="preview" style="max-height:100px;max-width:180px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">
+            </div>
+          </div>
+          <div class="fg" style="grid-column:1/-1"><div class="fl">Deskripsi Chapter</div><textarea class="fi" id="mc-desc" rows="2" placeholder="(opsional)" style="resize:vertical"></textarea></div>
+        </div>
+      </section>
+
+      <!-- Pages Editor -->
+      <section class="form-card" style="margin-top:1rem">
+        <div class="form-card-title">Halaman Manga (Pages)</div>
+        <p class="form-card-hint">Tambahkan gambar satu per satu. Gambar akan tampil berurutan dari atas ke bawah tanpa celah (seamless). Klik Upload untuk upload ke ImgBB atau paste URL langsung.</p>
+        <div id="mpages" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem"></div>
+        <button class="bsave" onclick="addMangaPage()" style="font-size:.65rem;padding:.4rem .85rem">+ Tambah Halaman</button>
+      </section>
+
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem">
+        <button class="bsave" id="mc-saveBtn" onclick="saveMangaChapter()">Simpan Chapter</button>
+        <button class="bdels" id="mc-cancelBtn" style="display:none" onclick="cancelMangaChapterEdit()">Batal</button>
+      </div>
+
+      <!-- Chapter List -->
+      <section class="form-card" style="margin-top:1rem">
+        <div class="form-card-title">Daftar Chapter (<span id="mangaChapterCount">0</span>)</div>
+        <div style="margin-bottom:.6rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <select class="fi" id="mc-filter-series" onchange="renderMangaChapterList()" style="max-width:260px;font-size:.7rem">
+            <option value="">Semua Series</option>
+          </select>
+        </div>
+        <div id="mangaChapterList"><div style="font-size:.78rem;color:var(--muted);font-style:italic">Memuat...</div></div>
+      </section>
+    </div>
+  </div><!-- end sec-manga -->
+
 <div class="toast" id="toast-ui"></div>
 
 
@@ -1733,7 +1876,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 window.switchTab = (tab) => {
-  ['katalog','cerita','resources','rules','announcements','webhook','notif'].forEach(t=>{
+  ['katalog','cerita','resources','rules','announcements','webhook','notif','manga'].forEach(t=>{
     document.getElementById('sec-'+t).classList.toggle('on', t===tab);
     document.getElementById('tab-'+t).classList.toggle('on', t===tab);
   });
@@ -3366,7 +3509,8 @@ const GH_REPO  = 'yumelyrics.github.io';
 const GH_WORKFLOWS = {
   songs:     { file: 'generate-pages.yml',    btn: 'gh-run-new-btn', statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: '▶ Generate Lagu Baru', dlUrl: 'https://yumelyrics.my.id/lagu/' },
   resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.my.id/resources/' },
-  stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' }
+  stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' },
+  manga:     { file: 'generate-manga.yml',      btn: 'gh-manga-run-btn', statusEl: 'gh-manga-status', dotEl: 'gh-manga-status-dot',  textEl: 'gh-manga-status-text',  dlEl: 'gh-manga-dl', label: '▶ Generate Manga',             dlUrl: 'https://yumelyrics.my.id/manga/' }
 };
 const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
 let _pollTimers = {};
@@ -4236,6 +4380,416 @@ window.uploadPhotoToWorker = async function(file){
   return window.uploadImageFile(file);
 };
 
+// ══════════════════════════════════════════ MANGA ADMIN ══════════════════════════════════════════
+
+let mangaSeries = [];
+let mangaChapters = [];
+
+// ── Sub-tab switch ──
+window.switchMangaTab = (sub) => {
+  ['series','chapter'].forEach(s => {
+    document.getElementById('msec-'+s).style.display = s===sub ? '' : 'none';
+    document.getElementById('mtab-'+s).classList.toggle('on', s===sub);
+  });
+};
+
+// ── Firestore listeners ──
+(function initMangaListeners(){
+  onSnapshot(query(collection(db,'manga_series'), orderBy('title','asc')), snap => {
+    mangaSeries = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderMangaSeriesList();
+    populateMangaSeriesDropdowns();
+  });
+  onSnapshot(query(collection(db,'manga_chapters'), orderBy('chapterNum','asc')), snap => {
+    mangaChapters = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderMangaChapterList();
+  });
+})();
+
+// ── Series dropdown ──
+function populateMangaSeriesDropdowns(){
+  const seriesSel = document.getElementById('mc-seriesId');
+  const filterSel = document.getElementById('mc-filter-series');
+  const curVal = seriesSel ? seriesSel.value : '';
+  const curFilter = filterSel ? filterSel.value : '';
+  const opts = mangaSeries.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');
+  if(seriesSel) seriesSel.innerHTML = '<option value="">— Pilih Series —</option>' + opts;
+  if(filterSel) filterSel.innerHTML = '<option value="">Semua Series</option>' + opts;
+  if(curVal && seriesSel) seriesSel.value = curVal;
+  if(curFilter && filterSel) filterSel.value = curFilter;
+}
+
+// ── Render series list ──
+function renderMangaSeriesList(){
+  const el = document.getElementById('mangaSeriesList');
+  const countEl = document.getElementById('mangaSeriesCount');
+  if(!el) return;
+  if(countEl) countEl.textContent = mangaSeries.length;
+  if(!mangaSeries.length){
+    el.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada series.</div>';
+    return;
+  }
+  el.innerHTML = mangaSeries.map(s=>`
+    <div class="exitem">
+      <div style="display:flex;align-items:center;gap:.7rem">
+        ${s.cover ? `<img src="${escHtml(s.cover)}" alt="" style="width:40px;height:56px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">` : '<div style="width:40px;height:56px;background:var(--card2);border-radius:4px;flex-shrink:0"></div>'}
+        <div>
+          <div class="exn">${escHtml(s.title)}</div>
+          <div class="exar">${escHtml(s.author||'')}${s.author&&s.status?' · ':''}${escHtml(s.status||'')}${s.genres?' · '+escHtml(s.genres):''}</div>
+        </div>
+      </div>
+      <div class="exitem-btns">
+        <button class="bedit" onclick="editMangaSeries('${s.id}')">Edit</button>
+        <button class="bdels" onclick="delMangaSeries('${s.id}')">Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Render chapter list ──
+window.renderMangaChapterList = function(){
+  const el = document.getElementById('mangaChapterList');
+  const countEl = document.getElementById('mangaChapterCount');
+  const filterSel = document.getElementById('mc-filter-series');
+  const filterVal = filterSel ? filterSel.value : '';
+  if(!el) return;
+  let list = filterVal ? mangaChapters.filter(c=>c.seriesId===filterVal) : mangaChapters;
+  if(countEl) countEl.textContent = list.length;
+  if(!list.length){
+    el.innerHTML='<div style="font-size:.78rem;color:var(--muted);font-style:italic">Belum ada chapter.</div>';
+    return;
+  }
+  el.innerHTML = list.map(c=>{
+    const series = mangaSeries.find(s=>s.id===c.seriesId);
+    const pagesCount = Array.isArray(c.pages) ? c.pages.length : 0;
+    return `
+      <div class="exitem">
+        <div>
+          <div class="exn">Ch. ${escHtml(String(c.chapterNum||'?'))}${c.chapterTitle?' — '+escHtml(c.chapterTitle):''}</div>
+          <div class="exar">${series?escHtml(series.title):'Unknown'} · ${pagesCount} hal. · <span style="color:${c.status==='published'?'#4caf7d':'var(--muted)'}">${escHtml(c.status||'draft')}</span></div>
+        </div>
+        <div class="exitem-btns">
+          <button class="bedit" onclick="editMangaChapter('${c.id}')">Edit</button>
+          <button class="bdels" onclick="delMangaChapter('${c.id}')">Hapus</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+// ── Cover preview helpers ──
+window.showMangaSeriesCoverPreview = function(){
+  const url = document.getElementById('ms-cover').value.trim();
+  const wrap = document.getElementById('ms-cover-preview-wrap');
+  const img = document.getElementById('ms-cover-preview-img');
+  if(url && sanitizeUrl(url) !== '#'){ img.src=sanitizeUrl(url); wrap.style.display='block'; }
+  else { img.removeAttribute('src'); wrap.style.display='none'; }
+};
+window.showMangaChapterCoverPreview = function(){
+  const url = document.getElementById('mc-cover').value.trim();
+  const wrap = document.getElementById('mc-cover-preview-wrap');
+  const img = document.getElementById('mc-cover-preview-img');
+  if(url && sanitizeUrl(url) !== '#'){ img.src=sanitizeUrl(url); wrap.style.display='block'; }
+  else { img.removeAttribute('src'); wrap.style.display='none'; }
+};
+
+// ── Cover upload helpers ──
+window.handleMangaSeriesCoverUpload = async function(input){
+  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  const file = input.files[0]; input.value='';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
+  if(file.size > 5*1024*1024){ toast('File terlalu besar (maks 5MB).'); return; }
+  const statusEl = document.getElementById('ms-cover-status');
+  statusEl.textContent = '⏳ Uploading...'; statusEl.style.color='var(--muted)';
+  try {
+    const url = await uploadImageFile(file);
+    document.getElementById('ms-cover').value = url;
+    showMangaSeriesCoverPreview();
+    statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
+  } catch(e){
+    statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
+    toast('Upload cover gagal: '+e.message);
+  }
+};
+window.handleMangaChapterCoverUpload = async function(input){
+  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  const file = input.files[0]; input.value='';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
+  if(file.size > 5*1024*1024){ toast('File terlalu besar (maks 5MB).'); return; }
+  const statusEl = document.getElementById('mc-cover-status');
+  statusEl.textContent = '⏳ Uploading...'; statusEl.style.color='var(--muted)';
+  try {
+    const url = await uploadImageFile(file);
+    document.getElementById('mc-cover').value = url;
+    showMangaChapterCoverPreview();
+    statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
+  } catch(e){
+    statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
+    toast('Upload chapter cover gagal: '+e.message);
+  }
+};
+
+// ── Pages editor ──
+let _mangaPageCounter = 0;
+
+window.addMangaPage = function(url=''){
+  const container = document.getElementById('mpages');
+  const idx = _mangaPageCounter++;
+  const row = document.createElement('div');
+  row.className = 'lrow';
+  row.dataset.idx = idx;
+  row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;background:var(--card2)';
+  row.innerHTML =
+    `<span class="pg-num" style="font-size:.62rem;color:var(--muted);flex-shrink:0;min-width:1.6rem;text-align:right"></span>` +
+    `<img class="pg-thumb" src="" alt="" style="width:32px;height:44px;object-fit:cover;border-radius:3px;border:1px solid var(--border);flex-shrink:0;display:${url?'block':'none'}" onerror="this.style.display='none'" referrerpolicy="no-referrer">` +
+    `<input class="fi pg-url" placeholder="URL gambar halaman" value="${esc(url)}" style="flex:1;font-size:.7rem;padding:.35rem .55rem" oninput="onMangaPageUrlInput(this)">` +
+    `<label class="bsave" style="cursor:pointer;font-size:.6rem;padding:.35rem .7rem;flex-shrink:0" title="Upload ke ImgBB">` +
+    `  📤<input type="file" accept="image/*" style="display:none" onchange="uploadMangaPageFile(this)">` +
+    `</label>` +
+    `<button class="bdel" onclick="this.closest('.lrow').remove();reindexMangaPages()" title="Hapus halaman">✕</button>`;
+  container.appendChild(row);
+  if(url){
+    const thumb = row.querySelector('.pg-thumb');
+    thumb.src = sanitizeUrl(url);
+    thumb.style.display = 'block';
+  }
+  reindexMangaPages();
+};
+
+window.onMangaPageUrlInput = function(inp){
+  const row = inp.closest('.lrow');
+  const thumb = row.querySelector('.pg-thumb');
+  const url = inp.value.trim();
+  if(url && sanitizeUrl(url) !== '#'){
+    thumb.src = sanitizeUrl(url);
+    thumb.style.display = 'block';
+  } else {
+    thumb.src = '';
+    thumb.style.display = 'none';
+  }
+};
+
+window.uploadMangaPageFile = async function(input){
+  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  const file = input.files[0]; input.value='';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
+  if(file.size > 10*1024*1024){ toast('File terlalu besar (maks 10MB).'); return; }
+  const row = input.closest('.lrow');
+  const urlInp = row.querySelector('.pg-url');
+  const thumb = row.querySelector('.pg-thumb');
+  const origText = input.parentElement.textContent.trim();
+  input.parentElement.textContent = '⏳';
+  try {
+    const url = await uploadImageFile(file);
+    urlInp.value = url;
+    thumb.src = sanitizeUrl(url);
+    thumb.style.display = 'block';
+    toast('✅ Halaman di-upload!');
+  } catch(e){
+    toast('Upload gagal: '+e.message);
+  }
+  // Restore label text
+  const lbl = row.querySelector('label.bsave');
+  if(lbl){
+    const inp2 = lbl.querySelector('input[type=file]');
+    lbl.innerHTML = '📤';
+    lbl.appendChild(inp2);
+  }
+};
+
+function reindexMangaPages(){
+  const rows = document.querySelectorAll('#mpages .lrow');
+  rows.forEach((r,i)=>{
+    const numEl = r.querySelector('.pg-num');
+    if(numEl) numEl.textContent = (i+1)+'.';
+  });
+}
+
+// ── Save Series ──
+window.saveMangaSeries = async function(){
+  const title = document.getElementById('ms-title').value.trim();
+  const slug  = document.getElementById('ms-slug').value.trim();
+  const author = document.getElementById('ms-author').value.trim();
+  const status = document.getElementById('ms-status').value;
+  const cover  = document.getElementById('ms-cover').value.trim();
+  const genres = document.getElementById('ms-genres').value.trim();
+  const desc   = document.getElementById('ms-desc').value.trim();
+  const editId = document.getElementById('ms-editid').value;
+  if(!title){ toast('Judul series wajib diisi!'); return; }
+  if(!slug){ toast('Slug wajib diisi!'); return; }
+  if(!/^[a-z0-9-]+$/.test(slug)){ toast('Slug hanya boleh huruf kecil, angka, dan tanda hubung (-)'); return; }
+  const btn = document.getElementById('ms-saveBtn');
+  btn.disabled = true;
+  const data = { title, slug, author, status, cover, genres, desc, updatedAt: new Date().toISOString() };
+  try {
+    if(editId){
+      await updateDoc(doc(db,'manga_series',editId), data);
+      toast('Series berhasil diupdate!');
+      cancelMangaSeriesEdit();
+    } else {
+      data.createdAt = new Date().toISOString();
+      await addDoc(collection(db,'manga_series'), data);
+      toast('Series berhasil ditambahkan!');
+      clearMangaSeriesForm();
+    }
+  } catch(e){ toast('Gagal simpan: '+e.message); }
+  btn.disabled = false;
+};
+
+function clearMangaSeriesForm(){
+  ['ms-title','ms-slug','ms-author','ms-genres','ms-cover','ms-desc'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('ms-status').value='ongoing';
+  document.getElementById('ms-editid').value='';
+  document.getElementById('ms-cover-status').textContent='';
+  document.getElementById('ms-cover-preview-wrap').style.display='none';
+}
+
+window.editMangaSeries = function(id){
+  const s = mangaSeries.find(x=>x.id===id); if(!s) return;
+  document.getElementById('ms-title').value = s.title||'';
+  document.getElementById('ms-slug').value  = s.slug||'';
+  document.getElementById('ms-author').value= s.author||'';
+  document.getElementById('ms-status').value= s.status||'ongoing';
+  document.getElementById('ms-genres').value= s.genres||'';
+  document.getElementById('ms-cover').value = s.cover||'';
+  document.getElementById('ms-desc').value  = s.desc||'';
+  document.getElementById('ms-editid').value= s.id;
+  showMangaSeriesCoverPreview();
+  document.getElementById('mangaSeriesBanner').style.display='flex';
+  document.getElementById('ms-saveBtn').textContent='✓ Update Series';
+  document.getElementById('ms-cancelBtn').style.display='block';
+  switchMangaTab('series');
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('Form diisi data series yang dipilih.');
+};
+
+window.cancelMangaSeriesEdit = function(){
+  clearMangaSeriesForm();
+  document.getElementById('mangaSeriesBanner').style.display='none';
+  document.getElementById('ms-saveBtn').textContent='Simpan Series';
+  document.getElementById('ms-cancelBtn').style.display='none';
+};
+
+window.delMangaSeries = async function(id){
+  if(!confirm('Yakin hapus series ini? Chapter-chapter-nya tidak ikut terhapus.')) return;
+  try {
+    await deleteDoc(doc(db,'manga_series',id));
+    toast('Series dihapus.');
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+// ── Auto-generate slug from title ──
+(function(){
+  const titleInp = document.getElementById('ms-title');
+  const slugInp  = document.getElementById('ms-slug');
+  if(titleInp && slugInp){
+    titleInp.addEventListener('input', function(){
+      if(document.getElementById('ms-editid').value) return; // don't touch slug while editing
+      slugInp.value = this.value.trim()
+        .toLowerCase()
+        .replace(/[^\w\s-]/g,'')
+        .replace(/[\s_]+/g,'-')
+        .replace(/-+/g,'-')
+        .slice(0,80);
+    });
+  }
+})();
+
+// ── Save Chapter ──
+window.saveMangaChapter = async function(){
+  const seriesId    = document.getElementById('mc-seriesId').value;
+  const chapterNum  = parseFloat(document.getElementById('mc-num').value);
+  const chapterTitle= document.getElementById('mc-title').value.trim();
+  const translator  = document.getElementById('mc-translator').value.trim();
+  const status      = document.getElementById('mc-status').value;
+  const cover       = document.getElementById('mc-cover').value.trim();
+  const desc        = document.getElementById('mc-desc').value.trim();
+  const editId      = document.getElementById('mc-editid').value;
+  if(!seriesId){ toast('Pilih series dulu!'); return; }
+  if(isNaN(chapterNum)){ toast('Nomor chapter wajib diisi!'); return; }
+  // collect pages
+  const pages = [];
+  document.querySelectorAll('#mpages .lrow').forEach(row=>{
+    const url = row.querySelector('.pg-url').value.trim();
+    if(url && sanitizeUrl(url) !== '#') pages.push(url);
+  });
+  if(!pages.length){ toast('Tambahkan minimal 1 halaman!'); return; }
+  const btn = document.getElementById('mc-saveBtn');
+  btn.disabled = true;
+  const data = { seriesId, chapterNum, chapterTitle, translator, status, cover, desc, pages, htmlDirty:true, updatedAt: new Date().toISOString() };
+  try {
+    if(editId){
+      await updateDoc(doc(db,'manga_chapters',editId), data);
+      toast('Chapter berhasil diupdate!');
+      cancelMangaChapterEdit();
+    } else {
+      data.createdAt = new Date().toISOString();
+      await addDoc(collection(db,'manga_chapters'), data);
+      toast('Chapter berhasil ditambahkan!');
+      clearMangaChapterForm();
+    }
+  } catch(e){ toast('Gagal simpan: '+e.message); }
+  btn.disabled = false;
+};
+
+function clearMangaChapterForm(){
+  ['mc-seriesId','mc-num','mc-title','mc-translator','mc-cover','mc-desc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('mc-status').value='draft';
+  document.getElementById('mc-editid').value='';
+  document.getElementById('mc-cover-status').textContent='';
+  document.getElementById('mc-cover-preview-wrap').style.display='none';
+  document.getElementById('mpages').innerHTML='';
+  addMangaPage();
+}
+
+window.editMangaChapter = function(id){
+  const c = mangaChapters.find(x=>x.id===id); if(!c) return;
+  document.getElementById('mc-seriesId').value  = c.seriesId||'';
+  document.getElementById('mc-num').value       = c.chapterNum||'';
+  document.getElementById('mc-title').value     = c.chapterTitle||'';
+  document.getElementById('mc-translator').value= c.translator||'';
+  document.getElementById('mc-status').value    = c.status||'draft';
+  document.getElementById('mc-cover').value     = c.cover||'';
+  document.getElementById('mc-desc').value      = c.desc||'';
+  document.getElementById('mc-editid').value    = c.id;
+  showMangaChapterCoverPreview();
+  document.getElementById('mpages').innerHTML='';
+  (c.pages||[]).forEach(url=>addMangaPage(url));
+  if(!c.pages||!c.pages.length) addMangaPage();
+  document.getElementById('mangaChapterBanner').style.display='flex';
+  document.getElementById('mc-saveBtn').textContent='✓ Update Chapter';
+  document.getElementById('mc-cancelBtn').style.display='block';
+  switchMangaTab('chapter');
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('Form diisi data chapter yang dipilih.');
+};
+
+window.cancelMangaChapterEdit = function(){
+  clearMangaChapterForm();
+  document.getElementById('mangaChapterBanner').style.display='none';
+  document.getElementById('mc-saveBtn').textContent='Simpan Chapter';
+  document.getElementById('mc-cancelBtn').style.display='none';
+};
+
+window.delMangaChapter = async function(id){
+  if(!confirm('Yakin hapus chapter ini?')) return;
+  try {
+    await deleteDoc(doc(db,'manga_chapters',id));
+    toast('Chapter dihapus.');
+  } catch(e){ toast('Gagal hapus: '+e.message); }
+};
+
+// ── Init chapter form ──
+addMangaPage();
+
+// ═══════════════════════════════════════════════════════════════════════════════
 function geniusFetchLyrics(url, fullTitle){
   var res = document.getElementById('gd-results');
   if(res) res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mengambil lirik dari ' + _escH(fullTitle) + '...</div>';
