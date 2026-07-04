@@ -1,11 +1,10 @@
-// generate-manga.js — v2026-07
+// generate-manga.js — v2026-07-updated
 // GitHub Actions: ambil data Firestore → generate HTML per chapter manga/komik terjemahan
-// Pola sama persis dengan generate-songs.js (manifest, htmlDirty, Discord, komentar, sitemap)
 //
 // Firestore collections:
 //   manga_series/{id}    → metadata series (judul, cover, deskripsi, dsb.)
 //   manga_chapters/{id}  → data chapter (pages[], seriesId, chapterNum, dsb.)
-//   manga_chapters/{id}/comments/{cmId} → sistem komentar
+//   manga_chapters/{id}/comments/{cmId} → sudah diganti Waline (tidak dipakai)
 //
 // Output:
 //   /manga/index.html              → katalog semua series
@@ -46,6 +45,7 @@ const BASE_URL      = 'https://yumelyrics.my.id'; // ganti kalau pakai subdomain
 const MANGA_DIR     = 'manga';
 const MANIFEST_PATH = '.yume-manga-manifest.json';
 const DISCORD_ROLE  = '<@&1234567890>'; // ganti dengan role ID Discord kamu
+const WALINE_SERVER = 'https://yumelyrics-comment.vercel.app'; // Waline server URL
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -302,10 +302,10 @@ body.discord-popup-lock{overflow:hidden}
 .discord-popup-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;margin:1rem 1.1rem 1.25rem;padding:.85rem 1rem;background:#5865F2;color:#fff;text-decoration:none;border-radius:8px;font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s}
 .discord-popup-btn:hover{background:#4752c4}
 .discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
-.discord-popup-fab{position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,0px));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s}
+.discord-popup-fab{position:fixed;bottom:max(5.5rem,calc(env(safe-area-inset-bottom,0px)+5.5rem));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:48px;height:48px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s}
 .discord-popup-fab.is-visible{display:flex}
 .discord-popup-fab:hover{transform:scale(1.08)}
-.discord-popup-fab svg{width:26px;height:20px}
+.discord-popup-fab svg{width:24px;height:18px}
 @media(max-width:768px){.discord-popup-overlay{backdrop-filter:none;background:rgba(10,8,18,.9)}.discord-popup-row{position:relative}.discord-popup-close{position:absolute;top:-12px;right:-12px;z-index:5;width:34px;height:34px;font-size:.95rem;margin-top:0}}
 `;
 
@@ -356,166 +356,214 @@ function buildDiscordPopup() {
 <\/script>`;
 }
 
-// ── Komentar (Firebase, pola sama dengan songs) ───────────────────────────────
-function buildCommentsSection(chapterId) {
+// ── Waline Comments ────────────────────────────────────────────────────────────
+const WALINE_CSS = `
+.comments-section{padding:3rem 2.5rem 7rem;border-top:1px solid var(--border);background:var(--paper);transition:var(--nm)}
+[data-theme="dark"] .comments-section{background:var(--paper)}
+.cm-inner{max-width:760px;margin:0 auto}
+.cm-heading{font-family:var(--serif);font-size:1.8rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:.35rem}
+.cm-sub{font-size:.75rem;color:var(--ash);font-family:var(--ro);margin-bottom:2rem}
+#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
+[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
+#waline .wl-browser,#waline .wl-os{display:none!important}
+#waline .wl-content img{max-width:100%;height:auto;display:block}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
+@media(max-width:768px){.comments-section{padding:2rem 1.2rem 5rem}}
+`;
+
+function buildWalineSection(chapterPath) {
+  const pathJson = JSON.stringify(chapterPath);
+  const serverJson = JSON.stringify(WALINE_SERVER);
   return `
 <section class="comments-section" id="comments">
-  <div class="cm-wrap">
+  <div class="cm-inner">
     <h2 class="cm-heading">Komentar</h2>
-    <div id="cm-form-area">
-      <div class="cm-input-row">
-        <input id="cm-name" class="cm-input" type="text" maxlength="40" placeholder="Nama kamu..." autocomplete="off">
-        <textarea id="cm-text" class="cm-input cm-textarea" maxlength="500" rows="3" placeholder="Tulis komentar..."></textarea>
-        <button class="cm-submit-btn" onclick="submitComment(null)">Kirim</button>
-      </div>
-    </div>
-    <div id="cm-list"><div class="cm-empty">Memuat komentar...</div></div>
+    <p class="cm-sub">Bagikan pendapatmu — bebas sebagai tamu, tanpa perlu login.</p>
+    <div id="waline"></div>
   </div>
 </section>
-
-<script type="module">
-const CHAPTER_ID = ${JSON.stringify(chapterId)};
-const FB_CFG = {
-  apiKey:'AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8',
-  authDomain:'yumesubs7.firebaseapp.com',projectId:'yumesubs7',
-  storageBucket:'yumesubs7.firebasestorage.app',
-  messagingSenderId:'1076202015626',appId:'1:1076202015626:web:ce89fb668eb6b2bd021673'
-};
-
-function escHtml(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function renderMention(s){
-  return escHtml(s).replace(/(^|\\s)(@[^\\s<]{1,40})/g,'$1<span class="cm-mention">$2</span>');
-}
-function timeAgo(ts){
-  var d=Date.now()-(ts?.seconds?ts.seconds*1000:(ts||0)),m=Math.floor(d/60000);
-  if(m<1)return 'baru saja';if(m<60)return m+'m lalu';
-  var h=Math.floor(m/60);if(h<24)return h+'j lalu';
-  var dy=Math.floor(h/24);if(dy<30)return dy+'h lalu';
-  return Math.floor(dy/30)+'bln lalu';
-}
-
-(window.requestIdleCallback||function(cb){setTimeout(cb,300)})(async function(){
-  try{
-    var fb=await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js');
-    var fs=await import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
-    var app=fb.initializeApp(FB_CFG,'manga_comments_'+CHAPTER_ID);
-    var db=fs.getFirestore(app);
-    var colRef=fs.collection(db,'manga_chapters',CHAPTER_ID,'comments');
-
-    // Realtime listener komentar
-    fs.onSnapshot(
-      fs.query(colRef,fs.orderBy('createdAt','asc')),
-      function(snap){
-        var list=document.getElementById('cm-list');
-        if(!list)return;
-        if(snap.empty){list.innerHTML='<div class="cm-empty">Belum ada komentar. Jadilah yang pertama!</div>';return;}
-        var html='';
-        snap.forEach(function(d){
-          var c=d.data(),id=d.id;
-          var name=escHtml(c.name||'Anonim').substring(0,40);
-          var text=renderMention(c.text||'');
-          var time=timeAgo(c.createdAt);
-          html+='<div class="cm-item" id="cm-'+id+'">'+
-            '<div class="cm-meta"><span class="cm-author">'+name+'</span><span class="cm-time">'+time+'</span></div>'+
-            '<div class="cm-text">'+text+'</div>'+
-            '<div class="cm-actions">'+
-              '<button class="cm-reply-btn" onclick="startReply(\''+id+'\',\''+name+'\')">↩ Balas</button>'+
-            '</div>'+
-            (c.replyToName?'<div class="cm-reply-ref">↩ Membalas '+escHtml(c.replyToName)+'</div>':'')+
-          '</div>';
-        });
-        list.innerHTML=html;
-      },
-      function(e){console.warn('cm snapshot error',e);}
-    );
-
-    // Submit komentar
-    window.submitComment=async function(replyToId){
-      var nameEl=document.getElementById('cm-name');
-      var textEl=document.getElementById('cm-text');
-      var name=(nameEl?.value||'').trim()||'Anonim';
-      var text=(textEl?.value||'').trim();
-      if(!text){alert('Tulis komentarmu dulu!');return;}
-      if(text.length>500){alert('Komentar terlalu panjang (maks 500 karakter).');return;}
-      var data={
-        name:name.substring(0,40),text:text.substring(0,500),
-        chapterId:CHAPTER_ID,createdAt:fs.serverTimestamp(),
-      };
-      if(replyToId){
-        var rSnap=await fs.getDoc(fs.doc(db,'manga_chapters',CHAPTER_ID,'comments',replyToId)).catch(()=>null);
-        if(rSnap?.exists()){data.replyToId=replyToId;data.replyToName=(rSnap.data().name||'Anonim').substring(0,40);}
-      }
-      try{
-        await fs.addDoc(colRef,data);
-        if(textEl)textEl.value='';
-        window._replyTarget=null;
-        var ra=document.getElementById('cm-reply-indicator');
-        if(ra)ra.remove();
-      }catch(e){alert('Gagal kirim komentar: '+e.message);}
-    };
-
-    window.startReply=function(id,name){
-      window._replyTarget=id;
-      var old=document.getElementById('cm-reply-indicator');
-      if(old)old.remove();
-      var div=document.createElement('div');
-      div.id='cm-reply-indicator';div.className='cm-reply-indicator';
-      div.innerHTML='↩ Membalas <strong>'+escHtml(name)+'</strong> <button onclick="cancelReply()">✕</button>';
-      var fa=document.getElementById('cm-form-area');
-      if(fa)fa.appendChild(div);
-      var tb=document.getElementById('cm-text');
-      if(tb)tb.focus();
-    };
-    window.cancelReply=function(){
-      window._replyTarget=null;
-      var el=document.getElementById('cm-reply-indicator');
-      if(el)el.remove();
-    };
-
-    // Override submitComment untuk pakai _replyTarget
-    var _origSubmit=window.submitComment;
-    window.submitComment=function(id){_origSubmit(id||window._replyTarget||null);};
-
-  }catch(e){
-    var list=document.getElementById('cm-list');
-    if(list)list.innerHTML='<div class="cm-empty">Komentar tidak dapat dimuat.</div>';
-    console.warn('cm init error',e);
+<script>
+(function(){
+  var walineLoaded=false;
+  function loadWaline(){
+    if(walineLoaded)return;
+    walineLoaded=true;
+    if(!document.getElementById('waline-css')){
+      var wlCss=document.createElement('link');
+      wlCss.id='waline-css';wlCss.rel='stylesheet';
+      wlCss.href='https://unpkg.com/@waline/client@3/dist/waline.css';
+      document.head.appendChild(wlCss);
+    }
+    import('https://unpkg.com/@waline/client@3/dist/waline.js').then(function(m){
+      m.init({
+        el:'#waline',
+        serverURL:${serverJson},
+        path:${pathJson},
+        comment:true,
+        pageview:false,
+        reaction:false,
+        dark:'html[data-theme="dark"]',
+        meta:['nick'],
+        requiredMeta:[],
+        locale:{
+          placeholder:'Tulis komentarmu di sini...',
+          sofa:'Jadilah yang pertama berkomentar!',
+          submit:'Kirim',nick:'Nama',preview:'Pratinjau',
+          comment:'Komentar',reply:'Balas',more:'Muat lebih banyak...',
+          admin:'Admin',word:'{0} kata',anonymous:'Tamu',
+          level0:'Pendatang',level1:'Pengunjung',level2:'Reguler',
+          level3:'Veteran',level4:'Master',level5:'Legenda',
+        },
+      });
+    }).catch(function(e){console.error('Waline load error:',e);});
   }
-});
+  var isMobile=window.matchMedia('(max-width:768px)').matches;
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting){obs.disconnect();loadWaline();}
+    },{rootMargin:isMobile?'120px':'200px'});
+    var el=document.querySelector('.comments-section');
+    if(el)obs.observe(el);
+  }
+  setTimeout(loadWaline,isMobile?9000:4000);
+})();
 <\/script>`;
 }
 
-const COMMENTS_CSS = `
-.comments-section{padding:3rem 3.5rem 5rem;border-top:1px solid var(--border);background:var(--cream);transition:var(--nm)}
-[data-theme="dark"] .comments-section{background:var(--cream)}
-.cm-wrap{max-width:720px;margin:0 auto}
-.cm-heading{font-family:var(--serif);font-size:1.8rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.5rem}
-.cm-input-row{display:flex;flex-direction:column;gap:.65rem;margin-bottom:2rem}
-.cm-input{background:var(--paper);border:1px solid var(--border);border-radius:4px;color:var(--ink);font-family:var(--ro);font-size:.88rem;padding:.6rem .9rem;outline:none;transition:border-color .15s;resize:vertical}
-.cm-input:focus{border-color:var(--gold)}
-.cm-textarea{min-height:80px}
-.cm-submit-btn{align-self:flex-start;background:var(--ink);color:var(--paper);border:none;font-family:var(--sans);font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:.6rem 1.4rem;cursor:pointer;transition:background .2s}
-.cm-submit-btn:hover{background:var(--gold);color:var(--ink)}
-.cm-item{padding:1rem 0;border-bottom:1px solid var(--border)}
-.cm-meta{display:flex;align-items:center;gap:.75rem;margin-bottom:.35rem}
-.cm-author{font-size:.8rem;font-weight:700;color:var(--ink);font-family:var(--sans)}
-.cm-time{font-size:.68rem;color:var(--ash)}
-.cm-text{font-size:.88rem;color:var(--ink);line-height:1.7;word-break:break-word;font-family:var(--ro)}
-.cm-mention{color:var(--gold);font-weight:600}
-.cm-reply-btn{background:none;border:none;color:var(--ash);font-family:var(--sans);font-size:.65rem;font-weight:600;letter-spacing:.1em;cursor:pointer;padding:.2rem 0;transition:color .15s}
-.cm-reply-btn:hover{color:var(--ink)}
-.cm-reply-ref{font-size:.72rem;color:var(--ash);margin-top:.3rem;padding-left:.75rem;border-left:2px solid var(--border);font-style:italic}
-.cm-reply-indicator{font-size:.78rem;color:var(--ash);padding:.5rem .75rem;background:var(--paper);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:.5rem}
-.cm-reply-indicator button{background:none;border:none;cursor:pointer;color:var(--ash);font-size:.85rem;line-height:1}
-.cm-empty{color:var(--ash);font-size:.85rem;font-family:var(--ro);padding:1rem 0}
-.cm-actions{margin-top:.4rem}
-@media(max-width:768px){.comments-section{padding:2rem 1.2rem 4rem}.cm-wrap{max-width:100%}}
+// ── Reader HUD CSS ─────────────────────────────────────────────────────────────
+const READER_HUD_CSS = `
+/* ── Floating Reader HUD — melayang di atas konten manga ── */
+#reader-hud{
+  position:fixed;
+  bottom:clamp(1.5rem, 8vh, 3.5rem);
+  left:50%;transform:translateX(-50%);
+  z-index:500;
+  display:flex;flex-direction:column;align-items:center;gap:.55rem;
+  pointer-events:none;
+  transition:opacity .3s cubic-bezier(.4,0,.2,1),transform .3s cubic-bezier(.4,0,.2,1);
+}
+#reader-hud.hud-hidden{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none!important}
+#reader-hud > *{pointer-events:auto}
+/* Pil judul di atas tombol */
+.hud-title{
+  display:flex;flex-direction:column;align-items:center;gap:.1rem;
+  background:rgba(10,8,16,.82);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-radius:999px;
+  padding:.38rem .9rem .42rem;
+  max-width:min(360px,80vw);
+}
+.hud-series-name{font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(200,192,208,.45);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hud-chapter-name{font-size:.75rem;font-weight:600;color:rgba(220,210,230,.88);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+/* Baris tiga tombol bulat */
+.hud-btns{display:flex;align-items:center;gap:1.1rem}
+.hud-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(14,11,22,.88);
+  border:none;outline:none;
+  color:rgba(220,210,230,.82);font-size:1.05rem;line-height:1;
+  text-decoration:none;cursor:pointer;flex-shrink:0;
+  box-shadow:0 2px 14px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);
+  transition:background .18s,color .18s,transform .14s,box-shadow .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.hud-btn:hover{background:rgba(30,24,44,.95);color:#fff;transform:scale(1.08);box-shadow:0 4px 18px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.13)}
+.hud-btn:active{transform:scale(.92)}
+.hud-btn-disabled{background:rgba(14,11,22,.5)!important;color:rgba(255,255,255,.18)!important;cursor:default;pointer-events:none;box-shadow:none}
+.hud-btn-list{font-size:.72rem}
+.hud-btn-list.active,.hud-btn-list:hover{background:rgba(40,28,14,.92);color:rgba(201,169,110,.95)}
+/* ── Chapter Drawer — slide up dari bawah layar ── */
+#chapter-drawer{
+  position:fixed;left:0;right:0;bottom:0;z-index:499;
+  background:rgba(6,5,10,.97);
+  backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-radius:1rem 1rem 0 0;
+  max-height:60vh;overflow-y:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;
+  transform:translateY(100%);opacity:0;pointer-events:none;
+}
+#chapter-drawer.drawer-open{transform:translateY(0);opacity:1;pointer-events:auto}
+.drawer-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:.75rem auto .4rem;flex-shrink:0}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:2;background:rgba(6,5,10,.99)}
+.drawer-title{font-size:.6rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,192,208,.5);font-family:var(--sans)}
+.drawer-close{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:rgba(200,192,208,.55);cursor:pointer;font-size:.7rem;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.drawer-close:hover{background:rgba(255,255,255,.14);color:#fff}
+.drawer-list{padding:.3rem 0 .8rem}
+.drawer-ch-item{display:flex;align-items:center;gap:.9rem;padding:.62rem 1.4rem;text-decoration:none;color:rgba(200,192,208,.6);font-family:var(--ro);font-size:.82rem;transition:background .14s,color .14s;border-bottom:1px solid rgba(255,255,255,.025)}
+.drawer-ch-item:last-child{border-bottom:none}
+.drawer-ch-item:hover{background:rgba(255,255,255,.045);color:#e8e2d9}
+.drawer-ch-item.current{color:var(--gold);background:rgba(201,169,110,.06)}
+.drawer-ch-num{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,192,208,.28);flex-shrink:0;min-width:44px}
+.drawer-ch-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-ch-pages{font-size:.58rem;color:rgba(200,192,208,.28);flex-shrink:0}
+#drawer-backdrop{position:fixed;inset:0;z-index:498;background:transparent;pointer-events:none;transition:background .3s}
+#drawer-backdrop.active{background:rgba(0,0,0,.45);pointer-events:auto}
+@media(max-width:480px){
+  .hud-btn{width:42px;height:42px;font-size:.95rem}
+  .hud-btns{gap:.85rem}
+  .hud-chapter-name{font-size:.7rem}
+  #reader-hud{bottom:clamp(1rem,5vh,2rem)}
+}
 `;
 
+const READER_HUD_SCRIPT = `<script>
+(function(){
+  var hud=document.getElementById('reader-hud');
+  var drawer=document.getElementById('chapter-drawer');
+  var backdrop=document.getElementById('drawer-backdrop');
+  var listBtn=document.getElementById('hud-list-btn');
+  var closeBtn=document.getElementById('drawer-close-btn');
+  var reader=document.getElementById('manga-reader');
+  var visible=true,drawerOpen=false,timer=null;
+
+  function show(){
+    if(!hud)return;
+    hud.classList.remove('hud-hidden');visible=true;
+    clearTimeout(timer);timer=setTimeout(hide,3500);
+  }
+  function hide(){
+    if(!hud||drawerOpen)return;
+    hud.classList.add('hud-hidden');visible=false;
+  }
+  function openDrawer(){
+    if(!drawer||!backdrop)return;
+    drawerOpen=true;
+    drawer.classList.add('drawer-open');drawer.setAttribute('aria-hidden','false');
+    backdrop.classList.add('active');
+    listBtn&&listBtn.classList.add('active');
+    clearTimeout(timer);
+    show();
+    requestAnimationFrame(function(){
+      var cur=drawer.querySelector('.drawer-ch-item.current');
+      if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
+    });
+  }
+  function closeDrawer(){
+    if(!drawer||!backdrop)return;
+    drawerOpen=false;
+    drawer.classList.remove('drawer-open');drawer.setAttribute('aria-hidden','true');
+    backdrop.classList.remove('active');
+    listBtn&&listBtn.classList.remove('active');
+    clearTimeout(timer);timer=setTimeout(hide,3500);
+  }
+  if(listBtn)listBtn.addEventListener('click',function(e){e.stopPropagation();drawerOpen?closeDrawer():openDrawer();});
+  if(closeBtn)closeBtn.addEventListener('click',closeDrawer);
+  if(backdrop)backdrop.addEventListener('click',closeDrawer);
+  if(reader)reader.addEventListener('click',function(e){
+    if(e.target.closest('#reader-hud')||e.target.closest('#chapter-drawer'))return;
+    if(drawerOpen){closeDrawer();return;}
+    if(visible)hide();else show();
+  });
+  timer=setTimeout(hide,3500);
+})();
+<\/script>`;
+
 // ── Chapter page HTML ──────────────────────────────────────────────────────────
-async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextChapter) {
+// seriesChapters: sorted ASC by chapterNum — used to render the in-page drawer
+async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextChapter, seriesChapters) {
   const seriesTitle  = chapter.seriesTitle   || '';
   const seriesSlug   = chapter.seriesSlug    || '';
   const chapterNum   = chapter.chapterNum    ?? 0;
@@ -536,6 +584,23 @@ async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextC
 
   const prevHref = prevChapter ? `${prevChapter.slug}.html` : null;
   const nextHref = nextChapter ? `${nextChapter.slug}.html` : null;
+
+  // Chapter drawer — urutan terbaru di atas
+  const siblingChapters = seriesChapters || [];
+  const drawerItems = [...siblingChapters]
+    .sort((a, b) => (b.chapterNum ?? 0) - (a.chapterNum ?? 0))
+    .map(ch => {
+      const cSlug   = chapterSlug(seriesSlug, ch.chapterNum);
+      const cTitle  = ch.chapterTitle || `Chapter ${ch.chapterNum}`;
+      const isCur   = ch.id === chapter.id;
+      return `<a class="drawer-ch-item${isCur?' current':''}" href="${escHtml(cSlug)}.html">`+
+        `<span class="drawer-ch-num">Ch. ${ch.chapterNum}</span>`+
+        `<span class="drawer-ch-title">${escHtml(cTitle)}</span>`+
+        `<span class="drawer-ch-pages">${(ch.pages||[]).length} hal</span>`+
+        `</a>`;
+    }).join('');
+
+  const walinePath = `/${MANGA_DIR}/${slug}`;
 
   const schema = JSON.stringify([
     {
@@ -561,15 +626,8 @@ async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextC
 
   const pagesHTML = pages.map((url, i) =>
     `<img class="manga-page" src="${escHtml(url)}" alt="${escHtml(seriesTitle)} ${displayTitle} halaman ${i+1}" ` +
-    `width="800" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="${i < 3 ? 'sync' : 'async'}">`
+    `width="800" loading="${i < 2 ? 'eager' : 'lazy'}" decoding="${i < 2 ? 'sync' : 'async'}">`
   ).join('\n');
-
-  const chapterNavHTML = (top) => `
-<div class="chap-nav ${top?'chap-nav-top':'chap-nav-bot'}">
-  ${prevHref ? `<a class="chap-nav-btn" href="${escHtml(prevHref)}">← Chapter Sebelumnya</a>` : '<span class="chap-nav-disabled">← Awal</span>'}
-  <a class="chap-nav-index" href="${escHtml(seriesSlug)}.html">≡ Daftar Chapter</a>
-  ${nextHref ? `<a class="chap-nav-btn" href="${escHtml(nextHref)}">Chapter Berikutnya →</a>` : '<span class="chap-nav-disabled">Terbaru →</span>'}
-</div>`;
 
   return minify(`<!DOCTYPE html>
 <html lang="id">
@@ -596,95 +654,118 @@ ${FONT_LINK}
 <style>
 ${CSS_TOKENS}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;background:var(--paper)}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
+html{scroll-behavior:smooth;background:#111}
+body{background:#111;color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
+
+/* Reader nav overrides — dark bar */
+nav{background:rgba(8,6,12,.92)!important;border-bottom-color:rgba(255,255,255,.07)!important}
+.nljp{color:#e8e2d9}.nlen{color:#5a5060}
+#theme-toggle,#nav-menu-btn{border-color:rgba(255,255,255,.12)!important}
+#theme-toggle svg{stroke:#7a7068}
+#nav-menu-btn span{background:#7a7068}
+#nav-dropdown{background:#1a1714!important;border-color:rgba(255,255,255,.08)!important}
+.nd-item{color:#7a7068}.nd-item:hover,.nd-item.on{color:#e8e2d9;background:#221e1a}
+
 ${NAV_CSS}
 ${DISCORD_POPUP_CSS}
-${COMMENTS_CSS}
+${WALINE_CSS}
+${READER_HUD_CSS}
 
-/* ── Chapter Hero ── */
-.chap-hero{padding:3rem 3.5rem 2rem;max-width:900px}
-.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:2rem;flex-wrap:wrap}
+/* ── Chapter header (dark) ── */
+.chap-header{background:#0d0b0e;border-bottom:1px solid rgba(255,255,255,.06);padding:2rem 2.5rem 1.75rem}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.55rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#4a4550;margin-bottom:1.5rem;flex-wrap:wrap}
 .breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
-.breadcrumb-sep{color:var(--smoke)}
-.chap-series{font-family:var(--serif);font-size:1.1rem;font-weight:300;font-style:italic;color:var(--ash);margin-bottom:.4rem}
-.chap-title{font-family:var(--sans);font-size:clamp(1.4rem,4vw,2.4rem);font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:.75rem}
-.chap-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.68rem;color:var(--ash);letter-spacing:.08em}
-.chap-meta span{display:flex;align-items:center;gap:.35rem}
-.chap-meta strong{color:var(--ink)}
-
-/* ── Chapter nav ── */
-.chap-nav{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.85rem 3.5rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--cream);flex-wrap:wrap}
-.chap-nav-top{margin-bottom:0}
-.chap-nav-bot{margin-top:0}
-.chap-nav-btn{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;padding:.5rem .9rem;border:1px solid var(--border);transition:border-color .2s,background .2s}
-.chap-nav-btn:hover{border-color:var(--gold);background:rgba(201,169,110,.08)}
-.chap-nav-index{font-family:var(--sans);font-size:.72rem;font-weight:600;color:var(--ash);text-decoration:none;letter-spacing:.08em;transition:color .2s}
-.chap-nav-index:hover{color:var(--ink)}
-.chap-nav-disabled{font-family:var(--sans);font-size:.72rem;color:var(--smoke);letter-spacing:.08em;user-select:none}
+.breadcrumb-sep{color:#2a2535}
+.chap-series{font-family:var(--serif);font-size:1rem;font-weight:300;font-style:italic;color:#7a6880;margin-bottom:.3rem}
+.chap-title{font-family:var(--sans);font-size:clamp(1.3rem,3.5vw,2.2rem);font-weight:700;color:#e8e2d9;line-height:1.2;margin-bottom:.7rem}
+.chap-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.65rem;color:#5a5060;letter-spacing:.08em}
+.chap-meta strong{color:#9a9098}
 
 /* ── Manga reader ── */
-.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:1.5rem 1rem;gap:.5rem}
-.manga-page{display:block;max-width:800px;width:100%;height:auto;object-fit:contain;background:#1a1a1a}
-.reader-hint{font-size:.65rem;color:#666;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:.6rem;font-family:var(--sans)}
+.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:1rem 0 6rem;gap:2px;cursor:pointer;user-select:none;overflow-x:hidden}
+.manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
+.manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a}
 
 /* ── Footer ── */
-footer{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;padding:2.5rem 3.5rem;border-top:1px solid var(--border);background:var(--cream);flex-wrap:wrap;transition:var(--nm)}
+footer{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;padding:2.5rem 2.5rem 5rem;border-top:1px solid var(--border);background:var(--cream);flex-wrap:wrap;transition:var(--nm)}
 [data-theme="dark"] footer{background:#070604}
-.footer-brand{font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)}
-.footer-tagline{font-size:.55rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem}
-.footer-copy{font-size:.52rem;color:var(--smoke);margin-top:.8rem}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
 .footer-link:hover{color:var(--gold)}
 
 @media(max-width:768px){
-  .chap-hero{padding:2rem 1.2rem 1.5rem}
-  .chap-nav{padding:.75rem 1.2rem}
-  .manga-reader{padding:1rem .5rem;gap:.35rem}
-  footer{padding:2rem 1.2rem;gap:1.5rem}
+  .chap-header{padding:1.5rem 1rem 1.25rem}
+  .manga-reader{gap:1px}
+  footer{padding:2rem 1rem 4rem}
 }
 </style>
 </head>
 <body>
 ${buildNav('../', 'manga')}
 
-<article>
-  <section class="chap-hero">
-    <div class="breadcrumb">
-      <a href="../index.html">Beranda</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="index.html">Manga</a>
-      <span class="breadcrumb-sep">›</span>
-      <a href="${escHtml(seriesSlug)}.html">${escHtml(seriesTitle)}</a>
-      <span class="breadcrumb-sep">›</span>
-      <span>Chapter ${chapterNum}</span>
-    </div>
-    <div class="chap-series">${escHtml(seriesTitle)}</div>
-    <h1 class="chap-title">${escHtml(displayTitle)}</h1>
-    <div class="chap-meta">
-      <span>📄 <strong>${pages.length}</strong> halaman</span>
-      ${translator?`<span>✏ Penerjemah: <strong>${escHtml(translator)}</strong></span>`:''}
-    </div>
-  </section>
-
-  ${chapterNavHTML(true)}
-
-  <div class="manga-reader" id="manga-reader">
-    <div class="reader-hint">Scroll ke bawah untuk membaca</div>
-    ${pagesHTML}
+<div class="chap-header">
+  <div class="breadcrumb">
+    <a href="../index.html">Beranda</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="index.html">Manga</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="${escHtml(seriesSlug)}.html">${escHtml(seriesTitle)}</a>
+    <span class="breadcrumb-sep">›</span>
+    <span>Chapter ${chapterNum}</span>
   </div>
+  <div class="chap-series">${escHtml(seriesTitle)}</div>
+  <h1 class="chap-title">${escHtml(displayTitle)}</h1>
+  <div class="chap-meta">
+    <span>📄 <strong>${pages.length}</strong> halaman</span>
+    ${translator?`<span>✏ Penerjemah: <strong>${escHtml(translator)}</strong></span>`:''}
+  </div>
+</div>
 
-  ${chapterNavHTML(false)}
-</article>
+<div class="manga-reader" id="manga-reader">
+  ${pagesHTML}
+</div>
+
+<!-- Floating Reader HUD — judul di atas, tiga tombol bulat renggang -->
+<div id="reader-hud">
+  <div class="hud-title">
+    <span class="hud-series-name">${escHtml(seriesTitle)}</span>
+    <span class="hud-chapter-name">${escHtml(displayTitle)}</span>
+  </div>
+  <div class="hud-btns">
+    ${prevHref
+      ? `<a class="hud-btn" href="${escHtml(prevHref)}" title="Chapter sebelumnya" aria-label="Chapter sebelumnya">←</a>`
+      : `<span class="hud-btn hud-btn-disabled" title="Sudah chapter pertama" aria-label="Chapter pertama">←</span>`}
+    <button class="hud-btn hud-btn-list" id="hud-list-btn" title="Daftar chapter" aria-label="Daftar chapter">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <line x1="0" y1="1" x2="16" y2="1"/><line x1="0" y1="6" x2="16" y2="6"/><line x1="0" y1="11" x2="16" y2="11"/>
+      </svg>
+    </button>
+    ${nextHref
+      ? `<a class="hud-btn" href="${escHtml(nextHref)}" title="Chapter berikutnya" aria-label="Chapter berikutnya">→</a>`
+      : `<span class="hud-btn hud-btn-disabled" title="Sudah chapter terbaru" aria-label="Chapter terbaru">→</span>`}
+  </div>
+</div>
+
+<!-- Chapter Drawer — slide up dari bawah, tanpa redirect -->
+<div id="drawer-backdrop"></div>
+<div id="chapter-drawer" role="dialog" aria-label="Daftar Chapter" aria-hidden="true">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">Daftar Chapter — ${escHtml(seriesTitle)}</span>
+    <button class="drawer-close" id="drawer-close-btn" aria-label="Tutup">✕</button>
+  </div>
+  <div class="drawer-list">
+    ${drawerItems || `<div style="padding:1.2rem 1.4rem;font-size:.8rem;color:rgba(200,192,208,.4)">Belum ada chapter lain.</div>`}
+  </div>
+</div>
 
 ${buildDiscordPopup()}
-${buildCommentsSection(chapterId)}
+${buildWalineSection(walinePath)}
 
 <footer>
   <div>
-    <div class="footer-brand">夢Lyrics · Manga</div>
-    <div class="footer-tagline">Komik Terjemahan Indonesia</div>
-    <div class="footer-copy">© 2025 YumeSubs — yumelyrics.my.id</div>
+    <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)">夢Lyrics · Manga</div>
+    <div style="font-size:.55rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem">Komik Terjemahan Indonesia</div>
+    <div style="font-size:.52rem;color:var(--smoke);margin-top:.8rem">© 2025 YumeSubs — yumelyrics.my.id</div>
   </div>
   <div>
     <a class="footer-link" href="index.html">← Semua Manga</a>
@@ -695,6 +776,7 @@ ${buildCommentsSection(chapterId)}
 </footer>
 
 ${NAV_SCRIPT}
+${READER_HUD_SCRIPT}
 </body>
 </html>`);
 }
@@ -713,12 +795,23 @@ async function generateSeriesHTML(series, chapters) {
 
   const statusLabel = { ongoing: 'Berlangsung', completed: 'Tamat', hiatus: 'Hiatus' }[status] || '';
 
-  const chapterCards = chapters.map(ch => {
+  // Urutkan terbaru (chapterNum terbesar) di atas
+  const sortedChapters = [...chapters].sort((a, b) => (b.chapterNum ?? 0) - (a.chapterNum ?? 0));
+
+  const chapterCards = sortedChapters.map(ch => {
     const cSlug  = chapterSlug(slug, ch.chapterNum);
-    const cTitle = ch.chapterTitle ? `Ch. ${ch.chapterNum} — ${ch.chapterTitle}` : `Chapter ${ch.chapterNum}`;
+    const cTitle = ch.chapterTitle || '';
+    const thumbUrl = ch.pages && ch.pages[0] ? wsrvUrl(ch.pages[0], 120, 65) : '';
+    const thumbHtml = thumbUrl
+      ? `<img class="cc-thumb-img" src="${escHtml(thumbUrl)}" alt="" width="52" height="72" loading="lazy" decoding="async">`
+      : `<div class="cc-thumb-ph"></div>`;
+
     return `<a class="chapter-card" href="${escHtml(cSlug)}.html">
-      <span class="cc-num">Ch. ${ch.chapterNum}</span>
-      <span class="cc-title">${escHtml(ch.chapterTitle || cTitle)}</span>
+      <div class="cc-thumb">${thumbHtml}</div>
+      <div class="cc-body">
+        <span class="cc-num">Ch. ${ch.chapterNum}</span>
+        <span class="cc-title">${escHtml(cTitle || `Chapter ${ch.chapterNum}`)}</span>
+      </div>
       <span class="cc-pages">${(ch.pages||[]).length} hal.</span>
       <span class="cc-arr">→</span>
     </a>`;
@@ -744,59 +837,98 @@ ${FONT_HEAD}${FONT_LINK}
 ${CSS_TOKENS}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--paper)}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
 ${NAV_CSS}
-.series-hero{display:grid;grid-template-columns:200px 1fr;gap:3rem;padding:3rem 3.5rem 2.5rem;max-width:1000px}
-.series-cover{width:200px;height:280px;object-fit:cover;box-shadow:8px 12px 0 rgba(10,8,18,.1)}
-.series-cover-placeholder{width:200px;height:280px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--smoke)}
-.series-info{display:flex;flex-direction:column;justify-content:center;gap:1rem}
-.series-title{font-family:var(--serif);font-size:clamp(1.8rem,4vw,3rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.25}
-.series-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.68rem;color:var(--ash);letter-spacing:.08em}
+
+/* ── Series hero — full width ── */
+.series-hero{display:flex;flex-direction:row;width:100%;min-height:300px;border-bottom:1px solid var(--border)}
+.series-cover-col{flex-shrink:0;width:220px;position:relative;overflow:hidden;background:var(--cream);padding-right:1px}
+.series-cover-col img{width:calc(100% - 12px);height:100%;object-fit:cover;display:block;margin-left:0;margin-right:12px}
+.series-cover-ph{width:100%;height:100%;min-height:300px;display:flex;align-items:flex-end;padding:1.5rem;background:linear-gradient(160deg,#1a1020 0%,#3d1f3a 50%,#7c3b5e 100%)}
+.series-cover-ph-text{font-family:var(--serif);font-size:1.4rem;font-weight:600;color:#e8c0d0;line-height:1.3}
+.series-info-col{flex:1;display:flex;flex-direction:column;justify-content:center;padding:3rem 4rem;border-left:1px solid var(--border);min-width:0}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:1.5rem;flex-wrap:wrap}
+.breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb-sep{color:var(--smoke)}
+.series-title{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:300;font-style:italic;color:var(--ink);line-height:1.2;margin-bottom:1rem}
+.series-meta{display:flex;gap:1rem 1.5rem;flex-wrap:wrap;font-size:.7rem;color:var(--ash);letter-spacing:.08em;align-items:center;margin-bottom:1rem}
 .series-meta strong{color:var(--ink)}
-.series-status{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.2rem .65rem;border:1px solid var(--border);color:var(--ash);border-radius:2px}
-.series-desc{font-size:.88rem;color:var(--ash);line-height:1.8;max-width:520px;font-family:var(--ro)}
-.chapter-list{padding:0 3.5rem 5rem;max-width:820px}
-.chapter-list h2{font-family:var(--serif);font-size:1.6rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
-.chapter-card{display:flex;align-items:center;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .15s}
-.chapter-card:hover{background:rgba(201,169,110,.05)}
-.cc-num{font-family:var(--sans);font-size:.72rem;font-weight:700;color:var(--ash);letter-spacing:.08em;min-width:52px;flex-shrink:0}
-.cc-title{flex:1;font-size:.9rem;color:var(--ink);font-family:var(--ro)}
-.cc-pages{font-size:.65rem;color:var(--smoke);flex-shrink:0}
-.cc-arr{color:var(--gold);font-family:var(--serif);margin-left:.5rem}
-footer{display:flex;justify-content:space-between;padding:2.5rem 3.5rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
+.series-meta-sep{color:var(--smoke);font-size:.8rem}
+.series-status{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.2rem .65rem;border:1px solid var(--border);color:var(--ash);border-radius:2px;margin-bottom:1rem}
+.series-desc{font-size:.9rem;color:var(--ash);line-height:1.85;font-family:var(--ro)}
+
+/* ── Chapter list — full width ── */
+.chapter-list-wrap{padding:2.5rem 4rem 6rem;width:100%}
+.chapter-list-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.chapter-list-head h2{font-family:var(--serif);font-size:1.6rem;font-weight:300;font-style:italic;color:var(--ink)}
+.ch-count{font-size:.62rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
+.chapter-card{display:flex;align-items:center;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:padding-left .18s,background .18s}
+.chapter-card:hover{background:rgba(201,169,110,.05);padding-left:.5rem}
+.cc-thumb{flex-shrink:0;width:52px;height:72px;background:var(--cream);overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.cc-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.cc-thumb-ph{width:52px;height:72px;background:linear-gradient(160deg,#1a1020,#3d1f3a)}
+.cc-body{flex:1;display:flex;flex-direction:column;gap:.18rem;min-width:0}
+.cc-num{font-family:var(--sans);font-size:.68rem;font-weight:700;color:var(--ash);letter-spacing:.1em;text-transform:uppercase}
+.cc-title{font-size:.9rem;color:var(--ink);font-family:var(--ro);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-pages{font-size:.62rem;color:var(--smoke);flex-shrink:0;white-space:nowrap}
+.cc-arr{color:var(--gold);font-family:var(--serif);margin-left:.5rem;flex-shrink:0;font-size:1.05rem}
+
+footer{display:flex;justify-content:space-between;padding:2.5rem 4rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
 [data-theme="dark"] footer{background:#070604}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
 .footer-link:hover{color:var(--gold)}
-@media(max-width:768px){
-  .series-hero{grid-template-columns:1fr;gap:1.5rem;padding:2rem 1.2rem}
-  .series-cover,.series-cover-placeholder{width:140px;height:200px}
-  .chapter-list{padding:0 1.2rem 4rem}
-  footer{padding:2rem 1.2rem}
+
+@media(max-width:900px){
+  .series-hero{flex-direction:column}
+  .series-cover-col{width:100%;height:240px;min-height:unset}
+  .series-cover-ph{min-height:240px}
+  .series-info-col{padding:2rem 1.5rem;border-left:none;border-top:1px solid var(--border)}
+  .chapter-list-wrap{padding:2rem 1.5rem 5rem}
+  footer{padding:2rem 1.5rem}
+}
+@media(max-width:600px){
+  .series-cover-col{height:200px}
+  .series-cover-ph{min-height:200px}
 }
 </style>
 </head>
 <body>
 ${buildNav('../','manga')}
+
 <div class="series-hero">
-  ${cover
-    ? `<img class="series-cover" src="${escHtml(cover)}" alt="${escHtml(title)}" width="200" height="280" loading="eager" decoding="sync">`
-    : `<div class="series-cover-placeholder">📖</div>`
-  }
-  <div class="series-info">
+  <div class="series-cover-col">
+    ${cover
+      ? `<img src="${escHtml(wsrvUrl(cover, 440))}" alt="${escHtml(title)}" width="220" loading="eager" decoding="sync">`
+      : `<div class="series-cover-ph"><div class="series-cover-ph-text">${escHtml(title)}</div></div>`
+    }
+  </div>
+  <div class="series-info-col">
+    <div class="breadcrumb">
+      <a href="../index.html">Beranda</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="index.html">Manga</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>${escHtml(title)}</span>
+    </div>
     <h1 class="series-title">${escHtml(title)}</h1>
     <div class="series-meta">
       <span>📚 <strong>${chapters.length}</strong> chapter</span>
-      ${author?`<span>✏ <strong>${escHtml(author)}</strong></span>`:''}
-      ${genres?`<span>🏷 ${escHtml(genres)}</span>`:''}
+      ${author?`<span class="series-meta-sep">—</span><span>✏ <strong>${escHtml(author)}</strong></span>`:''}
+      ${genres?`<span class="series-meta-sep">→</span><span>${escHtml(genres)}</span>`:''}
     </div>
     ${statusLabel?`<div><span class="series-status">${statusLabel}</span></div>`:''}
     ${desc?`<p class="series-desc">${escHtml(desc)}</p>`:''}
   </div>
 </div>
-<div class="chapter-list">
-  <h2>Daftar Chapter</h2>
-  ${chapterCards || '<p style="color:var(--ash);font-size:.88rem">Belum ada chapter yang tersedia.</p>'}
+
+<div class="chapter-list-wrap">
+  <div class="chapter-list-head">
+    <h2>Daftar Chapter</h2>
+    <span class="ch-count">${chapters.length} chapter · terbaru di atas</span>
+  </div>
+  ${chapterCards || '<p style="color:var(--ash);font-size:.88rem;padding:1rem 0">Belum ada chapter yang tersedia.</p>'}
 </div>
+
 <footer>
   <div>
     <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)">夢Lyrics · Manga</div>
@@ -865,7 +997,7 @@ footer{display:flex;justify-content:space-between;padding:2.5rem 3.5rem;border-t
 [data-theme="dark"] footer{background:#070604}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
 .footer-link:hover{color:var(--gold)}
-@media(max-width:768px){.page-hero,.footer{padding-left:1.2rem;padding-right:1.2rem}.series-grid{padding-left:1.2rem;padding-right:1.2rem;gap:1rem}}
+@media(max-width:768px){.page-hero{padding:2.5rem 1.2rem 1.5rem}.series-grid{padding-left:1.2rem;padding-right:1.2rem;gap:1rem}footer{padding:2rem 1.2rem}}
 </style>
 </head>
 <body>
@@ -894,192 +1026,129 @@ ${NAV_SCRIPT}
 // ── Sitemap helpers ───────────────────────────────────────────────────────────
 function buildSitemapUrl(loc, lastmod, priority = '0.7', changefreq = 'weekly', imgUrl = '', imgTitle = '') {
   const imgBlock = imgUrl
-    ? `<image:image><image:loc>${sitemapEscape(imgUrl)}</image:loc>${imgTitle?`<image:title>${sitemapEscape(imgTitle)}</image:title>`:''}</image:image>`
+    ? `\n    <image:image><image:loc>${sitemapEscape(imgUrl)}</image:loc>${imgTitle?`<image:title>${sitemapEscape(imgTitle)}</image:title>`:''}</image:image>`
     : '';
-  return `  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod><priority>${priority}</priority><changefreq>${changefreq}</changefreq>${imgBlock}</url>`;
+  return `  <url>\n    <loc>${sitemapEscape(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>${imgBlock}\n  </url>`;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  const t0 = Date.now();
-  console.log('🚀 generate-manga.js mulai...');
+  console.log('📖 Mulai generate manga halaman...');
 
-  const app = initializeApp(firebaseConfig, 'generate_manga');
+  const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  if (!fs.existsSync(MANGA_DIR)) fs.mkdirSync(MANGA_DIR, { recursive: true });
+  fs.mkdirSync(MANGA_DIR, { recursive: true });
 
-  // 1. Ambil semua data dari Firestore
-  console.log('📡 Mengambil data dari Firestore...');
-  const [seriesSnap, chaptersSnap] = await Promise.all([
-    getDocs(collection(db, 'manga_series')),
-    getDocs(collection(db, 'manga_chapters')),
-  ]);
+  const manifest    = loadManifest();
+  const today       = sitemapDate();
+  const newChapters = [];
+  let generated = 0, skipped = 0, cleared = 0;
 
-  // Series map: id → data
-  const seriesMap = {};
-  seriesSnap.forEach(d => { seriesMap[d.id] = { id: d.id, ...d.data() }; });
-  console.log(`  ✓ ${Object.keys(seriesMap).length} series`);
+  // ── Ambil data series ──
+  const seriesSnap = await getDocs(collection(db, 'manga_series'));
+  const seriesMap  = {};
+  const seriesList = [];
+  seriesSnap.forEach(d => {
+    const s = { id: d.id, ...d.data() };
+    s.slug  = s.slug || toSlug(s.title, d.id);
+    seriesMap[d.id] = s;
+    seriesList.push(s);
+  });
 
-  // Filter chapters: hanya published
+  // ── Ambil semua chapter ──
+  const chapSnap = await getDocs(collection(db, 'manga_chapters'));
   const allChapters = [];
-  chaptersSnap.forEach(d => {
+  chapSnap.forEach(d => {
     const ch = { id: d.id, ...d.data() };
-    if (ch.status === 'draft') return;
-    // Resolve series info dari seriesId
-    if (ch.seriesId && seriesMap[ch.seriesId]) {
-      const sr = seriesMap[ch.seriesId];
-      ch.seriesTitle = ch.seriesTitle || sr.title || '';
-      ch.seriesSlug  = ch.seriesSlug  || sr.slug  || toSlug(sr.title, ch.seriesId);
-    }
-    if (!ch.seriesSlug) ch.seriesSlug = toSlug(ch.seriesTitle, ch.id);
+    const sr = seriesMap[ch.seriesId] || {};
+    ch.seriesTitle = sr.title || ch.seriesTitle || '';
+    ch.seriesSlug  = sr.slug  || ch.seriesSlug  || toSlug(ch.seriesTitle);
+    ch.slug        = chapterSlug(ch.seriesSlug, ch.chapterNum);
     allChapters.push(ch);
   });
 
-  // Sort: per series, urut chapterNum
-  allChapters.sort((a, b) => {
-    const sc = (a.seriesSlug||'').localeCompare(b.seriesSlug||'');
-    return sc !== 0 ? sc : (a.chapterNum||0) - (b.chapterNum||0);
-  });
-  console.log(`  ✓ ${allChapters.length} chapter published`);
-
-  // Group by series
-  const bySeries = {};
+  // Group chapter per series untuk prev/next navigation
+  const chaptersBySeriesId = {};
   for (const ch of allChapters) {
-    const key = ch.seriesSlug || 'unknown';
-    if (!bySeries[key]) bySeries[key] = [];
-    bySeries[key].push(ch);
+    if (!chaptersBySeriesId[ch.seriesId]) chaptersBySeriesId[ch.seriesId] = [];
+    chaptersBySeriesId[ch.seriesId].push(ch);
+  }
+  for (const arr of Object.values(chaptersBySeriesId)) {
+    arr.sort((a, b) => (a.chapterNum ?? 0) - (b.chapterNum ?? 0));
   }
 
-  // Load manifest
-  const manifest = loadManifest();
-  const today    = sitemapDate();
-  const urls     = [
-    buildSitemapUrl(`${BASE_URL}/${MANGA_DIR}/`, today, '0.8', 'weekly'),
-  ];
+  // ── Generate chapter pages ──
+  await pConcurrent(4, allChapters.map(ch => async () => {
+    const slug = ch.slug;
+    if (!needsGenerate(ch, slug, manifest)) {
+      skipped++;
+      return;
+    }
 
-  // 2. Generate chapter pages
-  const newChapters    = [];
-  const dirtyClears    = [];
-  let generated = 0, skipped = 0;
-  const errors  = [];
+    const seriesSiblings = chaptersBySeriesId[ch.seriesId] || [];
+    const idx        = seriesSiblings.findIndex(s => s.id === ch.id);
+    const prevCh     = idx > 0 ? { ...seriesSiblings[idx - 1], slug: chapterSlug(ch.seriesSlug, seriesSiblings[idx - 1].chapterNum) } : null;
+    const nextCh     = idx < seriesSiblings.length - 1 ? { ...seriesSiblings[idx + 1], slug: chapterSlug(ch.seriesSlug, seriesSiblings[idx + 1].chapterNum) } : null;
 
-  console.log('📖 Generate halaman chapter...');
-  await pConcurrent(8, allChapters.map(ch => async () => {
-    const slug = chapterSlug(ch.seriesSlug, ch.chapterNum);
     try {
-      const fp = path.join(MANGA_DIR, `${slug}.html`);
-
-      if (!needsGenerate(ch, slug, manifest)) {
-        skipped++;
-        manifest.chapters[ch.id] = { slug, hash: chapterContentHash(ch) };
-        urls.push(buildSitemapUrl(`${BASE_URL}/${MANGA_DIR}/${slug}.html`,
-          sitemapLastmod(fp, today), '0.75', 'monthly', ch.cover||'', `${ch.seriesTitle} Ch. ${ch.chapterNum}`));
-        return;
-      }
-
-      // Cari prev/next dalam series yang sama
-      const siblings  = bySeries[ch.seriesSlug] || [];
-      const myIdx     = siblings.findIndex(s => s.id === ch.id);
-      const prevCh    = myIdx > 0 ? siblings[myIdx-1] : null;
-      const nextCh    = myIdx >= 0 && myIdx < siblings.length-1 ? siblings[myIdx+1] : null;
-      const prevSlug  = prevCh ? { slug: chapterSlug(ch.seriesSlug, prevCh.chapterNum) } : null;
-      const nextSlug  = nextCh ? { slug: chapterSlug(ch.seriesSlug, nextCh.chapterNum) } : null;
-
-      const html = await generateChapterHTML(ch, slug, null, prevSlug, nextSlug);
-      await fsWrite(fp, html, 'utf8');
-
-      const wasDirty = ch.htmlDirty === true || ch.htmlDirty === 'true';
+      const html = await generateChapterHTML(ch, slug, seriesList, prevCh, nextCh, seriesSiblings);
+      await fsWrite(path.join(MANGA_DIR, `${slug}.html`), html, 'utf8');
       manifest.chapters[ch.id] = { slug, hash: chapterContentHash(ch) };
-      if (wasDirty) dirtyClears.push(clearDirtyFlag(db, ch.id));
+      generated++;
 
-      const fileExisted = fs.existsSync(fp);
-      if (!fileExisted) {
+      if (ch.htmlDirty === true || ch.htmlDirty === 'true') {
+        clearDirtyFlag(db, ch.id);
+        cleared++;
+      } else {
         newChapters.push({
-          seriesTitle: ch.seriesTitle, chapterNum: ch.chapterNum,
+          seriesTitle: ch.seriesTitle,
+          chapterNum: ch.chapterNum,
           chapterTitle: ch.chapterTitle || '',
-          url: `${BASE_URL}/${MANGA_DIR}/${slug}.html`,
           cover: ch.cover || '',
+          url: `${BASE_URL}/${MANGA_DIR}/${slug}.html`,
         });
       }
-
-      generated++;
-      console.log(`  ✓ ${MANGA_DIR}/${slug}.html`);
-      urls.push(buildSitemapUrl(`${BASE_URL}/${MANGA_DIR}/${slug}.html`,
-        sitemapLastmod(fp, today), '0.75', 'monthly', ch.cover||'', `${ch.seriesTitle} Ch. ${ch.chapterNum}`));
+      console.log(`  ✓ ${slug}.html`);
     } catch(e) {
-      errors.push({ slug, err: e.message });
-      console.error(`  ✗ GAGAL ${slug}: ${e.message}`);
+      console.error(`  ✗ Gagal generate ${slug}:`, e.message);
     }
   }));
 
-  if (dirtyClears.length) {
-    await Promise.all(dirtyClears);
-    console.log(`   Cleared ${dirtyClears.length} htmlDirty flag(s)`);
+  // ── Generate series pages ──
+  for (const sr of seriesList) {
+    const srChapters = (chaptersBySeriesId[sr.id] || []);
+    // Update chapterCount untuk index
+    sr.chapterCount = srChapters.length;
+    try {
+      const html = await generateSeriesHTML(sr, srChapters);
+      await fsWrite(path.join(MANGA_DIR, `${sr.slug}.html`), html, 'utf8');
+      console.log(`  ✓ ${sr.slug}.html (series)`);
+    } catch(e) {
+      console.error(`  ✗ Gagal generate series ${sr.slug}:`, e.message);
+    }
   }
 
-  // 3. Generate series pages
-  console.log('📚 Generate halaman series...');
-  for (const [seriesSlug, chapters] of Object.entries(bySeries)) {
-    const seriesId = chapters[0]?.seriesId;
-    const rawSeries = seriesId && seriesMap[seriesId] ? seriesMap[seriesId] : {
-      id: seriesId, title: chapters[0]?.seriesTitle || seriesSlug, slug: seriesSlug,
-    };
-    const fp = path.join(MANGA_DIR, `${seriesSlug}.html`);
-    const html = await generateSeriesHTML(
-      { ...rawSeries, slug: seriesSlug },
-      chapters
-    );
-    await fsWrite(fp, html, 'utf8');
-    console.log(`  ✓ ${MANGA_DIR}/${seriesSlug}.html (${chapters.length} chapter)`);
-    urls.push(buildSitemapUrl(`${BASE_URL}/${MANGA_DIR}/${seriesSlug}.html`,
-      sitemapLastmod(fp, today), '0.8', 'weekly'));
+  // ── Generate index ──
+  try {
+    const indexHtml = await generateIndexHTML(seriesList);
+    await fsWrite(path.join(MANGA_DIR, 'index.html'), indexHtml, 'utf8');
+    console.log('  ✓ index.html');
+  } catch(e) {
+    console.error('  ✗ Gagal generate index:', e.message);
   }
 
-  // 4. Generate index
-  const seriesListForIndex = Object.entries(bySeries).map(([slug, chs]) => {
-    const sr = seriesMap[chs[0]?.seriesId] || {};
-    return {
-      slug, title: chs[0]?.seriesTitle || slug,
-      cover: sr.cover || '', genres: sr.genres || '',
-      chapterCount: chs.length,
-    };
-  }).sort((a,b) => a.title.localeCompare(b.title,'id'));
-
-  const indexHtml = await generateIndexHTML(seriesListForIndex);
-  await fsWrite(path.join(MANGA_DIR, 'index.html'), indexHtml, 'utf8');
-  console.log(`  ✓ ${MANGA_DIR}/index.html (${seriesListForIndex.length} series)`);
-
-  // 5. Simpan manifest
   saveManifest(manifest);
 
-  // 6. Discord notif
+  // ── Kirim notif Discord ──
   if (newChapters.length > 0) {
     await sendDiscordNotification(newChapters, true);
-  } else {
-    console.log('   Discord: tidak ada chapter baru, skip notif.');
   }
 
-  // 7. Sitemap (append ke sitemap.xml yang sudah ada — kalau mau, merge manual)
-  const mangaSitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-${urls.join('\n')}
-</urlset>`;
-  await fsWrite('sitemap-manga.xml', mangaSitemap, 'utf8');
-
-  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-  console.log(`\n✅ Selesai! ${generated} chapter di-generate, ${skipped} dilewati — ${elapsed}s`);
-  if (errors.length) {
-    console.warn(`⚠ ${errors.length} error:`);
-    for (const e of errors) console.warn(`  ✗ ${e.slug}: ${e.err}`);
-  }
-  console.log(`   Total: ${allChapters.length} chapter · ${seriesListForIndex.length} series · sitemap-manga.xml`);
-  process.exit(0);
+  console.log(`\n✅ Selesai — ${generated} chapter di-generate, ${skipped} dilewati, ${cleared} htmlDirty di-clear.`);
 }
 
-main().catch(async e => {
-  console.error('💥 Fatal:', e);
-  await sendDiscordNotification([], false).catch(()=>{});
+main().catch(e => {
+  console.error('❌ Error fatal:', e);
   process.exit(1);
 });
