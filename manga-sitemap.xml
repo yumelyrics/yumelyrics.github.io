@@ -6,11 +6,20 @@
     <lastmod>2026-07-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://i.ibb.co/DP3x5ks8/cover-crop.jpg</image:loc>
+      <image:title>Manga Terjemahan Indonesia — YumeSubs</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://yumelyrics.my.id/manga/yumelyrics.html</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.ibb.co/DP3x5ks8/cover-crop.jpg</image:loc>
+      <image:title>Yumelyrics</image:title>
+      <image:caption>Yumelyrics — Manga terjemahan Indonesia di YumeSubs</image:caption>
+    </image:image>
   </url>
 </urlset>
