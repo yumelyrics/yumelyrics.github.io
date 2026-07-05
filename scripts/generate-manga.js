@@ -661,21 +661,22 @@ const READER_HUD_SCRIPT = `<script>
 (function(){
   window.scrollTo(0,0);
   var hud=document.getElementById('reader-hud');
+  var nav=document.querySelector('nav');
   var drawer=document.getElementById('chapter-drawer');
   var backdrop=document.getElementById('drawer-backdrop');
   var listBtn=document.getElementById('hud-list-btn');
   var closeBtn=document.getElementById('drawer-close-btn');
   var reader=document.getElementById('manga-reader');
   var visible=true,drawerOpen=false,timer=null;
-  function show(){if(!hud)return;hud.classList.remove('hud-hidden');visible=true;clearTimeout(timer);timer=setTimeout(hide,3500);}
-  function hide(){if(!hud||drawerOpen)return;hud.classList.add('hud-hidden');visible=false;}
+  function show(){if(!hud)return;hud.classList.remove('hud-hidden');if(nav)nav.classList.remove('nav-hidden');visible=true;clearTimeout(timer);timer=setTimeout(hide,3500);}
+  function hide(){if(!hud||drawerOpen)return;hud.classList.add('hud-hidden');if(nav)nav.classList.add('nav-hidden');visible=false;}
   function openDrawer(){
     if(!drawer||!backdrop)return;drawerOpen=true;
     drawer.classList.add('drawer-open');drawer.setAttribute('aria-hidden','false');
     backdrop.classList.add('active');listBtn&&listBtn.classList.add('active');
     document.body.classList.add('reader-drawer-open');
     clearTimeout(timer);
-    if(hud)hud.classList.add('hud-hidden');visible=false;
+    if(hud)hud.classList.add('hud-hidden');if(nav)nav.classList.add('nav-hidden');visible=false;
     requestAnimationFrame(function(){var cur=drawer.querySelector('.drawer-ch-item.current');if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});});
   }
   function closeDrawer(){
@@ -814,6 +815,8 @@ nav{background:rgba(8,6,12,.92)!important;border-bottom-color:rgba(255,255,255,.
 #nav-dropdown{background:#1a1714!important;border-color:rgba(255,255,255,.08)!important}
 .nd-item{color:#7a7068}.nd-item:hover,.nd-item.on{color:#e8e2d9;background:#221e1a}
 ${NAV_CSS}
+nav{transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s}
+nav.nav-hidden{transform:translateY(-100%);opacity:0;pointer-events:none}
 ${DISCORD_POPUP_CSS}
 ${WALINE_CSS}
 ${READER_HUD_CSS}
@@ -828,7 +831,7 @@ ${READER_HUD_CSS}
 .manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 .manga-reader *{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 .manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
-.manga-page{display:block;width:100%;max-width:800px;height:auto;aspect-ratio:2/3;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
+.manga-page{display:block;width:100%;max-width:800px;height:auto;aspect-ratio:auto 2/3;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
 .manga-page.loaded{opacity:1}
 .chapter-cover-wrap{width:100%;max-width:800px;position:relative;background:#0a0810;margin-bottom:0}
 .chapter-cover-img{display:block;width:100%;height:auto;object-fit:contain}
