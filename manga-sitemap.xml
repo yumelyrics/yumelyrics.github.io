@@ -18,8 +18,19 @@
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://i.ibb.co/DP3x5ks8/cover-crop.jpg</image:loc>
-      <image:title>Yumelyrics</image:title>
-      <image:caption>Yumelyrics — Manga terjemahan Indonesia di YumeSubs</image:caption>
+      <image:title>Yumelyrics Announcements</image:title>
+      <image:caption>Yumelyrics Announcements — Manga terjemahan Indonesia di YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://yumelyrics.my.id/manga/yumelyrics-ch001.html</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://i.ibb.co/F4k0rfhL/001.jpg</image:loc>
+      <image:title>Yumelyrics Announcements Chapter 1 — Test upload</image:title>
+      <image:caption>Baca Yumelyrics Announcements Chapter 1 — Test upload terjemahan Indonesia di YumeSubs</image:caption>
     </image:image>
   </url>
 </urlset>
