@@ -1,0 +1,1430 @@
+// generate-manga.js — v2026-07-05 (SEO lengkap · mode system · sitemap · orphan cleanup)
+// GitHub Actions: ambil data Firestore → generate HTML per chapter manga/komik terjemahan
+//
+// Firestore collections:
+//   manga_series/{id}    → metadata series (judul, cover, deskripsi, dsb.)
+//   manga_chapters/{id}  → data chapter (pages[], seriesId, chapterNum, dsb.)
+//
+// Output:
+//   /manga/index.html                    → katalog semua series
+//   /manga/{seriesSlug}.html             → halaman series (daftar chapter)
+//   /manga/{seriesSlug}-ch{NNN}.html     → halaman reader chapter
+//   manga-sitemap.xml                    → sitemap khusus manga (image:image blocks)
+
+import { initializeApp }           from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import fs                          from 'fs';
+import { writeFile as fsWrite }    from 'fs/promises';
+import path                        from 'path';
+import crypto                      from 'crypto';
+import { fileURLToPath }           from 'url';
+
+let minifyHtmlTerser;
+try {
+  ({ minify: minifyHtmlTerser } = await import('html-minifier-terser'));
+} catch { minifyHtmlTerser = async (html) => html; }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// ── CONFIG — sesuaikan sebelum deploy ────────────────────────────────────────
+const DISCORD_WEBHOOK_URL   = process.env.DISCORD_WEBHOOK_URL || '';
+const DISCORD_SERVER_URL    = 'https://discord.gg/SW9bTRHK8H';
+const DISCORD_POPUP_IMAGE   = 'https://raw.githubusercontent.com/yumelyrics/yumelyrics.github.io/refs/heads/main/images/miku.jpg';
+const DISCORD_POPUP_IMAGE_OPT = `https://wsrv.nl/?url=${encodeURIComponent(DISCORD_POPUP_IMAGE)}&w=640&h=300&fit=cover&output=webp&q=70`;
+
+const firebaseConfig = {
+  apiKey:            process.env.FIREBASE_API_KEY,
+  authDomain:        'yumesubs7.firebaseapp.com',
+  projectId:         'yumesubs7',
+  storageBucket:     'yumesubs7.firebasestorage.app',
+  messagingSenderId: '1076202015626',
+  appId:             '1:1076202015626:web:ce89fb668eb6b2bd021673',
+};
+
+const BASE_URL      = 'https://yumelyrics.my.id';
+const MANGA_DIR     = 'manga';
+const MANIFEST_PATH = '.yume-manga-manifest.json';
+const SITEMAP_PATH  = 'manga-sitemap.xml';
+const DISCORD_ROLE  = '<@&1234567890>';          // ganti dengan role ID Discord kamu
+const WALINE_SERVER = 'https://yumelyrics-comment.vercel.app';
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Generate mode ─────────────────────────────────────────────────────────────
+/**
+ * Mode generate:
+ *  full        — semua chapter (hapus cache, rebuild total)
+ *  new         — hanya file HTML belum ada
+ *  edited      — hanya htmlDirty + hash belum sync (atau slug berubah)
+ *  incremental — new + edited (default)
+ */
+function resolveGenerateMode() {
+  let ghEventMode = '';
+  try {
+    if (process.env.GITHUB_EVENT_PATH) {
+      const evt = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+      ghEventMode = (evt?.inputs?.mode || '').trim().toLowerCase();
+    }
+  } catch (_) { /* non-fatal */ }
+
+  if (process.argv.includes('--full'))        return 'full';
+  if (process.argv.includes('--new'))         return 'new';
+  if (process.argv.includes('--edited'))      return 'edited';
+
+  const fromEnv = (process.env.GENERATE_MODE || '').trim().toLowerCase();
+  const mode = fromEnv || ghEventMode || 'incremental';
+  if (['full','new','edited','incremental'].includes(mode)) return mode;
+  return 'incremental';
+}
+
+function generateModeLabel(mode) {
+  switch (mode) {
+    case 'full':        return 'FULL (semua chapter)';
+    case 'new':         return 'NEW (chapter baru saja)';
+    case 'edited':      return 'EDITED (chapter diedit saja)';
+    default:            return 'INCREMENTAL (baru + diedit)';
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function sitemapEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function sitemapDate(d = new Date()) { return d.toISOString().split('T')[0]; }
+function sitemapLastmod(fp, fallback) {
+  try { if (fs.existsSync(fp)) return sitemapDate(fs.statSync(fp).mtime); } catch(_){}
+  return fallback;
+}
+
+function toSlug(text, fallback) {
+  if (text) return text.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').substring(0,60);
+  return fallback || 'chapter';
+}
+
+function chapterSlug(seriesSlug, chapterNum) {
+  return `${seriesSlug}-ch${String(chapterNum).padStart(3,'0')}`;
+}
+
+function wsrvUrl(url, w, q = 80) {
+  if (!url || !url.startsWith('http')) return url;
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${w}&output=webp&q=${q}`;
+}
+
+async function pConcurrent(n, tasks) {
+  let i = 0;
+  async function worker() { while (i < tasks.length) await tasks[i++](); }
+  await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, worker));
+}
+
+const MINIFY_OPTIONS = {
+  collapseWhitespace: true, removeComments: true,
+  minifyCSS: true, minifyJS: true,
+  removeAttributeQuotes: true, removeEmptyAttributes: true,
+  removeRedundantAttributes: true,
+};
+async function minify(html) {
+  try { return await minifyHtmlTerser(html, MINIFY_OPTIONS); } catch { return html; }
+}
+
+/** Hapus file HTML yg slug-nya tidak ada lagi di Firestore */
+function removeOrphanHtml(dir, validNames) {
+  if (!fs.existsSync(dir)) return 0;
+  let removed = 0;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith('.html')) continue;
+    const base = f.slice(0, -5);
+    if (!validNames.has(base)) {
+      fs.unlinkSync(path.join(dir, f));
+      removed++;
+    }
+  }
+  return removed;
+}
+
+// ── Manifest ──────────────────────────────────────────────────────────────────
+function loadManifest() {
+  try {
+    if (fs.existsSync(MANIFEST_PATH)) {
+      const d = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+      if (d && typeof d.chapters === 'object') return d;
+    }
+  } catch(_){}
+  return { version: 1, chapters: {} };
+}
+function saveManifest(m) {
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + '\n', 'utf8');
+}
+
+function chapterContentHash(ch) {
+  const p = {
+    seriesId:     ch.seriesId     || '',
+    seriesTitle:  ch.seriesTitle  || '',
+    seriesSlug:   ch.seriesSlug   || '',
+    chapterNum:   ch.chapterNum   ?? 0,
+    chapterTitle: ch.chapterTitle || '',
+    cover:        ch.cover        || '',
+    pages:        (ch.pages || []).join('|'),
+    description:  ch.description  || '',
+    translator:   ch.translator   || '',
+    status:       ch.status       || '',
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(p)).digest('hex').slice(0,16);
+}
+
+function needsGenerate(ch, slug, manifest, mode = 'incremental') {
+  const fp         = path.join(MANGA_DIR, `${slug}.html`);
+  const fileExists = fs.existsSync(fp);
+  const prev       = manifest.chapters[ch.id];
+  const dirty      = ch.htmlDirty === true || ch.htmlDirty === 'true';
+  const curHash    = chapterContentHash(ch);
+  const hashMismatch = !prev || prev.hash !== curHash;
+  // Slug berubah = file lama (slug lama) ada tapi slug baru belum ada
+  const slugChanged  = !!(prev && prev.slug !== slug);
+
+  if (mode === 'full')  return true;
+  if (mode === 'new')   return !fileExists;
+  if (mode === 'edited') {
+    // Slug berubah harus digenerate ulang meski file baru belum ada
+    // (file slug lama akan dibersihkan oleh removeOrphanHtml)
+    if (slugChanged) return true;
+    if (!fileExists) return false;
+    if (dirty && hashMismatch) return true;
+    return false;
+  }
+  // incremental (default): baru + diedit
+  if (!fileExists)           return true;
+  if (slugChanged)           return true;
+  if (dirty && hashMismatch) return true;
+  return false;
+}
+
+/** Flag htmlDirty macet: hash manifest sudah cocok — bisa di-clear tanpa generate ulang */
+function shouldClearStuckDirtyFlag(ch, slug, manifest) {
+  if (!(ch.htmlDirty === true || ch.htmlDirty === 'true')) return false;
+  const fp   = path.join(MANGA_DIR, `${slug}.html`);
+  if (!fs.existsSync(fp)) return false;
+  const prev = manifest.chapters[ch.id];
+  if (!prev || prev.slug !== slug) return false;
+  return prev.hash === chapterContentHash(ch);
+}
+
+/** Run pertama / manifest kosong: sinkronkan dari HTML yang sudah ada (tanpa generate ulang) */
+function seedManifestFromDisk(manifest, allChapters) {
+  let seeded = 0;
+  for (const ch of allChapters) {
+    if (ch.htmlDirty === true || ch.htmlDirty === 'true') continue;
+    const slug = ch.slug;
+    const fp   = path.join(MANGA_DIR, `${slug}.html`);
+    if (!fs.existsSync(fp)) continue;
+    const hash = chapterContentHash(ch);
+    const prev = manifest.chapters[ch.id];
+    if (!prev || prev.slug !== slug || prev.hash !== hash) {
+      manifest.chapters[ch.id] = { slug, hash };
+      seeded++;
+    }
+  }
+  return seeded;
+}
+
+async function clearDirtyFlag(db, chapterId) {
+  try { await updateDoc(doc(db, 'manga_chapters', chapterId), { htmlDirty: false }); }
+  catch(e) { console.warn(`  ⚠ Gagal clear htmlDirty untuk ${chapterId}:`, e.message); }
+}
+
+// ── Discord ───────────────────────────────────────────────────────────────────
+async function sendDiscordNotification(newChapters, success = true) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  try {
+    const count = newChapters.length;
+    let title, desc, color;
+    if (!success) {
+      title = '❌ Generate Manga Gagal';
+      desc  = 'Terjadi error saat generate halaman manga. Cek log GitHub Actions.';
+      color = 15158332;
+    } else {
+      title = count === 1 ? '📖 Chapter Baru Diupload' : `📖 ${count} Chapter Baru Diupload`;
+      desc  = `**${count}** chapter baru berhasil di-generate dan diupload.`;
+      color = 3447003;
+    }
+    const lines = newChapters.slice(0, 10).map(c => {
+      const num = `Ch. ${c.chapterNum}`;
+      const t   = c.chapterTitle ? ` — ${c.chapterTitle}` : '';
+      return `• [${escHtml(c.seriesTitle)} ${num}${t}](${c.url})`;
+    });
+    if (count > 10) lines.push(`_...dan ${count - 10} chapter lainnya_`);
+
+    const firstImg = newChapters.length > 0 ? newChapters[0].cover : '';
+    const embed = {
+      title, description: desc, color, url: `${BASE_URL}/${MANGA_DIR}/`,
+      fields: [
+        { name: '📚 Chapter Baru', value: lines.join('\n') || '_–_', inline: false },
+        { name: '🔗 Katalog Manga', value: `[Lihat semua manga](${BASE_URL}/${MANGA_DIR}/)`, inline: true },
+        { name: '🌐 Website', value: `[yumelyrics.my.id](${BASE_URL})`, inline: true },
+      ],
+      footer: { text: 'yumelyrics.my.id · manga' },
+      timestamp: new Date().toISOString(),
+    };
+    if (firstImg) {
+      embed[count === 1 ? 'image' : 'thumbnail'] = { url: firstImg };
+    }
+
+    const res = await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: DISCORD_ROLE, embeds: [embed] }),
+    });
+    if (res.ok) console.log(`✓ Notif Discord: ${count} chapter baru.`);
+    else        res.text().then(t => console.warn(`⚠ Discord error ${res.status}: ${t}`));
+  } catch(e) { console.warn('⚠ Gagal kirim notif Discord:', e.message); }
+}
+
+// ── Sitemap helpers ───────────────────────────────────────────────────────────
+function buildSitemapUrl({ loc, lastmod, priority = '0.7', changefreq = 'weekly', imgUrl = '', imgTitle = '', imgCaption = '' }) {
+  const imgBlock = imgUrl
+    ? `\n    <image:image>\n      <image:loc>${sitemapEsc(imgUrl)}</image:loc>${imgTitle ? `\n      <image:title>${sitemapEsc(imgTitle)}</image:title>` : ''}${imgCaption ? `\n      <image:caption>${sitemapEsc(imgCaption)}</image:caption>` : ''}\n    </image:image>`
+    : '';
+  return `  <url>\n    <loc>${sitemapEsc(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>${imgBlock}\n  </url>`;
+}
+
+function buildSitemapChapterUrl(ch, slug, today) {
+  const loc     = `${BASE_URL}/${MANGA_DIR}/${slug}.html`;
+  const lastmod = sitemapLastmod(path.join(MANGA_DIR, `${slug}.html`), today);
+  const cover   = ch.cover || (ch.pages && ch.pages[0]) || '';
+  const imgTitle = `${ch.seriesTitle} Chapter ${ch.chapterNum}${ch.chapterTitle ? ` — ${ch.chapterTitle}` : ''}`;
+  return buildSitemapUrl({
+    loc, lastmod, priority: '0.7', changefreq: 'monthly',
+    imgUrl: cover, imgTitle, imgCaption: `Baca ${imgTitle} terjemahan Indonesia di YumeSubs`,
+  });
+}
+
+function buildSitemapSeriesUrl(sr, today) {
+  const loc     = `${BASE_URL}/${MANGA_DIR}/${sr.slug}.html`;
+  const lastmod = sitemapLastmod(path.join(MANGA_DIR, `${sr.slug}.html`), today);
+  return buildSitemapUrl({
+    loc, lastmod, priority: '0.8', changefreq: 'weekly',
+    imgUrl: sr.cover || '', imgTitle: sr.title,
+    imgCaption: `${sr.title} — Manga terjemahan Indonesia di YumeSubs`,
+  });
+}
+
+// ── CSS shared constants ──────────────────────────────────────────────────────
+const FONT_URL  = 'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@400;500;600;700&display=swap';
+const FONT_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
+const FONT_LINK = `<link rel="preload" href="${FONT_URL}" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
+const THEME_BOOT = `<script>(function(){var t=localStorage.getItem('ym_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>`;
+
+const CSS_TOKENS = `
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+:root{
+  --ink:#0a0812;--paper:#f5f0ea;--cream:#ede7dc;--smoke:#c8bfb0;--ash:#8c8278;
+  --gold:#c9a96e;--gold2:#e8c98a;--rose:#c4637a;--plum:#7c4d6e;
+  --dusk:#6b5b7a;--sakura:#e8b4c8;--sakura-dim:rgba(196,99,122,.12);
+  --mist:rgba(10,8,18,.06);--border:rgba(10,8,18,.1);--red:#c0392b;
+  --serif:'Lora',Georgia,serif;--sans:'Syne',system-ui,sans-serif;--ro:'DM Sans',system-ui,sans-serif;
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);
+  --accent:var(--rose);--accent2:var(--gold);
+  --nm:background .35s ease,color .35s ease,border-color .35s ease;
+}
+[data-theme="dark"]{
+  --ink:#e8e2d9;--paper:#0f0d0b;--cream:#1a1714;--smoke:#4a4540;--ash:#7a7068;
+  --gold:#d4a96e;--gold2:#e8c98a;--rose:#d4758a;--red:#e05252;
+  --mist:rgba(232,226,217,.05);--border:rgba(232,226,217,.1);
+  --bg:var(--paper);--text:var(--ink);--muted:var(--ash);--accent:var(--rose);
+}
+`;
+
+const NAV_CSS = `
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 3rem;background:var(--paper);border-bottom:1px solid var(--border);transition:var(--nm)}
+@media(min-width:768px){nav{background:rgba(245,240,234,.92);backdrop-filter:blur(20px)}}
+[data-theme="dark"] nav{background:rgba(15,13,11,.92)}
+.nav-logo{display:flex;flex-direction:column;gap:.05rem;text-decoration:none}
+.nljp{font-size:1.05rem;font-weight:700;color:var(--ink);letter-spacing:.05em;font-family:var(--sans)}
+.nlen{font-size:.52rem;color:var(--ash);letter-spacing:.3em;text-transform:uppercase;font-weight:700}
+.nav-links{display:flex;gap:.25rem;align-items:center}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden;padding:0;transition:var(--nm)}
+#theme-toggle svg{width:14px;height:14px;stroke:var(--ash);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;position:absolute;transition:opacity .25s,transform .25s}
+#theme-toggle .icon-sun{opacity:1;transform:scale(1)}
+#theme-toggle .icon-moon{opacity:0;transform:scale(.7) rotate(45deg)}
+[data-theme="dark"] #theme-toggle .icon-sun{opacity:0;transform:scale(.7) rotate(-45deg)}
+[data-theme="dark"] #theme-toggle .icon-moon{opacity:1;transform:scale(1)}
+#nav-menu-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:none;border:1px solid var(--border);cursor:pointer;flex-direction:column;padding:0;gap:0}
+#nav-menu-btn span{display:block;width:14px;height:1.5px;background:var(--ash);transition:transform .25s,opacity .2s,width .25s}
+#nav-menu-btn span:nth-child(2){margin:3px 0}
+#nav-menu-btn.open span:nth-child(1){transform:translateY(4.5px) rotate(45deg)}
+#nav-menu-btn.open span:nth-child(2){opacity:0;width:0}
+#nav-menu-btn.open span:nth-child(3){transform:translateY(-4.5px) rotate(-45deg)}
+#nav-dropdown{position:absolute;top:calc(100% + 1px);right:3rem;z-index:200;background:var(--paper);border:1px solid var(--border);display:none;flex-direction:column;min-width:160px;box-shadow:0 8px 32px rgba(10,8,18,.1)}
+[data-theme="dark"] #nav-dropdown{background:var(--cream)}
+#nav-dropdown.open{display:flex}
+.nd-item{background:none;border:none;font-family:var(--sans);font-size:.68rem;color:var(--ash);letter-spacing:.18em;text-transform:uppercase;padding:.75rem 1.2rem;cursor:pointer;text-align:left;width:100%;font-weight:600;text-decoration:none;display:block;white-space:nowrap}
+.nd-item:hover,.nd-item.on{color:var(--ink);background:var(--cream)}
+@media(max-width:768px){nav{padding:.85rem 1rem}#nav-dropdown{right:1rem}}
+`;
+
+const NAV_SCRIPT = `<script>
+(function(){
+  var s=localStorage.getItem('ym_theme');
+  if(s==='dark')document.documentElement.setAttribute('data-theme','dark');
+  window.toggleTheme=function(){
+    var r=document.documentElement,d=r.getAttribute('data-theme')==='dark';
+    d?(r.removeAttribute('data-theme'),localStorage.setItem('ym_theme','light'))
+     :(r.setAttribute('data-theme','dark'),localStorage.setItem('ym_theme','dark'));
+  };
+  function toggleNav(){
+    var b=document.getElementById('nav-menu-btn'),d=document.getElementById('nav-dropdown');
+    if(!b||!d)return;
+    var o=d.classList.toggle('open');
+    b.classList.toggle('open',o);b.setAttribute('aria-expanded',o);
+  }
+  window.toggleNavMenu=toggleNav;
+  document.addEventListener('click',function(e){
+    var b=document.getElementById('nav-menu-btn'),d=document.getElementById('nav-dropdown');
+    if(!d||!d.classList.contains('open')||!b)return;
+    if(!b.contains(e.target)&&!d.contains(e.target)){d.classList.remove('open');b.classList.remove('open');b.setAttribute('aria-expanded',false);}
+  });
+})();
+<\/script>`;
+
+function buildNav(prefix, active) {
+  const p = prefix || '';
+  const links = [
+    { href: `${p}index.html`,        label: 'Katalog Lagu' },
+    { href: `${p}manga/index.html`,  label: 'Manga',    key: 'manga'  },
+    { href: `${p}artis/index.html`,  label: 'Artis'    },
+    { href: `${p}resources.html`,    label: 'Resources' },
+    { href: `${p}contact.html`,      label: 'Hubungi'  },
+  ];
+  return `<nav>
+  <a class="nav-logo" href="${p}index.html">
+    <div class="nljp">夢Lyrics</div>
+    <div class="nlen">YumeSubs</div>
+  </a>
+  <div class="nav-links">
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle tema" aria-label="Toggle tema">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button id="nav-menu-btn" onclick="toggleNavMenu()" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div id="nav-dropdown">
+    ${links.map(l => `<a class="nd-item${active===l.key?' on':''}" href="${l.href}">${l.label}</a>`).join('')}
+  </div>
+</nav>`;
+}
+
+const DISCORD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" aria-hidden="true"><path fill="currentColor" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>`;
+
+const DISCORD_POPUP_CSS = `
+.discord-popup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(10,8,18,.72);backdrop-filter:blur(8px)}
+.discord-popup-overlay.is-hidden{display:none!important}
+body.discord-popup-lock{overflow:hidden}
+.discord-popup-row{display:flex;flex-direction:row;align-items:flex-start;gap:.65rem;width:min(92vw,380px)}
+.discord-popup-card{width:100%;background:linear-gradient(160deg,#2c2f33 0%,#1e2124 100%);border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);border:1px solid rgba(88,101,242,.35);animation:discordPopIn .35s cubic-bezier(.34,1.2,.64,1)}
+@keyframes discordPopIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
+.discord-popup-close{flex-shrink:0;width:40px;height:40px;border:2px solid rgba(255,255,255,.28);border-radius:50%;background:#2c2f33;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;margin-top:.15rem}
+.discord-popup-close:hover{background:#5865F2}
+.discord-popup-img{display:block;width:100%;aspect-ratio:19/9;object-fit:cover;background:#1e2124}
+.discord-popup-title{margin:0;padding:1rem 1.1rem .25rem;font-family:var(--sans);font-size:.95rem;font-weight:700;color:#eeeef2;text-align:center;text-transform:lowercase}
+.discord-popup-btn{display:flex;align-items:center;justify-content:center;gap:.55rem;margin:1rem 1.1rem 1.25rem;padding:.85rem 1rem;background:#5865F2;color:#fff;text-decoration:none;border-radius:8px;font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s}
+.discord-popup-btn:hover{background:#4752c4}
+.discord-popup-btn svg{width:22px;height:17px;flex-shrink:0}
+.discord-popup-fab{position:fixed;bottom:max(5.5rem,calc(env(safe-area-inset-bottom,0px)+5.5rem));right:max(1rem,env(safe-area-inset-right,0px));z-index:198;width:48px;height:48px;border-radius:50%;background:linear-gradient(160deg,#5865F2 0%,#4752c4 100%);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(88,101,242,.45);text-decoration:none;transition:transform .2s}
+.discord-popup-fab.is-visible{display:flex}
+.discord-popup-fab:hover{transform:scale(1.08)}
+.discord-popup-fab svg{width:24px;height:18px}
+@media(max-width:768px){.discord-popup-overlay{backdrop-filter:none;background:rgba(10,8,18,.9)}.discord-popup-row{position:relative}.discord-popup-close{position:absolute;top:-12px;right:-12px;z-index:5;width:34px;height:34px;font-size:.95rem;margin-top:0}}
+@media(prefers-reduced-motion:reduce){.discord-popup-card{animation:none}}
+`;
+
+function buildDiscordPopup() {
+  return `
+<div id="discord-popup-overlay" class="discord-popup-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="discord-popup-title" aria-hidden="true">
+  <div class="discord-popup-row">
+    <div class="discord-popup-card">
+      <img class="discord-popup-img" data-src="${escHtml(DISCORD_POPUP_IMAGE_OPT)}" data-fallback="${escHtml(DISCORD_POPUP_IMAGE)}" alt="" width="380" height="180" loading="lazy" decoding="async">
+      <p class="discord-popup-title" id="discord-popup-title">server discord yumelyrics</p>
+      <a class="discord-popup-btn" href="${escHtml(DISCORD_SERVER_URL)}" target="_blank" rel="noopener noreferrer">${DISCORD_SVG} Gabung Server Discord</a>
+    </div>
+    <button class="discord-popup-close" id="discord-popup-close" aria-label="Tutup">✕</button>
+  </div>
+</div>
+<a class="discord-popup-fab" href="${escHtml(DISCORD_SERVER_URL)}" target="_blank" rel="noopener noreferrer" id="discord-popup-fab" aria-label="Discord YumeLyrics">${DISCORD_SVG}</a>
+<script>
+(function(){
+  var DELAY=12000,KEY='ym_discord_popup_seen',COOL=7*24*3600*1000;
+  var overlay=document.getElementById('discord-popup-overlay');
+  var closeBtn=document.getElementById('discord-popup-close');
+  var fab=document.getElementById('discord-popup-fab');
+  function dismiss(){
+    if(!overlay)return;
+    overlay.classList.add('is-hidden');overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('discord-popup-lock');
+    if(fab)fab.classList.add('is-visible');
+    try{localStorage.setItem(KEY,Date.now());}catch(e){}
+  }
+  function show(){
+    if(!overlay)return;
+    var img=overlay.querySelector('.discord-popup-img');
+    if(img&&img.dataset.src&&!img.src){img.src=img.dataset.src;img.onerror=function(){if(img.dataset.fallback)img.src=img.dataset.fallback;};}
+    overlay.classList.remove('is-hidden');overlay.setAttribute('aria-hidden','false');
+    document.body.classList.add('discord-popup-lock');
+  }
+  if(closeBtn)closeBtn.addEventListener('click',dismiss);
+  overlay&&overlay.addEventListener('click',function(e){if(e.target===overlay)dismiss();});
+  try{
+    var seen=parseInt(localStorage.getItem(KEY)||'0',10);
+    if(Date.now()-seen>COOL)setTimeout(show,DELAY);
+    else if(fab)fab.classList.add('is-visible');
+  }catch(e){setTimeout(show,DELAY);}
+})();
+<\/script>`;
+}
+
+// ── Waline Comments ────────────────────────────────────────────────────────────
+const WALINE_CSS = `
+.comments-section{padding:3rem 2.5rem 7rem;border-top:1px solid var(--border);background:var(--paper);transition:var(--nm)}
+.cm-inner{max-width:760px;margin:0 auto}
+.cm-heading{font-family:var(--serif);font-size:1.8rem;font-weight:600;color:var(--ink);margin-bottom:.35rem}
+.cm-sub{font-size:.75rem;color:var(--ash);font-family:var(--ro);margin-bottom:2rem}
+#waline{width:100%;--waline-font-size:.88rem;--waline-border-color:rgba(10,8,18,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink);--waline-theme-color:var(--rose);--waline-active-color:var(--rose);--waline-border:1px solid var(--border);--waline-avatar-size:36px;--waline-box-shadow:none}
+[data-theme="dark"] #waline{--waline-border-color:rgba(232,226,217,.1);--waline-bgcolor:var(--paper);--waline-bgcolor-hover:var(--cream);--waline-color:var(--ink)}
+#waline .wl-browser,#waline .wl-os{display:none!important}
+#waline .wl-content img{max-width:100%;height:auto;display:block}
+#waline .wl-input[name="url"],#waline label[for*="url"],#waline .wl-header-item:has(input[name="url"]){display:none!important}
+@media(max-width:768px){.comments-section{padding:2rem 1.2rem 5rem}}
+`;
+
+function buildWalineSection(chapterPath) {
+  const pathJson   = JSON.stringify(chapterPath);
+  const serverJson = JSON.stringify(WALINE_SERVER);
+  return `
+<section class="comments-section" id="comments">
+  <div class="cm-inner">
+    <h2 class="cm-heading">Komentar</h2>
+    <p class="cm-sub">Bagikan pendapatmu — bebas sebagai tamu, tanpa perlu login.</p>
+    <div id="waline"></div>
+  </div>
+</section>
+<script>
+(function(){
+  var walineLoaded=false;
+  function loadWaline(){
+    if(walineLoaded)return;walineLoaded=true;
+    if(!document.getElementById('waline-css')){
+      var lnk=document.createElement('link');lnk.id='waline-css';lnk.rel='stylesheet';
+      lnk.href='https://unpkg.com/@waline/client@3/dist/waline.css';document.head.appendChild(lnk);
+    }
+    import('https://unpkg.com/@waline/client@3/dist/waline.js').then(function(m){
+      m.init({
+        el:'#waline',serverURL:${serverJson},path:${pathJson},
+        comment:true,pageview:false,reaction:false,dark:'html[data-theme="dark"]',
+        meta:['nick'],requiredMeta:[],
+        locale:{
+          placeholder:'Tulis komentarmu di sini...',sofa:'Jadilah yang pertama berkomentar!',
+          submit:'Kirim',nick:'Nama',preview:'Pratinjau',comment:'Komentar',reply:'Balas',
+          more:'Muat lebih banyak...',admin:'Admin',word:'{0} kata',anonymous:'Tamu',
+          level0:'Pendatang',level1:'Pengunjung',level2:'Reguler',
+          level3:'Veteran',level4:'Master',level5:'Legenda',
+        },
+      });
+    }).catch(function(e){console.error('Waline load error:',e);});
+  }
+  var isMobile=window.matchMedia('(max-width:768px)').matches;
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting){obs.disconnect();loadWaline();}
+    },{rootMargin:isMobile?'120px':'200px'});
+    var el=document.querySelector('.comments-section');if(el)obs.observe(el);
+  }
+  setTimeout(loadWaline,isMobile?9000:4000);
+})();
+<\/script>`;
+}
+
+// ── Reader HUD CSS ─────────────────────────────────────────────────────────────
+const READER_HUD_CSS = `
+#reader-hud{
+  position:fixed;bottom:clamp(1.5rem,8vh,3.5rem);left:50%;transform:translateX(-50%);
+  z-index:500;display:flex;flex-direction:column;align-items:center;gap:.55rem;
+  pointer-events:none;transition:opacity .3s cubic-bezier(.4,0,.2,1),transform .3s cubic-bezier(.4,0,.2,1);
+}
+#reader-hud.hud-hidden{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none!important}
+#reader-hud>*{pointer-events:auto}
+.hud-title{display:flex;flex-direction:column;align-items:center;gap:.1rem;background:rgba(10,8,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:999px;padding:.38rem .9rem .42rem;max-width:min(360px,80vw)}
+.hud-series-name{font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(200,192,208,.45);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hud-chapter-name{font-size:.75rem;font-weight:600;color:rgba(220,210,230,.88);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.hud-btns{display:flex;align-items:center;gap:1.1rem}
+.hud-btn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:rgba(14,11,22,.88);border:none;outline:none;color:rgba(220,210,230,.82);font-size:1.05rem;line-height:1;text-decoration:none;cursor:pointer;flex-shrink:0;box-shadow:0 2px 14px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);transition:background .18s,color .18s,transform .14s,box-shadow .18s;-webkit-tap-highlight-color:transparent}
+.hud-btn:hover{background:rgba(30,24,44,.95);color:#fff;transform:scale(1.08);box-shadow:0 4px 18px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.13)}
+.hud-btn:active{transform:scale(.92)}
+.hud-btn-disabled{background:rgba(14,11,22,.5)!important;color:rgba(255,255,255,.18)!important;cursor:default;pointer-events:none;box-shadow:none}
+.hud-btn-list{font-size:.72rem}
+.hud-btn-list.active,.hud-btn-list:hover{background:rgba(40,28,14,.92);color:rgba(201,169,110,.95)}
+#chapter-drawer{position:fixed;left:0;right:0;bottom:0;z-index:499;background:rgba(6,5,10,.97);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);border-top:1px solid rgba(255,255,255,.08);border-radius:1rem 1rem 0 0;max-height:60vh;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;transform:translateY(100%);opacity:0;pointer-events:none}
+#chapter-drawer.drawer-open{transform:translateY(0);opacity:1;pointer-events:auto}
+.drawer-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:.75rem auto .4rem;flex-shrink:0}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:2;background:rgba(6,5,10,.99)}
+.drawer-title{font-size:.6rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,192,208,.5);font-family:system-ui,-apple-system,sans-serif}
+.drawer-close{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:rgba(200,192,208,.55);cursor:pointer;font-size:.7rem;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.drawer-close:hover{background:rgba(255,255,255,.14);color:#fff}
+.drawer-list{padding:.3rem 0 .8rem}
+.drawer-ch-item{display:flex;align-items:center;gap:.9rem;padding:.62rem 1.4rem;text-decoration:none;color:rgba(200,192,208,.6);font-family:system-ui,-apple-system,sans-serif;font-size:.82rem;transition:background .14s,color .14s;border-bottom:1px solid rgba(255,255,255,.025)}
+.drawer-ch-item:last-child{border-bottom:none}
+.drawer-ch-item:hover{background:rgba(255,255,255,.045);color:#e8e2d9}
+.drawer-ch-item.current{color:var(--gold);background:rgba(201,169,110,.06)}
+.drawer-ch-num{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,192,208,.28);flex-shrink:0;min-width:44px}
+.drawer-ch-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-ch-pages{font-size:.58rem;color:rgba(200,192,208,.28);flex-shrink:0}
+#drawer-backdrop{position:fixed;inset:0;z-index:498;background:transparent;pointer-events:none;transition:background .3s}
+#drawer-backdrop.active{background:rgba(0,0,0,.45);pointer-events:auto}
+#reader-loading-overlay{position:fixed;inset:0;z-index:600;background:#0f0d0b;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}
+#reader-loading-overlay.rl-done{opacity:0;pointer-events:none}
+.rl-box{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.rl-spinner{width:38px;height:38px;border-radius:50%;border:3px solid rgba(212,169,110,.18);border-top-color:#d4a96e;animation:rl-spin .8s linear infinite}
+@keyframes rl-spin{to{transform:rotate(360deg)}}
+.rl-text{font-family:system-ui,-apple-system,sans-serif;font-size:.72rem;letter-spacing:.08em;color:rgba(212,169,110,.85);text-transform:uppercase}
+@media(max-width:480px){.hud-btn{width:42px;height:42px;font-size:.95rem}.hud-btns{gap:.85rem}.hud-chapter-name{font-size:.7rem}#reader-hud{bottom:clamp(1rem,5vh,2rem)}}
+`;
+
+const READER_SCROLL_TOP_SCRIPT = `<script>
+(function(){if('scrollRestoration' in window.history)window.history.scrollRestoration='manual';window.scrollTo(0,0);})();
+<\/script>`;
+
+const READER_SEQ_LOAD_SCRIPT = `<script>
+(function(){
+  var reader=document.getElementById('manga-reader');
+  var overlay=document.getElementById('reader-loading-overlay');
+  if(!reader){if(overlay)overlay.style.display='none';return;}
+  var imgs=Array.prototype.slice.call(reader.querySelectorAll('img.manga-page[data-src]'));
+  if(!imgs.length){if(overlay)overlay.style.display='none';return;}
+  if(overlay){overlay.classList.add('rl-done');setTimeout(function(){overlay.style.display='none';},380);}
+  function loadImg(img){
+    var src=img.getAttribute('data-src');if(!src)return;
+    var tmp=new Image();
+    tmp.onload=function(){img.src=src;img.removeAttribute('data-src');img.classList.add('loaded');};
+    tmp.onerror=function(){img.src=src;img.removeAttribute('data-src');};
+    tmp.src=src;
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){loadImg(e.target);io.unobserve(e.target);}});
+    },{rootMargin:'400px 0px'});
+    imgs.forEach(function(img){io.observe(img);});
+  } else {imgs.forEach(loadImg);}
+})();
+<\/script>`;
+
+const READER_HUD_SCRIPT = `<script>
+(function(){
+  window.scrollTo(0,0);
+  var hud=document.getElementById('reader-hud');
+  var drawer=document.getElementById('chapter-drawer');
+  var backdrop=document.getElementById('drawer-backdrop');
+  var listBtn=document.getElementById('hud-list-btn');
+  var closeBtn=document.getElementById('drawer-close-btn');
+  var reader=document.getElementById('manga-reader');
+  var visible=true,drawerOpen=false,timer=null;
+  function show(){if(!hud)return;hud.classList.remove('hud-hidden');visible=true;clearTimeout(timer);timer=setTimeout(hide,3500);}
+  function hide(){if(!hud||drawerOpen)return;hud.classList.add('hud-hidden');visible=false;}
+  function openDrawer(){
+    if(!drawer||!backdrop)return;drawerOpen=true;
+    drawer.classList.add('drawer-open');drawer.setAttribute('aria-hidden','false');
+    backdrop.classList.add('active');listBtn&&listBtn.classList.add('active');
+    clearTimeout(timer);show();
+    requestAnimationFrame(function(){var cur=drawer.querySelector('.drawer-ch-item.current');if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});});
+  }
+  function closeDrawer(){
+    if(!drawer||!backdrop)return;drawerOpen=false;
+    drawer.classList.remove('drawer-open');drawer.setAttribute('aria-hidden','true');
+    backdrop.classList.remove('active');listBtn&&listBtn.classList.remove('active');
+    clearTimeout(timer);timer=setTimeout(hide,3500);
+  }
+  if(listBtn)listBtn.addEventListener('click',function(e){e.stopPropagation();drawerOpen?closeDrawer():openDrawer();});
+  if(closeBtn)closeBtn.addEventListener('click',closeDrawer);
+  if(backdrop)backdrop.addEventListener('click',closeDrawer);
+  if(reader)reader.addEventListener('click',function(e){
+    if(e.target.closest('#reader-hud')||e.target.closest('#chapter-drawer'))return;
+    if(drawerOpen){closeDrawer();return;}
+    if(visible)hide();else show();
+  });
+  timer=setTimeout(hide,3500);
+})();
+<\/script>`;
+
+// ── Chapter page HTML ──────────────────────────────────────────────────────────
+async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextChapter, seriesChapters) {
+  const seriesTitle  = chapter.seriesTitle  || '';
+  const seriesSlug   = chapter.seriesSlug   || '';
+  const chapterNum   = chapter.chapterNum   ?? 0;
+  const chapterTitle = chapter.chapterTitle || '';
+  const pages        = chapter.pages        || [];
+  const cover        = chapter.cover || (pages.length > 0 ? pages[0] : '');
+  const description  = chapter.description  || '';
+  const translator   = chapter.translator   || '';
+
+  const displayTitle = chapterTitle ? `Chapter ${chapterNum}: ${chapterTitle}` : `Chapter ${chapterNum}`;
+  const pageTitle    = `${seriesTitle} ${displayTitle} | YumeSubs`;
+  const metaDesc     = description || `Baca ${seriesTitle} ${displayTitle} terjemahan bahasa Indonesia. ${pages.length} halaman. Gratis di YumeSubs.`;
+  const keywords     = `${seriesTitle}, chapter ${chapterNum}, manga terjemahan, komik indonesia, yumelyrics, yumesubs${chapterTitle ? `, ${chapterTitle}` : ''}`;
+  const pageUrl      = `${BASE_URL}/${MANGA_DIR}/${slug}.html`;
+  const seriesUrl    = `${BASE_URL}/${MANGA_DIR}/${seriesSlug}.html`;
+
+  const prevHref = prevChapter ? `${prevChapter.slug}.html` : null;
+  const nextHref = nextChapter ? `${nextChapter.slug}.html` : null;
+
+  // Chapter drawer — urutan terbaru di atas
+  const siblingChapters = seriesChapters || [];
+  const drawerItems = [...siblingChapters]
+    .sort((a, b) => (b.chapterNum ?? 0) - (a.chapterNum ?? 0))
+    .map(ch => {
+      const cSlug  = chapterSlug(seriesSlug, ch.chapterNum);
+      const cTitle = ch.chapterTitle || `Chapter ${ch.chapterNum}`;
+      const isCur  = ch.id === chapter.id;
+      return `<a class="drawer-ch-item${isCur?' current':''}" href="${escHtml(cSlug)}.html">`+
+        `<span class="drawer-ch-num">Ch. ${ch.chapterNum}</span>`+
+        `<span class="drawer-ch-title">${escHtml(cTitle)}</span>`+
+        `<span class="drawer-ch-pages">${(ch.pages||[]).length} hal</span>`+
+        `</a>`;
+    }).join('');
+
+  const walinePath = `/${MANGA_DIR}/${slug}`;
+
+  // JSON-LD — ComicIssue + BreadcrumbList
+  const schema = JSON.stringify([
+    {
+      '@context': 'https://schema.org', '@type': 'ComicIssue',
+      'name': displayTitle,
+      'issueNumber': String(chapterNum),
+      'description': metaDesc,
+      'url': pageUrl,
+      'inLanguage': 'id',
+      'publisher': { '@type': 'Organization', 'name': 'YumeSubs', 'url': BASE_URL },
+      'isPartOf': { '@type': 'ComicSeries', 'name': seriesTitle, 'url': seriesUrl },
+      ...(translator ? { 'translator': { '@type': 'Person', 'name': translator } } : {}),
+      ...(cover ? { 'image': { '@type': 'ImageObject', 'url': cover } } : {}),
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Beranda', 'item': BASE_URL },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Manga', 'item': `${BASE_URL}/${MANGA_DIR}/` },
+        { '@type': 'ListItem', 'position': 3, 'name': seriesTitle, 'item': seriesUrl },
+        { '@type': 'ListItem', 'position': 4, 'name': displayTitle, 'item': pageUrl },
+      ],
+    },
+  ]);
+
+  const coverUrl = cover ? wsrvUrl(cover, 1200, 92) : '';
+
+  const pagesHTML = pages.map((url, i) => {
+    const hdUrl = wsrvUrl(url, 1200, 92);
+    return `<img class="manga-page" data-src="${escHtml(hdUrl)}" `+
+      `alt="${escHtml(seriesTitle)} ${escHtml(displayTitle)} halaman ${i+1}" `+
+      `width="800" decoding="async">`;
+  }).join('\n');
+
+  return minify(`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+${THEME_BOOT}
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="keywords" content="${escHtml(keywords)}">
+<title>${escHtml(pageTitle)}</title>
+<meta name="description" content="${escHtml(metaDesc)}">
+<meta property="og:title" content="${escHtml(pageTitle)}">
+<meta property="og:description" content="${escHtml(metaDesc)}">
+<meta property="og:url" content="${pageUrl}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="YumeSubs">
+<meta property="og:locale" content="id_ID">
+<meta name="twitter:title" content="${escHtml(pageTitle)}">
+<meta name="twitter:description" content="${escHtml(metaDesc)}">
+${cover ? `<meta property="og:image" content="${escHtml(cover)}">
+<meta property="og:image:alt" content="${escHtml(`${seriesTitle} ${displayTitle}`)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${escHtml(cover)}">
+<meta name="twitter:image:alt" content="${escHtml(`${seriesTitle} ${displayTitle}`)}">` : `<meta name="twitter:card" content="summary">`}
+<meta property="article:section" content="Manga">
+${seriesTitle ? `<meta property="article:tag" content="${escHtml(seriesTitle)}">` : ''}
+<link rel="canonical" href="${pageUrl}">
+<link rel="icon" type="image/png" href="../anime_icon.png">
+${prevHref ? `<link rel="prev" href="${escHtml(prevHref)}">` : ''}
+${nextHref ? `<link rel="next" href="${escHtml(nextHref)}">` : ''}
+<script type="application/ld+json">${schema}</script>
+${FONT_HEAD}
+${FONT_LINK}
+<style>
+${CSS_TOKENS}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:#111}
+body{background:#111;color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
+nav{background:rgba(8,6,12,.92)!important;border-bottom-color:rgba(255,255,255,.07)!important}
+.nljp{color:#e8e2d9}.nlen{color:#5a5060}
+#theme-toggle,#nav-menu-btn{border-color:rgba(255,255,255,.12)!important}
+#theme-toggle svg{stroke:#7a7068}
+#nav-menu-btn span{background:#7a7068}
+#nav-dropdown{background:#1a1714!important;border-color:rgba(255,255,255,.08)!important}
+.nd-item{color:#7a7068}.nd-item:hover,.nd-item.on{color:#e8e2d9;background:#221e1a}
+${NAV_CSS}
+${DISCORD_POPUP_CSS}
+${WALINE_CSS}
+${READER_HUD_CSS}
+.chap-header{background:#0d0b0e;border-bottom:1px solid rgba(255,255,255,.06);padding:2rem 2.5rem 1.75rem}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.55rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#4a4550;margin-bottom:1.5rem;flex-wrap:wrap}
+.breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb-sep{color:#2a2535}
+.chap-series{font-family:var(--serif);font-size:1rem;font-weight:500;color:#7a6880;margin-bottom:.3rem}
+.chap-title{font-family:var(--sans);font-size:clamp(1.3rem,3.5vw,2.2rem);font-weight:700;color:#e8e2d9;line-height:1.2;margin-bottom:.7rem}
+.chap-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.65rem;color:#5a5060;letter-spacing:.08em}
+.chap-meta strong{color:#9a9098}
+.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden}
+.manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
+.manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
+.manga-page.loaded{opacity:1}
+.chapter-cover-wrap{width:100%;max-width:800px;position:relative;background:#0a0810;margin-bottom:0}
+.chapter-cover-img{display:block;width:100%;height:auto;object-fit:contain}
+.chapter-cover-label{position:absolute;bottom:0;left:0;right:0;padding:.6rem 1rem;background:linear-gradient(transparent,rgba(0,0,0,.75));font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(220,210,230,.7)}
+footer{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;padding:2.5rem 2.5rem 5rem;border-top:1px solid var(--border);background:var(--cream);flex-wrap:wrap;transition:var(--nm)}
+[data-theme="dark"] footer{background:#070604}
+.footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
+.footer-link:hover{color:var(--gold)}
+@media(max-width:768px){.chap-header{padding:1.5rem 1rem 1.25rem}.manga-reader{gap:0}footer{padding:2rem 1rem 4rem}}
+</style>
+</head>
+<body>
+${READER_SCROLL_TOP_SCRIPT}
+${buildNav('../', 'manga')}
+
+<div class="chap-header">
+  <div class="breadcrumb">
+    <a href="../index.html">Beranda</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="index.html">Manga</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="${escHtml(seriesSlug)}.html">${escHtml(seriesTitle)}</a>
+    <span class="breadcrumb-sep">›</span>
+    <span>Chapter ${chapterNum}</span>
+  </div>
+  <div class="chap-series">${escHtml(seriesTitle)}</div>
+  <h1 class="chap-title">${escHtml(displayTitle)}</h1>
+  <div class="chap-meta">
+    <span>📄 <strong>${pages.length}</strong> halaman</span>
+    ${translator ? `<span>✏ Penerjemah: <strong>${escHtml(translator)}</strong></span>` : ''}
+  </div>
+</div>
+
+<div class="manga-reader" id="manga-reader">
+  ${coverUrl ? `<div class="chapter-cover-wrap">
+    <img class="chapter-cover-img" src="${escHtml(coverUrl)}" alt="Cover ${escHtml(displayTitle)}" loading="eager" decoding="async" fetchpriority="high">
+    <div class="chapter-cover-label">Cover · ${escHtml(displayTitle)}</div>
+  </div>` : ''}
+  ${pagesHTML}
+</div>
+
+<div id="reader-loading-overlay" style="display:none"></div>
+${READER_SEQ_LOAD_SCRIPT}
+
+<div id="reader-hud">
+  <div class="hud-title">
+    <span class="hud-series-name">${escHtml(seriesTitle)}</span>
+    <span class="hud-chapter-name">${escHtml(displayTitle)}</span>
+  </div>
+  <div class="hud-btns">
+    ${prevHref
+      ? `<a class="hud-btn" href="${escHtml(prevHref)}" title="Chapter sebelumnya" aria-label="Chapter sebelumnya">←</a>`
+      : `<span class="hud-btn hud-btn-disabled" title="Sudah chapter pertama" aria-label="Chapter pertama">←</span>`}
+    <button class="hud-btn hud-btn-list" id="hud-list-btn" title="Daftar chapter" aria-label="Daftar chapter">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <line x1="0" y1="1" x2="16" y2="1"/><line x1="0" y1="6" x2="16" y2="6"/><line x1="0" y1="11" x2="16" y2="11"/>
+      </svg>
+    </button>
+    ${nextHref
+      ? `<a class="hud-btn" href="${escHtml(nextHref)}" title="Chapter berikutnya" aria-label="Chapter berikutnya">→</a>`
+      : `<span class="hud-btn hud-btn-disabled" title="Sudah chapter terbaru" aria-label="Chapter terbaru">→</span>`}
+  </div>
+</div>
+
+<div id="drawer-backdrop"></div>
+<div id="chapter-drawer" role="dialog" aria-label="Daftar Chapter" aria-hidden="true">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">Daftar Chapter — ${escHtml(seriesTitle)}</span>
+    <button class="drawer-close" id="drawer-close-btn" aria-label="Tutup">✕</button>
+  </div>
+  <div class="drawer-list">
+    ${drawerItems || `<div style="padding:1.2rem 1.4rem;font-size:.8rem;color:rgba(200,192,208,.4)">Belum ada chapter lain.</div>`}
+  </div>
+</div>
+
+${buildDiscordPopup()}
+${buildWalineSection(walinePath)}
+
+<footer>
+  <div>
+    <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)">夢Lyrics · Manga</div>
+    <div style="font-size:.55rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:.2rem">Komik Terjemahan Indonesia</div>
+    <div style="font-size:.52rem;color:var(--smoke);margin-top:.8rem">© 2025 YumeSubs — yumelyrics.my.id</div>
+  </div>
+  <div>
+    <a class="footer-link" href="index.html">← Semua Manga</a>
+    <a class="footer-link" href="${escHtml(seriesSlug)}.html">Daftar Chapter ${escHtml(seriesTitle)}</a>
+    <a class="footer-link" href="../index.html">Katalog Lagu</a>
+    <a class="footer-link" href="../contact.html">Hubungi</a>
+  </div>
+</footer>
+
+${NAV_SCRIPT}
+${READER_HUD_SCRIPT}
+</body>
+</html>`);
+}
+
+// ── Series page HTML ──────────────────────────────────────────────────────────
+async function generateSeriesHTML(series, chapters) {
+  const title    = series.title       || '';
+  const slug     = series.slug        || '';
+  const cover    = series.cover       || '';
+  const desc     = series.description || '';
+  const genres   = series.genres      || '';
+  const author   = series.author      || '';
+  const status   = series.status      || '';
+  const pageUrl  = `${BASE_URL}/${MANGA_DIR}/${slug}.html`;
+  const metaDesc = desc
+    ? `${desc.slice(0, 150).trimEnd()}${desc.length > 150 ? '…' : ''}`
+    : `Baca ${title} terjemahan Indonesia. ${chapters.length} chapter tersedia gratis di YumeSubs.`;
+  const keywords = `${title}, manga terjemahan indonesia, baca manga, komik indonesia${genres ? `, ${genres}` : ''}${author ? `, ${author}` : ''}, yumesubs`;
+
+  const statusLabel = { ongoing: 'Berlangsung', completed: 'Tamat', hiatus: 'Hiatus' }[status] || '';
+
+  const sortedChapters = [...chapters].sort((a, b) => (b.chapterNum ?? 0) - (a.chapterNum ?? 0));
+
+  const chapterCards = sortedChapters.map(ch => {
+    const cSlug    = chapterSlug(slug, ch.chapterNum);
+    const cTitle   = ch.chapterTitle || '';
+    const thumbUrl = ch.pages && ch.pages[0] ? wsrvUrl(ch.pages[0], 120, 65) : '';
+    const thumbHtml = thumbUrl
+      ? `<img class="cc-thumb-img" src="${escHtml(thumbUrl)}" alt="${escHtml(title)} Chapter ${ch.chapterNum}" width="52" height="72" loading="lazy" decoding="async">`
+      : `<div class="cc-thumb-ph"></div>`;
+    return `<a class="chapter-card" href="${escHtml(cSlug)}.html">
+      <div class="cc-thumb">${thumbHtml}</div>
+      <div class="cc-body">
+        <span class="cc-num">Ch. ${ch.chapterNum}</span>
+        <span class="cc-title">${escHtml(cTitle || `Chapter ${ch.chapterNum}`)}</span>
+      </div>
+      <span class="cc-pages">${(ch.pages||[]).length} hal.</span>
+      <span class="cc-arr">→</span>
+    </a>`;
+  }).join('');
+
+  // JSON-LD — ComicSeries + BreadcrumbList
+  const schema = JSON.stringify([
+    {
+      '@context': 'https://schema.org', '@type': 'ComicSeries',
+      'name': title,
+      'description': metaDesc,
+      'url': pageUrl,
+      'inLanguage': 'id',
+      'numberOfEpisodes': chapters.length,
+      'publisher': { '@type': 'Organization', 'name': 'YumeSubs', 'url': BASE_URL },
+      ...(author ? { 'author': { '@type': 'Person', 'name': author } } : {}),
+      ...(cover ? { 'image': { '@type': 'ImageObject', 'url': cover } } : {}),
+      ...(genres ? { 'genre': genres.split(/[,，、]/).map(g => g.trim()).filter(Boolean) } : {}),
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Beranda', 'item': BASE_URL },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Manga', 'item': `${BASE_URL}/${MANGA_DIR}/` },
+        { '@type': 'ListItem', 'position': 3, 'name': title, 'item': pageUrl },
+      ],
+    },
+  ]);
+
+  return minify(`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+${THEME_BOOT}
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="keywords" content="${escHtml(keywords)}">
+<title>${escHtml(title)} — Manga Terjemahan | YumeSubs</title>
+<meta name="description" content="${escHtml(metaDesc)}">
+<meta property="og:title" content="${escHtml(title)} | YumeSubs">
+<meta property="og:description" content="${escHtml(metaDesc)}">
+<meta property="og:url" content="${pageUrl}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YumeSubs">
+<meta property="og:locale" content="id_ID">
+${cover ? `<meta property="og:image" content="${escHtml(cover)}">
+<meta property="og:image:alt" content="${escHtml(title)} — Manga terjemahan Indonesia">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escHtml(title)} | YumeSubs">
+<meta name="twitter:description" content="${escHtml(metaDesc)}">
+<meta name="twitter:image" content="${escHtml(cover)}">
+<meta name="twitter:image:alt" content="${escHtml(title)}">` : `<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${escHtml(title)} | YumeSubs">
+<meta name="twitter:description" content="${escHtml(metaDesc)}">`}
+<link rel="canonical" href="${pageUrl}">
+<link rel="icon" type="image/png" href="../anime_icon.png">
+<script type="application/ld+json">${schema}</script>
+${FONT_HEAD}${FONT_LINK}
+<style>
+${CSS_TOKENS}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
+${NAV_CSS}
+.series-hero{display:flex;flex-direction:row;width:100%;min-height:300px;border-bottom:1px solid var(--border)}
+.series-cover-col{flex-shrink:0;width:220px;position:relative;overflow:hidden;background:var(--cream);padding-right:1px}
+.series-cover-col img{width:calc(100% - 12px);height:100%;object-fit:cover;display:block;margin-left:0;margin-right:12px}
+.series-cover-ph{width:100%;height:100%;min-height:300px;display:flex;align-items:flex-end;padding:1.5rem;background:linear-gradient(160deg,#1a1020 0%,#3d1f3a 50%,#7c3b5e 100%)}
+.series-cover-ph-text{font-family:var(--serif);font-size:1.4rem;font-weight:600;color:#e8c0d0;line-height:1.3}
+.series-info-col{flex:1;display:flex;flex-direction:column;justify-content:center;padding:3rem 4rem;border-left:1px solid var(--border);min-width:0}
+.breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.58rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:1.5rem;flex-wrap:wrap}
+.breadcrumb a{text-decoration:none;color:inherit;transition:color .2s}.breadcrumb a:hover{color:var(--gold)}
+.breadcrumb-sep{color:var(--smoke)}
+.series-back-link{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--sans);font-size:.75rem;font-weight:600;color:var(--ash);text-decoration:none;margin-bottom:1.25rem;transition:color .18s}
+.series-back-link:hover{color:var(--rose)}
+.series-title{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:600;color:var(--ink);line-height:1.2;margin-bottom:1rem}
+.series-meta{display:flex;gap:1rem 1.5rem;flex-wrap:wrap;font-size:.7rem;color:var(--ash);letter-spacing:.08em;align-items:center;margin-bottom:1rem}
+.series-meta strong{color:var(--ink)}
+.series-meta-sep{color:var(--smoke);font-size:.8rem}
+.series-status{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.2rem .65rem;border:1px solid var(--border);color:var(--ash);border-radius:2px;margin-bottom:1rem}
+.series-desc{font-size:.9rem;color:var(--ash);line-height:1.85;font-family:var(--ro)}
+.chapter-list-wrap{padding:2.5rem 4rem 6rem;width:100%}
+.chapter-list-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.chapter-list-head h2{font-family:var(--serif);font-size:1.6rem;font-weight:600;color:var(--ink)}
+.ch-count{font-size:.62rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
+.chapter-card{display:flex;align-items:center;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:padding-left .18s,background .18s}
+.chapter-card:hover{background:rgba(201,169,110,.05);padding-left:.5rem}
+.cc-thumb{flex-shrink:0;width:52px;height:72px;background:var(--cream);overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.cc-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.cc-thumb-ph{width:52px;height:72px;background:linear-gradient(160deg,#1a1020,#3d1f3a)}
+.cc-body{flex:1;display:flex;flex-direction:column;gap:.18rem;min-width:0}
+.cc-num{font-family:system-ui,-apple-system,sans-serif;font-size:.68rem;font-weight:700;color:var(--ash);letter-spacing:.1em;text-transform:uppercase}
+.cc-title{font-size:.9rem;color:var(--ink);font-family:system-ui,-apple-system,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-pages{font-size:.62rem;color:var(--smoke);flex-shrink:0;white-space:nowrap}
+.cc-arr{color:var(--gold);font-family:var(--serif);margin-left:.5rem;flex-shrink:0;font-size:1.05rem}
+footer{display:flex;justify-content:space-between;padding:2.5rem 4rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
+[data-theme="dark"] footer{background:#070604}
+.footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
+.footer-link:hover{color:var(--gold)}
+@media(max-width:900px){
+  .series-hero{flex-direction:column}
+  .series-cover-col{width:100%;height:240px;min-height:unset}
+  .series-cover-ph{min-height:240px}
+  .series-info-col{padding:2rem 1.5rem;border-left:none;border-top:1px solid var(--border)}
+  .chapter-list-wrap{padding:2rem 1.5rem 5rem}
+  footer{padding:2rem 1.5rem}
+}
+@media(max-width:600px){.series-cover-col{height:200px}.series-cover-ph{min-height:200px}}
+</style>
+</head>
+<body>
+${buildNav('../','manga')}
+
+<div class="series-hero">
+  <div class="series-cover-col">
+    ${cover
+      ? `<img src="${escHtml(wsrvUrl(cover, 440))}" alt="${escHtml(title)}" width="220" loading="eager" decoding="async" fetchpriority="high">`
+      : `<div class="series-cover-ph"><div class="series-cover-ph-text">${escHtml(title)}</div></div>`}
+  </div>
+  <div class="series-info-col">
+    <div class="breadcrumb">
+      <a href="../index.html">Beranda</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="index.html">Manga</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>${escHtml(title)}</span>
+    </div>
+    <a class="series-back-link" href="index.html">← Kembali ke Katalog</a>
+    <h1 class="series-title">${escHtml(title)}</h1>
+    <div class="series-meta">
+      <span>📚 <strong>${chapters.length}</strong> chapter</span>
+      ${author ? `<span class="series-meta-sep">—</span><span>✏ <strong>${escHtml(author)}</strong></span>` : ''}
+      ${genres ? `<span class="series-meta-sep">→</span><span>${escHtml(genres)}</span>` : ''}
+    </div>
+    ${statusLabel ? `<div><span class="series-status">${statusLabel}</span></div>` : ''}
+    ${desc ? `<p class="series-desc">${escHtml(desc)}</p>` : ''}
+  </div>
+</div>
+
+<div class="chapter-list-wrap">
+  <div class="chapter-list-head">
+    <h2>Daftar Chapter</h2>
+    <span class="ch-count">${chapters.length} chapter · terbaru di atas</span>
+  </div>
+  ${chapterCards || '<p style="color:var(--ash);font-size:.88rem;padding:1rem 0">Belum ada chapter yang tersedia.</p>'}
+</div>
+
+<footer>
+  <div>
+    <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)">夢Lyrics · Manga</div>
+    <div style="font-size:.52rem;color:var(--smoke);margin-top:.8rem">© 2025 YumeSubs — yumelyrics.my.id</div>
+  </div>
+  <div>
+    <a class="footer-link" href="index.html">← Semua Manga</a>
+    <a class="footer-link" href="../index.html">Katalog Lagu</a>
+    <a class="footer-link" href="../contact.html">Hubungi</a>
+  </div>
+</footer>
+${NAV_SCRIPT}
+</body>
+</html>`);
+}
+
+// ── Index page HTML ───────────────────────────────────────────────────────────
+async function generateIndexHTML(seriesList) {
+  const pageUrl    = `${BASE_URL}/${MANGA_DIR}/`;
+  const total      = seriesList.reduce((s, sr) => s + (sr.chapterCount || 0), 0);
+  const metaDesc   = `${seriesList.length} seri manga terjemahan Indonesia — ${total} chapter tersedia gratis di YumeSubs. Baca manga favoritmu dalam bahasa Indonesia.`;
+  const firstCover = seriesList.find(sr => sr.cover)?.cover || '';
+
+  const cards = seriesList.map(sr => `
+    <a class="series-card" href="${escHtml(sr.slug)}.html">
+      ${sr.cover
+        ? `<img class="sc-cover" src="${escHtml(wsrvUrl(sr.cover, 300))}" alt="${escHtml(sr.title)}" width="150" height="210" loading="lazy" decoding="async">`
+        : `<div class="sc-cover sc-cover-ph">📖</div>`}
+      <div class="sc-info">
+        <div class="sc-title">${escHtml(sr.title)}</div>
+        <div class="sc-meta">${sr.chapterCount} chapter</div>
+        ${sr.genres ? `<div class="sc-genres">${escHtml(sr.genres)}</div>` : ''}
+      </div>
+    </a>`).join('');
+
+  // JSON-LD — CollectionPage + BreadcrumbList
+  const schema = JSON.stringify([
+    {
+      '@context': 'https://schema.org', '@type': 'CollectionPage',
+      'name': 'Manga Terjemahan Indonesia',
+      'description': metaDesc,
+      'url': pageUrl,
+      'inLanguage': 'id',
+      'publisher': { '@type': 'Organization', 'name': 'YumeSubs', 'url': BASE_URL },
+      'hasPart': seriesList.slice(0, 20).map(sr => ({
+        '@type': 'ComicSeries',
+        'name': sr.title,
+        'url': `${BASE_URL}/${MANGA_DIR}/${sr.slug}.html`,
+        ...(sr.cover ? { 'image': sr.cover } : {}),
+      })),
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Beranda', 'item': BASE_URL },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Manga', 'item': pageUrl },
+      ],
+    },
+  ]);
+
+  return minify(`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+${THEME_BOOT}
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="keywords" content="manga terjemahan indonesia, baca manga, komik indonesia gratis, yumesubs, yumelyrics manga">
+<title>Manga Terjemahan Indonesia | YumeSubs</title>
+<meta name="description" content="${escHtml(metaDesc)}">
+<meta property="og:title" content="Manga Terjemahan | YumeSubs">
+<meta property="og:description" content="${escHtml(metaDesc)}">
+<meta property="og:url" content="${pageUrl}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YumeSubs">
+<meta property="og:locale" content="id_ID">
+${firstCover ? `<meta property="og:image" content="${escHtml(firstCover)}">
+<meta property="og:image:alt" content="Manga terjemahan Indonesia — YumeSubs">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${escHtml(firstCover)}">
+<meta name="twitter:image:alt" content="Manga terjemahan Indonesia — YumeSubs">` : `<meta name="twitter:card" content="summary">`}
+<meta name="twitter:title" content="Manga Terjemahan | YumeSubs">
+<meta name="twitter:description" content="${escHtml(metaDesc)}">
+<link rel="canonical" href="${pageUrl}">
+<link rel="icon" type="image/png" href="../anime_icon.png">
+<script type="application/ld+json">${schema}</script>
+${FONT_HEAD}${FONT_LINK}
+<style>
+${CSS_TOKENS}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm)}
+${NAV_CSS}
+.page-hero{padding:4rem 3.5rem 2.5rem}
+.page-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.5rem);font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:.6rem}
+.page-sub{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
+.series-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.5rem;padding:0 3.5rem 5rem}
+.series-card{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:.75rem;transition:opacity .2s}
+.series-card:hover{opacity:.8}
+.sc-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--cream);display:block}
+.sc-cover-ph{display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--smoke)}
+.sc-info{display:flex;flex-direction:column;gap:.3rem}
+.sc-title{font-size:.92rem;font-weight:700;color:var(--ink);line-height:1.3;font-family:var(--sans)}
+.sc-meta{font-size:.65rem;color:var(--ash);letter-spacing:.05em}
+.sc-genres{font-size:.62rem;color:var(--smoke)}
+footer{display:flex;justify-content:space-between;padding:2.5rem 3.5rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
+[data-theme="dark"] footer{background:#070604}
+.footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
+.footer-link:hover{color:var(--gold)}
+@media(max-width:768px){.page-hero{padding:2.5rem 1.2rem 1.5rem}.series-grid{padding-left:1.2rem;padding-right:1.2rem;gap:1rem}footer{padding:2rem 1.2rem}}
+</style>
+</head>
+<body>
+${buildNav('../','manga')}
+<section class="page-hero">
+  <h1 class="page-title">Manga Terjemahan</h1>
+  <p class="page-sub">${seriesList.length} seri · ${total} chapter</p>
+</section>
+<div class="series-grid">${cards}</div>
+<footer>
+  <div>
+    <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--ink)">夢Lyrics</div>
+    <div style="font-size:.52rem;color:var(--smoke);margin-top:.8rem">© 2025 YumeSubs — yumelyrics.my.id</div>
+  </div>
+  <div>
+    <a class="footer-link" href="../index.html">Katalog Lagu</a>
+    <a class="footer-link" href="../artis/index.html">Artis</a>
+    <a class="footer-link" href="../contact.html">Hubungi</a>
+  </div>
+</footer>
+${NAV_SCRIPT}
+</body>
+</html>`);
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+async function main() {
+  const t0           = Date.now();
+  const generateMode = resolveGenerateMode();
+  const fullMode     = generateMode === 'full';
+  console.log(`⚙️  Mode: ${generateModeLabel(generateMode)}`);
+  console.log('🔥 Menghubungkan ke Firebase...');
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  fs.mkdirSync(MANGA_DIR, { recursive: true });
+
+  let manifest = loadManifest();
+  if (fullMode) {
+    manifest = { version: 1, chapters: {} };
+    const oldFiles = fs.existsSync(MANGA_DIR)
+      ? fs.readdirSync(MANGA_DIR).filter(f => f.endsWith('.html'))
+      : [];
+    for (const f of oldFiles) fs.unlinkSync(path.join(MANGA_DIR, f));
+    if (oldFiles.length) console.log(`🗑  ${oldFiles.length} file lama dihapus (full rebuild)`);
+  }
+
+  const today = sitemapDate();
+
+  // ── Ambil data series ──
+  const seriesSnap = await getDocs(collection(db, 'manga_series'));
+  const seriesMap  = {};
+  const seriesList = [];
+  seriesSnap.forEach(d => {
+    const s = { id: d.id, ...d.data() };
+    s.slug  = s.slug || toSlug(s.title, d.id);
+    seriesMap[d.id] = s;
+    seriesList.push(s);
+  });
+  console.log(`📦 ${seriesList.length} series ditemukan`);
+
+  // ── Ambil semua chapter ──
+  const chapSnap   = await getDocs(collection(db, 'manga_chapters'));
+  const allChapters = [];
+  chapSnap.forEach(d => {
+    const ch = { id: d.id, ...d.data() };
+    const sr = seriesMap[ch.seriesId] || {};
+    ch.seriesTitle = sr.title || ch.seriesTitle || '';
+    ch.seriesSlug  = sr.slug  || ch.seriesSlug  || toSlug(ch.seriesTitle);
+    ch.slug        = chapterSlug(ch.seriesSlug, ch.chapterNum);
+    allChapters.push(ch);
+  });
+  console.log(`📦 ${allChapters.length} chapter ditemukan`);
+
+  // Seed manifest dari disk (first run / manifest kosong)
+  if (!fullMode) {
+    const seeded = seedManifestFromDisk(manifest, allChapters);
+    if (seeded) console.log(`📋 Manifest diisi dari ${seeded} file HTML yang sudah ada`);
+  }
+
+  // Laporan dirty flags
+  if (!fullMode && (generateMode === 'edited' || generateMode === 'incremental')) {
+    const dirtyAll  = allChapters.filter(ch => ch.htmlDirty === true || ch.htmlDirty === 'true');
+    const dirtyNeed = dirtyAll.filter(ch => needsGenerate(ch, ch.slug, manifest, generateMode));
+    console.log(`📝 htmlDirty: ${dirtyAll.length} total, ${dirtyNeed.length} perlu generate`);
+    if (dirtyAll.length > dirtyNeed.length)
+      console.log(`   ${dirtyAll.length - dirtyNeed.length} flag macet — akan di-clear tanpa generate ulang`);
+  }
+
+  // Group chapter per series untuk prev/next navigation
+  const chaptersBySeriesId = {};
+  for (const ch of allChapters) {
+    if (!chaptersBySeriesId[ch.seriesId]) chaptersBySeriesId[ch.seriesId] = [];
+    chaptersBySeriesId[ch.seriesId].push(ch);
+  }
+  for (const arr of Object.values(chaptersBySeriesId))
+    arr.sort((a, b) => (a.chapterNum ?? 0) - (b.chapterNum ?? 0));
+
+  // ── Generate chapter pages ──
+  console.log('📖 Generate halaman chapter...');
+  let generated = 0, skipped = 0;
+  const newChapters   = [];
+  const chapterErrors = [];
+  const dirtyFlagClears = [];
+
+  await pConcurrent(4, allChapters.map(ch => async () => {
+    const slug = ch.slug;
+    const isDirty = ch.htmlDirty === true || ch.htmlDirty === 'true';
+
+    if (!needsGenerate(ch, slug, manifest, generateMode)) {
+      skipped++;
+      if (shouldClearStuckDirtyFlag(ch, slug, manifest)) {
+        dirtyFlagClears.push(clearDirtyFlag(db, ch.id));
+      }
+      return;
+    }
+
+    const seriesSiblings = chaptersBySeriesId[ch.seriesId] || [];
+    const idx    = seriesSiblings.findIndex(s => s.id === ch.id);
+    const prevCh = idx > 0
+      ? { ...seriesSiblings[idx - 1], slug: chapterSlug(ch.seriesSlug, seriesSiblings[idx - 1].chapterNum) }
+      : null;
+    const nextCh = idx < seriesSiblings.length - 1
+      ? { ...seriesSiblings[idx + 1], slug: chapterSlug(ch.seriesSlug, seriesSiblings[idx + 1].chapterNum) }
+      : null;
+
+    try {
+      const html = await generateChapterHTML(ch, slug, seriesList, prevCh, nextCh, seriesSiblings);
+      await fsWrite(path.join(MANGA_DIR, `${slug}.html`), html, 'utf8');
+      manifest.chapters[ch.id] = { slug, hash: chapterContentHash(ch) };
+      generated++;
+
+      if (isDirty) {
+        // chapter diedit → clear flag, jangan kirim notif
+        dirtyFlagClears.push(clearDirtyFlag(db, ch.id));
+      } else {
+        // chapter baru → siapkan notif Discord
+        newChapters.push({
+          seriesTitle:  ch.seriesTitle,
+          chapterNum:   ch.chapterNum,
+          chapterTitle: ch.chapterTitle || '',
+          cover:        ch.cover || '',
+          url:          `${BASE_URL}/${MANGA_DIR}/${slug}.html`,
+        });
+      }
+      console.log(`  ✓ ${slug}.html (${isDirty ? 'edit' : 'baru'})`);
+    } catch(e) {
+      chapterErrors.push({ slug, id: ch.id, err: e.message || String(e) });
+      console.error(`  ✗ GAGAL ${slug}: ${e.message || e}`);
+    }
+  }));
+
+  // Flush dirty flag clears sekaligus (batched)
+  if (dirtyFlagClears.length) {
+    await Promise.all(dirtyFlagClears);
+    console.log(`   Cleared ${dirtyFlagClears.length} htmlDirty flag(s)`);
+  }
+
+  // Laporan error chapter
+  if (chapterErrors.length) {
+    console.warn(`\n⚠ ${chapterErrors.length} chapter GAGAL di-generate:`);
+    for (const { slug, id, err } of chapterErrors)
+      console.warn(`  ✗ ${slug} (id: ${id}): ${err}`);
+  }
+  if (generated === 0 && chapterErrors.length > 0)
+    throw new Error(`${chapterErrors.length} chapter gagal di-generate — cek log di atas`);
+
+  // ── Generate series pages (selalu, karena chapter baru muncul di daftar) ──
+  console.log('📚 Generate halaman series...');
+  const seriesErrors = [];
+  for (const sr of seriesList) {
+    const srChapters  = chaptersBySeriesId[sr.id] || [];
+    sr.chapterCount   = srChapters.length;
+    try {
+      const html = await generateSeriesHTML(sr, srChapters);
+      await fsWrite(path.join(MANGA_DIR, `${sr.slug}.html`), html, 'utf8');
+      console.log(`  ✓ ${sr.slug}.html (${srChapters.length} chapter)`);
+    } catch(e) {
+      seriesErrors.push({ slug: sr.slug, err: e.message });
+      console.error(`  ✗ GAGAL series ${sr.slug}: ${e.message}`);
+    }
+  }
+
+  // ── Generate index ──
+  try {
+    const indexHtml = await generateIndexHTML(seriesList);
+    await fsWrite(path.join(MANGA_DIR, 'index.html'), indexHtml, 'utf8');
+    console.log('  ✓ index.html');
+  } catch(e) {
+    console.error('  ✗ Gagal generate index:', e.message);
+  }
+
+  // ── Hapus orphan HTML ──
+  const validChapterSlugs = new Set(allChapters.map(ch => ch.slug));
+  const validSeriesSlugs  = new Set(seriesList.map(sr => sr.slug));
+  validSeriesSlugs.add('index'); // jangan hapus index.html
+  const validAll = new Set([...validChapterSlugs, ...validSeriesSlugs]);
+  const orphans  = removeOrphanHtml(MANGA_DIR, validAll);
+  if (orphans) console.log(`🗑  Orphan dihapus: ${orphans} file`);
+
+  // Bersihkan manifest dari id yang sudah tidak ada di Firestore
+  const currentChapterIds = new Set(allChapters.map(ch => ch.id));
+  for (const id of Object.keys(manifest.chapters))
+    if (!currentChapterIds.has(id)) delete manifest.chapters[id];
+
+  saveManifest(manifest);
+
+  // ── Generate sitemap ──────────────────────────────────────────────────────
+  console.log('🗺  Generate manga-sitemap.xml...');
+  const sitemapUrls = [
+    // Index manga
+    buildSitemapUrl({
+      loc: `${BASE_URL}/${MANGA_DIR}/`,
+      lastmod: sitemapLastmod(path.join(MANGA_DIR, 'index.html'), today),
+      priority: '0.9', changefreq: 'daily',
+      imgUrl: seriesList.find(sr => sr.cover)?.cover || '',
+      imgTitle: 'Manga Terjemahan Indonesia — YumeSubs',
+    }),
+    // Series pages
+    ...seriesList.map(sr => buildSitemapSeriesUrl(sr, today)),
+    // Chapter pages
+    ...allChapters.map(ch => buildSitemapChapterUrl(ch, ch.slug, today)),
+  ];
+
+  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${sitemapUrls.join('\n')}
+</urlset>`;
+  await fsWrite(SITEMAP_PATH, sitemapXml, 'utf8');
+  console.log(`  ✓ ${SITEMAP_PATH} (${sitemapUrls.length} URL)`);
+
+  // ── Notif Discord ──
+  if (newChapters.length > 0) {
+    await sendDiscordNotification(newChapters, true);
+    console.log(`   Notif Discord: ${newChapters.length} chapter baru`);
+  } else {
+    console.log('   Notif Discord dilewati — tidak ada chapter baru.');
+  }
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  console.log(`\n✅ Selesai! ${elapsed}s`);
+  console.log(`   ${generated} chapter di-generate, ${skipped} dilewati`);
+  console.log(`   ${seriesList.length} series · ${allChapters.length} chapter total · ${SITEMAP_PATH}`);
+  if (chapterErrors.length || seriesErrors.length)
+    console.warn(`   ⚠ Error: ${chapterErrors.length} chapter, ${seriesErrors.length} series`);
+}
+
+main().catch(async e => {
+  console.error('❌ Error fatal:', e);
+  await sendDiscordNotification([], false);
+  process.exit(1);
+});
