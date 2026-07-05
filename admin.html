@@ -3873,6 +3873,8 @@ async function pollRunStatus(type, runId){
       setStatus(type, true, conclusion, labels[conclusion] || conclusion);
       if (type === 'songs') {
         setSongGenerateButtons(false);
+      } else if (type === 'manga') {
+        setMangaGenerateButtons(false);
       } else {
         document.getElementById(cfg.btn).disabled = false;
         document.getElementById(cfg.btn).textContent = cfg.label;
