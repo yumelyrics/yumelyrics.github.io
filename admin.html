@@ -1854,6 +1854,7 @@ async function enterAdminAppIfReady() {
   if (!auth.currentUser || !(await isAdminUser(auth.currentUser)) || !isAdminGateUnlocked()) return false;
   document.getElementById('loginOverlay').classList.add('hide');
   document.getElementById('logoutBtn').style.display = 'block';
+  try { window.scrollTo({top: 0, behavior: 'auto'}); } catch(e) {}
   startListening();
   initMangaListeners();
   return true;
@@ -3962,6 +3963,16 @@ function toggleTheme(){
 // ── GENIUS SEARCH (non-module, supaya bisa diakses dari onclick di dynamic HTML) ──
 function _escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── Manga helper functions (standalone copies — module scope tidak bisa diakses dari sini) ──
+var _esc = function(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+var _sanitizeUrl = function(url){
+  try {
+    var u = new URL(String(url||'').trim());
+    if(['https:','http:'].includes(u.protocol)) return u.href;
+    return '#';
+  } catch(e){ return '#'; }
+};
+
 function geniusDoSearch(){
   var qEl = document.getElementById('gd-query');
   var res  = document.getElementById('gd-results');
@@ -4359,18 +4370,12 @@ function initMangaListeners(){
   );
 }
 
-// ── ImgBB upload untuk manga ──
-async function mangaUploadToImgbb(file){
-  const key = imgbbKeyGet();
-  if(!key) throw new Error('Set ImgBB API Key dulu di panel 🔑 API Keys, lalu coba lagi.');
-  if(file.size > 32*1024*1024) throw new Error('File terlalu besar (maks 32MB untuk ImgBB).');
-  const fd = new FormData();
-  fd.append('image', file);
-  const res = await fetch('https://api.imgbb.com/1/upload?key=' + encodeURIComponent(key), { method:'POST', body:fd });
-  if(!res.ok) throw new Error('ImgBB error HTTP ' + res.status);
-  const json = await res.json();
-  if(!json.success) throw new Error('ImgBB gagal: ' + (json.error?.message || JSON.stringify(json.error) || 'unknown'));
-  return json.data.url;
+// ── Upload manga via Firebase Storage (reuses window.uploadImageFile dari module) ──
+async function mangaUploadToStorage(file, folder){
+  if (typeof window.uploadImageFile !== 'function') {
+    throw new Error('Upload belum siap — coba refresh halaman admin lalu login ulang.');
+  }
+  return await window.uploadImageFile(file, folder || 'manga');
 }
 
 // ── Series dropdown ──
@@ -4449,14 +4454,14 @@ window.showMangaSeriesCoverPreview = function(){
   const url = document.getElementById('ms-cover').value.trim();
   const wrap = document.getElementById('ms-cover-preview-wrap');
   const img = document.getElementById('ms-cover-preview-img');
-  if(url && sanitizeUrl(url) !== '#'){ img.src=sanitizeUrl(url); wrap.style.display='block'; }
+  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='block'; }
   else { img.removeAttribute('src'); wrap.style.display='none'; }
 };
 window.showMangaChapterCoverPreview = function(){
   const url = document.getElementById('mc-cover').value.trim();
   const wrap = document.getElementById('mc-cover-preview-wrap');
   const img = document.getElementById('mc-cover-preview-img');
-  if(url && sanitizeUrl(url) !== '#'){ img.src=sanitizeUrl(url); wrap.style.display='block'; }
+  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='block'; }
   else { img.removeAttribute('src'); wrap.style.display='none'; }
 };
 
@@ -4467,9 +4472,9 @@ window.handleMangaSeriesCoverUpload = async function(input){
   if(!file) return;
   if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
   const statusEl = document.getElementById('ms-cover-status');
-  statusEl.textContent = '⏳ Mengupload ke ImgBB...'; statusEl.style.color='var(--muted)';
+  statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await mangaUploadToImgbb(file);
+    const url = await mangaUploadToStorage(file, 'manga/covers');
     document.getElementById('ms-cover').value = url;
     showMangaSeriesCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4484,9 +4489,9 @@ window.handleMangaChapterCoverUpload = async function(input){
   if(!file) return;
   if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
   const statusEl = document.getElementById('mc-cover-status');
-  statusEl.textContent = '⏳ Mengupload ke ImgBB...'; statusEl.style.color='var(--muted)';
+  statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await mangaUploadToImgbb(file);
+    const url = await mangaUploadToStorage(file, 'manga/covers');
     document.getElementById('mc-cover').value = url;
     showMangaChapterCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4505,20 +4510,25 @@ window.addMangaPage = function(url=''){
   const row = document.createElement('div');
   row.className = 'lrow';
   row.dataset.idx = idx;
-  row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;background:var(--card2)';
+  row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;background:var(--cream,#ede7dc)';
   row.innerHTML =
     `<span class="pg-num" style="font-size:.62rem;color:var(--muted);flex-shrink:0;min-width:1.6rem;text-align:right"></span>` +
-    `<img class="pg-thumb" src="" alt="" style="width:32px;height:44px;object-fit:cover;border-radius:3px;border:1px solid var(--border);flex-shrink:0;display:${url?'block':'none'}" onerror="this.style.display='none'" referrerpolicy="no-referrer">` +
-    `<input class="fi pg-url" placeholder="URL gambar halaman" value="${esc(url)}" style="flex:1;font-size:.7rem;padding:.35rem .55rem" oninput="onMangaPageUrlInput(this)">` +
-    `<label class="bsave" style="cursor:pointer;font-size:.6rem;padding:.35rem .7rem;flex-shrink:0" title="Upload ke ImgBB">` +
+    `<img class="pg-thumb" src="" alt="" style="width:32px;height:44px;object-fit:cover;border-radius:3px;border:1px solid var(--border);flex-shrink:0;display:none" onerror="this.style.display='none'" referrerpolicy="no-referrer">` +
+    `<input class="fi pg-url" placeholder="URL gambar halaman" style="flex:1;font-size:.7rem;padding:.35rem .55rem" oninput="onMangaPageUrlInput(this)">` +
+    `<label class="bsave" style="cursor:pointer;font-size:.6rem;padding:.35rem .7rem;flex-shrink:0" title="Upload gambar halaman">` +
     `  📤<input type="file" accept="image/*" style="display:none" onchange="uploadMangaPageFile(this)">` +
     `</label>` +
     `<button class="bdel" onclick="this.closest('.lrow').remove();reindexMangaPages()" title="Hapus halaman">✕</button>`;
   container.appendChild(row);
   if(url){
     const thumb = row.querySelector('.pg-thumb');
-    thumb.src = sanitizeUrl(url);
-    thumb.style.display = 'block';
+    const urlInp = row.querySelector('.pg-url');
+    if(urlInp) urlInp.value = _esc(url);
+    const safe = _sanitizeUrl(url);
+    if(safe !== '#'){
+      thumb.src = safe;
+      thumb.style.display = 'block';
+    }
   }
   reindexMangaPages();
 };
@@ -4527,8 +4537,9 @@ window.onMangaPageUrlInput = function(inp){
   const row = inp.closest('.lrow');
   const thumb = row.querySelector('.pg-thumb');
   const url = inp.value.trim();
-  if(url && sanitizeUrl(url) !== '#'){
-    thumb.src = sanitizeUrl(url);
+  const safe = _sanitizeUrl(url);
+  if(url && safe !== '#'){
+    thumb.src = safe;
     thumb.style.display = 'block';
   } else {
     thumb.src = '';
@@ -4549,10 +4560,10 @@ window.uploadMangaPageFile = async function(input){
   if(lbl) lbl.innerHTML = '⏳';
   if(lbl && inp2) lbl.appendChild(inp2);
   try {
-    const url = await mangaUploadToImgbb(file);
+    const url = await mangaUploadToStorage(file, 'manga/pages');
     urlInp.value = url;
-    thumb.src = sanitizeUrl(url);
-    thumb.style.display = 'block';
+    const safe = _sanitizeUrl(url);
+    if(safe !== '#'){ thumb.src = safe; thumb.style.display = 'block'; }
     toast('✅ Halaman di-upload!');
   } catch(e){
     toast('Upload gagal: '+e.message);
@@ -4680,7 +4691,7 @@ window.saveMangaChapter = async function(){
   const pages = [];
   document.querySelectorAll('#mpages .lrow').forEach(row=>{
     const url = row.querySelector('.pg-url').value.trim();
-    if(url && sanitizeUrl(url) !== '#') pages.push(url);
+    if(url && _sanitizeUrl(url) !== '#') pages.push(url);
   });
   if(!pages.length){ toast('Tambahkan minimal 1 halaman!'); return; }
   const btn = document.getElementById('mc-saveBtn');
