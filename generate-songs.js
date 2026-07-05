@@ -953,6 +953,7 @@ function buildSiteNav(prefix, active) {
     <a class="nd-item" href="${p}resources.html">Resources</a>
     <a class="nd-item" href="${p}stories.html">Cerita</a>
     <a class="nd-item" href="${p}contact.html">Hubungi</a>
+    <a class="nd-item" href="${p}manga/index.html">Manga</a>
   </div>
 </nav>`;
 }
