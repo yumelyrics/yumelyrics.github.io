@@ -1021,13 +1021,13 @@ footer{display:flex;justify-content:space-between;padding:2.5rem 4rem;border-top
   .series-hero{flex-direction:column}
   .series-cover-col{width:100%;height:auto;min-height:unset;padding:2.75rem 1.5rem 2.25rem;display:flex;align-items:center;justify-content:center;background:#0c0a10}
   .series-cover-bg{display:block;position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(28px) brightness(.55) saturate(1.25);transform:scale(1.2)}
-  .series-cover-img{width:min(220px,62%);height:auto;max-height:340px;object-fit:contain;border-radius:10px;box-shadow:0 18px 45px rgba(0,0,0,.55)}
+  .series-cover-img{width:min(200px,58%);aspect-ratio:2/3;height:auto;object-fit:cover;border-radius:10px;box-shadow:0 18px 45px rgba(0,0,0,.55)}
   .series-cover-ph{min-height:240px;border-radius:10px}
   .series-info-col{padding:2rem 1.5rem;border-left:none;border-top:1px solid var(--border)}
   .chapter-list-wrap{padding:2rem 1.5rem 5rem}
   footer{padding:2rem 1.5rem}
 }
-@media(max-width:600px){.series-cover-col{padding:2.25rem 1.25rem 1.75rem}.series-cover-img{width:min(190px,58%);max-height:290px}.series-cover-ph{min-height:200px}}
+@media(max-width:600px){.series-cover-col{padding:2.25rem 1.25rem 1.75rem}.series-cover-img{width:min(170px,54%);aspect-ratio:2/3}.series-cover-ph{min-height:200px}}
 </style>
 </head>
 <body>
