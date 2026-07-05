@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://discord.com https://discordapp.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://asia-southeast2-yumesubs7.cloudfunctions.net https://*.googleapis.com https://*.cloudfunctions.net; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://discord.com https://discordapp.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://asia-southeast2-yumesubs7.cloudfunctions.net https://*.googleapis.com https://*.cloudfunctions.net; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script>(function(){'use strict';var b=function(e){e.preventDefault();return false};document.addEventListener('contextmenu',b);document.addEventListener('keydown',function(e){var k=(e.key||'').toUpperCase(),c=e.ctrlKey||e.metaKey,s=e.shiftKey;if(k==='F12'||(c&&s&&'IJC'.includes(k))||(c&&!s&&k==='U')||(c&&s&&k==='K')){b(e)}},true);document.addEventListener('dragstart',b);var _dt=0;setInterval(function(){var w=window.outerWidth-window.innerWidth>180,h=window.outerHeight-window.innerHeight>180;if((w||h)&&!_dt){_dt=1;document.documentElement.style.filter='blur(12px)';document.title='Akses diblokir'}},800);})();</script>
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
@@ -1565,6 +1565,8 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getCountFromServer, getDocs, getDoc, where, writeBatch, setDoc }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3dKYhDxX3DE5CAI_yQbjvUUdsBR0QeS8",
@@ -1575,9 +1577,10 @@ const firebaseConfig = {
   appId: "1:1076202015626:web:ce89fb668eb6b2bd021673"
 };
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
 
 let songs = [];
 let unsubSongs = null;
@@ -1586,7 +1589,6 @@ const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
-const UPLOAD_FALLBACK = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/uploadImg';
 // false = tanpa Cloud Functions (gratis). true = setelah deploy verifyAdminGate + Blaze plan
 const GATE_USE_SERVER = false;
 const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
@@ -2676,114 +2678,44 @@ window.onArtistKeydown = (e) => {
   if(_artistFocusIdx >= 0) items[_artistFocusIdx].scrollIntoView({block:'nearest'});
 };
 
-// ── COVER UPLOAD (Worker → ImgBB; fallback browser jika ImgBB blokir IP Cloudflare) ──
+// ── COVER / PAGE UPLOAD — langsung ke Firebase Storage (butuh login admin) ──
 
-function pickImgbbDirectUrl(data) {
-  if (!data) return '';
-  if (data.image?.url) return data.image.url;
-  const candidates = [data.url, data.display_url, data.url_viewer].filter(Boolean);
-  for (const u of candidates) {
-    if (/^https?:\/\/i\.ibb\.co\//i.test(u)) return u;
-    if (/^https?:\/\/i\.postimg\.cc\//i.test(u)) return u;
-  }
-  const u = data.url || data.display_url || '';
-  if (u && !/^https?:\/\/ibb\.co\//i.test(u)) return u;
-  return '';
+function _storageSafeExt(file) {
+  const rawExt  = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : '';
+  const typeExt = (file.type && file.type.includes('/')) ? file.type.split('/')[1].toLowerCase() : '';
+  if (/^[a-z0-9]{2,5}$/.test(rawExt)) return rawExt === 'jpeg' ? 'jpg' : rawExt;
+  if (/^[a-z0-9]{2,5}$/.test(typeExt)) return typeExt === 'jpeg' ? 'jpg' : typeExt;
+  return 'jpg';
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      resolve(typeof result === 'string' ? (result.split(',')[1] || '') : '');
-    };
-    reader.onerror = () => reject(new Error('Gagal baca file gambar'));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadImageViaWorker(file) {
-  const fd = new FormData();
-  fd.append('image', file);
-  const headers = {};
-  if (auth.currentUser) {
-    try { headers['Authorization'] = 'Bearer ' + await auth.currentUser.getIdToken(); } catch (e) {}
+async function uploadImageToFirebase(file, folder = 'uploads') {
+  if (!auth.currentUser) {
+    throw new Error('Login admin dulu sebelum upload gambar.');
   }
-  let res;
+  if (!file) throw new Error('File gambar kosong atau tidak terbaca');
+  const ext  = _storageSafeExt(file);
+  const rand = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now());
+  const path = `${folder}/${Date.now()}_${rand}.${ext}`;
+  const fileRef = storageRef(storage, path);
+  let snapshot;
   try {
-    res = await fetch(UPLOAD_WORKER + '/upload-img', { method: 'POST', headers, body: fd });
+    snapshot = await uploadBytes(fileRef, file, { contentType: file.type || 'image/jpeg' });
   } catch (e) {
-    throw new Error('Tidak bisa hubungi server upload. Cek koneksi atau deploy ulang worker.');
+    throw new Error('Upload ke Firebase Storage gagal: ' + (e.message || e.code || 'unknown error'));
   }
-  const raw = await res.text();
-  let json;
-  try { json = JSON.parse(raw); } catch (e) {
-    throw new Error('Server upload error (' + res.status + ').');
+  let url;
+  try {
+    url = await getDownloadURL(snapshot.ref);
+  } catch (e) {
+    throw new Error('Gagal mengambil URL gambar dari Firebase Storage: ' + (e.message || e.code || ''));
   }
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || json.message || ('Upload gagal (' + res.status + ')'));
-  }
-  const url = pickImgbbDirectUrl(json.data) || json.data?.url || json.data?.display_url;
-  if (!url) throw new Error('URL gambar tidak ada di respons server');
+  if (!url) throw new Error('URL gambar tidak ada di respons Firebase Storage');
   return url;
 }
+window.uploadImageToFirebase = uploadImageToFirebase;
 
-async function uploadImageViaImgbbDirect(file) {
-  const key = imgbbKeyGet().trim();
-  if (!key) {
-    throw new Error('Isi ImgBB API Key di panel 🔑 API Keys & Tokens (api.imgbb.com), lalu coba upload lagi.');
-  }
-  const fd = new FormData();
-  fd.append('key', key);
-  fd.append('image', file, file.name || 'cover.jpg');
-  let res;
-  try {
-    res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
-  } catch (e) {
-    throw new Error('Tidak bisa hubungi ImgBB. Cek koneksi internet.');
-  }
-  const json = await res.json().catch(() => ({}));
-  if (!json.success) {
-    throw new Error(json.error?.message || json.status_txt || ('ImgBB error ' + res.status));
-  }
-  const url = pickImgbbDirectUrl(json.data);
-  if (!url) throw new Error('URL gambar tidak ada di respons ImgBB');
-  return url;
-}
-
-async function uploadImageViaFirebase(file) {
-  const base64 = await fileToBase64(file);
-  if (!base64) throw new Error('File gambar kosong atau tidak terbaca');
-  const name = (file.name || 'cover.jpg').replace(/[^\w.\-]+/g, '_') || 'cover.jpg';
-  const res = await fetch(UPLOAD_FALLBACK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, name }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || 'Upload via Firebase gagal (' + res.status + ')');
-  }
-  const url = json.data?.url || json.data?.display_url;
-  if (!url) throw new Error('URL gambar tidak ada di respons Firebase');
-  return url;
-}
-
-async function uploadImageFile(file) {
-  // ImgBB memblokir IP Cloudflare — upload langsung dari browser jika key ada
-  if (imgbbKeyGet().trim()) {
-    return await uploadImageViaImgbbDirect(file);
-  }
-  try {
-    return await uploadImageViaWorker(file);
-  } catch (e) {
-    const msg = String(e.message || '');
-    if (/forbidden|imgbb menolak|invalid api/i.test(msg)) {
-      throw new Error('ImgBB menolak upload dari server. Buka 🔑 API Keys & Tokens → isi ImgBB API Key → upload lagi.');
-    }
-    throw e;
-  }
+async function uploadImageFile(file, folder = 'uploads') {
+  return await uploadImageToFirebase(file, folder);
 }
 window.uploadImageFile = uploadImageFile;
 
@@ -3023,9 +2955,9 @@ function coverCropExportBlob() {
 
 async function uploadCoverFileDirect(file, statusEl) {
   statusEl = statusEl || document.getElementById('cover-upload-status');
-  if (statusEl) { statusEl.textContent = '⏳ Uploading ke ImgBB...'; statusEl.style.color = 'var(--muted)'; }
+  if (statusEl) { statusEl.textContent = '⏳ Uploading ke Firebase...'; statusEl.style.color = 'var(--muted)'; }
   try {
-    const url = await uploadImageFile(file);
+    const url = await uploadImageFile(file, 'covers');
     document.getElementById('f-img').value = url;
     showCoverPreview(url);
     if (statusEl) { statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color = '#4caf7d'; }
@@ -4377,7 +4309,7 @@ window.uploadPhotoToWorker = async function(file){
   if (typeof window.uploadImageFile !== 'function') {
     throw new Error('Upload belum siap — refresh halaman admin.');
   }
-  return window.uploadImageFile(file);
+  return window.uploadImageFile(file, 'announcements');
 };
 
 // ══════════════════════════════════════════ MANGA ADMIN ══════════════════════════════════════════
@@ -4503,7 +4435,7 @@ window.handleMangaSeriesCoverUpload = async function(input){
   const statusEl = document.getElementById('ms-cover-status');
   statusEl.textContent = '⏳ Uploading...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await uploadImageFile(file);
+    const url = await uploadImageFile(file, 'manga/series-covers');
     document.getElementById('ms-cover').value = url;
     showMangaSeriesCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4521,7 +4453,7 @@ window.handleMangaChapterCoverUpload = async function(input){
   const statusEl = document.getElementById('mc-cover-status');
   statusEl.textContent = '⏳ Uploading...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await uploadImageFile(file);
+    const url = await uploadImageFile(file, 'manga/chapter-covers');
     document.getElementById('mc-cover').value = url;
     showMangaChapterCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4583,7 +4515,7 @@ window.uploadMangaPageFile = async function(input){
   const origText = input.parentElement.textContent.trim();
   input.parentElement.textContent = '⏳';
   try {
-    const url = await uploadImageFile(file);
+    const url = await uploadImageFile(file, 'manga/pages');
     urlInp.value = url;
     thumb.src = sanitizeUrl(url);
     thumb.style.display = 'block';
