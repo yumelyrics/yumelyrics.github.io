@@ -501,6 +501,23 @@ const READER_HUD_CSS = `
 .drawer-ch-pages{font-size:.58rem;color:rgba(200,192,208,.28);flex-shrink:0}
 #drawer-backdrop{position:fixed;inset:0;z-index:498;background:transparent;pointer-events:none;transition:background .3s}
 #drawer-backdrop.active{background:rgba(0,0,0,.45);pointer-events:auto}
+/* ── Sequential page-loading overlay ── */
+#reader-loading-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:#0f0d0b;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .35s ease;
+}
+#reader-loading-overlay.rl-done{opacity:0;pointer-events:none}
+.rl-box{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.rl-spinner{
+  width:38px;height:38px;border-radius:50%;
+  border:3px solid rgba(212,169,110,.18);
+  border-top-color:#d4a96e;
+  animation:rl-spin .8s linear infinite;
+}
+@keyframes rl-spin{to{transform:rotate(360deg)}}
+.rl-text{font-family:system-ui,-apple-system,sans-serif;font-size:.72rem;letter-spacing:.08em;color:rgba(212,169,110,.85);text-transform:uppercase}
 @media(max-width:480px){
   .hud-btn{width:42px;height:42px;font-size:.95rem}
   .hud-btns{gap:.85rem}
@@ -513,6 +530,46 @@ const READER_SCROLL_TOP_SCRIPT = `<script>
 (function(){
   if('scrollRestoration' in window.history) window.history.scrollRestoration='manual';
   window.scrollTo(0,0);
+})();
+<\/script>`;
+
+// Lazy-load via IntersectionObserver — tidak mengunci scroll sama sekali
+const READER_SEQ_LOAD_SCRIPT = `<script>
+(function(){
+  var reader=document.getElementById('manga-reader');
+  var overlay=document.getElementById('reader-loading-overlay');
+  if(!reader){ if(overlay) overlay.style.display='none'; return; }
+
+  var imgs=Array.prototype.slice.call(reader.querySelectorAll('img.manga-page[data-src]'));
+  var total=imgs.length;
+  if(!total){ if(overlay) overlay.style.display='none'; return; }
+
+  // Langsung sembunyikan overlay — jangan pernah kunci scroll
+  if(overlay){
+    overlay.classList.add('rl-done');
+    setTimeout(function(){ overlay.style.display='none'; }, 380);
+  }
+
+  function loadImg(img){
+    var src=img.getAttribute('data-src');
+    if(!src) return;
+    var tmp=new Image();
+    tmp.onload=function(){ img.src=src; img.removeAttribute('data-src'); img.classList.add('loaded'); };
+    tmp.onerror=function(){ img.src=src; img.removeAttribute('data-src'); };
+    tmp.src=src;
+  }
+
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ loadImg(e.target); io.unobserve(e.target); }
+      });
+    },{rootMargin:'400px 0px'});
+    imgs.forEach(function(img){ io.observe(img); });
+  } else {
+    // Fallback: load semua sekaligus
+    imgs.forEach(loadImg);
+  }
 })();
 <\/script>`;
 
@@ -576,8 +633,9 @@ async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextC
   const seriesSlug   = chapter.seriesSlug    || '';
   const chapterNum   = chapter.chapterNum    ?? 0;
   const chapterTitle = chapter.chapterTitle  || '';
-  const cover        = chapter.cover         || '';
   const pages        = chapter.pages         || [];
+  // Gunakan cover dari field, atau ambil dari gambar pertama chapter
+  const cover        = chapter.cover || (pages.length > 0 ? pages[0] : '');
   const description  = chapter.description  || '';
   const translator   = chapter.translator    || '';
   const chapterId    = chapter.id;
@@ -632,10 +690,16 @@ async function generateChapterHTML(chapter, slug, seriesList, prevChapter, nextC
     }
   ]);
 
-  const pagesHTML = pages.map((url, i) =>
-    `<img class="manga-page" src="${escHtml(url)}" alt="${escHtml(seriesTitle)} ${displayTitle} halaman ${i+1}" ` +
-    `width="800" loading="${i < 2 ? 'eager' : 'lazy'}" decoding="${i < 2 ? 'sync' : 'async'}">`
-  ).join('\n');
+  // Cover chapter = halaman pertama (HD, lebar penuh)
+  const coverUrl = cover ? wsrvUrl(cover, 1200, 92) : '';
+
+  const pagesHTML = pages.map((url, i) => {
+    // Proxy gambar via wsrv.nl agar HD dan reliable
+    const hdUrl = wsrvUrl(url, 1200, 92);
+    return `<img class="manga-page" data-src="${escHtml(hdUrl)}" ` +
+      `alt="${escHtml(seriesTitle)} ${displayTitle} halaman ${i+1}" ` +
+      `width="800" decoding="async">`;
+  }).join('\n');
 
   return minify(`<!DOCTYPE html>
 <html lang="id">
@@ -692,7 +756,12 @@ ${READER_HUD_CSS}
 /* ── Manga reader ── */
 .manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden}
 .manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
-.manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a}
+.manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
+.manga-page.loaded{opacity:1}
+/* Cover chapter — gambar pertama diperbesar sebagai cover */
+.chapter-cover-wrap{width:100%;max-width:800px;position:relative;background:#0a0810;margin-bottom:0}
+.chapter-cover-img{display:block;width:100%;height:auto;object-fit:contain}
+.chapter-cover-label{position:absolute;bottom:0;left:0;right:0;padding:.6rem 1rem;background:linear-gradient(transparent,rgba(0,0,0,.75));font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(220,210,230,.7)}
 
 /* ── Footer ── */
 footer{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;padding:2.5rem 2.5rem 5rem;border-top:1px solid var(--border);background:var(--cream);flex-wrap:wrap;transition:var(--nm)}
@@ -730,8 +799,16 @@ ${buildNav('../', 'manga')}
 </div>
 
 <div class="manga-reader" id="manga-reader">
+  ${coverUrl ? `<div class="chapter-cover-wrap">
+    <img class="chapter-cover-img" src="${escHtml(coverUrl)}" alt="Cover ${escHtml(displayTitle)}" loading="eager" decoding="async">
+    <div class="chapter-cover-label">Cover · ${escHtml(displayTitle)}</div>
+  </div>` : ''}
   ${pagesHTML}
 </div>
+
+<!-- Overlay loading — langsung disembunyikan, scroll tidak pernah dikunci -->
+<div id="reader-loading-overlay" style="display:none"></div>
+${READER_SEQ_LOAD_SCRIPT}
 
 <!-- Floating Reader HUD — judul di atas, tiga tombol bulat renggang -->
 <div id="reader-hud">
