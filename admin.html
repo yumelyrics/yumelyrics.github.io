@@ -2732,6 +2732,9 @@ async function uploadImageFile(file, folder = 'uploads') {
   return await uploadImageToFirebase(file, folder);
 }
 window.uploadImageFile = uploadImageFile;
+// Expose auth & db ke global scope supaya script non-module (manga admin) bisa akses
+window.auth = auth;
+window.db   = db;
 
 // ── COVER CROP (1:1, untuk thumbnail 16:9 / landscape) ──
 const _coverCrop = {
