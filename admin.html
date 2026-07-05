@@ -1411,10 +1411,13 @@ Paragraf dipisah dengan enter 2x.
       <section class="form-card" style="margin-top:1rem">
         <div class="form-card-title">⚡ Generate Manga Pages</div>
         <p class="form-card-hint">Trigger GitHub Actions untuk generate HTML manga dari Firestore ke repository. Butuh GitHub token di panel 🔑 API Keys.</p>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
-          <button class="bsave" id="gh-manga-run-btn" onclick="triggerWorkflow('manga','new')" data-label="▶ Generate Manga">▶ Generate Manga</button>
+        <div class="gh-manga-actions" style="display:flex;gap:.55rem;flex-wrap:wrap;align-items:stretch">
+          <button class="bsave" id="gh-manga-run-new-btn" data-label="▶ Chapter Baru" onclick="triggerWorkflow('manga','new')" style="flex:1;min-width:140px;background:rgba(76,175,125,.12);color:#3d9468;border:1px solid rgba(76,175,125,.35)" title="Hanya chapter yang belum punya halaman HTML">▶ Chapter Baru</button>
+          <button class="bsave" id="gh-manga-run-edited-btn" data-label="▶ Chapter Diedit" onclick="triggerWorkflow('manga','edited')" style="flex:1;min-width:140px;background:rgba(201,169,110,.15);color:var(--accent);border:1px solid rgba(201,169,110,.35)" title="Hanya chapter dengan flag edit (htmlDirty)">▶ Chapter Diedit</button>
+          <button class="bcancel" id="gh-manga-run-full-btn" data-label="Generate Semua" onclick="triggerWorkflow('manga','full')" style="flex:1;min-width:120px;font-size:.62rem;padding:.55rem .9rem" title="Generate ulang semua chapter — lama">Generate Semua</button>
+          <a href="https://github.com/yumelyrics/yumelyrics.github.io/actions/workflows/generate-manga.yml" target="_blank" rel="noopener" class="bcancel" style="font-size:.62rem;text-align:center;text-decoration:none;padding:.55rem 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;flex:none">↗ GitHub</a>
         </div>
-        <div id="gh-manga-status" style="display:none;align-items:center;gap:.6rem;margin-top:.7rem;font-size:.72rem;color:var(--text)">
+        <div id="gh-manga-status" style="display:none;align-items:center;gap:.6rem;margin-top:.7rem;font-size:.72rem;color:var(--text);flex-wrap:wrap">
           <span id="gh-manga-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0"></span>
           <span id="gh-manga-status-text"></span>
           <a id="gh-manga-dl" style="display:none;margin-left:.3rem" class="bsave" href="#" target="_blank" rel="noopener">↗ Lihat</a>
@@ -3598,6 +3601,33 @@ function setSongGenerateButtons(disabled, activeBtnId) {
   }
 }
 
+const GH_MANGA_BTN_IDS = ['gh-manga-run-new-btn', 'gh-manga-run-edited-btn', 'gh-manga-run-full-btn'];
+const GH_MANGA_MODE_LABELS = {
+  new: 'chapter baru',
+  edited: 'chapter diedit',
+  full: 'semua chapter',
+  incremental: 'baru & diedit'
+};
+const GH_MANGA_BTN_BY_MODE = {
+  new: 'gh-manga-run-new-btn',
+  edited: 'gh-manga-run-edited-btn',
+  full: 'gh-manga-run-full-btn',
+  incremental: 'gh-manga-run-new-btn'
+};
+
+function setMangaGenerateButtons(disabled, activeBtnId) {
+  GH_MANGA_BTN_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = !!disabled;
+    if (!disabled) el.textContent = el.dataset.label || el.textContent;
+  });
+  if (disabled && activeBtnId) {
+    const active = document.getElementById(activeBtnId);
+    if (active) active.textContent = 'Mengirim...';
+  }
+}
+
 // ── GITHUB WORKFLOW ──
 const GH_OWNER = 'yumelyrics';
 const GH_REPO  = 'yumelyrics.github.io';
@@ -3605,7 +3635,7 @@ const GH_WORKFLOWS = {
   songs:     { file: 'generate-pages.yml',    btn: 'gh-run-new-btn', statusEl: 'gh-songs-status',  dotEl: 'gh-songs-status-dot',  textEl: 'gh-songs-status-text',  dlEl: 'gh-songs-dl',  label: '▶ Generate Lagu Baru', dlUrl: 'https://yumelyrics.my.id/lagu/' },
   resources: { file: 'generate-resources.yml', btn: 'gh-res-run-btn', statusEl: 'gh-res-status',    dotEl: 'gh-res-status-dot',    textEl: 'gh-res-status-text',    dlEl: 'gh-res-dl',   label: 'Run Generate Resource Pages',  dlUrl: 'https://yumelyrics.my.id/resources/' },
   stories:   { file: 'generate-stories.yml',   btn: 'gh-str-run-btn', statusEl: 'gh-str-status',    dotEl: 'gh-str-status-dot',    textEl: 'gh-str-status-text',    dlEl: 'gh-str-dl',   label: 'Run Generate Story Pages',     dlUrl: 'https://yumelyrics.my.id/stories/' },
-  manga:     { file: 'generate-manga.yml',      btn: 'gh-manga-run-btn', statusEl: 'gh-manga-status', dotEl: 'gh-manga-status-dot',  textEl: 'gh-manga-status-text',  dlEl: 'gh-manga-dl', label: '▶ Generate Manga',             dlUrl: 'https://yumelyrics.my.id/manga/' }
+  manga:     { file: 'generate-manga.yml',      btn: 'gh-manga-run-new-btn', statusEl: 'gh-manga-status', dotEl: 'gh-manga-status-dot',  textEl: 'gh-manga-status-text',  dlEl: 'gh-manga-dl', label: '▶ Chapter Baru',             dlUrl: 'https://yumelyrics.my.id/manga/' }
 };
 const GH_DOT_COLORS = { queued:'#c9a96e', in_progress:'#4f7ec4', success:'#4caf7d', failure:'#c96e6e', cancelled:'#5a6a82', skipped:'#5a6a82' };
 let _pollTimers = {};
@@ -3859,47 +3889,61 @@ async function getLatestRunId(workflowFile, token){
 }
 
 window.triggerWorkflow = async (type, mode = 'new') => {
-  const cfg = GH_WORKFLOWS[type];
+  const cfg   = GH_WORKFLOWS[type];
   const token = ghTokenGet();
-  if(!token){ toast('Token belum diisi!'); return; }
-  const activeBtnId = type === 'songs' ? (GH_SONG_BTN_BY_MODE[mode] || 'gh-run-new-btn') : cfg.btn;
-  const btn = document.getElementById(activeBtnId) || document.getElementById(cfg.btn);
+  if (!token) { toast('Token belum diisi!'); return; }
+
+  // Tentukan tombol aktif & helper disable sesuai tipe
+  let activeBtnId, modeLabel;
   if (type === 'songs') {
+    activeBtnId = GH_SONG_BTN_BY_MODE[mode] || 'gh-run-new-btn';
+    modeLabel   = GH_SONG_MODE_LABELS[mode]  || mode;
     setSongGenerateButtons(true, activeBtnId);
+  } else if (type === 'manga') {
+    activeBtnId = GH_MANGA_BTN_BY_MODE[mode] || 'gh-manga-run-new-btn';
+    modeLabel   = GH_MANGA_MODE_LABELS[mode]  || mode;
+    setMangaGenerateButtons(true, activeBtnId);
   } else {
-    btn.disabled = true;
-    btn.textContent = 'Mengirim...';
+    activeBtnId = cfg.btn;
+    modeLabel   = mode;
+    const btn = document.getElementById(activeBtnId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
   }
-  const modeLabel = GH_SONG_MODE_LABELS[mode] || mode;
+
   setStatus(type, true, 'queued', `Mengirim trigger (${modeLabel})...`);
+
+  // Kirim inputs.mode untuk songs dan manga (keduanya mendukung mode system)
   const dispatchBody = { ref: 'main' };
-  if (type === 'songs') dispatchBody.inputs = { mode };
+  if (type === 'songs' || type === 'manga') dispatchBody.inputs = { mode };
+
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${cfg.file}/dispatches`, {
       method: 'POST',
       headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
       body: JSON.stringify(dispatchBody)
     });
-    if(res.status === 204){
+    if (res.status === 204) {
       toast('Workflow di-trigger (' + modeLabel + ')! 🚀');
       setStatus(type, true, 'queued', 'Antri (' + modeLabel + ')...');
       setTimeout(async () => {
         const runId = await getLatestRunId(cfg.file, token);
-        if(runId) pollRunStatus(type, runId);
+        if (runId) pollRunStatus(type, runId);
         else setStatus(type, true, 'queued', 'Run sedang diantri, refresh manual jika perlu.');
       }, 3500);
     } else {
-      const err = await res.json().catch(()=>({}));
-      toast('Gagal: ' + (err.message||res.status));
+      const err = await res.json().catch(() => ({}));
+      toast('Gagal: ' + (err.message || res.status));
       setStatus(type, false);
-      if (type === 'songs') setSongGenerateButtons(false);
-      else { btn.disabled = false; btn.textContent = cfg.label; }
+      if (type === 'songs')      setSongGenerateButtons(false);
+      else if (type === 'manga') setMangaGenerateButtons(false);
+      else { const btn = document.getElementById(cfg.btn); if (btn) { btn.disabled = false; btn.textContent = cfg.label; } }
     }
-  } catch(e){
+  } catch(e) {
     toast('Error: ' + e.message);
     setStatus(type, false);
-    if (type === 'songs') setSongGenerateButtons(false);
-    else { btn.disabled = false; btn.textContent = cfg.label; }
+    if (type === 'songs')      setSongGenerateButtons(false);
+    else if (type === 'manga') setMangaGenerateButtons(false);
+    else { const btn = document.getElementById(cfg.btn); if (btn) { btn.disabled = false; btn.textContent = cfg.label; } }
   }
 };
 
