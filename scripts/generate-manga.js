@@ -564,7 +564,7 @@ const READER_HUD_CSS = `
 .hud-btn-disabled{background:rgba(14,11,22,.5)!important;color:rgba(255,255,255,.18)!important;cursor:default;pointer-events:none;box-shadow:none}
 .hud-btn-list{font-size:.72rem}
 .hud-btn-list.active,.hud-btn-list:hover{background:rgba(40,28,14,.92);color:rgba(201,169,110,.95)}
-#chapter-drawer{position:fixed;left:0;right:0;bottom:0;z-index:499;background:rgba(6,5,10,.97);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);border-top:1px solid rgba(255,255,255,.08);border-radius:1rem 1rem 0 0;max-height:60vh;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;transform:translateY(100%);opacity:0;pointer-events:none}
+#chapter-drawer{position:fixed;left:0;right:0;bottom:0;z-index:501;background:rgba(6,5,10,.97);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);border-top:1px solid rgba(255,255,255,.08);border-radius:1rem 1rem 0 0;max-height:60vh;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;transform:translateY(100%);opacity:0;pointer-events:none}
 #chapter-drawer.drawer-open{transform:translateY(0);opacity:1;pointer-events:auto}
 .drawer-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:.75rem auto .4rem;flex-shrink:0}
 .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:2;background:rgba(6,5,10,.99)}
@@ -634,14 +634,15 @@ const READER_HUD_SCRIPT = `<script>
     if(!drawer||!backdrop)return;drawerOpen=true;
     drawer.classList.add('drawer-open');drawer.setAttribute('aria-hidden','false');
     backdrop.classList.add('active');listBtn&&listBtn.classList.add('active');
-    clearTimeout(timer);show();
+    clearTimeout(timer);
+    if(hud)hud.classList.add('hud-hidden');visible=false;
     requestAnimationFrame(function(){var cur=drawer.querySelector('.drawer-ch-item.current');if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});});
   }
   function closeDrawer(){
     if(!drawer||!backdrop)return;drawerOpen=false;
     drawer.classList.remove('drawer-open');drawer.setAttribute('aria-hidden','true');
     backdrop.classList.remove('active');listBtn&&listBtn.classList.remove('active');
-    clearTimeout(timer);timer=setTimeout(hide,3500);
+    clearTimeout(timer);show();
   }
   if(listBtn)listBtn.addEventListener('click',function(e){e.stopPropagation();drawerOpen?closeDrawer():openDrawer();});
   if(closeBtn)closeBtn.addEventListener('click',closeDrawer);
@@ -783,9 +784,10 @@ ${READER_HUD_CSS}
 .chap-title{font-family:var(--sans);font-size:clamp(1.3rem,3.5vw,2.2rem);font-weight:700;color:#e8e2d9;line-height:1.2;margin-bottom:.7rem}
 .chap-meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.65rem;color:#5a5060;letter-spacing:.08em}
 .chap-meta strong{color:#9a9098}
-.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden}
+.manga-reader{display:flex;flex-direction:column;align-items:center;background:#111;padding:0 0 6rem;gap:0;cursor:pointer;user-select:none;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.manga-reader *{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 .manga-reader img{width:100%;max-width:800px;height:auto;display:block;object-fit:contain}
-.manga-page{display:block;width:100%;max-width:800px;height:auto;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
+.manga-page{display:block;width:100%;max-width:800px;height:auto;aspect-ratio:2/3;object-fit:contain;background:#1a1a1a;opacity:0;transition:opacity .35s ease}
 .manga-page.loaded{opacity:1}
 .chapter-cover-wrap{width:100%;max-width:800px;position:relative;background:#0a0810;margin-bottom:0}
 .chapter-cover-img{display:block;width:100%;height:auto;object-fit:contain}
