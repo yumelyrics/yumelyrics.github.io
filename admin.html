@@ -1601,6 +1601,7 @@ const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
 const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+const UPLOAD_FALLBACK = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/uploadImg';
 // false = tanpa Cloud Functions (gratis). true = setelah deploy verifyAdminGate + Blaze plan
 const GATE_USE_SERVER = false;
 const GATE_VERIFY_URL = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/verifyAdminGate';
@@ -2728,8 +2729,95 @@ async function uploadImageToFirebase(file, folder = 'uploads') {
 }
 window.uploadImageToFirebase = uploadImageToFirebase;
 
-async function uploadImageFile(file, folder = 'uploads') {
-  return await uploadImageToFirebase(file, folder);
+// ── Helper: pilih URL ImgBB yang paling direct ──
+function pickImgbbDirectUrl(data) {
+  if (!data) return '';
+  if (data.image?.url) return data.image.url;
+  const candidates = [data.url, data.display_url, data.url_viewer].filter(Boolean);
+  for (const u of candidates) {
+    if (/^https?:\/\/i\.ibb\.co\//i.test(u)) return u;
+    if (/^https?:\/\/i\.postimg\.cc\//i.test(u)) return u;
+  }
+  const u = data.url || data.display_url || '';
+  if (u && !/^https?:\/\/ibb\.co\//i.test(u)) return u;
+  return '';
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      resolve(typeof result === 'string' ? (result.split(',')[1] || '') : '');
+    };
+    reader.onerror = () => reject(new Error('Gagal baca file gambar'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageViaWorker(file) {
+  const fd = new FormData();
+  fd.append('image', file);
+  const headers = {};
+  if (auth.currentUser) {
+    try { headers['Authorization'] = 'Bearer ' + await auth.currentUser.getIdToken(); } catch (e) {}
+  }
+  let res;
+  try {
+    res = await fetch(UPLOAD_WORKER + '/upload-img', { method: 'POST', headers, body: fd });
+  } catch (e) {
+    throw new Error('Tidak bisa hubungi server upload. Cek koneksi atau deploy ulang worker.');
+  }
+  const raw = await res.text();
+  let json;
+  try { json = JSON.parse(raw); } catch (e) {
+    throw new Error('Server upload error (' + res.status + ').');
+  }
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || json.message || ('Upload gagal (' + res.status + ')'));
+  }
+  const url = pickImgbbDirectUrl(json.data) || json.data?.url || json.data?.display_url;
+  if (!url) throw new Error('URL gambar tidak ada di respons server');
+  return url;
+}
+
+async function uploadImageViaImgbbDirect(file) {
+  const key = imgbbKeyGet().trim();
+  if (!key) {
+    throw new Error('Isi ImgBB API Key di panel 🔑 API Keys & Tokens (api.imgbb.com), lalu coba upload lagi.');
+  }
+  const fd = new FormData();
+  fd.append('key', key);
+  fd.append('image', file, file.name || 'cover.jpg');
+  let res;
+  try {
+    res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
+  } catch (e) {
+    throw new Error('Tidak bisa hubungi ImgBB. Cek koneksi internet.');
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!json.success) {
+    throw new Error(json.error?.message || json.status_txt || ('ImgBB error ' + res.status));
+  }
+  const url = pickImgbbDirectUrl(json.data);
+  if (!url) throw new Error('URL gambar tidak ada di respons ImgBB');
+  return url;
+}
+
+// uploadImageFile: ImgBB direct jika key ada, fallback ke Worker
+async function uploadImageFile(file) {
+  if (imgbbKeyGet().trim()) {
+    return await uploadImageViaImgbbDirect(file);
+  }
+  try {
+    return await uploadImageViaWorker(file);
+  } catch (e) {
+    const msg = String(e.message || '');
+    if (/forbidden|imgbb menolak|invalid api/i.test(msg)) {
+      throw new Error('ImgBB menolak upload dari server. Buka 🔑 API Keys & Tokens → isi ImgBB API Key → upload lagi.');
+    }
+    throw e;
+  }
 }
 window.uploadImageFile = uploadImageFile;
 // Expose auth & db ke global scope supaya script non-module (manga admin) bisa akses
@@ -4387,18 +4475,11 @@ function initMangaListeners(){
   );
 }
 
-// ── Upload manga via ImgBB ──
+// ── Upload manga — reuse uploadImageFile yang sudah benar (ImgBB direct / Worker fallback) ──
 async function mangaUploadToImgbb(file){
-  const key = _imgbbKeyGet();
-  if(!key) throw new Error('Set ImgBB API Key dulu di panel 🔑 API Keys, lalu coba lagi.');
-  if(file.size > 32*1024*1024) throw new Error('File terlalu besar (maks 32MB untuk ImgBB).');
-  const fd = new FormData();
-  fd.append('image', file);
-  const res = await fetch('https://api.imgbb.com/1/upload?key=' + encodeURIComponent(key), { method:'POST', body:fd });
-  if(!res.ok) throw new Error('ImgBB error HTTP ' + res.status);
-  const json = await res.json();
-  if(!json.success) throw new Error('ImgBB gagal: ' + (json.error?.message || JSON.stringify(json.error) || 'unknown'));
-  return json.data.url;
+  if(typeof window.uploadImageFile !== 'function')
+    throw new Error('Upload belum siap — refresh halaman lalu login ulang.');
+  return await window.uploadImageFile(file);
 }
 
 // ── Series dropdown ──
