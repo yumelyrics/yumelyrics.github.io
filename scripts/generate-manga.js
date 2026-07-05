@@ -280,6 +280,44 @@ async function sendDiscordNotification(newChapters, success = true) {
   } catch(e) { console.warn('⚠ Gagal kirim notif Discord:', e.message); }
 }
 
+// ── Discord: series baru ──────────────────────────────────────────────────────
+async function sendSeriesDiscordNotification(newSeriesList) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  if (!newSeriesList.length) return;
+  try {
+    const count = newSeriesList.length;
+    const title = count === 1 ? '📚 Series Baru Ditambahkan' : `📚 ${count} Series Baru Ditambahkan`;
+    const desc  = `**${count}** series manga baru berhasil ditambahkan ke katalog.`;
+    const color = 10181046;
+
+    const lines = newSeriesList.slice(0, 10).map(s => {
+      const g = s.genre ? ` — _${escHtml(s.genre)}_` : '';
+      return `• [${escHtml(s.title)}](${s.url})${g}`;
+    });
+    if (count > 10) lines.push(`_...dan ${count - 10} series lainnya_`);
+
+    const firstImg = newSeriesList[0]?.cover || '';
+    const embed = {
+      title, description: desc, color, url: `${BASE_URL}/${MANGA_DIR}/`,
+      fields: [
+        { name: '📖 Series Baru', value: lines.join('\n') || '_–_', inline: false },
+        { name: '🔗 Katalog Manga', value: `[Lihat semua manga](${BASE_URL}/${MANGA_DIR}/)`, inline: true },
+      ],
+      footer: { text: 'yumelyrics.my.id · manga' },
+      timestamp: new Date().toISOString(),
+    };
+    if (firstImg) embed[count === 1 ? 'image' : 'thumbnail'] = { url: firstImg };
+
+    const res = await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: DISCORD_ROLE, embeds: [embed] }),
+    });
+    if (res.ok) console.log(`✓ Notif Discord: ${count} series baru.`);
+    else        res.text().then(t => console.warn(`⚠ Discord error ${res.status}: ${t}`));
+  } catch(e) { console.warn('⚠ Gagal kirim notif Discord (series):', e.message); }
+}
+
 // ── Sitemap helpers ───────────────────────────────────────────────────────────
 function buildSitemapUrl({ loc, lastmod, priority = '0.7', changefreq = 'weekly', imgUrl = '', imgTitle = '', imgCaption = '' }) {
   const imgBlock = imgUrl
@@ -553,6 +591,7 @@ const READER_HUD_CSS = `
   pointer-events:none;transition:opacity .3s cubic-bezier(.4,0,.2,1),transform .3s cubic-bezier(.4,0,.2,1);
 }
 #reader-hud.hud-hidden{opacity:0;transform:translateX(-50%) translateY(12px);pointer-events:none!important}
+body.reader-drawer-open #reader-hud{display:none!important}
 #reader-hud>*{pointer-events:auto}
 .hud-title{display:flex;flex-direction:column;align-items:center;gap:.1rem;background:rgba(10,8,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:999px;padding:.38rem .9rem .42rem;max-width:min(360px,80vw)}
 .hud-series-name{font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(200,192,208,.45);font-family:var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -634,6 +673,7 @@ const READER_HUD_SCRIPT = `<script>
     if(!drawer||!backdrop)return;drawerOpen=true;
     drawer.classList.add('drawer-open');drawer.setAttribute('aria-hidden','false');
     backdrop.classList.add('active');listBtn&&listBtn.classList.add('active');
+    document.body.classList.add('reader-drawer-open');
     clearTimeout(timer);
     if(hud)hud.classList.add('hud-hidden');visible=false;
     requestAnimationFrame(function(){var cur=drawer.querySelector('.drawer-ch-item.current');if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});});
@@ -642,6 +682,7 @@ const READER_HUD_SCRIPT = `<script>
     if(!drawer||!backdrop)return;drawerOpen=false;
     drawer.classList.remove('drawer-open');drawer.setAttribute('aria-hidden','true');
     backdrop.classList.remove('active');listBtn&&listBtn.classList.remove('active');
+    document.body.classList.remove('reader-drawer-open');
     clearTimeout(timer);show();
   }
   if(listBtn)listBtn.addEventListener('click',function(e){e.stopPropagation();drawerOpen?closeDrawer():openDrawer();});
@@ -763,8 +804,8 @@ ${FONT_LINK}
 <style>
 ${CSS_TOKENS}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;background:#111}
-body{background:#111;color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden}
+html{scroll-behavior:smooth;background:#111;-webkit-tap-highlight-color:transparent}
+body{background:#111;color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 nav{background:rgba(8,6,12,.92)!important;border-bottom-color:rgba(255,255,255,.07)!important}
 .nljp{color:#e8e2d9}.nlen{color:#5a5060}
 #theme-toggle,#nav-menu-btn{border-color:rgba(255,255,255,.12)!important}
@@ -1362,8 +1403,8 @@ async function main() {
       if (isDirty) {
         // chapter diedit → clear flag, jangan kirim notif
         dirtyFlagClears.push(clearDirtyFlag(db, ch.id));
-      } else {
-        // chapter baru → siapkan notif Discord
+      } else if (!fullMode) {
+        // chapter baru → siapkan notif Discord (skip saat full rebuild)
         newChapters.push({
           seriesTitle:  ch.seriesTitle,
           chapterNum:   ch.chapterNum,
@@ -1397,13 +1438,25 @@ async function main() {
   // ── Generate series pages (selalu, karena chapter baru muncul di daftar) ──
   console.log('📚 Generate halaman series...');
   const seriesErrors = [];
+  const newSeries    = [];
   for (const sr of seriesList) {
-    const srChapters  = chaptersBySeriesId[sr.id] || [];
-    sr.chapterCount   = srChapters.length;
+    const srChapters   = chaptersBySeriesId[sr.id] || [];
+    sr.chapterCount    = srChapters.length;
+    const seriesPath   = path.join(MANGA_DIR, `${sr.slug}.html`);
+    const existedBefore = fullMode ? true : fs.existsSync(seriesPath);
     try {
       const html = await generateSeriesHTML(sr, srChapters);
-      await fsWrite(path.join(MANGA_DIR, `${sr.slug}.html`), html, 'utf8');
-      console.log(`  ✓ ${sr.slug}.html (${srChapters.length} chapter)`);
+      await fsWrite(seriesPath, html, 'utf8');
+      if (!existedBefore) {
+        newSeries.push({
+          title:  sr.title || sr.slug,
+          slug:   sr.slug,
+          cover:  sr.cover || '',
+          genre:  Array.isArray(sr.genre) ? sr.genre.join(', ') : (sr.genre || ''),
+          url:    `${BASE_URL}/${MANGA_DIR}/${sr.slug}.html`,
+        });
+      }
+      console.log(`  ✓ ${sr.slug}.html (${srChapters.length} chapter)${!existedBefore ? ' — series baru' : ''}`);
     } catch(e) {
       seriesErrors.push({ slug: sr.slug, err: e.message });
       console.error(`  ✗ GAGAL series ${sr.slug}: ${e.message}`);
@@ -1460,11 +1513,16 @@ ${sitemapUrls.join('\n')}
   console.log(`  ✓ ${SITEMAP_PATH} (${sitemapUrls.length} URL)`);
 
   // ── Notif Discord ──
+  if (newSeries.length > 0) {
+    await sendSeriesDiscordNotification(newSeries);
+    console.log(`   Notif Discord: ${newSeries.length} series baru`);
+  }
   if (newChapters.length > 0) {
     await sendDiscordNotification(newChapters, true);
     console.log(`   Notif Discord: ${newChapters.length} chapter baru`);
-  } else {
-    console.log('   Notif Discord dilewati — tidak ada chapter baru.');
+  }
+  if (newSeries.length === 0 && newChapters.length === 0) {
+    console.log('   Notif Discord dilewati — tidak ada series/chapter baru.');
   }
 
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
