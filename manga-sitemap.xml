@@ -7,8 +7,19 @@
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://i.ibb.co/DP3x5ks8/cover-crop.jpg</image:loc>
+      <image:loc>https://i.ibb.co/M5shP4Zm/ao-no-hako.jpg</image:loc>
       <image:title>Manga Terjemahan Indonesia — YumeSubs</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://yumelyrics.my.id/manga/ao-no-hako.html</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.ibb.co/M5shP4Zm/ao-no-hako.jpg</image:loc>
+      <image:title>Ao no Hako</image:title>
+      <image:caption>Ao no Hako — Manga terjemahan Indonesia di YumeSubs</image:caption>
     </image:image>
   </url>
   <url>
@@ -20,6 +31,17 @@
       <image:loc>https://i.ibb.co/DP3x5ks8/cover-crop.jpg</image:loc>
       <image:title>Yumelyrics Announcements</image:title>
       <image:caption>Yumelyrics Announcements — Manga terjemahan Indonesia di YumeSubs</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://yumelyrics.my.id/manga/ao-no-hako-ch001.html</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://i.ibb.co/WpMjDR3K/TL-001.jpg</image:loc>
+      <image:title>Ao no Hako Chapter 1</image:title>
+      <image:caption>Baca Ao no Hako Chapter 1 terjemahan Indonesia di YumeSubs</image:caption>
     </image:image>
   </url>
   <url>
