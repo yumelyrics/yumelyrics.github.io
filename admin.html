@@ -1387,14 +1387,16 @@ Paragraf dipisah dengan enter 2x.
             <div class="fl">Cover URL</div>
             <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
               <input class="fi" id="ms-cover" placeholder="https://i.ibb.co/..." style="flex:1;min-width:200px" oninput="showMangaSeriesCoverPreview()">
-              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem">
-                📤 Upload
+              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem" title="Upload gambar, crop otomatis jika bukan 1:1">
+                ✂️ Upload &amp; Crop
                 <input type="file" accept="image/*" style="display:none" onchange="handleMangaSeriesCoverUpload(this)">
               </label>
+              <button type="button" class="bdels" style="font-size:.65rem;padding:.45rem .9rem" onclick="clearMangaSeriesCover()" title="Hapus cover series">🗑 Hapus Cover</button>
             </div>
             <div id="ms-cover-status" style="font-size:.68rem;margin-top:.3rem;color:var(--muted)"></div>
-            <div id="ms-cover-preview-wrap" style="display:none;margin-top:.5rem">
+            <div id="ms-cover-preview-wrap" style="display:none;margin-top:.5rem;position:relative;align-items:flex-start;gap:.5rem">
               <img id="ms-cover-preview-img" alt="preview" style="max-height:120px;max-width:200px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">
+              <button type="button" onclick="clearMangaSeriesCover()" style="position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Hapus cover">✕</button>
             </div>
           </div>
           <div class="fg" style="grid-column:1/-1"><div class="fl">Deskripsi</div><textarea class="fi" id="ms-desc" rows="3" placeholder="Sinopsis series..." style="resize:vertical"></textarea></div>
@@ -1454,14 +1456,16 @@ Paragraf dipisah dengan enter 2x.
             <div class="fl">Cover Chapter URL</div>
             <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
               <input class="fi" id="mc-cover" placeholder="https://i.ibb.co/... (opsional)" style="flex:1;min-width:200px" oninput="showMangaChapterCoverPreview()">
-              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem">
-                📤 Upload
+              <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.45rem .9rem" title="Upload gambar, crop otomatis jika bukan 1:1">
+                ✂️ Upload &amp; Crop
                 <input type="file" accept="image/*" style="display:none" onchange="handleMangaChapterCoverUpload(this)">
               </label>
+              <button type="button" class="bdels" style="font-size:.65rem;padding:.45rem .9rem" onclick="clearMangaChapterCover()" title="Hapus cover chapter">🗑 Hapus Cover</button>
             </div>
             <div id="mc-cover-status" style="font-size:.68rem;margin-top:.3rem;color:var(--muted)"></div>
-            <div id="mc-cover-preview-wrap" style="display:none;margin-top:.5rem">
+            <div id="mc-cover-preview-wrap" style="display:none;margin-top:.5rem;position:relative;align-items:flex-start;gap:.5rem">
               <img id="mc-cover-preview-img" alt="preview" style="max-height:100px;max-width:180px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">
+              <button type="button" onclick="clearMangaChapterCover()" style="position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Hapus cover">✕</button>
             </div>
           </div>
           <div class="fg" style="grid-column:1/-1"><div class="fl">Deskripsi Chapter</div><textarea class="fi" id="mc-desc" rows="2" placeholder="(opsional)" style="resize:vertical"></textarea></div>
@@ -2823,6 +2827,19 @@ window.uploadImageFile = uploadImageFile;
 // Expose auth & db ke global scope supaya script non-module (manga admin) bisa akses
 window.auth = auth;
 window.db   = db;
+// Expose Firestore functions supaya manga admin (non-module script) bisa akses
+window.onSnapshot  = onSnapshot;
+window.collection  = collection;
+window.query       = query;
+window.orderBy     = orderBy;
+window.addDoc      = addDoc;
+window.updateDoc   = updateDoc;
+window.deleteDoc   = deleteDoc;
+window.doc         = doc;
+window.where       = where;
+window.escHtml     = escHtml;
+window.esc         = esc;
+window.toast       = toast;
 
 // ── COVER CROP (1:1, untuk thumbnail 16:9 / landscape) ──
 const _coverCrop = {
@@ -2835,6 +2852,7 @@ const _coverCrop = {
   maxCs: 0,
   dragging: false,
   ptrId: null,
+  onApplied: null, // callback(file) dipanggil setelah crop/skip selesai
 };
 
 function updateCoverCropBtn() {
@@ -2856,6 +2874,7 @@ function closeCoverCrop() {
   if (ov) { ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); }
   _coverCrop.img = null;
   _coverCrop.pendingFile = null;
+  _coverCrop.onApplied = null; // bersihkan callback agar tidak bocor ke konteks lain
   _coverCropRevoke();
 }
 
@@ -3082,9 +3101,15 @@ window.applyCoverCrop = async function () {
   try {
     const blob = await coverCropExportBlob();
     const file = new File([blob], 'cover-crop.jpg', { type: 'image/jpeg' });
+    const cb = _coverCrop.onApplied;
+    _coverCrop.onApplied = null;
     closeCoverCrop();
-    await uploadCoverFileDirect(file);
-    toast('Cover di-crop & di-upload ✅');
+    if (typeof cb === 'function') {
+      await cb(file);
+    } else {
+      await uploadCoverFileDirect(file);
+      toast('Cover di-crop & di-upload ✅');
+    }
   } catch (e) {
     toast('Crop gagal: ' + e.message);
   }
@@ -3094,11 +3119,44 @@ window.applyCoverCrop = async function () {
 window.skipCoverCropUpload = async function () {
   const file = _coverCrop.pendingFile;
   if (!file) return;
+  const cb = _coverCrop.onApplied;
+  _coverCrop.onApplied = null;
   closeCoverCrop();
-  await uploadCoverFileDirect(file);
+  if (typeof cb === 'function') {
+    await cb(file);
+  } else {
+    await uploadCoverFileDirect(file);
+  }
 };
 
 window.closeCoverCrop = closeCoverCrop;
+
+// ── Manga cover crop: buka modal crop dengan callback custom ──
+window.openMangaCoverCrop = async function(file, opts) {
+  // opts: { fieldId, statusId, previewFn }
+  const statusEl = opts.statusId ? document.getElementById(opts.statusId) : null;
+  const applyAndUpload = async (resultFile) => {
+    if (statusEl) { statusEl.textContent = '⏳ Uploading...'; statusEl.style.color = 'var(--muted)'; }
+    try {
+      const url = await uploadImageFile(resultFile);
+      const inp = document.getElementById(opts.fieldId);
+      if (inp) inp.value = url;
+      if (typeof opts.previewFn === 'function') opts.previewFn();
+      if (statusEl) { statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color = '#4caf7d'; }
+      toast('Cover di-upload ✅');
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = '❌ Gagal: ' + e.message; statusEl.style.color = 'var(--red)'; }
+      toast('Upload cover gagal: ' + e.message);
+    }
+  };
+  _coverCrop.onApplied = applyAndUpload;
+  const opened = await maybeAutoOpenCoverCrop(file, { file, uploadIfFail: false });
+  if (!opened) {
+    // Rasio sudah 1:1 atau gagal load, langsung upload
+    _coverCrop.onApplied = null;
+    await applyAndUpload(file);
+  }
+};
 
 async function maybeAutoOpenCoverCrop(source, opts) {
   opts = opts || {};
@@ -4558,51 +4616,89 @@ window.showMangaSeriesCoverPreview = function(){
   const url = document.getElementById('ms-cover').value.trim();
   const wrap = document.getElementById('ms-cover-preview-wrap');
   const img = document.getElementById('ms-cover-preview-img');
-  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='block'; }
+  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='inline-flex'; }
   else { img.removeAttribute('src'); wrap.style.display='none'; }
 };
 window.showMangaChapterCoverPreview = function(){
   const url = document.getElementById('mc-cover').value.trim();
   const wrap = document.getElementById('mc-cover-preview-wrap');
   const img = document.getElementById('mc-cover-preview-img');
-  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='block'; }
+  if(url && _sanitizeUrl(url) !== '#'){ img.src=_sanitizeUrl(url); wrap.style.display='inline-flex'; }
   else { img.removeAttribute('src'); wrap.style.display='none'; }
 };
 
 // ── Cover upload helpers ──
 window.handleMangaSeriesCoverUpload = async function(input){
-  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  if(!window.auth||!window.auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
   const file = input.files[0]; input.value='';
   if(!file) return;
   if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
-  const statusEl = document.getElementById('ms-cover-status');
-  statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
-  try {
-    const url = await mangaUploadToImgbb(file);
-    document.getElementById('ms-cover').value = url;
-    showMangaSeriesCoverPreview();
-    statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
-  } catch(e){
-    statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
-    toast('Upload cover gagal: '+e.message);
+  if(typeof window.openMangaCoverCrop === 'function'){
+    await window.openMangaCoverCrop(file, {
+      fieldId: 'ms-cover',
+      statusId: 'ms-cover-status',
+      previewFn: window.showMangaSeriesCoverPreview
+    });
+  } else {
+    // fallback: langsung upload tanpa crop
+    const statusEl = document.getElementById('ms-cover-status');
+    statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
+    try {
+      const url = await mangaUploadToImgbb(file);
+      document.getElementById('ms-cover').value = url;
+      showMangaSeriesCoverPreview();
+      statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
+    } catch(e){
+      statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
+      toast('Upload cover gagal: '+e.message);
+    }
   }
 };
 window.handleMangaChapterCoverUpload = async function(input){
-  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  if(!window.auth||!window.auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
   const file = input.files[0]; input.value='';
   if(!file) return;
   if(!file.type.startsWith('image/')){ toast('Harus file gambar.'); return; }
-  const statusEl = document.getElementById('mc-cover-status');
-  statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
-  try {
-    const url = await mangaUploadToImgbb(file);
-    document.getElementById('mc-cover').value = url;
-    showMangaChapterCoverPreview();
-    statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
-  } catch(e){
-    statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
-    toast('Upload chapter cover gagal: '+e.message);
+  if(typeof window.openMangaCoverCrop === 'function'){
+    await window.openMangaCoverCrop(file, {
+      fieldId: 'mc-cover',
+      statusId: 'mc-cover-status',
+      previewFn: window.showMangaChapterCoverPreview
+    });
+  } else {
+    // fallback: langsung upload tanpa crop
+    const statusEl = document.getElementById('mc-cover-status');
+    statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
+    try {
+      const url = await mangaUploadToImgbb(file);
+      document.getElementById('mc-cover').value = url;
+      showMangaChapterCoverPreview();
+      statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
+    } catch(e){
+      statusEl.textContent = '❌ Gagal: '+e.message; statusEl.style.color='var(--red)';
+      toast('Upload chapter cover gagal: '+e.message);
+    }
   }
+};
+
+// ── Hapus cover helpers ──
+window.clearMangaSeriesCover = function(){
+  document.getElementById('ms-cover').value = '';
+  document.getElementById('ms-cover-status').textContent = '';
+  const wrap = document.getElementById('ms-cover-preview-wrap');
+  const img  = document.getElementById('ms-cover-preview-img');
+  if(wrap) wrap.style.display = 'none';
+  if(img)  img.removeAttribute('src');
+  toast('Cover series dihapus.');
+};
+window.clearMangaChapterCover = function(){
+  document.getElementById('mc-cover').value = '';
+  document.getElementById('mc-cover-status').textContent = '';
+  const wrap = document.getElementById('mc-cover-preview-wrap');
+  const img  = document.getElementById('mc-cover-preview-img');
+  if(wrap) wrap.style.display = 'none';
+  if(img)  img.removeAttribute('src');
+  toast('Cover chapter dihapus.');
 };
 
 // ── Pages editor ──
@@ -4966,5 +5062,5 @@ function geniusFetchLyrics(url, fullTitle){
   });
 }
 </script>
-</body>
+<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="62b9fca5-d586-4742-8e6f-ab38f180f515"></script></body>
 </html>
