@@ -1471,9 +1471,21 @@ Paragraf dipisah dengan enter 2x.
       <!-- Pages Editor -->
       <section class="form-card" style="margin-top:1rem">
         <div class="form-card-title">Halaman Manga (Pages)</div>
-        <p class="form-card-hint">Tambahkan gambar satu per satu. Gambar akan tampil berurutan dari atas ke bawah tanpa celah (seamless). Klik Upload untuk upload ke ImgBB atau paste URL langsung.</p>
+        <p class="form-card-hint">Tambahkan gambar satu per satu atau sekaligus (bulk). Gambar bulk diurutkan otomatis berdasarkan nomor di nama file (misal: 01.jpg, 02.jpg). Klik Upload per baris untuk upload ke ImgBB, atau paste URL langsung.</p>
         <div id="mpages" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem"></div>
-        <button class="bsave" onclick="addMangaPage()" style="font-size:.65rem;padding:.4rem .85rem">+ Tambah Halaman</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+          <button class="bsave" onclick="addMangaPage()" style="font-size:.65rem;padding:.4rem .85rem">+ Tambah Halaman</button>
+          <label class="bsave" style="cursor:pointer;font-size:.65rem;padding:.4rem .85rem;background:rgba(76,175,125,.15);color:#3d9468;border:1px solid rgba(76,175,125,.4)" title="Pilih banyak gambar sekaligus, diurutkan otomatis by nama file">
+            📦 Bulk Upload ImgBB
+            <input type="file" accept="image/*" multiple style="display:none" onchange="bulkMangaUpload(this)">
+          </label>
+        </div>
+        <div id="manga-bulk-progress" style="display:none;margin-top:.5rem;font-size:.72rem;color:var(--muted);background:rgba(76,175,125,.07);border:1px solid rgba(76,175,125,.25);border-radius:6px;padding:.5rem .75rem">
+          <div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:.4rem;overflow:hidden">
+            <div id="manga-bulk-bar" style="height:100%;width:0%;background:#3d9468;border-radius:4px;transition:width .3s"></div>
+          </div>
+          <span id="manga-bulk-text">⏳ Mempersiapkan...</span>
+        </div>
       </section>
 
       <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem">
@@ -3972,6 +3984,8 @@ var _sanitizeUrl = function(url){
     return '#';
   } catch(e){ return '#'; }
 };
+// Baca ImgBB key langsung dari sessionStorage (sama seperti imgbbKeyGet di module)
+var _imgbbKeyGet = function(){ return sessionStorage.getItem('yume_imgbb_key') || ''; };
 
 function geniusDoSearch(){
   var qEl = document.getElementById('gd-query');
@@ -4370,12 +4384,18 @@ function initMangaListeners(){
   );
 }
 
-// ── Upload manga via Firebase Storage (reuses window.uploadImageFile dari module) ──
-async function mangaUploadToStorage(file, folder){
-  if (typeof window.uploadImageFile !== 'function') {
-    throw new Error('Upload belum siap — coba refresh halaman admin lalu login ulang.');
-  }
-  return await window.uploadImageFile(file, folder || 'manga');
+// ── Upload manga via ImgBB ──
+async function mangaUploadToImgbb(file){
+  const key = _imgbbKeyGet();
+  if(!key) throw new Error('Set ImgBB API Key dulu di panel 🔑 API Keys, lalu coba lagi.');
+  if(file.size > 32*1024*1024) throw new Error('File terlalu besar (maks 32MB untuk ImgBB).');
+  const fd = new FormData();
+  fd.append('image', file);
+  const res = await fetch('https://api.imgbb.com/1/upload?key=' + encodeURIComponent(key), { method:'POST', body:fd });
+  if(!res.ok) throw new Error('ImgBB error HTTP ' + res.status);
+  const json = await res.json();
+  if(!json.success) throw new Error('ImgBB gagal: ' + (json.error?.message || JSON.stringify(json.error) || 'unknown'));
+  return json.data.url;
 }
 
 // ── Series dropdown ──
@@ -4474,7 +4494,7 @@ window.handleMangaSeriesCoverUpload = async function(input){
   const statusEl = document.getElementById('ms-cover-status');
   statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await mangaUploadToStorage(file, 'manga/covers');
+    const url = await mangaUploadToImgbb(file);
     document.getElementById('ms-cover').value = url;
     showMangaSeriesCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4491,7 +4511,7 @@ window.handleMangaChapterCoverUpload = async function(input){
   const statusEl = document.getElementById('mc-cover-status');
   statusEl.textContent = '⏳ Mengupload...'; statusEl.style.color='var(--muted)';
   try {
-    const url = await mangaUploadToStorage(file, 'manga/covers');
+    const url = await mangaUploadToImgbb(file);
     document.getElementById('mc-cover').value = url;
     showMangaChapterCoverPreview();
     statusEl.textContent = '✅ Upload berhasil!'; statusEl.style.color='#4caf7d';
@@ -4560,7 +4580,7 @@ window.uploadMangaPageFile = async function(input){
   if(lbl) lbl.innerHTML = '⏳';
   if(lbl && inp2) lbl.appendChild(inp2);
   try {
-    const url = await mangaUploadToStorage(file, 'manga/pages');
+    const url = await mangaUploadToImgbb(file);
     urlInp.value = url;
     const safe = _sanitizeUrl(url);
     if(safe !== '#'){ thumb.src = safe; thumb.style.display = 'block'; }
@@ -4582,6 +4602,70 @@ function reindexMangaPages(){
     if(numEl) numEl.textContent = (i+1)+'.';
   });
 }
+
+// ── Bulk upload ──
+// Ekstrak angka terakhir dari nama file (tanpa ekstensi) untuk sorting
+// Contoh: "page_01.jpg"→1, "ch1_pg003.png"→3, "042.jpg"→42, "abc.jpg"→Infinity
+function _mangaFileOrder(file){
+  const stem = file.name.replace(/\.[^.]+$/, '');      // buang ekstensi
+  const nums = stem.match(/\d+/g);                     // semua kelompok angka
+  if(!nums) return [Infinity, file.name];
+  return [parseInt(nums[nums.length - 1], 10), file.name]; // angka terakhir
+}
+
+window.bulkMangaUpload = async function(input){
+  if(!auth.currentUser){ toast('Login admin dulu.'); input.value=''; return; }
+  const raw = Array.from(input.files||[]); input.value='';
+  if(!raw.length) return;
+
+  const files = raw.filter(f=>f.type.startsWith('image/'));
+  const skipped = raw.length - files.length;
+  if(!files.length){ toast('Tidak ada file gambar yang dipilih.'); return; }
+
+  // Urutkan berdasarkan angka terakhir di nama file, lalu nama file (a-z)
+  files.sort((a,b)=>{
+    const [na,sa] = _mangaFileOrder(a);
+    const [nb,sb] = _mangaFileOrder(b);
+    return na !== nb ? na - nb : sa.localeCompare(sb, undefined, {numeric:true});
+  });
+
+  const total = files.length;
+  const prog  = document.getElementById('manga-bulk-progress');
+  const bar   = document.getElementById('manga-bulk-bar');
+  const txt   = document.getElementById('manga-bulk-text');
+  prog.style.display = 'block';
+
+  const setProgress = (done, label) => {
+    bar.style.width = (done/total*100).toFixed(1)+'%';
+    txt.textContent = label;
+  };
+
+  let ok=0, fail=0, failNames=[];
+  for(let i=0;i<files.length;i++){
+    const f = files[i];
+    setProgress(i, `⏳ Mengupload ${i+1}/${total}: ${f.name}`);
+    try {
+      const url = await mangaUploadToImgbb(f);
+      addMangaPage(url);
+      ok++;
+    } catch(e){
+      fail++;
+      failNames.push(f.name + ' (' + e.message + ')');
+    }
+    setProgress(i+1, `⏳ Mengupload ${i+1}/${total}: ${f.name}`);
+  }
+
+  // Selesai
+  bar.style.width='100%';
+  if(fail===0){
+    txt.textContent = `✅ Semua ${ok} halaman berhasil di-upload${skipped?' ('+skipped+' bukan gambar dilewati)':''}.`;
+    txt.style.color='#3d9468';
+  } else {
+    txt.innerHTML = `⚠️ ${ok} berhasil, ${fail} gagal: <span title="${_esc(failNames.join('\n'))}" style="cursor:help;text-decoration:underline dotted">hover untuk detail</span>${skipped?' · '+skipped+' bukan gambar dilewati':''}.`;
+    txt.style.color='var(--red)';
+  }
+  setTimeout(()=>{ prog.style.display='none'; txt.style.color=''; }, 6000);
+};
 
 // ── Save Series ──
 window.saveMangaSeries = async function(){
