@@ -1080,24 +1080,61 @@ ${NAV_SCRIPT}
 </html>`);
 }
 
+// ── Relative time helper ──────────────────────────────────────────────────────
+function timeAgo(isoStr) {
+  if (!isoStr) return '';
+  const diff  = Date.now() - new Date(isoStr).getTime();
+  const mins  = Math.floor(diff / 60000);
+  if (mins < 1)   return 'baru saja';
+  if (mins < 60)  return `${mins} menit lalu`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return `${hrs} jam lalu`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30)  return `${days} hari lalu`;
+  const months = Math.floor(days / 30);
+  return `${months} bln lalu`;
+}
+
 // ── Index page HTML ───────────────────────────────────────────────────────────
-async function generateIndexHTML(seriesList) {
+async function generateIndexHTML(seriesList, allChapters = []) {
   const pageUrl    = `${BASE_URL}/${MANGA_DIR}/`;
   const total      = seriesList.reduce((s, sr) => s + (sr.chapterCount || 0), 0);
   const metaDesc   = `${seriesList.length} seri manga terjemahan Indonesia — ${total} chapter tersedia gratis di YumeSubs. Baca manga favoritmu dalam bahasa Indonesia.`;
   const firstCover = seriesList.find(sr => sr.cover)?.cover || '';
 
-  const cards = seriesList.map(sr => `
+  // 2 chapter terbaru per series (sort by chapterNum desc)
+  const chapsBySeries = {};
+  for (const ch of allChapters) {
+    if (!ch.seriesId) continue;
+    if (!chapsBySeries[ch.seriesId]) chapsBySeries[ch.seriesId] = [];
+    chapsBySeries[ch.seriesId].push(ch);
+  }
+  for (const id of Object.keys(chapsBySeries)) {
+    chapsBySeries[id].sort((a, b) => (b.chapterNum ?? 0) - (a.chapterNum ?? 0));
+  }
+
+  const cards = seriesList.map(sr => {
+    const latestChaps = (chapsBySeries[sr.id] || []).slice(0, 2);
+    const chapRows = latestChaps.map(ch => `
+      <div class="sc-chap-row">
+        <span class="sc-chap-num">Chapter ${ch.chapterNum}${ch.chapterTitle ? ` — ${escHtml(ch.chapterTitle.slice(0,22))}` : ''}</span>
+        <span class="sc-chap-time">${timeAgo(ch.updatedAt || ch.createdAt)}</span>
+      </div>`).join('');
+    const hasNew = latestChaps.length > 0;
+    return `
     <a class="series-card" href="${escHtml(sr.slug)}.html">
-      ${sr.cover
-        ? `<img class="sc-cover" src="${escHtml(wsrvUrl(sr.cover, 300))}" alt="${escHtml(sr.title)}" width="150" height="210" loading="lazy" decoding="async">`
-        : `<div class="sc-cover sc-cover-ph">📖</div>`}
+      <div class="sc-cover-wrap">
+        ${sr.cover
+          ? `<img class="sc-cover" src="${escHtml(wsrvUrl(sr.cover, 360))}" alt="${escHtml(sr.title)}" loading="lazy" decoding="async">`
+          : `<div class="sc-cover sc-cover-ph"><span>📖</span></div>`}
+        ${hasNew ? `<span class="sc-badge">UP</span>` : ''}
+      </div>
       <div class="sc-info">
         <div class="sc-title">${escHtml(sr.title)}</div>
-        <div class="sc-meta">${sr.chapterCount} chapter</div>
-        ${sr.genres ? `<div class="sc-genres">${escHtml(sr.genres)}</div>` : ''}
+        ${chapRows || `<div class="sc-chap-empty">${sr.chapterCount || 0} chapter</div>`}
       </div>
-    </a>`).join('');
+    </a>`;
+  }).join('');
 
   // JSON-LD — CollectionPage + BreadcrumbList
   const schema = JSON.stringify([
@@ -1157,23 +1194,33 @@ ${CSS_TOKENS}
 html{scroll-behavior:smooth;background:var(--paper)}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100dvh;transition:var(--nm)}
 ${NAV_CSS}
-.page-hero{padding:4rem 3.5rem 2.5rem}
-.page-title{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.5rem);font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:.6rem}
-.page-sub{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
-.series-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.5rem;padding:0 3.5rem 5rem}
-.series-card{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:.75rem;transition:opacity .2s}
-.series-card:hover{opacity:.8}
-.sc-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--cream);display:block}
-.sc-cover-ph{display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--smoke)}
-.sc-info{display:flex;flex-direction:column;gap:.3rem}
-.sc-title{font-size:.92rem;font-weight:700;color:var(--ink);line-height:1.3;font-family:var(--sans)}
-.sc-meta{font-size:.65rem;color:var(--ash);letter-spacing:.05em}
-.sc-genres{font-size:.62rem;color:var(--smoke)}
-footer{display:flex;justify-content:space-between;padding:2.5rem 3.5rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
+.page-hero{padding:3rem 1.2rem 1.2rem}
+.page-title{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:600;color:var(--ink);line-height:1.2;margin-bottom:.4rem}
+.page-sub{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ash)}
+.series-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;padding:.9rem 1.2rem 5rem}
+@media(min-width:480px){.series-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:768px){.series-grid{grid-template-columns:repeat(4,1fr);gap:1rem;padding-left:2rem;padding-right:2rem}.page-hero{padding:3.5rem 2rem 1.4rem}}
+@media(min-width:1100px){.series-grid{grid-template-columns:repeat(5,1fr);padding-left:3rem;padding-right:3rem}.page-hero{padding-left:3rem;padding-right:3rem}}
+.series-card{text-decoration:none;color:inherit;display:flex;flex-direction:column;background:var(--cream);border-radius:6px;overflow:hidden;transition:transform .18s,box-shadow .18s}
+.series-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+[data-theme="dark"] .series-card{background:#1a1520}
+.sc-cover-wrap{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;background:#1a1020;flex-shrink:0}
+.sc-cover{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.series-card:hover .sc-cover{transform:scale(1.04)}
+.sc-cover-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(145deg,#1a1020,#3d1f3a)}
+.sc-badge{position:absolute;top:7px;left:7px;background:#e53935;color:#fff;font-size:.52rem;font-weight:800;letter-spacing:.08em;padding:.18rem .45rem;border-radius:3px;line-height:1.2;font-family:var(--sans)}
+.sc-info{display:flex;flex-direction:column;flex:1}
+.sc-title{font-size:.8rem;font-weight:700;color:var(--ink);line-height:1.35;padding:.55rem .6rem .35rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sc-chap-row{display:flex;justify-content:space-between;align-items:center;padding:.3rem .6rem;border-top:1px solid var(--border);gap:.3rem}
+.sc-chap-num{font-size:.62rem;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sc-chap-time{font-size:.58rem;color:var(--smoke);white-space:nowrap;flex-shrink:0}
+.sc-chap-empty{font-size:.62rem;color:var(--smoke);padding:.3rem .6rem;border-top:1px solid var(--border)}
+footer{display:flex;justify-content:space-between;padding:2.5rem 1.2rem;border-top:1px solid var(--border);background:var(--cream);gap:2rem;flex-wrap:wrap;transition:var(--nm)}
 [data-theme="dark"] footer{background:#070604}
 .footer-link{display:block;font-size:.72rem;color:var(--ash);text-decoration:none;margin-bottom:.3rem}
 .footer-link:hover{color:var(--gold)}
-@media(max-width:768px){.page-hero{padding:2.5rem 1.2rem 1.5rem}.series-grid{padding-left:1.2rem;padding-right:1.2rem;gap:1rem}footer{padding:2rem 1.2rem}}
+@media(min-width:768px){footer{padding:2.5rem 2rem}}
+@media(min-width:1100px){footer{padding:2.5rem 3rem}}
 </style>
 </head>
 <body>
@@ -1360,7 +1407,7 @@ async function main() {
 
   // ── Generate index ──
   try {
-    const indexHtml = await generateIndexHTML(seriesList);
+    const indexHtml = await generateIndexHTML(seriesList, allChapters);
     await fsWrite(path.join(MANGA_DIR, 'index.html'), indexHtml, 'utf8');
     console.log('  ✓ index.html');
   } catch(e) {
