@@ -60,9 +60,9 @@ async function sendDiscordNotification(generatedSongs, success = true) {
       listTitle = '🎶 Lagu';
       color = 15158332;
     } else {
-      title = '🎵 Lagu Baru Diupload';
-      desc = `**${count}** lagu baru berhasil diupload ke website.`;
-      listTitle = '🎶 Lagu Baru';
+      title = '🌸 新着';
+      desc = `**${count}** Terjemahan baru kini tersedia di YumeLyrics.`;
+      listTitle = '🎶 Lagu Terbaru';
       color = 3066993;
     }
 
@@ -78,7 +78,7 @@ async function sendDiscordNotification(generatedSongs, success = true) {
       url: SITE_URL,
       fields: [
         { name: listTitle, value: songListValue, inline: false },
-        { name: '🔗 Website', value: `[yumelyrics.my.id](${SITE_URL})`, inline: true },
+        { name: 'Website', value: `[yumelyrics.my.id](${SITE_URL})`, inline: true },
       ],
       footer: { text: 'yumelyrics.my.id' },
       timestamp: new Date().toISOString(),
@@ -92,7 +92,7 @@ async function sendDiscordNotification(generatedSongs, success = true) {
     }
 /** Tag Roles notif discord */
     const payload = {
-      content: '<@&................>', /** ganti yang ini*/
+      content: '', /** ganti yang ini <@&................>*/
       embeds: [embed],
     };
     const res = await fetch(DISCORD_WEBHOOK_URL, {
