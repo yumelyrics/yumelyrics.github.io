@@ -1,4 +1,4 @@
-name: Deploy 404 page to GitHub Pages
+name: Deploy 404 Isekai
 
 on:
   push:
@@ -12,46 +12,68 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # ── Job 1: Deploy Cloudflare Worker ─────────────────────────────────
+  deploy-worker:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      worker_url: ${{ steps.get-url.outputs.url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare site output
-        run: |
-          mkdir -p site
-          cp 404.html site/404.html
-          cp 404.html site/index.html
-          if [ -f anime404.mp3 ]; then cp anime404.mp3 site/anime404.mp3; fi
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Inject alamat backend report
+      - name: Deploy Worker & set Discord secret
+        id: get-url
         env:
-          # Ini BUKAN webhook Discord — hanya alamat endpoint server kita sendiri
-          # (mis. https://nama-app-kamu.replit.app/api/visitor-report).
-          # Webhook Discord aslinya sekarang tersimpan rahasia di server itu,
-          # tidak pernah dikirim ke browser pengunjung.
-          VISITOR_REPORT_ENDPOINT: ${{ secrets.VISITOR_REPORT_ENDPOINT }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
-          if [ -z "$VISITOR_REPORT_ENDPOINT" ]; then
-            echo "Secret VISITOR_REPORT_ENDPOINT belum diset — notifikasi tidak aktif."
-          else
-            ESCAPED=$(printf '%s\n' "$VISITOR_REPORT_ENDPOINT" | sed -e 's/[\/&]/\\&/g')
-            sed -i "s|__VISITOR_REPORT_ENDPOINT__|$ESCAPED|g" site/404.html
-            sed -i "s|__VISITOR_REPORT_ENDPOINT__|$ESCAPED|g" site/index.html
-            echo "Endpoint berhasil disisipkan."
-          fi
+          npx wrangler@latest secret put DISCORD_WEBHOOK_URL \
+            --name isekai-discord <<< "${{ secrets.DISCORD_WEBHOOK_URL_404 }}"
+
+          DEPLOY_OUT=$(npx wrangler@latest deploy --name isekai-discord 2>&1)
+          echo "$DEPLOY_OUT"
+
+          # Ambil URL worker dari output wrangler
+          URL=$(echo "$DEPLOY_OUT" | grep -Eo 'https://isekai-discord\.[^[:space:]]+' | head -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+  # ── Job 2: Deploy GitHub Pages ───────────────────────────────────────
+  deploy-pages:
+    needs: deploy-worker
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject config ke 404.html
+        run: |
+          sed -i \
+            -e 's|__FIREBASE_API_KEY__|${{ secrets.FIREBASE_API_KEY }}|g' \
+            -e 's|__FIREBASE_AUTH_DOMAIN__|${{ secrets.FIREBASE_AUTH_DOMAIN }}|g' \
+            -e 's|__FIREBASE_PROJECT_ID__|${{ secrets.FIREBASE_PROJECT_ID }}|g' \
+            -e 's|__FIREBASE_STORAGE_BUCKET__|${{ secrets.FIREBASE_STORAGE_BUCKET }}|g' \
+            -e 's|__FIREBASE_MESSAGING_SENDER_ID__|${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}|g' \
+            -e 's|__FIREBASE_APP_ID__|${{ secrets.FIREBASE_APP_ID }}|g' \
+            -e 's|__CF_WORKER_URL__|${{ needs.deploy-worker.outputs.worker_url }}|g' \
+            404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
