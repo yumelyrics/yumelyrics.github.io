@@ -2,29 +2,419 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>YumeSubs</title>
-<!-- Redirect secepat mungkin — URL acak / typo tidak menampilkan halaman error hosting -->
-<script>
-(function () {
-  var home = '/index.html';
-  var p = (location.pathname || '/').toLowerCase();
-  if (p === '/' || p === '/index.html') return;
-  /* Probe bot umum — tetap redirect ke index, tanpa pesan error */
-  var bad = /\.(git|env|sql|bak|log|yml|yaml|json|md|cjs|js\.map)$|\/wp-|\/wordpress|\/\.well-known\/(?!assetlinks)|\/node_modules\/|\/\.git\/|\/package\.json|\/composer\.json/;
-  if (bad.test(p)) { location.replace(home); return; }
-  location.replace(home);
-})();
-</script>
-<meta http-equiv="refresh" content="0;url=/index.html">
+<title>SYSTEM BREACH // 404</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; min-height: 100vh; background: #f5f0ea; }
+  :root{ --green:#ff0022; --red:#ff003c; }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:#000;
+    color:var(--green);
+    font-family:'Courier New', Consolas, monospace;
+    overflow:hidden;
+    cursor:none;
+  }
+  canvas#matrix{
+    position:fixed; inset:0; width:100%; height:100%; z-index:0;
+    opacity:0.55;
+  }
+  .scanlines{
+    position:fixed; inset:0; z-index:5; pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 1px,
+      rgba(0,0,0,0.35) 2px,
+      rgba(0,0,0,0.35) 3px
+    );
+    mix-blend-mode:multiply;
+  }
+  .vignette{
+    position:fixed; inset:0; z-index:6; pointer-events:none;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
+  }
+  .noise{
+    position:fixed; inset:0; z-index:7; pointer-events:none;
+    opacity:0.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:noiseShift .2s steps(2) infinite;
+  }
+  @keyframes noiseShift{
+    0%{ transform:translate(0,0); }
+    50%{ transform:translate(-2%,1%); }
+    100%{ transform:translate(1%,-2%); }
+  }
+  .flash{
+    position:fixed; inset:0; z-index:8; pointer-events:none;
+    background:rgba(255,0,60,0.08);
+    opacity:0;
+  }
+  .flash.active{ animation:flashPulse 0.15s linear; }
+  @keyframes flashPulse{
+    0%{ opacity:0.9; }
+    100%{ opacity:0; }
+  }
+  main{
+    position:relative; z-index:10;
+    width:100%; height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+  }
+  .glitch-wrap{ position:relative; }
+  h1{
+    font-family:'Nosifer', 'Courier New', monospace;
+    font-size:clamp(1.8rem, 7vw, 4.6rem);
+    letter-spacing:.04em;
+    line-height:1.15;
+    margin:0 0 .35em;
+    color:var(--green);
+    text-shadow:
+      0 0 6px rgba(255,0,34,.9),
+      0 0 18px rgba(255,0,34,.6),
+      0 0 40px rgba(140,0,0,.55),
+      2px 2px 0 rgba(0,0,0,.9);
+    position:relative;
+    animation:flicker 3.4s infinite;
+  }
+  p.sub, .term, .warning-tag{ font-family:'Special Elite', 'Courier New', monospace; }
+  h1::before, h1::after{
+    content:attr(data-text);
+    position:absolute; left:0; top:0; width:100%;
+    overflow:hidden; clip-path: inset(0 0 0 0);
+  }
+  h1::before{
+    color:var(--red);
+    left:2px; text-shadow:-2px 0 red;
+    animation:glitchTop 2.6s infinite linear alternate-reverse;
+  }
+  h1::after{
+    color:#00d4ff;
+    left:-2px; text-shadow:2px 0 #00d4ff;
+    animation:glitchBottom 3.1s infinite linear alternate-reverse;
+  }
+  @keyframes glitchTop{
+    0%{ clip-path: inset(0 0 85% 0); transform:translate(-2px,-2px); }
+    20%{ clip-path: inset(10% 0 60% 0); transform:translate(2px,1px); }
+    40%{ clip-path: inset(40% 0 30% 0); transform:translate(-1px,2px); }
+    60%{ clip-path: inset(70% 0 5% 0); transform:translate(2px,-1px); }
+    80%{ clip-path: inset(20% 0 65% 0); transform:translate(-2px,1px); }
+    100%{ clip-path: inset(0 0 90% 0); transform:translate(1px,-2px); }
+  }
+  @keyframes glitchBottom{
+    0%{ clip-path: inset(85% 0 0 0); transform:translate(2px,2px); }
+    25%{ clip-path: inset(50% 0 20% 0); transform:translate(-2px,-1px); }
+    50%{ clip-path: inset(15% 0 55% 0); transform:translate(1px,-2px); }
+    75%{ clip-path: inset(65% 0 10% 0); transform:translate(-1px,2px); }
+    100%{ clip-path: inset(30% 0 40% 0); transform:translate(2px,1px); }
+  }
+  @keyframes flicker{
+    0%,19%,21%,23%,25%,54%,56%,100%{ opacity:1; }
+    20%,22%,24%,55%{ opacity:.4; }
+  }
+  p.sub{
+    font-size:clamp(.85rem, 2.6vw, 1.2rem);
+    color:#ff8f8f;
+    letter-spacing:.06em;
+    max-width:640px;
+    margin:0 auto 1.6em;
+    line-height:1.7;
+    text-shadow:0 0 6px rgba(255,0,34,.5);
+    animation:whisper 5s ease-in-out infinite;
+  }
+  @keyframes whisper{
+    0%,100%{ opacity:1; letter-spacing:.06em; }
+    48%{ opacity:.75; }
+    50%{ opacity:.45; letter-spacing:.09em; transform:skewX(1deg); }
+    52%{ opacity:.75; }
+  }
+  .camera-box{
+    margin-top:1.4em;
+    border:1px solid rgba(255,0,60,.5);
+    background:rgba(10,0,0,.5);
+    padding:10px;
+    max-width:260px;
+    width:80%;
+    box-shadow:0 0 25px rgba(255,0,60,.25) inset;
+  }
+  .camera-box p{
+    margin:0 0 8px;
+    font-size:.65rem;
+    letter-spacing:.15em;
+    color:var(--red);
+    text-align:center;
+  }
+  .camera-box img, .camera-box video{
+    width:100%;
+    display:block;
+    filter:grayscale(1) contrast(1.3) brightness(.85) sepia(.25) hue-rotate(70deg);
+    border:1px solid rgba(255,0,34,.35);
+  }
+  .term{
+    font-size:clamp(.72rem, 2vw, .95rem);
+    color:var(--green);
+    background:rgba(0,10,0,.55);
+    border:1px solid rgba(255,0,34,.4);
+    border-radius:4px;
+    padding:14px 18px;
+    max-width:620px;
+    width:90%;
+    text-align:left;
+    box-shadow:0 0 25px rgba(255,0,34,.2) inset;
+    min-height:150px;
+  }
+  .term .line{ opacity:0; white-space:pre-wrap; }
+  .cursor{
+    display:inline-block; width:8px; height:1em; background:var(--green);
+    animation:blink 1s steps(1) infinite; vertical-align:text-bottom;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .eye{
+    position:fixed;
+    width:2px; height:2px;
+    pointer-events:none;
+    z-index:9;
+    opacity:0;
+  }
+  .warning-tag{
+    display:inline-block; margin-top:1.6em; font-size:.7rem;
+    letter-spacing:.25em; color:var(--red);
+    border:1px solid rgba(255,0,60,.5); padding:6px 14px; border-radius:2px;
+    animation:redPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes redPulse{
+    0%,100%{ box-shadow:0 0 4px rgba(255,0,60,.4); }
+    50%{ box-shadow:0 0 18px rgba(255,0,60,.9); }
+  }
+  .muted-note{
+    position:fixed; bottom:14px; right:16px; z-index:20;
+    font-size:.65rem; color:#7a3d3d; letter-spacing:.1em;
+    opacity:.7;
+  }
+  .highlight{ color:#ff003c; text-shadow:0 0 6px rgba(255,0,60,.8); }
 </style>
 </head>
 <body>
-<p style="font-family: system-ui, sans-serif; font-size: .85rem; color: #8c8278; text-align: center; padding: 3rem 1rem;">
-  Memuat… <a href="/index.html">Klik di sini</a> jika tidak otomatis.
-</p>
+
+<canvas id="matrix"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="noise"></div>
+<div class="flash" id="flash"></div>
+
+<main>
+  <div class="glitch-wrap">
+    <h1 data-text="404 // TIDAK DITEMUKAN">404 // TIDAK DITEMUKAN</h1>
+  </div>
+  <p class="sub">
+    Halaman yang kamu cari sudah tidak ada lagi.<br>
+    Sistem ini sudah mencatat aktivitasmu.
+  </p>
+
+  <div class="term" id="term"></div>
+
+  <div class="camera-box" id="cameraBox" style="display:none;">
+    <p id="cameraLabel">MENGAKSES KAMERA...</p>
+    <video id="camVideo" autoplay muted playsinline style="display:none;"></video>
+    <img id="camShot" style="display:none;" alt="captured">
+  </div>
+
+  <div class="warning-tag">KONEKSI SEDANG DIPANTAU</div>
+</main>
+
+<div class="muted-note">audio: aktif — jangan matikan speaker</div>
+
+<audio id="bgm" src="creepy-ambient.mp3" loop preload="auto"></audio>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Block back navigation ---------- */
+  history.pushState(null, "", location.href);
+  window.addEventListener("popstate", function () {
+    history.pushState(null, "", location.href);
+  });
+  // Re-push periodically in case something else touches history
+  setInterval(function(){ history.pushState(null, "", location.href); }, 300);
+
+  window.addEventListener("beforeunload", function (e) {
+    e.preventDefault();
+    e.returnValue = "";
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Backspace" && !/input|textarea/i.test(document.activeElement.tagName)) {
+      e.preventDefault();
+    }
+    if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      e.preventDefault();
+    }
+  });
+  document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  /* ---------- Matrix rain ---------- */
+  var canvas = document.getElementById("matrix");
+  var ctx = canvas.getContext("2d");
+  var W, H, cols, drops;
+  var chars = "アカサタナハマヤラワ0123456789ABCDEFXYZ!@#$%&*<>/\\;:";
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    var fontSize = 16;
+    cols = Math.floor(W / fontSize);
+    drops = new Array(cols).fill(1);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = Math.random() > 0.9 ? "#8c0000" : "#ff0022";
+    ctx.font = "16px monospace";
+    for (var i = 0; i < drops.length; i++) {
+      var text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * 16, drops[i] * 16);
+      if (drops[i] * 16 > H && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw, 45);
+
+  /* ---------- Random red flash / screen glitch ---------- */
+  var flashEl = document.getElementById("flash");
+  function randomGlitch() {
+    flashEl.classList.remove("active");
+    void flashEl.offsetWidth;
+    flashEl.classList.add("active");
+    document.body.style.transform = "translate(" + (Math.random()*6-3) + "px," + (Math.random()*4-2) + "px)";
+    setTimeout(function(){ document.body.style.transform = "translate(0,0)"; }, 90);
+    setTimeout(randomGlitch, 2500 + Math.random() * 5000);
+  }
+  setTimeout(randomGlitch, 1800);
+
+  /* ---------- Typed terminal log ---------- */
+  var term = document.getElementById("term");
+
+  function typeLine(text, cls) {
+    return new Promise(function (resolve) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "line" + (cls ? " " + cls : "");
+      lineEl.style.opacity = 1;
+      term.appendChild(lineEl);
+      var i = 0;
+      var speed = 14 + Math.random() * 16;
+      (function type() {
+        if (i <= text.length) {
+          lineEl.textContent = text.slice(0, i);
+          i++;
+          setTimeout(type, speed);
+        } else {
+          setTimeout(resolve, 250 + Math.random() * 350);
+        }
+      })();
+    });
+  }
+
+  async function runLog() {
+    await typeLine("> root@unknown:~# tracing connection...");
+    await typeLine("> resolving public IP...");
+
+    var info = null;
+    try {
+      var res = await fetch("https://ipapi.co/json/");
+      if (res.ok) info = await res.json();
+    } catch (e) { /* ignore, fall back below */ }
+
+    if (info && info.ip) {
+      await typeLine("> IP address: " + info.ip, "highlight");
+      await typeLine("> ISP / org: " + (info.org || "unknown"));
+      await typeLine("> location: " + [info.city, info.region, info.country_name].filter(Boolean).join(", "));
+      await typeLine("> timezone: " + (info.timezone || "unknown"));
+      await typeLine("> asn: " + (info.asn || "unknown"));
+    } else {
+      await typeLine("> IP address: [lookup failed]", "highlight");
+    }
+
+    await typeLine("> platform: " + navigator.platform);
+    await typeLine("> user_agent: " + navigator.userAgent);
+    await typeLine("> language: " + navigator.language);
+    await typeLine("> screen: " + screen.width + "x" + screen.height + " (" + window.devicePixelRatio + "x)");
+    await typeLine("> cpu_cores: " + (navigator.hardwareConcurrency || "unknown"));
+    await typeLine("> access_level: UNAUTHORIZED", "highlight");
+    await typeLine("> file_index: page not found");
+    await typeLine("> initiating surveillance protocol...");
+    await typeLine("> webcam: standby");
+    await typeLine("> microphone: standby");
+    await typeLine("> WARNING: this session has been recorded", "highlight");
+    await typeLine("> there is nothing for you here.");
+    await typeLine("> turn back while you still can_");
+    startCamera();
+  }
+
+  /* ---------- Front camera auto-capture ----------
+     The browser will always show its own permission prompt the first time a
+     site asks for the camera — that is a hard security boundary enforced by
+     the browser itself and cannot be skipped or hidden. If the visitor
+     allows it, a snapshot is taken automatically a couple seconds later and
+     shown directly on the page. Camera access also only works when the page
+     is served over https (or localhost) — it is blocked entirely when the
+     file is opened directly from disk (file://). */
+  function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    var box = document.getElementById("cameraBox");
+    var label = document.getElementById("cameraLabel");
+    var video = document.getElementById("camVideo");
+    var shot = document.getElementById("camShot");
+    box.style.display = "block";
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.style.display = "block";
+        label.textContent = "WAJAH TERDETEKSI...";
+        setTimeout(function () {
+          var canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth || 320;
+          canvas.height = video.videoHeight || 240;
+          var c = canvas.getContext("2d");
+          c.drawImage(video, 0, 0, canvas.width, canvas.height);
+          shot.src = canvas.toDataURL("image/png");
+          shot.style.display = "block";
+          video.style.display = "none";
+          label.textContent = "GAMBAR DISIMPAN KE SERVER";
+          stream.getTracks().forEach(function (t) { t.stop(); });
+        }, 2500);
+      })
+      .catch(function () {
+        label.textContent = "AKSES KAMERA DITOLAK";
+      });
+  }
+
+  /* ---------- Audio: attempt immediate autoplay, no click gate ---------- */
+  var bgm = document.getElementById("bgm");
+  bgm.volume = 0.55;
+  var playPromise = bgm.play();
+  if (playPromise && playPromise.catch) {
+    playPromise.catch(function () {
+      // Some browsers block sound until any interaction anywhere on the page;
+      // this retries silently on the very first interaction without showing
+      // any gate/overlay.
+      var retry = function () { bgm.play().catch(function () {}); };
+      ["click", "keydown", "touchstart", "scroll", "mousemove"].forEach(function (evt) {
+        window.addEventListener(evt, retry, { once: true });
+      });
+    });
+  }
+
+  runLog();
+})();
+</script>
 </body>
 </html>
