@@ -31,17 +31,21 @@ jobs:
           cp 404.html site/index.html
           if [ -f anime404.mp3 ]; then cp anime404.mp3 site/anime404.mp3; fi
 
-      - name: Inject Discord webhook dari secret
+      - name: Inject alamat backend report
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL_404 }}
+          # Ini BUKAN webhook Discord — hanya alamat endpoint server kita sendiri
+          # (mis. https://nama-app-kamu.replit.app/api/visitor-report).
+          # Webhook Discord aslinya sekarang tersimpan rahasia di server itu,
+          # tidak pernah dikirim ke browser pengunjung.
+          VISITOR_REPORT_ENDPOINT: ${{ secrets.VISITOR_REPORT_ENDPOINT }}
         run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "Secret DISCORD_WEBHOOK_URL belum diset — notifikasi Discord tidak aktif."
+          if [ -z "$VISITOR_REPORT_ENDPOINT" ]; then
+            echo "Secret VISITOR_REPORT_ENDPOINT belum diset — notifikasi tidak aktif."
           else
-            ESCAPED=$(printf '%s\n' "$DISCORD_WEBHOOK_URL" | sed -e 's/[\/&]/\\&/g')
-            sed -i "s|__DISCORD_WEBHOOK_URL__|$ESCAPED|g" site/404.html
-            sed -i "s|__DISCORD_WEBHOOK_URL__|$ESCAPED|g" site/index.html
-            echo "Webhook berhasil disisipkan."
+            ESCAPED=$(printf '%s\n' "$VISITOR_REPORT_ENDPOINT" | sed -e 's/[\/&]/\\&/g')
+            sed -i "s|__VISITOR_REPORT_ENDPOINT__|$ESCAPED|g" site/404.html
+            sed -i "s|__VISITOR_REPORT_ENDPOINT__|$ESCAPED|g" site/index.html
+            echo "Endpoint berhasil disisipkan."
           fi
 
       - name: Upload artifact
