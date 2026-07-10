@@ -2,3 +2,7 @@ name = "isekai-discord"
 main = "worker/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+
+# KV namespace untuk rate limiting
+# ID diisi otomatis oleh GitHub Actions saat deploy
+# (CI menambahkan blok [[kv_namespaces]] secara dinamis)

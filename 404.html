@@ -45,6 +45,7 @@
   .term .line{white-space:pre-wrap;word-break:break-word;padding:1.5px 0;}
   .term .line.gold{color:var(--gold);font-weight:600;}
   .term .line.pink{color:var(--pink);}
+  .term .line.dim{color:rgba(255,233,247,.4);}
   .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
     animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
   @keyframes blink{50%{opacity:0}}
@@ -73,7 +74,6 @@
 <div class="sparkles" id="sparkles"></div>
 <audio id="bgm" src="anime404.mp3" loop preload="auto"></audio>
 
-<!-- Firebase SDK (CDN modular) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp }
@@ -81,7 +81,7 @@ import { getFirestore, collection, addDoc, serverTimestamp }
 
 "use strict";
 
-/* ── CONFIG — diisi otomatis oleh GitHub Actions ─────────────────────── */
+/* ── CONFIG (diisi GitHub Actions) ───────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            "__FIREBASE_API_KEY__",
   authDomain:        "__FIREBASE_AUTH_DOMAIN__",
@@ -93,7 +93,7 @@ const firebaseConfig = {
 var WORKER_URL = "__CF_WORKER_URL__";
 
 var FB_READY = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("__");
-var CF_READY  = WORKER_URL && !WORKER_URL.startsWith("__");
+var CF_READY = WORKER_URL && !WORKER_URL.startsWith("__");
 
 var app, db;
 if (FB_READY) {
@@ -124,8 +124,8 @@ function buildScene(){
   var W = canvas.width  = window.innerWidth;
   var H = canvas.height = window.innerHeight;
   var area = W * H;
-  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000),55)  : Math.min(Math.floor(area/9000),180);
-  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000),16)  : Math.min(Math.floor(area/16000),55);
+  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000),55) : Math.min(Math.floor(area/9000),180);
+  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000),16) : Math.min(Math.floor(area/16000),55);
   sc = Math.max(sc, IS_MOBILE ? 25 : 60);
   pc = Math.max(pc, IS_MOBILE ? 6  : 18);
   stars = [];
@@ -157,9 +157,9 @@ render();
 /* ── Sparkles ─────────────────────────────────────────────────────────── */
 var EMOJIS=["✨","🌸","⭐","💫","🎐"];
 var wrap=document.getElementById("sparkles");
-for(var s=0;s<(IS_MOBILE?6:12);s++){
+for(var i=0;i<(IS_MOBILE?6:12);i++){
   var el=document.createElement("span");el.className="sparkle";
-  el.textContent=EMOJIS[s%EMOJIS.length];
+  el.textContent=EMOJIS[i%EMOJIS.length];
   el.style.left=(Math.random()*95)+"%";el.style.top=(Math.random()*95)+"%";
   el.style.animationDelay=(Math.random()*2.2)+"s";wrap.appendChild(el);
 }
@@ -169,7 +169,7 @@ var term=document.getElementById("term");
 function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
 function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
 
-/* ── IP lookup ───────────────────────────────────────────────────────── */
+/* ── IP lookup (dengan proxy detection) ──────────────────────────────── */
 function fetchJson(url, ms){
   return new Promise(function(resolve,reject){
     var tid=setTimeout(function(){reject(new Error("timeout"));},ms);
@@ -179,16 +179,17 @@ function fetchJson(url, ms){
   });
 }
 async function getIpInfo(){
-  var services=[
+  // ip-api.com: tambah proxy & hosting untuk VPN detection
+  var services = [
     "https://ipapi.co/json/",
-    "https://ip-api.com/json/?fields=query,org,city,regionName,country,timezone"
+    "https://ip-api.com/json/?fields=query,org,city,regionName,country,timezone,proxy,hosting"
   ];
   for(var i=0;i<services.length;i++){
     try{
-      var d=await fetchJson(services[i],5000);
-      if(d.query&&!d.ip)               d.ip           = d.query;
-      if(d.regionName&&!d.region)      d.region       = d.regionName;
-      if(d.country&&!d.country_name)   d.country_name = d.country;
+      var d = await fetchJson(services[i], 5000);
+      if(d.query && !d.ip)             d.ip           = d.query;
+      if(d.regionName && !d.region)    d.region       = d.regionName;
+      if(d.country && !d.country_name) d.country_name = d.country;
       return d;
     }catch(e){}
   }
@@ -198,59 +199,113 @@ async function getIpInfo(){
 /* ── GPS Geolocation ─────────────────────────────────────────────────── */
 function getGPS(){
   return new Promise(function(resolve){
-    if (!navigator.geolocation) { resolve(null); return; }
+    if(!navigator.geolocation){ resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
-      function(pos){
-        resolve({
-          lat:      pos.coords.latitude,
-          lon:      pos.coords.longitude,
-          accuracy: Math.round(pos.coords.accuracy)
-        });
-      },
+      function(pos){ resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }); },
       function(){ resolve(null); },
       { timeout: 8000, maximumAge: 0, enableHighAccuracy: true }
     );
   });
 }
 
-/* ── Kirim ke Firestore ──────────────────────────────────────────────── */
-async function sendToFirestore(data) {
-  if (!FB_READY) return;
-  try {
-    await addDoc(collection(db, "visitors_404"), {
-      ...data,
-      timestamp: serverTimestamp(),
-      url: window.location.href,
-      referrer: document.referrer || null
-    });
-  } catch(e) { /* silent */ }
+/* ── Baterai ─────────────────────────────────────────────────────────── */
+async function getBattery(){
+  if(!navigator.getBattery) return null;
+  try{
+    var b = await navigator.getBattery();
+    return { level: Math.round(b.level * 100), charging: b.charging };
+  }catch(e){ return null; }
 }
 
-/* ── Kirim ke Cloudflare Worker → Discord ───────────────────────────── */
-async function sendToWorker(data) {
-  if (!CF_READY) return;
-  try {
-    await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...data,
-        url: window.location.href,
-        referrer: document.referrer || null
-      })
+/* ── Koneksi internet ────────────────────────────────────────────────── */
+function getNetwork(){
+  var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if(!c) return null;
+  return {
+    type:     c.effectiveType || c.type || null,
+    downlink: c.downlink      || null,
+    saveData: !!c.saveData
+  };
+}
+
+/* ── Hardware & touch ────────────────────────────────────────────────── */
+function getHardware(){
+  return {
+    ram:         navigator.deviceMemory        || null,
+    cpu:         navigator.hardwareConcurrency || null,
+    touchPoints: navigator.maxTouchPoints      || 0
+  };
+}
+
+/* ── Visitor fingerprint + kunjungan ─────────────────────────────────── */
+function simpleHash(str){
+  var h = 0x811c9dc5 >>> 0;
+  for(var i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h  = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8,"0");
+}
+function getVisitInfo(){
+  var raw = [
+    navigator.userAgent, navigator.language,
+    screen.width, screen.height, screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || 0,
+    navigator.deviceMemory        || 0
+  ].join("||");
+  var fp  = simpleHash(raw);
+  var KEY = "_isekai_v";
+  var now = Date.now();
+  var stored;
+  try{ stored = JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  if(!stored || stored.fp !== fp){ stored = { fp:fp, n:1, first:now }; }
+  else { stored.n++; }
+  stored.last = now;
+  try{ localStorage.setItem(KEY, JSON.stringify(stored)); }catch(e){}
+  return stored;
+}
+
+/* ── Kirim ke Firestore ──────────────────────────────────────────────── */
+async function sendToFirestore(data){
+  if(!FB_READY) return;
+  try{
+    await addDoc(collection(db,"visitors_404"),{
+      ...data, timestamp: serverTimestamp(),
+      url: window.location.href, referrer: document.referrer || null
     });
-  } catch(e) { /* silent */ }
+  }catch(e){}
+}
+
+/* ── Kirim ke Worker → Discord ───────────────────────────────────────── */
+async function sendToWorker(data){
+  if(!CF_READY) return;
+  try{
+    await fetch(WORKER_URL,{
+      method:  "POST",
+      headers: {"Content-Type":"application/json"},
+      body:    JSON.stringify({ ...data, url: window.location.href, referrer: document.referrer || null })
+    });
+  }catch(e){}
 }
 
 /* ── MAIN ────────────────────────────────────────────────────────────── */
 async function run(){
   addLine("> guild@isekai:~$ melacak pengunjung...");
-  addLine("> mengambil koordinat portal...");
+  addLine("> mengambil koordinat portal...", "dim");
 
-  /* IP + GPS jalan paralel */
-  var results = await Promise.all([getIpInfo(), getGPS()]);
-  var info = results[0];
-  var gps  = results[1];
+  /* Semua lookup jalan paralel */
+  var results = await Promise.all([
+    getIpInfo(),
+    getGPS(),
+    getBattery()
+  ]);
+  var info    = results[0];
+  var gps     = results[1];
+  var battery = results[2];
+  var net     = getNetwork();
+  var hw      = getHardware();
+  var visit   = getVisitInfo();
 
   var ip      = info&&info.ip           ||"tidak diketahui";
   var isp     = info&&info.org          ||"tidak diketahui";
@@ -259,24 +314,24 @@ async function run(){
   var country = info&&info.country_name ||"";
   var tz      = info&&info.timezone     ||"tidak diketahui";
   var lokasi  = [city,region,country].filter(Boolean).join(", ")||"tidak diketahui";
+  var isProxy   = info ? (info.proxy   != null ? info.proxy   : null) : null;
+  var isHosting = info ? (info.hosting != null ? info.hosting : null) : null;
 
-  addLine("> IP dunia nyata: "+ip, "gold");
-  addLine("> guild / ISP: "+isp);
-  addLine("> lokasi (IP): "+lokasi);
-  if (gps) {
-    addLine("> GPS tepat: "+gps.lat.toFixed(5)+", "+gps.lon.toFixed(5)+" (±"+gps.accuracy+"m)", "gold");
-  }
-  addLine("> zona waktu: "+tz);
-  addLine("> platform: "+navigator.platform);
-  addLine("> device: "+navigator.userAgent.slice(0,80)+"...");
-  addLine("> bahasa: "+navigator.language);
-  addLine("> resolusi: "+screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
+  addLine("> IP: "+ip, "gold");
+  addLine("> ISP: "+isp+(isProxy?"  ⚠ VPN/Proxy":"")+(isHosting?"  ⚠ Datacenter":""));
+  addLine("> Lokasi (IP): "+lokasi);
+  if(gps) addLine("> GPS: "+gps.lat.toFixed(5)+", "+gps.lon.toFixed(5)+" (±"+gps.accuracy+"m)", "gold");
+  if(net&&net.type) addLine("> Koneksi: "+net.type.toUpperCase()+(net.downlink?" · "+net.downlink+"Mbps":""));
+  if(battery) addLine("> Baterai: "+battery.level+"% "+(battery.charging?"(charging)":""));
+  addLine("> RAM: "+(hw.ram?hw.ram+"GB":"—")+"  CPU: "+(hw.cpu?hw.cpu+" core":"—")+"  Touch: "+(hw.touchPoints>0?"Ya":"Tidak"));
+  addLine("> Fingerprint: "+visit.fp+"  (kunjungan ke-"+visit.n+")");
   addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
-  addLine("> mencatat ke grimoire...");
+  addLine("> mencatat ke grimoire...", "dim");
   addCursor();
 
   var payload = {
     ip, isp, city, region, country, lokasi,
+    isProxy, isHosting,
     timezone:   tz,
     platform:   navigator.platform,
     userAgent:  navigator.userAgent,
@@ -286,14 +341,21 @@ async function run(){
     pixelRatio: devicePixelRatio,
     gpsLat:     gps ? gps.lat      : null,
     gpsLon:     gps ? gps.lon      : null,
-    gpsAcc:     gps ? gps.accuracy : null
+    gpsAcc:     gps ? gps.accuracy : null,
+    battLevel:    battery ? battery.level    : null,
+    battCharging: battery ? battery.charging : null,
+    netType:     net ? net.type     : null,
+    netDownlink: net ? net.downlink : null,
+    netSaveData: net ? net.saveData : null,
+    ram:         hw.ram,
+    cpu:         hw.cpu,
+    touchPoints: hw.touchPoints,
+    fp:          visit.fp,
+    visitCount:  visit.n,
+    firstVisit:  visit.first
   };
 
-  /* Kirim ke Firestore + Worker secara paralel */
-  await Promise.all([
-    sendToFirestore(payload),
-    sendToWorker(payload)
-  ]);
+  await Promise.all([sendToFirestore(payload), sendToWorker(payload)]);
 }
 
 run();
