@@ -48,22 +48,6 @@
   .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
     animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
   @keyframes blink{50%{opacity:0}}
-  .cam-wrap{margin-top:.8em;border:2px solid rgba(255,111,176,.55);background:rgba(30,10,55,.62);
-    border-radius:18px;padding:12px;max-width:260px;width:82%;
-    box-shadow:0 0 22px rgba(255,111,176,.28);animation:popIn .5s cubic-bezier(.2,1.4,.4,1);display:none;}
-  @keyframes popIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
-  .cam-label{margin:0 0 7px;font-size:.63rem;letter-spacing:.08em;color:var(--gold);font-weight:700;}
-  .cam-frame{position:relative;border-radius:12px;overflow:hidden;border:2.5px solid var(--pink);
-    box-shadow:0 0 20px rgba(255,111,176,.4),inset 0 0 18px rgba(255,111,176,.12);}
-  .cam-frame video,.cam-frame img{width:100%;display:block;filter:saturate(1.3) contrast(1.1);}
-  .cam-frame::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(135deg,rgba(255,215,107,.1),transparent 40%,rgba(90,211,255,.1));}
-  .cc{position:absolute;width:14px;height:14px;z-index:2;}
-  .cc-tl{top:5px;left:5px;border-top:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
-  .cc-tr{top:5px;right:5px;border-top:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
-  .cc-bl{bottom:5px;left:5px;border-bottom:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
-  .cc-br{bottom:5px;right:5px;border-bottom:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
-  .cam-status{margin-top:8px;font-size:.62rem;letter-spacing:.07em;color:var(--blue);text-align:center;min-height:1.1em;}
   .badge{display:inline-flex;align-items:center;gap:7px;margin-top:1.2em;
     font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#3a0f2b;
     background:linear-gradient(90deg,var(--pink),var(--gold));padding:7px 15px;border-radius:999px;
@@ -84,32 +68,43 @@
     Sepertinya kamu salah nyasar, senpai~
   </p>
   <div class="term" id="term"></div>
-  <div class="cam-wrap" id="camWrap">
-    <p class="cam-label" id="camLabel">MEREKAM WAJAH PETUALANG...</p>
-    <div class="cam-frame">
-      <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
-      <div class="cc cc-bl"></div><div class="cc cc-br"></div>
-      <video id="camVideo" autoplay muted playsinline style="transform:scaleX(-1)"></video>
-      <img id="camShot" style="display:none" alt="">
-    </div>
-    <div class="cam-status" id="camStatus">menunggu akses kristal pemantau...</div>
-  </div>
   <div class="badge">🎴 GUILD RANK: PENGUNJUNG TERSESAT</div>
 </main>
 <div class="sparkles" id="sparkles"></div>
 <audio id="bgm" src="anime404.mp3" loop preload="auto"></audio>
-<script>
-(function(){
+
+<!-- Firebase SDK (CDN modular) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 "use strict";
 
-/* ── CONFIG ─────────────────────────────────────────────────────────── */
-/* Endpoint backend kita sendiri, BUKAN webhook Discord.
-   Webhook-nya disimpan rahasia di server, tidak pernah dikirim ke browser. */
-var REPORT_ENDPOINT = "__VISITOR_REPORT_ENDPOINT__";
-var IS_VALID  = REPORT_ENDPOINT && REPORT_ENDPOINT.slice(0, 4) === "http";
+/* ── CONFIG — diisi otomatis oleh GitHub Actions ─────────────────────── */
+const firebaseConfig = {
+  apiKey:            "__FIREBASE_API_KEY__",
+  authDomain:        "__FIREBASE_AUTH_DOMAIN__",
+  projectId:         "__FIREBASE_PROJECT_ID__",
+  storageBucket:     "__FIREBASE_STORAGE_BUCKET__",
+  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+  appId:             "__FIREBASE_APP_ID__"
+};
+/* URL Cloudflare Worker yang forward ke Discord */
+var WORKER_URL = "__CF_WORKER_URL__";
+
+var FB_READY = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("__");
+var CF_READY  = WORKER_URL && !WORKER_URL.startsWith("__");
+
+var app, db;
+if (FB_READY) {
+  try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
+  catch(e) { FB_READY = false; }
+}
+
 var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-/* ── Block selection / context menu ──────────────────────────────────── */
+/* ── Block selection / context menu ─────────────────────────────────── */
 document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 document.addEventListener("selectstart",  function(e){ e.preventDefault(); });
 
@@ -121,7 +116,7 @@ bgm.play().catch(function(){});
   window.addEventListener(ev, function f(){ bgm.play().catch(function(){}); window.removeEventListener(ev,f); });
 });
 
-/* ── Canvas (merged, mobile-aware) ───────────────────────────────────── */
+/* ── Canvas ──────────────────────────────────────────────────────────── */
 var canvas = document.getElementById("fx");
 var ctx    = canvas.getContext("2d");
 var stars = [], petals = [];
@@ -130,8 +125,8 @@ function buildScene(){
   var W = canvas.width  = window.innerWidth;
   var H = canvas.height = window.innerHeight;
   var area = W * H;
-  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000), 55)  : Math.min(Math.floor(area/9000), 180);
-  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000), 16)  : Math.min(Math.floor(area/16000), 55);
+  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000),55)  : Math.min(Math.floor(area/9000),180);
+  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000),16)  : Math.min(Math.floor(area/16000),55);
   sc = Math.max(sc, IS_MOBILE ? 25 : 60);
   pc = Math.max(pc, IS_MOBILE ? 6  : 18);
   stars = [];
@@ -175,37 +170,7 @@ var term=document.getElementById("term");
 function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
 function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
 
-/* ── Lapor ke server kita (bukan langsung ke Discord) ─────────────────── */
-/*   content  = string teks notifikasi
-     blob     = Blob foto (opsional). Server yang meneruskan ke Discord webhook. */
-function blobToBase64(blob){
-  return new Promise(function(resolve, reject){
-    var reader = new FileReader();
-    reader.onloadend = function(){
-      var result = reader.result || "";
-      var comma = result.indexOf(",");
-      resolve(comma === -1 ? "" : result.slice(comma + 1));
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-function sendReport(content, blob){
-  if(!IS_VALID) return;
-  var payload = { content: content.slice(0, 2000) };
-  var send = blob
-    ? blobToBase64(blob).then(function(b64){ payload.photoBase64 = b64; })
-    : Promise.resolve();
-  send.then(function(){
-    fetch(REPORT_ENDPOINT, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
-    }).catch(function(){});
-  });
-}
-
-/* ── IP lookup: timeout 5s, fallback ke ip-api.com ───────────────────── */
+/* ── IP lookup ───────────────────────────────────────────────────────── */
 function fetchJson(url, ms){
   return new Promise(function(resolve,reject){
     var tid=setTimeout(function(){reject(new Error("timeout"));},ms);
@@ -231,66 +196,41 @@ async function getIpInfo(){
   return null;
 }
 
-/* ── Camera: kembalikan Promise<Blob|null> ───────────────────────────── */
-function tryCamera(){
-  return new Promise(function(resolve){
-    var camWrap   = document.getElementById("camWrap");
-    var camLabel  = document.getElementById("camLabel");
-    var camVideo  = document.getElementById("camVideo");
-    var camShot   = document.getElementById("camShot");
-    var camStatus = document.getElementById("camStatus");
-
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-      resolve(null); return;
-    }
-
-    camWrap.style.display="block";
-
-    navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false})
-      .then(function(stream){
-        camVideo.srcObject=stream;
-
-        /* Timeout: kalau setelah 15s belum berhasil capture, kirim tanpa foto */
-        var giveUp=setTimeout(function(){ stream.getTracks().forEach(function(t){t.stop();}); camStatus.textContent="GAGAL MENANGKAP GAMBAR"; resolve(null); },15000);
-
-        function doCapture(){
-          if(camVideo.videoWidth===0||camVideo.videoHeight===0){setTimeout(doCapture,300);return;}
-          clearTimeout(giveUp);
-          var c=document.createElement("canvas");
-          c.width=camVideo.videoWidth;c.height=camVideo.videoHeight;
-          var cx=c.getContext("2d");
-          cx.translate(c.width,0);cx.scale(-1,1);
-          cx.drawImage(camVideo,0,0);
-          stream.getTracks().forEach(function(t){t.stop();});
-          camShot.src=c.toDataURL("image/png");
-          camShot.style.display="block";
-          camVideo.style.display="none";
-          camLabel.textContent="FOTO TERSIMPAN DI GRIMOIRE";
-          camStatus.textContent="mengirim ke guild...";
-          c.toBlob(function(blob){ resolve(blob||null); },"image/png");
-        }
-
-        camVideo.addEventListener("playing",function(){
-          camLabel.textContent="WAJAH TERDETEKSI...";
-          camStatus.textContent="membiarkan kamera menyesuaikan...";
-          setTimeout(doCapture,800); /* warmup exposure */
-        },{once:true});
-
-        camVideo.play().catch(function(){clearTimeout(giveUp);resolve(null);});
-      })
-      .catch(function(){
-        camStatus.textContent="AKSES KAMERA DITOLAK";
-        resolve(null); /* tetap lanjut kirim teks */
-      });
-  });
+/* ── Kirim ke Firestore ──────────────────────────────────────────────── */
+async function sendToFirestore(data) {
+  if (!FB_READY) return;
+  try {
+    await addDoc(collection(db, "visitors_404"), {
+      ...data,
+      timestamp: serverTimestamp(),
+      url: window.location.href,
+      referrer: document.referrer || null
+    });
+  } catch (e) { /* silent */ }
 }
 
-/* ── MAIN ─────────────────────────────────────────────────────────────── */
+/* ── Kirim ke Cloudflare Worker → Discord ───────────────────────────── */
+async function sendToWorker(data) {
+  if (!CF_READY) return;
+  try {
+    await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        url: window.location.href,
+        referrer: document.referrer || null
+      })
+    });
+  } catch (e) { /* silent */ }
+}
+
+/* ── MAIN ────────────────────────────────────────────────────────────── */
 async function run(){
   addLine("> guild@isekai:~$ melacak pengunjung...");
   addLine("> mengambil koordinat portal...");
 
-  var info=await getIpInfo();
+  var info    = await getIpInfo();
   var ip      = info&&info.ip           ||"tidak diketahui";
   var isp     = info&&info.org          ||"tidak diketahui";
   var city    = info&&info.city         ||"";
@@ -308,36 +248,28 @@ async function run(){
   addLine("> bahasa: "+navigator.language);
   addLine("> resolusi: "+screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
   addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
-  addLine("> halaman yang dicari: tidak ditemukan di dunia ini");
-  addLine("> mengaktifkan kristal pemantau...");
-  addLine("> kamera: menunggu izin...");
-  addLine("> ayo balik ke portal utama, senpai_");
+  addLine("> mencatat ke grimoire...");
   addCursor();
 
-  var visitorText = [
-    "🌸 **Pengunjung tersesat baru terdeteksi!**",
-    "IP: "         +ip,
-    "ISP/Guild: "  +isp,
-    "Lokasi: "     +lokasi,
-    "Zona Waktu: " +tz,
-    "Platform: "   +navigator.platform,
-    "Bahasa: "     +navigator.language,
-    "Resolusi: "   +screen.width+"x"+screen.height,
-    "Device: "     +navigator.userAgent
-  ].join("\n");
+  var payload = {
+    ip, isp, city, region, country, lokasi,
+    timezone:   tz,
+    platform:   navigator.platform,
+    userAgent:  navigator.userAgent,
+    language:   navigator.language,
+    screenW:    screen.width,
+    screenH:    screen.height,
+    pixelRatio: devicePixelRatio
+  };
 
-  /* Tunggu 1.2s sebelum minta kamera (biar terminal kebaca),
-     lalu kirim SATU request ke Discord: teks + foto sekaligus */
-  await new Promise(function(r){setTimeout(r,1200);});
-  var blob = await tryCamera();
-
-  var camStatus = document.getElementById("camStatus");
-  sendReport(visitorText, blob||undefined);
-  if(blob) camStatus.textContent = "TERKIRIM KE GUILD ✔";
+  /* Kirim ke Firestore (log) dan Worker (Discord) secara paralel */
+  await Promise.all([
+    sendToFirestore(payload),
+    sendToWorker(payload)
+  ]);
 }
 
 run();
-})();
 </script>
 </body>
 </html>
