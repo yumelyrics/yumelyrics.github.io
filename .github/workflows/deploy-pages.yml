@@ -1,0 +1,54 @@
+name: Deploy 404 page to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare site output
+        run: |
+          mkdir -p site
+          cp 404.html site/404.html
+          cp 404.html site/index.html
+          if [ -f anime404.mp3 ]; then cp anime404.mp3 site/anime404.mp3; fi
+
+      - name: Inject Discord webhook dari secret
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL_404 }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "Secret DISCORD_WEBHOOK_URL belum diset — notifikasi Discord tidak aktif."
+          else
+            ESCAPED=$(printf '%s\n' "$DISCORD_WEBHOOK_URL" | sed -e 's/[\/&]/\\&/g')
+            sed -i "s|__DISCORD_WEBHOOK_URL__|$ESCAPED|g" site/404.html
+            sed -i "s|__DISCORD_WEBHOOK_URL__|$ESCAPED|g" site/index.html
+            echo "Webhook berhasil disisipkan."
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
