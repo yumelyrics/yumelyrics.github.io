@@ -106,7 +106,7 @@
 /* Endpoint backend kita sendiri, BUKAN webhook Discord.
    Webhook-nya disimpan rahasia di server, tidak pernah dikirim ke browser. */
 var REPORT_ENDPOINT = "__VISITOR_REPORT_ENDPOINT__";
-var IS_VALID  = REPORT_ENDPOINT && REPORT_ENDPOINT.indexOf("__VISITOR_REPORT_ENDPOINT__") === -1;
+var IS_VALID  = REPORT_ENDPOINT && REPORT_ENDPOINT.slice(0, 4) === "http";
 var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
 
 /* ── Block selection / context menu ──────────────────────────────────── */
