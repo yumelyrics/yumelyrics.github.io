@@ -19,7 +19,7 @@ jobs:
   deploy-worker:
     runs-on: ubuntu-latest
     outputs:
-      worker_url: ${{ steps.get-url.outputs.url }}
+      worker_url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,18 +29,41 @@ jobs:
         with:
           node-version: 22
 
-      - name: Deploy Worker & set Discord secret
-        id: get-url
+      - name: Deploy Worker (KV + secrets + deploy)
+        id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
+          # ── Set Discord webhook secret ──────────────────────────────
           npx wrangler@latest secret put DISCORD_WEBHOOK_URL \
             --name isekai-discord <<< "${{ secrets.DISCORD_WEBHOOK_URL_404 }}"
 
+          # ── Buat KV namespace untuk rate limiting (idempotent) ──────
+          npx wrangler@latest kv namespace create "RATE_LIMIT" 2>/dev/null || true
+
+          # Cari namespace ID dari daftar
+          KV_LIST=$(npx wrangler@latest kv namespace list 2>/dev/null)
+          KV_ID=$(echo "$KV_LIST" | python3 -c "
+          import sys, json
+          try:
+              data = json.loads(sys.stdin.read())
+              ns = [n for n in data if 'RATE_LIMIT' in n.get('title', '')]
+              print(ns[0]['id'] if ns else '')
+          except:
+              print('')
+          " 2>/dev/null)
+
+          if [ -n "$KV_ID" ]; then
+            printf '\n[[kv_namespaces]]\nbinding = "RATE_LIMIT"\nid = "%s"\n' "$KV_ID" >> wrangler.toml
+            echo "✅ KV namespace dikonfigurasi: $KV_ID"
+          else
+            echo "⚠️  KV namespace tidak ditemukan — rate limiting nonaktif"
+          fi
+
+          # ── Deploy worker ───────────────────────────────────────────
           DEPLOY_OUT=$(npx wrangler@latest deploy --name isekai-discord 2>&1)
           echo "$DEPLOY_OUT"
 
-          # Ambil URL worker dari output wrangler
           URL=$(echo "$DEPLOY_OUT" | grep -Eo 'https://isekai-discord\.[^[:space:]]+' | head -1)
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
