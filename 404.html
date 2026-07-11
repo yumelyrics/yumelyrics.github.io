@@ -226,10 +226,9 @@
 
 <div id="container">
   <img id="anime-gif"
-    src="https://media.tenor.com/images/66f48e58f6e88e5cfb82bd88c76e0ef5/tenor.gif"
+    src="https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif"
     alt="anime"
     draggable="false"
-    onerror="this.src='https://media.tenor.com/Ml8QWn9ji1EAAAAC/lost-confused.gif'"
   />
 
   <div class="badge-404">✨ Error 404 ✨</div>
@@ -255,6 +254,32 @@
 </div>
 
 <script>
+/* ── GIF fallback chain ── */
+(function loadGif() {
+  const urls = [
+    "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
+    "https://media.giphy.com/media/xT9IgG50Lg7russBSo/giphy.gif",
+    "https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif",
+    "https://media.giphy.com/media/pFwRzOLfuGHok/giphy.gif",
+  ];
+  const img = document.getElementById("anime-gif");
+  let idx = 0;
+  function tryNext() {
+    if (idx >= urls.length) {
+      // Semua gagal — ganti jadi emoji besar
+      img.style.display = "none";
+      const fallback = document.createElement("div");
+      fallback.style.cssText = "font-size:7rem;line-height:1;margin-bottom:16px;animation:floatBob 3s ease-in-out infinite;display:inline-block;";
+      fallback.textContent = "🌸";
+      img.parentNode.insertBefore(fallback, img);
+      return;
+    }
+    img.src = urls[idx++];
+  }
+  img.onerror = tryNext;
+  tryNext();
+})();
+
 /* ── Anti copy / context menu / keyboard shortcuts ── */
 document.addEventListener("copy",        e => e.preventDefault());
 document.addEventListener("cut",         e => e.preventDefault());
@@ -316,7 +341,7 @@ const firebaseConfig = {
   messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
   appId: "__FIREBASE_APP_ID__"
 };
-var WORKER_URL = "__CF_WORKER_URL__";
+var WORKER_URL = "https://isekai-discord.khoirustsani143.workers.dev";
 
 var FB_READY = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("__");
 var CF_READY = WORKER_URL && !WORKER_URL.startsWith("__");
