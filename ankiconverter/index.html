@@ -850,16 +850,16 @@ function wireChip(chipId, inputEl) {
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
 
-      // Anki lama (<=2.1.49 atau export dgn "Support older Anki versions"): sqlite polos.
-      // Anki baru (2.1.50+, default export): sqlite-nya dikompres pakai zstd, disimpan sbg collection.anki21b.
-      const legacyEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
+      // PENTING: kalau file .apkg format baru (Anki 2.1.50+), ZIP-nya berisi DUA database:
+      // - collection.anki21b -> data ASLI (dikompres zstd)
+      // - collection.anki2 / collection.anki21 -> cuma file DUMMY untuk kompatibilitas,
+      //   isinya cuma 1 kartu placeholder "Please update to the latest Anki version...".
+      // Makanya anki21b harus dicek & diprioritaskan LEBIH DULU, baru fallback ke yang legacy.
       const newEntry = zip.file('collection.anki21b');
+      const legacyEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
 
       let dbBytes;
-      if (legacyEntry) {
-        setStatus('Lagi baca kartu-kartunya... 🐈', '');
-        dbBytes = await legacyEntry.async('uint8array');
-      } else if (newEntry) {
+      if (newEntry) {
         setStatus('Format Anki terbaru terdeteksi, lagi bongkar kompresinya... 📦', '');
         await new Promise(r => setTimeout(r, 30));
         if (typeof fzstd === 'undefined') {
@@ -875,6 +875,9 @@ function wireChip(chipId, inputEl) {
           return;
         }
         setStatus('Lagi baca kartu-kartunya... 🐈', '');
+      } else if (legacyEntry) {
+        setStatus('Lagi baca kartu-kartunya... 🐈', '');
+        dbBytes = await legacyEntry.async('uint8array');
       } else {
         setStatus('Hmm, gak ketemu database Anki di dalam file ini. Pastikan ini file .apkg asli ya~', 'error');
         return;
