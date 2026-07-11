@@ -241,6 +241,15 @@ input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 
+/* ── Animasi transisi tema (dark/light) ──
+   Class ini cuma ditempel sebentar (± setengah detik) lewat JS pas tombol tema
+   diklik, jadi tidak membebani halaman terus-menerus. Hanya dipakai di desktop
+   (non-touch) — di HP tetap instan demi performa scroll. */
+.theme-anim, .theme-anim *{
+  transition:background-color .4s ease, color .4s ease, border-color .4s ease,
+    fill .4s ease, stroke .4s ease, box-shadow .4s ease !important;
+}
+
 .wrap{position:relative;z-index:2}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;height:auto;background:rgba(245,240,234,.97);border-bottom:1px solid rgba(26,22,18,.08);min-width:0;max-width:100%;box-shadow:none}
 [data-theme="dark"] nav{background:rgba(15,13,11,.97);border-bottom-color:rgba(201,169,110,.12)}
@@ -302,28 +311,44 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .catalog-panel::before{display:none}
 .manuscript-sec-hd .sec-lb{font-family:var(--serif);font-weight:400;font-size:1.2rem;letter-spacing:.06em;text-transform:none;color:var(--ink)}
 .manuscript-sec-hd .sec-lb::before{content:'— ';color:var(--sakura);font-weight:300}
-.catalog-list-wrap{padding:0 3rem 4rem;max-width:1280px}
-.song-grid{display:flex;flex-direction:column;gap:0;padding:0;width:100%;max-width:none;overflow:visible}
-.sc{background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .22s,padding .22s;overflow:visible;display:flex;flex-direction:row;align-items:stretch;position:relative;border-radius:0;padding:.9rem .65rem .9rem 0;content-visibility:auto;contain-intrinsic-size:0 76px}
-.sc:first-of-type{border-top:1px solid var(--border)}
+.catalog-list-wrap{padding:0 3rem 4rem;max-width:1600px}
+/* ── KATALOG GRID — kartu besar, judul di bawah gambar, kolom menyesuaikan lebar layar ── */
+.song-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:2.2rem 1.5rem;
+  padding:0;width:100%;max-width:none;overflow:visible;
+}
+.sc{
+  background:transparent;border:none;cursor:pointer;
+  transition:transform .25s ease;
+  overflow:visible;display:flex;flex-direction:column;align-items:stretch;
+  position:relative;border-radius:0;padding:0;
+  content-visibility:auto;contain-intrinsic-size:0 280px;
+}
+.sc:first-of-type{border-top:none}
 .sc::before{display:none}
-.sc:hover{background:var(--sakura-dim);padding-left:.4rem;padding-right:.85rem;border-color:var(--border);box-shadow:none}
-.sc-img-wrap{width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;background:var(--cream);overflow:hidden;border:1px solid var(--border);align-self:center}
+.sc:hover{background:transparent;padding:0;border-color:transparent;box-shadow:none;transform:translateY(-4px)}
+.sc-img-wrap{
+  width:100%;min-width:0;aspect-ratio:1/1;height:auto;padding-top:0;
+  position:relative;flex-shrink:0;background:var(--cream);overflow:hidden;
+  border:1px solid var(--border);align-self:stretch;
+}
 .sc-img-wrap img{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-  transform:none;transition:transform .4s ease;
+  transform:none;transition:transform .45s ease;
   image-rendering:auto;
 }
-.sc:hover .sc-img-wrap img{opacity:1;transform:scale(1.04)}
+.sc:hover .sc-img-wrap img{opacity:1;transform:scale(1.06)}
 .sc-corner{display:none}
-.scb{padding:.1rem 0 .1rem 1.15rem;flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;min-width:0}
+.scb{padding:.85rem .1rem .1rem;flex:1;display:flex;flex-direction:column;justify-content:flex-start;position:relative;z-index:2;min-width:0}
 .scn{font-size:.56rem;color:var(--smoke);letter-spacing:.22em;margin-bottom:.35rem;text-transform:uppercase;font-weight:700;font-variant-numeric:tabular-nums}
 .scn::before{content:'№ ';color:var(--gold);letter-spacing:.08em}
 .sc-preview{font-family:var(--serif);font-size:.8rem;font-style:italic;color:var(--ash);line-height:1.45;margin-bottom:.3rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .sc-preview:empty{display:none}
-.scjp{font-family:var(--jp);font-size:1.08rem;font-weight:400;color:var(--ink);line-height:1.35;margin-bottom:.12rem}
-.scro{font-size:.74rem;color:#7a6f68;font-style:italic;font-weight:400;margin-bottom:.1rem;font-family:var(--serif);line-height:1.4}
-.scid{font-size:.76rem;color:var(--rose);font-style:normal;font-weight:300;margin-bottom:0;font-family:var(--serif);letter-spacing:.01em;line-height:1.4}
+.scjp{font-family:var(--jp);font-size:1rem;font-weight:400;color:var(--ink);line-height:1.35;margin-bottom:.18rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scro{font-size:.72rem;color:#7a6f68;font-style:italic;font-weight:400;margin-bottom:.15rem;font-family:var(--serif);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.scid{font-size:.74rem;color:var(--rose);font-style:normal;font-weight:300;margin-bottom:0;font-family:var(--serif);letter-spacing:.01em;line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .scid:empty{display:none;margin:0}
 [data-theme="dark"] .scro{color:#b0a898}
 [data-theme="dark"] .scid{color:var(--rose)}
@@ -333,7 +358,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc-learn.diff-e{color:#2d7a4a;border-color:rgba(45,122,74,.3)}
 .sc-learn.diff-m{color:var(--dusk);border-color:rgba(107,91,122,.28)}
 .sc-learn.diff-h{color:var(--rose);border-color:rgba(196,99,122,.32)}
-.scf{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;gap:.65rem;flex-shrink:0}
+.scf{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;gap:.65rem;flex-shrink:0}
 .scar{font-size:.58rem;color:var(--ash);letter-spacing:.14em;text-transform:uppercase;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scar-link{color:var(--ash);text-decoration:none;transition:color .2s}
 .scar-link:hover{color:var(--gold)}
@@ -406,22 +431,22 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sec-hd{flex-wrap:wrap;gap:.5rem;padding-top:.65rem;margin-bottom:.85rem}
   .sec-lb{font-size:.9rem;white-space:normal}
   .sec-ln{display:none}
-  .song-grid{max-width:none;gap:0}
-  .sc{flex-direction:row;align-items:stretch;padding:.65rem 0}
-  .sc-img-wrap{width:4.1rem;min-width:4.1rem;padding-top:0;height:auto;align-self:stretch;min-height:4.1rem}
+  .song-grid{max-width:none;gap:1.4rem .9rem;grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
+  .sc{flex-direction:column;align-items:stretch;padding:0}
+  .sc-img-wrap{width:100%;min-width:0;aspect-ratio:1/1;padding-top:0;height:auto;align-self:stretch;min-height:0}
   .sc-img-wrap img{width:100%;height:100%;object-fit:cover}
   .sc-corner{display:none}
-  .scb{padding:.5rem .6rem;min-width:0;justify-content:center}
+  .scb{padding:.55rem .05rem 0;min-width:0;justify-content:flex-start}
   .scn{display:none}
-  .scjp{font-size:.86rem;line-height:1.25;margin-bottom:.12rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .scjp{font-size:.8rem;line-height:1.25;margin-bottom:.12rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .scro,.scid{font-size:.6rem;line-height:1.3;margin-bottom:.1rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .scid{margin-bottom:.25rem}
-  .scf{margin-top:.15rem}
+  .scf{margin-top:.25rem}
   .scarr{display:none}
   .rec-tag{font-size:.42rem;margin-bottom:.15rem;padding:.08rem 0}
-  .sc-skel{flex-direction:row}
-  .sc-skel-img{width:4.1rem;min-width:4.1rem;padding-top:0;height:4.1rem;flex-shrink:0}
-  .sc-skel-body{padding:.5rem .6rem;flex:1;gap:.4rem}
+  .sc-skel{flex-direction:column}
+  .sc-skel-img{width:100%;min-width:0;padding-top:0;aspect-ratio:1/1;height:auto;flex-shrink:0}
+  .sc-skel-body{padding:.55rem .05rem 0;flex:1;gap:.4rem}
   #lyrView{padding:0 1rem 4rem}
   .lvback{flex-wrap:wrap;padding:1.5rem 0 1.25rem}
   footer{padding:2rem 1rem 1.5rem!important}
@@ -429,11 +454,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   #catView{padding-bottom:calc(5.5rem + env(safe-area-inset-bottom,0px))}
 }
 @media(max-width:480px){
-  .song-grid{gap:.4rem}
-  .sc-img-wrap{width:3.6rem;min-width:3.6rem;min-height:3.6rem}
-  .sc-skel-img{width:3.6rem;min-width:3.6rem;height:3.6rem}
-  .scb{padding:.45rem .55rem}
-  .scjp{font-size:.82rem}
+  .song-grid{gap:1.1rem .7rem;grid-template-columns:repeat(auto-fill,minmax(105px,1fr))}
+  .sc-img-wrap{width:100%;min-width:0;min-height:0}
+  .sc-skel-img{width:100%;min-width:0}
+  .scb{padding:.45rem 0 0}
+  .scjp{font-size:.78rem}
   .hero h1 br{display:none}
   .hero h1{font-size:1.65rem}
   .filter-grid{gap:.28rem}
@@ -452,18 +477,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   100%{background-position:600px 0}
 }
 .sc-skel{
-  background:transparent;border:none;border-bottom:1px solid var(--border);
-  overflow:hidden;display:flex;flex-direction:row;align-items:stretch;pointer-events:none;padding:.75rem 0;
+  background:transparent;border:none;
+  overflow:hidden;display:flex;flex-direction:column;align-items:stretch;pointer-events:none;padding:0;
 }
 .sc-skel-img{
-  width:4.75rem;min-width:4.75rem;height:4.75rem;padding-top:0;position:relative;flex-shrink:0;
+  width:100%;min-width:0;aspect-ratio:1/1;height:auto;padding-top:0;position:relative;flex-shrink:0;
+  border:1px solid var(--border);
   background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
   background-size:600px 100%;
   animation:shimmer 1.4s infinite linear;
   opacity:.4;
 }
 [data-theme="dark"] .sc-skel-img{opacity:.15}
-.sc-skel-body{padding:1.1rem;display:flex;flex-direction:column;gap:.55rem}
+.sc-skel-body{padding:.85rem .1rem 0;display:flex;flex-direction:column;gap:.55rem}
 .sc-skel-line{
   height:.65rem;border-radius:0;
   background:linear-gradient(90deg, var(--cream) 25%, var(--smoke) 50%, var(--cream) 75%);
@@ -775,7 +801,6 @@ var sro = true, str = true;
 var recOnly = false, popOnly = false, favOnly = false, artistFilterKey = '';
 var artistSlugByKey = {};
 var artistMetaList = [];
-var _songsRefreshTimer = null;
 
 
 // ── Helpers ──
@@ -913,10 +938,10 @@ function buildCard(s, i) {
   div.dataset.id = s.id;
   div.onclick = () => _os(s.id);
   const imgSrc = hdImgUrl(s.img || '');
-  const ph = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22%3E%3Crect width=%2276%22 height=%2276%22 fill=%22%230d0c1a%22/%3E%3Ctext x=%2238%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2222%22 fill=%22%23555%22%3E%E2%99%AA%3C/text%3E%3C/svg%3E';
+  const ph = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%230d0c1a%22/%3E%3Ctext x=%22200%22 y=%22222%22 text-anchor=%22middle%22 font-size=%2264%22 fill=%22%23555%22%3E%E2%99%AA%3C/text%3E%3C/svg%3E';
   const imgEl = imgSrc
-    ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" width="76" height="76" loading="lazy" decoding="async" fetchpriority="low" sizes="76px" onerror="this.src='${ph}'">`
-    : `<img src="${ph}" alt="" width="76" height="76" decoding="async">`;
+    ? `<img src="${escCard(imgSrc)}" alt="${escCard(s.titleJp)}" loading="lazy" decoding="async" fetchpriority="low" sizes="(max-width:480px) 45vw, (max-width:768px) 30vw, 220px" onerror="this.src='${ph}'">`
+    : `<img src="${ph}" alt="" decoding="async">`;
   const aKey = normalizeArtistKey(s.artist);
   const aSlug = artistSlugByKey[aKey];
   const artistEl = aSlug && s.artist
@@ -1264,42 +1289,41 @@ function _cacheSongs(arr) {
         }, function(){});
       }
 
-      // Fetch songs from Firestore
-      async function _fetchSongs() {
+      // ── Dengarkan perubahan lagu secara real-time ──
+      // onSnapshot langsung memicu callback ini setiap kali ada lagu
+      // ditambah/diedit/dihapus di admin — tidak perlu tunggu refresh berkala lagi.
+      function _applySongsSnapshot(snap) {
         var grid = document.getElementById('songGrid');
-        try {
-          var snap = await getDocs(fquery(collection(db,'songs'), orderBy('order','desc')));
-          songs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-          refreshArtistFilter(); _cacheSongs(songs);
-          rc(document.getElementById('searchInp').value||'');
-          showContinueRead();
-        } catch(e) {
-          try {
-            var snap2 = await getDocs(collection(db,'songs'));
-            songs = snap2.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
-              .sort(function(a,b){ return (b.order||0)-(a.order||0); });
-            refreshArtistFilter(); _cacheSongs(songs);
-            rc(document.getElementById('searchInp').value||'');
-            showContinueRead();
-          } catch(e2) {
-            if (!songs.length && grid)
-              grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
-          }
-        }
+        songs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        refreshArtistFilter(); _cacheSongs(songs);
+        rc(document.getElementById('searchInp').value||'');
+        showContinueRead();
+        if (!songs.length && grid && !grid.querySelector('.sc-skel'))
+          grid.innerHTML = '<div class="no-result">Belum ada lagu.</div>';
       }
 
-      // Check cache freshness
-      try {
-        var ts = parseInt(localStorage.getItem('ym_songs_cache_ts')||'0',10);
-        var AGE = 5*60*1000;
-        if (songs.length && Date.now()-ts < AGE) {
-          _songsRefreshTimer = setTimeout(_fetchSongs, AGE-(Date.now()-ts));
-          return;
-        }
-      } catch(e) {}
-      _fetchSongs();
-      if(_songsRefreshTimer) clearTimeout(_songsRefreshTimer);
-      _songsRefreshTimer = setTimeout(function loop(){ _fetchSongs(); _songsRefreshTimer=setTimeout(loop,5*60*1000); }, 5*60*1000);
+      function _startSongsListener() {
+        var grid = document.getElementById('songGrid');
+        var unsub = onSnapshot(
+          fquery(collection(db,'songs'), orderBy('order','desc')),
+          _applySongsSnapshot,
+          function() {
+            // Fallback kalau field 'order' bermasalah — tetap real-time, cuma urutan manual.
+            onSnapshot(collection(db,'songs'), function(snap){
+              songs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+                .sort(function(a,b){ return (b.order||0)-(a.order||0); });
+              refreshArtistFilter(); _cacheSongs(songs);
+              rc(document.getElementById('searchInp').value||'');
+              showContinueRead();
+            }, function() {
+              if (!songs.length && grid)
+                grid.innerHTML = '<div class="loading-msg">Gagal memuat data. Coba refresh.</div>';
+            });
+          }
+        );
+      }
+
+      _startSongsListener();
     }).catch(function(){});
   }
 
@@ -1384,7 +1408,20 @@ sv('cat');
 function toggleTheme(){
   const root = document.documentElement;
   const isDark = root.getAttribute('data-theme') === 'dark';
-  root.classList.add('no-transition');
+  // Animasi crossfade cuma di desktop (mouse) & kalau user tidak minta "reduce motion" —
+  // di HP tetap instan biar scroll tetap ringan.
+  const canAnimate = window.matchMedia &&
+    matchMedia('(pointer:fine)').matches &&
+    !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canAnimate) {
+    root.classList.add('theme-anim');
+    clearTimeout(root._themeAnimTimer);
+    root._themeAnimTimer = setTimeout(function(){ root.classList.remove('theme-anim'); }, 450);
+  } else {
+    root.classList.add('no-transition');
+  }
+
   if(isDark){
     root.removeAttribute('data-theme');
     localStorage.setItem('ym_theme','light');
@@ -1392,11 +1429,14 @@ function toggleTheme(){
     root.setAttribute('data-theme','dark');
     localStorage.setItem('ym_theme','dark');
   }
-  requestAnimationFrame(function(){
+
+  if (!canAnimate) {
     requestAnimationFrame(function(){
-      root.classList.remove('no-transition');
+      requestAnimationFrame(function(){
+        root.classList.remove('no-transition');
+      });
     });
-  });
+  }
 }
 
 function toggleNavMenu(){
