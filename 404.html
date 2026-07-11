@@ -6,28 +6,37 @@
 <title>404 ✨ Nyaa~ Halaman Ini Tidak Ada!</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  /* ── Anti copy & select ── */
-  * {
+  /* ── Reset & anti-copy ── */
+  *, *::before, *::after {
+    box-sizing: border-box;
     -webkit-user-select: none !important;
     -moz-user-select: none !important;
-    -ms-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
   }
 
   /* ── Base ── */
+  html {
+    height: 100%;
+  }
   body {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
     background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #e1bee7 50%, #bbdefb 75%, #b3e5fc 100%);
     background-size: 400% 400%;
+    background-attachment: fixed;
     animation: gradientShift 8s ease infinite;
     font-family: 'M PLUS Rounded 1c', 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    align-items: flex-start;          /* tidak center — biar bisa scroll ke bawah */
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
+    padding: 32px 16px 40px;
+    /* safe area untuk iPhone notch */
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
   }
 
   @keyframes gradientShift {
@@ -36,7 +45,7 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* ── Floating sakura petals ── */
+  /* ── Floating petals ── */
   .petal {
     position: fixed;
     top: -30px;
@@ -44,18 +53,16 @@
     animation: fall linear infinite;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.7;
+    opacity: 0.65;
   }
   @keyframes fall {
-    0%   { transform: translateY(-30px) rotate(0deg); opacity: 0.8; }
+    0%   { transform: translateY(-30px) rotate(0deg); opacity: 0.7; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  /* ── Stars overlay ── */
+  /* ── Stars ── */
   .star {
     position: fixed;
-    width: 4px;
-    height: 4px;
     border-radius: 50%;
     background: #fff;
     animation: twinkle ease-in-out infinite;
@@ -64,7 +71,7 @@
   }
   @keyframes twinkle {
     0%, 100% { opacity: 0.1; transform: scale(1); }
-    50%       { opacity: 0.9; transform: scale(1.5); }
+    50%       { opacity: 0.85; transform: scale(1.5); }
   }
 
   /* ── Card ── */
@@ -72,78 +79,94 @@
     position: relative;
     z-index: 10;
     text-align: center;
-    max-width: 520px;
-    width: 90%;
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 2px solid rgba(255, 182, 193, 0.6);
-    border-radius: 30px;
-    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 480px;
+    /* opak lebih tinggi → teks jelas terbaca */
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 182, 193, 0.55);
+    border-radius: 28px;
+    padding: 44px 28px 28px;
     box-shadow:
-      0 8px 32px rgba(255, 105, 180, 0.25),
-      0 0 0 1px rgba(255,255,255,0.4) inset;
-    animation: popIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+      0 12px 40px rgba(255, 105, 180, 0.22),
+      0 0 0 1px rgba(255,255,255,0.6) inset;
+    animation: popIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    margin: auto; /* vertikal centering kalau layar cukup tinggi */
   }
   @keyframes popIn {
-    from { opacity: 0; transform: scale(0.7) translateY(30px); }
+    from { opacity: 0; transform: scale(0.8) translateY(24px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Ribbon atas */
+  #container::before {
+    content: "🎀";
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.2rem;
+    filter: drop-shadow(0 2px 6px rgba(255,105,180,0.5));
   }
 
   /* ── Anime GIF ── */
   #anime-gif {
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
     object-fit: cover;
     border-radius: 50%;
     border: 4px solid #ff85c1;
-    box-shadow: 0 0 0 4px #fff, 0 6px 20px rgba(255, 105, 180, 0.4);
-    margin-bottom: 16px;
+    box-shadow: 0 0 0 4px #fff, 0 8px 24px rgba(255, 105, 180, 0.35);
+    margin-bottom: 14px;
     animation: floatBob 3s ease-in-out infinite;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
   @keyframes floatBob {
-    0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-10px); }
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-9px); }
   }
 
-  /* ── 404 badge ── */
+  /* ── Badge ── */
   .badge-404 {
     display: inline-block;
     background: linear-gradient(135deg, #ff85c1, #c084fc);
     color: #fff;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 3px;
     text-transform: uppercase;
-    padding: 4px 14px;
+    padding: 5px 16px;
     border-radius: 999px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(192,132,252,0.4);
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(192,132,252,0.35);
   }
 
   /* ── Heading ── */
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.4rem, 5vw, 1.9rem);
     font-weight: 900;
     color: #be185d;
-    margin: 6px 0 8px;
-    line-height: 1.2;
-    text-shadow: 2px 2px 0 rgba(255,182,193,0.5);
+    margin: 4px 0 8px;
+    line-height: 1.25;
+    text-shadow: 1px 1px 0 rgba(255,182,193,0.6);
   }
   h1 span.kawaii {
     display: block;
-    font-size: 1.1rem;
+    font-size: clamp(0.85rem, 3.5vw, 1rem);
     color: #a855f7;
     font-weight: 700;
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
-  /* ── Sub text ── */
+  /* ── Subtitle ── */
   .subtitle {
-    font-size: 0.95rem;
-    color: #9d4edd;
-    margin: 0 0 18px;
-    line-height: 1.6;
+    font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+    color: #7e22ce;
+    margin: 0 0 16px;
+    line-height: 1.7;
   }
   .subtitle em {
     font-style: normal;
@@ -154,48 +177,58 @@
   /* ── Divider ── */
   .divider {
     border: none;
-    border-top: 2px dashed rgba(255, 133, 193, 0.4);
-    margin: 16px 0;
+    border-top: 2px dashed rgba(255, 133, 193, 0.45);
+    margin: 14px 0;
   }
 
   /* ── Scan log ── */
   #details {
-    font-size: 0.78rem;
-    color: #7e22ce;
+    font-size: clamp(0.78rem, 3.2vw, 0.84rem);
+    color: #6b21a8;           /* lebih gelap → kontras lebih tinggi */
     text-align: left;
-    max-height: 140px;
-    overflow: hidden;
-    padding: 4px 2px;
-    line-height: 1.7;
+    max-height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 4px;
+    line-height: 1.75;
+    /* scrollbar tipis */
+    scrollbar-width: thin;
+    scrollbar-color: #f472b6 transparent;
   }
+  #details::-webkit-scrollbar       { width: 4px; }
+  #details::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 4px; }
+
   .line {
     margin: 2px 0;
     opacity: 0;
-    animation: fadeSlide 0.4s forwards;
+    animation: fadeSlide 0.35s forwards;
     display: flex;
-    align-items: center;
-    gap: 6px;
+    align-items: flex-start;
+    gap: 7px;
+    word-break: break-word;
   }
   .line::before {
     content: "♡";
     color: #f472b6;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     flex-shrink: 0;
+    margin-top: 2px;
   }
   @keyframes fadeSlide {
-    from { opacity: 0; transform: translateX(-8px); }
+    from { opacity: 0; transform: translateX(-6px); }
     to   { opacity: 1; transform: translateX(0); }
   }
 
-  /* ── Footer note ── */
+  /* ── Footer ── */
   .footer-note {
     margin-top: 18px;
-    font-size: 0.72rem;
-    color: #c084fc;
-    opacity: 0.8;
+    font-size: clamp(0.65rem, 2.8vw, 0.72rem);
+    color: #a855f7;
+    opacity: 0.85;
+    line-height: 1.5;
   }
 
-  /* ── Cute sparkle icon bounce ── */
+  /* ── Bounce ── */
   .bounce {
     display: inline-block;
     animation: bounce 1.2s ease-in-out infinite;
@@ -205,15 +238,21 @@
     50%       { transform: translateY(-5px); }
   }
 
-  /* ── Ribbon corners ── */
-  #container::before {
-    content: "🎀";
-    position: absolute;
-    top: -16px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 2rem;
-    filter: drop-shadow(0 2px 4px rgba(255,105,180,0.5));
+  /* ── Mobile xs (<360px) ── */
+  @media (max-width: 360px) {
+    body         { padding: 24px 10px 32px; }
+    #container   { padding: 40px 18px 22px; border-radius: 22px; }
+    #anime-gif   { width: 116px; height: 116px; }
+    h1           { font-size: 1.25rem; }
+  }
+
+  /* ── Layar landscape pendek ── */
+  @media (max-height: 600px) and (orientation: landscape) {
+    #anime-gif   { width: 80px; height: 80px; margin-bottom: 8px; }
+    h1           { font-size: 1.1rem; margin: 2px 0 4px; }
+    .subtitle    { font-size: 0.8rem; margin-bottom: 10px; }
+    #details     { max-height: 100px; }
+    body         { padding: 16px 12px 20px; }
   }
 </style>
 </head>
@@ -249,7 +288,7 @@
   <div id="details"></div>
 
   <p class="footer-note">
-    🎀 Powered by Isekai Info-chan ✨ • がんばってね！ 🌸
+    🎀 りっかちゃん ✦ がんばってね！ 🌸
   </p>
 </div>
 
