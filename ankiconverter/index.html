@@ -79,6 +79,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js" defer></script>
 
 <!-- ══════════════════════════════════════════
      JSON-LD STRUCTURED DATA (AI & Search Engines)
@@ -121,9 +122,11 @@
     "Preview tabel sebelum download",
     "Proses sepenuhnya di browser — 100% privat",
     "Mendukung ribuan kartu sekaligus",
-    "Multi note type didukung"
+    "Multi note type didukung",
+    "Support file .apkg dari semua versi Anki (lama maupun terbaru/zstd)",
+    "Support note type dan nama field custom buatan sendiri"
   ],
-  "softwareVersion": "2.0",
+  "softwareVersion": "2.1",
   "screenshot": "https://yumelyrics.github.io/ankiconverter/og-image.png",
   "isAccessibleForFree": true,
   "privacyPolicy": "https://yumelyrics.my.id/privacy",
@@ -596,7 +599,7 @@
           <li>Buka Anki di komputer → menu <b>File → Export</b></li>
           <li>Pilih <b>Export format: Anki Deck Package (.apkg)</b></li>
           <li>Pilih deck yang mau di-convert</li>
-          <li>Kalau muncul opsi <b>"Support older Anki versions"</b>, centang itu biar filenya kompatibel</li>
+          <li>Opsi <b>"Support older Anki versions"</b> boleh dicentang atau tidak — tool ini sudah support file .apkg dari versi Anki manapun (lama maupun baru)</li>
           <li>Klik Export, lalu upload hasilnya ke sini ✨</li>
         </ol>
       </details>
@@ -695,7 +698,7 @@
    WAIT FOR SCRIPTS TO LOAD (karena pakai defer)
    ============================================================ */
 function waitForLibs(cb) {
-  if (typeof JSZip !== 'undefined' && typeof initSqlJs !== 'undefined' && typeof Papa !== 'undefined') {
+  if (typeof JSZip !== 'undefined' && typeof initSqlJs !== 'undefined' && typeof Papa !== 'undefined' && typeof fzstd !== 'undefined') {
     cb();
   } else {
     setTimeout(() => waitForLibs(cb), 80);
@@ -847,18 +850,36 @@ function wireChip(chipId, inputEl) {
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
 
-      let dbEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
-      if (!dbEntry) {
-        if (zip.file('collection.anki21b')) {
-          setStatus('Format kompresi baru (zstd) belum didukung. Pas export di Anki, centang "Support older Anki versions" ya~ 🙏', 'error');
-        } else {
-          setStatus('Hmm, gak ketemu database Anki di dalam file ini. Pastikan ini file .apkg asli ya~', 'error');
+      // Anki lama (<=2.1.49 atau export dgn "Support older Anki versions"): sqlite polos.
+      // Anki baru (2.1.50+, default export): sqlite-nya dikompres pakai zstd, disimpan sbg collection.anki21b.
+      const legacyEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
+      const newEntry = zip.file('collection.anki21b');
+
+      let dbBytes;
+      if (legacyEntry) {
+        setStatus('Lagi baca kartu-kartunya... 🐈', '');
+        dbBytes = await legacyEntry.async('uint8array');
+      } else if (newEntry) {
+        setStatus('Format Anki terbaru terdeteksi, lagi bongkar kompresinya... 📦', '');
+        await new Promise(r => setTimeout(r, 30));
+        if (typeof fzstd === 'undefined') {
+          setStatus('Waduh, library pembongkar format barunya gagal dimuat. Coba refresh halaman terus ulangi ya~ 🙏', 'error');
+          return;
         }
+        const compressed = await newEntry.async('uint8array');
+        try {
+          dbBytes = fzstd.decompress(compressed);
+        } catch (zerr) {
+          console.error(zerr);
+          setStatus('Gagal membongkar file apkg format baru ini. (' + zerr.message + ')', 'error');
+          return;
+        }
+        setStatus('Lagi baca kartu-kartunya... 🐈', '');
+      } else {
+        setStatus('Hmm, gak ketemu database Anki di dalam file ini. Pastikan ini file .apkg asli ya~', 'error');
         return;
       }
 
-      setStatus('Lagi baca kartu-kartunya... 🐈', '');
-      const dbBytes = await dbEntry.async('uint8array');
       const db = new SQL.Database(dbBytes);
 
       const models = getModels(db);
