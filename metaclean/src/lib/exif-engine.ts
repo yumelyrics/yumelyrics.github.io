@@ -13,6 +13,38 @@ export interface ParsedImage {
 }
 
 // ---------------------------------------------------------------------------
+// String sanitization for piexifjs writes
+// ---------------------------------------------------------------------------
+//
+// piexifjs packs EXIF ASCII/UNDEFINED string tags one JS char code = one
+// byte. Any character with a code point above 0xFF (curly quotes " ' ,
+// en/em dashes – —, CJK, emoji, ...) breaks that packing: piexif.dump()/
+// insert() still return *something*, but the resulting data URL is no
+// longer valid base64. dataUrlToBlob()'s atob() call then throws — and
+// since that happens synchronously inside the download button's onClick
+// with nothing catching it, the button appears to do nothing at all.
+// This is why edits or removals could look like they "didn't really
+// change" the file, and why Randomize (which always joins the Description
+// and Location fields with an em dash, see writeImage below) reliably
+// broke downloading. Sanitizing every string before handing it to
+// piexifjs prevents the corruption instead of just crashing on it later.
+const SMART_PUNCTUATION: [RegExp, string][] = [
+  [/[\u2014\u2013]/g, '-'],   // em dash, en dash
+  [/[\u2018\u2019]/g, "'"],   // curly single quotes
+  [/[\u201C\u201D]/g, '"'],   // curly double quotes
+  [/\u2026/g, '...'],         // ellipsis
+];
+function sanitizeExifString(input: string): string {
+  if (!input) return input;
+  let out = input;
+  for (const [pattern, replacement] of SMART_PUNCTUATION) out = out.replace(pattern, replacement);
+  // Anything still outside Latin-1 (0x00-0xFF) can't be packed safely by
+  // piexifjs — drop it rather than let it silently corrupt the file.
+  out = out.replace(/[^\u0000-\u00FF]/g, '');
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
+// ---------------------------------------------------------------------------
 // Helpers: rational <-> number conversions used by EXIF binary format
 // ---------------------------------------------------------------------------
 
@@ -189,24 +221,25 @@ export function writeImage(dataUrl: string, values: MetadataValues): string {
     return Number.isFinite(n) ? n : undefined;
   };
 
-  if (str(values.Make) !== undefined) zeroth[piexif.ImageIFD.Make] = values.Make;
-  if (str(values.Model) !== undefined) zeroth[piexif.ImageIFD.Model] = values.Model;
-  if (str(values.Software) !== undefined) zeroth[piexif.ImageIFD.Software] = values.Software;
-  if (str(values.Artist) !== undefined) zeroth[piexif.ImageIFD.Artist] = values.Artist;
-  if (str(values.Copyright) !== undefined) zeroth[piexif.ImageIFD.Copyright] = values.Copyright;
+  if (str(values.Make) !== undefined) zeroth[piexif.ImageIFD.Make] = sanitizeExifString(values.Make!);
+  if (str(values.Model) !== undefined) zeroth[piexif.ImageIFD.Model] = sanitizeExifString(values.Model!);
+  if (str(values.Software) !== undefined) zeroth[piexif.ImageIFD.Software] = sanitizeExifString(values.Software!);
+  if (str(values.Artist) !== undefined) zeroth[piexif.ImageIFD.Artist] = sanitizeExifString(values.Artist!);
+  if (str(values.Copyright) !== undefined) zeroth[piexif.ImageIFD.Copyright] = sanitizeExifString(values.Copyright!);
   // JPEG/EXIF has no dedicated place-name tag, so a location name is folded
-  // into the free-text description rather than dropped.
+  // into the free-text description rather than dropped. Joined with a plain
+  // ascii hyphen (not an em dash) — see sanitizeExifString above for why.
   const description = [str(values.ImageDescription), str(values.GPSLocationName) ? `Location: ${values.GPSLocationName}` : undefined]
     .filter(Boolean)
-    .join(' — ');
-  if (description) zeroth[piexif.ImageIFD.ImageDescription] = description;
+    .join(' - ');
+  if (description) zeroth[piexif.ImageIFD.ImageDescription] = sanitizeExifString(description);
   const orientation = num(values.Orientation);
   if (orientation !== undefined) zeroth[piexif.ImageIFD.Orientation] = orientation;
   const dt = toExifDateTime(values.DateTime ?? '');
   if (dt) zeroth[piexif.ImageIFD.DateTime] = dt;
 
-  if (str(values.LensMake) !== undefined) exif[piexif.ExifIFD.LensMake] = values.LensMake;
-  if (str(values.LensModel) !== undefined) exif[piexif.ExifIFD.LensModel] = values.LensModel;
+  if (str(values.LensMake) !== undefined) exif[piexif.ExifIFD.LensMake] = sanitizeExifString(values.LensMake!);
+  if (str(values.LensModel) !== undefined) exif[piexif.ExifIFD.LensModel] = sanitizeExifString(values.LensModel!);
   const dtOrig = toExifDateTime(values.DateTimeOriginal ?? '');
   if (dtOrig) exif[piexif.ExifIFD.DateTimeOriginal] = dtOrig;
   const dtDig = toExifDateTime(values.DateTimeDigitized ?? '');
@@ -263,7 +296,11 @@ export function writeImage(dataUrl: string, values: MetadataValues): string {
     thumbnail: exifObj['thumbnail'] ?? null,
   } as unknown as piexif.ExifDict;
   const exifBytes = piexif.dump(newExif);
-  return piexif.insert(exifBytes, dataUrl);
+  try {
+    return piexif.insert(exifBytes, dataUrl);
+  } catch {
+    throw new Error('Could not save metadata into this file. Try again, or use "Strip All Metadata" instead.');
+  }
 }
 
 // Strip every EXIF/GPS/IPTC tag from the image entirely.
