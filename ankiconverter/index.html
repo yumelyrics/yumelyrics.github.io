@@ -468,6 +468,53 @@
   .previewnote.warn { color: #B8722A; font-weight: 700; }
   .previewnote.good { color: #2E9E77; font-weight: 700; }
 
+  /* ── preview render-limit controls ── */
+  .preview-controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .preview-controls-label { color: var(--ink-soft); font-weight: 700; font-size: 12.5px; flex-shrink: 0; }
+  .pchip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pchip {
+    border: 2px solid var(--line); background: var(--cream-2); color: var(--ink);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    min-height: 32px; transition: background .15s, border-color .15s, color .15s, opacity .15s;
+    font-family: "M PLUS Rounded 1c", sans-serif;
+  }
+  .pchip.active { background: var(--sakura); border-color: var(--sakura-dk); color: #fff; }
+  .pchip:disabled { opacity: .45; cursor: wait; }
+  .pcustom { display: flex; gap: 6px; align-items: center; }
+  .pcustom-input {
+    width: 84px; border: 2px solid var(--line); background: var(--cream-2); color: var(--ink);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+    font-family: "M PLUS Rounded 1c", sans-serif; min-height: 32px;
+    -moz-appearance: textfield;
+  }
+  .pcustom-input:focus { outline: none; border-color: var(--sakura-dk); background: #fff; }
+  .pcustom-input::-webkit-outer-spin-button,
+  .pcustom-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pcustom-btn {
+    border: 2px solid var(--lavender); background: var(--cream-2); color: var(--lavender-dk, var(--ink));
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    min-height: 32px; font-family: "M PLUS Rounded 1c", sans-serif;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .pcustom-btn:hover, .pcustom-btn:active { background: var(--lavender); color: #fff; }
+  .preview-controls-count {
+    color: var(--ink-soft); font-size: 12px; margin-left: auto; white-space: nowrap;
+  }
+  .preview-render-warning {
+    display: none; font-size: 12px; line-height: 1.5; color: #8A5A16; font-weight: 600;
+    background: #FFF6E8; border: 2px solid #F3DCA8; border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 10px;
+  }
+  .preview-render-warning.show { display: block; }
+  @media (max-width: 480px) {
+    .preview-controls-count { margin-left: 0; width: 100%; }
+  }
+
   /* ── buttons ── */
   .btn {
     display: inline-flex; align-items: center; gap: 9px; justify-content: center;
@@ -856,15 +903,69 @@ async function readClipboardText() {
    ============================================================ */
 function createEditableTable(tableEl, noteEl, opts) {
   opts = opts || {};
-  const maxRender = opts.maxRender || 400;
+  const DEFAULT_LIMIT = opts.maxRender || 400;
+  const LIMIT_STEPS = [100, 400, 1000, 2500, 'all'];
+  const HEAVY_THRESHOLD = 800;   // di atas ini, kasih status "lagi nge-render..." dulu sebelum kerja berat
+  const WARN_THRESHOLD  = 1500;  // di atas ini, kasih peringatan performa
+
   let headers = [];
   let rows = [];
   let onChangeCb = null;
   let baseNoteText = '';
+  let renderLimit = DEFAULT_LIMIT;
+  let renderToken = 0; // biar render lama yg masih "nunggu paint" gak nimpa render baru
+
+  // ── toolbar "Tampilkan: 100 / 400 / 1.000 / 2.500 / Semua", disisipin sekali
+  //    di atas tablewrap-nya (bukan di atas tabelnya sendiri, biar sticky header tabel gak keganggu)
+  const tableWrap = tableEl.closest('.tablewrap') || tableEl.parentNode;
+  const controlsEl = document.createElement('div');
+  controlsEl.className = 'preview-controls';
+  controlsEl.innerHTML =
+    '<span class="preview-controls-label">👁️ Tampilkan</span>' +
+    '<div class="pchip-group" role="group" aria-label="Jumlah kartu yang ditampilkan di preview">' +
+    LIMIT_STEPS.map(v => `<button type="button" class="pchip${v === DEFAULT_LIMIT ? ' active' : ''}" data-limit="${v}">${v === 'all' ? 'Semua' : v.toLocaleString('id-ID')}</button>`).join('') +
+    '</div>' +
+    '<div class="pcustom">' +
+      '<input type="number" class="pcustom-input" min="1" step="1" inputmode="numeric" placeholder="custom..." aria-label="Jumlah kartu custom">' +
+      '<button type="button" class="pcustom-btn">Tampilin</button>' +
+    '</div>' +
+    '<span class="preview-controls-count"></span>';
+  const warnEl = document.createElement('div');
+  warnEl.className = 'preview-render-warning';
+  tableWrap.parentNode.insertBefore(controlsEl, tableWrap);
+  tableWrap.parentNode.insertBefore(warnEl, tableWrap);
+
+  const customInput = controlsEl.querySelector('.pcustom-input');
+  const customBtn = controlsEl.querySelector('.pcustom-btn');
+
+  function applyCustomLimit() {
+    const n = parseInt(customInput.value, 10);
+    if (!n || n < 1) { customInput.focus(); return; }
+    renderLimit = n;
+    controlsEl.querySelectorAll('.pchip').forEach(b => b.classList.remove('active'));
+    render();
+  }
+  customBtn.addEventListener('click', applyCustomLimit);
+  customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCustomLimit(); } });
+  customInput.addEventListener('input', () => { if (customInput.value) controlsEl.querySelectorAll('.pchip').forEach(b => b.classList.remove('active')); });
+
+  controlsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.pchip');
+    if (!btn) return;
+    const val = btn.dataset.limit;
+    renderLimit = val === 'all' ? Infinity : parseInt(val, 10);
+    customInput.value = '';
+    controlsEl.querySelectorAll('.pchip').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
 
   function setData(h, r, baseNote) {
     headers = h; rows = r;
     baseNoteText = baseNote || '';
+    renderLimit = DEFAULT_LIMIT; // reset ke default tiap ada data baru (deck lain / re-parse)
+    customInput.value = '';
+    controlsEl.querySelectorAll('.pchip').forEach(b => b.classList.toggle('active', b.dataset.limit == DEFAULT_LIMIT));
+    controlsEl.style.display = rows.length > 100 ? 'flex' : 'none';
     render();
   }
   function getData() { return { headers, rows }; }
@@ -877,7 +978,27 @@ function createEditableTable(tableEl, noteEl, opts) {
   }
 
   function render() {
-    const shown = rows.length > maxRender ? rows.slice(0, maxRender) : rows;
+    const effectiveLimit = Math.min(renderLimit, rows.length);
+    const myToken = ++renderToken;
+
+    controlsEl.querySelectorAll('.pchip').forEach(b => b.disabled = false);
+
+    if (effectiveLimit > HEAVY_THRESHOLD) {
+      // deck gede — kasih tau dulu lagi kerja, biar HP gak kerasa "nge-freeze" tanpa alasan
+      setNote(`⏳ Lagi nge-render ${effectiveLimit.toLocaleString('id-ID')} kartu, bentar ya...`);
+      controlsEl.querySelectorAll('.pchip').forEach(b => b.disabled = true);
+      // 2x requestAnimationFrame supaya browser sempat "paint" pesan di atas dulu
+      // sebelum ngerjain innerHTML gede yang bakal ngeblok main thread sebentar
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (myToken === renderToken) doRender(effectiveLimit);
+      }));
+    } else {
+      doRender(effectiveLimit);
+    }
+  }
+
+  function doRender(effectiveLimit) {
+    const shown = rows.length > effectiveLimit ? rows.slice(0, effectiveLimit) : rows;
     tableEl.innerHTML =
       '<thead><tr>' + headers.map((h, ci) => `
         <th>
@@ -895,8 +1016,23 @@ function createEditableTable(tableEl, noteEl, opts) {
         ).join('') + '</tr>'
       ).join('') + '</tbody>';
 
-    if (rows.length > maxRender) {
-      setNote(`✏️ ${maxRender} baris pertama bisa diedit langsung di sini (dari total ${rows.length}). Buat edit SEMUA baris sekaligus (mis. abis ditranslate), pakai tombol 📋/📥 di tiap judul kolom ya~`, 'warn');
+    controlsEl.querySelectorAll('.pchip').forEach(b => b.disabled = false);
+
+    const countLabel = effectiveLimit < rows.length
+      ? `${effectiveLimit.toLocaleString('id-ID')} dari ${rows.length.toLocaleString('id-ID')} kartu`
+      : `${rows.length.toLocaleString('id-ID')} kartu (semua)`;
+    controlsEl.querySelector('.preview-controls-count').textContent = countLabel;
+
+    if (effectiveLimit > WARN_THRESHOLD) {
+      warnEl.textContent = `⚠️ Nampilin ${effectiveLimit.toLocaleString('id-ID')} kartu sekaligus buat diedit. Performanya ngikutin device kamu — kalau mulai kerasa lag/berat, coba pilih jumlah yang lebih kecil di atas tabel, tapi 📋/📥 di judul kolom tetap kerja ke SEMUA baris kok, gak cuma yang keliatan.`;
+      warnEl.classList.add('show');
+    } else {
+      warnEl.classList.remove('show');
+      warnEl.textContent = '';
+    }
+
+    if (effectiveLimit < rows.length) {
+      setNote(`✏️ Menampilkan ${effectiveLimit.toLocaleString('id-ID')} dari ${rows.length.toLocaleString('id-ID')} kartu (bisa diganti lewat tombol "Tampilkan" di atas tabel). Buat edit SEMUA baris sekaligus (mis. abis ditranslate), pakai tombol 📋/📥 di tiap judul kolom ya~`, 'warn');
     } else {
       setNote(baseNoteText || `✏️ Tap/klik sel mana aja buat edit langsung. Pakai 📋 di judul kolom buat copy 1 kolom penuh, atau 📥 buat timpa 1 kolom penuh dari clipboard.`);
     }
