@@ -190,6 +190,22 @@ label.field-label{ font-weight:800; font-size:.8rem; color:var(--ink-soft); disp
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
 
+.field-checks{ display:flex; flex-wrap:wrap; gap:8px; }
+.field-chip{
+  display:inline-flex; align-items:center; gap:7px; background:#fff; border:2px solid #ffd3ea;
+  border-radius:999px; padding:8px 14px; font-weight:700; font-size:.8rem; color:var(--ink);
+  cursor:pointer; transition:.15s; user-select:none;
+}
+.field-chip:hover{ border-color:var(--pink); }
+.field-chip input{ accent-color:var(--pink-deep); width:15px; height:15px; cursor:pointer; margin:0; }
+.field-chip.active{ background:var(--blush); border-color:var(--pink-deep); color:var(--pink-deep); }
+
+.field-mini-label{
+  font-size:.66rem; font-weight:800; color:var(--pink-deep); text-transform:uppercase; letter-spacing:.4px;
+  margin:0 0 3px; opacity:.85;
+}
+.edit-cell .field-mini-label:not(:first-child){ margin-top:12px; padding-top:10px; border-top:1px dashed #ffd3ea; }
+
 .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
 .stat-pill{
   background:var(--blush); border-radius:14px; padding:8px 14px; font-weight:800; font-size:.8rem;
@@ -241,8 +257,23 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-.footer-note{ text-align:center; color:var(--ink-soft); font-size:.78rem; margin-top:30px; font-weight:700; }
+.footer-note{ text-align:center; color:var(--ink-soft); font-size:.78rem; margin-top:30px; font-weight:700; line-height:1.6; }
 .hidden{ display:none !important; }
+
+.wm-badge{
+  position:fixed; right:16px; bottom:16px; z-index:70;
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,.88); backdrop-filter:blur(4px);
+  border:2px solid #ffd3ea; border-radius:999px; padding:7px 14px;
+  font-family:'Baloo 2', cursive; font-size:.72rem; font-weight:700; color:var(--pink-deep);
+  text-decoration:none; box-shadow:0 4px 14px rgba(255,143,199,.28);
+  transition:.15s; letter-spacing:.2px;
+}
+.wm-badge span{ color:var(--lavender); }
+.wm-badge:hover{ transform:translateY(-2px); border-color:var(--pink-deep); }
+@media (max-width:640px){
+  .wm-badge{ right:10px; bottom:10px; font-size:.62rem; padding:6px 11px; }
+}
 
 .loader{
   display:inline-flex; gap:4px; align-items:center;
@@ -368,8 +399,8 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <select id="modelSelect"></select>
       </div>
       <div>
-        <label class="field-label">Field yang mau diterjemahin</label>
-        <select id="fieldSelect"></select>
+        <label class="field-label">Field yang mau diterjemahin <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(boleh centang lebih dari 1 buat digabung)</span></label>
+        <div class="field-checks" id="fieldChecks"></div>
       </div>
     </div>
     <div class="stats" id="statsRow"></div>
@@ -410,15 +441,17 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     </div>
   </div>
 
-  <p class="footer-note">Semua proses jalan 100% di browser kamu — file .apkg ga pernah dikirim ke server manapun 🔒💕</p>
+  <p class="footer-note">Semua proses jalan 100% di browser kamu — file .apkg ga pernah dikirim ke server manapun 🔒💕<br>Dibuat oleh <b>yumelyrics</b> × <b>yumesubs</b></p>
 </div>
+
+<a class="wm-badge" id="wmBadge" href="https://yumelyrics.my.id/" target="_blank" rel="noopener">✨ yumelyrics <span>×</span> yumesubs</a>
 
 <!-- PASTE MODAL -->
 <div class="modal-bg" id="pasteModalBg">
   <div class="modal">
     <h3>📥 Paste Hasil Terjemahan</h3>
-    <p style="font-weight:700; color:var(--ink-soft); font-size:.85rem;">Tempel teks yang sama persis formatnya kayak waktu kamu copy tadi (jangan hapus baris <code>[[[ID:...]]]</code>-nya ya), lalu klik Terapkan.</p>
-    <textarea id="pasteArea" placeholder="[[[ID:12345]]]&#10;teks terjemahan di sini...&#10;&#10;[[[ID:12346]]]&#10;teks lainnya..."></textarea>
+    <p style="font-weight:700; color:var(--ink-soft); font-size:.85rem;">Tempel teks yang sama persis formatnya kayak waktu kamu copy tadi (jangan hapus baris <code>[[[ID:...]]]</code> dan tag <code>[NamaField]</code> kalau kamu gabung beberapa field), lalu klik Terapkan.</p>
+    <textarea id="pasteArea" placeholder="[[[ID:12345]]]&#10;[SentKanji]&#10;teks terjemahan di sini...&#10;[SentEng]&#10;teks terjemahan lainnya...&#10;&#10;[[[ID:12346]]]&#10;..."></textarea>
     <div class="modal-actions">
       <button class="btn ghost" id="btnCancelPaste">Batal</button>
       <button class="btn mint" id="btnApplyPaste">✨ Terapkan</button>
@@ -477,7 +510,7 @@ const state = {
   decksMap: {},     // did -> deck name
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
-  currentFieldIdx: 0,
+  selectedFieldIdxs: [0],
   originalFileName: 'deck.apkg'
 };
 
@@ -695,21 +728,42 @@ function populateModelSelect(){
     sel.value = midsUsed[0];
   }
   populateFieldSelect();
+  renderTable(); // fix: dulu tabel baru muncul kalau field select diutak-atik manual, sekarang langsung render pas upload
 }
 
 function populateFieldSelect(){
-  const sel = document.getElementById('fieldSelect');
-  sel.innerHTML = '';
+  const container = document.getElementById('fieldChecks');
+  container.innerHTML = '';
   const model = state.models[state.currentMid];
   if(!model) return;
+  state.selectedFieldIdxs = model.flds.length ? [0] : [];
   model.flds.forEach((name, idx)=>{
-    const opt = document.createElement('option');
-    opt.value = idx;
-    opt.textContent = `${idx+1}. ${name}`;
-    sel.appendChild(opt);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip' + (idx===0 ? ' active' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = idx === 0;
+    cb.addEventListener('change', ()=>{
+      let idxs = state.selectedFieldIdxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      if(idxs.length === 0){
+        cb.checked = true;
+        idxs = [idx];
+        toast('Minimal 1 field harus dicentang ya~', '⚠️');
+      }
+      idxs.sort((a,b)=>a-b);
+      state.selectedFieldIdxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      renderTable();
+    });
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    container.appendChild(chip);
   });
-  sel.onchange = ()=>{ state.currentFieldIdx = parseInt(sel.value); renderTable(); };
-  state.currentFieldIdx = 0;
   updateStats();
 }
 
@@ -733,6 +787,7 @@ function renderTable(){
   if(!model) return;
   const rows = state.notes.filter(n=>n.mid===state.currentMid);
   const frag = document.createDocumentFragment();
+  const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
 
   rows.forEach(note=>{
     const tr = document.createElement('tr');
@@ -752,7 +807,7 @@ function renderTable(){
     const previewTd = document.createElement('td');
     previewTd.className = 'preview-cell';
     const otherFields = note.fields
-      .map((v,i)=> i===state.currentFieldIdx ? null : stripHtml(v))
+      .map((v,i)=> selIdxs.includes(i) ? null : stripHtml(v))
       .filter(v=>v!==null && v.trim()!=='')
       .join(' · ');
     const mini = document.createElement('span');
@@ -763,19 +818,28 @@ function renderTable(){
 
     const editTd = document.createElement('td');
     editTd.className = 'edit-cell';
-    const ta = document.createElement('textarea');
-    ta.value = note.fields[state.currentFieldIdx] || '';
-    ta.dataset.noteId = note.id;
-    if(note.dirty) ta.classList.add('dirty');
-    ta.addEventListener('input', ()=>{
-      note.fields[state.currentFieldIdx] = ta.value;
-      note.dirty = true;
-      ta.classList.add('dirty');
-      const dotEl = document.getElementById('dot-'+note.id);
-      if(dotEl){ dotEl.className='row-dot dirty'; }
-      updateStats();
+    selIdxs.forEach(fi=>{
+      if(selIdxs.length > 1){
+        const lbl = document.createElement('div');
+        lbl.className = 'field-mini-label';
+        lbl.textContent = model.flds[fi] || `Field ${fi+1}`;
+        editTd.appendChild(lbl);
+      }
+      const ta = document.createElement('textarea');
+      ta.value = note.fields[fi] || '';
+      ta.dataset.noteId = note.id;
+      ta.dataset.fieldIdx = fi;
+      if(note.dirty) ta.classList.add('dirty');
+      ta.addEventListener('input', ()=>{
+        note.fields[fi] = ta.value;
+        note.dirty = true;
+        ta.classList.add('dirty');
+        const dotEl = document.getElementById('dot-'+note.id);
+        if(dotEl){ dotEl.className='row-dot dirty'; }
+        updateStats();
+      });
+      editTd.appendChild(ta);
     });
-    editTd.appendChild(ta);
     tr.appendChild(editTd);
 
     frag.appendChild(tr);
@@ -797,9 +861,19 @@ function currentRows(){
 }
 
 function buildBlockText(){
+  const model = state.models[state.currentMid];
+  const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
   return currentRows().map(n=>{
-    const val = n.fields[state.currentFieldIdx] || '';
-    return `[[[ID:${n.id}]]]\n${val}`;
+    if(selIdxs.length === 1){
+      const val = n.fields[selIdxs[0]] || '';
+      return `[[[ID:${n.id}]]]\n${val}`;
+    }
+    const parts = selIdxs.map(fi=>{
+      const fname = (model && model.flds[fi]) || `Field${fi+1}`;
+      const val = n.fields[fi] || '';
+      return `[${fname}]\n${val}`;
+    }).join('\n');
+    return `[[[ID:${n.id}]]]\n${parts}`;
   }).join('\n\n');
 }
 
@@ -835,16 +909,37 @@ document.getElementById('btnApplyPaste').addEventListener('click', ()=>{
 });
 
 function applyBlockText(raw){
+  const model = state.models[state.currentMid];
+  const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
   const regex = /\[\[\[ID:(\d+)\]\]\]\n?([\s\S]*?)(?=\n*\[\[\[ID:\d+\]\]\]|$)/g;
   let match, count=0;
   const byId = {};
   currentRows().forEach(n=> byId[n.id]=n);
   while((match = regex.exec(raw)) !== null){
     const id = match[1];
-    let val = match[2].replace(/\n+$/,'');
+    let blockContent = match[2].replace(/\n+$/,'');
     const note = byId[id];
-    if(note){
-      note.fields[state.currentFieldIdx] = val;
+    if(!note) continue;
+
+    // Deteksi format multi-field: baris "[NamaField]" di awal tiap bagian
+    const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|$)/gm;
+    const fieldMatches = [...blockContent.matchAll(fieldTagRegex)];
+
+    if(fieldMatches.length){
+      fieldMatches.forEach((fm, pos)=>{
+        const fname = fm[1].trim();
+        const fval = fm[2].replace(/\n+$/,'');
+        let idx = model ? model.flds.findIndex(f=> f===fname) : -1;
+        if(idx === -1) idx = selIdxs[pos] !== undefined ? selIdxs[pos] : -1;
+        if(idx !== -1){
+          note.fields[idx] = fval;
+          note.dirty = true;
+        }
+      });
+      count++;
+    } else {
+      // format lama (single field, tanpa tag nama field)
+      note.fields[selIdxs[0]] = blockContent;
       note.dirty = true;
       count++;
     }
@@ -863,7 +958,21 @@ function downloadBlob(content, filename, type){
 }
 
 document.getElementById('btnExportCsv').addEventListener('click', ()=>{
-  const rows = currentRows().map(n=> ({ id:n.id, text:n.fields[state.currentFieldIdx]||'' }));
+  const model = state.models[state.currentMid];
+  const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
+  let rows;
+  if(selIdxs.length === 1){
+    rows = currentRows().map(n=> ({ id:n.id, text:n.fields[selIdxs[0]]||'' }));
+  } else {
+    rows = currentRows().map(n=>{
+      const row = { id: n.id };
+      selIdxs.forEach(fi=>{
+        const fname = (model && model.flds[fi]) || `field${fi+1}`;
+        row[fname] = n.fields[fi] || '';
+      });
+      return row;
+    });
+  }
   const csv = Papa.unparse(rows);
   downloadBlob(csv, 'anki_field_export.csv', 'text/csv;charset=utf-8;');
   toast('CSV berhasil didownload!', '⬇️');
@@ -882,16 +991,30 @@ importFileInput.addEventListener('change', async e=>{
   if(!f) return;
   const text = await f.text();
   let applied = 0;
+  const model = state.models[state.currentMid];
+  const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
   if(f.name.toLowerCase().endsWith('.csv')){
     const parsed = Papa.parse(text, {header:true});
     const byId = {};
     currentRows().forEach(n=> byId[String(n.id)]=n);
     parsed.data.forEach(row=>{
       const id = row.id;
-      if(id && byId[id]){
-        byId[id].fields[state.currentFieldIdx] = row.text || '';
-        byId[id].dirty = true;
+      const note = id ? byId[id] : null;
+      if(!note) return;
+      if(selIdxs.length === 1){
+        note.fields[selIdxs[0]] = row.text || '';
+        note.dirty = true;
         applied++;
+      } else {
+        let any = false;
+        selIdxs.forEach(fi=>{
+          const fname = (model && model.flds[fi]) || `field${fi+1}`;
+          if(Object.prototype.hasOwnProperty.call(row, fname)){
+            note.fields[fi] = row[fname] || '';
+            any = true;
+          }
+        });
+        if(any){ note.dirty = true; applied++; }
       }
     });
   } else {
