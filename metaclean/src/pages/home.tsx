@@ -79,22 +79,34 @@ export default function Home() {
 
   const handleDownload = () => {
     if (!dataUrl || !file) return;
-    // Always go through writeImage: it merges the current form values into
-    // the file's existing metadata, updating only the managed fields and
-    // leaving everything else (and any field the user left blank on a file
-    // that never had it) untouched. Full removal only ever happens via the
-    // explicit "Strip All Metadata" action, never implicitly on download.
-    const newUrl = writeImage(dataUrl, values);
-    const blob = dataUrlToBlob(newUrl);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const nameParts = file.name.split('.');
-    const ext = nameParts.pop();
-    a.download = `${nameParts.join('.')}-edited.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Saved successfully', description: 'Your updated image has been downloaded.' });
+    try {
+      // Always go through writeImage: it merges the current form values into
+      // the file's existing metadata, updating only the managed fields and
+      // leaving everything else (and any field the user left blank on a file
+      // that never had it) untouched. Full removal only ever happens via the
+      // explicit "Strip All Metadata" action, never implicitly on download.
+      const newUrl = writeImage(dataUrl, values);
+      const blob = dataUrlToBlob(newUrl);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const nameParts = file.name.split('.');
+      const ext = nameParts.pop();
+      a.download = `${nameParts.join('.')}-edited.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: 'Saved successfully', description: 'Your updated image has been downloaded.' });
+    } catch (err) {
+      // Previously this could throw silently (e.g. from a corrupted data
+      // URL) with nothing catching it, making the button look completely
+      // unresponsive. Now the user always gets told what happened.
+      console.error('Download failed:', err);
+      toast({
+        title: 'Download failed',
+        description: err instanceof Error ? err.message : 'Something went wrong while saving the file. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleStrip = () => {
