@@ -441,11 +441,32 @@
   }
   tbody td {
     padding: 8px 11px; border-top: 1px solid var(--line);
-    max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   tbody tr:nth-child(even) { background: #FFF4F8; }
   tbody tr:hover           { background: #FFE9F1; }
   .previewnote { font-size: 12px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
+
+  /* ── editable table (edit isi deck + copy/paste kolom) ── */
+  .th-inner { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .th-label { overflow: hidden; text-overflow: ellipsis; }
+  .th-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .th-btn {
+    border: none; background: rgba(255,255,255,.25); color: #fff; border-radius: 6px;
+    width: 22px; height: 22px; font-size: 11px; cursor: pointer; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; transition: background .15s, transform .15s;
+  }
+  .th-btn:hover  { background: rgba(255,255,255,.45); }
+  .th-btn:active { transform: scale(.9); }
+  tbody td[contenteditable="true"] {
+    white-space: pre-wrap; word-break: break-word; cursor: text;
+    outline: none; transition: background .15s;
+  }
+  tbody td[contenteditable="true"]:hover  { background: #FFE0EC; }
+  tbody td[contenteditable="true"]:focus  { background: #FFF; box-shadow: inset 0 0 0 2px var(--sakura-dk); }
+  .previewnote.warn { color: #B8722A; font-weight: 700; }
+  .previewnote.good { color: #2E9E77; font-weight: 700; }
 
   /* ── buttons ── */
   .btn {
@@ -581,6 +602,12 @@
         <label class="chip active" id="chipTags">
           <input type="checkbox" id="includeTags" checked> Sertakan Tags
         </label>
+        <label class="chip" id="chipDeck">
+          <input type="checkbox" id="includeDeck"> Sertakan Deck
+        </label>
+        <label class="chip" id="chipGuid">
+          <input type="checkbox" id="includeGuid"> Sertakan GUID <span style="opacity:.7">(buat update in-place)</span>
+        </label>
         <label class="chip">
           Pemisah:
           <select id="delimiterA2C" aria-label="Pemisah kolom CSV">
@@ -602,11 +629,17 @@
           <li>Opsi <b>"Support older Anki versions"</b> boleh dicentang atau tidak — tool ini sudah support file .apkg dari versi Anki manapun (lama maupun baru)</li>
           <li>Klik Export, lalu upload hasilnya ke sini ✨</li>
         </ol>
+        <p style="margin-top:10px; font-size:.85em; opacity:.8">
+          ℹ️ Catatan: tool ini cuma convert <b>teks</b> kartu (termasuk nama file gambar/audio kalau ada, mis. <code>[sound:xxx.mp3]</code>). File gambar/audio-nya sendiri gak ikut ke-extract ke CSV.
+        </p>
+        <p style="margin-top:6px; font-size:.85em; opacity:.8">
+          🔑 Opsi <b>"Sertakan GUID"</b>: nambahin kolom identitas asli tiap kartu. Kalau CSV hasil convert ini (yang GUID-nya masih utuh, jangan diubah/dihapus) di-convert BALIK ke .apkg pakai mode "CSV → Apkg" di tool ini, kartunya bakal pakai ID yang sama kayak aslinya — jadi kompatibel buat update-in-place, bukan bikin duplikat.
+        </p>
       </details>
     </section>
 
     <section class="card" id="previewCardA2C" style="display:none" aria-label="Preview hasil konversi">
-      <div class="section-title"><span class="dot"></span> Langkah 2 — Cek dulu hasilnya</div>
+      <div class="section-title"><span class="dot"></span> Langkah 2 — Cek & edit hasilnya</div>
       <div class="stats" id="statsA2C" aria-live="polite"></div>
       <div class="tablewrap"><table id="previewTableA2C" aria-label="Preview data CSV"></table></div>
       <div class="previewnote" id="previewNoteA2C" aria-live="polite"></div>
@@ -615,6 +648,26 @@
     <section class="card" id="downloadCardA2C" style="display:none">
       <div class="section-title"><span class="dot"></span> Langkah 3 — Download!</div>
       <button class="btn" id="downloadBtnA2C">⬇️ Download CSV-nya</button>
+
+      <details class="tip" style="margin-top:14px">
+        <summary>Mau update kartu lama di Anki (bukan bikin duplikat)?</summary>
+        <p style="font-size:.85em; margin-bottom:8px"><b>Ada 2 cara:</b></p>
+        <p style="font-size:.85em; margin-bottom:4px"><b>Cara 1 — Import manual di Anki (paling aman):</b></p>
+        <ol>
+          <li>Edit dulu isi kartunya di tabel preview di atas (mis. field terjemahan) sebelum download</li>
+          <li>Download CSV-nya, lalu buka Anki di komputer → <b>File → Import</b> (bukan lewat tool ini)</li>
+          <li>Pilih file CSV-nya, pastikan <b>Note type</b> &amp; <b>Deck</b> yang dipilih SAMA kayak deck lama</li>
+          <li>Aktifin opsi <b>"Update notes that match first field"</b> (nama opsinya bisa beda dikit tergantung versi Anki)</li>
+          <li>Anki bakal update field kartu yang field pertamanya sama persis — jadi gak bikin duplikat 🎉</li>
+        </ol>
+        <p style="font-size:.85em; margin:8px 0 4px"><b>Cara 2 — Round-trip lewat tool ini (pakai GUID):</b></p>
+        <ol>
+          <li>Pas convert apkg→csv, centang dulu opsi <b>"Sertakan GUID"</b> di atas sebelum download CSV-nya</li>
+          <li>Edit isi kartunya di CSV/preview, tapi JANGAN hapus/ubah kolom GUID-nya</li>
+          <li>Convert balik CSV itu ke .apkg lewat mode "CSV → Apkg" — kartunya bakal otomatis pakai ID asli yang sama</li>
+          <li>Import .apkg hasilnya ke Anki, tetap aktifin opsi update-by-match biar Anki nge-treat sebagai update, bukan kartu baru</li>
+        </ol>
+      </details>
     </section>
 
   </div>
@@ -665,14 +718,16 @@
         <ul>
           <li>Kolom pertama otomatis jadi sisi <b>depan kartu</b>, kolom sisanya jadi sisi <b>belakang</b></li>
           <li>Kolom bernama persis <code>Tags</code> otomatis dipakai sebagai tag Anki</li>
-          <li>Note type baru dibuat otomatis sesuai jumlah &amp; nama kolom CSV kamu</li>
+          <li>Kolom bernama persis <code>GUID</code> (opsional, biasanya hasil dari mode "Apkg → CSV" tool ini dengan opsi "Sertakan GUID" dicentang) dipakai buat mempertahankan identitas kartu asli — cocok buat update-in-place</li>
+          <li>Kolom bernama persis <code>Note Type</code> (opsional) bikin tiap nilai unik di situ jadi note type-nya sendiri — jadi 1 file CSV bisa punya beberapa note type berbeda sekaligus</li>
+          <li>Note type baru dibuat otomatis sesuai jumlah &amp; nama kolom CSV kamu (field yang kosong buat note type tertentu dibiarkan kosong)</li>
           <li>Mendukung 2.000 – 10.000+ kartu, tinggal tunggu beberapa detik pas generate</li>
         </ul>
       </details>
     </section>
 
     <section class="card" id="previewCardC2A" style="display:none" aria-label="Preview data CSV">
-      <div class="section-title lavender"><span class="dot"></span> Langkah 2 — Cek dulu hasilnya</div>
+      <div class="section-title lavender"><span class="dot"></span> Langkah 2 — Cek & edit hasilnya</div>
       <div class="stats" id="statsC2A" aria-live="polite"></div>
       <div class="tablewrap"><table id="previewTableC2A" aria-label="Preview data kartu"></table></div>
       <div class="previewnote" id="previewNoteC2A" aria-live="polite"></div>
@@ -766,6 +821,142 @@ function escapeHtml(s) {
 }
 function truncate(s, n) { s = String(s); return s.length > n ? s.slice(0, n) + '…' : s; }
 
+/* ============================================================
+   CLIPBOARD HELPERS (buat fitur copy/paste 1 kolom sekaligus)
+   ============================================================ */
+async function writeClipboardText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.top = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e2) { return false; }
+  }
+}
+
+async function readClipboardText() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text !== null && text !== undefined) return text;
+  } catch (e) { /* fallback di bawah */ }
+  // Browser blokir akses clipboard otomatis (butuh izin) — minta paste manual.
+  return prompt('Browser ini gak ngizinin baca clipboard otomatis. Paste (Ctrl+V) teksnya di sini terus tekan OK:', '');
+}
+
+/* ============================================================
+   EDITABLE TABLE — buat "edit isi deck" langsung di preview,
+   + tombol 📋 copy kolom & 📥 paste kolom (buat translate massal dsb)
+   ============================================================ */
+function createEditableTable(tableEl, noteEl, opts) {
+  opts = opts || {};
+  const maxRender = opts.maxRender || 400;
+  let headers = [];
+  let rows = [];
+  let onChangeCb = null;
+  let baseNoteText = '';
+
+  function setData(h, r, baseNote) {
+    headers = h; rows = r;
+    baseNoteText = baseNote || '';
+    render();
+  }
+  function getData() { return { headers, rows }; }
+  function onChange(cb) { onChangeCb = cb; }
+
+  function setNote(msg, cls) {
+    if (!noteEl) return;
+    noteEl.textContent = msg;
+    noteEl.className = 'previewnote' + (cls ? ' ' + cls : '');
+  }
+
+  function render() {
+    const shown = rows.length > maxRender ? rows.slice(0, maxRender) : rows;
+    tableEl.innerHTML =
+      '<thead><tr>' + headers.map((h, ci) => `
+        <th>
+          <div class="th-inner">
+            <span class="th-label" title="${escapeHtml(h)}">${escapeHtml(truncate(h, 18))}</span>
+            <span class="th-actions">
+              <button type="button" class="th-btn" data-act="copy" data-col="${ci}" title="Copy semua isi kolom &quot;${escapeHtml(h)}&quot;">📋</button>
+              <button type="button" class="th-btn" data-act="paste" data-col="${ci}" title="Timpa semua isi kolom &quot;${escapeHtml(h)}&quot; dari clipboard">📥</button>
+            </span>
+          </div>
+        </th>`).join('') + '</tr></thead>' +
+      '<tbody>' + shown.map((r, ri) =>
+        '<tr>' + r.map((c, ci) =>
+          `<td contenteditable="true" spellcheck="false" data-row="${ri}" data-col="${ci}">${escapeHtml(String(c === undefined || c === null ? '' : c))}</td>`
+        ).join('') + '</tr>'
+      ).join('') + '</tbody>';
+
+    if (rows.length > maxRender) {
+      setNote(`✏️ ${maxRender} baris pertama bisa diedit langsung di sini (dari total ${rows.length}). Buat edit SEMUA baris sekaligus (mis. abis ditranslate), pakai tombol 📋/📥 di tiap judul kolom ya~`, 'warn');
+    } else {
+      setNote(baseNoteText || `✏️ Tap/klik sel mana aja buat edit langsung. Pakai 📋 di judul kolom buat copy 1 kolom penuh, atau 📥 buat timpa 1 kolom penuh dari clipboard.`);
+    }
+  }
+
+  // Edit sel langsung — update array data aslinya (in-place, jadi otomatis kepakai pas export)
+  tableEl.addEventListener('input', (e) => {
+    const td = e.target.closest('td[contenteditable]');
+    if (!td) return;
+    const ri = +td.dataset.row, ci = +td.dataset.col;
+    if (rows[ri]) {
+      rows[ri][ci] = td.textContent;
+      if (onChangeCb) onChangeCb();
+    }
+  });
+  // Biar paste teks ke 1 sel gak bawa formatting aneh-aneh
+  tableEl.addEventListener('paste', (e) => {
+    const td = e.target.closest('td[contenteditable]');
+    if (!td) return;
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+
+  tableEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.th-btn');
+    if (!btn) return;
+    const ci = +btn.dataset.col;
+    const colName = headers[ci];
+
+    if (btn.dataset.act === 'copy') {
+      const text = rows.map(r => (r[ci] === undefined || r[ci] === null ? '' : r[ci])).join('\n');
+      const ok = await writeClipboardText(text);
+      setNote(ok
+        ? `✅ Semua isi kolom "${colName}" (${rows.length} baris) berhasil di-copy ke clipboard. Tinggal paste ke Google Translate / ChatGPT / dll~`
+        : `❌ Gagal copy ke clipboard. Coba pakai browser lain atau pastikan halaman ini pakai HTTPS.`, ok ? 'good' : 'warn');
+      return;
+    }
+
+    if (btn.dataset.act === 'paste') {
+      const text = await readClipboardText();
+      if (text === null) return; // user cancel
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
+      const n = Math.min(lines.length, rows.length);
+      for (let i = 0; i < n; i++) rows[i][ci] = lines[i];
+      render();
+      if (onChangeCb) onChangeCb();
+      if (lines.length !== rows.length) {
+        setNote(`⚠️ Kolom "${colName}" ditimpa: clipboard punya ${lines.length} baris, deck punya ${rows.length} baris. ${n} baris pertama berhasil ditimpa, sisanya dibiarin apa adanya. Cek lagi urutannya ya~`, 'warn');
+      } else {
+        setNote(`✅ Kolom "${colName}" berhasil ditimpa semua (${n} baris) dari clipboard.`, 'good');
+      }
+      return;
+    }
+  });
+
+  return { setData, getData, onChange, render };
+}
+
 function stripHtml(html) {
   if (!html) return '';
   let s = String(html)
@@ -818,18 +1009,32 @@ function wireChip(chipId, inputEl) {
 
   const stripHtmlChk   = document.getElementById('stripHtml');
   const includeTagsChk = document.getElementById('includeTags');
+  const includeDeckChk = document.getElementById('includeDeck');
+  const includeGuidChk = document.getElementById('includeGuid');
   const delimiterSel   = document.getElementById('delimiterA2C');
 
   wireChip('chipStrip', stripHtmlChk);
   wireChip('chipTags',  includeTagsChk);
+  wireChip('chipDeck',  includeDeckChk);
+  wireChip('chipGuid',  includeGuidChk);
 
   let currentCsvBlob = null;
   let currentFileBaseName = 'deck';
-  let lastNotesData = null, lastModels = null;
+  let lastNotesData = null, lastModels = null, lastDecks = null, lastNoteDeckIds = null;
+
+  const editTable = createEditableTable(document.getElementById('previewTableA2C'), document.getElementById('previewNoteA2C'));
+  editTable.onChange(regenerateCsvBlob);
+
+  function regenerateCsvBlob() {
+    const { headers, rows } = editTable.getData();
+    const delim = delimiterSel.value;
+    const csvString = toCsv(headers, rows, delim);
+    currentCsvBlob = new Blob([csvString], {type: 'text/csv;charset=utf-8;'});
+  }
 
   setupDropzone(dropzone, fileInput, handleFile);
-  [stripHtmlChk, includeTagsChk, delimiterSel].forEach(el => {
-    el.addEventListener('change', () => { if (lastNotesData) renderResults(lastNotesData, lastModels); });
+  [stripHtmlChk, includeTagsChk, includeDeckChk, includeGuidChk, delimiterSel].forEach(el => {
+    el.addEventListener('change', () => { if (lastNotesData) renderResults(lastNotesData, lastModels, lastDecks, lastNoteDeckIds); });
   });
 
   function setStatus(msg, type) { statusEl.textContent = msg; statusEl.className = 'status ' + (type || ''); }
@@ -843,7 +1048,13 @@ function wireChip(chipId, inputEl) {
     currentFileBaseName = file.name.replace(/\.apkg$/i, '');
     previewCard.style.display = 'none';
     downloadCard.style.display = 'none';
-    setStatus('Lagi buka paket kartunya... 📦✨', '');
+
+    const sizeMB = file.size / (1024 * 1024);
+    if (sizeMB > 50) {
+      setStatus(`File-nya lumayan gede (${sizeMB.toFixed(0)} MB), mohon tunggu bentar ya... 📦⏳`, '');
+    } else {
+      setStatus('Lagi buka paket kartunya... 📦✨', '');
+    }
 
     try {
       await ensureSql();
@@ -855,6 +1066,9 @@ function wireChip(chipId, inputEl) {
       // - collection.anki2 / collection.anki21 -> cuma file DUMMY untuk kompatibilitas,
       //   isinya cuma 1 kartu placeholder "Please update to the latest Anki version...".
       // Makanya anki21b harus dicek & diprioritaskan LEBIH DULU, baru fallback ke yang legacy.
+      // Catatan: hanya database (notes/cards/note type) yang dikompres zstd, bukan file media
+      // (gambar/audio) — jadi ukuran .apkg yang gede itu biasanya didominasi media, bukan data
+      // yang perlu dibongkar di sini. Makanya file gede (ratusan MB) harusnya tetap lancar.
       const newEntry = zip.file('collection.anki21b');
       const legacyEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
 
@@ -871,7 +1085,7 @@ function wireChip(chipId, inputEl) {
           dbBytes = fzstd.decompress(compressed);
         } catch (zerr) {
           console.error(zerr);
-          setStatus('Gagal membongkar file apkg format baru ini. (' + zerr.message + ')', 'error');
+          setStatus('Gagal membongkar file apkg format baru ini — mungkin cara kompresinya kurang umum. Coba export ulang dari Anki dengan opsi "Support older Anki versions" dicentang ya~ 🙏 (' + zerr.message + ')', 'error');
           return;
         }
         setStatus('Lagi baca kartu-kartunya... 🐈', '');
@@ -887,12 +1101,14 @@ function wireChip(chipId, inputEl) {
 
       const models = getModels(db);
       const notesData = getNotes(db);
+      const decks = getDecks(db);
+      const noteDeckIds = getNoteDeckIds(db);
       db.close();
 
       if (!notesData.length) { setStatus('Deck ini kosong, gak ada kartu yang ketemu 😿', 'error'); return; }
 
-      lastNotesData = notesData; lastModels = models;
-      renderResults(notesData, models);
+      lastNotesData = notesData; lastModels = models; lastDecks = decks; lastNoteDeckIds = noteDeckIds;
+      renderResults(notesData, models, decks, noteDeckIds);
       setStatus(`Yeay! ${notesData.length} kartu berhasil dibaca 🎉`, 'ok');
     } catch(err) {
       console.error(err);
@@ -931,15 +1147,50 @@ function wireChip(chipId, inputEl) {
   }
 
   function getNotes(db) {
-    const res = db.exec("SELECT mid, flds, tags FROM notes");
+    const res = db.exec("SELECT id, guid, mid, flds, tags FROM notes");
     if (!res.length) return [];
-    return res[0].values.map(([mid, flds, tags]) => ({
-      mid, fields: String(flds).split('\x1f'),
+    return res[0].values.map(([id, guid, mid, flds, tags]) => ({
+      id, guid: String(guid || ''), mid, fields: String(flds).split('\x1f'),
       tags: String(tags || '').trim().replace(/\s+/g, ' ')
     }));
   }
 
-  function buildCsvData(notesData, models, doStrip, doTags) {
+  // Nama deck: format lama -> JSON di col.decks. Format baru (skema v18+) -> tabel `decks`.
+  function getDecks(db) {
+    let decks = {};
+    try {
+      const res = db.exec("SELECT decks FROM col");
+      if (res.length && res[0].values.length) {
+        const json = res[0].values[0][0];
+        if (json && json !== '{}') {
+          const parsed = JSON.parse(json);
+          Object.keys(parsed).forEach(id => { decks[id] = parsed[id].name; });
+        }
+      }
+    } catch(e) {}
+    if (Object.keys(decks).length === 0) {
+      try {
+        const dk = db.exec("SELECT id, name FROM decks");
+        if (dk.length) dk[0].values.forEach(([id, name]) => { decks[id] = name; });
+      } catch(e) {}
+    }
+    return decks;
+  }
+
+  // Mapping note id -> deck id, diambil dari kartu pertama yang ditemukan buat tiap note
+  // (note dg banyak kartu di beberapa deck jarang terjadi, jadi kita ambil salah satu aja).
+  function getNoteDeckIds(db) {
+    const map = {};
+    try {
+      const res = db.exec("SELECT nid, did FROM cards");
+      if (res.length) {
+        res[0].values.forEach(([nid, did]) => { if (!(nid in map)) map[nid] = did; });
+      }
+    } catch(e) {}
+    return map;
+  }
+
+  function buildCsvData(notesData, models, doStrip, doTags, doDeck, doGuid, decks, noteDeckIds) {
     const usedModelIds = [...new Set(notesData.map(n => n.mid))];
     const modelObjs = usedModelIds.map(id => models[id]).filter(Boolean);
     const singleModel = usedModelIds.length === 1 && modelObjs.length === 1;
@@ -957,12 +1208,19 @@ function wireChip(chipId, inputEl) {
       fieldColCount = maxFields;
     }
     if (doTags) headers.push('Tags');
+    if (doDeck) headers.push('Deck');
+    if (doGuid) headers.push('GUID');
 
     const rows = notesData.map(n => {
       let vals = n.fields.map(f => doStrip ? stripHtml(f) : f);
       while (vals.length < fieldColCount) vals.push('');
       let row = singleModel ? vals : [(models[n.mid] ? models[n.mid].name : 'Unknown'), ...vals];
       if (doTags) row.push(n.tags);
+      if (doDeck) {
+        const did = noteDeckIds ? noteDeckIds[n.id] : undefined;
+        row.push((decks && did !== undefined && decks[did]) ? decks[did] : '');
+      }
+      if (doGuid) row.push(n.guid || '');
       return row;
     });
 
@@ -987,11 +1245,13 @@ function wireChip(chipId, inputEl) {
     return '\uFEFF' + lines.join('\r\n');
   }
 
-  function renderResults(notesData, models) {
+  function renderResults(notesData, models, decks, noteDeckIds) {
     const doStrip = stripHtmlChk.checked;
     const doTags  = includeTagsChk.checked;
+    const doDeck  = includeDeckChk.checked;
+    const doGuid  = includeGuidChk.checked;
     const delim   = delimiterSel.value;
-    const { headers, rows, modelCounts } = buildCsvData(notesData, models, doStrip, doTags);
+    const { headers, rows, modelCounts } = buildCsvData(notesData, models, doStrip, doTags, doDeck, doGuid, decks, noteDeckIds);
 
     document.getElementById('statsA2C').innerHTML = `
       <div class="stat"><b>${rows.length}</b>total kartu</div>
@@ -999,22 +1259,12 @@ function wireChip(chipId, inputEl) {
       <div class="stat"><b>${headers.length}</b>kolom di CSV</div>
     `;
 
-    const table = document.getElementById('previewTableA2C');
-    const previewRows = rows.slice(0, 8);
-    table.innerHTML =
-      '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>' +
-      '<tbody>' + previewRows.map(r =>
-        '<tr>' + r.map(c => `<td title="${escapeHtml(String(c))}">${escapeHtml(truncate(String(c), 55))}</td>`).join('') + '</tr>'
-      ).join('') + '</tbody>';
-
-    document.getElementById('previewNoteA2C').textContent =
-      rows.length > 8 ? `Nampilin 8 dari ${rows.length} baris. Sisanya ada di file CSV~` : `Semua ${rows.length} baris ditampilkan.`;
+    editTable.setData(headers, rows);
 
     previewCard.style.display  = 'block';
     downloadCard.style.display = 'block';
 
-    const csvString = toCsv(headers, rows, delim);
-    currentCsvBlob = new Blob([csvString], {type: 'text/csv;charset=utf-8;'});
+    regenerateCsvBlob();
   }
 
   downloadBtn.addEventListener('click', () => {
@@ -1052,6 +1302,14 @@ function wireChip(chipId, inputEl) {
   let currentFileBaseName = 'deck';
   let apkgBlob = null;
   let lastRawText = null;
+
+  const editTable = createEditableTable(document.getElementById('previewTableC2A'), document.getElementById('previewNoteC2A'));
+  // Edit di tabel ini langsung mutasi array `parsed.rows`/`parsed.headers` (referensi yang sama),
+  // jadi pas generateApkg() jalan, hasil edit/paste kolom otomatis kepakai — gak perlu sinkronisasi manual.
+  editTable.onChange(() => {
+    downloadBtn.style.display = 'none';
+    apkgBlob = null;
+  });
 
   setupDropzone(dropzone, fileInput, handleFile);
   hasHeaderChk.addEventListener('change', () => { if (lastRawText) parseAndPreview(lastRawText); });
@@ -1118,6 +1376,16 @@ function wireChip(chipId, inputEl) {
       rows = results.data.map(r => { const c = r.slice(); while (c.length < maxLen) c.push(''); return c; });
     }
 
+    // Kolom "Note Type" (opsional): kalau ada, tiap nilai unik di kolom ini bakal jadi
+    // note type terpisah pas di-generate ke apkg (dukung CSV multi note type).
+    const noteTypeIdx = headers.findIndex(h => h.trim().toLowerCase() === 'note type');
+    let noteTypeList = null;
+    if (noteTypeIdx !== -1) {
+      noteTypeList = rows.map(r => (r[noteTypeIdx] || '').toString().trim());
+      headers = headers.filter((_, i) => i !== noteTypeIdx);
+      rows = rows.map(r => r.filter((_, i) => i !== noteTypeIdx));
+    }
+
     const tagsIdx = headers.findIndex(h => h.trim().toLowerCase() === 'tags');
     let tagsList;
     if (tagsIdx !== -1) {
@@ -1128,37 +1396,63 @@ function wireChip(chipId, inputEl) {
       tagsList = rows.map(() => '');
     }
 
+    // Kolom "GUID" (opsional, biasanya dari mode Apkg → CSV dengan "Sertakan GUID" dicentang):
+    // dipakai buat mempertahankan identitas kartu asli pas digenerate ulang jadi .apkg,
+    // biar hasilnya kompatibel buat update-in-place lewat import Anki, bukan bikin duplikat.
+    const guidIdx = headers.findIndex(h => h.trim().toLowerCase() === 'guid');
+    let guidList, hasGuidCol = false;
+    if (guidIdx !== -1) {
+      hasGuidCol = true;
+      guidList = rows.map(r => (r[guidIdx] || '').toString().trim());
+      headers = headers.filter((_, i) => i !== guidIdx);
+      rows = rows.map(r => r.filter((_, i) => i !== guidIdx));
+    } else {
+      guidList = rows.map(() => '');
+    }
+
     if (!headers.length || !rows.length) {
       setStatus('CSV-nya kosong atau formatnya gak kebaca 😿', 'error');
       parsed = null;
       return;
     }
 
-    parsed = { headers, rows, tagsList };
+    parsed = { headers, rows, tagsList, noteTypeList, guidList, hasGuidCol };
     renderPreview();
-    setStatus(`Yeay! ${rows.length} baris, ${headers.length} kolom berhasil dibaca 🎉`, 'ok');
+    const ntNote = noteTypeList ? `, ${new Set(noteTypeList.filter(Boolean)).size || 1} note type` : '';
+    const guidNote = hasGuidCol ? `, GUID asli terdeteksi 🔑` : '';
+    setStatus(`Yeay! ${rows.length} baris, ${headers.length} kolom${ntNote}${guidNote} berhasil dibaca 🎉`, 'ok');
+  }
+
+  // Kelompokkan baris berdasarkan kolom "Note Type" (kalau ada). Tiap grup = 1 note type
+  // terpisah pas digenerate. Kalau gak ada kolom itu, semua baris jadi 1 note type (spt sebelumnya).
+  function getModelGroups() {
+    const { rows, noteTypeList } = parsed;
+    const fallbackName = (modelNameInput.value || currentFileBaseName + ' Type').trim() || 'Imported Type';
+    if (!noteTypeList) {
+      return [{ name: fallbackName, rowIdx: rows.map((_, i) => i) }];
+    }
+    const order = [];
+    const groups = new Map();
+    noteTypeList.forEach((nt, i) => {
+      const name = nt || fallbackName;
+      if (!groups.has(name)) { groups.set(name, []); order.push(name); }
+      groups.get(name).push(i);
+    });
+    return order.map(name => ({ name, rowIdx: groups.get(name) }));
   }
 
   function renderPreview() {
     if (!parsed) return;
     const { headers, rows } = parsed;
+    const groups = getModelGroups();
 
     document.getElementById('statsC2A').innerHTML = `
       <div class="stat"><b>${rows.length}</b>baris (calon kartu)</div>
       <div class="stat"><b>${headers.length}</b>kolom (field)</div>
-      <div class="stat"><b>1</b>note type baru</div>
+      <div class="stat"><b>${groups.length}</b>note type baru</div>
     `;
 
-    const table = document.getElementById('previewTableC2A');
-    const previewRows = rows.slice(0, 8);
-    table.innerHTML =
-      '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>' +
-      '<tbody>' + previewRows.map(r =>
-        '<tr>' + r.map(c => `<td title="${escapeHtml(String(c))}">${escapeHtml(truncate(String(c), 55))}</td>`).join('') + '</tr>'
-      ).join('') + '</tbody>';
-
-    document.getElementById('previewNoteC2A').textContent =
-      rows.length > 8 ? `Nampilin 8 dari ${rows.length} baris.` : `Semua ${rows.length} baris ditampilkan.`;
+    editTable.setData(headers, rows);
 
     previewCard.style.display  = 'block';
     downloadCard.style.display = 'block';
@@ -1233,9 +1527,9 @@ function wireChip(chipId, inputEl) {
 
     try {
       await ensureSql();
-      const { headers, rows, tagsList } = parsed;
+      const { headers, rows, tagsList, guidList, hasGuidCol } = parsed;
       const deckName  = (deckNameInput.value  || currentFileBaseName || 'Imported Deck').trim();
-      const modelName = (modelNameInput.value || (currentFileBaseName + ' Type')).trim();
+      const groups = getModelGroups(); // 1 grup = 1 note type; lihat kolom "Note Type" di CSV kalau ada
 
       setStatus(`Lagi bikin ${rows.length} kartu... 🃏 (bisa makan waktu beberapa detik)`, '');
       await new Promise(r => setTimeout(r, 30));
@@ -1257,14 +1551,22 @@ function wireChip(chipId, inputEl) {
       `);
 
       const deckId  = nextId();
-      const modelId = nextId();
       const nowSec  = Math.floor(Date.now() / 1000);
       const nowMs   = Date.now();
 
-      const models = buildModel(modelId, deckId, modelName, headers);
+      // Satu model (note type) per grup, tapi semua notenya masuk 1 deck yang sama.
+      let models = {};
+      const rowModelId = new Array(rows.length);
+      groups.forEach(g => {
+        const mid = nextId();
+        Object.assign(models, buildModel(mid, deckId, g.name, headers));
+        g.rowIdx.forEach(i => { rowModelId[i] = mid; });
+      });
+      const firstModelId = Object.keys(models)[0];
+
       const decks  = buildDecksJson(deckId, deckName);
       const dconf  = buildDconf();
-      const conf   = buildColConf(deckId, modelId);
+      const conf   = buildColConf(deckId, firstModelId);
 
       db.run("INSERT INTO col VALUES (1,?,?,?,11,0,0,0,?,?,?,?,'{}')", [
         nowSec, nowMs, nowMs, JSON.stringify(conf), JSON.stringify(models), JSON.stringify(decks), JSON.stringify(dconf)
@@ -1273,6 +1575,7 @@ function wireChip(chipId, inputEl) {
       db.run('BEGIN TRANSACTION');
       const noteStmt = db.prepare("INSERT INTO notes VALUES (?,?,?,?,?,?,?,?,?,?,?)");
       const cardStmt = db.prepare("INSERT INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+      let guidReused = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const fields = rows[i].map(v => v === undefined || v === null ? '' : String(v));
@@ -1280,9 +1583,13 @@ function wireChip(chipId, inputEl) {
         const sfld   = fields[0] || '';
         const tags   = tagsList[i] ? (' ' + tagsList[i].trim().split(/\s+/).join(' ') + ' ') : '';
         const noteId = nextId();
-        const guid   = 'n' + noteId.toString(36) + Math.random().toString(36).slice(2, 8);
+        // GUID asli (kolom "GUID" di CSV) dipertahankan kalau ada & gak kosong, biar update-in-place
+        // beneran kompatibel pas di-import balik ke Anki. Kalau kosong, tetap generate GUID baru.
+        const origGuid = guidList && guidList[i] ? guidList[i] : '';
+        const guid = origGuid || ('n' + noteId.toString(36) + Math.random().toString(36).slice(2, 8));
+        if (origGuid) guidReused++;
 
-        noteStmt.run([noteId, guid, modelId, nowSec, -1, tags, flds, sfld, simpleChecksum(sfld), 0, '']);
+        noteStmt.run([noteId, guid, rowModelId[i], nowSec, -1, tags, flds, sfld, simpleChecksum(sfld), 0, '']);
 
         const cardId = nextId();
         cardStmt.run([cardId, noteId, deckId, 0, nowSec, -1, 0, 0, i + 1, 0, 0, 0, 0, 0, 0, 0, 0, '']);
@@ -1301,7 +1608,9 @@ function wireChip(chipId, inputEl) {
 
       apkgBlob = new Blob([zipBytes], {type: 'application/octet-stream'});
       downloadBtn.style.display = 'inline-flex';
-      setStatus(`Beres! Deck "${deckName}" siap dengan ${rows.length} kartu 🎉`, 'ok');
+      const ntInfo = groups.length > 1 ? ` (${groups.length} note type)` : '';
+      const guidInfo = guidReused > 0 ? ` — ${guidReused} GUID asli dipertahankan 🔑` : '';
+      setStatus(`Beres! Deck "${deckName}" siap dengan ${rows.length} kartu${ntInfo}${guidInfo} 🎉`, 'ok');
     } catch(err) {
       console.error(err);
       setStatus('Waduh, gagal bikin apkg-nya. (' + err.message + ')', 'error');
