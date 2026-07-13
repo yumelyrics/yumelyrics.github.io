@@ -187,6 +187,56 @@ select, textarea, input[type=text]{
 select:focus, textarea:focus, input:focus{ outline:2px solid var(--pink); }
 label.field-label{ font-weight:800; font-size:.8rem; color:var(--ink-soft); display:block; margin-bottom:5px; }
 
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:999px;
+  background:linear-gradient(90deg, var(--pink), var(--lavender)); outline:none; margin-top:4px; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%;
+  background:#fff; border:3px solid var(--pink-deep); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--pink-deep); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+.bg-preview-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:16px; }
+.bg-preview-card{
+  position:relative; width:100%; max-width:480px; aspect-ratio:3/2; border-radius:22px; overflow:hidden;
+  border:3px solid #ffd3ea; background:#fdf3f8; cursor:pointer; user-select:none; -webkit-user-select:none;
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); touch-action:pan-y;
+}
+.bg-preview-img{
+  position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat;
+  opacity:.9; transition:opacity .18s, filter .18s;
+}
+.bg-preview-overlay{ position:absolute; inset:0; background:rgba(0,0,0,.25); transition:background .18s; }
+.bg-preview-content{ position:relative; z-index:2; text-align:center; padding:22px; max-width:88%; }
+.bg-preview-side-label{
+  display:inline-block; font-family:'Baloo 2', cursive; font-weight:700; font-size:.72rem; letter-spacing:.5px;
+  text-transform:uppercase; color:#fff; background:rgba(0,0,0,.4); padding:4px 14px; border-radius:999px; margin-bottom:12px;
+  text-shadow:none;
+}
+.bg-preview-text{
+  font-family:Arial, sans-serif; font-size:1.1rem; font-weight:700; color:#fff; line-height:1.55;
+  text-shadow:0 1px 3px rgba(0,0,0,.9), 0 0 14px rgba(0,0,0,.6), 0 0 2px rgba(0,0,0,1);
+  max-height:170px; overflow:hidden;
+}
+.bg-preview-hint{
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:2;
+  font-size:.66rem; font-weight:700; color:#fff; background:rgba(0,0,0,.4); padding:4px 12px; border-radius:999px; opacity:.9;
+}
+.bg-preview-card.empty .bg-preview-img,
+.bg-preview-card.empty .bg-preview-overlay{ opacity:0 !important; }
+.bg-preview-card.empty .bg-preview-hint{ background:#ffe1ef; color:var(--pink-deep); }
+.bg-preview-side-label.applied{ background:rgba(20,150,95,.65); }
+
+.bg-preview-dots{ display:flex; gap:8px; }
+.bg-preview-dot{
+  width:10px; height:10px; border-radius:50%; border:none; background:#ffd3ea; cursor:pointer; padding:0; transition:.15s;
+}
+.bg-preview-dot.active{ background:var(--pink-deep); width:28px; border-radius:999px; }
+.btn.applied{ box-shadow:0 0 0 3px var(--mint) inset, 0 5px 0 #7c63e0; }
+
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
 
@@ -225,7 +275,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 .id-cell{ color:var(--ink-soft); font-weight:800; width:64px; }
 .preview-cell{ color:var(--ink-soft); max-width:220px; }
 .preview-cell .mini{
-  display:block; max-height:54px; overflow:hidden; font-size:.78rem; line-height:1.3;
+  display:block; font-size:.78rem; line-height:1.4;
 }
 .edit-cell{ min-width:260px; }
 .edit-cell textarea{
@@ -326,6 +376,12 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
   .toast{ bottom:16px; padding:10px 16px; font-size:.85rem; max-width:90vw; }
 
   .footer-note{ font-size:.72rem; margin-top:20px; }
+
+  .bg-preview-card{ max-width:100%; border-radius:18px; }
+  .bg-preview-text{ font-size:.92rem; max-height:130px; }
+  .bg-preview-side-label{ font-size:.64rem; padding:3px 11px; }
+  .bg-preview-content{ padding:16px; }
+  .bg-preview-hint{ font-size:.6rem; }
 }
 
 @media (max-width:380px){
@@ -404,6 +460,77 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       </div>
     </div>
     <div class="stats" id="statsRow"></div>
+  </div>
+
+  <!-- STEP 2.5: CARD BACKGROUND -->
+  <div class="card hidden" id="bgCard">
+    <h2><span class="step-num">✨</span> Background Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span></h2>
+    <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Ganti background tampilan kartu di Anki pakai foto sendiri. Berlaku buat note type <b id="bgModelName">-</b> yang lagi dipilih di atas.</p>
+
+    <div class="dropzone" id="bgDropzone" style="padding:22px 16px;">
+      <span class="dz-emoji">🖼️</span>
+      Pilih atau seret foto ke sini
+      <small>JPG/PNG, otomatis dikompres biar file .apkg tetap ringan</small>
+      <input type="file" id="bgFileInput" accept="image/*" />
+    </div>
+
+    <div class="hidden" id="bgControls" style="margin-top:16px;">
+      <div class="bg-preview-wrap">
+        <div class="bg-preview-card empty" id="bgPreviewCard">
+          <div class="bg-preview-img" id="bgPreviewImg"></div>
+          <div class="bg-preview-overlay" id="bgPreviewOverlay"></div>
+          <div class="bg-preview-content">
+            <span class="bg-preview-side-label" id="bgPreviewSideLabel">Depan (Front)</span>
+            <div class="bg-preview-text" id="bgPreviewText">Contoh teks kartu</div>
+          </div>
+          <div class="bg-preview-hint">👆 Ketuk / geser buat lihat sisi lainnya</div>
+        </div>
+        <div class="bg-preview-dots">
+          <button type="button" class="bg-preview-dot active" id="dotFront" title="Depan"></button>
+          <button type="button" class="bg-preview-dot" id="dotBack" title="Belakang"></button>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-bottom:16px;">
+        <button class="btn alt" id="btnApplyFront">🃏 Terapkan ke Depan</button>
+        <button class="btn alt" id="btnApplyBack">🃏 Terapkan ke Belakang</button>
+        <button class="btn ghost" id="btnClearBg">🗑️ Hapus Background</button>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="field-label">Mode Tampilan Foto</label>
+          <select id="bgFit">
+            <option value="cover">Penuhi (Cover)</option>
+            <option value="contain">Pas / Utuh (Contain)</option>
+            <option value="stretch">Regangkan (Stretch)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Posisi Foto</label>
+          <select id="bgPosition">
+            <option value="center">Tengah</option>
+            <option value="top">Atas</option>
+            <option value="bottom">Bawah</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label class="field-label">Kecerahan Foto (Opacity) — <span id="bgOpacityVal">90</span>%</label>
+        <input type="range" id="bgOpacity" min="10" max="100" value="90" />
+      </div>
+      <div style="margin-top:12px;">
+        <label class="field-label">Overlay Gelap (biar teks tetep kebaca) — <span id="bgOverlayVal">25</span>%</label>
+        <input type="range" id="bgOverlay" min="0" max="80" value="25" />
+      </div>
+      <div style="margin-top:12px;">
+        <label class="field-label">Blur — <span id="bgBlurVal">0</span>px</label>
+        <input type="range" id="bgBlur" min="0" max="12" value="0" />
+      </div>
+
+      <div id="bgStatus" style="margin-top:14px; font-weight:800; font-size:.82rem; color:var(--ink-soft);"></div>
+    </div>
   </div>
 
   <!-- STEP 3: TABLE PREVIEW / EDIT -->
@@ -511,6 +638,19 @@ const state = {
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
   selectedFieldIdxs: [0],
+  cardBg: {
+    dataUrl: null,        // buat preview di browser
+    bytes: null,           // Uint8Array (JPEG terkompres) buat disisipin ke media apkg
+    mediaFilename: '_ankihoney_card_bg.jpg',
+    fit: 'cover',
+    position: 'center',
+    opacity: 90,
+    overlay: 25,
+    blur: 0,
+    front: false,
+    back: false,
+    previewSide: 'front'
+  },
   originalFileName: 'deck.apkg'
 };
 
@@ -621,6 +761,7 @@ async function handleApkgFile(file){
 
     populateModelSelect();
     document.getElementById('selectCard').classList.remove('hidden');
+    document.getElementById('bgCard').classList.remove('hidden');
     document.getElementById('tableCard').classList.remove('hidden');
     document.getElementById('saveCard').classList.remove('hidden');
 
@@ -629,6 +770,275 @@ async function handleApkgFile(file){
     statusEl.innerHTML = '😿 Gagal baca file: ' + (err.message || err);
     say('Aduh error nya... coba file lain? 😿');
   }
+}
+
+/* ---------------- background kartu (front/back) ---------------- */
+const bgDropzone = document.getElementById('bgDropzone');
+const bgFileInput = document.getElementById('bgFileInput');
+
+bgDropzone.addEventListener('click', ()=> bgFileInput.click());
+['dragover','dragenter'].forEach(ev=> bgDropzone.addEventListener(ev, e=>{ e.preventDefault(); bgDropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev=> bgDropzone.addEventListener(ev, e=>{ e.preventDefault(); bgDropzone.classList.remove('drag'); }));
+bgDropzone.addEventListener('drop', e=>{
+  const f = e.dataTransfer.files[0];
+  if(f) handleBgImage(f);
+});
+bgFileInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(f) handleBgImage(f);
+});
+
+// Resize + kompres foto ke JPEG biar file .apkg hasil akhir tetap ringan
+function prepareBackgroundImage(file){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      const maxDim = 1600;
+      let w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        const scale = maxDim / Math.max(w,h);
+        w = Math.round(w*scale); h = Math.round(h*scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob=>{
+        URL.revokeObjectURL(url);
+        if(!blob){ reject(new Error('Gagal memproses gambar')); return; }
+        const reader = new FileReader();
+        reader.onload = ()=> resolve({ dataUrl: reader.result, blob });
+        reader.onerror = ()=> reject(new Error('Gagal baca hasil kompresi'));
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.82);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('File bukan gambar yang valid')); };
+    img.src = url;
+  });
+}
+
+async function handleBgImage(file){
+  if(!file.type || !file.type.startsWith('image/')){ toast('File harus foto/gambar ya~', '😿'); return; }
+  toast('Lagi proses fotonya...', '🖼️');
+  try{
+    const { dataUrl, blob } = await prepareBackgroundImage(file);
+    state.cardBg.dataUrl = dataUrl;
+    state.cardBg.bytes = new Uint8Array(await blob.arrayBuffer());
+    document.getElementById('bgControls').classList.remove('hidden');
+    updateBgPreview();
+    updateBgStatus();
+    toast('Foto siap! Atur tampilannya, terus klik Terapkan~', '📸');
+    say('Foto background udah siap dipasang! ✨');
+  }catch(err){
+    console.error(err);
+    toast('Gagal proses foto: '+(err.message||err), '😿');
+  }
+}
+
+document.getElementById('bgFit').addEventListener('change', e=>{ state.cardBg.fit = e.target.value; updateBgPreview(); });
+document.getElementById('bgPosition').addEventListener('change', e=>{ state.cardBg.position = e.target.value; updateBgPreview(); });
+document.getElementById('bgOpacity').addEventListener('input', e=>{
+  state.cardBg.opacity = parseInt(e.target.value);
+  document.getElementById('bgOpacityVal').textContent = e.target.value;
+  updateBgPreview();
+});
+document.getElementById('bgOverlay').addEventListener('input', e=>{
+  state.cardBg.overlay = parseInt(e.target.value);
+  document.getElementById('bgOverlayVal').textContent = e.target.value;
+  updateBgPreview();
+});
+document.getElementById('bgBlur').addEventListener('input', e=>{
+  state.cardBg.blur = parseInt(e.target.value);
+  document.getElementById('bgBlurVal').textContent = e.target.value;
+  updateBgPreview();
+});
+
+document.getElementById('btnApplyFront').addEventListener('click', ()=>{
+  if(!state.cardBg.dataUrl){ toast('Upload foto dulu ya~', '😿'); return; }
+  state.cardBg.front = !state.cardBg.front;
+  updateBgPreview(); updateBgStatus();
+  toast(state.cardBg.front ? 'Background diterapkan ke Depan!' : 'Background dilepas dari Depan', state.cardBg.front ? '✨' : '↩️');
+});
+document.getElementById('btnApplyBack').addEventListener('click', ()=>{
+  if(!state.cardBg.dataUrl){ toast('Upload foto dulu ya~', '😿'); return; }
+  state.cardBg.back = !state.cardBg.back;
+  updateBgPreview(); updateBgStatus();
+  toast(state.cardBg.back ? 'Background diterapkan ke Belakang!' : 'Background dilepas dari Belakang', state.cardBg.back ? '✨' : '↩️');
+});
+document.getElementById('btnClearBg').addEventListener('click', ()=>{
+  state.cardBg.dataUrl = null;
+  state.cardBg.bytes = null;
+  state.cardBg.front = false;
+  state.cardBg.back = false;
+  document.getElementById('bgControls').classList.add('hidden');
+  bgFileInput.value = '';
+  updateBgStatus();
+  toast('Background dihapus~', '🗑️');
+});
+
+function getSampleCardText(side){
+  const rows = currentRows();
+  if(!rows.length) return side === 'front' ? 'Contoh teks depan kartu' : 'Contoh teks belakang kartu';
+  const note = rows[0];
+  if(side === 'front'){
+    return stripHtml(note.fields[0] || '') || 'Contoh teks depan kartu';
+  }
+  const rest = note.fields.slice(1).map(f=>stripHtml(f)).filter(v=>v && v.trim()).join('   •   ');
+  return rest || 'Contoh teks belakang kartu';
+}
+
+function updateBgPreview(){
+  const cfg = state.cardBg;
+  const sizeMap = { cover:'cover', contain:'contain', stretch:'100% 100%' };
+  const posMap = { center:'center center', top:'center top', bottom:'center bottom' };
+  const side = cfg.previewSide || 'front';
+  const active = side === 'front' ? cfg.front : cfg.back;
+
+  const card = document.getElementById('bgPreviewCard');
+  const img = document.getElementById('bgPreviewImg');
+  const overlay = document.getElementById('bgPreviewOverlay');
+  const sideLabel = document.getElementById('bgPreviewSideLabel');
+  const textEl = document.getElementById('bgPreviewText');
+  if(!card) return;
+
+  sideLabel.textContent = (side === 'front' ? 'Depan (Front)' : 'Belakang (Back)') + (active ? ' · diterapkan ✅' : ' · belum diterapkan');
+  sideLabel.classList.toggle('applied', active);
+  textEl.textContent = getSampleCardText(side);
+  document.getElementById('dotFront').classList.toggle('active', side==='front');
+  document.getElementById('dotBack').classList.toggle('active', side==='back');
+
+  card.classList.toggle('empty', !cfg.dataUrl);
+  if(cfg.dataUrl){
+    img.style.backgroundImage = `url('${cfg.dataUrl}')`;
+    img.style.backgroundSize = sizeMap[cfg.fit] || 'cover';
+    img.style.backgroundPosition = posMap[cfg.position] || 'center center';
+    img.style.opacity = String(cfg.opacity/100);
+    img.style.filter = `blur(${cfg.blur}px)`;
+    overlay.style.backgroundColor = `rgba(0,0,0,${cfg.overlay/100})`;
+  }
+
+  document.getElementById('btnApplyFront').classList.toggle('applied', cfg.front);
+  document.getElementById('btnApplyBack').classList.toggle('applied', cfg.back);
+}
+
+function toggleBgPreviewSide(force){
+  state.cardBg.previewSide = force || (state.cardBg.previewSide === 'front' ? 'back' : 'front');
+  updateBgPreview();
+}
+
+(function setupBgPreviewSwipe(){
+  const card = document.getElementById('bgPreviewCard');
+  let startX = null, moved = false;
+  card.addEventListener('pointerdown', e=>{ startX = e.clientX; moved = false; });
+  card.addEventListener('pointermove', e=>{ if(startX !== null && Math.abs(e.clientX - startX) > 8) moved = true; });
+  card.addEventListener('pointerup', e=>{
+    if(startX === null) return;
+    toggleBgPreviewSide();
+    startX = null; moved = false;
+  });
+  document.getElementById('dotFront').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('front'); });
+  document.getElementById('dotBack').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('back'); });
+})();
+
+function updateBgStatus(){
+  const el = document.getElementById('bgStatus');
+  if(!el) return;
+  const cfg = state.cardBg;
+  if(!cfg.dataUrl){ el.textContent = ''; return; }
+  if(!cfg.front && !cfg.back){ el.textContent = 'Belum diterapkan ke sisi manapun — klik "Terapkan ke Depan/Belakang" di atas.'; return; }
+  const sides = [cfg.front ? 'Depan' : null, cfg.back ? 'Belakang' : null].filter(Boolean).join(' & ');
+  el.textContent = `✅ Background aktif di: ${sides} — bakal ikut kesimpen pas kamu download .apkg`;
+}
+
+/* ---- helper suntik background ke template Anki (qfmt/afmt/css), dipakai pas save ---- */
+const AH_BG_START = '/* === AnkiHoney Background START === */';
+const AH_BG_END = '/* === AnkiHoney Background END === */';
+const AH_WRAP_OPEN = '<div class="ankihoney-bg">';
+const AH_WRAP_CLOSE = '</div><!-- /ankihoney-bg -->';
+
+function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function ahWrapTemplate(html, enable){
+  html = html || '';
+  const trimmed = html.trim();
+  const alreadyWrapped = trimmed.startsWith(AH_WRAP_OPEN) && trimmed.endsWith(AH_WRAP_CLOSE);
+  if(enable){
+    if(alreadyWrapped) return html;
+    return AH_WRAP_OPEN + html + AH_WRAP_CLOSE;
+  }
+  if(alreadyWrapped){
+    return trimmed.slice(AH_WRAP_OPEN.length, trimmed.length - AH_WRAP_CLOSE.length);
+  }
+  return html;
+}
+
+function ahStripCssBlock(css){
+  css = css || '';
+  const re = new RegExp(escapeRegex(AH_BG_START)+'[\\s\\S]*?'+escapeRegex(AH_BG_END)+'\\n?', 'g');
+  return css.replace(re, '').trim();
+}
+
+function ahBuildCssBlock(cfg){
+  const sizeMap = { cover:'cover', contain:'contain', stretch:'100% 100%' };
+  const posMap = { center:'center center', top:'center top', bottom:'center bottom' };
+  const opacity = Math.max(0, Math.min(100, cfg.opacity)) / 100;
+  const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
+  const blur = Math.max(0, Math.min(20, cfg.blur));
+  return `\n${AH_BG_START}\n.ankihoney-bg{ position:relative; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${cfg.mediaFilename}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${AH_BG_END}\n`;
+}
+
+// Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
+function applyCardBackgroundToModel(model, cfg){
+  if(!model) return;
+  let css = ahStripCssBlock(model.css || '');
+  const hasBg = !!(cfg && cfg.mediaFilename && (cfg.front || cfg.back));
+  if(hasBg) css = css + ahBuildCssBlock(cfg);
+  model.css = css;
+  model.tmpls = (model.tmpls || []).map(t=> ({
+    ...t,
+    qfmt: ahWrapTemplate(t.qfmt, hasBg && cfg.front),
+    afmt: ahWrapTemplate(t.afmt, hasBg && cfg.back)
+  }));
+}
+
+// Tambahin file foto background ke media map suatu zip (format lama, media map = JSON)
+async function ensureBgMediaInZip(zip, bytes, filename){
+  let mediaMap = {};
+  const mediaEntry = zip.file('media');
+  if(mediaEntry){
+    const bytes2 = await mediaEntry.async('uint8array');
+    try{ mediaMap = JSON.parse(new TextDecoder().decode(bytes2)); }
+    catch(e){ const parsed = tryParseMediaProtobuf(bytes2); if(parsed) mediaMap = parsed; }
+  }
+  const usedNums = Object.keys(zip.files).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n));
+  const mapNums = Object.keys(mediaMap).map(n=>parseInt(n)).filter(n=>!isNaN(n));
+  const maxNum = Math.max(-1, ...usedNums, ...mapNums);
+  const key = String(maxNum+1);
+  zip.file(key, bytes);
+  mediaMap[key] = filename;
+  zip.file('media', JSON.stringify(mediaMap));
+  return filename;
+}
+
+// Suntik background ke note type yang lagi dipilih, langsung ke col.models di db format lama (schema 11/legacy)
+async function applyCardBackgroundLegacy(){
+  const res = state.db.exec("SELECT models FROM col");
+  if(!res.length || !res[0].values.length) return;
+  let modelsJson;
+  try{ modelsJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
+  const model = modelsJson[state.currentMid];
+  if(!model) return;
+
+  const cfg = state.cardBg;
+  const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
+  if(hasBg){
+    await ensureBgMediaInZip(state.zip, cfg.bytes, cfg.mediaFilename);
+    applyCardBackgroundToModel(model, { ...cfg, mediaFilename: cfg.mediaFilename });
+  } else {
+    applyCardBackgroundToModel(model, { front:false, back:false });
+  }
+  state.db.run("UPDATE col SET models=?", [JSON.stringify(modelsJson)]);
 }
 
 /* ---------------- readers yang jalan di semua versi skema Anki ---------------- */
@@ -722,13 +1132,22 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); renderTable(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
   }
   populateFieldSelect();
+  updateBgModelLabel();
   renderTable(); // fix: dulu tabel baru muncul kalau field select diutak-atik manual, sekarang langsung render pas upload
+}
+
+function updateBgModelLabel(){
+  const el = document.getElementById('bgModelName');
+  if(!el) return;
+  const model = state.models[state.currentMid];
+  el.textContent = model ? model.name : '-';
+  updateBgPreview();
 }
 
 function populateFieldSelect(){
@@ -1046,6 +1465,8 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
       });
       stmt.free();
 
+      await applyCardBackgroundLegacy();
+
       const newDbData = state.db.export();
       state.zip.file(state.collectionFileName, newDbData);
       const blob = await state.zip.generateAsync({type:'blob'});
@@ -1202,6 +1623,11 @@ async function rebuildAsLegacyApkg(){
     const fieldNames = m.flds && m.flds.length ? m.flds : ['Front','Back'];
     const deckIdForModel = Object.keys(state.decksMap)[0] || 1;
     models[mid] = buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames);
+    if(String(mid) === String(state.currentMid)){
+      const cfg = state.cardBg;
+      const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
+      applyCardBackgroundToModel(models[mid], hasBg ? { ...cfg, mediaFilename: cfg.mediaFilename } : { front:false, back:false });
+    }
   });
   if(Object.keys(models).length === 0){
     models['1'] = buildLegacyModel(1, 1, 'Basic', ['Front','Back']);
@@ -1273,6 +1699,19 @@ async function rebuildAsLegacyApkg(){
   for(const name of mediaFiles){
     const bytes = await state.zip.file(name).async('uint8array');
     newZip.file(name, bytes);
+  }
+
+  // Sisipin foto background (kalau ada) sebagai file media baru + update mapping-nya
+  const bgCfg = state.cardBg;
+  if(bgCfg.dataUrl && bgCfg.bytes && (bgCfg.front || bgCfg.back)){
+    let mediaMap = {};
+    try{ mediaMap = JSON.parse(mediaJson); }catch(e){ mediaMap = {}; }
+    const usedNums = mediaFiles.map(n=>parseInt(n)).concat(Object.keys(mediaMap).map(n=>parseInt(n))).filter(n=>!isNaN(n));
+    const maxNum = Math.max(-1, ...usedNums);
+    const key = String(maxNum+1);
+    mediaMap[key] = bgCfg.mediaFilename;
+    newZip.file(key, bgCfg.bytes);
+    newZip.file('media', JSON.stringify(mediaMap));
   }
 
   return await newZip.generateAsync({type:'blob'});
