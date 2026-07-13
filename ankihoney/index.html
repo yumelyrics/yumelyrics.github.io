@@ -1068,7 +1068,7 @@ function ahBuildCssBlock(cfg){
   const opacity = Math.max(0, Math.min(100, cfg.opacity)) / 100;
   const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
   const blur = Math.max(0, Math.min(20, cfg.blur));
-  return `\n${AH_BG_START}\n.ankihoney-bg{ position:relative; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${cfg.mediaFilename}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${AH_BG_END}\n`;
+  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${cfg.mediaFilename}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${AH_BG_END}\n`;
 }
 
 // Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
