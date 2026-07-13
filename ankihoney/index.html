@@ -1339,10 +1339,68 @@ function ahBuildCssBlock(cfg){
   const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
   const fxSelector = fx.target === 'all' ? '.ankihoney-bg, .ankihoney-bg *' : '.ankihoney-bg b, .ankihoney-bg strong';
   const fxCss = fx.enabled !== false
-    ? `/* Teks bold (vocab yang di-highlight) tetep pake warna aslinya (biar beda &\n   gampang dibedain dari teks biasa), tapi ditambahin outline/glow custom di\n   sekelilingnya biar tetep kebaca jelas di atas foto apa pun tanpa kehilangan\n   warna khasnya. Gaya, warna & ketebalannya bisa diatur di form. */\n${fxSelector}{\n  text-shadow: ${ahBuildTextShadowValue(cfg)};\n}\n`
+    ? `/* Teks bold (vocab yang di-highlight) tetep pake warna aslinya (biar beda &
+   gampang dibedain dari teks biasa), tapi ditambahin outline/glow custom di
+   sekelilingnya biar tetep kebaca jelas di atas foto apa pun tanpa kehilangan
+   warna khasnya. Gaya, warna & ketebalannya bisa diatur di form. */
+${fxSelector}{
+  text-shadow: ${ahBuildTextShadowValue(cfg)};
+}
+`
     : '';
 
-  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; isolation:isolate; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${ahBgImageRef(cfg)}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${fxCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah\n   dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper\n   nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay\n   & blur cuma ke-apply 1x, gak numpuk 2x. */\n.ankihoney-bg .ankihoney-bg::before,\n.ankihoney-bg .ankihoney-bg::after{ content:none !important; display:none !important; }\n${AH_BG_END}\n`;
+  // Panel semi-solid di belakang blok teks non-vocab (Notes, Definitions, link footer,
+  // kotak "Reveal English translation"). Ini SELALU aktif & TIDAK ikut pengaturan
+  // Outline/Shadow Teks Vocab di atas -- fitur itu sengaja cuma buat kosakata yang
+  // di-bold. Tanpa panel ini, teks biasa (yang warnanya gelap secara default di
+  // template) ketelen sama foto+overlay begitu di atas background gelap.
+  const panelCss = `/* Panel semi-solid biar Notes/Definitions/footer/link tetep kebaca jelas di
+   atas foto apa pun. Ini terpisah dari Outline/Shadow Vocab di atas (yang cuma
+   nyentuh teks bold) -- panel ini nyentuh blok teks non-bold. */
+.ankihoney-bg details,
+.ankihoney-bg .headword_section,
+.ankihoney-bg footer,
+.ankihoney-bg div.ensentence > a.hint{
+  background: rgba(20,10,20,0.62) !important;
+  color: #f5eefb !important;
+  border-color: rgba(255,255,255,0.25) !important;
+}
+.ankihoney-bg details a,
+.ankihoney-bg footer a,
+.ankihoney-bg summary{
+  color: #ffd3ea !important;
+}
+.ankihoney-bg footer > a:not(:last-child)::after{
+  color: #ffd3ea !important;
+}
+`;
+
+  return `
+${AH_BG_START}
+.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }
+html, body{ background-color:transparent !important; }
+.ankihoney-bg{ position:relative; isolation:isolate; }
+.ankihoney-bg::before{
+  content:""; position:fixed; inset:0; z-index:-2;
+  background-image:url('${ahBgImageRef(cfg)}');
+  background-size:${sizeMap[cfg.fit]||'cover'};
+  background-position:${posMap[cfg.position]||'center center'};
+  background-repeat:no-repeat;
+  opacity:${opacity};
+  filter:blur(${blur}px);
+}
+.ankihoney-bg::after{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:rgba(0,0,0,${overlay});
+}
+${fxCss}${panelCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah
+   dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper
+   nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay
+   & blur cuma ke-apply 1x, gak numpuk 2x. */
+.ankihoney-bg .ankihoney-bg::before,
+.ankihoney-bg .ankihoney-bg::after{ content:none !important; display:none !important; }
+${AH_BG_END}
+`;
 }
 
 // Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
