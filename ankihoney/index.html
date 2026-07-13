@@ -406,6 +406,29 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 </style>
 </head>
 <body>
+<script>
+(function(){
+  // Domain lock: cuma nampilin tool ini kalau diakses dari domain resmi.
+  // Catatan: ini proteksi client-side doang, gampang dilewatin kalau orangnya
+  // ngerti buka View Source & hapus baris ini — cuma nyegah copas kasual.
+  var allowedHosts = ['yumelyrics.my.id', 'www.yumelyrics.my.id', 'yumelyrics.github.io'];
+  var host = location.hostname;
+  if(host && allowedHosts.indexOf(host) === -1){
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#1a0e17;color:#fff;'
+      + 'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+      + 'text-align:center;padding:30px;font-family:Arial,sans-serif;';
+    ov.innerHTML =
+      '<div style="font-size:46px;margin-bottom:12px;">🔒</div>'
+      + '<h1 style="font-size:19px;margin:0 0 10px;font-weight:800;">AnkiHoney cuma bisa dipakai di situs resminya</h1>'
+      + '<p style="opacity:.75;max-width:420px;margin:0 0 22px;font-size:14px;line-height:1.5;">Kamu lagi buka salinan yang di-hosting di luar situs asli. Buka versi resminya di sini ya:</p>'
+      + '<a href="https://yumelyrics.my.id" style="background:linear-gradient(90deg,#ff5f6d,#a855f7);color:#fff;'
+      + 'padding:11px 26px;border-radius:999px;font-weight:700;text-decoration:none;font-size:14px;">yumelyrics.my.id</a>';
+    var lock = function(){ document.body.appendChild(ov); };
+    if(document.body) lock(); else document.addEventListener('DOMContentLoaded', lock);
+  }
+})();
+</script>
 
 <div class="sparkle-layer" id="sparkleLayer"></div>
 
@@ -643,6 +666,7 @@ const state = {
   isLatest: false,            // true kalau deck aslinya format terbaru (anki21b, zstd)
   models: {},       // mid -> {name, flds:[names...]}
   decksMap: {},     // did -> deck name
+  decksDescMap: {}, // did -> deck description asli
   deckNameOverrides: {}, // did -> custom deck name (override, dari form user)
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
@@ -972,6 +996,44 @@ function updateBgStatus(){
   el.textContent = `✅ Background aktif di: ${sides} — bakal ikut kesimpen pas kamu download .apkg`;
 }
 
+/* ---- helper deskripsi deck otomatis, dipakai pas save ---- */
+const AH_DESC_START = '[AnkiHoney]';
+const AH_DESC_END = '[/AnkiHoney]';
+
+function ahBuildDeckDescBlock(){
+  const tgl = new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+  return `${AH_DESC_START}
+<div style="font-family:'Poppins','Segoe UI',sans-serif; line-height:1.6; font-size:13px;">
+<style>
+.ah-rgb-text{
+  background:linear-gradient(90deg,#ff5f6d,#ffc371,#47cf73,#38b6ff,#a855f7,#ff5f6d);
+  background-size:300% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+  font-weight:700; letter-spacing:.3px;
+  animation:ah-rgb-shift 6s linear infinite;
+}
+@keyframes ah-rgb-shift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+</style>
+<span class="ah-rgb-text">✨ yumelyrics / ankihoney</span> — deck ini diupdate otomatis pada ${tgl}.<br>
+Gabung <a href="https://discord.gg/SW9bTRHK8H" target="_blank" rel="noopener" style="color:#5865F2; font-weight:700; text-decoration:none; border-bottom:1.5px dashed #5865F2;">Discord</a> kita buat request terjemahan deck &amp; update terbaru ya~
+</div>
+${AH_DESC_END}`;
+}
+
+function ahStripDeckDesc(desc){
+  desc = desc || '';
+  const re = new RegExp(escapeRegex(AH_DESC_START)+'[\\s\\S]*?'+escapeRegex(AH_DESC_END)+'\\n?', 'g');
+  return desc.replace(re, '').trim();
+}
+
+// Gabungin deskripsi asli (kalau ada, keterangan lama user tetap dipertahankan) dengan
+// blok deskripsi AnkiHoney yang baru — dipanggil ulang tiap export biar tanggalnya update terus.
+function ahApplyDeckDesc(origDesc){
+  const kept = ahStripDeckDesc(origDesc);
+  const block = ahBuildDeckDescBlock();
+  return kept ? (kept + '\n\n' + block) : block;
+}
+
 /* ---- helper suntik background ke template Anki (qfmt/afmt/css), dipakai pas save ---- */
 const AH_BG_START = '/* === AnkiHoney Background START === */';
 const AH_BG_END = '/* === AnkiHoney Background END === */';
@@ -1097,14 +1159,16 @@ async function ensureBgMediaInZip(zip, bytes, filename){
 // custom-nya, kartu-kartunya ikut dipindah ke ID baru itu (jadwal belajar tetap aman,
 // gak kepengaruh karena disimpen di tabel cards, bukan di deck).
 function applyDeckRenamesLegacy(){
-  if(!state.deckNameOverrides || Object.keys(state.deckNameOverrides).length === 0) return;
   const res = state.db.exec("SELECT decks FROM col");
   if(!res.length || !res[0].values.length) return;
   let decksJson;
   try{ decksJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
+
+  // 1. Rename (kasih ID baru) buat deck yang namanya diganti dari form
   let offset = 0;
-  Object.keys(state.deckNameOverrides).forEach(did=>{
-    const newName = state.deckNameOverrides[did];
+  const overrides = state.deckNameOverrides || {};
+  Object.keys(overrides).forEach(did=>{
+    const newName = overrides[did];
     const orig = decksJson[did];
     if(!orig || orig.name === newName) return;
     const newId = Date.now() + (offset++);
@@ -1112,6 +1176,12 @@ function applyDeckRenamesLegacy(){
     state.db.run("UPDATE cards SET did=? WHERE did=?", [newId, parseInt(did)]);
     delete decksJson[did];
   });
+
+  // 2. Tempelin/refresh deskripsi otomatis AnkiHoney ke semua deck yang ada
+  Object.keys(decksJson).forEach(id=>{
+    decksJson[id].desc = ahApplyDeckDesc(decksJson[id].desc || '');
+  });
+
   state.db.run("UPDATE col SET decks=?", [JSON.stringify(decksJson)]);
 }
 
@@ -1315,16 +1385,17 @@ function modelHasOriginalDesign(m){
   return !!(m && m.tmpls && m.tmpls.length && m.tmpls.every(t=> t.qfmt));
 }
 
-// Nama deck: skema lama -> JSON di col.decks. Skema baru (v18+) -> tabel decks.
+// Nama + deskripsi deck: skema lama -> JSON di col.decks. Skema baru (v18+) -> tabel decks.
 function getDecksAnyVersion(db){
   let decks = {};
+  let descs = {};
   try{
     const res = db.exec("SELECT decks FROM col");
     if(res.length && res[0].values.length){
       const json = res[0].values[0][0];
       if(json && json !== '{}'){
         const parsed = JSON.parse(json);
-        Object.keys(parsed).forEach(id=>{ decks[id] = parsed[id].name; });
+        Object.keys(parsed).forEach(id=>{ decks[id] = parsed[id].name; descs[id] = parsed[id].desc || ''; });
       }
     }
   }catch(e){ /* fallback di bawah */ }
@@ -1334,6 +1405,7 @@ function getDecksAnyVersion(db){
       if(dk.length) dk[0].values.forEach(([id, name])=>{ decks[id] = name; });
     }catch(e){ console.warn('gagal baca decks', e); }
   }
+  state.decksDescMap = descs;
   return decks;
 }
 
@@ -1820,8 +1892,8 @@ function buildLegacyModelFromDesign(mid, deckId, modelName, fieldNames, m){
   };
 }
 
-function buildLegacyDeck(id, name, now){
-  return {id, mod:now, name, usn:0, lrnToday:[0,0], revToday:[0,0], newToday:[0,0], timeToday:[0,0], collapsed:false, browserCollapsed:false, desc:"", dyn:0, conf:1, extendNew:0, extendRev:0};
+function buildLegacyDeck(id, name, now, desc){
+  return {id, mod:now, name, usn:0, lrnToday:[0,0], revToday:[0,0], newToday:[0,0], timeToday:[0,0], collapsed:false, browserCollapsed:false, desc: desc||"", dyn:0, conf:1, extendNew:0, extendRev:0};
 }
 
 function buildLegacyDconf(){
@@ -1968,17 +2040,18 @@ async function rebuildAsLegacyApkg(){
 
   let decks = {};
   const usedDids = [...new Set(remappedCardsRows.map(r=>r[2]))];
-  if(!state.decksMap['1'] && !deckIdRemap['1']) decks['1'] = buildLegacyDeck(1, 'Default', now);
+  if(!state.decksMap['1'] && !deckIdRemap['1']) decks['1'] = buildLegacyDeck(1, 'Default', now, ahApplyDeckDesc(''));
   Object.keys(state.decksMap).forEach(id=>{
+    const origDesc = (state.decksDescMap && state.decksDescMap[id]) || '';
     if(deckIdRemap[id] !== undefined){
       const newId = deckIdRemap[id];
-      decks[String(newId)] = buildLegacyDeck(newId, state.deckNameOverrides[id], now);
+      decks[String(newId)] = buildLegacyDeck(newId, state.deckNameOverrides[id], now, ahApplyDeckDesc(origDesc));
     } else {
-      decks[id] = buildLegacyDeck(parseInt(id), state.decksMap[id], now);
+      decks[id] = buildLegacyDeck(parseInt(id), state.decksMap[id], now, ahApplyDeckDesc(origDesc));
     }
   });
-  usedDids.forEach(id=>{ if(!decks[id]) decks[id] = buildLegacyDeck(id, 'Imported Deck', now); });
-  if(Object.keys(decks).length === 0) decks['1'] = buildLegacyDeck(1,'Default',now);
+  usedDids.forEach(id=>{ if(!decks[id]) decks[id] = buildLegacyDeck(id, 'Imported Deck', now, ahApplyDeckDesc('')); });
+  if(Object.keys(decks).length === 0) decks['1'] = buildLegacyDeck(1,'Default',now, ahApplyDeckDesc(''));
 
   const dconf = buildLegacyDconf();
   const firstDeckId = Object.keys(decks).find(id=>id!=='1') || Object.keys(decks)[0] || '1';
