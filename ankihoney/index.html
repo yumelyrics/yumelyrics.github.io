@@ -738,6 +738,36 @@ function toast(msg, emoji='💗'){
   toast._tm = setTimeout(()=> t.classList.remove('show'), 2600);
 }
 
+// Popup buat error teknis (bukan sekadar console.warn) -- beda sama toast() yang
+// buat notif ringan & cepet ilang, ini nunggu di-dismiss manual & ngarahin user
+// buat lapor ke Discord kalau mereka nemuin kasus ini, soalnya biasanya artinya
+// ada bentuk data baru yang belum ke-handle sama tool ini.
+const AH_DISCORD_URL = 'https://discord.gg/SW9bTRHK8H';
+function ahShowErrorPopup(msg){
+  let bg = document.getElementById('ahErrorModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahErrorModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3>😿 Ada bagian yang gagal diproses</h3>
+        <p id="ahErrorModalMsg" style="white-space:pre-wrap; font-size:.85rem; color:var(--ink-soft);"></p>
+        <p style="font-size:.85rem;">Deck kamu tetep kesimpen & bisa lanjut dipakai, tapi bagian yang gagal tadi mungkin gak sempurna. Boleh banget dilaporin ke Discord kita biar bisa dicek & diperbaiki:<br>
+          <a href="${AH_DISCORD_URL}" target="_blank" rel="noopener" style="color:#5865F2; font-weight:700; text-decoration:none; border-bottom:1.5px dashed #5865F2;">${AH_DISCORD_URL}</a>
+        </p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="ahErrorModalClose" type="button">Oke, ngerti</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.querySelector('#ahErrorModalClose').addEventListener('click', ()=> bg.classList.remove('show'));
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+  }
+  bg.querySelector('#ahErrorModalMsg').textContent = msg;
+  bg.classList.add('show');
+}
+
 /* ---------------- state ---------------- */
 const state = {
   SQL: null,
@@ -835,6 +865,7 @@ async function handleApkgFile(file){
       }catch(zerr){
         console.error(zerr);
         statusEl.innerHTML = '😿 Gagal membongkar format terbaru ini. Coba export ulang dari Anki dengan opsi "Support older Anki versions" dicentang ya~ (' + (zerr.message||zerr) + ')';
+        ahShowErrorPopup('Gagal membongkar isi deck (collection.anki21b).\nError: ' + (zerr.message||zerr) + '\n\nCoba export ulang deck dari Anki dengan opsi "Support older Anki versions" dicentang.');
         return;
       }
     } else if(legacyEntry){
@@ -2558,7 +2589,10 @@ async function rebuildAsLegacyApkg(){
     // baru diproses sebagai JSON/protobuf seperti biasa.
     if(mediaBytes.length >= 4 && mediaBytes[0]===0x28 && mediaBytes[1]===0xb5 && mediaBytes[2]===0x2f && mediaBytes[3]===0xfd){
       try{ mediaBytes = zstdDecompressSafe(mediaBytes); }
-      catch(e){ console.warn('gagal decompress manifest media zstd (best-effort):', e); }
+      catch(e){
+        console.warn('gagal decompress manifest media zstd (best-effort):', e);
+        ahShowErrorPopup('Gagal membongkar daftar nama file media (manifest "media") dari deck ini.\nError: ' + (e.message||e));
+      }
     }
     // Coba baca langsung sebagai JSON dulu (kalau ternyata bukan protobuf)
     try{
@@ -2579,13 +2613,24 @@ async function rebuildAsLegacyApkg(){
   // manapun walau nama filenya benar. Deteksi lewat magic number zstd (4 byte
   // pertama = 28 B5 2F FD) & bongkar pake fzstd (sama kayak collection.anki21b).
   const mediaFiles = Object.keys(state.zip.files).filter(name => /^\d+$/.test(name));
+  const mediaDecompressFailed = [];
   for(const name of mediaFiles){
     let bytes = await state.zip.file(name).async('uint8array');
     if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
       try{ bytes = zstdDecompressSafe(bytes); }
-      catch(e){ console.warn('gagal decompress media zstd (best-effort), file='+name, e); }
+      catch(e){
+        console.warn('gagal decompress media zstd (best-effort), file='+name, e);
+        mediaDecompressFailed.push(name);
+      }
     }
     newZip.file(name, bytes);
+  }
+  if(mediaDecompressFailed.length){
+    const contoh = mediaDecompressFailed.slice(0, 10).join(', ') + (mediaDecompressFailed.length > 10 ? ', ...' : '');
+    ahShowErrorPopup(
+      mediaDecompressFailed.length + ' dari ' + mediaFiles.length + ' file media (audio/gambar) gagal dibongkar & mungkin gak kebaca di Anki.\n' +
+      'Nomor file: ' + contoh
+    );
   }
 
   // Sisipin foto background (kalau ada & mode upload) sebagai file media baru + update mapping-nya.
