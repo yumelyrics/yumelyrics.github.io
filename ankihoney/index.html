@@ -1042,26 +1042,35 @@ function ahHexToRgb(hex){
 
 // Bangun value CSS text-shadow (tanpa prefix "text-shadow:") berdasarkan config custom.
 // Dipakai bareng buat live preview di browser & buat CSS beneran yang disuntik ke Anki.
-function ahBuildTextShadowValue(cfg){
+// Bangun deklarasi CSS (bukan cuma text-shadow) buat efek teks vocab.
+// 'outline' = garis tepi tegas ala komik: isi huruf putih polos, cuma
+//   PINGGIRANNYA doang yang kena warna custom. Pake -webkit-text-stroke
+//   (stroke digambar di tengah tepi glyph) + paint-order:stroke fill supaya
+//   fill putih ditumpuk DI ATAS separuh stroke yang ada di dalam huruf, jadi
+//   yang keliatan cuma separuh luar strokenya -> persis kayak garis outline.
+//   Ga pake blur sama sekali, jadi gak nyebar/numpuk ke karakter sebelahnya.
+// 'glow'    = bayangan lembut ngeblur di sekeliling teks, warna asli teks
+//   tetep dipertahankan (dipakai kalau user mau efek lebih soft, bukan outline).
+function ahBuildTextFxCss(cfg){
   const fx = (cfg && cfg.textFx) || {};
   const s = Math.max(1, Math.min(6, fx.strength || 3));
-  const { r, g, b } = ahHexToRgb(fx.color || '#000000');
+  const color = fx.color || '#000000';
+  const { r, g, b } = ahHexToRgb(color);
   const rgba = a => `rgba(${r},${g},${b},${a})`;
+
   if(fx.styleMode === 'outline'){
-    // outline tegas: tumpuk shadow solid ke 8 arah sejauh ketebalan yang dipilih
-    const layers = [];
-    for(let d=1; d<=s; d++){
-      layers.push(
-        `${d}px 0 0 ${rgba(1)}`, `-${d}px 0 0 ${rgba(1)}`,
-        `0 ${d}px 0 ${rgba(1)}`, `0 -${d}px 0 ${rgba(1)}`,
-        `${d}px ${d}px 0 ${rgba(1)}`, `-${d}px -${d}px 0 ${rgba(1)}`,
-        `${d}px -${d}px 0 ${rgba(1)}`, `-${d}px ${d}px 0 ${rgba(1)}`
-      );
-    }
-    return layers.join(', ');
+    const strokeWidth = (s * 0.45).toFixed(2); // 0.45px - 2.7px, tetep tipis & tegas
+    return [
+      `color: #ffffff`,
+      `-webkit-text-stroke: ${strokeWidth}px ${color}`,
+      `text-stroke: ${strokeWidth}px ${color}`,
+      `paint-order: stroke fill`,
+      `text-shadow: none`
+    ];
   }
-  // glow (default): bayangan lembut ngeblur di sekeliling teks
-  return [
+
+  // glow (default): bayangan lembut, warna huruf asli dipertahankan
+  const shadow = [
     `0 0 ${s}px ${rgba(.95)}`,
     `0 0 ${s*2}px ${rgba(.85)}`,
     `0 1px ${s}px ${rgba(.95)}`,
@@ -1069,6 +1078,7 @@ function ahBuildTextShadowValue(cfg){
     `1px 0 ${s}px ${rgba(.95)}`,
     `-1px 0 ${s}px ${rgba(.95)}`
   ].join(', ');
+  return [ `text-shadow: ${shadow}` ];
 }
 
 function updateTextFxPreview(){
@@ -1078,17 +1088,18 @@ function updateTextFxPreview(){
   controls.style.opacity = fx.enabled ? '1' : '.4';
   controls.style.pointerEvents = fx.enabled ? '' : 'none';
 
-  const shadow = fx.enabled ? `text-shadow: ${ahBuildTextShadowValue(state.cardBg)};` : '';
+  const declarations = fx.enabled ? ahBuildTextFxCss(state.cardBg).join('; ') + ';' : '';
 
-  // demo mini di background terang & gelap
+  // demo mini di background terang & gelap -- font-weight:800 dipertahankan,
+  // sisanya (color/stroke/shadow) di-reset dulu baru ditimpa declarations baru
   ['bgTextFxDemoLight','bgTextFxDemoDark'].forEach(id=>{
     const el = document.getElementById(id);
-    if(el) el.style.cssText = el.style.cssText.replace(/text-shadow:[^;]*;?/,'') + shadow;
+    if(el) el.style.cssText = 'font-weight:800; font-size:1rem;' + (declarations ? ' ' + declarations : '');
   });
 
-  // vocab bold di preview kartu utama
+  // vocab bold di preview kartu utama (cuma yang di dalam field, bukan seluruh kartu)
   const target = document.querySelectorAll('#bgPreviewText b, #bgPreviewText strong');
-  target.forEach(el=>{ el.style.cssText = shadow; });
+  target.forEach(el=>{ el.style.cssText = declarations; });
 }
 
 document.getElementById('bgTextFxEnabled').addEventListener('change', e=>{
@@ -1337,14 +1348,21 @@ function ahBuildCssBlock(cfg){
   const blur = Math.max(0, Math.min(20, cfg.blur));
 
   const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
+  // Selector ini SENGAJA dibatesin ke <b>/<strong> literal doang (yang cuma
+  // muncul dari isi field asli kayak SentKanji/VocabDef/Notes -- template ini
+  // gak nyisipin <b>/<strong> di tempat lain kayak header/footer/tags), jadi
+  // efeknya cuma nempel di kosakata yang emang dikutip/di-bold di dalam field,
+  // gak pernah ngerembet ke elemen lain di kartu.
   const fxSelector = fx.target === 'all' ? '.ankihoney-bg, .ankihoney-bg *' : '.ankihoney-bg b, .ankihoney-bg strong';
+  const fxDeclarations = ahBuildTextFxCss(cfg).map(d => `  ${d};`).join('\n');
   const fxCss = fx.enabled !== false
-    ? `/* Teks bold (vocab yang di-highlight) tetep pake warna aslinya (biar beda &
-   gampang dibedain dari teks biasa), tapi ditambahin outline/glow custom di
-   sekelilingnya biar tetep kebaca jelas di atas foto apa pun tanpa kehilangan
-   warna khasnya. Gaya, warna & ketebalannya bisa diatur di form. */
+    ? `/* Kosakata yang di-bold di dalam field (Notes/Definitions/kalimat) dikasih
+   outline/glow custom biar tetep kebaca jelas di atas foto apa pun. Mode
+   'outline': isi huruf putih polos, cuma pinggirannya doang yang kena warna
+   custom (gak nyebar ke karakter lain). Gaya, warna & ketebalannya bisa
+   diatur di form. */
 ${fxSelector}{
-  text-shadow: ${ahBuildTextShadowValue(cfg)};
+${fxDeclarations}
 }
 `
     : '';
