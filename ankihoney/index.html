@@ -576,6 +576,66 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <input type="range" id="bgBlur" min="0" max="12" value="0" />
       </div>
 
+      <div style="margin-top:18px; padding-top:14px; border-top:2px dashed #ffd3ea;">
+        <label class="field-label" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <span>✍️ Outline / Shadow Teks Vocab <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(biar kutipan tetep kebaca)</span></span>
+          <label style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.72rem; cursor:pointer; text-transform:none;">
+            <input type="checkbox" id="bgTextFxEnabled" checked style="width:16px; height:16px; cursor:pointer;" />
+            Aktif
+          </label>
+        </label>
+        <small style="display:block; margin:2px 2px 10px; color:var(--ink-soft); font-weight:600; font-size:.72rem;">
+          Nambahin outline/bayangan gelap-terang di sekitar teks yang di-<b>bold</b> di field kamu, biar kosakata yang dikutip tetep gampang dibaca walaupun foto background-nya diganti-ganti.
+        </small>
+
+        <div id="bgTextFxControls">
+          <div class="grid2">
+            <div>
+              <label class="field-label">Gaya</label>
+              <select id="bgTextFxStyle">
+                <option value="glow">Glow (bayangan lembut)</option>
+                <option value="outline">Outline (garis tegas)</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Berlaku Untuk</label>
+              <select id="bgTextFxTarget">
+                <option value="bold">Vocab yang di-bold aja</option>
+                <option value="all">Semua teks di kartu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:12px; align-items:end;">
+            <div>
+              <label class="field-label">Warna — <span id="bgTextFxColorVal">#000000</span></label>
+              <input type="color" id="bgTextFxColor" value="#000000" style="width:100%; height:38px; border-radius:10px; border:2px solid #ffd3ea; cursor:pointer; padding:2px; background:#fff;" />
+            </div>
+            <div class="btn-row" style="margin:0; gap:6px;">
+              <button type="button" class="btn ghost" id="bgTextFxPresetBlack" style="flex:1; padding:8px 4px; font-size:.7rem;">⚫ Hitam</button>
+              <button type="button" class="btn ghost" id="bgTextFxPresetWhite" style="flex:1; padding:8px 4px; font-size:.7rem;">⚪ Putih</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label class="field-label">Ketebalan — <span id="bgTextFxStrengthVal">3</span></label>
+            <input type="range" id="bgTextFxStrength" min="1" max="6" value="3" />
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:130px; border-radius:14px; padding:20px 10px; text-align:center; background:linear-gradient(135deg,#ffe9c7,#ffd3ea);">
+              <span id="bgTextFxDemoLight" style="font-weight:800; font-size:1rem; color:#7c2d12;">夢 (yume)</span>
+            </div>
+            <div style="flex:1; min-width:130px; border-radius:14px; padding:20px 10px; text-align:center; background:linear-gradient(135deg,#241733,#3a1f45);">
+              <span id="bgTextFxDemoDark" style="font-weight:800; font-size:1rem; color:#ff9fce;">夢 (yume)</span>
+            </div>
+          </div>
+          <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:600; font-size:.7rem;">
+            👆 Simulasi di background terang &amp; gelap — coba geser-geser pengaturan di atas sampai kosakatanya keliatan jelas di dua-duanya.
+          </small>
+        </div>
+      </div>
+
       <div id="bgStatus" style="margin-top:14px; font-weight:800; font-size:.82rem; color:var(--ink-soft);"></div>
     </div>
   </div>
@@ -705,7 +765,14 @@ const state = {
     blur: 0,
     front: false,
     back: false,
-    previewSide: 'front'
+    previewSide: 'front',
+    textFx: {
+      enabled: true,       // aktif/nonaktif outline/shadow custom
+      styleMode: 'glow',   // 'glow' (bayangan lembut) atau 'outline' (garis tegas)
+      color: '#000000',    // warna outline/shadow
+      strength: 3,         // ketebalan, 1-6
+      target: 'bold'       // 'bold' (cuma vocab yang di-bold) atau 'all' (semua teks)
+    }
   },
   originalFileName: 'deck.apkg'
 };
@@ -964,6 +1031,101 @@ document.getElementById('bgBlur').addEventListener('input', e=>{
   updateBgPreview();
 });
 
+/* ---------------- custom outline/shadow teks vocab ---------------- */
+function ahHexToRgb(hex){
+  hex = (hex || '#000000').replace('#','');
+  if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex, 16);
+  if(isNaN(num)) return { r:0, g:0, b:0 };
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+
+// Bangun value CSS text-shadow (tanpa prefix "text-shadow:") berdasarkan config custom.
+// Dipakai bareng buat live preview di browser & buat CSS beneran yang disuntik ke Anki.
+function ahBuildTextShadowValue(cfg){
+  const fx = (cfg && cfg.textFx) || {};
+  const s = Math.max(1, Math.min(6, fx.strength || 3));
+  const { r, g, b } = ahHexToRgb(fx.color || '#000000');
+  const rgba = a => `rgba(${r},${g},${b},${a})`;
+  if(fx.styleMode === 'outline'){
+    // outline tegas: tumpuk shadow solid ke 8 arah sejauh ketebalan yang dipilih
+    const layers = [];
+    for(let d=1; d<=s; d++){
+      layers.push(
+        `${d}px 0 0 ${rgba(1)}`, `-${d}px 0 0 ${rgba(1)}`,
+        `0 ${d}px 0 ${rgba(1)}`, `0 -${d}px 0 ${rgba(1)}`,
+        `${d}px ${d}px 0 ${rgba(1)}`, `-${d}px -${d}px 0 ${rgba(1)}`,
+        `${d}px -${d}px 0 ${rgba(1)}`, `-${d}px ${d}px 0 ${rgba(1)}`
+      );
+    }
+    return layers.join(', ');
+  }
+  // glow (default): bayangan lembut ngeblur di sekeliling teks
+  return [
+    `0 0 ${s}px ${rgba(.95)}`,
+    `0 0 ${s*2}px ${rgba(.85)}`,
+    `0 1px ${s}px ${rgba(.95)}`,
+    `0 -1px ${s}px ${rgba(.95)}`,
+    `1px 0 ${s}px ${rgba(.95)}`,
+    `-1px 0 ${s}px ${rgba(.95)}`
+  ].join(', ');
+}
+
+function updateTextFxPreview(){
+  const fx = state.cardBg.textFx;
+  const controls = document.getElementById('bgTextFxControls');
+  if(!controls) return;
+  controls.style.opacity = fx.enabled ? '1' : '.4';
+  controls.style.pointerEvents = fx.enabled ? '' : 'none';
+
+  const shadow = fx.enabled ? `text-shadow: ${ahBuildTextShadowValue(state.cardBg)};` : '';
+
+  // demo mini di background terang & gelap
+  ['bgTextFxDemoLight','bgTextFxDemoDark'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.cssText = el.style.cssText.replace(/text-shadow:[^;]*;?/,'') + shadow;
+  });
+
+  // vocab bold di preview kartu utama
+  const target = document.querySelectorAll('#bgPreviewText b, #bgPreviewText strong');
+  target.forEach(el=>{ el.style.cssText = shadow; });
+}
+
+document.getElementById('bgTextFxEnabled').addEventListener('change', e=>{
+  state.cardBg.textFx.enabled = e.target.checked;
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxStyle').addEventListener('change', e=>{
+  state.cardBg.textFx.styleMode = e.target.value;
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxTarget').addEventListener('change', e=>{
+  state.cardBg.textFx.target = e.target.value;
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxColor').addEventListener('input', e=>{
+  state.cardBg.textFx.color = e.target.value;
+  document.getElementById('bgTextFxColorVal').textContent = e.target.value;
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxStrength').addEventListener('input', e=>{
+  state.cardBg.textFx.strength = parseInt(e.target.value);
+  document.getElementById('bgTextFxStrengthVal').textContent = e.target.value;
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxPresetBlack').addEventListener('click', ()=>{
+  state.cardBg.textFx.color = '#000000';
+  document.getElementById('bgTextFxColor').value = '#000000';
+  document.getElementById('bgTextFxColorVal').textContent = '#000000';
+  updateTextFxPreview();
+});
+document.getElementById('bgTextFxPresetWhite').addEventListener('click', ()=>{
+  state.cardBg.textFx.color = '#ffffff';
+  document.getElementById('bgTextFxColor').value = '#ffffff';
+  document.getElementById('bgTextFxColorVal').textContent = '#ffffff';
+  updateTextFxPreview();
+});
+
 document.getElementById('btnApplyFront').addEventListener('click', ()=>{
   if(!ahHasBgImage(state.cardBg)){ toast(state.cardBg.mode==='url' ? 'Isi link gambar dulu ya~' : 'Upload foto dulu ya~', '😿'); return; }
   state.cardBg.front = !state.cardBg.front;
@@ -1000,6 +1162,43 @@ function getSampleCardText(side){
   return rest || 'Contoh teks belakang kartu';
 }
 
+// Buang semua tag HTML KECUALI <b>/<strong>, biar vocab yang di-highlight
+// di field asli tetep keliatan bold pas dipreview (buat nunjukkin efek outline/shadow-nya)
+function sanitizeKeepBold(str){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = str || '';
+  (function walk(node){
+    [...node.childNodes].forEach(child=>{
+      if(child.nodeType === 1){
+        const tag = child.tagName.toLowerCase();
+        if(tag === 'b' || tag === 'strong'){
+          walk(child);
+        } else {
+          node.replaceChild(document.createTextNode(child.textContent), child);
+        }
+      }
+    });
+  })(tmp);
+  return (tmp.innerHTML || '').replace(/\s+/g,' ').trim();
+}
+
+function getSampleCardHtml(side){
+  const rows = currentRows();
+  let raw = '';
+  if(rows.length){
+    const note = rows[0];
+    raw = side === 'front'
+      ? (note.fields[0] || '')
+      : note.fields.slice(1).filter(f=>f && f.trim()).join('   •   ');
+  }
+  let safe = sanitizeKeepBold(raw);
+  if(!/<b>|<strong>/i.test(safe)){
+    // gak ada vocab yang di-bold di data asli → kasih contoh biar efeknya tetep keliatan
+    safe = (safe ? safe + ' — ' : '') + 'contoh: <b>kosakata</b> yang di-bold';
+  }
+  return safe;
+}
+
 function updateBgPreview(){
   const cfg = state.cardBg;
   const sizeMap = { cover:'cover', contain:'contain', stretch:'100% 100%' };
@@ -1016,7 +1215,8 @@ function updateBgPreview(){
 
   sideLabel.textContent = (side === 'front' ? 'Depan (Front)' : 'Belakang (Back)') + (active ? ' · diterapkan ✅' : ' · belum diterapkan');
   sideLabel.classList.toggle('applied', active);
-  textEl.textContent = getSampleCardText(side);
+  textEl.innerHTML = getSampleCardHtml(side);
+  updateTextFxPreview();
   document.getElementById('dotFront').classList.toggle('active', side==='front');
   document.getElementById('dotBack').classList.toggle('active', side==='back');
 
@@ -1135,7 +1335,14 @@ function ahBuildCssBlock(cfg){
   const opacity = Math.max(0, Math.min(100, cfg.opacity)) / 100;
   const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
   const blur = Math.max(0, Math.min(20, cfg.blur));
-  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; isolation:isolate; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${ahBgImageRef(cfg)}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n/* Teks bold (vocab yang di-highlight) tetep pake warna aslinya (biar beda &\n   gampang dibedain dari teks biasa), tapi ditambahin outline/glow gelap di\n   sekelilingnya biar tetep kebaca jelas di atas foto apa pun tanpa kehilangan\n   warna khasnya. */\n.ankihoney-bg b, .ankihoney-bg strong{\n  text-shadow:\n    0 0 3px rgba(0,0,0,.95),\n    0 0 6px rgba(0,0,0,.85),\n    0 1px 2px rgba(0,0,0,.95),\n    0 -1px 2px rgba(0,0,0,.95),\n    1px 0 2px rgba(0,0,0,.95),\n    -1px 0 2px rgba(0,0,0,.95);\n}\n/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah\n   dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper\n   nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay\n   & blur cuma ke-apply 1x, gak numpuk 2x. */\n.ankihoney-bg .ankihoney-bg::before,\n.ankihoney-bg .ankihoney-bg::after{ content:none !important; display:none !important; }\n${AH_BG_END}\n`;
+
+  const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
+  const fxSelector = fx.target === 'all' ? '.ankihoney-bg, .ankihoney-bg *' : '.ankihoney-bg b, .ankihoney-bg strong';
+  const fxCss = fx.enabled !== false
+    ? `/* Teks bold (vocab yang di-highlight) tetep pake warna aslinya (biar beda &\n   gampang dibedain dari teks biasa), tapi ditambahin outline/glow custom di\n   sekelilingnya biar tetep kebaca jelas di atas foto apa pun tanpa kehilangan\n   warna khasnya. Gaya, warna & ketebalannya bisa diatur di form. */\n${fxSelector}{\n  text-shadow: ${ahBuildTextShadowValue(cfg)};\n}\n`
+    : '';
+
+  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; isolation:isolate; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${ahBgImageRef(cfg)}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${fxCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah\n   dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper\n   nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay\n   & blur cuma ke-apply 1x, gak numpuk 2x. */\n.ankihoney-bg .ankihoney-bg::before,\n.ankihoney-bg .ankihoney-bg::after{ content:none !important; display:none !important; }\n${AH_BG_END}\n`;
 }
 
 // Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
