@@ -751,8 +751,14 @@ async function handleApkgFile(file){
     }
 
     if(state.isLatest){
+      const usedMidsPreview = [...new Set(state.notes.map(n=>n.mid))];
+      const allDesignsCaptured = usedMidsPreview.length > 0 && usedMidsPreview.every(mid=> modelHasOriginalDesign(state.models[mid]));
       warnEl.classList.remove('hidden');
-      warnEl.innerHTML = '⚠️ Deck ini pakai format Anki terbaru (zstd). Bisa dibaca &amp; diedit kok! Tapi pas nanti disimpan ulang, file-nya bakal dikonversi ke format kompatibel (Legacy) — isi kartu, tag, dan jadwal belajar (due/interval) tetap aman, cuma <b>desain tampilan kartu (template depan/belakang)</b> bakal jadi tampilan sederhana generik, dan mapping media/gambar bisa jadi kurang akurat. Kalau deck kamu penting banget desain templatenya, lebih aman export ulang dari Anki dengan opsi "Support older Anki versions" dicentang dulu ya~ 🙏';
+      if(allDesignsCaptured){
+        warnEl.innerHTML = '⚠️ Deck ini pakai format Anki terbaru (zstd). Bisa dibaca &amp; diedit kok! Pas disimpan ulang, file-nya bakal dikonversi ke format kompatibel (Legacy) — isi kartu, tag, jadwal belajar (due/interval), <b>dan desain tampilan kartu (template depan/belakang + CSS) berhasil ditangkap &amp; ikut kesimpen</b>. Mapping media/gambar tetap bisa sedikit kurang akurat di kasus tertentu. Kalau ternyata pas dibuka di Anki desainnya masih meleset, export ulang dari Anki dengan opsi "Support older Anki versions" dicentang ya~ 🙏';
+      } else {
+        warnEl.innerHTML = '⚠️ Deck ini pakai format Anki terbaru (zstd). Bisa dibaca &amp; diedit kok! Isi kartu, tag, dan jadwal belajar (due/interval) tetap aman. AnkiHoney nyoba nangkep <b>desain tampilan kartu (template depan/belakang)</b> asli juga, tapi buat sebagian note type di deck ini gagal ke-baca, jadi bakal jatuh ke tampilan sederhana generik. Kalau desain templatenya penting banget, lebih aman export ulang dari Anki dengan opsi "Support older Anki versions" dicentang dulu ya~ 🙏';
+      }
     }
 
     statusEl.innerHTML = `✅ Deck kebuka! Ketemu <b>${state.notes.length}</b> catatan (notes).` + (state.isLatest ? ' <span style="color:#c98a00;">(format terbaru, lihat catatan di bawah)</span>' : '');
@@ -1043,9 +1049,124 @@ async function applyCardBackgroundLegacy(){
 
 /* ---------------- readers yang jalan di semua versi skema Anki ---------------- */
 
-// Note type / model: skema lama (v11) simpan JSON di col.models.
-// Skema baru (v15+/v18) pindahin ke tabel notetypes+fields (nama & urutan field
-// masih kolom biasa, cuma desain template qfmt/afmt yang dibungkus protobuf).
+/* ---- decoder protobuf generik minimal (best-effort), dipakai buat baca
+   desain kartu asli (qfmt/afmt/css) dari notetypes.config & templates.config
+   di skema baru (v15+/v18). Field number di bawah dicocokkan dari source
+   rslib Anki (CardTemplateConfig: q_format=1, a_format=2; NotetypeConfig:
+   kind=1, sort_field_idx=2, css=3) — bukan API resmi, jadi kalau versi Anki
+   ke depan ganti layout protobuf-nya, kode ini fallback aman ke template
+   generik biasa (liat hasOriginalDesign di rebuildAsLegacyApkg) ---- */
+function pbReadVarint(bytes, pos){
+  let result = 0, shift = 0, b;
+  do{
+    b = bytes[pos.i++];
+    result += (b & 0x7f) * Math.pow(2, shift);
+    shift += 7;
+  } while(b & 0x80);
+  return result;
+}
+function pbDecode(bytes){
+  const fields = {};
+  const pos = {i:0};
+  while(pos.i < bytes.length){
+    const tag = pbReadVarint(bytes, pos);
+    const fieldNum = tag >>> 3, wireType = tag & 0x7;
+    let entry;
+    if(wireType === 0){
+      entry = { wireType, varint: pbReadVarint(bytes, pos) };
+    } else if(wireType === 2){
+      const len = pbReadVarint(bytes, pos);
+      entry = { wireType, raw: bytes.slice(pos.i, pos.i+len) };
+      pos.i += len;
+    } else if(wireType === 1){
+      entry = { wireType, raw: bytes.slice(pos.i, pos.i+8) }; pos.i += 8;
+    } else if(wireType === 5){
+      entry = { wireType, raw: bytes.slice(pos.i, pos.i+4) }; pos.i += 4;
+    } else {
+      throw new Error('wiretype protobuf tak dikenal: '+wireType);
+    }
+    if(!fields[fieldNum]) fields[fieldNum] = [];
+    fields[fieldNum].push(entry);
+  }
+  return fields;
+}
+function pbGetString(fields, num){
+  const arr = fields[num];
+  if(!arr || !arr.length) return '';
+  const last = arr[arr.length-1];
+  if(last.wireType !== 2) return '';
+  try{ return new TextDecoder().decode(last.raw); }catch(e){ return ''; }
+}
+function pbGetVarint(fields, num){
+  const arr = fields[num];
+  if(!arr || !arr.length) return null;
+  const last = arr[arr.length-1];
+  return last.wireType === 0 ? last.varint : null;
+}
+
+// Nomor field css di NotetypeConfig (best-effort tebakan = 3) gak sepenuhnya
+// bisa diverifikasi dari luar source Anki, jadi biar gak gampang ketuker sama
+// string field lain di config yang sama (misal latex_pre/latex_post), kita
+// scoring semua kandidat string top-level & pilih yang paling "keliatan CSS".
+function pbGuessCss(fields){
+  let best = '', bestScore = -Infinity;
+  Object.keys(fields).forEach(numStr=>{
+    fields[numStr].forEach(entry=>{
+      if(entry.wireType !== 2) return;
+      let text;
+      try{ text = new TextDecoder().decode(entry.raw); }catch(e){ return; }
+      if(!text) return;
+      let score = 0;
+      if(/\.card\b/.test(text)) score += 10;
+      if(/\{[^{}]*:[^{}]*;/.test(text)) score += 5; // pola "properti: nilai;"
+      if(/\\documentclass|\\usepackage|\\begin\{document\}/.test(text)) score -= 100; // itu latex, bukan css
+      if(/\{\{.*?\}\}/.test(text)) score -= 100; // itu qfmt/afmt (handlebars), bukan css
+      if(numStr === '3') score += 1; // tie-breaker: field 3 = tebakan awal dari pola proto Anki
+      if(score > bestScore){ bestScore = score; best = text; }
+    });
+  });
+  return bestScore > 0 ? best : (pbGetString(fields, 3) || '');
+}
+
+// Baca desain kartu asli (css + qfmt/afmt tiap template) dari tabel notetypes/templates
+// skema baru. Balikin mid -> {css, type, tmpls:[{name,ord,qfmt,afmt}]}. Best-effort:
+// kalau satu blob gagal di-decode, note type itu aja yang dilewatin (gak nge-crash semua).
+function getNewSchemaModelDesigns(db){
+  const designs = {};
+  try{
+    const nt = db.exec("SELECT id, config FROM notetypes");
+    if(nt.length){
+      nt[0].values.forEach(([id, configBlob])=>{
+        try{
+          const fields = pbDecode(new Uint8Array(configBlob));
+          const css = pbGuessCss(fields);
+          const kind = pbGetVarint(fields, 1);
+          designs[id] = { css: css || '', type: kind===1 ? 1 : 0, tmpls: [] };
+        }catch(e){ console.warn('gagal decode notetypes.config (best-effort), mid='+id, e); }
+      });
+    }
+  }catch(e){ console.warn('gagal baca tabel notetypes.config', e); }
+
+  try{
+    const tpl = db.exec("SELECT ntid, ord, name, config FROM templates ORDER BY ntid, ord");
+    if(tpl.length){
+      tpl[0].values.forEach(([ntid, ord, name, configBlob])=>{
+        if(!designs[ntid]) designs[ntid] = { css:'', type:0, tmpls:[] };
+        try{
+          const fields = pbDecode(new Uint8Array(configBlob));
+          const qfmt = pbGetString(fields, 1);
+          const afmt = pbGetString(fields, 2);
+          designs[ntid].tmpls.push({ name: name||('Card '+(ord+1)), ord, qfmt, afmt, bqfmt:'', bafmt:'', did:null, bfont:'', bsize:0 });
+        }catch(e){ console.warn('gagal decode templates.config (best-effort), ntid='+ntid, e); }
+      });
+    }
+  }catch(e){ console.warn('gagal baca tabel templates', e); }
+  return designs;
+}
+
+// Note type / model: skema lama (v11) simpan JSON di col.models, lengkap sama
+// desain kartunya (tmpls: qfmt/afmt, css). Skema baru (v15+/v18) pindahin ke
+// tabel notetypes+fields+templates, desainnya dibungkus protobuf (getNewSchemaModelDesigns).
 function getModelsAnyVersion(db){
   let models = {};
   try{
@@ -1056,7 +1177,16 @@ function getModelsAnyVersion(db){
         const parsed = JSON.parse(json);
         Object.keys(parsed).forEach(mid=>{
           const m = parsed[mid];
-          models[mid] = { name: m.name, flds: m.flds.map(f=>f.name) };
+          models[mid] = {
+            name: m.name,
+            flds: m.flds.map(f=>f.name),
+            type: m.type || 0,
+            css: m.css || '',
+            tmpls: (m.tmpls||[]).map(t=>({
+              name: t.name, ord: t.ord, qfmt: t.qfmt||'', afmt: t.afmt||'',
+              bqfmt: t.bqfmt||'', bafmt: t.bafmt||'', did:null, bfont: t.bfont||'', bsize: t.bsize||0
+            }))
+          };
         });
       }
     }
@@ -1074,13 +1204,27 @@ function getModelsAnyVersion(db){
             fieldMap[ntid][ord] = name;
           });
         }
+        const designs = getNewSchemaModelDesigns(db);
         nt[0].values.forEach(([id, name])=>{
-          models[id] = { name, flds: (fieldMap[id]||[]).filter(n=>n!==undefined) };
+          const d = designs[id] || {};
+          models[id] = {
+            name,
+            flds: (fieldMap[id]||[]).filter(n=>n!==undefined),
+            type: d.type || 0,
+            css: d.css || '',
+            tmpls: (d.tmpls||[]).filter(t=> t.qfmt) // buang kalau protobuf gagal / kosong
+          };
         });
       }
     }catch(e){ console.warn('gagal baca notetypes', e); }
   }
   return models;
+}
+
+// Cek apakah desain kartu asli (qfmt/afmt tiap template) berhasil ditangkap
+// buat suatu model — dipakai buat mutusin rebuild pake desain asli vs generik.
+function modelHasOriginalDesign(m){
+  return !!(m && m.tmpls && m.tmpls.length && m.tmpls.every(t=> t.qfmt));
 }
 
 // Nama deck: skema lama -> JSON di col.decks. Skema baru (v18+) -> tabel decks.
@@ -1516,6 +1660,32 @@ function buildLegacyModel(mid, deckId, modelName, fieldNames){
   };
 }
 
+// Sama kayak buildLegacyModel, tapi pake desain kartu ASLI (qfmt/afmt/css) yang
+// berhasil ditangkap dari deck sumbernya, bukan bikin template generik baru.
+function buildLegacyModelFromDesign(mid, deckId, modelName, fieldNames, m){
+  const flds = fieldNames.map((name,i)=>({name, ord:i, sticky:false, rtl:false, font:"Arial", size:20, media:[]}));
+  const tmpls = m.tmpls
+    .map((t,i)=>({
+      name: t.name || ('Card '+(i+1)),
+      ord: (typeof t.ord === 'number' ? t.ord : i),
+      qfmt: t.qfmt, afmt: t.afmt,
+      bqfmt: t.bqfmt||'', bafmt: t.bafmt||'', did:null,
+      bfont: t.bfont||'', bsize: t.bsize||0
+    }))
+    .sort((a,b)=> a.ord - b.ord);
+  return {
+    id: mid, name: modelName, type: m.type||0, mod: Math.floor(Date.now()/1000), usn: 0, sortf: 0, did: deckId,
+    tmpls,
+    flds,
+    css: m.css && m.css.trim() ? m.css : ".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n",
+    latexPre: "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    latexPost: "\\end{document}",
+    latexsvg: false,
+    req: tmpls.map((t,i)=>[i, "any", [0]]),
+    tags: [], vers: []
+  };
+}
+
 function buildLegacyDeck(id, name, now){
   return {id, mod:now, name, usn:0, lrnToday:[0,0], revToday:[0,0], newToday:[0,0], timeToday:[0,0], collapsed:false, browserCollapsed:false, desc:"", dyn:0, conf:1, extendNew:0, extendRev:0};
 }
@@ -1622,7 +1792,9 @@ async function rebuildAsLegacyApkg(){
     if(!m) return;
     const fieldNames = m.flds && m.flds.length ? m.flds : ['Front','Back'];
     const deckIdForModel = Object.keys(state.decksMap)[0] || 1;
-    models[mid] = buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames);
+    models[mid] = modelHasOriginalDesign(m)
+      ? buildLegacyModelFromDesign(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames, m)
+      : buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames);
     if(String(mid) === String(state.currentMid)){
       const cfg = state.cardBg;
       const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
