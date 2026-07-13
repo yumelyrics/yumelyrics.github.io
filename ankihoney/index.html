@@ -2313,20 +2313,21 @@ function buildLegacyDconf(){
 // Coba parse mapping media (skema baru simpan sebagai Protobuf MediaEntries: repeated {name, size, sha1}).
 // Best-effort: kalau parsing gagal / hasilnya ga masuk akal, balikin null biar caller fallback aman.
 function tryParseMediaProtobuf(bytes){
-  try{
-    let pos = 0;
-    function readVarint(buf){
-      let result = 0, shift = 0, b;
-      do{
-        b = buf[pos++];
-        result |= (b & 0x7f) << shift;
-        shift += 7;
-      } while(b & 0x80);
-      return result >>> 0;
-    }
-    const map = {};
-    let idx = 0;
-    while(pos < bytes.length){
+  let pos = 0;
+  function readVarint(buf){
+    let result = 0, shift = 0, b;
+    do{
+      b = buf[pos++];
+      if(b === undefined) throw new Error('kehabisan byte pas baca varint');
+      result += (b & 0x7f) * Math.pow(2, shift);
+      shift += 7;
+    } while(b & 0x80);
+    return result;
+  }
+  const map = {};
+  let idx = 0;
+  while(pos < bytes.length){
+    try{
       const tag = readVarint(bytes);
       const fieldNum = tag >>> 3, wireType = tag & 0x7;
       if(fieldNum === 1 && wireType === 2){
@@ -2345,7 +2346,7 @@ function tryParseMediaProtobuf(bytes){
           } else if(wt2 === 2){
             const l3 = readVarint(bytes);
             pos += l3;
-          } else { throw new Error('wiretype tak dikenal'); }
+          } else { throw new Error('wiretype tak dikenal di dalam entry: '+wt2); }
         }
         pos = entryEnd;
         if(name) map[idx] = name;
@@ -2356,14 +2357,21 @@ function tryParseMediaProtobuf(bytes){
         const len = readVarint(bytes);
         pos += len;
       } else {
-        throw new Error('wiretype tak dikenal di level atas');
+        throw new Error('wiretype tak dikenal di level atas: '+wireType);
       }
+    }catch(e){
+      // PENTING (fix): dulu satu error DI MANA PUN di 2500+ entry bikin SEMUA
+      // mapping ke-buang (balik null -> caller pake '{}' -> semua nama file media
+      // ilang, audio/gambar jadi gak kebaca sama sekali di Anki). Sekarang begitu
+      // ketemu entry yang gagal di-decode, kita cuma STOP baca dari titik itu
+      // (gak bisa lanjut karena batas entry berikutnya jadi gak jelas), tapi
+      // entry-entry SEBELUMNYA yang udah berhasil ke-parse tetap dipertahankan &
+      // dibalikin -- best-effort partial jauh lebih baik daripada kehilangan semua.
+      console.warn('parse media protobuf berhenti di entry ke-'+idx+' (best-effort, entry sebelumnya tetap disimpan):', e);
+      break;
     }
-    return Object.keys(map).length ? map : null;
-  }catch(e){
-    console.warn('parse media protobuf gagal (best-effort):', e);
-    return null;
   }
+  return Object.keys(map).length ? map : null;
 }
 
 async function rebuildAsLegacyApkg(){
@@ -2531,10 +2539,19 @@ async function rebuildAsLegacyApkg(){
   }
   newZip.file('media', mediaJson);
 
-  // Salin semua file media bernomor (gambar/audio) apa adanya
+  // Salin semua file media bernomor (gambar/audio). PENTING (fix): di format Anki
+  // terbaru (anki21b), file media individual ITU SENDIRI juga dikompres zstd
+  // (bukan cuma collection-nya) -- kalau dicopy "apa adanya" tanpa dibongkar,
+  // hasilnya bukan audio/gambar valid, jadi gak kebaca sama sekali oleh Anki
+  // manapun walau nama filenya benar. Deteksi lewat magic number zstd (4 byte
+  // pertama = 28 B5 2F FD) & bongkar pake fzstd (sama kayak collection.anki21b).
   const mediaFiles = Object.keys(state.zip.files).filter(name => /^\d+$/.test(name));
   for(const name of mediaFiles){
-    const bytes = await state.zip.file(name).async('uint8array');
+    let bytes = await state.zip.file(name).async('uint8array');
+    if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+      try{ bytes = fzstd.decompress(bytes); }
+      catch(e){ console.warn('gagal decompress media zstd (best-effort), file='+name, e); }
+    }
     newZip.file(name, bytes);
   }
 
