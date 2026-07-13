@@ -186,6 +186,9 @@ select, textarea, input[type=text]{
 }
 select:focus, textarea:focus, input:focus{ outline:2px solid var(--pink); }
 label.field-label{ font-weight:800; font-size:.8rem; color:var(--ink-soft); display:block; margin-bottom:5px; }
+.deck-name-row{ margin-bottom:10px; }
+.deck-name-row:last-child{ margin-bottom:0; }
+.deck-name-row .deck-name-orig{ font-size:.72rem; font-weight:700; color:var(--ink-soft); margin-bottom:3px; opacity:.75; }
 
 input[type=range]{
   -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:999px;
@@ -563,6 +566,11 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
   <div class="card hidden" id="saveCard">
     <h2><span class="step-num">4</span> Simpan Deck Baru</h2>
     <p style="font-weight:700; color:var(--ink-soft); margin-top:0;">Setelah field-nya diganti sama hasil terjemahan, download ulang jadi .apkg buat diimport ke Anki lagi ✨</p>
+    <div id="deckNameCard" style="margin-bottom:16px;">
+      <label class="field-label">Nama Deck yang bakal tampil di Anki</label>
+      <p style="font-size:.76rem; color:var(--ink-soft); opacity:.85; margin-top:-4px; margin-bottom:8px;">⚠️ Kalau nama deck ini diganti dari nama aslinya, pas diimport ke Anki bakal <b>kebuat deck BARU</b> dengan nama itu (bukan nge-update nama deck yang lama). Deck lama tetap ada di Anki tapi jadi kosong (kartunya pindah semua ke deck baru) — bisa dihapus manual kalau udah gak kepake.</p>
+      <div id="deckNameList"></div>
+    </div>
     <div class="btn-row">
       <button class="btn mint" id="btnDownloadApkg">💾 Download .apkg Hasil Update</button>
     </div>
@@ -635,6 +643,7 @@ const state = {
   isLatest: false,            // true kalau deck aslinya format terbaru (anki21b, zstd)
   models: {},       // mid -> {name, flds:[names...]}
   decksMap: {},     // did -> deck name
+  deckNameOverrides: {}, // did -> custom deck name (override, dari form user)
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
   selectedFieldIdxs: [0],
@@ -730,6 +739,11 @@ async function handleApkgFile(file){
 
     state.models = getModelsAnyVersion(db);
     state.decksMap = getDecksAnyVersion(db);
+    state.usedDeckIds = [];
+    try{
+      const cardsDidRes = db.exec("SELECT DISTINCT did FROM cards");
+      if(cardsDidRes.length) state.usedDeckIds = cardsDidRes[0].values.map(r=>String(r[0]));
+    }catch(e){ console.warn('gagal baca did dari cards', e); }
 
     // load notes (kolom ini stabil di semua versi skema Anki)
     const notesRes = db.exec("SELECT id, guid, mid, tags, flds FROM notes");
@@ -739,7 +753,7 @@ async function handleApkgFile(file){
         const [id, guid, mid, tags, flds] = row;
         state.notes.push({
           id, guid: String(guid||''), mid: String(mid), tags: String(tags||''),
-          fields: String(flds).split('\x1f'),
+          fields: String(flds).split('\x1f').map(f=> ahStripWmHtml(f)),
           dirty: false
         });
       });
@@ -766,6 +780,7 @@ async function handleApkgFile(file){
     toast('Deck berhasil dibuka!', '🎉');
 
     populateModelSelect();
+    populateDeckNameInputs();
     document.getElementById('selectCard').classList.remove('hidden');
     document.getElementById('bgCard').classList.remove('hidden');
     document.getElementById('tableCard').classList.remove('hidden');
@@ -1008,6 +1023,52 @@ function applyCardBackgroundToModel(model, cfg){
   }));
 }
 
+/* ---- helper suntik watermark "yumelyrics / ankihoney" ke tiap kartu, dipakai pas save ---- */
+const AH_WM_CSS_START = '/* === AnkiHoney Watermark START === */';
+const AH_WM_CSS_END = '/* === AnkiHoney Watermark END === */';
+const AH_WM_HTML_START = '<!-- AnkiHoney Watermark START -->';
+const AH_WM_HTML_END = '<!-- AnkiHoney Watermark END -->';
+const AH_WM_TEXT = '🍯 yumelyrics / ankihoney';
+const AH_WM_URL = 'https://discord.gg/SW9bTRHK8H';
+const AH_WM_HTML = `${AH_WM_HTML_START}<a class="ankihoney-wm" href="${AH_WM_URL}" target="_blank" rel="noopener">${AH_WM_TEXT}</a>${AH_WM_HTML_END}`;
+const AH_WM_CSS = `\n${AH_WM_CSS_START}\n.ankihoney-wm{\n  position:fixed; right:8px; bottom:5px; z-index:9999;\n  font-family:'Poppins','Quicksand','Century Gothic','Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;\n  font-size:10.5px; font-weight:600; letter-spacing:.3px;\n  color:#a8a8a8; opacity:.6; text-decoration:none; pointer-events:auto; cursor:pointer;\n  transition:opacity .15s ease;\n}\n.ankihoney-wm:hover{ opacity:.95; color:#7a7a7a; text-decoration:underline; }\n${AH_WM_CSS_END}\n`;
+
+function ahStripWmHtml(html){
+  html = html || '';
+  const re = new RegExp(escapeRegex(AH_WM_HTML_START)+'[\\s\\S]*?'+escapeRegex(AH_WM_HTML_END), 'g');
+  return html.replace(re, '');
+}
+
+function ahStripWmCss(css){
+  css = css || '';
+  const re = new RegExp(escapeRegex(AH_WM_CSS_START)+'[\\s\\S]*?'+escapeRegex(AH_WM_CSS_END)+'\\n?', 'g');
+  return css.replace(re, '').trim();
+}
+
+// Suntik watermark ke satu objek model Anki: tambahin div kecil di pojok tiap
+// template (qfmt & afmt) + CSS-nya. Dipanggil otomatis buat semua model pas rebuild.
+function applyWatermarkToModel(model){
+  if(!model) return;
+  model.css = ahStripWmCss(model.css || '') + AH_WM_CSS;
+  model.tmpls = (model.tmpls || []).map(t=> ({
+    ...t,
+    qfmt: ahStripWmHtml(t.qfmt || '') + AH_WM_HTML,
+    afmt: ahStripWmHtml(t.afmt || '') + AH_WM_HTML
+  }));
+}
+
+// Suntik watermark ke TAG asli Anki (bukan ke isi field manapun) — jadi gak pernah
+// numpang ke field konten (yang bisa aja lagi dipakai template buat nampilin sesuatu,
+// misal field "Tags" custom milik user sendiri) dan gak ngerusak tampilan kartu sama
+// sekali. Tetep nempel ke DATA note (bukan cuma template), cuma gak keliatan di kartu,
+// cuma keliatan di list tag / browser Anki. Dipanggil pas EXPORT aja.
+const AH_WM_TAG = 'yumelyrics/ankihoney';
+function injectWmIntoTags(tags){
+  const parts = (tags || '').trim().split(/\s+/).filter(t=> t && t !== AH_WM_TAG);
+  parts.push(AH_WM_TAG);
+  return parts.join(' ');
+}
+
 // Tambahin file foto background ke media map suatu zip (format lama, media map = JSON)
 async function ensureBgMediaInZip(zip, bytes, filename){
   let mediaMap = {};
@@ -1028,6 +1089,32 @@ async function ensureBgMediaInZip(zip, bytes, filename){
 }
 
 // Suntik background ke note type yang lagi dipilih, langsung ke col.models di db format lama (schema 11/legacy)
+// Terapin nama deck custom dari form user ke database format lama (in-place edit).
+// PENTING: Anki nyocokin deck pas import berdasarkan ID, bukan nama — kalau ID-nya
+// sama kayak deck yang udah ada di koleksi Anki user, nama baru bakal DIABAIKAN dan
+// tetep pake nama lama. Makanya di sini bikin ID deck BARU (belum pernah ada) buat
+// deck yang namanya diganti, biar Anki nganggep itu deck baru & beneran pake nama
+// custom-nya, kartu-kartunya ikut dipindah ke ID baru itu (jadwal belajar tetap aman,
+// gak kepengaruh karena disimpen di tabel cards, bukan di deck).
+function applyDeckRenamesLegacy(){
+  if(!state.deckNameOverrides || Object.keys(state.deckNameOverrides).length === 0) return;
+  const res = state.db.exec("SELECT decks FROM col");
+  if(!res.length || !res[0].values.length) return;
+  let decksJson;
+  try{ decksJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
+  let offset = 0;
+  Object.keys(state.deckNameOverrides).forEach(did=>{
+    const newName = state.deckNameOverrides[did];
+    const orig = decksJson[did];
+    if(!orig || orig.name === newName) return;
+    const newId = Date.now() + (offset++);
+    decksJson[String(newId)] = { ...orig, id: newId, name: newName };
+    state.db.run("UPDATE cards SET did=? WHERE did=?", [newId, parseInt(did)]);
+    delete decksJson[did];
+  });
+  state.db.run("UPDATE col SET decks=?", [JSON.stringify(decksJson)]);
+}
+
 async function applyCardBackgroundLegacy(){
   const res = state.db.exec("SELECT models FROM col");
   if(!res.length || !res[0].values.length) return;
@@ -1044,6 +1131,7 @@ async function applyCardBackgroundLegacy(){
   } else {
     applyCardBackgroundToModel(model, { front:false, back:false });
   }
+  Object.keys(modelsJson).forEach(mid=> applyWatermarkToModel(modelsJson[mid]));
   state.db.run("UPDATE col SET models=?", [JSON.stringify(modelsJson)]);
 }
 
@@ -1261,6 +1349,48 @@ function readRowsSafe(db, sql){
     console.warn('readRowsSafe gagal:', sql, e);
     return [];
   }
+}
+
+function populateDeckNameInputs(){
+  state.deckNameOverrides = {};
+  const wrap = document.getElementById('deckNameList');
+  wrap.innerHTML = '';
+
+  // Cuma tampilin deck yang beneran ditempelin kartu (bukan deck kosong/parent bawaan Anki)
+  let idsToShow = (state.usedDeckIds && state.usedDeckIds.length)
+    ? state.usedDeckIds.filter(id=> state.decksMap[id] !== undefined)
+    : Object.keys(state.decksMap);
+  if(idsToShow.length === 0) idsToShow = Object.keys(state.decksMap);
+  if(idsToShow.length === 0) return;
+
+  if(idsToShow.length === 1){
+    const id = idsToShow[0];
+    const origName = state.decksMap[id];
+    const row = document.createElement('div');
+    row.className = 'deck-name-row';
+    row.innerHTML = `<input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${origName}" />`;
+    wrap.appendChild(row);
+  } else {
+    idsToShow.forEach(id=>{
+      const origName = state.decksMap[id];
+      const row = document.createElement('div');
+      row.className = 'deck-name-row';
+      row.innerHTML = `
+        <div class="deck-name-orig">Ganti nama deck: "${origName}"</div>
+        <input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${origName}" />
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  wrap.querySelectorAll('.deckNameInput').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const did = inp.dataset.did;
+      const val = inp.value.trim();
+      if(val) state.deckNameOverrides[did] = val;
+      else delete state.deckNameOverrides[did];
+    });
+  });
 }
 
 function populateModelSelect(){
@@ -1601,14 +1731,18 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
     let updatedCount = state.notes.filter(n=>n.dirty).length;
 
     if(!state.isLatest){
-      // Format lama: tinggal UPDATE flds di database yang sama, aman 100%, semua data lain utuh.
-      const stmt = state.db.prepare("UPDATE notes SET flds=?, mod=? WHERE id=?");
+      // Format lama: UPDATE flds+tags di database yang sama. Semua note ditulis ulang
+      // (bukan cuma yang dirty) supaya tag watermark ikut ke-suntik ke semuanya.
+      const stmt = state.db.prepare("UPDATE notes SET flds=?, tags=?, mod=? WHERE id=?");
       const now = Math.floor(Date.now()/1000);
       state.notes.forEach(n=>{
-        if(n.dirty) stmt.run([n.fields.join('\x1f'), now, n.id]);
+        const flds = n.fields.join('\x1f');
+        const tags = injectWmIntoTags(n.tags);
+        stmt.run([flds, tags, now, n.id]);
       });
       stmt.free();
 
+      applyDeckRenamesLegacy();
       await applyCardBackgroundLegacy();
 
       const newDbData = state.db.export();
@@ -1800,15 +1934,49 @@ async function rebuildAsLegacyApkg(){
       const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
       applyCardBackgroundToModel(models[mid], hasBg ? { ...cfg, mediaFilename: cfg.mediaFilename } : { front:false, back:false });
     }
+    applyWatermarkToModel(models[mid]);
   });
   if(Object.keys(models).length === 0){
     models['1'] = buildLegacyModel(1, 1, 'Basic', ['Front','Back']);
+    applyWatermarkToModel(models['1']);
   }
 
+  // PENTING: Anki nyocokin deck pas import berdasarkan ID, bukan nama — kalau ID
+  // deck di file ini sama kayak deck yang UDAH ADA di koleksi Anki user (dan memang
+  // begitu, karena file ini asalnya export dari deck itu sendiri), nama baru bakal
+  // DIABAIKAN & tetep pake nama lama pas diimport. Makanya buat deck yang namanya
+  // diganti, kasih ID BARU (belum pernah ada) biar Anki nganggep itu deck baru &
+  // beneran pake nama custom-nya. Kartu-kartu yang tadinya nempel di ID lama ikut
+  // dipindah ke ID baru (jadwal belajar aman, itu disimpen di tabel cards, bukan di deck).
+  let deckIdRemap = {}; // old did (string) -> new did (number)
+  let offset = 0;
+  Object.keys(state.deckNameOverrides).forEach(id=>{
+    const newName = state.deckNameOverrides[id];
+    if(state.decksMap[id] && state.decksMap[id] !== newName){
+      deckIdRemap[id] = Date.now() + (offset++);
+    }
+  });
+  const remappedCardsRows = cardsRows.map(row=>{
+    const oldDid = String(row[2]);
+    if(deckIdRemap[oldDid] !== undefined){
+      const newRow = row.slice();
+      newRow[2] = deckIdRemap[oldDid];
+      return newRow;
+    }
+    return row;
+  });
+
   let decks = {};
-  const usedDids = [...new Set(cardsRows.map(r=>r[2]))];
-  if(!state.decksMap['1']) decks['1'] = buildLegacyDeck(1, 'Default', now);
-  Object.keys(state.decksMap).forEach(id=>{ decks[id] = buildLegacyDeck(parseInt(id), state.decksMap[id], now); });
+  const usedDids = [...new Set(remappedCardsRows.map(r=>r[2]))];
+  if(!state.decksMap['1'] && !deckIdRemap['1']) decks['1'] = buildLegacyDeck(1, 'Default', now);
+  Object.keys(state.decksMap).forEach(id=>{
+    if(deckIdRemap[id] !== undefined){
+      const newId = deckIdRemap[id];
+      decks[String(newId)] = buildLegacyDeck(newId, state.deckNameOverrides[id], now);
+    } else {
+      decks[id] = buildLegacyDeck(parseInt(id), state.decksMap[id], now);
+    }
+  });
   usedDids.forEach(id=>{ if(!decks[id]) decks[id] = buildLegacyDeck(id, 'Imported Deck', now); });
   if(Object.keys(decks).length === 0) decks['1'] = buildLegacyDeck(1,'Default',now);
 
@@ -1827,13 +1995,14 @@ async function rebuildAsLegacyApkg(){
   state.notes.forEach(n=>{
     const flds = n.fields.join('\x1f');
     const sfld = stripHtml(n.fields[0] || '');
-    noteStmt.run([n.id, n.guid || ('n'+n.id.toString(36)), parseInt(n.mid), now, -1, n.tags||'', flds, sfld, simpleChecksumLocal(sfld), 0, '']);
+    const tags = injectWmIntoTags(n.tags);
+    noteStmt.run([n.id, n.guid || ('n'+n.id.toString(36)), parseInt(n.mid), now, -1, tags, flds, sfld, simpleChecksumLocal(sfld), 0, '']);
   });
   noteStmt.free();
 
-  if(cardsRows.length){
+  if(remappedCardsRows.length){
     const cardStmt = db.prepare("INSERT INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    cardsRows.forEach(row=> cardStmt.run(row));
+    remappedCardsRows.forEach(row=> cardStmt.run(row));
     cardStmt.free();
   }
   if(revlogRows.length){
