@@ -493,11 +493,31 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     <h2><span class="step-num">✨</span> Background Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span></h2>
     <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Ganti background tampilan kartu di Anki pakai foto sendiri. Berlaku buat note type <b id="bgModelName">-</b> yang lagi dipilih di atas.</p>
 
+    <div style="background:#fff8e6; border:2px dashed #ffcf6b; border-radius:14px; padding:12px 14px; margin-bottom:14px; font-size:.78rem; font-weight:700; color:#8a6a1a; line-height:1.5;">
+      ⚠️ <b>Penting kalau note type ini udah dipakai di deck lain</b> yang udah ada duluan di Anki kamu (misal note type yang sama dipakai bareng-bareng di banyak deck): Anki cuma nge-update tampilan note type pas import kalau ada perubahan baru yang kedeteksi. Tool ini udah otomatis nanganin itu, tapi kalau setelah import background <b>tetep</b> gak muncul, biasanya karena Anki nyimpen versi lama note type-nya. Coba <b>hapus dulu deck versi lama dari Anki</b> (atau note type-nya lewat Manage Note Types) sebelum import ulang file yang baru, biar gak bentrok sama versi lama.
+    </div>
+
+    <div class="btn-row" style="margin-bottom:12px;">
+      <button type="button" class="btn ghost applied" id="bgModeUpload" style="flex:1;">📤 Upload Foto</button>
+      <button type="button" class="btn ghost" id="bgModeUrl" style="flex:1;">🔗 Pakai Link Gambar</button>
+    </div>
+
     <div class="dropzone" id="bgDropzone" style="padding:22px 16px;">
       <span class="dz-emoji">🖼️</span>
       Pilih atau seret foto ke sini
       <small>JPG/PNG, otomatis dikompres biar file .apkg tetap ringan</small>
       <input type="file" id="bgFileInput" accept="image/*" />
+    </div>
+    <small style="display:block; margin:6px 2px 4px; color:var(--ink-soft); font-weight:600; font-size:.72rem;">
+      ✅ Foto ikut kesimpen di dalam .apkg, jadi tetep muncul walau offline. Kalau note type ini udah kepake di deck lain yang lebih lama di Anki kamu, baca peringatan kuning di atas dulu ya.
+    </small>
+
+    <div class="hidden" id="bgUrlWrap" style="margin-bottom:4px;">
+      <label class="field-label">Link Gambar (harus bisa diakses publik dari internet)</label>
+      <input type="text" id="bgUrlInput" placeholder="https://contoh.com/foto-kamu.jpg" />
+      <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:600; font-size:.72rem;">
+        ⚠️ Foto harus tetap online selamanya biar background gak ilang pas dipelajari. Gambar juga gak ikut kesimpen ke dalam .apkg (jadi butuh internet nyala pas belajar di Anki), tapi cara ini paling anti-gagal karena gak nyentuh media/note type sama sekali.
+      </small>
     </div>
 
     <div class="hidden" id="bgControls" style="margin-top:16px;">
@@ -522,6 +542,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <button class="btn alt" id="btnApplyBack">🃏 Terapkan ke Belakang</button>
         <button class="btn ghost" id="btnClearBg">🗑️ Hapus Background</button>
       </div>
+
 
       <div class="grid2">
         <div>
@@ -672,6 +693,8 @@ const state = {
   currentMid: null,
   selectedFieldIdxs: [0],
   cardBg: {
+    mode: 'upload',        // 'upload' (file lokal) atau 'url' (link gambar online)
+    imageUrl: '',           // dipakai kalau mode === 'url'
     dataUrl: null,        // buat preview di browser
     bytes: null,           // Uint8Array (JPEG terkompres) buat disisipin ke media apkg
     mediaFilename: '_ankihoney_card_bg.jpg',
@@ -817,9 +840,46 @@ async function handleApkgFile(file){
   }
 }
 
+function ahHashBytes(bytes){
+  let h1 = 2166136261, h2 = 2166136261;
+  for(let i=0;i<bytes.length;i++){
+    h1 ^= bytes[i]; h1 = Math.imul(h1, 16777619);
+    h2 ^= bytes[bytes.length-1-i]; h2 = Math.imul(h2, 16777619);
+  }
+  return (h1>>>0).toString(16).padStart(8,'0') + (h2>>>0).toString(16).padStart(8,'0');
+}
 /* ---------------- background kartu (front/back) ---------------- */
+function ahHasBgImage(cfg){
+  if(!cfg) return false;
+  return cfg.mode === 'url' ? !!(cfg.imageUrl && cfg.imageUrl.trim()) : !!(cfg.dataUrl && cfg.bytes);
+}
+function ahBgImageRef(cfg){
+  return cfg.mode === 'url' ? cfg.imageUrl.trim() : cfg.mediaFilename;
+}
 const bgDropzone = document.getElementById('bgDropzone');
 const bgFileInput = document.getElementById('bgFileInput');
+const bgUrlInput = document.getElementById('bgUrlInput');
+const bgModeUpload = document.getElementById('bgModeUpload');
+const bgModeUrl = document.getElementById('bgModeUrl');
+
+function setBgMode(mode){
+  state.cardBg.mode = mode;
+  bgModeUpload.classList.toggle('applied', mode==='upload');
+  bgModeUrl.classList.toggle('applied', mode==='url');
+  bgDropzone.classList.toggle('hidden', mode!=='upload');
+  document.getElementById('bgUrlWrap').classList.toggle('hidden', mode!=='url');
+  const showControls = ahHasBgImage(state.cardBg);
+  document.getElementById('bgControls').classList.toggle('hidden', !showControls);
+  updateBgPreview(); updateBgStatus();
+}
+bgModeUpload.addEventListener('click', ()=> setBgMode('upload'));
+bgModeUrl.addEventListener('click', ()=> setBgMode('url'));
+bgUrlInput.addEventListener('input', e=>{
+  state.cardBg.imageUrl = e.target.value;
+  const has = ahHasBgImage(state.cardBg);
+  document.getElementById('bgControls').classList.toggle('hidden', !has);
+  updateBgPreview(); updateBgStatus();
+});
 
 bgDropzone.addEventListener('click', ()=> bgFileInput.click());
 ['dragover','dragenter'].forEach(ev=> bgDropzone.addEventListener(ev, e=>{ e.preventDefault(); bgDropzone.classList.add('drag'); }));
@@ -870,6 +930,11 @@ async function handleBgImage(file){
     const { dataUrl, blob } = await prepareBackgroundImage(file);
     state.cardBg.dataUrl = dataUrl;
     state.cardBg.bytes = new Uint8Array(await blob.arrayBuffer());
+    // PENTING: nama file media dibikin unik berdasarkan isi foto (hash), bukan nama
+    // statis kayak sebelumnya. Ini nyegah Anki nge-rename file diem-diem pas import
+    // kalau kebetulan ada file lama dengan nama sama tapi isi beda di collection.media
+    // user (dari percobaan/export sebelumnya) — yang bikin CSS jadi nunjuk ke file yang salah.
+    state.cardBg.mediaFilename = '_ankihoney_bg_' + ahHashBytes(state.cardBg.bytes) + '.jpg';
     document.getElementById('bgControls').classList.remove('hidden');
     updateBgPreview();
     updateBgStatus();
@@ -900,13 +965,13 @@ document.getElementById('bgBlur').addEventListener('input', e=>{
 });
 
 document.getElementById('btnApplyFront').addEventListener('click', ()=>{
-  if(!state.cardBg.dataUrl){ toast('Upload foto dulu ya~', '😿'); return; }
+  if(!ahHasBgImage(state.cardBg)){ toast(state.cardBg.mode==='url' ? 'Isi link gambar dulu ya~' : 'Upload foto dulu ya~', '😿'); return; }
   state.cardBg.front = !state.cardBg.front;
   updateBgPreview(); updateBgStatus();
   toast(state.cardBg.front ? 'Background diterapkan ke Depan!' : 'Background dilepas dari Depan', state.cardBg.front ? '✨' : '↩️');
 });
 document.getElementById('btnApplyBack').addEventListener('click', ()=>{
-  if(!state.cardBg.dataUrl){ toast('Upload foto dulu ya~', '😿'); return; }
+  if(!ahHasBgImage(state.cardBg)){ toast(state.cardBg.mode==='url' ? 'Isi link gambar dulu ya~' : 'Upload foto dulu ya~', '😿'); return; }
   state.cardBg.back = !state.cardBg.back;
   updateBgPreview(); updateBgStatus();
   toast(state.cardBg.back ? 'Background diterapkan ke Belakang!' : 'Background dilepas dari Belakang', state.cardBg.back ? '✨' : '↩️');
@@ -914,10 +979,12 @@ document.getElementById('btnApplyBack').addEventListener('click', ()=>{
 document.getElementById('btnClearBg').addEventListener('click', ()=>{
   state.cardBg.dataUrl = null;
   state.cardBg.bytes = null;
+  state.cardBg.imageUrl = '';
   state.cardBg.front = false;
   state.cardBg.back = false;
   document.getElementById('bgControls').classList.add('hidden');
   bgFileInput.value = '';
+  bgUrlInput.value = '';
   updateBgStatus();
   toast('Background dihapus~', '🗑️');
 });
@@ -953,9 +1020,9 @@ function updateBgPreview(){
   document.getElementById('dotFront').classList.toggle('active', side==='front');
   document.getElementById('dotBack').classList.toggle('active', side==='back');
 
-  card.classList.toggle('empty', !cfg.dataUrl);
-  if(cfg.dataUrl){
-    img.style.backgroundImage = `url('${cfg.dataUrl}')`;
+  card.classList.toggle('empty', !ahHasBgImage(cfg));
+  if(ahHasBgImage(cfg)){
+    img.style.backgroundImage = `url('${cfg.mode==='url' ? cfg.imageUrl.trim() : cfg.dataUrl}')`;
     img.style.backgroundSize = sizeMap[cfg.fit] || 'cover';
     img.style.backgroundPosition = posMap[cfg.position] || 'center center';
     img.style.opacity = String(cfg.opacity/100);
@@ -990,7 +1057,7 @@ function updateBgStatus(){
   const el = document.getElementById('bgStatus');
   if(!el) return;
   const cfg = state.cardBg;
-  if(!cfg.dataUrl){ el.textContent = ''; return; }
+  if(!ahHasBgImage(cfg)){ el.textContent = ''; return; }
   if(!cfg.front && !cfg.back){ el.textContent = 'Belum diterapkan ke sisi manapun — klik "Terapkan ke Depan/Belakang" di atas.'; return; }
   const sides = [cfg.front ? 'Depan' : null, cfg.back ? 'Belakang' : null].filter(Boolean).join(' & ');
   el.textContent = `✅ Background aktif di: ${sides} — bakal ikut kesimpen pas kamu download .apkg`;
@@ -1068,14 +1135,14 @@ function ahBuildCssBlock(cfg){
   const opacity = Math.max(0, Math.min(100, cfg.opacity)) / 100;
   const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
   const blur = Math.max(0, Math.min(20, cfg.blur));
-  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${cfg.mediaFilename}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${AH_BG_END}\n`;
+  return `\n${AH_BG_START}\n.card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }\nhtml, body{ background-color:transparent !important; }\n.ankihoney-bg{ position:relative; }\n.ankihoney-bg::before{\n  content:""; position:fixed; inset:0; z-index:-2;\n  background-image:url('${ahBgImageRef(cfg)}');\n  background-size:${sizeMap[cfg.fit]||'cover'};\n  background-position:${posMap[cfg.position]||'center center'};\n  background-repeat:no-repeat;\n  opacity:${opacity};\n  filter:blur(${blur}px);\n}\n.ankihoney-bg::after{\n  content:""; position:fixed; inset:0; z-index:-1;\n  background:rgba(0,0,0,${overlay});\n}\n${AH_BG_END}\n`;
 }
 
 // Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
 function applyCardBackgroundToModel(model, cfg){
   if(!model) return;
   let css = ahStripCssBlock(model.css || '');
-  const hasBg = !!(cfg && cfg.mediaFilename && (cfg.front || cfg.back));
+  const hasBg = !!(cfg && ahBgImageRef(cfg) && (cfg.front || cfg.back));
   if(hasBg) css = css + ahBuildCssBlock(cfg);
   model.css = css;
   model.tmpls = (model.tmpls || []).map(t=> ({
@@ -1205,10 +1272,12 @@ async function applyCardBackgroundLegacy(){
   if(!model) return;
 
   const cfg = state.cardBg;
-  const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
+  const hasBg = ahHasBgImage(cfg) && (cfg.front || cfg.back);
   if(hasBg){
-    await ensureBgMediaInZip(state.zip, cfg.bytes, cfg.mediaFilename);
-    applyCardBackgroundToModel(model, { ...cfg, mediaFilename: cfg.mediaFilename });
+    if(cfg.mode !== 'url'){
+      await ensureBgMediaInZip(state.zip, cfg.bytes, cfg.mediaFilename);
+    }
+    applyCardBackgroundToModel(model, cfg);
   } else {
     applyCardBackgroundToModel(model, { front:false, back:false });
   }
@@ -2014,8 +2083,8 @@ async function rebuildAsLegacyApkg(){
       : buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames);
     if(String(mid) === String(state.currentMid)){
       const cfg = state.cardBg;
-      const hasBg = !!(cfg.dataUrl && cfg.bytes && (cfg.front || cfg.back));
-      applyCardBackgroundToModel(models[mid], hasBg ? { ...cfg, mediaFilename: cfg.mediaFilename } : { front:false, back:false });
+      const hasBg = ahHasBgImage(cfg) && (cfg.front || cfg.back);
+      applyCardBackgroundToModel(models[mid], hasBg ? cfg : { front:false, back:false });
     }
     applyWatermarkToModel(models[mid]);
   });
@@ -2126,9 +2195,10 @@ async function rebuildAsLegacyApkg(){
     newZip.file(name, bytes);
   }
 
-  // Sisipin foto background (kalau ada) sebagai file media baru + update mapping-nya
+  // Sisipin foto background (kalau ada & mode upload) sebagai file media baru + update mapping-nya.
+  // Mode URL gak butuh ini sama sekali karena CSS-nya langsung nunjuk ke link internet.
   const bgCfg = state.cardBg;
-  if(bgCfg.dataUrl && bgCfg.bytes && (bgCfg.front || bgCfg.back)){
+  if(bgCfg.mode !== 'url' && bgCfg.dataUrl && bgCfg.bytes && (bgCfg.front || bgCfg.back)){
     let mediaMap = {};
     try{ mediaMap = JSON.parse(mediaJson); }catch(e){ mediaMap = {}; }
     const usedNums = mediaFiles.map(n=>parseInt(n)).concat(Object.keys(mediaMap).map(n=>parseInt(n))).filter(n=>!isNaN(n));
