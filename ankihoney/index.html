@@ -831,7 +831,7 @@ async function handleApkgFile(file){
       }
       const compressed = await newEntry.async('uint8array');
       try{
-        dbBytes = fzstd.decompress(compressed);
+        dbBytes = zstdDecompressSafe(compressed);
       }catch(zerr){
         console.error(zerr);
         statusEl.innerHTML = '😿 Gagal membongkar format terbaru ini. Coba export ulang dari Anki dengan opsi "Support older Anki versions" dicentang ya~ (' + (zerr.message||zerr) + ')';
@@ -2310,6 +2310,28 @@ function buildLegacyDconf(){
   }};
 }
 
+// FIX: pengganti fzstd.decompress(bytes) satu-shot. fzstd butuh tau ukuran hasil
+// decompress di awal (dari header frame ATAU dari buffer yang kita kasih manual) --
+// kalau frame-nya "streaming" (content size gak ketulis di header, yang ternyata
+// beneran dipakai Anki buat media per-file), fzstd.decompress() bakal throw, atau
+// lebih parah lagi diam-diam ngasih hasil KEPOTONG kalau kita paksa kasih buffer
+// yang kekecilan. Solusinya: pakai API streaming (fzstd.Decompress) yang emang
+// didesain buat nerima frame tanpa content-size di depan -- dia terima data
+// sepotong demi sepotong (di sini kita kasih sekaligus) & ngumpulin chunk hasil
+// decompress apa adanya, jadi ga pernah nebak-nebak ukuran buffer.
+function zstdDecompressSafe(bytes){
+  const chunks = [];
+  const stream = new fzstd.Decompress(chunk => chunks.push(chunk));
+  stream.push(bytes, true);
+  if(chunks.length === 1) return chunks[0];
+  let total = 0;
+  for(const c of chunks) total += c.length;
+  const out = new Uint8Array(total);
+  let off = 0;
+  for(const c of chunks){ out.set(c, off); off += c.length; }
+  return out;
+}
+
 // Coba parse mapping media (skema baru simpan sebagai Protobuf MediaEntries: repeated {name, size, sha1}).
 // Best-effort: kalau parsing gagal / hasilnya ga masuk akal, balikin null biar caller fallback aman.
 function tryParseMediaProtobuf(bytes){
@@ -2526,7 +2548,18 @@ async function rebuildAsLegacyApkg(){
   const mediaEntry = state.zip.file('media');
   let mediaJson = '{}';
   if(mediaEntry){
-    const mediaBytes = await mediaEntry.async('uint8array');
+    let mediaBytes = await mediaEntry.async('uint8array');
+    // FIX (bug utama ilangnya semua nama file media): di format anki21b, file
+    // manifest 'media' ITU SENDIRI ternyata bisa ikut dikompres zstd, sama kayak
+    // file media bernomor. Sebelumnya ini kelewat dicek -- protobuf parser dikasih
+    // byte zstd mentah (bukan protobuf), langsung gagal di entry pertama, dan
+    // caller fallback ke '{}' -> SEMUA 2500+ nama file (audio/gambar) ke-drop,
+    // padahal isi filenya sendiri masih utuh. Deteksi & bongkar dulu di sini,
+    // baru diproses sebagai JSON/protobuf seperti biasa.
+    if(mediaBytes.length >= 4 && mediaBytes[0]===0x28 && mediaBytes[1]===0xb5 && mediaBytes[2]===0x2f && mediaBytes[3]===0xfd){
+      try{ mediaBytes = zstdDecompressSafe(mediaBytes); }
+      catch(e){ console.warn('gagal decompress manifest media zstd (best-effort):', e); }
+    }
     // Coba baca langsung sebagai JSON dulu (kalau ternyata bukan protobuf)
     try{
       const asText = new TextDecoder().decode(mediaBytes);
@@ -2549,7 +2582,7 @@ async function rebuildAsLegacyApkg(){
   for(const name of mediaFiles){
     let bytes = await state.zip.file(name).async('uint8array');
     if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
-      try{ bytes = fzstd.decompress(bytes); }
+      try{ bytes = zstdDecompressSafe(bytes); }
       catch(e){ console.warn('gagal decompress media zstd (best-effort), file='+name, e); }
     }
     newZip.file(name, bytes);
