@@ -2093,7 +2093,7 @@ function applyBlockText(raw){
     if(!note) continue;
 
     // Deteksi format multi-field: baris "[NamaField]" di awal tiap bagian
-    const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|$)/gm;
+    const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|(?![\s\S]))/gm;
     const fieldMatches = [...blockContent.matchAll(fieldTagRegex)];
 
     if(fieldMatches.length){
