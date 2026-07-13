@@ -1083,6 +1083,12 @@ function applyCardBackgroundToModel(model, cfg){
     qfmt: ahWrapTemplate(t.qfmt, hasBg && cfg.front),
     afmt: ahWrapTemplate(t.afmt, hasBg && cfg.back)
   }));
+  // PENTING: kalau note type ini ID-nya udah ada di koleksi Anki user (kepake bareng
+  // di banyak deck), Anki cuma nge-update note type pas IMPORT kalau field `mod`
+  // (waktu edit) di file yang diimport lebih baru dari yang ada di koleksi. Tanpa ini,
+  // perubahan CSS/template bisa "ke-skip" diem-diem walau data notenya tetep masuk.
+  model.mod = Math.floor(Date.now()/1000);
+  model.usn = -1;
 }
 
 /* ---- helper suntik watermark "yumelyrics / ankihoney" ke tiap kartu, dipakai pas save ---- */
@@ -1117,6 +1123,11 @@ function applyWatermarkToModel(model){
     qfmt: ahStripWmHtml(t.qfmt || '') + AH_WM_HTML,
     afmt: ahStripWmHtml(t.afmt || '') + AH_WM_HTML
   }));
+  // Sama kayak di applyCardBackgroundToModel: paksa Anki nganggep note type ini
+  // "lebih baru" pas import, biar perubahan (watermark & background) gak ke-skip
+  // kalau note type dengan ID yang sama udah ada duluan di koleksi user.
+  model.mod = Math.floor(Date.now()/1000);
+  model.usn = -1;
 }
 
 // Suntik watermark ke TAG asli Anki (bukan ke isi field manapun) — jadi gak pernah
