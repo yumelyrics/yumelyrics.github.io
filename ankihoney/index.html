@@ -1367,6 +1367,18 @@ ${fxDeclarations}
 `
     : '';
 
+  // Warna bold/strong BAWAAN deck (--color-headword, biasanya ungu/pink terang di
+  // .jpsentence b/strong) sengaja dibikin dulu kontrasnya -- soalnya begitu fitur
+  // Outline/Shadow di atas aktif, si outline/glow itu sendiri udah yang jadi
+  // "penanda" utama biar kosakata kebaca jelas, jadi warna isi hurufnya gak perlu
+  // se-vivid biasanya lagi (kalau tetep vivid, isi teks & outline malah rebutan
+  // perhatian / keliatan rame). Cuma jalan pas mode 'glow' -- di mode 'outline'
+  // warna isi huruf udah dipaksa putih polos sama fxDeclarations di atas, jadi
+  // gak perlu diredam lagi.
+  const mutedHeadwordCss = (fx.enabled !== false && fx.styleMode !== 'outline')
+    ? `/* Redam warna bold/strong bawaan deck (headword) pas Outline/Shadow aktif,\n   biar gak rebutan kontras sama efeknya. */\n.ankihoney-bg .jpsentence b,\n.ankihoney-bg .jpsentence strong{\n  opacity: 0.72;\n}\n`
+    : '';
+
   // Panel semi-solid di belakang blok teks non-vocab (Notes, Definitions, link footer,
   // kotak "Reveal English translation"). Ini SELALU aktif & TIDAK ikut pengaturan
   // Outline/Shadow Teks Vocab di atas -- fitur itu sengaja cuma buat kosakata yang
@@ -1411,7 +1423,7 @@ html, body{ background-color:transparent !important; }
   content:""; position:fixed; inset:0; z-index:-1;
   background:rgba(0,0,0,${overlay});
 }
-${fxCss}${panelCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah
+${fxCss}${mutedHeadwordCss}${panelCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah
    dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper
    nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay
    & blur cuma ke-apply 1x, gak numpuk 2x. */
@@ -2206,25 +2218,54 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
 
 /* ---------------- rebuild ke format Legacy (schema 11) ---------------- */
 
-function buildLegacyModel(mid, deckId, modelName, fieldNames){
+// modelType: 0 = standard, 1 = cloze (dari m.type note type asli — dipertahankan
+// biar note Cloze yang jatuh ke fallback ini tetep dirender pake {{cloze:...}},
+// bukan ketampilin mentah sebagai teks "{{c1::...}}" ala note type biasa.
+// templateCount: jumlah template minimum yang dibutuhkan, dihitung dari ord
+// tertinggi yang beneran dipakai di tabel cards (lihat rebuildAsLegacyApkg) —
+// note type standar custom yang punya >1 kartu per note (mis. "and reversed")
+// butuh template sejumlah itu juga, atau kartu ber-ord>=1 bakal nunjuk ke
+// template yang gak ada pas diimport ke Anki. Cloze SELALU 1 template
+// (jumlah kartu-nya diatur Anki sendiri lewat banyaknya c1/c2/dst, bukan
+// lewat banyaknya template), jadi templateCount diabaikan kalau modelType===1.
+function buildLegacyModel(mid, deckId, modelName, fieldNames, modelType, templateCount){
+  modelType = modelType === 1 ? 1 : 0;
+  templateCount = Math.max(1, templateCount || 1);
   const flds = fieldNames.map((name,i)=>({name, ord:i, sticky:false, rtl:false, font:"Arial", size:20, media:[]}));
-  let qfmt, afmt;
-  if(fieldNames.length >= 2){
-    qfmt = `{{${fieldNames[0]}}}`;
-    afmt = `{{FrontSide}}<hr id="answer">` + fieldNames.slice(1).map(f=>`{{${f}}}`).join('<hr>');
+
+  let tmpls, req;
+  if(modelType === 1){
+    // Cloze: field pertama dianggap field cloze utama (paling umum, mis. "Text").
+    const clozeField = fieldNames[0] || 'Text';
+    const qfmt = `{{cloze:${clozeField}}}`;
+    const afmt = `{{cloze:${clozeField}}}` + fieldNames.slice(1).map(f=>`<br>{{${f}}}`).join('');
+    tmpls = [{name:"Cloze", ord:0, qfmt, afmt, bqfmt:"", bafmt:"", did:null, bfont:"", bsize:0}];
+    req = [[0, "any", [0]]];
   } else {
-    qfmt = `{{${fieldNames[0]||'Front'}}}`;
-    afmt = `{{FrontSide}}<hr id="answer">`;
+    tmpls = [];
+    for(let i=0;i<templateCount;i++){
+      let qfmt, afmt;
+      if(fieldNames.length >= 2){
+        qfmt = `{{${fieldNames[0]}}}`;
+        afmt = `{{FrontSide}}<hr id="answer">` + fieldNames.slice(1).map(f=>`{{${f}}}`).join('<hr>');
+      } else {
+        qfmt = `{{${fieldNames[0]||'Front'}}}`;
+        afmt = `{{FrontSide}}<hr id="answer">`;
+      }
+      tmpls.push({name:`Card ${i+1}`, ord:i, qfmt, afmt, bqfmt:"", bafmt:"", did:null, bfont:"", bsize:0});
+    }
+    req = tmpls.map((t,i)=>[i, "any", [0]]);
   }
+
   return {
-    id: mid, name: modelName, type: 0, mod: Math.floor(Date.now()/1000), usn: 0, sortf: 0, did: deckId,
-    tmpls: [{name:"Card 1", ord:0, qfmt, afmt, bqfmt:"", bafmt:"", did:null, bfont:"", bsize:0}],
+    id: mid, name: modelName, type: modelType, mod: Math.floor(Date.now()/1000), usn: 0, sortf: 0, did: deckId,
+    tmpls,
     flds,
     css: ".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n",
     latexPre: "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
     latexPost: "\\end{document}",
     latexsvg: false,
-    req: [[0, "any", [0]]],
+    req,
     tags: [], vers: []
   };
 }
@@ -2355,15 +2396,34 @@ async function rebuildAsLegacyApkg(){
   // 3. Rebuild models & decks JSON (nama & urutan field/deck dipertahankan, ID numeriknya juga sama
   //    persis dengan aslinya supaya relasi mid/did di notes & cards tetap valid)
   const usedMids = [...new Set(state.notes.map(n=>n.mid))];
+
+  // PENTING: cards dipindah apa adanya (row[3] = ord = index template kartu itu).
+  // Kalau note type-nya jatuh ke fallback generik (modelHasOriginalDesign gagal) dan
+  // note type itu aslinya punya >1 template (misal custom note type ala "Basic and
+  // reversed"), template generik yang cuma dibikin 1 ("Card 1") bikin kartu dengan
+  // ord>=1 nunjuk ke template yang gak ada pas diimport ke Anki. Makanya kita itung
+  // dulu jumlah template minimum yang dibutuhkan tiap mid dari ord tertinggi yang
+  // beneran dipakai di tabel cards, biar fallback generik ikut bikin sejumlah itu.
+  const nidToMid = {};
+  state.notes.forEach(n=>{ nidToMid[n.id] = n.mid; });
+  const templateCountByMid = {};
+  cardsRows.forEach(row=>{
+    const mid = nidToMid[row[1]];
+    if(mid === undefined) return;
+    const ord = row[3] || 0;
+    templateCountByMid[mid] = Math.max(templateCountByMid[mid] || 1, ord + 1);
+  });
+
   let models = {};
   usedMids.forEach(mid=>{
     const m = state.models[mid];
     if(!m) return;
     const fieldNames = m.flds && m.flds.length ? m.flds : ['Front','Back'];
     const deckIdForModel = Object.keys(state.decksMap)[0] || 1;
+    const neededTemplateCount = templateCountByMid[mid] || 1;
     models[mid] = modelHasOriginalDesign(m)
       ? buildLegacyModelFromDesign(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames, m)
-      : buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames);
+      : buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames, m.type || 0, neededTemplateCount);
     if(String(mid) === String(state.currentMid)){
       const cfg = state.cardBg;
       const hasBg = ahHasBgImage(cfg) && (cfg.front || cfg.back);
