@@ -644,12 +644,32 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
   <div class="card hidden" id="tableCard">
     <h2><span class="step-num">3</span> Preview &amp; Edit <span class="badge" id="dirtyBadge">0 diubah</span></h2>
     <div class="btn-row">
-      <button class="btn" id="btnCopyAll">📋 Copy Semua Field<small>buat ditranslate</small></button>
+      <button class="btn ghost" id="btnCopyAll">📋 Copy SEMUA Field<small>buat ditranslate</small></button>
       <button class="btn alt" id="btnPasteAll">📥 Paste Hasil Terjemahan</button>
+      <button class="btn ghost" id="btnUndoPaste" disabled>↩️ Undo Paste Terakhir<small>balikin paste sebelumnya</small></button>
       <button class="btn ghost" id="btnExportCsv">⬇️ Export CSV</button>
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
       <button class="btn ghost" id="btnImportFile">⬆️ Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
+    </div>
+
+    <div id="batchPanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
+      <label class="field-label" style="margin-bottom:8px;">✂️ Copy per Batch <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(disaranin buat deck gede — biar AI translate-nya gak keliru geser urutan pas kebanyakan teks sekaligus)</span></label>
+      <div class="grid2" style="align-items:end;">
+        <div>
+          <label class="field-label">Jumlah kartu per batch</label>
+          <input type="number" id="batchSizeInput" min="1" step="1" value="50" />
+        </div>
+        <div class="btn-row" style="margin:0;">
+          <button class="btn ghost" id="btnBatchPrev" type="button">◀ Sebelumnya</button>
+          <button class="btn ghost" id="btnBatchNext" type="button">Berikutnya ▶</button>
+        </div>
+      </div>
+      <div id="batchInfo" style="margin-top:10px; font-weight:800; font-size:.82rem; color:var(--ink-soft);"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn mint" id="btnCopyBatch" type="button">📋 Copy Batch Ini<small>lebih aman buat deck gede</small></button>
+        <button class="btn alt" id="btnPasteBatch" type="button">📥 Paste Batch Ini<small>khusus buat batch yang aktif</small></button>
+      </div>
     </div>
     <div class="table-wrap" style="margin-top:16px;">
       <table>
@@ -688,8 +708,8 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 <!-- PASTE MODAL -->
 <div class="modal-bg" id="pasteModalBg">
   <div class="modal">
-    <h3>📥 Paste Hasil Terjemahan</h3>
-    <p style="font-weight:700; color:var(--ink-soft); font-size:.85rem;">Tempel teks yang sama persis formatnya kayak waktu kamu copy tadi (jangan hapus baris <code>[[[ID:...]]]</code> dan tag <code>[NamaField]</code> kalau kamu gabung beberapa field), lalu klik Terapkan.</p>
+    <h3 id="pasteModalTitle">📥 Paste Hasil Terjemahan</h3>
+    <p id="pasteModalSub" style="font-weight:700; color:var(--ink-soft); font-size:.85rem;">Tempel teks yang sama persis formatnya kayak waktu kamu copy tadi (jangan hapus baris <code>[[[ID:...]]]</code> dan tag <code>[NamaField]</code> kalau kamu gabung beberapa field), lalu klik Terapkan. Kalau kamu translate per batch, tempel & terapkan satu batch dulu sebelum copy batch berikutnya ya — jangan digabung jadi satu paste raksasa, biar ID-nya gak gampang ketuker sama AI translator-nya.</p>
     <textarea id="pasteArea" placeholder="[[[ID:12345]]]&#10;[SentKanji]&#10;teks terjemahan di sini...&#10;[SentEng]&#10;teks terjemahan lainnya...&#10;&#10;[[[ID:12346]]]&#10;..."></textarea>
     <div class="modal-actions">
       <button class="btn ghost" id="btnCancelPaste">Batal</button>
@@ -697,6 +717,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     </div>
   </div>
 </div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -782,6 +803,10 @@ const state = {
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
   selectedFieldIdxs: [0],
+  batchSize: 50,
+  batchIndex: 0,
+  doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
+  pasteSnapshot: null,     // {mid, batchKey, entries:[{id, fields, dirty}]} -- buat fitur Undo Paste Terakhir
   cardBg: {
     mode: 'upload',        // 'upload' (file lokal) atau 'url' (link gambar online)
     imageUrl: '',           // dipakai kalau mode === 'url'
@@ -1948,7 +1973,83 @@ function updateStats(){
     <div class="stat-pill">🗂️ ${Object.keys(state.models).length} note type di deck</div>
   `;
   document.getElementById('dirtyBadge').textContent = `${state.notes.filter(n=>n.dirty).length} diubah`;
+  updateBatchUI();
 }
+
+/* ---------------- batch copy ---------------- */
+function getBatchBounds(total){
+  const size = Math.max(1, state.batchSize|0 || 1);
+  const totalBatches = Math.max(1, Math.ceil(total / size));
+  if(state.batchIndex < 0) state.batchIndex = 0;
+  if(state.batchIndex > totalBatches-1) state.batchIndex = totalBatches-1;
+  const start = state.batchIndex * size;
+  const end = Math.min(total, start + size);
+  return { size, totalBatches, start, end };
+}
+
+function getBatchRows(){
+  const rows = currentRows();
+  const { start, end } = getBatchBounds(rows.length);
+  return rows.slice(start, end);
+}
+
+// Kunci unik buat satu "batch" berdasarkan gabungan ID kartunya (bukan cuma nomor index batch),
+// biar tetep valid walau jumlah kartu per batch diubah-ubah. Dipakai buat nandain batch yang
+// udah pernah di-apply, jadi kalau di-paste ulang bisa diingetin dulu sebelum ke-overwrite diam-diam.
+function batchKeyFor(rows){
+  return (rows||[]).map(n=> String(n.id)).sort((a,b)=> a.localeCompare(b, undefined, {numeric:true})).join(',');
+}
+
+function updateBatchUI(){
+  const infoEl = document.getElementById('batchInfo');
+  if(!infoEl) return;
+  const rows = currentRows();
+  const total = rows.length;
+  const { totalBatches, start, end } = getBatchBounds(total);
+  if(total === 0){
+    infoEl.textContent = 'Belum ada kartu buat di-batch.';
+  } else {
+    const curBatchRows = getBatchRows();
+    const isDone = state.doneBatches.has(batchKeyFor(curBatchRows));
+    infoEl.innerHTML = `Batch <b>${state.batchIndex+1} / ${totalBatches}</b> — kartu ke <b>${start+1}–${end}</b> dari total <b>${total}</b>` +
+      (isDone ? ` <span style="color:#3fae80;">✅ sudah di-apply</span>` : '');
+  }
+  const prevBtn = document.getElementById('btnBatchPrev');
+  const nextBtn = document.getElementById('btnBatchNext');
+  if(prevBtn) prevBtn.disabled = state.batchIndex <= 0;
+  if(nextBtn) nextBtn.disabled = state.batchIndex >= totalBatches-1;
+}
+
+document.getElementById('batchSizeInput').addEventListener('input', (e)=>{
+  let v = parseInt(e.target.value, 10);
+  if(!Number.isFinite(v) || v < 1) v = 1;
+  state.batchSize = v;
+  state.batchIndex = 0; // balik ke batch pertama biar gak ketinggalan/kelewatan kartu
+  updateBatchUI();
+});
+document.getElementById('btnBatchPrev').addEventListener('click', ()=>{
+  state.batchIndex = Math.max(0, state.batchIndex - 1);
+  updateBatchUI();
+});
+document.getElementById('btnBatchNext').addEventListener('click', ()=>{
+  state.batchIndex += 1;
+  updateBatchUI();
+});
+document.getElementById('btnCopyBatch').addEventListener('click', async ()=>{
+  const rows = getBatchRows();
+  if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
+  const text = buildBlockText(rows);
+  const { totalBatches } = getBatchBounds(currentRows().length);
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  toast(`Batch ${state.batchIndex+1}/${totalBatches} (${rows.length} kartu) dicopy!`, '📋');
+  say(`Batch ${state.batchIndex+1} dari ${totalBatches} udah aku copy! Translate ini dulu ya, jangan digabung sama batch lain biar ID-nya gak ketuker~ 🍯`);
+});
 
 /* ---------------- table render ---------------- */
 function renderTable(){
@@ -2031,10 +2132,10 @@ function currentRows(){
   return state.notes.filter(n=>n.mid===state.currentMid);
 }
 
-function buildBlockText(){
+function buildBlockText(rows){
   const model = state.models[state.currentMid];
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
-  return currentRows().map(n=>{
+  return (rows || currentRows()).map(n=>{
     if(selIdxs.length === 1){
       const val = n.fields[selIdxs[0]] || '';
       return `[[[ID:${n.id}]]]\n${val}`;
@@ -2049,10 +2150,21 @@ function buildBlockText(){
 }
 
 document.getElementById('btnCopyAll').addEventListener('click', async ()=>{
-  const text = buildBlockText();
+  const rows = currentRows();
+  const BIG_DECK_WARNING_THRESHOLD = 120;
+  if(rows.length > BIG_DECK_WARNING_THRESHOLD){
+    const lanjut = confirm(
+      `Kartu tipe ini ada ${rows.length}, lumayan banyak buat ditranslate sekaligus.\n\n`+
+      `Nge-paste teks sebanyak ini ke AI translator (ChatGPT/Google Translate dll) beresiko bikin AI-nya "geser" nomor urutan ID di tengah-tengah, jadi terjemahan salah pasang ke kartu yang lain (pernah kejadian!).\n\n`+
+      `Disaranin pakai fitur "Copy per Batch" di bawah aja (misal 50 kartu per batch).\n\n`+
+      `Tetap mau copy SEMUA ${rows.length} kartu sekaligus?`
+    );
+    if(!lanjut) return;
+  }
+  const text = buildBlockText(rows);
   try{
     await navigator.clipboard.writeText(text);
-    toast('Semua field dicopy! Tinggal paste ke Google Translate / ChatGPT~', '📋');
+    toast(`${rows.length} field dicopy! Tinggal paste ke Google Translate / ChatGPT~`, '📋');
     say('Field-nya sudah aku copy ke clipboard! ✂️');
   }catch(e){
     // fallback
@@ -2064,33 +2176,130 @@ document.getElementById('btnCopyAll').addEventListener('click', async ()=>{
 });
 
 const pasteModalBg = document.getElementById('pasteModalBg');
-document.getElementById('btnPasteAll').addEventListener('click', ()=>{
+let pasteScopeRows = null; // null = paste bebas (semua kartu tipe ini); array = mode batch (ID harus persis cocok batch aktif)
+
+function openPasteModal(scopeRows){
+  pasteScopeRows = scopeRows || null;
   document.getElementById('pasteArea').value = '';
+  const titleEl = document.getElementById('pasteModalTitle');
+  const subEl = document.getElementById('pasteModalSub');
+  if(pasteScopeRows){
+    const { totalBatches } = getBatchBounds(currentRows().length);
+    titleEl.textContent = `📥 Paste Batch ${state.batchIndex+1}/${totalBatches} (${pasteScopeRows.length} kartu)`;
+    subEl.innerHTML = `Mode <b>Paste Batch</b> — tool ini bakal ngecek ketat: cuma ${pasteScopeRows.length} ID kartu di batch ${state.batchIndex+1} ini yang boleh muncul di teks yang kamu tempel. Kalau ada ID dari batch lain kebawa, atau ada ID batch ini yang malah gak ketemu, bakal ada peringatan biar gak ada yang ketuker.`;
+  } else {
+    titleEl.textContent = '📥 Paste Hasil Terjemahan';
+    subEl.innerHTML = 'Tempel teks yang sama persis formatnya kayak waktu kamu copy tadi (jangan hapus baris <code>[[[ID:...]]]</code> dan tag <code>[NamaField]</code> kalau kamu gabung beberapa field), lalu klik Terapkan. Kalau kamu translate per batch, mendingan pakai tombol "Paste Batch Ini" di panel batch biar dicek ketat per batch — jangan digabung jadi satu paste raksasa.';
+  }
   pasteModalBg.classList.add('show');
+}
+
+document.getElementById('btnPasteAll').addEventListener('click', ()=> openPasteModal(null));
+document.getElementById('btnPasteBatch').addEventListener('click', ()=>{
+  const rows = getBatchRows();
+  if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
+  if(state.doneBatches.has(batchKeyFor(rows))){
+    const lanjut = confirm(
+      `Batch ${state.batchIndex+1} ini KETANDA udah pernah di-apply sebelumnya.\n\n`+
+      `Kalau kamu paste lagi, isi field yang sekarang bakal ketimpa sama teks baru ini.\n\n`+
+      `Yakin mau lanjut nimpa?`
+    );
+    if(!lanjut) return;
+  }
+  openPasteModal(rows);
 });
 document.getElementById('btnCancelPaste').addEventListener('click', ()=> pasteModalBg.classList.remove('show'));
 
 document.getElementById('btnApplyPaste').addEventListener('click', ()=>{
   const raw = document.getElementById('pasteArea').value;
-  const applied = applyBlockText(raw);
+
+  // Snapshot dulu SEBELUM diterapin -> biar bisa di-undo kalau ternyata hasilnya berantakan.
+  // Mode Paste Batch: cuma snapshot kartu di batch ini. Mode Paste Bebas: snapshot semua kartu
+  // tipe ini (karena ID mana aja yang bakal kena gak ketauan sebelum di-parse).
+  const scopeForSnapshot = pasteScopeRows || currentRows();
+  state.pasteSnapshot = {
+    mid: state.currentMid,
+    batchKey: pasteScopeRows ? batchKeyFor(pasteScopeRows) : null,
+    entries: scopeForSnapshot.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
+  };
+
+  const applied = applyBlockText(raw, pasteScopeRows);
   pasteModalBg.classList.remove('show');
   renderTable();
-  toast(`${applied} field berhasil diupdate dari hasil terjemahan!`, '✨');
-  say(`Wah keren, ${applied} field udah diterjemahin! 🌟`);
+
+  const undoBtn = document.getElementById('btnUndoPaste');
+  if(undoBtn) undoBtn.disabled = false;
+
+  if(pasteScopeRows){
+    const { totalBatches } = getBatchBounds(currentRows().length);
+    state.doneBatches.add(batchKeyFor(pasteScopeRows));
+    toast(`Batch ${state.batchIndex+1}/${totalBatches}: ${applied} field diupdate!`, '✨');
+    say(`Batch ${state.batchIndex+1} beres! Kalau udah yakin bener, lanjut ke batch berikutnya ya~ 🌟`);
+  } else {
+    toast(`${applied} field berhasil diupdate dari hasil terjemahan!`, '✨');
+    say(`Wah keren, ${applied} field udah diterjemahin! 🌟`);
+  }
+  pasteScopeRows = null;
+  updateBatchUI();
 });
 
-function applyBlockText(raw){
+document.getElementById('btnUndoPaste').addEventListener('click', ()=>{
+  const snap = state.pasteSnapshot;
+  if(!snap){ toast('Gak ada paste yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  if(snap.batchKey) state.doneBatches.delete(snap.batchKey);
+  state.pasteSnapshot = null;
+  document.getElementById('btnUndoPaste').disabled = true;
+  renderTable();
+  updateBatchUI();
+  toast('Paste terakhir dibatalin, balik ke sebelum di-apply!', '↩️');
+  say('Oke, aku balikin lagi kayak sebelum paste tadi~ 🔙');
+});
+
+function applyBlockText(raw, scopeRows){
   const model = state.models[state.currentMid];
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
   const regex = /\[\[\[ID:(\d+)\]\]\]\n?([\s\S]*?)(?=\n*\[\[\[ID:\d+\]\]\]|$)/g;
   let match, count=0;
   const byId = {};
   currentRows().forEach(n=> byId[n.id]=n);
+
+  // Kalau dipanggil dari mode "Paste Batch", ID yang boleh diterapkan HARUS persis
+  // anggota batch yang lagi aktif -- ID valid tapi dari batch lain tetap ditolak & dilaporkan,
+  // biar terjemahan gak nyasar ke kartu di luar batch yang lagi dikerjain.
+  const scopeIds = scopeRows ? new Set(scopeRows.map(n=> String(n.id))) : null;
+
+  // ---- Pelacak buat validasi anti-pergeseran/misalignment ----
+  const seenIds = new Set();
+  const appliedOrder = [];   // urutan ID yang beneran diterapin (buat deteksi ke-geser/swap)
+  const appliedChanges = []; // {id, fname, oldLen, newLen} tiap field yang diganti, buat deteksi panjang aneh
+  const warnings = {
+    duplicateIds: [],      // ID:xxx muncul lebih dari sekali di teks yang di-paste
+    unknownIds: [],        // ID:xxx ada di teks paste tapi gak ketemu di kartu yang lagi dibuka
+    outOfScopeIds: [],     // ID:xxx valid tapi bukan anggota batch yang lagi aktif (mode Paste Batch)
+    fieldNameMismatch: [], // {id, fname} nama tag [Field] gak cocok sama nama field asli notetype
+    droppedFields: [],     // {id, fname} tag field-nya gak bisa dipetakan sama sekali (isinya dibuang)
+    emptiedFields: [],     // {id, fname} field yang tadinya ada isi, sekarang jadi kosong abis di-paste
+    lengthOutliers: []     // {id, fname, oldLen, newLen} field yang panjangnya beda jauh dari pola batch ini
+  };
+
   while((match = regex.exec(raw)) !== null){
     const id = match[1];
     let blockContent = match[2].replace(/\n+$/,'');
+
+    if(seenIds.has(id)) warnings.duplicateIds.push(id);
+    seenIds.add(id);
+
     const note = byId[id];
-    if(!note) continue;
+    if(!note){ warnings.unknownIds.push(id); continue; }
+    if(scopeIds && !scopeIds.has(String(id))){ warnings.outOfScopeIds.push(id); continue; }
+
+    appliedOrder.push(String(id));
 
     // Deteksi format multi-field: baris "[NamaField]" di awal tiap bagian
     const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|(?![\s\S]))/gm;
@@ -2101,8 +2310,22 @@ function applyBlockText(raw){
         const fname = fm[1].trim();
         const fval = fm[2].replace(/\n+$/,'');
         let idx = model ? model.flds.findIndex(f=> f===fname) : -1;
-        if(idx === -1) idx = selIdxs[pos] !== undefined ? selIdxs[pos] : -1;
+        if(idx === -1){
+          // Nama tag [Field] gak ketemu persis di notetype -> fallback ke posisi urutan.
+          // Ini rawan salah pasang kalau AI translator ngerubah/ngilangin salah satu tag [Field],
+          // makanya kita catat sebagai warning, bukan diterapin diem-diem.
+          if(selIdxs[pos] !== undefined){
+            idx = selIdxs[pos];
+            warnings.fieldNameMismatch.push({ id, fname, fallbackField: model.flds[idx] });
+          } else {
+            warnings.droppedFields.push({ id, fname });
+          }
+        }
         if(idx !== -1){
+          const oldLen = stripHtml(note.fields[idx] || '').length;
+          const newLen = stripHtml(fval).length;
+          if(oldLen > 0 && newLen === 0) warnings.emptiedFields.push({ id, fname });
+          appliedChanges.push({ id, fname, oldLen, newLen });
           note.fields[idx] = fval;
           note.dirty = true;
         }
@@ -2110,11 +2333,100 @@ function applyBlockText(raw){
       count++;
     } else {
       // format lama (single field, tanpa tag nama field)
+      const oldLen = stripHtml(note.fields[selIdxs[0]] || '').length;
+      const newLen = stripHtml(blockContent).length;
+      if(oldLen > 0 && newLen === 0) warnings.emptiedFields.push({ id, fname: null });
+      appliedChanges.push({ id, fname: null, oldLen, newLen });
       note.fields[selIdxs[0]] = blockContent;
       note.dirty = true;
       count++;
     }
   }
+
+  // ---- Deteksi urutan ke-geser/swap ----
+  // ID tetep dipakai sebagai sumber kebenaran (jadi field TETAP masuk ke kartu yang bener sesuai ID),
+  // tapi kalau urutan blok di teks paste beda sama urutan aslinya pas di-copy, itu sinyal AI translator-nya
+  // kemungkinan ngacak/geser baris -- pantas dicurigai walau ID-nya sendiri masih valid semua.
+  const expectedSourceRows = scopeRows || currentRows();
+  const expectedOrder = expectedSourceRows.map(n=> String(n.id)).filter(id=> appliedOrder.includes(id));
+  const orderMismatchSample = [];
+  let orderMismatchCount = 0;
+  for(let i=0; i<appliedOrder.length; i++){
+    if(appliedOrder[i] !== expectedOrder[i]){
+      orderMismatchCount++;
+      if(orderMismatchSample.length < 5){
+        orderMismatchSample.push(`posisi ke-${i+1}: ketemu ID:${appliedOrder[i]}, harusnya ID:${expectedOrder[i]}`);
+      }
+    }
+  }
+  warnings.orderMismatchCount = orderMismatchCount;
+  warnings.orderMismatchSample = orderMismatchSample;
+
+  // ---- Deteksi panjang teks yang aneh dibanding pola batch ini ----
+  // Kalau satu field tiba-tiba jauh lebih pendek/panjang dibanding field-field lain yang sepadan
+  // di batch yang sama, bisa jadi tanda isinya ketuker ke field/kartu lain.
+  function medianOf(arr){
+    if(!arr.length) return null;
+    const s = arr.slice().sort((a,b)=>a-b);
+    const mid = Math.floor(s.length/2);
+    return s.length % 2 ? s[mid] : (s[mid-1]+s[mid])/2;
+  }
+  const sizable = appliedChanges.filter(c=> c.oldLen >= 8);
+  const ratios = sizable.map(c=> c.newLen / c.oldLen);
+  const medRatio = medianOf(ratios);
+  if(medRatio && medRatio > 0){
+    sizable.forEach(c=>{
+      const r = c.newLen / c.oldLen;
+      if(r < medRatio * 0.3 || r > medRatio * 3){
+        warnings.lengthOutliers.push(c);
+      }
+    });
+  }
+
+  // Mode Paste Batch: kita TAU persis ID mana aja yang seharusnya ada -> bisa deteksi kalau
+  // ada kartu di batch ini yang translationnya kelewat/gak ke-paste sama sekali.
+  const missingFromBatch = scopeIds
+    ? scopeRows.filter(n=> !seenIds.has(String(n.id))).map(n=> n.id)
+    : [];
+
+  const hasWarnings = warnings.duplicateIds.length || warnings.unknownIds.length ||
+                       warnings.outOfScopeIds.length || warnings.fieldNameMismatch.length ||
+                       warnings.droppedFields.length || missingFromBatch.length ||
+                       warnings.emptiedFields.length || warnings.lengthOutliers.length ||
+                       warnings.orderMismatchCount;
+  if(hasWarnings){
+    const lines = [];
+    if(warnings.duplicateIds.length){
+      lines.push(`⚠️ ${warnings.duplicateIds.length} ID muncul dobel di teks yang kamu paste (blok terakhir yang menang, yang sebelumnya ketimpa): ${warnings.duplicateIds.slice(0,10).join(', ')}${warnings.duplicateIds.length>10?', ...':''}`);
+    }
+    if(warnings.unknownIds.length){
+      lines.push(`⚠️ ${warnings.unknownIds.length} ID di teks paste gak ketemu kartunya (dilewatin, gak diterapin): ${warnings.unknownIds.slice(0,10).join(', ')}${warnings.unknownIds.length>10?', ...':''}`);
+    }
+    if(warnings.outOfScopeIds.length){
+      lines.push(`⚠️ ${warnings.outOfScopeIds.length} ID valid tapi BUKAN anggota batch yang lagi aktif (mungkin ini hasil terjemahan dari batch lain yang ketuker/ke-paste di sini): ${warnings.outOfScopeIds.slice(0,10).join(', ')}${warnings.outOfScopeIds.length>10?', ...':''} — ini SEMUA dilewatin, gak diterapin. Cek lagi kamu lagi di batch berapa & paste hasil translate batch yang bener.`);
+    }
+    if(missingFromBatch.length){
+      lines.push(`⚠️ ${missingFromBatch.length} kartu di batch ini gak ketemu ID-nya sama sekali di teks yang kamu paste (kemungkinan kelewat/gak sempet diterjemahin AI-nya): ${missingFromBatch.slice(0,10).join(', ')}${missingFromBatch.length>10?', ...':''} — field kartu ini TETAP isi lama, belum ke-update.`);
+    }
+    if(warnings.fieldNameMismatch.length){
+      lines.push(`⚠️ ${warnings.fieldNameMismatch.length} bagian punya tag [NamaField] yang gak persis sama kayak nama field aslinya, jadi ditebak berdasarkan urutan aja — ini TANDA PALING KUAT kalau AI translator-nya ngerubah/ngilangin sebagian tag pas nerjemahin, dan berpotensi bikin field ketuker ke kartu yang salah. Cek manual bagian ini dulu sebelum lanjut simpan!`);
+    }
+    if(warnings.droppedFields.length){
+      lines.push(`⚠️ ${warnings.droppedFields.length} bagian field gak bisa dipetakan sama sekali & isinya DIBUANG (bukan ke kartu lain, cuma hilang): ${warnings.droppedFields.slice(0,10).map(w=>`ID:${w.id} [${w.fname}]`).join(', ')}${warnings.droppedFields.length>10?', ...':''}`);
+    }
+    if(warnings.orderMismatchCount){
+      lines.push(`⚠️ Urutan ${warnings.orderMismatchCount} blok ID di teks paste BEDA sama urutan aslinya pas kamu copy (${warnings.orderMismatchSample.join('; ')}${warnings.orderMismatchCount>warnings.orderMismatchSample.length?', ...':''}). Field tetap diterapin sesuai ID yang tertulis (jadi gak nyasar ke kartu lain), tapi urutan yang geser gini sering nandain AI translator-nya ngacak baris — cek manual dulu sebelum yakin bener.`);
+    }
+    if(warnings.emptiedFields.length){
+      lines.push(`⚠️ ${warnings.emptiedFields.length} field yang tadinya ADA isinya, sekarang jadi KOSONG abis di-paste: ${warnings.emptiedFields.slice(0,10).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''}`).join(', ')}${warnings.emptiedFields.length>10?', ...':''} — kemungkinan translation-nya kelewat, atau ketuker ke tempat lain.`);
+    }
+    if(warnings.lengthOutliers.length){
+      lines.push(`⚠️ ${warnings.lengthOutliers.length} field panjangnya beda JAUH dari pola field-field lain yang sepadan di batch ini (jauh lebih pendek/panjang) — bisa jadi tanda isinya ketuker: ${warnings.lengthOutliers.slice(0,8).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''} (${w.oldLen}→${w.newLen} karakter)`).join(', ')}${warnings.lengthOutliers.length>8?', ...':''}`);
+    }
+    lines.push(`\nSaran: kalau ini kejadian pas kamu paste batch gede, coba pecah jadi batch lebih kecil (pakai fitur "Copy per Batch") biar AI translator-nya gak gampang keliru jagain urutan ID. Kalau ternyata hasilnya berantakan, tombol "↩️ Undo Paste Terakhir" bisa balikin ke sebelum paste ini diterapin.`);
+    ahShowErrorPopup(lines.join('\n\n'));
+  }
+
   return count;
 }
 
