@@ -257,6 +257,8 @@ input[type=range]::-moz-range-thumb{
 }
 .field-lock:hover{ opacity:.8; }
 .field-lock.active{ opacity:1; }
+.field-instr.active{ opacity:1; filter: drop-shadow(0 0 0 transparent); }
+.field-instr.active::after{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--mint,#5fcf9d); margin-left:2px; vertical-align:top; }
 
 .field-mini-label{
   font-size:.66rem; font-weight:800; color:var(--pink-deep); text-transform:uppercase; letter-spacing:.4px;
@@ -795,6 +797,89 @@ function ahShowErrorPopup(msg){
   bg.classList.add('show');
 }
 
+// Template default buat field kayak "Notes" -- dipasang otomatis pas pertama kali user
+// buka modal instruksi field yang namanya keliatan kayak field catatan/penjelasan, biar
+// gak nulis dari nol. Tetep bisa diedit/dihapus bebas sama user.
+const AH_DEFAULT_NOTES_INSTRUCTION =
+`Isi field ini dengan penjelasan lengkap tentang kosakata/kalimat yang lagi diterjemahin, mencakup:
+- Arti & nuansa: jelasin makna detailnya, bukan cuma terjemahan kata per kata.
+- Frekuensi pemakaian: kosakata ini sering dipakai di percakapan sehari-hari, atau jarang/terkesan sastra-formal-kaku?
+- Konteks pemakaian: biasanya dipakai di situasi apa (ngobrol santai sama teman, situasi formal/kerja, tulisan/surat, percakapan keluarga, dll) dan kapan pas dipakainya.
+- Tingkat kesopanan: ini bentuk sopan (teineigo/keigo) atau bentuk biasa/kasual (futsuukei)? Kasih tau juga versi sopan/kasualnya kalau ada padanannya.
+- Kosakata/ungkapan yang mirip: sebutin kata atau frasa lain yang artinya mirip atau sering ketuker, terus jelasin bedanya apa (nuansa, tingkat formalitas, konteks pemakaian, atau kapan salah satu lebih natural dipakai dibanding yang lain).
+- Kalau ada nuansa budaya, kolokasi umum (kata yang sering bareng), atau catatan pemakaian unik lainnya (misal cuma dipakai di kalimat tertentu, gender tertentu, atau ada di dialek tertentu), sebutin juga sesingkat & sejelas mungkin.
+- Kanji & furigana: kalau ada kanji di penjelasan, WAJIB kasih cara baca furigana-nya, dengan format PERSIS begini: kanji diikuti kurung siku berisi hiragana-nya, contoh: 私[わたし]。 Jangan pakai tanda kurung biasa ( ) atau format lain. Kurung siku-nya HARUS nempel PERSIS cuma di bagian kanji-nya aja, JANGAN di seret ke hiragana yang nempel di sebelumnya — kalau dalam satu kata ada campuran hiragana+kanji, kasih SATU spasi pemisah sebelum kanji-nya biar furigana jatuh tepat di atas kanji doang, bukan di atas seluruh kata. Contoh: たった今 (dibaca たったいま) ditulis jadi "たった 今[いま]", BUKAN "たった今[いま]" atau "たった[いま]今".
+Tulis pakai bahasa Indonesia yang santai & enak dibaca, jangan kaku kayak kamus, tapi tetap padat & to the point.`;
+
+function ahLooksLikeNotesField(fieldName){
+  const n = (fieldName||'').toLowerCase();
+  return n.includes('note') || n.includes('catatan') || n.includes('keterangan') || n.includes('penjelasan');
+}
+
+// Modal buat nulis/edit instruksi khusus per field, yang bakal ikut ditempelin ke
+// [INSTRUKSI BUAT AI TRANSLATOR] pas user copy teks buat ditranslate -- jadi AI-nya
+// langsung tau field itu mau diisi kayak gimana (misal Notes: jelasin lengkap + furigana).
+function openFieldInstructionModal(idx, fieldName, onSaved){
+  let bg = document.getElementById('ahFieldInstrModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahFieldInstrModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3 id="ahFieldInstrTitle">📝 Instruksi Khusus Field</h3>
+        <p style="font-weight:700; color:var(--ink-soft); font-size:.85rem;">Instruksi ini bakal ikut nempel di teks yang kamu copy buat ditranslate, jadi AI-nya (ChatGPT/Google Translate dll) langsung tau field ini harus diisi kayak gimana. Kosongin lalu simpan kalau mau hapus instruksinya.</p>
+        <textarea id="ahFieldInstrArea" style="min-height:240px;" placeholder="Contoh: jelasin lengkap makna kosakatanya, formal/kasual, kosakata mirip, furigana, dst..."></textarea>
+        <div class="modal-actions" style="justify-content:space-between;">
+          <button class="btn ghost" id="ahFieldInstrUseTemplate" type="button">📋 Pakai template Notes</button>
+          <div style="display:flex; gap:10px;">
+            <button class="btn ghost" id="ahFieldInstrCancel" type="button">Batal</button>
+            <button class="btn mint" id="ahFieldInstrSave" type="button">💾 Simpan</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+  }
+  bg.querySelector('#ahFieldInstrTitle').textContent = `📝 Instruksi Khusus Field "${fieldName}"`;
+  const ta = bg.querySelector('#ahFieldInstrArea');
+  const existing = state.fieldInstructions[idx];
+  ta.value = existing !== undefined ? existing : (ahLooksLikeNotesField(fieldName) ? AH_DEFAULT_NOTES_INSTRUCTION : '');
+
+  // clone tombol biar listener lama (dari field lain yang sebelumnya dibuka) kebuang, gak numpuk
+  const oldCancel = bg.querySelector('#ahFieldInstrCancel');
+  const oldSave = bg.querySelector('#ahFieldInstrSave');
+  const oldTemplate = bg.querySelector('#ahFieldInstrUseTemplate');
+  const cancelBtn = oldCancel.cloneNode(true); oldCancel.replaceWith(cancelBtn);
+  const saveBtn = oldSave.cloneNode(true); oldSave.replaceWith(saveBtn);
+  const templateBtn = oldTemplate.cloneNode(true); oldTemplate.replaceWith(templateBtn);
+
+  // Klik tombol ini LANGSUNG ganti isi textarea jadi template Notes lengkap (bukan copy ke
+  // clipboard) -- biar field custom (misal "Extra", "Info") bisa pakai template yang sama
+  // kayak field yang namanya kedetect otomatis sebagai "Notes", tinggal diedit lalu Simpan.
+  templateBtn.addEventListener('click', (e)=>{
+    e.preventDefault();
+    ta.value = AH_DEFAULT_NOTES_INSTRUCTION;
+    ta.focus();
+    toast('Template Notes udah kepasang di textarea~ Edit dulu kalau perlu, terus Simpan.', '📋');
+  });
+
+  cancelBtn.addEventListener('click', ()=> bg.classList.remove('show'));
+  saveBtn.addEventListener('click', ()=>{
+    const val = ta.value.trim();
+    if(val){
+      state.fieldInstructions[idx] = val;
+    } else {
+      delete state.fieldInstructions[idx];
+    }
+    bg.classList.remove('show');
+    if(onSaved) onSaved();
+    toast(val ? `Instruksi buat "${fieldName}" disimpen~` : `Instruksi buat "${fieldName}" dihapus~`, '📝');
+  });
+
+  bg.classList.add('show');
+}
+
 /* ---------------- state ---------------- */
 const state = {
   SQL: null,
@@ -810,6 +895,7 @@ const state = {
   currentMid: null,
   selectedFieldIdxs: [0],
   referenceFieldIdxs: [], // subset dari selectedFieldIdxs yang ditandain SUMBER/REFERENSI -- field yang dipakai AI buat konteks tapi HARUSNYA gak berubah (misal SentKanji/VocabKanji asli), beda sama field TARGET yang emang diisi hasil terjemahan (SentEng/VocabDef/Notes)
+  fieldInstructions: {}, // idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana"), ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]
   batchSize: 50,
   batchIndex: 0,
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
@@ -1941,6 +2027,7 @@ function populateFieldSelect(){
   if(!model) return;
   state.selectedFieldIdxs = model.flds.length ? [0] : [];
   state.referenceFieldIdxs = [];
+  state.fieldInstructions = {};
   model.flds.forEach((name, idx)=>{
     const chip = document.createElement('label');
     chip.className = 'field-chip' + (idx===0 ? ' active' : '');
@@ -1959,6 +2046,25 @@ function populateFieldSelect(){
     lockBtn.textContent = '🔓';
     lockBtn.title = 'Tandain sebagai field SUMBER/REFERENSI (misal Kanji asli) yang harusnya GAK berubah pas ditranslate — beda sama field target yang emang diisi hasil terjemahan.';
     chip.appendChild(lockBtn);
+
+    // Tombol instruksi khusus per field: field target (misal "Notes") bisa dikasih perintah
+    // tambahan buat AI translator -- ikut kecopy ke teks yang ditempel ke AI, jadi AI-nya tau
+    // persis mau diisi apa di field itu (misal minta penjelasan lengkap kosakata + furigana).
+    const instrBtn = document.createElement('span');
+    instrBtn.className = 'field-lock field-instr';
+    instrBtn.textContent = '📝';
+    instrBtn.title = 'Tambahin instruksi khusus buat AI translator pas ngisi field ini (misal: minta penjelasan lengkap kosakata, format furigana, dst). Instruksi ini ikut kecopy ke teks yang ditempel ke AI.';
+    chip.appendChild(instrBtn);
+    function refreshInstrBtn(){
+      const has = !!(state.fieldInstructions[idx] && state.fieldInstructions[idx].trim());
+      instrBtn.classList.toggle('active', has);
+    }
+    refreshInstrBtn();
+    instrBtn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!cb.checked){ toast('Centang field-nya dulu, baru bisa dikasih instruksi khusus~', '⚠️'); return; }
+      openFieldInstructionModal(idx, name, refreshInstrBtn);
+    });
 
     cb.addEventListener('change', ()=>{
       let idxs = state.selectedFieldIdxs.slice();
@@ -2192,14 +2298,39 @@ function buildBlockText(rows){
   }).join('\n\n');
 
   // Kalau ada field yang ditandain "sumber" (🔒), kasih instruksi eksplisit di atas teks biar
-  // AI translator-nya gak salah nerjemahin field yang harusnya dibiarin sama persis.
+  // AI translator-nya gak salah nerjemahin field yang harusnya dibiarin sama persis. Digabung
+  // sama instruksi khusus per-field (kalau user nulis, misal buat field "Notes") jadi satu
+  // header [INSTRUKSI BUAT AI TRANSLATOR] di atas teks yang dicopy.
+  const headerParts = [];
+
   if(refIdxs.length && model){
     const refNames = refIdxs.map(fi=> model.flds[fi]).filter(Boolean);
     const targetNames = selIdxs.filter(fi=> !refIdxs.includes(fi)).map(fi=> model.flds[fi]).filter(Boolean);
     if(refNames.length){
-      const header = `[INSTRUKSI BUAT AI TRANSLATOR]\nField ${refNames.map(n=>`"${n}"`).join(', ')} adalah SUMBER/REFERENSI — salin PERSIS SAMA APA ADANYA, JANGAN diterjemahin/diubah, cuma dipakai buat konteks/ngambil kosakata.${targetNames.length ? ` Isi hasil terjemahannya ditaruh di field ${targetNames.map(n=>`"${n}"`).join(', ')} aja.` : ''} Jangan hapus baris [[[ID:...]]] dan tag [NamaField], dan jangan ubah urutan barisnya.\n\n`;
-      return header + body;
+      headerParts.push(`Field ${refNames.map(n=>`"${n}"`).join(', ')} adalah SUMBER/REFERENSI — salin PERSIS SAMA APA ADANYA, JANGAN diterjemahin/diubah, cuma dipakai buat konteks/ngambil kosakata.${targetNames.length ? ` Isi hasil terjemahannya ditaruh di field ${targetNames.map(n=>`"${n}"`).join(', ')} aja.` : ''}`);
     }
+  }
+
+  if(model){
+    const instrLines = [];
+    selIdxs.filter(fi=> !refIdxs.includes(fi)).forEach(fi=>{
+      const txt = state.fieldInstructions && state.fieldInstructions[fi];
+      if(txt && txt.trim()){
+        const fname = model.flds[fi] || `Field${fi+1}`;
+        instrLines.push(`• Field "${fname}":\n${txt.trim()}`);
+      }
+    });
+    if(instrLines.length){
+      headerParts.push(`Instruksi khusus buat tiap field (WAJIB diikutin pas ngisi field itu):\n${instrLines.join('\n\n')}`);
+    }
+  }
+
+  if(headerParts.length){
+    const tagNote = selIdxs.length > 1
+      ? 'Jangan hapus baris [[[ID:...]]] dan tag [NamaField], dan jangan ubah urutan barisnya.'
+      : 'Jangan hapus baris [[[ID:...]]], dan jangan ubah urutan barisnya.';
+    const header = `[INSTRUKSI BUAT AI TRANSLATOR]\n${headerParts.join('\n\n')}\n\n${tagNote}\n\n`;
+    return header + body;
   }
   return body;
 }
