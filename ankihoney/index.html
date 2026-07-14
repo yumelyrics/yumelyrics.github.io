@@ -248,6 +248,25 @@ input[type=range]::-moz-range-thumb{
 .bg-preview-dot.active{ background:var(--pink-deep); width:28px; border-radius:999px; }
 .btn.applied{ box-shadow:0 0 0 3px var(--mint) inset, 0 5px 0 #7c63e0; }
 
+/* ---- template & styling editor ---- */
+.tpl-editor{
+  width:100%; min-height:220px; border-radius:16px; border:2px solid #ffd3ea; padding:14px;
+  font-family:'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size:.82rem;
+  line-height:1.55; color:var(--ink); background:#fffcfe; resize:vertical; tab-size:2;
+}
+.tpl-editor:focus{ outline:none; border-color:var(--pink-deep); }
+.tpl-preview-wrap{ margin-top:16px; }
+.tpl-preview-label{ font-family:'Baloo 2',cursive; font-weight:700; color:var(--pink-deep); font-size:.85rem; margin-bottom:8px; }
+.tpl-preview-frame{
+  width:100%; height:260px; border-radius:16px; border:3px solid #ffd3ea; background:#fff;
+  box-shadow:var(--shadow);
+}
+.tpl-field-hint{
+  display:inline-block; background:var(--blush); color:var(--pink-deep); font-weight:700; font-size:.7rem;
+  padding:2px 9px; border-radius:999px; margin:2px 3px 0 0; cursor:pointer; border:none;
+}
+.tpl-field-hint:hover{ background:var(--pink); color:#fff; }
+
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
 
@@ -663,6 +682,51 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     </div>
   </div>
 
+  <!-- STEP 2.7: TEMPLATE & STYLING EDITOR -->
+  <div class="card hidden" id="tplCard">
+    <h2><span class="step-num">🎨</span> Edit Template &amp; Styling Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span></h2>
+    <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Edit langsung HTML tampilan kartu Depan/Belakang & CSS-nya, lengkap sama preview real-time. Berlaku buat note type <b id="tplModelName">-</b> yang lagi dipilih di atas.</p>
+
+    <div class="grid2" style="margin-bottom:12px;">
+      <div>
+        <label class="field-label">Kartu (Card Template)</label>
+        <select id="tplCardSelect"></select>
+      </div>
+      <div>
+        <label class="field-label">Preview Sisi</label>
+        <div class="btn-row" style="gap:6px;">
+          <button type="button" class="btn ghost applied" id="tplPreviewFront" style="flex:1;">👁️ Depan</button>
+          <button type="button" class="btn ghost" id="tplPreviewBack" style="flex:1;">👁️ Belakang</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-bottom:10px;">
+      <button type="button" class="btn ghost applied" id="tplTabFront" style="flex:1;">📝 Front Template</button>
+      <button type="button" class="btn ghost" id="tplTabBack" style="flex:1;">📝 Back Template</button>
+      <button type="button" class="btn ghost" id="tplTabCss" style="flex:1;">🎨 Styling (CSS)</button>
+    </div>
+
+    <textarea id="tplEditorFront" class="tpl-editor" spellcheck="false" rows="10"></textarea>
+    <textarea id="tplEditorBack" class="tpl-editor hidden" spellcheck="false" rows="10"></textarea>
+    <textarea id="tplEditorCss" class="tpl-editor hidden" spellcheck="false" rows="10"></textarea>
+
+    <div style="margin-top:8px;">
+      <small style="display:block; color:var(--ink-soft); font-weight:600; font-size:.72rem; margin-bottom:4px;">💡 Field yang bisa dipakai (klik buat nyalin ke clipboard):</small>
+      <div id="tplFieldHints"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:14px;">
+      <button type="button" class="btn ghost" id="tplBtnReset">↺ Kembalikan ke Desain Asli</button>
+    </div>
+
+    <div class="tpl-preview-wrap">
+      <div class="tpl-preview-label">👁️ Preview Real-time</div>
+      <iframe id="tplPreviewFrame" class="tpl-preview-frame" title="Preview kartu" sandbox="allow-same-origin"></iframe>
+      <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:600; font-size:.7rem;">⚡ Preview ini pakai data dari note pertama di tabel & rendering handlebars sederhana (best-effort), termasuk nampilin gambar &amp; muterin audio ASLI yang ada di dalam deck kamu — bisa aja gak 100% sama persis kayak Anki asli buat template yang rumit banget, tapi cukup buat ngecek perubahan HTML/CSS-nya realtime.</small>
+    </div>
+  </div>
+
   <!-- STEP 3: TABLE PREVIEW / EDIT -->
   <div class="card hidden" id="tableCard">
     <h2><span class="step-num">3</span> Preview &amp; Edit <span class="badge" id="dirtyBadge">0 diubah</span></h2>
@@ -941,7 +1005,11 @@ const state = {
       target: 'bold'       // 'bold' (cuma vocab yang di-bold) atau 'all' (semua teks)
     }
   },
-  originalFileName: 'deck.apkg'
+  originalFileName: 'deck.apkg',
+  templateOriginals: {}, // mid -> {css, tmpls:[...]} snapshot "asli" (sebelum diedit user), buat tombol Reset
+  templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
+  mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
+  _mediaMapPromise: null // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
 };
 
 /* ---------------- init sql.js ---------------- */
@@ -1074,10 +1142,16 @@ async function handleApkgFile(file){
     say(`Yeay~ ${state.notes.length} kartu berhasil dimuat! 🎉`);
     toast('Deck berhasil dibuka!', '🎉');
 
+    state.templateOriginals = {}; // reset cache "desain asli" tiap kali buka deck baru
+    Object.values(state.mediaBlobUrlCache).forEach(url=>{ try{ URL.revokeObjectURL(url); }catch(e){} });
+    state.mediaBlobUrlCache = {};
+    state._mediaMapPromise = null;
+
     populateModelSelect();
     populateDeckNameInputs();
     document.getElementById('selectCard').classList.remove('hidden');
     document.getElementById('bgCard').classList.remove('hidden');
+    document.getElementById('tplCard').classList.remove('hidden');
     document.getElementById('tableCard').classList.remove('hidden');
     document.getElementById('saveCard').classList.remove('hidden');
 
@@ -1461,18 +1535,42 @@ function toggleBgPreviewSide(force){
   updateBgPreview();
 }
 
+// Versi ringan dari updateBgPreview() -- CUMA nulis ulang background-position &
+// angka readout-nya, tanpa nyentuh innerHTML teks/efek FX yang berat. Dipanggil
+// terus-menerus SELAMA drag (biar posisi kerasa nempel di jari/kursor), sedangkan
+// updateBgPreview() yang lengkap cuma dipanggil sekali di akhir drag. Sebelumnya
+// updateBgPreview() penuh dipanggil di TIAP pointermove, yang nge-reset innerHTML
+// & CSS teks berkali-kali per detik -> inilah biang glitch/patah-patahnya foto pas digeser.
+function updateBgPreviewPositionOnly(){
+  const cfg = state.cardBg;
+  const device = cfg.previewDevice || 'desktop';
+  const posX = device === 'mobile' ? (cfg.mobilePosX ?? 50) : (cfg.posX ?? 50);
+  const posY = device === 'mobile' ? (cfg.mobilePosY ?? 50) : (cfg.posY ?? 50);
+  const img = document.getElementById('bgPreviewImg');
+  const posReadout = document.getElementById('bgPosReadout');
+  if(img) img.style.backgroundPosition = `${posX}% ${posY}%`;
+  if(posReadout) posReadout.textContent = `Posisi: ${Math.round(posX)}%, ${Math.round(posY)}%`;
+}
+
 (function setupBgPreviewInteraction(){
   const card = document.getElementById('bgPreviewCard');
   const MOVE_THRESHOLD = 5; // px -- di bawah ini dianggap tap (ganti sisi), bukan drag (atur posisi)
   let startX = null, startY = null, moved = false, dragActive = false;
+  let rafId = null, pendingEvent = null;
 
   function clampPct(v){ return Math.max(0, Math.min(100, v)); }
+  // FIX arah kebalik: background-position CSS itu makin gede % makin nunjukin
+  // sisi KANAN/BAWAH dari gambar asli -- efeknya gambar malah KELIATAN geser ke
+  // KIRI/ATAS pas persen-nya dinaikin. Kalau posisi dipetain APA ADANYA dari
+  // koordinat kursor (kursor makin ke kanan -> % makin gede), hasilnya gambar
+  // malah geser ke arah BERLAWANAN dari tarikan jari/kursor. Makanya di sini
+  // koordinatnya dibalik (100 - x, 100 - y) dulu, biar geser ke kanan/bawah
+  // beneran bikin gambar KELIATAN ikut geser ke kanan/bawah (searah tarikan).
   function posFromEvent(e){
     const rect = card.getBoundingClientRect();
-    return {
-      x: clampPct(((e.clientX - rect.left) / rect.width) * 100),
-      y: clampPct(((e.clientY - rect.top) / rect.height) * 100)
-    };
+    const rawX = clampPct(((e.clientX - rect.left) / rect.width) * 100);
+    const rawY = clampPct(((e.clientY - rect.top) / rect.height) * 100);
+    return { x: 100 - rawX, y: 100 - rawY };
   }
   // Nulis posisi ke device yang lagi aktif di tab (Desktop atau Mobile) --
   // 2 device ini disimpen terpisah, jadi geser pas tab Mobile aktif GAK
@@ -1486,7 +1584,10 @@ function toggleBgPreviewSide(force){
       state.cardBg.posX = Math.round(x);
       state.cardBg.posY = Math.round(y);
     }
-    updateBgPreview();
+    // Selama drag cuma update posisi gambar + angka readout (murah & cepat).
+    // Rebuild teks/efek FX yang berat baru dijalanin sekali di akhir drag lewat
+    // updateBgPreview() penuh (di pointerup) -- ini yang benerin glitch/patah-patah.
+    updateBgPreviewPositionOnly();
   }
 
   card.addEventListener('pointerdown', e=>{
@@ -1498,7 +1599,19 @@ function toggleBgPreviewSide(force){
     if(startX === null) return;
     const dist = Math.hypot(e.clientX-startX, e.clientY-startY);
     if(dist > MOVE_THRESHOLD) moved = true;
-    if(dragActive && moved) applyDragPosition(e);
+    if(dragActive && moved){
+      // Throttle lewat requestAnimationFrame -- pointermove bisa nembak jauh
+      // lebih sering daripada refresh rate layar, dan kalau tiap event langsung
+      // micu kerjaan DOM, updatenya numpuk & bikin gambar keliatan patah-patah/
+      // glitch pas digeser cepat. Cukup proses event TERBARU tiap 1 frame.
+      pendingEvent = e;
+      if(rafId === null){
+        rafId = requestAnimationFrame(()=>{
+          if(pendingEvent) applyDragPosition(pendingEvent);
+          rafId = null; pendingEvent = null;
+        });
+      }
+    }
   });
   card.addEventListener('pointerup', e=>{
     if(startX === null) return;
@@ -1507,15 +1620,338 @@ function toggleBgPreviewSide(force){
       // lama tetep jalan: ketuk buat gonta-ganti preview sisi Depan/Belakang.
       toggleBgPreviewSide();
     } else {
+      if(rafId !== null){ cancelAnimationFrame(rafId); rafId = null; }
+      if(pendingEvent){ applyDragPosition(pendingEvent); pendingEvent = null; }
+      updateBgPreview(); // refresh penuh sekali di akhir drag (teks, dot, status, dll)
       toast(`Posisi ${state.cardBg.previewDevice === 'mobile' ? 'Mobile' : 'Desktop'} diupdate~`, '🎯');
     }
     startX = null; startY = null; moved = false; dragActive = false;
   });
-  card.addEventListener('pointercancel', ()=>{ startX = null; startY = null; moved = false; dragActive = false; });
+  card.addEventListener('pointercancel', ()=>{
+    if(rafId !== null){ cancelAnimationFrame(rafId); rafId = null; }
+    pendingEvent = null;
+    startX = null; startY = null; moved = false; dragActive = false;
+  });
 
   document.getElementById('dotFront').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('front'); });
   document.getElementById('dotBack').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('back'); });
 })();
+
+/* ---------------- editor Front Template / Back Template / Styling (realtime) ---------------- */
+
+// Ambil nilai satu field dari note berdasarkan nama field-nya (best-effort,
+// dipakai buat rendering preview handlebars Anki di bawah).
+function ahFieldValueByName(fields, fieldNames, name){
+  const idx = fieldNames.indexOf(name);
+  return idx >= 0 ? (fields[idx] || '') : '';
+}
+
+// Render 1 tag {{...}} handlebars ala Anki jadi HTML preview. Best-effort:
+// dukung {{Field}}, {{FrontSide}}, {{cloze:Field}}, {{Tags}}/{{Type}}/{{Deck}}/{{Card}},
+// dan modifier field kayak {{text:Field}}/{{furigana:Field}} (modifier-nya
+// diabaikan, langsung tampilin isi field-nya apa adanya).
+function ahRenderTemplateTag(tag, fields, fieldNames, extra){
+  tag = tag.trim();
+  if(tag === 'FrontSide') return extra.frontSide || '';
+  if(tag.toLowerCase().startsWith('cloze:')){
+    const fname = tag.slice(tag.indexOf(':')+1);
+    let val = ahFieldValueByName(fields, fieldNames, fname);
+    // best-effort: highlight cloze pertama yang ketemu, sisanya ditampilin apa adanya
+    val = val.replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, (m, txt)=> `<span style="background:#ffe08a; border-radius:4px; padding:0 3px;">[...${txt}...]</span>`);
+    return val;
+  }
+  const idx = tag.lastIndexOf(':');
+  const fname = idx >= 0 ? tag.slice(idx+1) : tag;
+  if(fname === 'Tags') return extra.tags || '';
+  if(fname === 'Type') return extra.type || '';
+  if(fname === 'Deck') return extra.deck || '';
+  if(fname === 'Subdeck') return extra.deck || '';
+  if(fname === 'Card') return extra.card || '';
+  return ahFieldValueByName(fields, fieldNames, fname);
+}
+
+// Render qfmt/afmt (handlebars ala Anki) jadi HTML buat preview. Dukung blok
+// kondisional {{#Field}}...{{/Field}} (tampil kalau field ISI) dan
+// {{^Field}}...{{/Field}} (tampil kalau field KOSONG). Ini rendering
+// best-effort buat preview aja, bukan pengganti engine asli Anki.
+function ahRenderAnkiTemplate(tpl, fields, fieldNames, extra){
+  tpl = tpl || '';
+  let prev;
+  do{
+    prev = tpl;
+    tpl = tpl.replace(/\{\{#([^#^\/}]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, name, inner)=>{
+      const val = name === 'FrontSide' ? (extra.frontSide||'') : ahFieldValueByName(fields, fieldNames, name);
+      return (val && String(val).trim()) ? inner : '';
+    });
+    tpl = tpl.replace(/\{\{\^([^#^\/}]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (m, name, inner)=>{
+      const val = ahFieldValueByName(fields, fieldNames, name);
+      return (!val || !String(val).trim()) ? inner : '';
+    });
+  }while(tpl !== prev);
+  tpl = tpl.replace(/\{\{([^#^\/][^}]*)\}\}/g, (m, tag)=> ahRenderTemplateTag(tag, fields, fieldNames, extra));
+  return tpl;
+}
+
+function ahCurrentTplModel(){
+  return state.models[state.currentMid];
+}
+
+// Ambil/simpen snapshot "desain asli" model ini SEKALI doang (pas pertama kali
+// editor dibuka buat mid itu) -- dipakai tombol "Kembalikan ke Desain Asli".
+function ahEnsureTemplateSnapshot(mid, model){
+  if(!model || state.templateOriginals[mid]) return;
+  state.templateOriginals[mid] = {
+    css: model.css || '',
+    tmpls: (model.tmpls || []).map(t=> ({ ord: t.ord, qfmt: t.qfmt || '', afmt: t.afmt || '' }))
+  };
+}
+
+function ahCurrentTplOrd(){
+  const model = ahCurrentTplModel();
+  if(!model || !model.tmpls || !model.tmpls.length) return 0;
+  const exists = model.tmpls.some(t=> t.ord === state.templateEditor.ord);
+  return exists ? state.templateEditor.ord : model.tmpls[0].ord;
+}
+
+// Panggil pas note type dipilih/diganti (termasuk pas deck baru dibuka) --
+// nge-refresh dropdown template & isi ketiga textarea editor dari state.models.
+function populateTemplateEditor(){
+  const card = document.getElementById('tplCard');
+  if(!card || card.classList.contains('hidden')) { /* tetep lanjut isi state walau card masih hidden di render pertama */ }
+  const model = ahCurrentTplModel();
+  const nameEl = document.getElementById('tplModelName');
+  if(nameEl) nameEl.textContent = model ? model.name : '-';
+  if(!model || !model.tmpls || !model.tmpls.length){
+    const hintsEl = document.getElementById('tplFieldHints');
+    if(hintsEl) hintsEl.innerHTML = '<small style="color:var(--ink-soft); font-weight:600;">Desain kartu asli note type ini belum berhasil ditangkap, jadi belum bisa diedit di sini.</small>';
+    return;
+  }
+  ahEnsureTemplateSnapshot(state.currentMid, model);
+  state.templateEditor.ord = ahCurrentTplOrd();
+
+  const sel = document.getElementById('tplCardSelect');
+  sel.innerHTML = '';
+  model.tmpls.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.ord;
+    opt.textContent = t.name || ('Card ' + (t.ord+1));
+    sel.appendChild(opt);
+  });
+  sel.value = state.templateEditor.ord;
+  sel.onchange = ()=>{
+    state.templateEditor.ord = parseInt(sel.value);
+    loadTemplateEditorTextareas();
+    renderTemplateLivePreview();
+  };
+
+  const hintsEl = document.getElementById('tplFieldHints');
+  if(hintsEl){
+    hintsEl.innerHTML = '';
+    const names = ['FrontSide', ...model.flds];
+    names.forEach(name=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tpl-field-hint';
+      btn.textContent = `{{${name}}}`;
+      btn.title = 'Klik buat nyalin ke clipboard';
+      btn.addEventListener('click', ()=>{
+        navigator.clipboard?.writeText(`{{${name}}}`).catch(()=>{});
+        toast(`{{${name}}} disalin ke clipboard~`, '📋');
+      });
+      hintsEl.appendChild(btn);
+    });
+  }
+
+  loadTemplateEditorTextareas();
+  renderTemplateLivePreview();
+}
+
+function loadTemplateEditorTextareas(){
+  const model = ahCurrentTplModel();
+  if(!model) return;
+  const t = model.tmpls.find(t=> t.ord === state.templateEditor.ord) || model.tmpls[0];
+  document.getElementById('tplEditorFront').value = t.qfmt || '';
+  document.getElementById('tplEditorBack').value = t.afmt || '';
+  document.getElementById('tplEditorCss').value = model.css || '';
+}
+
+function switchTemplateEditorTab(tab){
+  state.templateEditor.tab = tab;
+  ['front','back','css'].forEach(name=>{
+    document.getElementById('tplEditor' + name.charAt(0).toUpperCase()+name.slice(1)).classList.toggle('hidden', name !== tab);
+    document.getElementById('tplTab' + name.charAt(0).toUpperCase()+name.slice(1)).classList.toggle('applied', name === tab);
+  });
+}
+
+function switchTemplatePreviewSide(side){
+  state.templateEditor.side = side;
+  document.getElementById('tplPreviewFront').classList.toggle('applied', side === 'front');
+  document.getElementById('tplPreviewBack').classList.toggle('applied', side === 'back');
+  renderTemplateLivePreview();
+}
+
+// Baca manifest 'media' dari zip .apkg yang lagi dibuka (nomor file <-> nama file
+// asli), sama kayak logic pas export (termasuk bongkar zstd kalau manifestnya
+// sendiri kekompres) -- dipakai biar preview realtime bisa nunjukin gambar &
+// muterin audio ASLI dari deck, bukan cuma teks mentah [sound:...]/ikon patah.
+async function ahGetMediaNameMap(){
+  if(state._mediaMapPromise) return state._mediaMapPromise;
+  state._mediaMapPromise = (async ()=>{
+    if(!state.zip) return {};
+    const entry = state.zip.file('media');
+    if(!entry) return {};
+    let bytes = await entry.async('uint8array');
+    if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+      try{ bytes = zstdDecompressSafe(bytes); }
+      catch(e){ console.warn('gagal bongkar manifest media buat preview (best-effort)', e); return {}; }
+    }
+    try{
+      const asText = new TextDecoder().decode(bytes);
+      return JSON.parse(asText);
+    }catch(e){
+      return tryParseMediaProtobuf(bytes) || {};
+    }
+  })();
+  return state._mediaMapPromise;
+}
+
+const AH_MEDIA_MIME_MAP = {
+  jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp',
+  svg:'image/svg+xml', bmp:'image/bmp', avif:'image/avif',
+  mp3:'audio/mpeg', ogg:'audio/ogg', oga:'audio/ogg', wav:'audio/wav', m4a:'audio/mp4',
+  flac:'audio/flac', weba:'audio/webm', mp4:'video/mp4', webm:'video/webm'
+};
+
+// Ambil (atau bikin & cache) blob: URL buat 1 file media, dibaca langsung dari
+// zip .apkg yang lagi dibuka (termasuk bongkar zstd per-file kalau formatnya
+// anki21b, sama kayak logic pas export). Balikin null kalau filenya gak ketemu.
+async function ahGetMediaBlobUrl(filename){
+  if(!filename || !state.zip) return null;
+  if(state.mediaBlobUrlCache[filename]) return state.mediaBlobUrlCache[filename];
+  const nameMap = await ahGetMediaNameMap();
+  let num = null;
+  for(const k in nameMap){ if(nameMap[k] === filename){ num = k; break; } }
+  if(num === null) return null;
+  const entry = state.zip.file(num);
+  if(!entry) return null;
+  let bytes;
+  try{ bytes = await entry.async('uint8array'); }catch(e){ return null; }
+  if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+    try{ bytes = zstdDecompressSafe(bytes); }
+    catch(e){ console.warn('gagal bongkar media zstd buat preview (best-effort), file='+filename, e); return null; }
+  }
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  const mime = AH_MEDIA_MIME_MAP[ext] || 'application/octet-stream';
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  state.mediaBlobUrlCache[filename] = url;
+  return url;
+}
+
+// Ganti referensi media di HTML hasil render (<img src="nama.jpg"> dan tag
+// [sound:nama.mp3]) jadi blob: URL yang beneran bisa ditampilin/diputer di
+// iframe preview, diambil dari media asli yang ada di dalam .apkg. Kalau
+// filenya gak ketemu di deck, dikasih placeholder yang jelas (bukan silently gagal).
+async function ahResolveMediaInHtml(html){
+  const imgTags = [...new Set((html.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi) || []))];
+  for(const tag of imgTags){
+    const m = tag.match(/\bsrc=["']([^"']+)["']/i);
+    if(!m) continue;
+    const src = m[1];
+    if(/^(https?:|data:|blob:)/i.test(src)) continue;
+    const url = await ahGetMediaBlobUrl(decodeURIComponent(src));
+    const replaced = url
+      ? tag.replace(src, url)
+      : tag.replace('<img ', `<img title="⚠️ gambar '${src}' gak ketemu di media deck" style="outline:2px dashed #ff6bb3;" `);
+    html = html.split(tag).join(replaced);
+  }
+  const soundTags = [...new Set((html.match(/\[sound:([^\]]+)\]/gi) || []))];
+  for(const tag of soundTags){
+    const fname = tag.slice(7, -1);
+    const url = await ahGetMediaBlobUrl(decodeURIComponent(fname));
+    const replacement = url
+      ? `<audio controls src="${url}" style="max-width:100%; margin:6px 0; vertical-align:middle;"></audio>`
+      : `<span style="display:inline-block; font-size:.75em; opacity:.65; border:1px dashed #ff6bb3; border-radius:6px; padding:2px 6px;">🔊 audio '${fname}' gak ketemu di media deck</span>`;
+    html = html.split(tag).join(replacement);
+  }
+  return html;
+}
+
+async function buildTemplatePreviewDoc(){
+  const model = ahCurrentTplModel();
+  if(!model || !model.tmpls || !model.tmpls.length) return '<!doctype html><body></body>';
+  const t = model.tmpls.find(t=> t.ord === state.templateEditor.ord) || model.tmpls[0];
+  const rows = (typeof currentRows === 'function') ? currentRows() : [];
+  const fieldNames = model.flds || [];
+  const fields = (rows && rows.length) ? rows[0].fields : fieldNames.map(f=> `[Contoh ${f}]`);
+  const extra = { tags:'contoh-tag', type: model.name || '', deck: 'Deck Contoh', card: t.name || '' };
+  const frontHtml = ahRenderAnkiTemplate(t.qfmt, fields, fieldNames, extra);
+  let bodyHtml = frontHtml;
+  if(state.templateEditor.side === 'back'){
+    extra.frontSide = frontHtml;
+    bodyHtml = ahRenderAnkiTemplate(t.afmt, fields, fieldNames, extra);
+  }
+  bodyHtml = await ahResolveMediaInHtml(bodyHtml);
+  const css = model.css || '';
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+    html,body{ margin:0; padding:0; }
+    body{ padding:18px; box-sizing:border-box; font-family:Arial; }
+    ${css}
+  </style></head><body class="card">${bodyHtml}</body></html>`;
+}
+
+let _tplPreviewDebounce = null;
+let _tplPreviewToken = 0;
+function renderTemplateLivePreview(){
+  // Debounce dikit (~120ms) biar preview tetep kerasa realtime pas ngetik cepat,
+  // tapi gak nge-rebuild iframe di TIAP keystroke (yang bisa berat/nge-lag).
+  if(_tplPreviewDebounce) clearTimeout(_tplPreviewDebounce);
+  _tplPreviewDebounce = setTimeout(async ()=>{
+    const myToken = ++_tplPreviewToken;
+    const doc = await buildTemplatePreviewDoc();
+    if(myToken !== _tplPreviewToken) return; // ada render lain yang nyusul lebih baru, buang hasil yang ini (cegah race condition/flicker)
+    const iframe = document.getElementById('tplPreviewFrame');
+    if(iframe) iframe.srcdoc = doc;
+  }, 120);
+}
+
+document.getElementById('tplTabFront').addEventListener('click', ()=> switchTemplateEditorTab('front'));
+document.getElementById('tplTabBack').addEventListener('click', ()=> switchTemplateEditorTab('back'));
+document.getElementById('tplTabCss').addEventListener('click', ()=> switchTemplateEditorTab('css'));
+document.getElementById('tplPreviewFront').addEventListener('click', ()=> switchTemplatePreviewSide('front'));
+document.getElementById('tplPreviewBack').addEventListener('click', ()=> switchTemplatePreviewSide('back'));
+
+document.getElementById('tplEditorFront').addEventListener('input', e=>{
+  const model = ahCurrentTplModel();
+  if(!model) return;
+  const t = model.tmpls.find(t=> t.ord === state.templateEditor.ord);
+  if(t){ t.qfmt = e.target.value; renderTemplateLivePreview(); }
+});
+document.getElementById('tplEditorBack').addEventListener('input', e=>{
+  const model = ahCurrentTplModel();
+  if(!model) return;
+  const t = model.tmpls.find(t=> t.ord === state.templateEditor.ord);
+  if(t){ t.afmt = e.target.value; renderTemplateLivePreview(); }
+});
+document.getElementById('tplEditorCss').addEventListener('input', e=>{
+  const model = ahCurrentTplModel();
+  if(!model) return;
+  model.css = e.target.value;
+  renderTemplateLivePreview();
+});
+
+document.getElementById('tplBtnReset').addEventListener('click', ()=>{
+  const model = ahCurrentTplModel();
+  const snap = state.templateOriginals[state.currentMid];
+  if(!model || !snap){ toast('Belum ada perubahan buat di-reset~', '🤔'); return; }
+  model.css = snap.css;
+  model.tmpls.forEach(t=>{
+    const orig = snap.tmpls.find(o=> o.ord === t.ord);
+    if(orig){ t.qfmt = orig.qfmt; t.afmt = orig.afmt; }
+  });
+  loadTemplateEditorTextareas();
+  renderTemplateLivePreview();
+  toast('Template & CSS dibalikin ke desain asli~', '↺');
+});
 
 function updateBgStatus(){
   const el = document.getElementById('bgStatus');
@@ -1833,11 +2269,30 @@ function applyDeckRenamesLegacy(){
   state.db.run("UPDATE col SET decks=?", [JSON.stringify(decksJson)]);
 }
 
+// Salin balik perubahan Front/Back Template & Styling (CSS) yang dibikin lewat
+// editor -- kesimpen di state.models -- ke JSON models mentah yang baru dibaca
+// ulang dari db. Perlu ini karena export format lama baca ulang langsung dari
+// db (bukan dari state.models), jadi tanpa ini editan template/CSS user bisa
+// "ke-skip" diem-diem walau udah keliatan berubah di preview.
+function applyTemplateEditsToModelsJson(modelsJson){
+  Object.keys(modelsJson).forEach(mid=>{
+    const edited = state.models[mid];
+    const raw = modelsJson[mid];
+    if(!edited || !raw) return;
+    if(typeof edited.css === 'string') raw.css = edited.css;
+    (raw.tmpls || []).forEach(rt=>{
+      const et = (edited.tmpls || []).find(t=> t.ord === rt.ord);
+      if(et){ rt.qfmt = et.qfmt; rt.afmt = et.afmt; }
+    });
+  });
+}
+
 async function applyCardBackgroundLegacy(){
   const res = state.db.exec("SELECT models FROM col");
   if(!res.length || !res[0].values.length) return;
   let modelsJson;
   try{ modelsJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
+  applyTemplateEditsToModelsJson(modelsJson);
   const model = modelsJson[state.currentMid];
   if(!model) return;
 
@@ -2128,7 +2583,7 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
@@ -2136,6 +2591,7 @@ function populateModelSelect(){
   populateFieldSelect();
   updateBgModelLabel();
   renderTable(); // fix: dulu tabel baru muncul kalau field select diutak-atik manual, sekarang langsung render pas upload
+  populateTemplateEditor();
 }
 
 function updateBgModelLabel(){
