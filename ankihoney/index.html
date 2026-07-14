@@ -2376,7 +2376,6 @@ function applyBlockText(raw, scopeRows){
     fieldNameMismatch: [], // {id, fname} nama tag [Field] gak cocok sama nama field asli notetype
     droppedFields: [],     // {id, fname} tag field-nya gak bisa dipetakan sama sekali (isinya dibuang)
     emptiedFields: [],     // {id, fname} field yang tadinya ada isi, sekarang jadi kosong abis di-paste
-    shrunkFields: [],      // {id, fname, oldLen, newLen, oldSnippet, newSnippet} field yang MENGECIL (nambah panjang itu wajar, gak diwarning)
     tokenSwaps: [],        // {id, fname, token, foundInId, foundInFname} referensi (sound/img/url/field sumber) yang kayaknya nyasar ke ID lain
     referenceFieldChanged: [] // {id, fname, oldSnippet, newSnippet} field yang ditandain SUMBER (🔒) tapi ternyata isinya berubah
   };
@@ -2421,8 +2420,6 @@ function applyBlockText(raw, scopeRows){
           const isRef = (state.referenceFieldIdxs||[]).includes(idx);
           if(oldLen > 0 && newLen === 0){
             warnings.emptiedFields.push({ id, fname });
-          } else if(newLen < oldLen){
-            warnings.shrunkFields.push({ id, fname, oldLen, newLen, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(fval) });
           }
           if(isRef && stripHtml(oldVal).trim() !== stripHtml(fval).trim()){
             warnings.referenceFieldChanged.push({ id, fname, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(fval) });
@@ -2440,8 +2437,6 @@ function applyBlockText(raw, scopeRows){
       const newLen = stripHtml(blockContent).length;
       if(oldLen > 0 && newLen === 0){
         warnings.emptiedFields.push({ id, fname: null });
-      } else if(newLen < oldLen){
-        warnings.shrunkFields.push({ id, fname: null, oldLen, newLen, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(blockContent) });
       }
       appliedChanges.push({ id, fname: null, oldTokens: extractInvariantTokens(oldVal), newTokens: extractInvariantTokens(blockContent) });
       note.fields[selIdxs[0]] = blockContent;
@@ -2497,7 +2492,7 @@ function applyBlockText(raw, scopeRows){
   const hasWarnings = warnings.duplicateIds.length || warnings.unknownIds.length ||
                        warnings.outOfScopeIds.length || warnings.fieldNameMismatch.length ||
                        warnings.droppedFields.length || missingFromBatch.length ||
-                       warnings.emptiedFields.length || warnings.shrunkFields.length ||
+                       warnings.emptiedFields.length ||
                        warnings.tokenSwaps.length || warnings.orderMismatchCount ||
                        warnings.referenceFieldChanged.length;
   if(hasWarnings){
@@ -2534,14 +2529,6 @@ function applyBlockText(raw, scopeRows){
     }
     if(warnings.emptiedFields.length){
       lines.push(`⚠️ ${warnings.emptiedFields.length} field yang tadinya ADA isinya, sekarang jadi KOSONG abis di-paste: ${warnings.emptiedFields.slice(0,10).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''} (kartu: ${notePreviewById[w.id]||'(?)'})`).join('; ')}${warnings.emptiedFields.length>10?', ...':''} — kemungkinan translation-nya kelewat, atau ketuker ke tempat lain.`);
-    }
-    if(warnings.shrunkFields.length){
-      lines.push(`⚠️ ${warnings.shrunkFields.length} field jadi LEBIH PENDEK dari sebelumnya (nambah panjang itu wajar & gak diwarning, tapi MENGECIL patut dicek):\n` +
-        warnings.shrunkFields.slice(0,8).map(w=>
-          `• ID:${w.id}${w.fname?` [${w.fname}]`:''} — ${w.oldLen}→${w.newLen} karakter (kartu: ${notePreviewById[w.id]||'(?)'})\n`+
-          `   dulu: "${w.oldSnippet}"\n`+
-          `   jadi: "${w.newSnippet}"`
-        ).join('\n') + (warnings.shrunkFields.length>8?`\n...dan ${warnings.shrunkFields.length-8} lainnya`:''));
     }
     if(warnings.referenceFieldChanged.length){
       lines.push(`⚠️ ${warnings.referenceFieldChanged.length} field yang ditandain 🔒 SUMBER (harusnya gak berubah) ternyata isinya beda dari aslinya — kemungkinan AI-nya ikut nerjemahin/ngedit field ini padahal harusnya dibiarin persis sama:\n` +
