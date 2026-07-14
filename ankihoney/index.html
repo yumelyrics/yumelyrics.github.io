@@ -205,8 +205,16 @@ input[type=range]::-moz-range-thumb{
 .bg-preview-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:16px; }
 .bg-preview-card{
   position:relative; width:100%; max-width:480px; aspect-ratio:3/2; border-radius:22px; overflow:hidden;
-  border:3px solid #ffd3ea; background:#fdf3f8; cursor:pointer; user-select:none; -webkit-user-select:none;
-  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); touch-action:pan-y;
+  border:3px solid #ffd3ea; background:#fdf3f8; cursor:grab; user-select:none; -webkit-user-select:none;
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); touch-action:none;
+  transition:aspect-ratio .25s, max-width .25s;
+}
+.bg-preview-card:active{ cursor:grabbing; }
+.bg-preview-card.device-mobile{ max-width:230px; aspect-ratio:9/16; }
+.bg-preview-device-badge{
+  position:absolute; top:10px; right:10px; z-index:3; font-family:'Baloo 2', cursive; font-weight:700;
+  font-size:.68rem; color:#fff; background:rgba(74,51,88,.65); padding:4px 11px; border-radius:999px;
+  letter-spacing:.3px; pointer-events:none;
 }
 .bg-preview-img{
   position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat;
@@ -533,11 +541,12 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <div class="bg-preview-card empty" id="bgPreviewCard">
           <div class="bg-preview-img" id="bgPreviewImg"></div>
           <div class="bg-preview-overlay" id="bgPreviewOverlay"></div>
+          <span class="bg-preview-device-badge" id="bgPreviewDeviceBadge">🖥️ Desktop</span>
           <div class="bg-preview-content">
             <span class="bg-preview-side-label" id="bgPreviewSideLabel">Depan (Front)</span>
             <div class="bg-preview-text" id="bgPreviewText">Contoh teks kartu</div>
           </div>
-          <div class="bg-preview-hint">👆 Ketuk / geser buat lihat sisi lainnya</div>
+          <div class="bg-preview-hint">🖐️ Seret gambar buat atur posisi · ketuk buat lihat sisi lain</div>
         </div>
         <div class="bg-preview-dots">
           <button type="button" class="bg-preview-dot active" id="dotFront" title="Depan"></button>
@@ -562,13 +571,19 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
           </select>
         </div>
         <div>
-          <label class="field-label">Posisi Foto</label>
-          <select id="bgPosition">
-            <option value="center">Tengah</option>
-            <option value="top">Atas</option>
-            <option value="bottom">Bawah</option>
-          </select>
+          <label class="field-label">Lagi Atur Posisi Buat</label>
+          <div class="btn-row" style="gap:6px;">
+            <button type="button" class="btn ghost applied" id="bgDeviceDesktop" style="flex:1; font-size:.72rem; padding:9px 6px;">🖥️ Desktop</button>
+            <button type="button" class="btn ghost" id="bgDeviceMobile" style="flex:1; font-size:.72rem; padding:9px 6px;">📱 Mobile</button>
+          </div>
         </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <small style="color:var(--ink-soft); font-weight:600; font-size:.72rem; flex:1; min-width:220px;">
+          🖐️ <b id="bgPosReadout">Posisi: 50%, 50%</b> — seret langsung di gambar preview di atas ke arah mana aja buat pas-in posisinya. Posisi <b>Desktop</b> &amp; <b>Mobile</b> kesimpen <b>terpisah</b>, jadi pindah tab di atas buat atur masing-masing device — pas dibuka di Anki HP, foto otomatis pake posisi tab Mobile.
+        </small>
+        <button type="button" class="btn ghost" id="btnResetBgPos" style="font-size:.72rem; white-space:nowrap;">↺ Reset ke Tengah</button>
       </div>
 
       <div style="margin-top:16px;">
@@ -808,7 +823,7 @@ const AH_DEFAULT_NOTES_INSTRUCTION =
 - Tingkat kesopanan: ini bentuk sopan (teineigo/keigo) atau bentuk biasa/kasual (futsuukei)? Kasih tau juga versi sopan/kasualnya kalau ada padanannya.
 - Kosakata/ungkapan yang mirip: sebutin kata atau frasa lain yang artinya mirip atau sering ketuker, terus jelasin bedanya apa (nuansa, tingkat formalitas, konteks pemakaian, atau kapan salah satu lebih natural dipakai dibanding yang lain).
 - Kalau ada nuansa budaya, kolokasi umum (kata yang sering bareng), atau catatan pemakaian unik lainnya (misal cuma dipakai di kalimat tertentu, gender tertentu, atau ada di dialek tertentu), sebutin juga sesingkat & sejelas mungkin.
-- Kanji & furigana: kalau ada kanji di penjelasan, WAJIB kasih cara baca furigana-nya, dengan format PERSIS begini: kanji diikuti kurung siku berisi hiragana-nya, contoh: 私[わたし]。 Jangan pakai tanda kurung biasa ( ) atau format lain. Kurung siku-nya HARUS nempel PERSIS cuma di bagian kanji-nya aja, JANGAN di seret ke hiragana yang nempel di sebelumnya — kalau dalam satu kata ada campuran hiragana+kanji, kasih SATU spasi pemisah sebelum kanji-nya biar furigana jatuh tepat di atas kanji doang, bukan di atas seluruh kata. Contoh: たった今 (dibaca たったいま) ditulis jadi "たった 今[いま]", BUKAN "たった今[いま]" atau "たった[いま]今".
+- Kanji & furigana: kalau ada kanji di penjelasan, WAJIB kasih cara baca furigana-nya, dengan format PERSIS begini: kanji (atau blok kanji beruntun yang sama-sama dibaca jadi satu furigana) diikuti kurung siku berisi hiragana-nya, contoh: 私[わたし]。 Jangan pakai tanda kurung biasa ( ) atau format lain. Kurung siku-nya HARUS nempel PERSIS cuma ngelingkupin blok kanji-nya doang, JANGAN sampe furigana-nya keanggep nyebar ke karakter lain yang nempel SEBELUM blok kanji itu (baik itu hiragana atau kanji lain) — caranya, kasih SATU spasi pemisah sebelum karakter PALING DEPAN dari blok kanji yang mau dikasih furigana (bukan di antara kanji-kanji di dalam bloknya sendiri, itu tetep nempel gak pake spasi). Contoh kasus hiragana+kanji: たった今 (dibaca たったいま, cuma "今" yang kanji) ditulis jadi "たった 今[いま]", BUKAN "たった今[いま]" atau "たった[いま]今". Contoh kasus kanji ketemu kanji (blok kanji-nya lebih dari 1 karakter): 巫山戯る (dibaca ふざける, "巫山戯" bertiga sama-sama masuk satu bacaan ふざけ) ditulis jadi "巫山戯[ふざけ]る" tapi kalau sebelum "巫" ada karakter lain yang nempel (misal hiragana atau kanji kata sebelumnya), WAJIB kasih spasi sebelum "巫"-nya aja (bukan di antara 巫/山/戯), biar furigana-nya cuma ngelingkupin 3 kanji itu dan gak ikut nyebar ke kata sebelumnya.
 Tulis pakai bahasa Indonesia yang santai & enak dibaca, jangan kaku kayak kamus, tapi tetap padat & to the point.`;
 
 function ahLooksLikeNotesField(fieldName){
@@ -907,7 +922,11 @@ const state = {
     bytes: null,           // Uint8Array (JPEG terkompres) buat disisipin ke media apkg
     mediaFilename: '_ankihoney_card_bg.jpg',
     fit: 'cover',
-    position: 'center',
+    posX: 50,          // posisi geser horizontal (%) khusus buat DESKTOP
+    posY: 50,          // posisi geser vertikal (%) khusus buat DESKTOP
+    mobilePosX: 50,    // posisi geser horizontal (%) khusus buat MOBILE (AnkiDroid/AnkiMobile) -- terpisah dari Desktop
+    mobilePosY: 50,    // posisi geser vertikal (%) khusus buat MOBILE -- terpisah dari Desktop
+    previewDevice: 'desktop', // 'desktop' | 'mobile' -- device mana yang lagi diatur/dipreview posisinya di form
     opacity: 90,
     overlay: 25,
     blur: 0,
@@ -929,6 +948,19 @@ const state = {
 let sqlReadyPromise = initSqlJs({
   locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
 }).then(SQL => { state.SQL = SQL; return SQL; });
+
+// Konfirmasi kalau user coba nutup tab / refresh SETELAH file .apkg berhasil dimuat --
+// semua kerjaan (translate, edit field, dll) cuma kesimpen di memori browser aja, belum
+// ada auto-save ke server/disk, jadi kalau ke-close/refresh tanpa sengaja progress-nya ilang.
+// Browser modern gak nampilin teks custom ini (cuma dialog konfirmasi bawaan browser),
+// tapi listener-nya harus tetep dipasang biar dialognya nongol sama sekali.
+window.addEventListener('beforeunload', (e)=>{
+  if(state.notes && state.notes.length){
+    e.preventDefault();
+    e.returnValue = 'Progress kamu (deck yang lagi dibuka & belum di-download ulang) bakal ilang kalau halaman ini ditutup/direfresh. Yakin mau lanjut?';
+    return e.returnValue;
+  }
+});
 
 /* ---------------- upload / parse ---------------- */
 const dropzone = document.getElementById('dropzone');
@@ -1163,7 +1195,25 @@ async function handleBgImage(file){
 }
 
 document.getElementById('bgFit').addEventListener('change', e=>{ state.cardBg.fit = e.target.value; updateBgPreview(); });
-document.getElementById('bgPosition').addEventListener('change', e=>{ state.cardBg.position = e.target.value; updateBgPreview(); });
+
+// Tab pemilih device yang lagi diatur posisinya -- Desktop & Mobile disimpen
+// terpisah (state.cardBg.posX/posY vs mobilePosX/mobilePosY), pindah tab cuma
+// ganti device MANA yang lagi di-drag/dipreview, gak nge-reset yang lain.
+function setBgPreviewDevice(device){
+  state.cardBg.previewDevice = device;
+  updateBgPreview();
+}
+document.getElementById('bgDeviceDesktop').addEventListener('click', ()=> setBgPreviewDevice('desktop'));
+document.getElementById('bgDeviceMobile').addEventListener('click', ()=> setBgPreviewDevice('mobile'));
+document.getElementById('btnResetBgPos').addEventListener('click', ()=>{
+  if(state.cardBg.previewDevice === 'mobile'){
+    state.cardBg.mobilePosX = 50; state.cardBg.mobilePosY = 50;
+  } else {
+    state.cardBg.posX = 50; state.cardBg.posY = 50;
+  }
+  updateBgPreview();
+  toast(`Posisi ${state.cardBg.previewDevice === 'mobile' ? 'Mobile' : 'Desktop'} direset ke tengah~`, '↺');
+});
 document.getElementById('bgOpacity').addEventListener('input', e=>{
   state.cardBg.opacity = parseInt(e.target.value);
   document.getElementById('bgOpacityVal').textContent = e.target.value;
@@ -1362,9 +1412,11 @@ function getSampleCardHtml(side){
 function updateBgPreview(){
   const cfg = state.cardBg;
   const sizeMap = { cover:'cover', contain:'contain', stretch:'100% 100%' };
-  const posMap = { center:'center center', top:'center top', bottom:'center bottom' };
   const side = cfg.previewSide || 'front';
   const active = side === 'front' ? cfg.front : cfg.back;
+  const device = cfg.previewDevice || 'desktop';
+  const posX = device === 'mobile' ? (cfg.mobilePosX ?? 50) : (cfg.posX ?? 50);
+  const posY = device === 'mobile' ? (cfg.mobilePosY ?? 50) : (cfg.posY ?? 50);
 
   const card = document.getElementById('bgPreviewCard');
   const img = document.getElementById('bgPreviewImg');
@@ -1381,10 +1433,20 @@ function updateBgPreview(){
   document.getElementById('dotBack').classList.toggle('active', side==='back');
 
   card.classList.toggle('empty', !ahHasBgImage(cfg));
+  card.classList.toggle('device-mobile', device === 'mobile');
+  const deviceBadge = document.getElementById('bgPreviewDeviceBadge');
+  if(deviceBadge) deviceBadge.textContent = device === 'mobile' ? '📱 Mobile' : '🖥️ Desktop';
+  const posReadout = document.getElementById('bgPosReadout');
+  if(posReadout) posReadout.textContent = `Posisi: ${Math.round(posX)}%, ${Math.round(posY)}%`;
+  const dtDesktop = document.getElementById('bgDeviceDesktop');
+  const dtMobile = document.getElementById('bgDeviceMobile');
+  if(dtDesktop) dtDesktop.classList.toggle('applied', device !== 'mobile');
+  if(dtMobile) dtMobile.classList.toggle('applied', device === 'mobile');
+
   if(ahHasBgImage(cfg)){
     img.style.backgroundImage = `url('${cfg.mode==='url' ? cfg.imageUrl.trim() : cfg.dataUrl}')`;
     img.style.backgroundSize = sizeMap[cfg.fit] || 'cover';
-    img.style.backgroundPosition = posMap[cfg.position] || 'center center';
+    img.style.backgroundPosition = `${posX}% ${posY}%`;
     img.style.opacity = String(cfg.opacity/100);
     img.style.filter = `blur(${cfg.blur}px)`;
     overlay.style.backgroundColor = `rgba(0,0,0,${cfg.overlay/100})`;
@@ -1399,16 +1461,58 @@ function toggleBgPreviewSide(force){
   updateBgPreview();
 }
 
-(function setupBgPreviewSwipe(){
+(function setupBgPreviewInteraction(){
   const card = document.getElementById('bgPreviewCard');
-  let startX = null, moved = false;
-  card.addEventListener('pointerdown', e=>{ startX = e.clientX; moved = false; });
-  card.addEventListener('pointermove', e=>{ if(startX !== null && Math.abs(e.clientX - startX) > 8) moved = true; });
+  const MOVE_THRESHOLD = 5; // px -- di bawah ini dianggap tap (ganti sisi), bukan drag (atur posisi)
+  let startX = null, startY = null, moved = false, dragActive = false;
+
+  function clampPct(v){ return Math.max(0, Math.min(100, v)); }
+  function posFromEvent(e){
+    const rect = card.getBoundingClientRect();
+    return {
+      x: clampPct(((e.clientX - rect.left) / rect.width) * 100),
+      y: clampPct(((e.clientY - rect.top) / rect.height) * 100)
+    };
+  }
+  // Nulis posisi ke device yang lagi aktif di tab (Desktop atau Mobile) --
+  // 2 device ini disimpen terpisah, jadi geser pas tab Mobile aktif GAK
+  // ngubah posisi yang udah diatur buat Desktop, begitu juga sebaliknya.
+  function applyDragPosition(e){
+    const { x, y } = posFromEvent(e);
+    if(state.cardBg.previewDevice === 'mobile'){
+      state.cardBg.mobilePosX = Math.round(x);
+      state.cardBg.mobilePosY = Math.round(y);
+    } else {
+      state.cardBg.posX = Math.round(x);
+      state.cardBg.posY = Math.round(y);
+    }
+    updateBgPreview();
+  }
+
+  card.addEventListener('pointerdown', e=>{
+    startX = e.clientX; startY = e.clientY; moved = false;
+    dragActive = ahHasBgImage(state.cardBg);
+    if(dragActive){ try{ card.setPointerCapture(e.pointerId); }catch(err){} }
+  });
+  card.addEventListener('pointermove', e=>{
+    if(startX === null) return;
+    const dist = Math.hypot(e.clientX-startX, e.clientY-startY);
+    if(dist > MOVE_THRESHOLD) moved = true;
+    if(dragActive && moved) applyDragPosition(e);
+  });
   card.addEventListener('pointerup', e=>{
     if(startX === null) return;
-    toggleBgPreviewSide();
-    startX = null; moved = false;
+    if(!(dragActive && moved)){
+      // Cuma tap (gak digeser signifikan), atau lagi belum ada foto -- perilaku
+      // lama tetep jalan: ketuk buat gonta-ganti preview sisi Depan/Belakang.
+      toggleBgPreviewSide();
+    } else {
+      toast(`Posisi ${state.cardBg.previewDevice === 'mobile' ? 'Mobile' : 'Desktop'} diupdate~`, '🎯');
+    }
+    startX = null; startY = null; moved = false; dragActive = false;
   });
+  card.addEventListener('pointercancel', ()=>{ startX = null; startY = null; moved = false; dragActive = false; });
+
   document.getElementById('dotFront').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('front'); });
   document.getElementById('dotBack').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('back'); });
 })();
@@ -1464,6 +1568,12 @@ function ahApplyDeckDesc(origDesc){
 /* ---- helper suntik background ke template Anki (qfmt/afmt/css), dipakai pas save ---- */
 const AH_BG_START = '/* === AnkiHoney Background START === */';
 const AH_BG_END = '/* === AnkiHoney Background END === */';
+// Lebar viewport (px) buat mbedain render Desktop vs Mobile pas kartu dibuka
+// beneran di Anki -- app Anki di HP (AnkiDroid/AnkiMobile) rendernya webview
+// selebar layar device (biasanya jauh di bawah ini), sedangkan Anki desktop
+// window-nya biasanya lebih lebar dari ini. Dipakai di @media buat milih
+// posisi foto mana (Desktop atau Mobile) yang berlaku.
+const AH_MOBILE_BREAKPOINT = 600;
 const AH_WRAP_OPEN = '<div class="ankihoney-bg">';
 const AH_WRAP_CLOSE = '</div><!-- /ankihoney-bg -->';
 
@@ -1491,10 +1601,16 @@ function ahStripCssBlock(css){
 
 function ahBuildCssBlock(cfg){
   const sizeMap = { cover:'cover', contain:'contain', stretch:'100% 100%' };
-  const posMap = { center:'center center', top:'center top', bottom:'center bottom' };
   const opacity = Math.max(0, Math.min(100, cfg.opacity)) / 100;
   const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
   const blur = Math.max(0, Math.min(20, cfg.blur));
+  const posX = Math.max(0, Math.min(100, cfg.posX != null ? cfg.posX : 50));
+  const posY = Math.max(0, Math.min(100, cfg.posY != null ? cfg.posY : 50));
+  // Kalau posisi Mobile belum pernah diatur user, jatuh ke posisi Desktop
+  // (bukan default 50/50 mentah) biar hasilnya tetep masuk akal walau user
+  // cuma sempet ngatur satu device doang.
+  const mobilePosX = Math.max(0, Math.min(100, cfg.mobilePosX != null ? cfg.mobilePosX : posX));
+  const mobilePosY = Math.max(0, Math.min(100, cfg.mobilePosY != null ? cfg.mobilePosY : posY));
 
   const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
   // Selector ini SENGAJA dibatesin ke <b>/<strong> literal doang (yang cuma
@@ -1563,7 +1679,7 @@ html, body{ background-color:transparent !important; }
   content:""; position:fixed; inset:0; z-index:-2;
   background-image:url('${ahBgImageRef(cfg)}');
   background-size:${sizeMap[cfg.fit]||'cover'};
-  background-position:${posMap[cfg.position]||'center center'};
+  background-position:${posX}% ${posY}%;
   background-repeat:no-repeat;
   opacity:${opacity};
   filter:blur(${blur}px);
@@ -1571,6 +1687,16 @@ html, body{ background-color:transparent !important; }
 .ankihoney-bg::after{
   content:""; position:fixed; inset:0; z-index:-1;
   background:rgba(0,0,0,${overlay});
+}
+/* Posisi foto khusus buat layar sempit (HP -- AnkiDroid/AnkiMobile), diatur
+   terpisah dari posisi Desktop di atas lewat tab "📱 Mobile" pas ngatur foto
+   di AnkiHoney. Breakpoint ${AH_MOBILE_BREAKPOINT}px dipakai karena app Anki
+   di HP biasanya render webview selebar layar device (jauh lebih sempit
+   dibanding window Anki desktop). */
+@media (max-width:${AH_MOBILE_BREAKPOINT}px){
+  .ankihoney-bg::before{
+    background-position:${mobilePosX}% ${mobilePosY}%;
+  }
 }
 ${fxCss}${mutedHeadwordCss}${panelCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah
    dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper
