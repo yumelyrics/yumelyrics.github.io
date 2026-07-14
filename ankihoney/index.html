@@ -252,6 +252,11 @@ input[type=range]::-moz-range-thumb{
 .field-chip:hover{ border-color:var(--pink); }
 .field-chip input{ accent-color:var(--pink-deep); width:15px; height:15px; cursor:pointer; margin:0; }
 .field-chip.active{ background:var(--blush); border-color:var(--pink-deep); color:var(--pink-deep); }
+.field-lock{
+  font-size:.85rem; opacity:.4; cursor:pointer; line-height:1; padding:2px;
+}
+.field-lock:hover{ opacity:.8; }
+.field-lock.active{ opacity:1; }
 
 .field-mini-label{
   font-size:.66rem; font-weight:800; color:var(--pink-deep); text-transform:uppercase; letter-spacing:.4px;
@@ -483,6 +488,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <div>
         <label class="field-label">Field yang mau diterjemahin <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(boleh centang lebih dari 1 buat digabung)</span></label>
         <div class="field-checks" id="fieldChecks"></div>
+        <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:600; font-size:.7rem;">🔒/🔓 di tiap field = tandain field itu SUMBER (misal Kanji asli yang cuma dipakai AI buat konteks & harusnya gak berubah) — beda sama field target yang emang diisi hasil terjemahan. Ini bikin tool bisa ngingetin kalau field sumber ternyata ikut berubah pas paste (tanda ke-translate/ke-swap gak sengaja).</small>
       </div>
     </div>
     <div class="stats" id="statsRow"></div>
@@ -803,6 +809,7 @@ const state = {
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
   selectedFieldIdxs: [0],
+  referenceFieldIdxs: [], // subset dari selectedFieldIdxs yang ditandain SUMBER/REFERENSI -- field yang dipakai AI buat konteks tapi HARUSNYA gak berubah (misal SentKanji/VocabKanji asli), beda sama field TARGET yang emang diisi hasil terjemahan (SentEng/VocabDef/Notes)
   batchSize: 50,
   batchIndex: 0,
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
@@ -1933,12 +1940,26 @@ function populateFieldSelect(){
   const model = state.models[state.currentMid];
   if(!model) return;
   state.selectedFieldIdxs = model.flds.length ? [0] : [];
+  state.referenceFieldIdxs = [];
   model.flds.forEach((name, idx)=>{
     const chip = document.createElement('label');
     chip.className = 'field-chip' + (idx===0 ? ' active' : '');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = idx === 0;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+
+    // Toggle "field sumber": field yang dipakai AI buat konteks (misal Kanji asli) tapi
+    // HARUSNYA gak ikut berubah pas ditranslate -- beda sama field target yang emang diisi
+    // hasil terjemahan. Ini bikin tool bisa ngedeteksi kalau field sumber ternyata ikut berubah
+    // (tanda ke-translate/ke-swap gak sengaja), tanpa perlu nebak-nebak nama field.
+    const lockBtn = document.createElement('span');
+    lockBtn.className = 'field-lock';
+    lockBtn.textContent = '🔓';
+    lockBtn.title = 'Tandain sebagai field SUMBER/REFERENSI (misal Kanji asli) yang harusnya GAK berubah pas ditranslate — beda sama field target yang emang diisi hasil terjemahan.';
+    chip.appendChild(lockBtn);
+
     cb.addEventListener('change', ()=>{
       let idxs = state.selectedFieldIdxs.slice();
       if(cb.checked){
@@ -1954,10 +1975,31 @@ function populateFieldSelect(){
       idxs.sort((a,b)=>a-b);
       state.selectedFieldIdxs = idxs;
       chip.classList.toggle('active', cb.checked);
+      if(!cb.checked){
+        state.referenceFieldIdxs = state.referenceFieldIdxs.filter(i=> i!==idx);
+        lockBtn.textContent = '🔓';
+        lockBtn.classList.remove('active');
+      }
       renderTable();
     });
-    chip.appendChild(cb);
-    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+
+    lockBtn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!cb.checked){ toast('Centang field-nya dulu, baru bisa ditandain sumber~', '⚠️'); return; }
+      let refs = state.referenceFieldIdxs.slice();
+      if(refs.includes(idx)){
+        refs = refs.filter(i=> i!==idx);
+        lockBtn.textContent = '🔓';
+        lockBtn.classList.remove('active');
+      } else {
+        refs.push(idx);
+        lockBtn.textContent = '🔒';
+        lockBtn.classList.add('active');
+        toast(`"${name}" ditandain sebagai field sumber — harusnya gak berubah pas ditranslate~`, '🔒');
+      }
+      state.referenceFieldIdxs = refs;
+    });
+
     container.appendChild(chip);
   });
   updateStats();
@@ -2135,7 +2177,8 @@ function currentRows(){
 function buildBlockText(rows){
   const model = state.models[state.currentMid];
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
-  return (rows || currentRows()).map(n=>{
+  const refIdxs = state.referenceFieldIdxs || [];
+  const body = (rows || currentRows()).map(n=>{
     if(selIdxs.length === 1){
       const val = n.fields[selIdxs[0]] || '';
       return `[[[ID:${n.id}]]]\n${val}`;
@@ -2147,6 +2190,18 @@ function buildBlockText(rows){
     }).join('\n');
     return `[[[ID:${n.id}]]]\n${parts}`;
   }).join('\n\n');
+
+  // Kalau ada field yang ditandain "sumber" (🔒), kasih instruksi eksplisit di atas teks biar
+  // AI translator-nya gak salah nerjemahin field yang harusnya dibiarin sama persis.
+  if(refIdxs.length && model){
+    const refNames = refIdxs.map(fi=> model.flds[fi]).filter(Boolean);
+    const targetNames = selIdxs.filter(fi=> !refIdxs.includes(fi)).map(fi=> model.flds[fi]).filter(Boolean);
+    if(refNames.length){
+      const header = `[INSTRUKSI BUAT AI TRANSLATOR]\nField ${refNames.map(n=>`"${n}"`).join(', ')} adalah SUMBER/REFERENSI — salin PERSIS SAMA APA ADANYA, JANGAN diterjemahin/diubah, cuma dipakai buat konteks/ngambil kosakata.${targetNames.length ? ` Isi hasil terjemahannya ditaruh di field ${targetNames.map(n=>`"${n}"`).join(', ')} aja.` : ''} Jangan hapus baris [[[ID:...]]] dan tag [NamaField], dan jangan ubah urutan barisnya.\n\n`;
+      return header + body;
+    }
+  }
+  return body;
 }
 
 document.getElementById('btnCopyAll').addEventListener('click', async ()=>{
@@ -2261,6 +2316,34 @@ document.getElementById('btnUndoPaste').addEventListener('click', ()=>{
   say('Oke, aku balikin lagi kayak sebelum paste tadi~ 🔙');
 });
 
+function snippetOf(str, n){
+  n = n || 50;
+  const s = stripHtml(str || '');
+  return s.length > n ? s.slice(0, n) + '…' : (s || '(kosong)');
+}
+
+// Referensi yang HARUS tetap sama persis walau bahasanya beda (nama file audio, gambar, link) --
+// dipakai sebagai "sidik jari" konten buat nangkep kasus dua field ke-swap biar ID-nya sendiri
+// tetep valid dua-duanya. Kalau includeFullText true (field ditandain SUMBER/REFERENSI oleh user),
+// seluruh isi field itu sendiri juga dipakai sebagai "token" -- soalnya field sumber emang
+// harusnya PERSIS SAMA, gak peduli isinya bahasa apa.
+function extractInvariantTokens(str, includeFullText){
+  const tokens = [];
+  const s = str || '';
+  let m;
+  const reSound = /\[sound:[^\]]+\]/g;
+  while((m = reSound.exec(s))) tokens.push(m[0]);
+  const reImg = /<img[^>]*>/gi;
+  while((m = reImg.exec(s))) tokens.push(m[0]);
+  const reUrl = /https?:\/\/[^\s"'<>]+/g;
+  while((m = reUrl.exec(s))) tokens.push(m[0]);
+  if(includeFullText){
+    const full = stripHtml(s).trim();
+    if(full.length >= 3) tokens.push('FULLTEXT::' + full);
+  }
+  return tokens;
+}
+
 function applyBlockText(raw, scopeRows){
   const model = state.models[state.currentMid];
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
@@ -2268,6 +2351,14 @@ function applyBlockText(raw, scopeRows){
   let match, count=0;
   const byId = {};
   currentRows().forEach(n=> byId[n.id]=n);
+
+  // Preview tiap kartu (field LAIN di luar yang lagi ditranslate), diambil SEBELUM paste diterapin,
+  // biar warning bisa nunjukin "kartu ini yang mana" tanpa harus scroll ke tabel.
+  const notePreviewById = {};
+  currentRows().forEach(n=>{
+    const txt = n.fields.map((v,i)=> selIdxs.includes(i) ? null : stripHtml(v)).filter(v=>v!==null && v.trim()!=='').join(' · ');
+    notePreviewById[n.id] = snippetOf(txt || '(kosong)', 70);
+  });
 
   // Kalau dipanggil dari mode "Paste Batch", ID yang boleh diterapkan HARUS persis
   // anggota batch yang lagi aktif -- ID valid tapi dari batch lain tetap ditolak & dilaporkan,
@@ -2277,7 +2368,7 @@ function applyBlockText(raw, scopeRows){
   // ---- Pelacak buat validasi anti-pergeseran/misalignment ----
   const seenIds = new Set();
   const appliedOrder = [];   // urutan ID yang beneran diterapin (buat deteksi ke-geser/swap)
-  const appliedChanges = []; // {id, fname, oldLen, newLen} tiap field yang diganti, buat deteksi panjang aneh
+  const appliedChanges = []; // {id, fname, oldLen, newLen, oldSnippet, newSnippet, oldTokens, newTokens} tiap field yang diganti
   const warnings = {
     duplicateIds: [],      // ID:xxx muncul lebih dari sekali di teks yang di-paste
     unknownIds: [],        // ID:xxx ada di teks paste tapi gak ketemu di kartu yang lagi dibuka
@@ -2285,7 +2376,9 @@ function applyBlockText(raw, scopeRows){
     fieldNameMismatch: [], // {id, fname} nama tag [Field] gak cocok sama nama field asli notetype
     droppedFields: [],     // {id, fname} tag field-nya gak bisa dipetakan sama sekali (isinya dibuang)
     emptiedFields: [],     // {id, fname} field yang tadinya ada isi, sekarang jadi kosong abis di-paste
-    lengthOutliers: []     // {id, fname, oldLen, newLen} field yang panjangnya beda jauh dari pola batch ini
+    shrunkFields: [],      // {id, fname, oldLen, newLen, oldSnippet, newSnippet} field yang MENGECIL (nambah panjang itu wajar, gak diwarning)
+    tokenSwaps: [],        // {id, fname, token, foundInId, foundInFname} referensi (sound/img/url/field sumber) yang kayaknya nyasar ke ID lain
+    referenceFieldChanged: [] // {id, fname, oldSnippet, newSnippet} field yang ditandain SUMBER (🔒) tapi ternyata isinya berubah
   };
 
   while((match = regex.exec(raw)) !== null){
@@ -2322,10 +2415,19 @@ function applyBlockText(raw, scopeRows){
           }
         }
         if(idx !== -1){
-          const oldLen = stripHtml(note.fields[idx] || '').length;
+          const oldVal = note.fields[idx] || '';
+          const oldLen = stripHtml(oldVal).length;
           const newLen = stripHtml(fval).length;
-          if(oldLen > 0 && newLen === 0) warnings.emptiedFields.push({ id, fname });
-          appliedChanges.push({ id, fname, oldLen, newLen });
+          const isRef = (state.referenceFieldIdxs||[]).includes(idx);
+          if(oldLen > 0 && newLen === 0){
+            warnings.emptiedFields.push({ id, fname });
+          } else if(newLen < oldLen){
+            warnings.shrunkFields.push({ id, fname, oldLen, newLen, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(fval) });
+          }
+          if(isRef && stripHtml(oldVal).trim() !== stripHtml(fval).trim()){
+            warnings.referenceFieldChanged.push({ id, fname, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(fval) });
+          }
+          appliedChanges.push({ id, fname, oldTokens: extractInvariantTokens(oldVal, isRef), newTokens: extractInvariantTokens(fval, isRef) });
           note.fields[idx] = fval;
           note.dirty = true;
         }
@@ -2333,10 +2435,15 @@ function applyBlockText(raw, scopeRows){
       count++;
     } else {
       // format lama (single field, tanpa tag nama field)
-      const oldLen = stripHtml(note.fields[selIdxs[0]] || '').length;
+      const oldVal = note.fields[selIdxs[0]] || '';
+      const oldLen = stripHtml(oldVal).length;
       const newLen = stripHtml(blockContent).length;
-      if(oldLen > 0 && newLen === 0) warnings.emptiedFields.push({ id, fname: null });
-      appliedChanges.push({ id, fname: null, oldLen, newLen });
+      if(oldLen > 0 && newLen === 0){
+        warnings.emptiedFields.push({ id, fname: null });
+      } else if(newLen < oldLen){
+        warnings.shrunkFields.push({ id, fname: null, oldLen, newLen, oldSnippet: snippetOf(oldVal), newSnippet: snippetOf(blockContent) });
+      }
+      appliedChanges.push({ id, fname: null, oldTokens: extractInvariantTokens(oldVal), newTokens: extractInvariantTokens(blockContent) });
       note.fields[selIdxs[0]] = blockContent;
       note.dirty = true;
       count++;
@@ -2362,26 +2469,24 @@ function applyBlockText(raw, scopeRows){
   warnings.orderMismatchCount = orderMismatchCount;
   warnings.orderMismatchSample = orderMismatchSample;
 
-  // ---- Deteksi panjang teks yang aneh dibanding pola batch ini ----
-  // Kalau satu field tiba-tiba jauh lebih pendek/panjang dibanding field-field lain yang sepadan
-  // di batch yang sama, bisa jadi tanda isinya ketuker ke field/kartu lain.
-  function medianOf(arr){
-    if(!arr.length) return null;
-    const s = arr.slice().sort((a,b)=>a-b);
-    const mid = Math.floor(s.length/2);
-    return s.length % 2 ? s[mid] : (s[mid-1]+s[mid])/2;
-  }
-  const sizable = appliedChanges.filter(c=> c.oldLen >= 8);
-  const ratios = sizable.map(c=> c.newLen / c.oldLen);
-  const medRatio = medianOf(ratios);
-  if(medRatio && medRatio > 0){
-    sizable.forEach(c=>{
-      const r = c.newLen / c.oldLen;
-      if(r < medRatio * 0.3 || r > medRatio * 3){
-        warnings.lengthOutliers.push(c);
+  // ---- Deteksi konten yang kayaknya "seharusnya ada di ID lain" ----
+  // Nama file audio/gambar/link itu gak diterjemahin AI, jadi kalau referensi itu ada di field
+  // ASLI-nya ID X tapi ilang dari hasil translate ID X dan malah nongol di hasil translate ID lain,
+  // itu bukti kuat dua field ini ke-swap -- bukan cuma dugaan panjang teks doang.
+  appliedChanges.forEach(c=>{
+    c.oldTokens.forEach(tok=>{
+      if(c.newTokens.includes(tok)) return; // masih ada di tempat yang bener, aman
+      const foundIn = appliedChanges.find(o=> o !== c && o.newTokens.includes(tok));
+      if(foundIn){
+        warnings.tokenSwaps.push({ id: c.id, fname: c.fname, token: tok, foundInId: foundIn.id, foundInFname: foundIn.fname });
       }
     });
-  }
+  });
+
+  // Kalau field sumber yang berubah tadi udah ketauan ke-swap-nya lewat tokenSwaps (di atas),
+  // gak perlu dilaporin dobel di sini -- cukup satu kali dengan bukti yang lebih spesifik.
+  const swappedPairs = new Set(warnings.tokenSwaps.map(w=> w.id+'|'+(w.fname||'')));
+  warnings.referenceFieldChanged = warnings.referenceFieldChanged.filter(w=> !swappedPairs.has(w.id+'|'+(w.fname||'')));
 
   // Mode Paste Batch: kita TAU persis ID mana aja yang seharusnya ada -> bisa deteksi kalau
   // ada kartu di batch ini yang translationnya kelewat/gak ke-paste sama sekali.
@@ -2392,10 +2497,20 @@ function applyBlockText(raw, scopeRows){
   const hasWarnings = warnings.duplicateIds.length || warnings.unknownIds.length ||
                        warnings.outOfScopeIds.length || warnings.fieldNameMismatch.length ||
                        warnings.droppedFields.length || missingFromBatch.length ||
-                       warnings.emptiedFields.length || warnings.lengthOutliers.length ||
-                       warnings.orderMismatchCount;
+                       warnings.emptiedFields.length || warnings.shrunkFields.length ||
+                       warnings.tokenSwaps.length || warnings.orderMismatchCount ||
+                       warnings.referenceFieldChanged.length;
   if(hasWarnings){
     const lines = [];
+    if(warnings.tokenSwaps.length){
+      const dispToken = (t)=> t.startsWith('FULLTEXT::') ? `isi field sumber "${snippetOf(t.slice(10),40)}"` : t;
+      lines.push(`🚨 ${warnings.tokenSwaps.length} referensi (audio/gambar/link/field sumber) kayaknya KETUKER ke ID lain — ini indikasi PALING KUAT:\n` +
+        warnings.tokenSwaps.slice(0,6).map(w=>
+          `• ${dispToken(w.token)} harusnya di ID:${w.id}${w.fname?` [${w.fname}]`:''} tapi malah ketemu di ID:${w.foundInId}${w.foundInFname?` [${w.foundInFname}]`:''}\n`+
+          `   ↳ ID:${w.id} → ${notePreviewById[w.id] || '(?)'}\n`+
+          `   ↳ ID:${w.foundInId} → ${notePreviewById[w.foundInId] || '(?)'}`
+        ).join('\n') + (warnings.tokenSwaps.length>6?`\n...dan ${warnings.tokenSwaps.length-6} lainnya`:''));
+    }
     if(warnings.duplicateIds.length){
       lines.push(`⚠️ ${warnings.duplicateIds.length} ID muncul dobel di teks yang kamu paste (blok terakhir yang menang, yang sebelumnya ketimpa): ${warnings.duplicateIds.slice(0,10).join(', ')}${warnings.duplicateIds.length>10?', ...':''}`);
     }
@@ -2418,10 +2533,23 @@ function applyBlockText(raw, scopeRows){
       lines.push(`⚠️ Urutan ${warnings.orderMismatchCount} blok ID di teks paste BEDA sama urutan aslinya pas kamu copy (${warnings.orderMismatchSample.join('; ')}${warnings.orderMismatchCount>warnings.orderMismatchSample.length?', ...':''}). Field tetap diterapin sesuai ID yang tertulis (jadi gak nyasar ke kartu lain), tapi urutan yang geser gini sering nandain AI translator-nya ngacak baris — cek manual dulu sebelum yakin bener.`);
     }
     if(warnings.emptiedFields.length){
-      lines.push(`⚠️ ${warnings.emptiedFields.length} field yang tadinya ADA isinya, sekarang jadi KOSONG abis di-paste: ${warnings.emptiedFields.slice(0,10).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''}`).join(', ')}${warnings.emptiedFields.length>10?', ...':''} — kemungkinan translation-nya kelewat, atau ketuker ke tempat lain.`);
+      lines.push(`⚠️ ${warnings.emptiedFields.length} field yang tadinya ADA isinya, sekarang jadi KOSONG abis di-paste: ${warnings.emptiedFields.slice(0,10).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''} (kartu: ${notePreviewById[w.id]||'(?)'})`).join('; ')}${warnings.emptiedFields.length>10?', ...':''} — kemungkinan translation-nya kelewat, atau ketuker ke tempat lain.`);
     }
-    if(warnings.lengthOutliers.length){
-      lines.push(`⚠️ ${warnings.lengthOutliers.length} field panjangnya beda JAUH dari pola field-field lain yang sepadan di batch ini (jauh lebih pendek/panjang) — bisa jadi tanda isinya ketuker: ${warnings.lengthOutliers.slice(0,8).map(w=>`ID:${w.id}${w.fname?` [${w.fname}]`:''} (${w.oldLen}→${w.newLen} karakter)`).join(', ')}${warnings.lengthOutliers.length>8?', ...':''}`);
+    if(warnings.shrunkFields.length){
+      lines.push(`⚠️ ${warnings.shrunkFields.length} field jadi LEBIH PENDEK dari sebelumnya (nambah panjang itu wajar & gak diwarning, tapi MENGECIL patut dicek):\n` +
+        warnings.shrunkFields.slice(0,8).map(w=>
+          `• ID:${w.id}${w.fname?` [${w.fname}]`:''} — ${w.oldLen}→${w.newLen} karakter (kartu: ${notePreviewById[w.id]||'(?)'})\n`+
+          `   dulu: "${w.oldSnippet}"\n`+
+          `   jadi: "${w.newSnippet}"`
+        ).join('\n') + (warnings.shrunkFields.length>8?`\n...dan ${warnings.shrunkFields.length-8} lainnya`:''));
+    }
+    if(warnings.referenceFieldChanged.length){
+      lines.push(`⚠️ ${warnings.referenceFieldChanged.length} field yang ditandain 🔒 SUMBER (harusnya gak berubah) ternyata isinya beda dari aslinya — kemungkinan AI-nya ikut nerjemahin/ngedit field ini padahal harusnya dibiarin persis sama:\n` +
+        warnings.referenceFieldChanged.slice(0,8).map(w=>
+          `• ID:${w.id}${w.fname?` [${w.fname}]`:''} (kartu: ${notePreviewById[w.id]||'(?)'})\n`+
+          `   dulu: "${w.oldSnippet}"\n`+
+          `   jadi: "${w.newSnippet}"`
+        ).join('\n') + (warnings.referenceFieldChanged.length>8?`\n...dan ${warnings.referenceFieldChanged.length-8} lainnya`:''));
     }
     lines.push(`\nSaran: kalau ini kejadian pas kamu paste batch gede, coba pecah jadi batch lebih kecil (pakai fitur "Copy per Batch") biar AI translator-nya gak gampang keliru jagain urutan ID. Kalau ternyata hasilnya berantakan, tombol "↩️ Undo Paste Terakhir" bisa balikin ke sebelum paste ini diterapin.`);
     ahShowErrorPopup(lines.join('\n\n'));
