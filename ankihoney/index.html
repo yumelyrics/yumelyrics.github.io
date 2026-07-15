@@ -758,19 +758,25 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     </div>
 
     <div id="autoTranslatePanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
-      <label class="field-label" style="margin-bottom:8px;">🌐 Translate Otomatis <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(opsional — translate langsung semua field yang dicentang di atas, tanpa copy-paste manual)</span></label>
+      <label class="field-label" style="margin-bottom:8px;">🌐 Translate Otomatis <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(opsional — translate atau jelasin kosakata langsung semua field yang dicentang di atas, tanpa copy-paste manual)</span></label>
+
+      <div class="btn-row" style="gap:6px; margin-bottom:10px;">
+        <button type="button" class="btn ghost applied" id="atOpTranslate" style="flex:1;">🌐 Terjemahin<small>translate isi field apa adanya</small></button>
+        <button type="button" class="btn ghost" id="atOpExplain" style="flex:1;">🧠 Jelasin Kosakata (AI)<small>AI jelasin makna/nuansa, hasilnya ditaruh di field lain</small></button>
+      </div>
 
       <div class="grid2">
         <div>
-          <label class="field-label">Engine Translate</label>
+          <label class="field-label" id="atEngineLabel">Engine Translate</label>
           <select id="atEngineSelect">
-            <option value="google-free">🆓 Google Translate (gratis, tanpa API key)</option>
-            <option value="google-cloud">🔑 Google Cloud Translate API</option>
+            <option value="google-free" id="atEngineOptGoogleFree">🆓 Google Translate (gratis, tanpa API key)</option>
+            <option value="google-cloud" id="atEngineOptGoogleCloud">🔑 Google Cloud Translate API</option>
             <option value="openai">🔑 OpenAI (ChatGPT) API</option>
             <option value="claude">🔑 Anthropic (Claude) API</option>
             <option value="gemini">🔑 Google Gemini API</option>
             <option value="deepseek">🔑 DeepSeek API</option>
           </select>
+          <p id="atEngineExplainNote" class="hidden" style="font-size:.7rem; color:var(--ink-soft); font-weight:600; margin:6px 0 0;">⚠️ Mode "Jelasin Kosakata" butuh AI beneran buat ngerti instruksinya, jadi Google Translate (gratis/Cloud) gak kepilih -- pilih salah satu dari OpenAI/Claude/Gemini/DeepSeek ya~</p>
         </div>
         <div id="atApiKeyWrap" class="hidden">
           <label class="field-label">API Key</label>
@@ -780,13 +786,20 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
       <div class="grid2" style="margin-top:10px;">
         <div>
-          <label class="field-label">Bahasa Sumber</label>
+          <label class="field-label" id="atSourceLangLabel">Bahasa Sumber</label>
           <input type="text" id="atSourceLang" list="atLangList" value="auto" placeholder="auto" />
         </div>
         <div>
-          <label class="field-label">Bahasa Target</label>
+          <label class="field-label" id="atTargetLangLabel">Bahasa Target</label>
           <input type="text" id="atTargetLang" list="atLangList" value="id" placeholder="id" />
         </div>
+      </div>
+
+      <div id="atExplainInstrWrap" class="hidden" style="margin-top:12px;">
+        <label class="field-label">🧠 Instruksi Buat AI Jelasin Kosakata</label>
+        <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:2px 0 8px;">Instruksi ini sama konsepnya kayak "Instruksi Khusus Field" (tombol 📝 di daftar field buat field kayak Notes) -- bedanya di sini AI-nya beneran manggil API &amp; hasilnya langsung ditaruh ke field Tujuan yang kamu pilih di bawah, gak perlu copy-paste manual lagi.</p>
+        <textarea id="atExplainInstrArea" style="min-height:200px;"></textarea>
+        <button type="button" class="btn ghost" id="atExplainUseTemplate" style="margin-top:6px;">📋 Reset ke template default</button>
       </div>
       <datalist id="atLangList">
         <option value="auto">Deteksi Otomatis</option>
@@ -809,7 +822,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       </datalist>
 
       <div style="margin-top:12px;">
-        <label class="field-label">Field yang Ditranslate</label>
+        <label class="field-label" id="atFieldSectionLabel">Field yang Ditranslate</label>
         <div class="btn-row" style="gap:6px; margin-bottom:8px;">
           <button type="button" class="btn ghost applied" id="atModeInplace" style="flex:1;">🔁 Field yang sama<small>timpa isi field yang dicentang di atas</small></button>
           <button type="button" class="btn ghost" id="atModeMapped" style="flex:1;">➡️ Field beda<small>ambil dari field A, taruh hasilnya ke field B</small></button>
@@ -823,9 +836,9 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:10px 0 0;" id="atModeHint">⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b>. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.</p>
 
       <div class="btn-row" style="margin-top:10px;">
-        <button class="btn mint" id="btnAutoTranslate" type="button">🌐 Translate Semua Field yang Dicentang</button>
+        <button class="btn mint" id="btnAutoTranslate" type="button"><span id="btnAutoTranslateLabel">🌐 Translate Semua Field yang Dicentang</span></button>
         <button class="btn ghost hidden" id="btnAutoTranslateCancel" type="button">⏹️ Batalin</button>
-        <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled>↩️ Undo Translate Terakhir</button>
+        <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled><span id="btnAutoTranslateUndoLabel">↩️ Undo Translate Terakhir</span></button>
       </div>
       <div id="atProgress" style="margin-top:8px; font-weight:800; font-size:.8rem; color:var(--ink-soft);"></div>
     </div>
@@ -846,7 +859,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn mint" id="btnCopyBatch" type="button">📋 Copy Batch Ini<small>lebih aman buat deck gede</small></button>
         <button class="btn alt" id="btnPasteBatch" type="button">📥 Paste Batch Ini<small>khusus buat batch yang aktif</small></button>
-        <button class="btn mint" id="btnAutoTranslateBatch" type="button">🌐 Translate Batch Ini<small>pakai pengaturan Translate Otomatis di atas</small></button>
+        <button class="btn mint" id="btnAutoTranslateBatch" type="button"><span id="btnAutoTranslateBatchLabel">🌐 Translate Batch Ini</span><small>pakai pengaturan Translate Otomatis di atas</small></button>
       </div>
     </div>
     <div class="table-wrap" style="margin-top:16px;">
@@ -989,6 +1002,39 @@ function ahShowErrorPopup(msg){
   bg.classList.add('show');
 }
 
+// Popup khusus kalau kecium ada engine AI translate (OpenAI/Claude/Gemini/DeepSeek) yang
+// nolak request-nya gara-gara NAMA MODEL udah dihapus/diganti sama provider-nya (lihat
+// ahMakeEngineError). Beda sama ahShowErrorPopup biasa -- ini negesin jelas ke user kalau
+// ini BUKAN salah mereka & bukan salah API key, tapi tool ini yang butuh diupdate nama
+// modelnya. Cuma nongol SEKALI per proses translate (dipicu dari kegagalan pertama yang
+// kedeteksi modelIssue), biar gak spam popup kalau banyak field yang gagal bareng-bareng.
+function ahShowModelIssuePopup(provider, errMsg){
+  let bg = document.getElementById('ahModelIssueModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahModelIssueModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3>🤖 Model AI-nya kayaknya udah usang</h3>
+        <p style="font-size:.85rem; color:var(--ink-soft);">Provider <b id="ahModelIssueProvider"></b> nolak request translate-nya dengan pesan yang nunjukkin nama model AI yang dipakai tool ini <b>udah gak didukung lagi</b> (dihapus/diganti/deprecated). Ini <b>bukan salah kamu</b> dan bukan salah API key kamu -- provider AI emang sering banget ganti-ganti nama model, jadi tool ini yang perlu diupdate ngikutin nama model terbarunya.</p>
+        <p id="ahModelIssueDetail" style="white-space:pre-wrap; font-size:.75rem; color:var(--ink-soft); opacity:.8; background:rgba(0,0,0,.04); padding:8px 10px; border-radius:8px;"></p>
+        <p style="font-size:.85rem;">Field yang gagal tadi dibiarin apa adanya (gak ketimpa), jadi aman buat dicoba lagi nanti kalau tool-nya udah diupdate. Boleh banget bantu lapor ke Discord kita biar cepet dibenerin:<br>
+          <a href="${AH_DISCORD_URL}" target="_blank" rel="noopener" style="color:#5865F2; font-weight:700; text-decoration:none; border-bottom:1.5px dashed #5865F2;">${AH_DISCORD_URL}</a>
+        </p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="ahModelIssueModalClose" type="button">Oke, ngerti</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.querySelector('#ahModelIssueModalClose').addEventListener('click', ()=> bg.classList.remove('show'));
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+  }
+  bg.querySelector('#ahModelIssueProvider').textContent = provider || 'AI';
+  bg.querySelector('#ahModelIssueDetail').textContent = (errMsg||'').slice(0,300);
+  bg.classList.add('show');
+}
+
 // Template default buat field kayak "Notes" -- dipasang otomatis pas pertama kali user
 // buka modal instruksi field yang namanya keliatan kayak field catatan/penjelasan, biar
 // gak nulis dari nol. Tetep bisa diedit/dihapus bebas sama user.
@@ -1002,6 +1048,18 @@ const AH_DEFAULT_NOTES_INSTRUCTION =
 - Kalau ada nuansa budaya, kolokasi umum (kata yang sering bareng), atau catatan pemakaian unik lainnya (misal cuma dipakai di kalimat tertentu, gender tertentu, atau ada di dialek tertentu), sebutin juga sesingkat & sejelas mungkin.
 - Kanji & furigana: kalau ada kanji di penjelasan, WAJIB kasih cara baca furigana-nya, dengan format PERSIS begini: kanji (atau blok kanji beruntun yang sama-sama dibaca jadi satu furigana) diikuti kurung siku berisi hiragana-nya, contoh: 私[わたし]。 Jangan pakai tanda kurung biasa ( ) atau format lain. Kurung siku-nya HARUS nempel PERSIS cuma ngelingkupin blok kanji-nya doang, JANGAN sampe furigana-nya keanggep nyebar ke karakter lain yang nempel SEBELUM blok kanji itu (baik itu hiragana atau kanji lain) — caranya, kasih SATU spasi pemisah sebelum karakter PALING DEPAN dari blok kanji yang mau dikasih furigana (bukan di antara kanji-kanji di dalam bloknya sendiri, itu tetep nempel gak pake spasi). Contoh kasus hiragana+kanji: たった今 (dibaca たったいま, cuma "今" yang kanji) ditulis jadi "たった 今[いま]", BUKAN "たった今[いま]" atau "たった[いま]今". Contoh kasus kanji ketemu kanji (blok kanji-nya lebih dari 1 karakter): 巫山戯る (dibaca ふざける, "巫山戯" bertiga sama-sama masuk satu bacaan ふざけ) ditulis jadi "巫山戯[ふざけ]る" tapi kalau sebelum "巫" ada karakter lain yang nempel (misal hiragana atau kanji kata sebelumnya atau romaji, atau tidak ada karakter sama sekali), WAJIB kasih spasi sebelum "巫"-nya aja (bukan di antara 巫/山/戯), biar furigana-nya cuma ngelingkupin 3 kanji itu dan gak ikut nyebar ke kata sebelumnya.
 Tulis pakai bahasa Indonesia yang santai & enak dibaca, jangan kaku kayak kamus, tapi tetap padat & to the point.`;
+
+// Instruksi default buat fitur "Jelasin Kosakata (AI)" di panel Translate Otomatis --
+// sengaja dipakein isi yang SAMA kayak template Notes di atas, karena tujuannya emang
+// sama (AI ngejelasin kosakata/kalimat secara lengkap), cuma beda jalur eksekusinya:
+// yang ini langsung manggil API & nulis ke field tujuan, bukan cuma nempel pas copy-paste.
+const AH_DEFAULT_EXPLAIN_INSTRUCTION = AH_DEFAULT_NOTES_INSTRUCTION;
+
+// Engine yang boleh dipakai buat mode "Jelasin Kosakata" -- cuma yang beneran AI chat model
+// (Google Translate gratis/Cloud itu API terjemahan literal, gak bisa diinstruksiin bebas).
+// Didefinisiin di sini (bukan deket ahExplainDispatch di bawah) biar udah kebaca duluan
+// sebelum initAutoTranslatePanel IIFE manggil ahAtSetOp() pas halaman pertama kali dimuat.
+const AH_EXPLAIN_ENGINES = ['openai', 'claude', 'gemini', 'deepseek'];
 
 function ahLooksLikeNotesField(fieldName){
   const n = (fieldName||'').toLowerCase();
@@ -1135,7 +1193,7 @@ const state = {
   templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
   mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
   _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
-  autoTranslate: { cancel: false, mode: 'inplace' }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B)
+  autoTranslate: { cancel: false, mode: 'inplace', op: 'translate' }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan)
   autoTranslateSnapshot: null // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
 };
 
@@ -2928,6 +2986,18 @@ function ahAtSaveSetting(key, val){
   try{ localStorage.setItem(AH_AT_STORAGE_PREFIX+key, val); }catch(e){}
 }
 
+const AT_HINT_INPLACE = '⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b> (isinya bakal DITIMPA sama hasil terjemahan). API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.';
+const AT_HINT_MAPPED = '⚠️ Field <b>Sumber</b> DIBACA doang (gak diubah), hasil terjemahannya ditaruh/nimpa isi field <b>Tujuan</b> yang kamu pilih. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen.';
+const AT_HINT_INPLACE_EXPLAIN = '⚠️ Field yang dicentang di atas bakal DITIMPA sama hasil penjelasan AI-nya sendiri (jarang kepake buat mode ini -- biasanya field sumbernya masih dibutuhin apa adanya). Lebih disaranin pakai mode "Field beda" di bawah. API key cuma kesimpen lokal di browser kamu sendiri.';
+const AT_HINT_MAPPED_EXPLAIN = '⚠️ Field <b>Sumber</b> DIBACA doang buat bahan AI jelasin (gak diubah), hasil penjelasannya ditaruh/nimpa isi field <b>Tujuan</b> yang kamu pilih -- ini yang paling cocok, misal Sumber="Kosakata" &amp; Tujuan="Notes". API key cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG ke server engine yang dipilih (bukan lewat server AnkiHoney) — dobel-cek hasilnya sebelum disimpen.';
+
+function ahAtCurrentHint(){
+  const mapped = state.autoTranslate.mode === 'mapped';
+  const explain = state.autoTranslate.op === 'explain';
+  if(explain) return mapped ? AT_HINT_MAPPED_EXPLAIN : AT_HINT_INPLACE_EXPLAIN;
+  return mapped ? AT_HINT_MAPPED : AT_HINT_INPLACE;
+}
+
 // Inget pilihan terakhir user (engine/API key/bahasa) -- CUMA kesimpen lokal di
 // browser dia sendiri (localStorage), gak pernah dikirim ke server manapun selain
 // pas beneran manggil API translate-nya langsung.
@@ -2937,10 +3007,12 @@ function ahAtSaveSetting(key, val){
   const apiKeyInput = document.getElementById('atApiKey');
   const sourceInput = document.getElementById('atSourceLang');
   const targetInput = document.getElementById('atTargetLang');
+  const explainArea = document.getElementById('atExplainInstrArea');
 
   engineSel.value = ahAtLoadSetting('engine', 'google-free');
   sourceInput.value = ahAtLoadSetting('source', 'auto');
   targetInput.value = ahAtLoadSetting('target', 'id');
+  explainArea.value = ahAtLoadSetting('explainInstr', AH_DEFAULT_EXPLAIN_INSTRUCTION);
 
   function refreshApiKeyVisibility(){
     apiKeyWrap.classList.toggle('hidden', engineSel.value === 'google-free');
@@ -2952,17 +3024,23 @@ function ahAtSaveSetting(key, val){
   apiKeyInput.addEventListener('input', ()=> ahAtSaveSetting('apikey_'+engineSel.value, apiKeyInput.value));
   sourceInput.addEventListener('input', ()=> ahAtSaveSetting('source', sourceInput.value));
   targetInput.addEventListener('input', ()=> ahAtSaveSetting('target', targetInput.value));
-})();
+  explainArea.addEventListener('input', ()=> ahAtSaveSetting('explainInstr', explainArea.value));
 
-const AT_HINT_INPLACE = '⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b> (isinya bakal DITIMPA sama hasil terjemahan). API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.';
-const AT_HINT_MAPPED = '⚠️ Field <b>Sumber</b> DIBACA doang (gak diubah), hasil terjemahannya ditaruh/nimpa isi field <b>Tujuan</b> yang kamu pilih. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen.';
+  document.getElementById('atExplainUseTemplate').addEventListener('click', ()=>{
+    explainArea.value = AH_DEFAULT_EXPLAIN_INSTRUCTION;
+    ahAtSaveSetting('explainInstr', explainArea.value);
+    toast('Instruksi dibalikin ke template default~', '📋');
+  });
+
+  ahAtSetOp(ahAtLoadSetting('op', 'translate'));
+})();
 
 function ahAtSetMode(mode){
   state.autoTranslate.mode = mode;
   document.getElementById('atModeInplace').classList.toggle('applied', mode === 'inplace');
   document.getElementById('atModeMapped').classList.toggle('applied', mode === 'mapped');
   document.getElementById('atMappedWrap').classList.toggle('hidden', mode !== 'mapped');
-  document.getElementById('atModeHint').innerHTML = mode === 'mapped' ? AT_HINT_MAPPED : AT_HINT_INPLACE;
+  document.getElementById('atModeHint').innerHTML = ahAtCurrentHint();
   if(mode === 'mapped' && !document.querySelectorAll('.at-mapping-row').length){
     ahAtAddMappingRow();
   }
@@ -2970,6 +3048,51 @@ function ahAtSetMode(mode){
 document.getElementById('atModeInplace').addEventListener('click', ()=> ahAtSetMode('inplace'));
 document.getElementById('atModeMapped').addEventListener('click', ()=> ahAtSetMode('mapped'));
 document.getElementById('atAddMapping').addEventListener('click', ()=> ahAtAddMappingRow());
+
+// Toggle antara mode "Terjemahin" (dispatcher lama, ahTranslateDispatch) dan "Jelasin
+// Kosakata" (dispatcher baru, ahExplainDispatch pakai instruksi custom). Ganti-ganti label
+// tombol/hint biar gak bikin bingung, dan matiin opsi engine yang gak support mode explain
+// (Google Translate gratis/Cloud, karena itu API terjemahan literal bukan AI chat model).
+function ahAtSetOp(op){
+  state.autoTranslate.op = op;
+  ahAtSaveSetting('op', op);
+  document.getElementById('atOpTranslate').classList.toggle('applied', op === 'translate');
+  document.getElementById('atOpExplain').classList.toggle('applied', op === 'explain');
+  document.getElementById('atExplainInstrWrap').classList.toggle('hidden', op !== 'explain');
+  document.getElementById('atEngineExplainNote').classList.toggle('hidden', op !== 'explain');
+  document.getElementById('atEngineLabel').textContent = op === 'explain' ? 'Engine AI' : 'Engine Translate';
+  document.getElementById('atSourceLangLabel').textContent = op === 'explain' ? 'Bahasa Kosakata Sumber (opsional, buat konteks)' : 'Bahasa Sumber';
+  document.getElementById('atTargetLangLabel').textContent = op === 'explain' ? 'Bahasa Penjelasan' : 'Bahasa Target';
+  document.getElementById('atFieldSectionLabel').textContent = op === 'explain' ? 'Field yang Dijelasin' : 'Field yang Ditranslate';
+
+  const engineSel = document.getElementById('atEngineSelect');
+  const optGoogleFree = document.getElementById('atEngineOptGoogleFree');
+  const optGoogleCloud = document.getElementById('atEngineOptGoogleCloud');
+  const explainOnly = op === 'explain';
+  optGoogleFree.disabled = explainOnly;
+  optGoogleCloud.disabled = explainOnly;
+  if(explainOnly && !AH_EXPLAIN_ENGINES.includes(engineSel.value)){
+    engineSel.value = ahAtLoadSetting('lastExplainEngine', 'openai');
+    engineSel.dispatchEvent(new Event('change'));
+  }
+
+  const runLabel = op === 'explain' ? '🧠 Jelasin Kosakata Semua Field yang Dicentang' : '🌐 Translate Semua Field yang Dicentang';
+  const undoLabel = op === 'explain' ? '↩️ Undo Jelasin Kosakata Terakhir' : '↩️ Undo Translate Terakhir';
+  const batchLabel = op === 'explain' ? '🧠 Jelasin Kosakata Batch Ini' : '🌐 Translate Batch Ini';
+  document.getElementById('btnAutoTranslateLabel').textContent = runLabel;
+  document.getElementById('btnAutoTranslateUndoLabel').textContent = undoLabel;
+  const batchLabelEl = document.getElementById('btnAutoTranslateBatchLabel');
+  if(batchLabelEl) batchLabelEl.textContent = batchLabel;
+
+  document.getElementById('atModeHint').innerHTML = ahAtCurrentHint();
+}
+document.getElementById('atOpTranslate').addEventListener('click', ()=> ahAtSetOp('translate'));
+document.getElementById('atOpExplain').addEventListener('click', ()=> ahAtSetOp('explain'));
+document.getElementById('atEngineSelect').addEventListener('change', function(){
+  if(state.autoTranslate.op === 'explain' && AH_EXPLAIN_ENGINES.includes(this.value)){
+    ahAtSaveSetting('lastExplainEngine', this.value);
+  }
+});
 
 // Bikin 1 baris pasangan "ambil dari field X -> taruh ke field Y" buat mode
 // translate "Field beda". Dipakai pas user nambah pasangan baru, atau pas note
@@ -3037,6 +3160,24 @@ function ahAtRefreshMappingsForModel(){
 
 function ahSleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
 
+// Helper bareng buat semua engine AI (OpenAI/Claude/Gemini/DeepSeek): provider-provider ini
+// SERING banget ganti/hapus nama model (kejadian beberapa kali cuma dalam beberapa bulan),
+// jadi kalau request gagal, kita coba tebak apa penyebabnya "model ini udah gak didukung lagi"
+// (HTTP 404, atau pesan error nyebut kata "model" bareng "not found/deprecated/decommissioned/dst")
+// biar user dikasih tau JELAS kalau ini bukan salah mereka -- tool ini yang butuh diupdate,
+// bukan cuma error generik yang bikin bingung.
+function ahMakeEngineError(provider, status, bodyText){
+  const snippet = (bodyText||'').slice(0,200);
+  const lower = (bodyText||'').toLowerCase();
+  const modelIssue = status === 404
+    || /model[a-z_"'\s]{0,20}(not[ _]?found|does not exist|deprecat|decommission|discontinu|no longer|unsupported|unrecognized|invalid|unknown)/i.test(lower)
+    || /(deprecat|decommission|discontinu|retired)[a-z_"'\s]{0,20}model/i.test(lower);
+  const err = new Error(provider+' error: HTTP '+status+' '+snippet);
+  err.modelIssue = modelIssue;
+  err.provider = provider;
+  return err;
+}
+
 // Engine #1: endpoint Google Translate versi gratis/gak resmi (trik yang sama dipakai
 // banyak tool client-side lain) -- gak butuh API key sama sekali, tapi sifatnya
 // BEST-EFFORT: bisa aja kena rate-limit atau diblokir sewaktu-waktu sama Google
@@ -3061,7 +3202,7 @@ async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
   const res = await fetch('https://translation.googleapis.com/language/translate/v2?key='+encodeURIComponent(apiKey), {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Google Cloud Translate error: HTTP '+res.status+' '+t.slice(0,200)); }
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('Google Cloud Translate', res.status, t); }
   const data = await res.json();
   return data?.data?.translations?.[0]?.translatedText ?? text;
 }
@@ -3077,9 +3218,9 @@ async function ahTranslateOpenAI(text, sl, tl, apiKey){
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
-    body: JSON.stringify({ model:'gpt-4o-mini', temperature:0.2, messages:[{role:'system',content:sys},{role:'user',content:user}] })
+    body: JSON.stringify({ model:'gpt-5-mini', temperature:0.2, messages:[{role:'system',content:sys},{role:'user',content:user}] })
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('OpenAI error: HTTP '+res.status+' '+t.slice(0,200)); }
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('OpenAI', res.status, t); }
   const data = await res.json();
   return data?.choices?.[0]?.message?.content?.trim() || text;
 }
@@ -3101,9 +3242,9 @@ async function ahTranslateClaude(text, sl, tl, apiKey){
       'anthropic-version':'2023-06-01',
       'anthropic-dangerous-direct-browser-access':'true'
     },
-    body: JSON.stringify({ model:'claude-3-5-haiku-20241022', max_tokens:4096, temperature:0.2, system:AH_AI_TRANSLATE_SYS, messages:[{role:'user',content:user}] })
+    body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:4096, temperature:0.2, system:AH_AI_TRANSLATE_SYS, messages:[{role:'user',content:user}] })
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Claude error: HTTP '+res.status+' '+t.slice(0,200)); }
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('Claude', res.status, t); }
   const data = await res.json();
   return (data?.content||[]).map(b=> b.text || '').join('').trim() || text;
 }
@@ -3113,11 +3254,11 @@ async function ahTranslateGemini(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
   const user = 'Terjemahin teks berikut'+srcNote+' ke bahasa "'+(tl||'id')+'":\n\n'+text;
-  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey), {
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+encodeURIComponent(apiKey), {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ systemInstruction:{ parts:[{text:AH_AI_TRANSLATE_SYS}] }, contents:[{role:'user', parts:[{text:user}]}], generationConfig:{ temperature:0.2 } })
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Gemini error: HTTP '+res.status+' '+t.slice(0,200)); }
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('Gemini', res.status, t); }
   const data = await res.json();
   return (data?.candidates?.[0]?.content?.parts||[]).map(p=> p.text || '').join('').trim() || text;
 }
@@ -3130,9 +3271,9 @@ async function ahTranslateDeepSeek(text, sl, tl, apiKey){
   const res = await fetch('https://api.deepseek.com/chat/completions', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
-    body: JSON.stringify({ model:'deepseek-chat', temperature:0.2, messages:[{role:'system',content:AH_AI_TRANSLATE_SYS},{role:'user',content:user}] })
+    body: JSON.stringify({ model:'deepseek-v4-flash', temperature:0.2, messages:[{role:'system',content:AH_AI_TRANSLATE_SYS},{role:'user',content:user}] })
   });
-  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('DeepSeek error: HTTP '+res.status+' '+t.slice(0,200)); }
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('DeepSeek', res.status, t); }
   const data = await res.json();
   return data?.choices?.[0]?.message?.content?.trim() || text;
 }
@@ -3144,6 +3285,84 @@ async function ahTranslateDispatch(engine, text, sl, tl, apiKey){
   if(engine === 'gemini') return ahTranslateGemini(text, sl, tl, apiKey);
   if(engine === 'deepseek') return ahTranslateDeepSeek(text, sl, tl, apiKey);
   return ahTranslateGoogleFree(text, sl, tl);
+}
+
+/* ---------------- mode "Jelasin Kosakata (AI)" ----------------
+   Sama kayak engine translate di atas, tapi system prompt-nya DIGANTI pakai instruksi
+   custom dari user (default-nya sama kayak template Notes) alih-alih instruksi "translate
+   apa adanya". Cuma didukung sama engine yang beneran AI chat model (OpenAI/Claude/Gemini/
+   DeepSeek) -- Google Translate (gratis/Cloud) itu API terjemahan literal, gak bisa disuruh
+   "jelasin kosakata" karena bukan model bahasa, jadi sengaja gak disediain di sini. */
+function ahBuildExplainPrompt(text, instruction, lang){
+  const langNote = lang ? `\n\nJawab pakai bahasa "${lang}".` : '';
+  return `${instruction}${langNote}\n\nBerikut teks/kosakata yang mau dijelasin:\n\n${text}`;
+}
+
+async function ahExplainOpenAI(text, instruction, lang, apiKey){
+  if(!text || !text.trim()) return text;
+  const sys = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya (boleh pakai tag HTML sederhana kayak <b> kalau instruksinya minta), tanpa embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
+    body: JSON.stringify({ model:'gpt-5-mini', temperature:0.4, messages:[{role:'system',content:sys},{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('OpenAI', res.status, t); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || text;
+}
+
+const AH_AI_EXPLAIN_SYS = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya (boleh pakai tag HTML sederhana kayak <b> kalau instruksinya minta), tanpa embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+
+async function ahExplainClaude(text, instruction, lang, apiKey){
+  if(!text || !text.trim()) return text;
+  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:4096, temperature:0.4, system:AH_AI_EXPLAIN_SYS, messages:[{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('Claude', res.status, t); }
+  const data = await res.json();
+  return (data?.content||[]).map(b=> b.text || '').join('').trim() || text;
+}
+
+async function ahExplainGemini(text, instruction, lang, apiKey){
+  if(!text || !text.trim()) return text;
+  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+encodeURIComponent(apiKey), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ systemInstruction:{ parts:[{text:AH_AI_EXPLAIN_SYS}] }, contents:[{role:'user', parts:[{text:user}]}], generationConfig:{ temperature:0.4 } })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('Gemini', res.status, t); }
+  const data = await res.json();
+  return (data?.candidates?.[0]?.content?.parts||[]).map(p=> p.text || '').join('').trim() || text;
+}
+
+async function ahExplainDeepSeek(text, instruction, lang, apiKey){
+  if(!text || !text.trim()) return text;
+  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
+    body: JSON.stringify({ model:'deepseek-v4-flash', temperature:0.4, messages:[{role:'system',content:AH_AI_EXPLAIN_SYS},{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw ahMakeEngineError('DeepSeek', res.status, t); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || text;
+}
+
+async function ahExplainDispatch(engine, text, instruction, lang, apiKey){
+  if(engine === 'openai') return ahExplainOpenAI(text, instruction, lang, apiKey);
+  if(engine === 'claude') return ahExplainClaude(text, instruction, lang, apiKey);
+  if(engine === 'gemini') return ahExplainGemini(text, instruction, lang, apiKey);
+  if(engine === 'deepseek') return ahExplainDeepSeek(text, instruction, lang, apiKey);
+  throw new Error('Engine "'+engine+'" gak support mode Jelasin Kosakata -- pilih OpenAI/Claude/Gemini/DeepSeek ya~');
 }
 
 // Translate SEMUA field yang dicentang (minus yang ditandain 🔒 sumber) buat SEMUA
@@ -3176,23 +3395,36 @@ async function runAutoTranslate(rowsOverride){
     pairs = targetIdxs.map(i=> ({ src:i, dst:i }));
   }
 
+  const op = state.autoTranslate.op;
   const engine = document.getElementById('atEngineSelect').value;
   const targetLang = document.getElementById('atTargetLang').value.trim() || 'id';
   const sourceLang = document.getElementById('atSourceLang').value.trim() || 'auto';
   const apiKey = document.getElementById('atApiKey').value.trim();
+  const explainInstruction = document.getElementById('atExplainInstrArea').value.trim();
+
+  if(op === 'explain' && !AH_EXPLAIN_ENGINES.includes(engine)){
+    toast('Mode "Jelasin Kosakata" cuma support engine OpenAI/Claude/Gemini/DeepSeek~', '⚠️');
+    return;
+  }
+  if(op === 'explain' && !explainInstruction){
+    toast('Isi dulu instruksi buat AI-nya (atau pencet "Reset ke template default")~', '⚠️');
+    return;
+  }
   if(engine !== 'google-free' && !apiKey){ toast('Isi API key dulu ya buat pakai engine ini~', '🔑'); return; }
 
-  // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasil
-  // translate bakal NIMPA TOTAL isi lama (bukan digabung/append jadi 2 terjemahan).
-  // Kalau ada yang bakal ketimpa, user harus konfirmasi dulu sebelum lanjut.
+  // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasilnya
+  // bakal NIMPA TOTAL isi lama (bukan digabung/append jadi dua). Kalau ada yang bakal
+  // ketimpa, user harus konfirmasi dulu sebelum lanjut.
   const dstIdxsForCheck = [...new Set(pairs.map(p=> p.dst))];
   const willOverwriteCount = rows.filter(n=> dstIdxsForCheck.some(i=> (n.fields[i]||'').trim() !== '')).length;
   if(willOverwriteCount > 0){
     const dstNames = dstIdxsForCheck.map(i=> `"${model.flds[i] || ('Field '+(i+1))}"`).join(', ');
+    const resultLabel = op === 'explain' ? 'hasil penjelasan AI' : 'hasil terjemahan';
+    const undoLabel = op === 'explain' ? 'Undo Jelasin Kosakata Terakhir' : 'Undo Translate Terakhir';
     const lanjut = confirm(
       `${willOverwriteCount} dari ${rows.length} note udah ada isi di field tujuan (${dstNames}).\n\n`+
-      `Isi lamanya bakal DITIMPA TOTAL sama hasil terjemahan (bukan digabung jadi 2 terjemahan).\n\n`+
-      `Yakin mau lanjut? (Tenang, ada tombol "Undo Translate Terakhir" kalau berubah pikiran)`
+      `Isi lamanya bakal DITIMPA TOTAL sama ${resultLabel} (bukan digabung jadi 2).\n\n`+
+      `Yakin mau lanjut? (Tenang, ada tombol "${undoLabel}" kalau berubah pikiran)`
     );
     if(!lanjut) return;
   }
@@ -3214,6 +3446,10 @@ async function runAutoTranslate(rowsOverride){
 
   const totalOps = rows.length * pairs.length;
   let done = 0, failed = 0;
+  // Nangkep KEJADIAN PERTAMA doang dari error yang kecium "model AI-nya udah usang/
+  // dihapus provider" (lihat ahMakeEngineError) -- dipopup-in sekali di akhir proses,
+  // bukan tiap field gagal, biar gak spam modal berkali-kali padahal penyebabnya sama.
+  let modelIssueInfo = null;
 
   outer:
   for(const note of rows){
@@ -3222,14 +3458,19 @@ async function runAutoTranslate(rowsOverride){
       const original = note.fields[src] || '';
       if(original.trim()){
         try{
-          const translated = await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
-          if(translated && note.fields[dst] !== translated){
-            note.fields[dst] = translated;
+          const result = (op === 'explain')
+            ? await ahExplainDispatch(engine, original, explainInstruction, targetLang, apiKey)
+            : await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
+          if(result && note.fields[dst] !== result){
+            note.fields[dst] = result;
             note.dirty = true;
           }
         }catch(e){
           failed++;
-          console.warn('Auto-translate gagal buat note '+note.id+' field '+src+'->'+dst, e);
+          console.warn((op === 'explain' ? 'Auto-explain' : 'Auto-translate')+' gagal buat note '+note.id+' field '+src+'->'+dst, e);
+          if(!modelIssueInfo && e && e.modelIssue){
+            modelIssueInfo = { provider: e.provider || engine, message: e.message || String(e) };
+          }
         }
       }
       done++;
@@ -3262,12 +3503,21 @@ async function runAutoTranslate(rowsOverride){
   }
 
   const batchLabel = isBatchScoped ? `Batch ${state.batchIndex+1}: ` : '';
+  const verbDone = op === 'explain' ? 'dijelasin' : 'ditranslate';
+  const verbNoun = op === 'explain' ? 'Jelasin Kosakata' : 'Translate';
+  const opEmoji = op === 'explain' ? '🧠' : '🌐';
   if(state.autoTranslate.cancel){
-    toast(`${batchLabel}Translate dibatalin di tengah jalan. ${done}/${totalOps} field udah sempet diproses~`, '⏹️');
+    toast(`${batchLabel}${verbNoun} dibatalin di tengah jalan. ${done}/${totalOps} field udah sempet diproses~`, '⏹️');
+  } else if(modelIssueInfo){
+    // Kasus spesial: kegagalannya kedeteksi gara-gara nama model AI-nya udah usang/
+    // dihapus provider, bukan error acak biasa -- kasih tau JELAS lewat popup + toast
+    // singkat, biar user gak salah kira ini salah API key/koneksi mereka.
+    toast(`${batchLabel}${failed} field gagal, kayaknya model AI-nya udah usang 🤖`, '⚠️');
+    ahShowModelIssuePopup(modelIssueInfo.provider, modelIssueInfo.message);
   } else if(failed){
-    toast(`${batchLabel}Translate selesai, tapi ${failed} field gagal (cek Console browser buat detail errornya) 😿`, '⚠️');
+    toast(`${batchLabel}${verbNoun} selesai, tapi ${failed} field gagal (cek Console browser buat detail errornya) 😿`, '⚠️');
   } else {
-    toast(`${batchLabel}${done} field berhasil ditranslate! Cek dulu di tabel sebelum disimpen ya~`, '🌐');
+    toast(`${batchLabel}${done} field berhasil ${verbDone}! Cek dulu di tabel sebelum disimpen ya~`, opEmoji);
   }
 }
 
