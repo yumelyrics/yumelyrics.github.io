@@ -3298,9 +3298,89 @@ function ahBuildExplainPrompt(text, instruction, lang){
   return `${instruction}${langNote}\n\nBerikut teks/kosakata yang mau dijelasin:\n\n${text}`;
 }
 
+/* ---------------- Post-processing hasil "Jelasin Kosakata (AI)" ----------------
+   AI (GPT/Claude/Gemini/DeepSeek) secara alami jawab pakai Markdown (**bold**, bullet list
+   pakai "*"/"-"), padahal field Anki itu HTML mentah -- kalau dibiarin, tanda bintangnya
+   keliatan literal & berantakan (persis kayak laporan user: "**Frekuensi Pemakaian**" nongol
+   apa adanya). Selain itu, format furigana "漢字[bacaan]" yang diminta di instruksi cuma bakal
+   "hidup" (jadi tulisan kecil di atas kanji) kalau note type-nya pasang filter
+   {{furigana:Field}} di template -- kalau enggak, ya nongol mentah gitu aja kayak di gambar.
+   Dua fungsi di bawah ngerapihin DUA masalah itu sebelum hasilnya ditaruh ke field: Markdown
+   -> HTML beneran, dan "漢字[bacaan]" -> tag <ruby> HTML asli (jadi furigana-nya kebaca
+   LANGSUNG di field manapun, gak gantung setelan note type). */
+
+// Ubah "漢字[bacaan]" jadi <ruby>漢字<rt>bacaan</rt></ruby>. Base-nya (sebelum kurung siku)
+// sengaja gak boleh ngelewatin spasi ATAU tanda markdown (* _), biar kalau AI nulis
+// "**有り難[ありがた]い**" gak ke-ikut ** nya jadi bagian kanji -- cuma "有り難" doang yang
+// keambil, tanda ** yang tersisa nanti baru diproses jadi <b> sama ahInlineMdToHtml.
+// Reading-nya juga divalidasi HARUS kana doang, biar bracket lain (misal catatan kaki "[1]")
+// gak ke-anggep furigana & ke-ubah asal-asalan.
+function ahFuriganaToRuby(text){
+  if(!text) return text;
+  const KANA_ONLY = /^[\u3041-\u3096\u30A1-\u30FA\u30FCー・]+$/;
+  return text.replace(/([^\s\[\]<>*_]+)\[([^\[\]]+)\]/g, (m, base, reading) => {
+    if(!KANA_ONLY.test(reading)) return m;
+    return `<ruby>${base}<rt>${reading}</rt></ruby>`;
+  });
+}
+
+// **bold** -> <b>, *italic* -> <i> (bold diproses duluan biar ** gak ke-anggep 2 pasang *).
+function ahInlineMdToHtml(text){
+  if(!text) return text;
+  let out = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  out = out.replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+  return out;
+}
+
+// 1 block (dipisah baris kosong) -> HTML. Kalau baris pertamanya bullet ("* "/"- "), block-nya
+// dianggep list: baris lanjutan yang gak diawali bullet nempel (via <br>) ke <li> yang lagi
+// kebuka, dan baris bullet yang indentasinya lebih dalam dari bullet paling atas dianggep
+// nested list di dalam <li> induknya. Kalau bukan list, jadi <p> biasa (baris baru -> <br>).
+function ahMdBlockToHtml(block){
+  const lines = block.replace(/\r\n?/g, '\n').split('\n').filter(l => l.trim() !== '');
+  if(!lines.length) return '';
+  const bulletRe = /^(\s*)[*\-]\s+(.*)$/;
+  const firstBullet = lines[0].match(bulletRe);
+  if(!firstBullet){
+    return `<p>${lines.map(l => ahInlineMdToHtml(l.trim())).join('<br>')}</p>`;
+  }
+  const topIndent = firstBullet[1].length;
+  let html = '<ul>';
+  let liOpen = false, nestedOpen = false;
+  for(const line of lines){
+    const m = line.match(bulletRe);
+    if(m && m[1].length > topIndent){
+      if(!nestedOpen){ html += '<ul>'; nestedOpen = true; } else { html += '</li>'; }
+      html += `<li>${ahInlineMdToHtml(m[2])}`;
+    } else if(m){
+      if(nestedOpen){ html += '</li></ul>'; nestedOpen = false; }
+      if(liOpen) html += '</li>';
+      html += `<li>${ahInlineMdToHtml(m[2])}`;
+      liOpen = true;
+    } else {
+      html += `<br>${ahInlineMdToHtml(line.trim())}`;
+    }
+  }
+  if(nestedOpen) html += '</li></ul>';
+  if(liOpen) html += '</li>';
+  html += '</ul>';
+  return html;
+}
+
+// Entry point -- dipanggil ke SETIAP hasil fitur "Jelasin Kosakata (AI)" sebelum ditaruh ke
+// field: furigana diubah ke <ruby> dulu (SEBELUM markdown diproses, biar ** di sekitar kanji
+// gak ke-ikut ke dalam tag ruby-nya -- lihat komentar ahFuriganaToRuby), baru teks-nya dipecah
+// per block & diubah jadi HTML.
+function ahFormatExplainResult(text){
+  if(!text) return text;
+  const withFurigana = ahFuriganaToRuby(text);
+  const blocks = withFurigana.replace(/\r\n?/g, '\n').split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+  return blocks.map(ahMdBlockToHtml).join('');
+}
+
 async function ahExplainOpenAI(text, instruction, lang, apiKey){
   if(!text || !text.trim()) return text;
-  const sys = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya (boleh pakai tag HTML sederhana kayak <b> kalau instruksinya minta), tanpa embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+  const sys = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam format Markdown biasa (pakai ** buat teks tebal, pakai "-" buat bullet list kalau perlu) -- JANGAN pakai tag HTML apapun (kayak <b>, <ul>, <li>), soalnya hasilnya bakal diproses ulang jadi HTML otomatis. Format furigana "kanji[bacaan]" (kalau instruksinya minta) HARUS persis nempel ke kanji-nya tanpa keselip tanda markdown apapun. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
   const user = ahBuildExplainPrompt(text, instruction, lang);
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method:'POST',
@@ -3312,7 +3392,7 @@ async function ahExplainOpenAI(text, instruction, lang, apiKey){
   return data?.choices?.[0]?.message?.content?.trim() || text;
 }
 
-const AH_AI_EXPLAIN_SYS = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya (boleh pakai tag HTML sederhana kayak <b> kalau instruksinya minta), tanpa embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+const AH_AI_EXPLAIN_SYS = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam format Markdown biasa (pakai ** buat teks tebal, pakai "-" buat bullet list kalau perlu) -- JANGAN pakai tag HTML apapun (kayak <b>, <ul>, <li>), soalnya hasilnya bakal diproses ulang jadi HTML otomatis. Format furigana "kanji[bacaan]" (kalau instruksinya minta) HARUS persis nempel ke kanji-nya tanpa keselip tanda markdown apapun. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
 
 async function ahExplainClaude(text, instruction, lang, apiKey){
   if(!text || !text.trim()) return text;
@@ -3458,9 +3538,12 @@ async function runAutoTranslate(rowsOverride){
       const original = note.fields[src] || '';
       if(original.trim()){
         try{
-          const result = (op === 'explain')
+          const rawResult = (op === 'explain')
             ? await ahExplainDispatch(engine, original, explainInstruction, targetLang, apiKey)
             : await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
+          // Rapihin hasil AI khusus mode "Jelasin Kosakata": Markdown -> HTML beneran,
+          // & "kanji[bacaan]" -> <ruby> HTML asli biar furigana-nya kebaca di Anki.
+          const result = (op === 'explain' && rawResult) ? ahFormatExplainResult(rawResult) : rawResult;
           if(result && note.fields[dst] !== result){
             note.fields[dst] = result;
             note.dirty = true;
