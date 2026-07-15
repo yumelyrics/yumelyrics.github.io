@@ -384,6 +384,21 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 .loader span:nth-child(3){ animation-delay:.3s; }
 @keyframes bounce{ 0%,80%,100%{ transform:scale(.5); opacity:.5;} 40%{ transform:scale(1); opacity:1; } }
 
+/* Progress bar animasi buat fitur Auto-Translate/Jelasin Kosakata -- nunjukkin kartu ke berapa
+   yang lagi diproses AI-nya, plus shimmer bar biar keliatan jelas "lagi jalan" (bukan macet). */
+.at-progress-track{
+  width:100%; height:9px; border-radius:999px; background:var(--blush); overflow:hidden; margin-top:6px;
+}
+.at-progress-fill{
+  height:100%; border-radius:999px; width:0%;
+  background:linear-gradient(90deg, var(--pink-deep), var(--lavender), var(--pink-deep));
+  background-size:200% 100%;
+  transition:width .3s ease;
+  animation: ah-progress-shimmer 1.3s linear infinite;
+}
+.at-progress-fill.done{ animation:none; background:var(--mint); background-size:auto; }
+@keyframes ah-progress-shimmer{ 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+
 .step-num{
   display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
   border-radius:50%; background:var(--pink); color:#fff; font-size:.7rem; font-weight:800; margin-right:6px;
@@ -800,7 +815,14 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:2px 0 8px;">Instruksi ini sama konsepnya kayak "Instruksi Khusus Field" (tombol 📝 di daftar field buat field kayak Notes) -- bedanya di sini AI-nya beneran manggil API &amp; hasilnya langsung ditaruh ke field Tujuan yang kamu pilih di bawah, gak perlu copy-paste manual lagi.</p>
         <textarea id="atExplainInstrArea" style="min-height:200px;"></textarea>
         <button type="button" class="btn ghost" id="atExplainUseTemplate" style="margin-top:6px;">📋 Reset ke template default</button>
+
+        <div style="margin-top:14px;">
+          <label class="field-label">📖 Field Konteks Tambahan (opsional)</label>
+          <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:2px 0 8px;">Kalau field <b>Sumber</b> di atas cuma berisi kosakata/kata tunggal (misal field Kosakata), field ini boleh diisi field lain yang berisi KALIMAT lengkapnya (misal SentKanji) -- isinya DIBACA doang dan dikasih ke AI sebagai konteks tambahan, biar penjelasannya nyambung sama gimana kosakata itu dipakai di kalimatnya, bukan cuma makna umum kamusnya doang.</p>
+          <select id="atExplainContextField"><option value="">(Gak pakai field konteks tambahan)</option></select>
+        </div>
       </div>
+
       <datalist id="atLangList">
         <option value="auto">Deteksi Otomatis</option>
         <option value="id">Indonesia</option>
@@ -839,8 +861,10 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <button class="btn mint" id="btnAutoTranslate" type="button"><span id="btnAutoTranslateLabel">🌐 Translate Semua Field yang Dicentang</span></button>
         <button class="btn ghost hidden" id="btnAutoTranslateCancel" type="button">⏹️ Batalin</button>
         <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled><span id="btnAutoTranslateUndoLabel">↩️ Undo Translate Terakhir</span></button>
+        <button class="btn ghost hidden" id="btnAutoTranslateRetryFailed" type="button">🔁 <span id="btnAutoTranslateRetryFailedLabel">Mulai Ulang yang Gagal</span></button>
       </div>
       <div id="atProgress" style="margin-top:8px; font-weight:800; font-size:.8rem; color:var(--ink-soft);"></div>
+      <div id="atProgressTrackWrap" class="hidden"><div id="atProgressBar" class="at-progress-track"><div class="at-progress-fill"></div></div></div>
     </div>
 
     <div id="batchPanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
@@ -862,7 +886,21 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <button class="btn mint" id="btnAutoTranslateBatch" type="button"><span id="btnAutoTranslateBatchLabel">🌐 Translate Batch Ini</span><small>pakai pengaturan Translate Otomatis di atas</small></button>
       </div>
     </div>
-    <div class="table-wrap" style="margin-top:16px;">
+    <div class="btn-row" style="margin-top:16px; align-items:center;">
+      <span style="font-weight:800; font-size:.82rem; color:var(--ink-soft);" id="tablePageInfo"></span>
+      <div style="flex:1;"></div>
+      <span style="font-weight:800; font-size:.75rem; color:var(--ink-soft); text-transform:uppercase; margin-right:2px;">Baris per halaman</span>
+      <select id="tablePageSizeSelect" style="width:auto; padding:8px 10px;">
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+      </select>
+      <button class="btn ghost" id="btnTablePagePrev" type="button" style="padding:8px 14px;">◀</button>
+      <button class="btn ghost" id="btnTablePageNext" type="button" style="padding:8px 14px;">▶</button>
+    </div>
+    <p style="font-size:.7rem; color:var(--ink-soft); font-weight:600; margin:4px 0 0;">💡 Tabel di bawah ini dibagi per halaman biar gak ngelag pas deck-nya gede -- ini CUMA buat tampilan, translate/jelasin/copy-paste tetep jalan ke SEMUA note yang dicentang, bukan cuma yang keliatan di halaman ini.</p>
+    <div class="table-wrap" style="margin-top:10px;">
       <table>
         <thead>
           <tr>
@@ -1035,6 +1073,53 @@ function ahShowModelIssuePopup(provider, errMsg){
   bg.classList.add('show');
 }
 
+// Popup buat kegagalan proses Translate Otomatis / Jelasin Kosakata (AI) yang BUKAN
+// kasus "model usang" (lihat ahShowModelIssuePopup di atas buat itu) -- misal timeout,
+// rate limit, atau error lain dari engine-nya. Beda sama ahShowErrorPopup generik: ini
+// nunjukkin CONTOH nyata field mana aja yang gagal + pesan errornya, dan nyediain tombol
+// buat langsung ngulang proses TAPI CUMA buat field yang gagal doang (gak perlu dari nol).
+function ahShowFailedRetryPopup(op, entries, onRetry){
+  if(!entries || !entries.length) return;
+  let bg = document.getElementById('ahFailedRetryModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahFailedRetryModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3 id="ahFailedRetryTitle">😿 Ada field yang gagal diproses</h3>
+        <p style="font-size:.85rem; color:var(--ink-soft);">Field yang gagal DIBIARIN apa adanya (gak ketimpa/gak ilang), jadi aman buat dicoba lagi. Ini beberapa contoh kegagalannya:</p>
+        <div id="ahFailedRetryList" style="max-height:220px; overflow:auto; font-size:.76rem; color:var(--ink-soft); background:rgba(0,0,0,.04); padding:8px 10px; border-radius:8px; white-space:pre-wrap;"></div>
+        <p style="font-size:.8rem; margin-top:10px;">Bisa langsung diulang CUMA buat yang gagal (gak perlu ulang dari awal semua kartu), atau lapor ke Discord kalau keulang-ulang terus gagalnya:<br>
+          <a href="${AH_DISCORD_URL}" target="_blank" rel="noopener" style="color:#5865F2; font-weight:700; text-decoration:none; border-bottom:1.5px dashed #5865F2;">${AH_DISCORD_URL}</a>
+        </p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="ahFailedRetryClose" type="button">Nanti aja</button>
+          <button class="btn mint" id="ahFailedRetryBtn" type="button"></button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.querySelector('#ahFailedRetryClose').addEventListener('click', ()=> bg.classList.remove('show'));
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+  }
+  const model = state.models[state.currentMid];
+  const verbed = op === 'explain' ? 'dijelasin' : 'ditranslate';
+  const verbUlang = op === 'explain' ? 'Jelasin' : 'Translate';
+  const emoji = op === 'explain' ? '🧠' : '🌐';
+  bg.querySelector('#ahFailedRetryTitle').textContent = `😿 ${entries.length} field gagal ${verbed}`;
+  const shown = entries.slice(0, 8);
+  const lines = shown.map(e=>{
+    const fname = (model && model.flds && model.flds[e.dst]) || ('Field '+(e.dst+1));
+    return `Kartu #${e.id} — ${fname}:\n${(e.err||'Error gak diketahui').slice(0,180)}`;
+  });
+  if(entries.length > shown.length) lines.push(`...dan ${entries.length - shown.length} field lainnya yang gagal`);
+  bg.querySelector('#ahFailedRetryList').textContent = lines.join('\n\n');
+  const retryBtnEl = bg.querySelector('#ahFailedRetryBtn');
+  retryBtnEl.textContent = `${emoji} Mulai ${verbUlang} Ulang yang Gagal (${entries.length})`;
+  retryBtnEl.onclick = ()=>{ bg.classList.remove('show'); onRetry(); };
+  bg.classList.add('show');
+}
+
 // Template default buat field kayak "Notes" -- dipasang otomatis pas pertama kali user
 // buka modal instruksi field yang namanya keliatan kayak field catatan/penjelasan, biar
 // gak nulis dari nol. Tetep bisa diedit/dihapus bebas sama user.
@@ -1160,6 +1245,8 @@ const state = {
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
   batchSize: 50,
   batchIndex: 0,
+  tablePageSize: 50,   // buat pagination tabel Preview & Edit doang (biar gak ngelag di deck gede) -- terpisah dari batchSize/batchIndex di atas, yang itu buat fitur Copy/Paste/Translate per Batch
+  tablePageIndex: 0,
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
   pasteSnapshot: null,     // {mid, batchKey, entries:[{id, fields, dirty}]} -- buat fitur Undo Paste Terakhir
   cardBg: {
@@ -1193,7 +1280,7 @@ const state = {
   templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
   mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
   _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
-  autoTranslate: { cancel: false, mode: 'inplace', op: 'translate' }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan)
+  autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
   autoTranslateSnapshot: null // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
 };
 
@@ -2770,7 +2857,7 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; state.tablePageIndex = 0; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
@@ -2998,6 +3085,20 @@ function ahAtCurrentHint(){
   return mapped ? AT_HINT_MAPPED : AT_HINT_INPLACE;
 }
 
+// Kosongin & sembunyiin tombol "Mulai Ulang yang Gagal" -- dipanggil tiap kali user
+// ganti pengaturan (op/mode) yang bikin daftar kegagalan lama gak relevan lagi, atau
+// pas mulai proses translate/jelasin BARU dari awal (bukan retry).
+function ahAtClearFailedRetry(){
+  state.autoTranslate.lastFailedEntries = [];
+  const btn = document.getElementById('btnAutoTranslateRetryFailed');
+  if(btn) btn.classList.add('hidden');
+}
+document.getElementById('btnAutoTranslateRetryFailed').addEventListener('click', ()=>{
+  const entries = state.autoTranslate.lastFailedEntries || [];
+  if(!entries.length){ toast('Gak ada yang gagal buat diulang~', '⚠️'); return; }
+  runAutoTranslate(null, entries);
+});
+
 // Inget pilihan terakhir user (engine/API key/bahasa) -- CUMA kesimpen lokal di
 // browser dia sendiri (localStorage), gak pernah dikirim ke server manapun selain
 // pas beneran manggil API translate-nya langsung.
@@ -3037,6 +3138,7 @@ function ahAtCurrentHint(){
 
 function ahAtSetMode(mode){
   state.autoTranslate.mode = mode;
+  ahAtClearFailedRetry();
   document.getElementById('atModeInplace').classList.toggle('applied', mode === 'inplace');
   document.getElementById('atModeMapped').classList.toggle('applied', mode === 'mapped');
   document.getElementById('atMappedWrap').classList.toggle('hidden', mode !== 'mapped');
@@ -3056,6 +3158,7 @@ document.getElementById('atAddMapping').addEventListener('click', ()=> ahAtAddMa
 function ahAtSetOp(op){
   state.autoTranslate.op = op;
   ahAtSaveSetting('op', op);
+  ahAtClearFailedRetry();
   document.getElementById('atOpTranslate').classList.toggle('applied', op === 'translate');
   document.getElementById('atOpExplain').classList.toggle('applied', op === 'explain');
   document.getElementById('atExplainInstrWrap').classList.toggle('hidden', op !== 'explain');
@@ -3156,7 +3259,40 @@ function ahAtRefreshMappingsForModel(){
   if(!list) return;
   list.innerHTML = '';
   if(state.autoTranslate.mode === 'mapped') ahAtAddMappingRow();
+  ahAtRefreshExplainContextField();
 }
+
+// Field opsional buat "Jelasin Kosakata (AI)" -- isinya DIBACA doang dan dikirim ke AI
+// sebagai KONTEKS TAMBAHAN (misal kalimat lengkap "SentKanji" pas field Sumber-nya cuma
+// kosakata tunggal "VocabKanji"), biar penjelasannya nyambung sama pemakaian aslinya di
+// kalimat, bukan cuma makna umum kamus. Dropdown-nya di-refresh tiap ganti note type,
+// dan coba dipertahanin (by NAMA field, bukan index) kalau field yang sama masih ada.
+function ahAtRefreshExplainContextField(){
+  const sel = document.getElementById('atExplainContextField');
+  if(!sel) return;
+  const model = state.models[state.currentMid];
+  const prevName = sel.value !== '' && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].textContent.replace(/^\d+\.\s/, '') : ahAtLoadSetting('explainContextFieldName', '');
+  sel.innerHTML = '';
+  const emptyOpt = document.createElement('option');
+  emptyOpt.value = '';
+  emptyOpt.textContent = '(Gak pakai field konteks tambahan)';
+  sel.appendChild(emptyOpt);
+  (model && model.flds || []).forEach((name, idx)=>{
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${idx+1}. ${name}`;
+    sel.appendChild(opt);
+  });
+  if(prevName){
+    const match = [...sel.options].find(o=> o.value !== '' && (model.flds[+o.value] === prevName));
+    if(match) sel.value = match.value;
+  }
+}
+document.getElementById('atExplainContextField')?.addEventListener('change', function(){
+  const model = state.models[state.currentMid];
+  const name = (this.value !== '' && model) ? (model.flds[+this.value] || '') : '';
+  ahAtSaveSetting('explainContextFieldName', name);
+});
 
 function ahSleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
 
@@ -3293,95 +3429,39 @@ async function ahTranslateDispatch(engine, text, sl, tl, apiKey){
    apa adanya". Cuma didukung sama engine yang beneran AI chat model (OpenAI/Claude/Gemini/
    DeepSeek) -- Google Translate (gratis/Cloud) itu API terjemahan literal, gak bisa disuruh
    "jelasin kosakata" karena bukan model bahasa, jadi sengaja gak disediain di sini. */
-function ahBuildExplainPrompt(text, instruction, lang){
+function ahBuildExplainPrompt(text, instruction, lang, contextText){
   const langNote = lang ? `\n\nJawab pakai bahasa "${lang}".` : '';
-  return `${instruction}${langNote}\n\nBerikut teks/kosakata yang mau dijelasin:\n\n${text}`;
+  const contextNote = (contextText && contextText.trim())
+    ? `\n\nKonteks tambahan (kalimat/konteks pemakaian aslinya -- DIBACA doang buat bantu mahamin, JANGAN dijelasin/diterjemahin sendiri, cuma dipake buat mastiin penjelasan kosakata di atas nyambung sama konteks ini):\n\n${contextText.trim()}`
+    : '';
+  return `${instruction}${langNote}\n\nBerikut teks/kosakata yang mau dijelasin:\n\n${text}${contextNote}`;
 }
 
 /* ---------------- Post-processing hasil "Jelasin Kosakata (AI)" ----------------
-   AI (GPT/Claude/Gemini/DeepSeek) secara alami jawab pakai Markdown (**bold**, bullet list
-   pakai "*"/"-"), padahal field Anki itu HTML mentah -- kalau dibiarin, tanda bintangnya
-   keliatan literal & berantakan (persis kayak laporan user: "**Frekuensi Pemakaian**" nongol
-   apa adanya). Selain itu, format furigana "漢字[bacaan]" yang diminta di instruksi cuma bakal
-   "hidup" (jadi tulisan kecil di atas kanji) kalau note type-nya pasang filter
-   {{furigana:Field}} di template -- kalau enggak, ya nongol mentah gitu aja kayak di gambar.
-   Dua fungsi di bawah ngerapihin DUA masalah itu sebelum hasilnya ditaruh ke field: Markdown
-   -> HTML beneran, dan "漢字[bacaan]" -> tag <ruby> HTML asli (jadi furigana-nya kebaca
-   LANGSUNG di field manapun, gak gantung setelan note type). */
-
-// Ubah "漢字[bacaan]" jadi <ruby>漢字<rt>bacaan</rt></ruby>. Base-nya (sebelum kurung siku)
-// sengaja gak boleh ngelewatin spasi ATAU tanda markdown (* _), biar kalau AI nulis
-// "**有り難[ありがた]い**" gak ke-ikut ** nya jadi bagian kanji -- cuma "有り難" doang yang
-// keambil, tanda ** yang tersisa nanti baru diproses jadi <b> sama ahInlineMdToHtml.
-// Reading-nya juga divalidasi HARUS kana doang, biar bracket lain (misal catatan kaki "[1]")
-// gak ke-anggep furigana & ke-ubah asal-asalan.
-function ahFuriganaToRuby(text){
-  if(!text) return text;
-  const KANA_ONLY = /^[\u3041-\u3096\u30A1-\u30FA\u30FCー・]+$/;
-  return text.replace(/([^\s\[\]<>*_]+)\[([^\[\]]+)\]/g, (m, base, reading) => {
-    if(!KANA_ONLY.test(reading)) return m;
-    return `<ruby>${base}<rt>${reading}</rt></ruby>`;
-  });
-}
-
-// **bold** -> <b>, *italic* -> <i> (bold diproses duluan biar ** gak ke-anggep 2 pasang *).
-function ahInlineMdToHtml(text){
-  if(!text) return text;
-  let out = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-  out = out.replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
-  return out;
-}
-
-// 1 block (dipisah baris kosong) -> HTML. Kalau baris pertamanya bullet ("* "/"- "), block-nya
-// dianggep list: baris lanjutan yang gak diawali bullet nempel (via <br>) ke <li> yang lagi
-// kebuka, dan baris bullet yang indentasinya lebih dalam dari bullet paling atas dianggep
-// nested list di dalam <li> induknya. Kalau bukan list, jadi <p> biasa (baris baru -> <br>).
-function ahMdBlockToHtml(block){
-  const lines = block.replace(/\r\n?/g, '\n').split('\n').filter(l => l.trim() !== '');
-  if(!lines.length) return '';
-  const bulletRe = /^(\s*)[*\-]\s+(.*)$/;
-  const firstBullet = lines[0].match(bulletRe);
-  if(!firstBullet){
-    return `<p>${lines.map(l => ahInlineMdToHtml(l.trim())).join('<br>')}</p>`;
-  }
-  const topIndent = firstBullet[1].length;
-  let html = '<ul>';
-  let liOpen = false, nestedOpen = false;
-  for(const line of lines){
-    const m = line.match(bulletRe);
-    if(m && m[1].length > topIndent){
-      if(!nestedOpen){ html += '<ul>'; nestedOpen = true; } else { html += '</li>'; }
-      html += `<li>${ahInlineMdToHtml(m[2])}`;
-    } else if(m){
-      if(nestedOpen){ html += '</li></ul>'; nestedOpen = false; }
-      if(liOpen) html += '</li>';
-      html += `<li>${ahInlineMdToHtml(m[2])}`;
-      liOpen = true;
-    } else {
-      html += `<br>${ahInlineMdToHtml(line.trim())}`;
-    }
-  }
-  if(nestedOpen) html += '</li></ul>';
-  if(liOpen) html += '</li>';
-  html += '</ul>';
-  return html;
-}
-
-// Entry point -- dipanggil ke SETIAP hasil fitur "Jelasin Kosakata (AI)" sebelum ditaruh ke
-// field: furigana diubah ke <ruby> dulu (SEBELUM markdown diproses, biar ** di sekitar kanji
-// gak ke-ikut ke dalam tag ruby-nya -- lihat komentar ahFuriganaToRuby), baru teks-nya dipecah
-// per block & diubah jadi HTML.
+   PENTING (revisi ke-2): field ini biasanya kepake bareng filter furigana bawaan note
+   type (atau addon sejenis) yang kerjanya nge-scan teks field buat pola "kanji[bacaan]"
+   -- dan filter kayak gitu pada dasarnya nge-anggep field-nya PLAIN TEXT, jadi kalau field-nya
+   udah keisi tag HTML asli (<b>, <ul>, <ruby>, dst -- percobaan sebelumnya), tag-nya malah
+   ke-escape/keliatan literal kayak "<b>" pas dirender (persis laporan user). Makanya SEKARANG
+   hasil AI-nya CUMA dibersihin dari tanda markdown-nya doang (jadi plain text biasa), TANPA
+   nambahin tag HTML apapun -- paragraf/section udah otomatis kepisah sendiri sama baris kosong
+   dari jawaban AI-nya (gak perlu <br>/<p>). Format furigana "kanji[bacaan]" DIBIARIN PERSIS
+   apa adanya, gak disentuh sama sekali -- itu emang formatnya yang diminta di instruksi
+   default Notes, biar filter furigana note type (atau tampilan manual sesuai instruksi) yang
+   urus renderingnya sendiri. */
 function ahFormatExplainResult(text){
   if(!text) return text;
-  const withFurigana = ahFuriganaToRuby(text);
-  const blocks = withFurigana.replace(/\r\n?/g, '\n').split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
-  return blocks.map(ahMdBlockToHtml).join('');
+  let out = text.replace(/\r\n?/g, '\n');
+  out = out.replace(/\*\*(.+?)\*\*/g, '$1');            // **bold** -> teks polos (tanda bintangnya doang yang ilang)
+  out = out.replace(/^([ \t]*)[*\-][ \t]+/gm, '$1• ');  // baris bullet "*"/"-" -> "•" (bukan tag <li>)
+  out = out.replace(/\*([^*\n]+)\*/g, '$1');            // sisa *italic* tunggal -> teks polos juga
+  return out.trim();
 }
 
-async function ahExplainOpenAI(text, instruction, lang, apiKey){
+async function ahExplainOpenAI(text, instruction, lang, apiKey, contextText){
   if(!text || !text.trim()) return text;
-  const sys = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam format Markdown biasa (pakai ** buat teks tebal, pakai "-" buat bullet list kalau perlu) -- JANGAN pakai tag HTML apapun (kayak <b>, <ul>, <li>), soalnya hasilnya bakal diproses ulang jadi HTML otomatis. Format furigana "kanji[bacaan]" (kalau instruksinya minta) HARUS persis nempel ke kanji-nya tanpa keselip tanda markdown apapun. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
-  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const sys = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam PLAIN TEXT (boleh pakai ** buat bold & "-" buat bullet point kalau perlu struktur) -- JANGAN PAKAI TAG HTML SAMA SEKALI (kayak <b>, <ul>, <li>, <br>, <ruby>, dst), soalnya field ini bakal diproses filter furigana bawaan note type yang nge-anggep isinya plain text, jadi tag HTML apapun bakal keliatan literal/rusak. Pisahin tiap bagian/kalimat pakai BARIS KOSONG (paragraf) aja, JANGAN pakai tag apapun buat itu. Format furigana "kanji[bacaan]" (kalau instruksinya minta) WAJIB ditulis PERSIS sesuai instruksi, jangan diubah/dihapus/diringkas. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+  const user = ahBuildExplainPrompt(text, instruction, lang, contextText);
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
@@ -3392,11 +3472,11 @@ async function ahExplainOpenAI(text, instruction, lang, apiKey){
   return data?.choices?.[0]?.message?.content?.trim() || text;
 }
 
-const AH_AI_EXPLAIN_SYS = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam format Markdown biasa (pakai ** buat teks tebal, pakai "-" buat bullet list kalau perlu) -- JANGAN pakai tag HTML apapun (kayak <b>, <ul>, <li>), soalnya hasilnya bakal diproses ulang jadi HTML otomatis. Format furigana "kanji[bacaan]" (kalau instruksinya minta) HARUS persis nempel ke kanji-nya tanpa keselip tanda markdown apapun. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
+const AH_AI_EXPLAIN_SYS = 'Kamu asisten yang jelasin kosakata/kalimat sesuai instruksi dari user. Balikin CUMA hasil penjelasannya dalam PLAIN TEXT (boleh pakai ** buat bold & "-" buat bullet point kalau perlu struktur) -- JANGAN PAKAI TAG HTML SAMA SEKALI (kayak <b>, <ul>, <li>, <br>, <ruby>, dst), soalnya field ini bakal diproses filter furigana bawaan note type yang nge-anggep isinya plain text, jadi tag HTML apapun bakal keliatan literal/rusak. Pisahin tiap bagian/kalimat pakai BARIS KOSONG (paragraf) aja, JANGAN pakai tag apapun buat itu. Format furigana "kanji[bacaan]" (kalau instruksinya minta) WAJIB ditulis PERSIS sesuai instruksi, jangan diubah/dihapus/diringkas. Jangan pakai embel-embel pembuka/penutup kayak "Berikut penjelasannya:".';
 
-async function ahExplainClaude(text, instruction, lang, apiKey){
+async function ahExplainClaude(text, instruction, lang, apiKey, contextText){
   if(!text || !text.trim()) return text;
-  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const user = ahBuildExplainPrompt(text, instruction, lang, contextText);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
     headers:{
@@ -3412,9 +3492,9 @@ async function ahExplainClaude(text, instruction, lang, apiKey){
   return (data?.content||[]).map(b=> b.text || '').join('').trim() || text;
 }
 
-async function ahExplainGemini(text, instruction, lang, apiKey){
+async function ahExplainGemini(text, instruction, lang, apiKey, contextText){
   if(!text || !text.trim()) return text;
-  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const user = ahBuildExplainPrompt(text, instruction, lang, contextText);
   const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+encodeURIComponent(apiKey), {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ systemInstruction:{ parts:[{text:AH_AI_EXPLAIN_SYS}] }, contents:[{role:'user', parts:[{text:user}]}], generationConfig:{ temperature:0.4 } })
@@ -3424,9 +3504,9 @@ async function ahExplainGemini(text, instruction, lang, apiKey){
   return (data?.candidates?.[0]?.content?.parts||[]).map(p=> p.text || '').join('').trim() || text;
 }
 
-async function ahExplainDeepSeek(text, instruction, lang, apiKey){
+async function ahExplainDeepSeek(text, instruction, lang, apiKey, contextText){
   if(!text || !text.trim()) return text;
-  const user = ahBuildExplainPrompt(text, instruction, lang);
+  const user = ahBuildExplainPrompt(text, instruction, lang, contextText);
   const res = await fetch('https://api.deepseek.com/chat/completions', {
     method:'POST',
     headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
@@ -3437,11 +3517,11 @@ async function ahExplainDeepSeek(text, instruction, lang, apiKey){
   return data?.choices?.[0]?.message?.content?.trim() || text;
 }
 
-async function ahExplainDispatch(engine, text, instruction, lang, apiKey){
-  if(engine === 'openai') return ahExplainOpenAI(text, instruction, lang, apiKey);
-  if(engine === 'claude') return ahExplainClaude(text, instruction, lang, apiKey);
-  if(engine === 'gemini') return ahExplainGemini(text, instruction, lang, apiKey);
-  if(engine === 'deepseek') return ahExplainDeepSeek(text, instruction, lang, apiKey);
+async function ahExplainDispatch(engine, text, instruction, lang, apiKey, contextText){
+  if(engine === 'openai') return ahExplainOpenAI(text, instruction, lang, apiKey, contextText);
+  if(engine === 'claude') return ahExplainClaude(text, instruction, lang, apiKey, contextText);
+  if(engine === 'gemini') return ahExplainGemini(text, instruction, lang, apiKey, contextText);
+  if(engine === 'deepseek') return ahExplainDeepSeek(text, instruction, lang, apiKey, contextText);
   throw new Error('Engine "'+engine+'" gak support mode Jelasin Kosakata -- pilih OpenAI/Claude/Gemini/DeepSeek ya~');
 }
 
@@ -3450,12 +3530,20 @@ async function ahExplainDispatch(engine, text, instruction, lang, apiKey){
 // biar gak ngebejek endpoint/rate-limit, dan bisa dibatalin di tengah jalan.
 // Dukung 2 mode: 'inplace' (timpa isi field yang sama) dan 'mapped' (baca dari
 // field A, tulis hasilnya ke field B yang beda -- A gak ikut berubah).
-async function runAutoTranslate(rowsOverride){
+async function runAutoTranslate(rowsOverride, retryEntries){
   const model = state.models[state.currentMid];
   if(!model) return;
-  const rows = rowsOverride && rowsOverride.length ? rowsOverride : currentRows();
+  const isRetry = !!(retryEntries && retryEntries.length);
+  let rows = rowsOverride && rowsOverride.length ? rowsOverride : currentRows();
+  if(isRetry){
+    // Retry cuma peduli sama note yang tadi ada field-nya yang gagal -- ambil dari
+    // state.notes langsung (bukan cuma currentRows()) biar tetep ketemu walau user
+    // udah pindah batch/scroll dari posisi pas run pertama gagal.
+    const idSet = new Set(retryEntries.map(e=> e.id));
+    rows = state.notes.filter(n=> n.mid === state.currentMid && idSet.has(n.id));
+  }
   if(!rows.length){ toast('Gak ada note buat ditranslate~', '⚠️'); return; }
-  const isBatchScoped = !!(rowsOverride && rowsOverride.length);
+  const isBatchScoped = !!(rowsOverride && rowsOverride.length) && !isRetry;
 
   const mode = state.autoTranslate.mode;
   let pairs = []; // array of {src, dst} field index -- buat 'inplace', src===dst
@@ -3481,6 +3569,10 @@ async function runAutoTranslate(rowsOverride){
   const sourceLang = document.getElementById('atSourceLang').value.trim() || 'auto';
   const apiKey = document.getElementById('atApiKey').value.trim();
   const explainInstruction = document.getElementById('atExplainInstrArea').value.trim();
+  // Field opsional "Konteks Tambahan" -- CUMA relevan buat mode 'explain', dibaca doang
+  // per-note dan dikirim ke AI sebagai konteks pemakaian (lihat ahBuildExplainPrompt).
+  const explainContextSel = document.getElementById('atExplainContextField');
+  const explainContextIdx = (op === 'explain' && explainContextSel && explainContextSel.value !== '') ? parseInt(explainContextSel.value) : -1;
 
   if(op === 'explain' && !AH_EXPLAIN_ENGINES.includes(engine)){
     toast('Mode "Jelasin Kosakata" cuma support engine OpenAI/Claude/Gemini/DeepSeek~', '⚠️');
@@ -3492,21 +3584,30 @@ async function runAutoTranslate(rowsOverride){
   }
   if(engine !== 'google-free' && !apiKey){ toast('Isi API key dulu ya buat pakai engine ini~', '🔑'); return; }
 
-  // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasilnya
-  // bakal NIMPA TOTAL isi lama (bukan digabung/append jadi dua). Kalau ada yang bakal
-  // ketimpa, user harus konfirmasi dulu sebelum lanjut.
-  const dstIdxsForCheck = [...new Set(pairs.map(p=> p.dst))];
-  const willOverwriteCount = rows.filter(n=> dstIdxsForCheck.some(i=> (n.fields[i]||'').trim() !== '')).length;
-  if(willOverwriteCount > 0){
-    const dstNames = dstIdxsForCheck.map(i=> `"${model.flds[i] || ('Field '+(i+1))}"`).join(', ');
-    const resultLabel = op === 'explain' ? 'hasil penjelasan AI' : 'hasil terjemahan';
-    const undoLabel = op === 'explain' ? 'Undo Jelasin Kosakata Terakhir' : 'Undo Translate Terakhir';
-    const lanjut = confirm(
-      `${willOverwriteCount} dari ${rows.length} note udah ada isi di field tujuan (${dstNames}).\n\n`+
-      `Isi lamanya bakal DITIMPA TOTAL sama ${resultLabel} (bukan digabung jadi 2).\n\n`+
-      `Yakin mau lanjut? (Tenang, ada tombol "${undoLabel}" kalau berubah pikiran)`
-    );
-    if(!lanjut) return;
+  // Kunci unik per (note, src, dst) -- dipakai buat mode retry, biar CUMA pasangan
+  // field yang gagal tadi doang yang diulang (bukan semua field di note itu, biar
+  // gak mubazir manggil API buat field yang udah berhasil).
+  const retryKeySet = isRetry ? new Set(retryEntries.map(e=> e.id+'#'+e.src+'#'+e.dst)) : null;
+
+  // Retry: gak perlu nanya konfirmasi timpa lagi (field yang diulang emang niatnya
+  // ditimpa sama hasil yang baru, itu emang tujuan "ulang yang gagal"-nya).
+  if(!isRetry){
+    // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasilnya
+    // bakal NIMPA TOTAL isi lama (bukan digabung/append jadi dua). Kalau ada yang bakal
+    // ketimpa, user harus konfirmasi dulu sebelum lanjut.
+    const dstIdxsForCheck = [...new Set(pairs.map(p=> p.dst))];
+    const willOverwriteCount = rows.filter(n=> dstIdxsForCheck.some(i=> (n.fields[i]||'').trim() !== '')).length;
+    if(willOverwriteCount > 0){
+      const dstNames = dstIdxsForCheck.map(i=> `"${model.flds[i] || ('Field '+(i+1))}"`).join(', ');
+      const resultLabel = op === 'explain' ? 'hasil penjelasan AI' : 'hasil terjemahan';
+      const undoLabel = op === 'explain' ? 'Undo Jelasin Kosakata Terakhir' : 'Undo Translate Terakhir';
+      const lanjut = confirm(
+        `${willOverwriteCount} dari ${rows.length} note udah ada isi di field tujuan (${dstNames}).\n\n`+
+        `Isi lamanya bakal DITIMPA TOTAL sama ${resultLabel} (bukan digabung jadi 2).\n\n`+
+        `Yakin mau lanjut? (Tenang, ada tombol "${undoLabel}" kalau berubah pikiran)`
+      );
+      if(!lanjut) return;
+    }
   }
 
   // Snapshot SEMUA note note type ini SEBELUM mulai nimpa -- biar bisa di-undo utuh
@@ -3520,29 +3621,57 @@ async function runAutoTranslate(rowsOverride){
   const btn = document.getElementById('btnAutoTranslate');
   const cancelBtn = document.getElementById('btnAutoTranslateCancel');
   const progEl = document.getElementById('atProgress');
+  const progTrackWrap = document.getElementById('atProgressTrackWrap');
+  const progFill = progTrackWrap.querySelector('.at-progress-fill');
   state.autoTranslate.cancel = false;
   btn.disabled = true;
   cancelBtn.classList.remove('hidden');
+  progTrackWrap.classList.remove('hidden');
+  progFill.classList.remove('done');
+  progFill.style.width = '0%';
+  // Sembunyiin tombol "Mulai Ulang yang Gagal" selama proses baru jalan -- baru
+  // dimunculin lagi di akhir kalau emang masih ada yang gagal (lihat bawah).
+  document.getElementById('btnAutoTranslateRetryFailed').classList.add('hidden');
 
-  const totalOps = rows.length * pairs.length;
-  let done = 0, failed = 0;
+  // totalOps: normal = semua kombinasi note x pasangan field. Retry = CUMA kombinasi
+  // yang beneran ada di daftar kegagalan tadi (biar progress bar-nya akurat, gak
+  // ngitung field yang emang gak diulang).
+  let totalOps = 0;
+  if(isRetry){
+    rows.forEach(note=> pairs.forEach(p=>{ if(retryKeySet.has(note.id+'#'+p.src+'#'+p.dst)) totalOps++; }));
+  } else {
+    totalOps = rows.length * pairs.length;
+  }
+  let done = 0, failed = 0, noteIdx = 0;
   // Nangkep KEJADIAN PERTAMA doang dari error yang kecium "model AI-nya udah usang/
   // dihapus provider" (lihat ahMakeEngineError) -- dipopup-in sekali di akhir proses,
   // bukan tiap field gagal, biar gak spam modal berkali-kali padahal penyebabnya sama.
   let modelIssueInfo = null;
+  // Detail tiap field yang gagal di proses INI (id note, field src/dst, pesan error)
+  // -- dipake buat isi popup "Ada bagian yang gagal" & tombol "Mulai Ulang yang Gagal".
+  const newFailedEntries = [];
+  const opVerbing = op === 'explain' ? 'jelasin' : 'translate';
+  const opEmojiRun = op === 'explain' ? '🧠' : '🌐';
+  const loaderHtml = '<span class="loader"><span></span><span></span><span></span></span>';
 
   outer:
   for(const note of rows){
+    noteIdx++;
     for(const { src, dst } of pairs){
       if(state.autoTranslate.cancel) break outer;
+      if(isRetry && !retryKeySet.has(note.id+'#'+src+'#'+dst)) continue; // bukan yang gagal tadi, skip -- jangan dipanggil ulang
       const original = note.fields[src] || '';
       if(original.trim()){
+        // Tampilin animasi loading SEBELUM manggil API, biar keliatan jelas AI-nya lagi
+        // beneran kerja di kartu ke berapa (bukan cuma diem nunggu tanpa progress).
+        progEl.innerHTML = `<span style="display:inline-flex; align-items:center; gap:7px;">${loaderHtml} ${opEmojiRun} Lagi ${opVerbing} kartu ${noteIdx}/${rows.length}...</span>`;
         try{
+          const contextText = (op === 'explain' && explainContextIdx >= 0) ? (note.fields[explainContextIdx] || '') : '';
           const rawResult = (op === 'explain')
-            ? await ahExplainDispatch(engine, original, explainInstruction, targetLang, apiKey)
+            ? await ahExplainDispatch(engine, original, explainInstruction, targetLang, apiKey, contextText)
             : await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
-          // Rapihin hasil AI khusus mode "Jelasin Kosakata": Markdown -> HTML beneran,
-          // & "kanji[bacaan]" -> <ruby> HTML asli biar furigana-nya kebaca di Anki.
+          // Rapihin hasil AI khusus mode "Jelasin Kosakata": bersihin markdown-nya jadi
+          // plain text (furigana "kanji[bacaan]" dibiarin persis, gak diapa-apain).
           const result = (op === 'explain' && rawResult) ? ahFormatExplainResult(rawResult) : rawResult;
           if(result && note.fields[dst] !== result){
             note.fields[dst] = result;
@@ -3550,6 +3679,8 @@ async function runAutoTranslate(rowsOverride){
           }
         }catch(e){
           failed++;
+          const errMsg = (e && e.message) || String(e);
+          newFailedEntries.push({ id: note.id, src, dst, err: errMsg });
           console.warn((op === 'explain' ? 'Auto-explain' : 'Auto-translate')+' gagal buat note '+note.id+' field '+src+'->'+dst, e);
           if(!modelIssueInfo && e && e.modelIssue){
             modelIssueInfo = { provider: e.provider || engine, message: e.message || String(e) };
@@ -3557,10 +3688,16 @@ async function runAutoTranslate(rowsOverride){
         }
       }
       done++;
-      progEl.textContent = `Progress: ${done}/${totalOps}` + (failed ? ` (${failed} gagal)` : '');
+      progFill.style.width = Math.round((done/totalOps)*100) + '%';
+      progEl.innerHTML = `<span style="display:inline-flex; align-items:center; gap:7px;">${loaderHtml} Kartu ${noteIdx}/${rows.length} — Progress: ${done}/${totalOps}` + (failed ? ` (${failed} gagal)` : '') + `</span>`;
       if(engine === 'google-free') await ahSleep(200); // jaga-jaga rate limit di endpoint gratisan
     }
   }
+  progTrackWrap.classList.add('hidden');
+  progFill.classList.add('done');
+  progEl.innerHTML = state.autoTranslate.cancel
+    ? `⏹️ Dibatalin — ${done}/${totalOps} field udah sempet diproses` + (failed ? ` (${failed} gagal)` : '')
+    : `✅ Selesai — ${done}/${totalOps} field diproses` + (failed ? ` (${failed} gagal)` : '');
 
   // Mode 'mapped': pastiin field Tujuan ikut kecentang biar hasilnya langsung
   // keliatan & bisa dicek di tabel Preview & Edit tanpa perlu centang manual.
@@ -3585,7 +3722,21 @@ async function runAutoTranslate(rowsOverride){
     updateBatchUI();
   }
 
-  const batchLabel = isBatchScoped ? `Batch ${state.batchIndex+1}: ` : '';
+  // Simpen daftar kegagalan proses INI (nge-timpa daftar lama) -- kalau masih ada
+  // yang gagal, munculin lagi tombol "Mulai Ulang yang Gagal" biar user bisa langsung
+  // nyoba ulang CUMA buat yang gagal doang tanpa nembak ulang semua kartu.
+  state.autoTranslate.lastFailedEntries = newFailedEntries;
+  const retryBtnRow = document.getElementById('btnAutoTranslateRetryFailed');
+  const retryBtnRowLabel = document.getElementById('btnAutoTranslateRetryFailedLabel');
+  if(newFailedEntries.length){
+    const verbUlang = op === 'explain' ? 'Jelasin' : 'Translate';
+    retryBtnRowLabel.textContent = `Mulai ${verbUlang} Ulang yang Gagal (${newFailedEntries.length})`;
+    retryBtnRow.classList.remove('hidden');
+  } else {
+    retryBtnRow.classList.add('hidden');
+  }
+
+  const batchLabel = isBatchScoped ? `Batch ${state.batchIndex+1}: ` : (isRetry ? 'Ulang yang gagal: ' : '');
   const verbDone = op === 'explain' ? 'dijelasin' : 'ditranslate';
   const verbNoun = op === 'explain' ? 'Jelasin Kosakata' : 'Translate';
   const opEmoji = op === 'explain' ? '🧠' : '🌐';
@@ -3598,7 +3749,8 @@ async function runAutoTranslate(rowsOverride){
     toast(`${batchLabel}${failed} field gagal, kayaknya model AI-nya udah usang 🤖`, '⚠️');
     ahShowModelIssuePopup(modelIssueInfo.provider, modelIssueInfo.message);
   } else if(failed){
-    toast(`${batchLabel}${verbNoun} selesai, tapi ${failed} field gagal (cek Console browser buat detail errornya) 😿`, '⚠️');
+    toast(`${batchLabel}${verbNoun} selesai, tapi ${failed} field gagal 😿`, '⚠️');
+    ahShowFailedRetryPopup(op, newFailedEntries, ()=> runAutoTranslate(null, state.autoTranslate.lastFailedEntries));
   } else {
     toast(`${batchLabel}${done} field berhasil ${verbDone}! Cek dulu di tabel sebelum disimpen ya~`, opEmoji);
   }
@@ -3615,6 +3767,7 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
   });
   state.autoTranslateSnapshot = null;
   document.getElementById('btnAutoTranslateUndo').disabled = true;
+  ahAtClearFailedRetry();
   renderTable();
   updateStats();
   toast('Translate otomatis terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
@@ -3655,9 +3808,32 @@ function renderTable(){
   tbody.innerHTML = '';
   const model = state.models[state.currentMid];
   if(!model) return;
-  const rows = state.notes.filter(n=>n.mid===state.currentMid);
+  const allRows = state.notes.filter(n=>n.mid===state.currentMid);
   const frag = document.createDocumentFragment();
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
+
+  // Pagination -- CUMA buat batasin JUMLAH BARIS YANG DI-RENDER ke DOM sekali render,
+  // biar gak ngelag di deck gede (ribuan notes bikin ribuan textarea sekaligus tiap kali
+  // renderTable() dipanggil, misal tiap centang/uncentang field). Translate/Jelasin/Copy-
+  // Paste tetep jalan ke SEMUA note yang dicentang (lewat currentRows()), gak kepengaruh
+  // sama pagination ini -- ini murni soal apa yang KELIATAN & bisa diedit manual di layar.
+  const pageSize = Math.max(1, state.tablePageSize|0 || 50);
+  const totalPages = Math.max(1, Math.ceil(allRows.length / pageSize));
+  if(state.tablePageIndex >= totalPages) state.tablePageIndex = totalPages - 1;
+  if(state.tablePageIndex < 0) state.tablePageIndex = 0;
+  const startIdx = state.tablePageIndex * pageSize;
+  const rows = allRows.slice(startIdx, startIdx + pageSize);
+
+  const pageInfoEl = document.getElementById('tablePageInfo');
+  if(pageInfoEl){
+    pageInfoEl.textContent = allRows.length
+      ? `Halaman ${state.tablePageIndex+1}/${totalPages} — note ke ${startIdx+1}–${Math.min(startIdx+pageSize, allRows.length)} dari total ${allRows.length}`
+      : 'Belum ada note.';
+  }
+  const prevBtn = document.getElementById('btnTablePagePrev');
+  const nextBtn = document.getElementById('btnTablePageNext');
+  if(prevBtn) prevBtn.disabled = state.tablePageIndex <= 0;
+  if(nextBtn) nextBtn.disabled = state.tablePageIndex >= totalPages - 1;
 
   rows.forEach(note=>{
     const tr = document.createElement('tr');
@@ -3718,6 +3894,18 @@ function renderTable(){
   tbody.appendChild(frag);
   updateStats();
 }
+
+document.getElementById('btnTablePagePrev').addEventListener('click', ()=>{
+  if(state.tablePageIndex > 0){ state.tablePageIndex--; renderTable(); }
+});
+document.getElementById('btnTablePageNext').addEventListener('click', ()=>{
+  state.tablePageIndex++; renderTable();
+});
+document.getElementById('tablePageSizeSelect').addEventListener('change', function(){
+  state.tablePageSize = parseInt(this.value) || 50;
+  state.tablePageIndex = 0; // balik ke halaman pertama biar gak bingung posisinya geser
+  renderTable();
+});
 
 function stripHtml(str){
   const tmp = document.createElement('div');
