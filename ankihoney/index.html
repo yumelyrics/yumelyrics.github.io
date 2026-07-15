@@ -147,6 +147,18 @@ header.hero{
   font-family:'Baloo 2', cursive; font-size:1.15rem; margin:0 0 14px; color:var(--ink);
   display:flex; align-items:center; gap:8px;
 }
+.card h2.collapsible-header{
+  cursor:pointer; user-select:none; margin-bottom:0; padding:2px 0;
+}
+.card h2.collapsible-header:hover{ color:var(--pink-deep); }
+.collapsible-header .collapse-chevron{
+  margin-left:auto; font-size:1rem; color:var(--pink-deep); transition:transform .25s ease; flex:none;
+}
+.collapsible-header.open .collapse-chevron{ transform:rotate(90deg); }
+.collapsible-header .collapse-hint{
+  font-size:.68rem; font-weight:700; color:var(--ink-soft); text-transform:none; letter-spacing:0; margin-left:4px;
+}
+.collapsible-body{ margin-top:14px; }
 .badge{
   display:inline-block; background:var(--lavender); color:#fff; font-size:.65rem;
   font-weight:800; padding:3px 10px; border-radius:999px; font-family:'Nunito';
@@ -390,6 +402,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
   .card{ padding:16px; border-radius:18px; margin-bottom:14px; }
   .card h2{ font-size:1rem; }
+  .collapsible-header .collapse-hint{ display:none; }
 
   .dropzone{ padding:26px 14px; }
   .dz-emoji{ font-size:2rem; }
@@ -525,7 +538,8 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
   <!-- STEP 2.5: CARD BACKGROUND -->
   <div class="card hidden" id="bgCard">
-    <h2><span class="step-num">✨</span> Background Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span></h2>
+    <h2 class="collapsible-header" id="bgCardHeader" data-target="bgCardBody"><span class="step-num">✨</span> Background Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
+    <div class="collapsible-body hidden" id="bgCardBody">
     <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Ganti background tampilan kartu di Anki pakai foto sendiri. Berlaku buat note type <b id="bgModelName">-</b> yang lagi dipilih di atas.</p>
 
     <div style="background:#fff8e6; border:2px dashed #ffcf6b; border-radius:14px; padding:12px 14px; margin-bottom:14px; font-size:.78rem; font-weight:700; color:#8a6a1a; line-height:1.5;">
@@ -680,11 +694,13 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
       <div id="bgStatus" style="margin-top:14px; font-weight:800; font-size:.82rem; color:var(--ink-soft);"></div>
     </div>
+    </div>
   </div>
 
   <!-- STEP 2.7: TEMPLATE & STYLING EDITOR -->
   <div class="card hidden" id="tplCard">
-    <h2><span class="step-num">🎨</span> Edit Template &amp; Styling Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span></h2>
+    <h2 class="collapsible-header" id="tplCardHeader" data-target="tplCardBody"><span class="step-num">🎨</span> Edit Template &amp; Styling Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
+    <div class="collapsible-body hidden" id="tplCardBody">
     <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Edit langsung HTML tampilan kartu Depan/Belakang & CSS-nya, lengkap sama preview real-time. Berlaku buat note type <b id="tplModelName">-</b> yang lagi dipilih di atas.</p>
 
     <div class="grid2" style="margin-bottom:12px;">
@@ -725,6 +741,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <iframe id="tplPreviewFrame" class="tpl-preview-frame" title="Preview kartu" sandbox="allow-same-origin"></iframe>
       <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:600; font-size:.7rem;">⚡ Preview ini pakai data dari note pertama di tabel & rendering handlebars sederhana (best-effort), termasuk nampilin gambar &amp; muterin audio ASLI yang ada di dalam deck kamu — bisa aja gak 100% sama persis kayak Anki asli buat template yang rumit banget, tapi cukup buat ngecek perubahan HTML/CSS-nya realtime.</small>
     </div>
+    </div>
   </div>
 
   <!-- STEP 3: TABLE PREVIEW / EDIT -->
@@ -738,6 +755,79 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
       <button class="btn ghost" id="btnImportFile">⬆️ Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
+    </div>
+
+    <div id="autoTranslatePanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
+      <label class="field-label" style="margin-bottom:8px;">🌐 Translate Otomatis <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(opsional — translate langsung semua field yang dicentang di atas, tanpa copy-paste manual)</span></label>
+
+      <div class="grid2">
+        <div>
+          <label class="field-label">Engine Translate</label>
+          <select id="atEngineSelect">
+            <option value="google-free">🆓 Google Translate (gratis, tanpa API key)</option>
+            <option value="google-cloud">🔑 Google Cloud Translate API</option>
+            <option value="openai">🔑 OpenAI (ChatGPT) API</option>
+            <option value="claude">🔑 Anthropic (Claude) API</option>
+            <option value="gemini">🔑 Google Gemini API</option>
+            <option value="deepseek">🔑 DeepSeek API</option>
+          </select>
+        </div>
+        <div id="atApiKeyWrap" class="hidden">
+          <label class="field-label">API Key</label>
+          <input type="password" id="atApiKey" placeholder="Tempel API key kamu di sini" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px;">
+        <div>
+          <label class="field-label">Bahasa Sumber</label>
+          <input type="text" id="atSourceLang" list="atLangList" value="auto" placeholder="auto" />
+        </div>
+        <div>
+          <label class="field-label">Bahasa Target</label>
+          <input type="text" id="atTargetLang" list="atLangList" value="id" placeholder="id" />
+        </div>
+      </div>
+      <datalist id="atLangList">
+        <option value="auto">Deteksi Otomatis</option>
+        <option value="id">Indonesia</option>
+        <option value="en">English</option>
+        <option value="ja">Japanese</option>
+        <option value="ko">Korean</option>
+        <option value="zh-CN">Chinese (Simplified)</option>
+        <option value="zh-TW">Chinese (Traditional)</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="pt">Portuguese</option>
+        <option value="ru">Russian</option>
+        <option value="ar">Arabic</option>
+        <option value="th">Thai</option>
+        <option value="vi">Vietnamese</option>
+        <option value="hi">Hindi</option>
+        <option value="it">Italian</option>
+      </datalist>
+
+      <div style="margin-top:12px;">
+        <label class="field-label">Field yang Ditranslate</label>
+        <div class="btn-row" style="gap:6px; margin-bottom:8px;">
+          <button type="button" class="btn ghost applied" id="atModeInplace" style="flex:1;">🔁 Field yang sama<small>timpa isi field yang dicentang di atas</small></button>
+          <button type="button" class="btn ghost" id="atModeMapped" style="flex:1;">➡️ Field beda<small>ambil dari field A, taruh hasilnya ke field B</small></button>
+        </div>
+        <div id="atMappedWrap" class="hidden">
+          <div id="atMappedList"></div>
+          <button type="button" class="btn ghost" id="atAddMapping" style="margin-top:2px;">+ Tambah Pasangan Field</button>
+        </div>
+      </div>
+
+      <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:10px 0 0;" id="atModeHint">⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b>. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.</p>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn mint" id="btnAutoTranslate" type="button">🌐 Translate Semua Field yang Dicentang</button>
+        <button class="btn ghost hidden" id="btnAutoTranslateCancel" type="button">⏹️ Batalin</button>
+        <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled>↩️ Undo Translate Terakhir</button>
+      </div>
+      <div id="atProgress" style="margin-top:8px; font-weight:800; font-size:.8rem; color:var(--ink-soft);"></div>
     </div>
 
     <div id="batchPanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
@@ -756,6 +846,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn mint" id="btnCopyBatch" type="button">📋 Copy Batch Ini<small>lebih aman buat deck gede</small></button>
         <button class="btn alt" id="btnPasteBatch" type="button">📥 Paste Batch Ini<small>khusus buat batch yang aktif</small></button>
+        <button class="btn mint" id="btnAutoTranslateBatch" type="button">🌐 Translate Batch Ini<small>pakai pengaturan Translate Otomatis di atas</small></button>
       </div>
     </div>
     <div class="table-wrap" style="margin-top:16px;">
@@ -809,6 +900,28 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------------- collapsible optional card sections ---------------- */
+/* Background Kartu & Edit Template/Styling disembunyiin default (biar hemat
+   ruang), user klik headernya buat buka/tutup. State per-card diinget di
+   localStorage biar gak collapse lagi tiap reload/upload deck baru. */
+(function initCollapsibleCards(){
+  document.querySelectorAll('.collapsible-header[data-target]').forEach(header=>{
+    const body = document.getElementById(header.dataset.target);
+    if(!body) return;
+    const storeKey = 'ah_collapse_' + header.dataset.target;
+    function setOpen(open){
+      body.classList.toggle('hidden', !open);
+      header.classList.toggle('open', open);
+      header.setAttribute('aria-expanded', open ? 'true' : 'false');
+      try{ localStorage.setItem(storeKey, open ? '1' : '0'); }catch(e){}
+    }
+    let saved = null;
+    try{ saved = localStorage.getItem(storeKey); }catch(e){}
+    setOpen(saved === '1'); // default tertutup kecuali user pernah buka & disimpen kebuka
+    header.addEventListener('click', ()=> setOpen(body.classList.contains('hidden')));
+  });
+})();
+
 /* ---------------- decorative sparkles ---------------- */
 (function sparkles(){
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -895,6 +1008,16 @@ function ahLooksLikeNotesField(fieldName){
   return n.includes('note') || n.includes('catatan') || n.includes('keterangan') || n.includes('penjelasan');
 }
 
+// Instruksi khusus per field disimpen TERPISAH per note type (mid), biar instruksi yang
+// udah ditulis buat note type A gak ke-reset/ilang kalau user pindah ke note type B lalu
+// balik lagi ke A (dulu ke-reset jadi {} tiap ganti note type -- bug, sekarang dibikin
+// persisten selama deck yang sama masih kebuka).
+function ahCurrentFieldInstructions(){
+  const mid = state.currentMid;
+  if(!state.fieldInstructionsByModel[mid]) state.fieldInstructionsByModel[mid] = {};
+  return state.fieldInstructionsByModel[mid];
+}
+
 // Modal buat nulis/edit instruksi khusus per field, yang bakal ikut ditempelin ke
 // [INSTRUKSI BUAT AI TRANSLATOR] pas user copy teks buat ditranslate -- jadi AI-nya
 // langsung tau field itu mau diisi kayak gimana (misal Notes: jelasin lengkap + furigana).
@@ -922,7 +1045,7 @@ function openFieldInstructionModal(idx, fieldName, onSaved){
   }
   bg.querySelector('#ahFieldInstrTitle').textContent = `📝 Instruksi Khusus Field "${fieldName}"`;
   const ta = bg.querySelector('#ahFieldInstrArea');
-  const existing = state.fieldInstructions[idx];
+  const existing = ahCurrentFieldInstructions()[idx];
   ta.value = existing !== undefined ? existing : (ahLooksLikeNotesField(fieldName) ? AH_DEFAULT_NOTES_INSTRUCTION : '');
 
   // clone tombol biar listener lama (dari field lain yang sebelumnya dibuka) kebuang, gak numpuk
@@ -947,9 +1070,10 @@ function openFieldInstructionModal(idx, fieldName, onSaved){
   saveBtn.addEventListener('click', ()=>{
     const val = ta.value.trim();
     if(val){
-      state.fieldInstructions[idx] = val;
+      state.fieldInstructionsByModel[state.currentMid] = state.fieldInstructionsByModel[state.currentMid] || {};
+      state.fieldInstructionsByModel[state.currentMid][idx] = val;
     } else {
-      delete state.fieldInstructions[idx];
+      if(state.fieldInstructionsByModel[state.currentMid]) delete state.fieldInstructionsByModel[state.currentMid][idx];
     }
     bg.classList.remove('show');
     if(onSaved) onSaved();
@@ -974,7 +1098,8 @@ const state = {
   currentMid: null,
   selectedFieldIdxs: [0],
   referenceFieldIdxs: [], // subset dari selectedFieldIdxs yang ditandain SUMBER/REFERENSI -- field yang dipakai AI buat konteks tapi HARUSNYA gak berubah (misal SentKanji/VocabKanji asli), beda sama field TARGET yang emang diisi hasil terjemahan (SentEng/VocabDef/Notes)
-  fieldInstructions: {}, // idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana"), ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]
+  fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
+  fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
   batchSize: 50,
   batchIndex: 0,
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
@@ -1009,7 +1134,9 @@ const state = {
   templateOriginals: {}, // mid -> {css, tmpls:[...]} snapshot "asli" (sebelum diedit user), buat tombol Reset
   templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
   mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
-  _mediaMapPromise: null // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
+  _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
+  autoTranslate: { cancel: false, mode: 'inplace' }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B)
+  autoTranslateSnapshot: null // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
 };
 
 /* ---------------- init sql.js ---------------- */
@@ -1143,6 +1270,8 @@ async function handleApkgFile(file){
     toast('Deck berhasil dibuka!', '🎉');
 
     state.templateOriginals = {}; // reset cache "desain asli" tiap kali buka deck baru
+    state.fieldInstructionsByModel = {}; // reset instruksi khusus field juga -- deck baru = note type baru semua
+    state.fieldSelectionByModel = {}; // reset juga cache centang/lock field per note type
     Object.values(state.mediaBlobUrlCache).forEach(url=>{ try{ URL.revokeObjectURL(url); }catch(e){} });
     state.mediaBlobUrlCache = {};
     state._mediaMapPromise = null;
@@ -2583,7 +2712,7 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
@@ -2592,6 +2721,7 @@ function populateModelSelect(){
   updateBgModelLabel();
   renderTable(); // fix: dulu tabel baru muncul kalau field select diutak-atik manual, sekarang langsung render pas upload
   populateTemplateEditor();
+  ahAtRefreshMappingsForModel();
 }
 
 function updateBgModelLabel(){
@@ -2607,15 +2737,36 @@ function populateFieldSelect(){
   container.innerHTML = '';
   const model = state.models[state.currentMid];
   if(!model) return;
-  state.selectedFieldIdxs = model.flds.length ? [0] : [];
-  state.referenceFieldIdxs = [];
-  state.fieldInstructions = {};
+
+  // Inget pilihan field yang dicentang & yang ditandain 🔒 sumber SECARA TERPISAH per
+  // note type (mid) -- dulu ini ke-reset total ke default (cuma field pertama) tiap
+  // pindah note type, jadi kalau user udah rapiin centang+lock buat note type A lalu
+  // ngecek note type B, terus balik lagi ke A, semua pilihannya ilang (bug). Sekarang
+  // dipulihin dari cache kalau note type ini udah pernah diatur sebelumnya.
+  const cached = state.fieldSelectionByModel[state.currentMid];
+  if(cached){
+    state.selectedFieldIdxs = cached.selected.filter(i=> i < model.flds.length);
+    state.referenceFieldIdxs = cached.reference.filter(i=> i < model.flds.length && state.selectedFieldIdxs.includes(i));
+    if(!state.selectedFieldIdxs.length) state.selectedFieldIdxs = model.flds.length ? [0] : [];
+  } else {
+    state.selectedFieldIdxs = model.flds.length ? [0] : [];
+    state.referenceFieldIdxs = [];
+  }
+  function saveFieldSelectionCache(){
+    state.fieldSelectionByModel[state.currentMid] = {
+      selected: state.selectedFieldIdxs.slice(),
+      reference: state.referenceFieldIdxs.slice()
+    };
+  }
+
   model.flds.forEach((name, idx)=>{
+    const isSelected = state.selectedFieldIdxs.includes(idx);
+    const isRef = state.referenceFieldIdxs.includes(idx);
     const chip = document.createElement('label');
-    chip.className = 'field-chip' + (idx===0 ? ' active' : '');
+    chip.className = 'field-chip' + (isSelected ? ' active' : '');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
-    cb.checked = idx === 0;
+    cb.checked = isSelected;
     chip.appendChild(cb);
     chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
 
@@ -2624,8 +2775,8 @@ function populateFieldSelect(){
     // hasil terjemahan. Ini bikin tool bisa ngedeteksi kalau field sumber ternyata ikut berubah
     // (tanda ke-translate/ke-swap gak sengaja), tanpa perlu nebak-nebak nama field.
     const lockBtn = document.createElement('span');
-    lockBtn.className = 'field-lock';
-    lockBtn.textContent = '🔓';
+    lockBtn.className = 'field-lock' + (isRef ? ' active' : '');
+    lockBtn.textContent = isRef ? '🔒' : '🔓';
     lockBtn.title = 'Tandain sebagai field SUMBER/REFERENSI (misal Kanji asli) yang harusnya GAK berubah pas ditranslate — beda sama field target yang emang diisi hasil terjemahan.';
     chip.appendChild(lockBtn);
 
@@ -2638,7 +2789,7 @@ function populateFieldSelect(){
     instrBtn.title = 'Tambahin instruksi khusus buat AI translator pas ngisi field ini (misal: minta penjelasan lengkap kosakata, format furigana, dst). Instruksi ini ikut kecopy ke teks yang ditempel ke AI.';
     chip.appendChild(instrBtn);
     function refreshInstrBtn(){
-      const has = !!(state.fieldInstructions[idx] && state.fieldInstructions[idx].trim());
+      const has = !!(ahCurrentFieldInstructions()[idx] && ahCurrentFieldInstructions()[idx].trim());
       instrBtn.classList.toggle('active', has);
     }
     refreshInstrBtn();
@@ -2668,6 +2819,7 @@ function populateFieldSelect(){
         lockBtn.textContent = '🔓';
         lockBtn.classList.remove('active');
       }
+      saveFieldSelectionCache();
       renderTable();
     });
 
@@ -2686,6 +2838,7 @@ function populateFieldSelect(){
         toast(`"${name}" ditandain sebagai field sumber — harusnya gak berubah pas ditranslate~`, '🔒');
       }
       state.referenceFieldIdxs = refs;
+      saveFieldSelectionCache();
     });
 
     container.appendChild(chip);
@@ -2765,6 +2918,388 @@ document.getElementById('btnBatchNext').addEventListener('click', ()=>{
   state.batchIndex += 1;
   updateBatchUI();
 });
+/* ---------------- translate otomatis (opsional, langsung manggil API translate) ---------------- */
+
+const AH_AT_STORAGE_PREFIX = 'ankihoney_autotranslate_';
+function ahAtLoadSetting(key, fallback){
+  try{ const v = localStorage.getItem(AH_AT_STORAGE_PREFIX+key); return v === null ? fallback : v; }catch(e){ return fallback; }
+}
+function ahAtSaveSetting(key, val){
+  try{ localStorage.setItem(AH_AT_STORAGE_PREFIX+key, val); }catch(e){}
+}
+
+// Inget pilihan terakhir user (engine/API key/bahasa) -- CUMA kesimpen lokal di
+// browser dia sendiri (localStorage), gak pernah dikirim ke server manapun selain
+// pas beneran manggil API translate-nya langsung.
+(function initAutoTranslatePanel(){
+  const engineSel = document.getElementById('atEngineSelect');
+  const apiKeyWrap = document.getElementById('atApiKeyWrap');
+  const apiKeyInput = document.getElementById('atApiKey');
+  const sourceInput = document.getElementById('atSourceLang');
+  const targetInput = document.getElementById('atTargetLang');
+
+  engineSel.value = ahAtLoadSetting('engine', 'google-free');
+  sourceInput.value = ahAtLoadSetting('source', 'auto');
+  targetInput.value = ahAtLoadSetting('target', 'id');
+
+  function refreshApiKeyVisibility(){
+    apiKeyWrap.classList.toggle('hidden', engineSel.value === 'google-free');
+    apiKeyInput.value = ahAtLoadSetting('apikey_'+engineSel.value, '');
+  }
+  refreshApiKeyVisibility();
+
+  engineSel.addEventListener('change', ()=>{ ahAtSaveSetting('engine', engineSel.value); refreshApiKeyVisibility(); });
+  apiKeyInput.addEventListener('input', ()=> ahAtSaveSetting('apikey_'+engineSel.value, apiKeyInput.value));
+  sourceInput.addEventListener('input', ()=> ahAtSaveSetting('source', sourceInput.value));
+  targetInput.addEventListener('input', ()=> ahAtSaveSetting('target', targetInput.value));
+})();
+
+const AT_HINT_INPLACE = '⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b> (isinya bakal DITIMPA sama hasil terjemahan). API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.';
+const AT_HINT_MAPPED = '⚠️ Field <b>Sumber</b> DIBACA doang (gak diubah), hasil terjemahannya ditaruh/nimpa isi field <b>Tujuan</b> yang kamu pilih. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen.';
+
+function ahAtSetMode(mode){
+  state.autoTranslate.mode = mode;
+  document.getElementById('atModeInplace').classList.toggle('applied', mode === 'inplace');
+  document.getElementById('atModeMapped').classList.toggle('applied', mode === 'mapped');
+  document.getElementById('atMappedWrap').classList.toggle('hidden', mode !== 'mapped');
+  document.getElementById('atModeHint').innerHTML = mode === 'mapped' ? AT_HINT_MAPPED : AT_HINT_INPLACE;
+  if(mode === 'mapped' && !document.querySelectorAll('.at-mapping-row').length){
+    ahAtAddMappingRow();
+  }
+}
+document.getElementById('atModeInplace').addEventListener('click', ()=> ahAtSetMode('inplace'));
+document.getElementById('atModeMapped').addEventListener('click', ()=> ahAtSetMode('mapped'));
+document.getElementById('atAddMapping').addEventListener('click', ()=> ahAtAddMappingRow());
+
+// Bikin 1 baris pasangan "ambil dari field X -> taruh ke field Y" buat mode
+// translate "Field beda". Dipakai pas user nambah pasangan baru, atau pas note
+// type diganti (dropdown-nya di-refresh biar sesuai daftar field yang baru).
+function ahAtBuildFieldSelect(model, preferIdx){
+  const sel = document.createElement('select');
+  (model.flds||[]).forEach((name, idx)=>{
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${idx+1}. ${name}`;
+    sel.appendChild(opt);
+  });
+  if(preferIdx !== undefined && preferIdx !== null && preferIdx < (model.flds||[]).length) sel.value = preferIdx;
+  return sel;
+}
+function ahAtAddMappingRow(srcIdx, dstIdx){
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || model.flds.length < 2){
+    toast('Note type ini cuma punya 1 field, jadi gak bisa translate ke field beda~', '⚠️');
+    return;
+  }
+  const list = document.getElementById('atMappedList');
+  const row = document.createElement('div');
+  row.className = 'grid2 at-mapping-row';
+  row.style.cssText = 'align-items:end; margin-bottom:8px;';
+
+  const srcWrap = document.createElement('div');
+  srcWrap.innerHTML = '<label class="field-label">Ambil dari (Sumber)</label>';
+  const srcSel = ahAtBuildFieldSelect(model, srcIdx ?? 0);
+  srcSel.className = 'atMapSrc';
+  srcWrap.appendChild(srcSel);
+
+  const dstWrap = document.createElement('div');
+  dstWrap.style.cssText = 'display:flex; gap:8px; align-items:end;';
+  const dstInner = document.createElement('div');
+  dstInner.style.flex = '1';
+  dstInner.innerHTML = '<label class="field-label">Taruh ke (Tujuan)</label>';
+  const dstSel = ahAtBuildFieldSelect(model, dstIdx ?? Math.min(1, model.flds.length-1));
+  dstSel.className = 'atMapDst';
+  dstInner.appendChild(dstSel);
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn ghost';
+  removeBtn.style.padding = '10px 14px';
+  removeBtn.textContent = '🗑️';
+  removeBtn.addEventListener('click', ()=>{
+    row.remove();
+    if(!document.querySelectorAll('.at-mapping-row').length) ahAtAddMappingRow();
+  });
+  dstWrap.appendChild(dstInner);
+  dstWrap.appendChild(removeBtn);
+
+  row.appendChild(srcWrap);
+  row.appendChild(dstWrap);
+  list.appendChild(row);
+}
+// Refresh dropdown mapping tiap ganti note type -- field lama udah gak relevan
+// buat note type baru, jadi list mapping-nya direset.
+function ahAtRefreshMappingsForModel(){
+  const list = document.getElementById('atMappedList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(state.autoTranslate.mode === 'mapped') ahAtAddMappingRow();
+}
+
+function ahSleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
+
+// Engine #1: endpoint Google Translate versi gratis/gak resmi (trik yang sama dipakai
+// banyak tool client-side lain) -- gak butuh API key sama sekali, tapi sifatnya
+// BEST-EFFORT: bisa aja kena rate-limit atau diblokir sewaktu-waktu sama Google
+// karena ini bukan endpoint publik resmi. Kalau gagal terus, disaranin pindah ke
+// engine yang pakai API key.
+async function ahTranslateGoogleFree(text, sl, tl){
+  if(!text || !text.trim()) return text;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl||'auto')}&tl=${encodeURIComponent(tl||'id')}&dt=t&q=${encodeURIComponent(text)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Google Translate (gratis) error: HTTP '+res.status);
+  const data = await res.json();
+  return ((data && data[0]) || []).map(seg=> (seg && seg[0]) || '').join('');
+}
+
+// Engine #2: Google Cloud Translate API resmi (v2), butuh API key sendiri dari Google
+// Cloud Console. format:'html' dipakai biar tag HTML di field Anki (bold, ruby
+// furigana, dst) gak ikut kena terjemahin/rusak -- cuma teks di dalamnya aja.
+async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
+  if(!text || !text.trim()) return text;
+  const body = { q:text, target: tl||'id', format:'html' };
+  if(sl && sl !== 'auto') body.source = sl;
+  const res = await fetch('https://translation.googleapis.com/language/translate/v2?key='+encodeURIComponent(apiKey), {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Google Cloud Translate error: HTTP '+res.status+' '+t.slice(0,200)); }
+  const data = await res.json();
+  return data?.data?.translations?.[0]?.translatedText ?? text;
+}
+
+// Engine #3: OpenAI API (butuh API key sendiri) -- paling aman dipakai buat field yang
+// isinya banyak tag HTML/furigana/[sound:...], karena model-nya diinstruksiin eksplisit
+// buat mempertahankan semua tag persis apa adanya & cuma nerjemahin teks yang kebaca doang.
+async function ahTranslateOpenAI(text, sl, tl, apiKey){
+  if(!text || !text.trim()) return text;
+  const sys = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
+  const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
+  const user = 'Terjemahin teks berikut'+srcNote+' ke bahasa "'+(tl||'id')+'":\n\n'+text;
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
+    body: JSON.stringify({ model:'gpt-4o-mini', temperature:0.2, messages:[{role:'system',content:sys},{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('OpenAI error: HTTP '+res.status+' '+t.slice(0,200)); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || text;
+}
+
+const AH_AI_TRANSLATE_SYS = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
+
+// Engine #4: Anthropic Claude API (butuh API key sendiri dari console.anthropic.com).
+// Header 'anthropic-dangerous-direct-browser-access' dibutuhin karena API-nya dipanggil
+// LANGSUNG dari browser (bukan lewat server), sama kayak engine lain di tool ini.
+async function ahTranslateClaude(text, sl, tl, apiKey){
+  if(!text || !text.trim()) return text;
+  const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
+  const user = 'Terjemahin teks berikut'+srcNote+' ke bahasa "'+(tl||'id')+'":\n\n'+text;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({ model:'claude-3-5-haiku-20241022', max_tokens:4096, temperature:0.2, system:AH_AI_TRANSLATE_SYS, messages:[{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Claude error: HTTP '+res.status+' '+t.slice(0,200)); }
+  const data = await res.json();
+  return (data?.content||[]).map(b=> b.text || '').join('').trim() || text;
+}
+
+// Engine #5: Google Gemini API (butuh API key sendiri dari Google AI Studio).
+async function ahTranslateGemini(text, sl, tl, apiKey){
+  if(!text || !text.trim()) return text;
+  const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
+  const user = 'Terjemahin teks berikut'+srcNote+' ke bahasa "'+(tl||'id')+'":\n\n'+text;
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ systemInstruction:{ parts:[{text:AH_AI_TRANSLATE_SYS}] }, contents:[{role:'user', parts:[{text:user}]}], generationConfig:{ temperature:0.2 } })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('Gemini error: HTTP '+res.status+' '+t.slice(0,200)); }
+  const data = await res.json();
+  return (data?.candidates?.[0]?.content?.parts||[]).map(p=> p.text || '').join('').trim() || text;
+}
+
+// Engine #6: DeepSeek API (kompatibel format OpenAI, butuh API key sendiri dari platform.deepseek.com).
+async function ahTranslateDeepSeek(text, sl, tl, apiKey){
+  if(!text || !text.trim()) return text;
+  const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
+  const user = 'Terjemahin teks berikut'+srcNote+' ke bahasa "'+(tl||'id')+'":\n\n'+text;
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
+    body: JSON.stringify({ model:'deepseek-chat', temperature:0.2, messages:[{role:'system',content:AH_AI_TRANSLATE_SYS},{role:'user',content:user}] })
+  });
+  if(!res.ok){ const t = await res.text().catch(()=>''); throw new Error('DeepSeek error: HTTP '+res.status+' '+t.slice(0,200)); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || text;
+}
+
+async function ahTranslateDispatch(engine, text, sl, tl, apiKey){
+  if(engine === 'google-cloud') return ahTranslateGoogleCloud(text, sl, tl, apiKey);
+  if(engine === 'openai') return ahTranslateOpenAI(text, sl, tl, apiKey);
+  if(engine === 'claude') return ahTranslateClaude(text, sl, tl, apiKey);
+  if(engine === 'gemini') return ahTranslateGemini(text, sl, tl, apiKey);
+  if(engine === 'deepseek') return ahTranslateDeepSeek(text, sl, tl, apiKey);
+  return ahTranslateGoogleFree(text, sl, tl);
+}
+
+// Translate SEMUA field yang dicentang (minus yang ditandain 🔒 sumber) buat SEMUA
+// note dari note type yang lagi aktif, sekali klik. Jalan sekuensial (bukan paralel)
+// biar gak ngebejek endpoint/rate-limit, dan bisa dibatalin di tengah jalan.
+// Dukung 2 mode: 'inplace' (timpa isi field yang sama) dan 'mapped' (baca dari
+// field A, tulis hasilnya ke field B yang beda -- A gak ikut berubah).
+async function runAutoTranslate(rowsOverride){
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  const rows = rowsOverride && rowsOverride.length ? rowsOverride : currentRows();
+  if(!rows.length){ toast('Gak ada note buat ditranslate~', '⚠️'); return; }
+  const isBatchScoped = !!(rowsOverride && rowsOverride.length);
+
+  const mode = state.autoTranslate.mode;
+  let pairs = []; // array of {src, dst} field index -- buat 'inplace', src===dst
+
+  if(mode === 'mapped'){
+    document.querySelectorAll('.at-mapping-row').forEach(row=>{
+      const src = parseInt(row.querySelector('.atMapSrc').value);
+      const dst = parseInt(row.querySelector('.atMapDst').value);
+      if(!Number.isNaN(src) && !Number.isNaN(dst)) pairs.push({ src, dst });
+    });
+    const badPair = pairs.find(p=> p.src === p.dst);
+    if(badPair){ toast('Field Sumber & Tujuan gak boleh sama di mode "Field beda" ya~', '⚠️'); return; }
+    if(!pairs.length){ toast('Tambahin minimal 1 pasangan field dulu~', '⚠️'); return; }
+  } else {
+    const targetIdxs = (state.selectedFieldIdxs||[]).filter(i=> !(state.referenceFieldIdxs||[]).includes(i));
+    if(!targetIdxs.length){ toast('Semua field yang dicentang ditandain 🔒 sumber -- gak ada field target buat ditranslate~', '⚠️'); return; }
+    pairs = targetIdxs.map(i=> ({ src:i, dst:i }));
+  }
+
+  const engine = document.getElementById('atEngineSelect').value;
+  const targetLang = document.getElementById('atTargetLang').value.trim() || 'id';
+  const sourceLang = document.getElementById('atSourceLang').value.trim() || 'auto';
+  const apiKey = document.getElementById('atApiKey').value.trim();
+  if(engine !== 'google-free' && !apiKey){ toast('Isi API key dulu ya buat pakai engine ini~', '🔑'); return; }
+
+  // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasil
+  // translate bakal NIMPA TOTAL isi lama (bukan digabung/append jadi 2 terjemahan).
+  // Kalau ada yang bakal ketimpa, user harus konfirmasi dulu sebelum lanjut.
+  const dstIdxsForCheck = [...new Set(pairs.map(p=> p.dst))];
+  const willOverwriteCount = rows.filter(n=> dstIdxsForCheck.some(i=> (n.fields[i]||'').trim() !== '')).length;
+  if(willOverwriteCount > 0){
+    const dstNames = dstIdxsForCheck.map(i=> `"${model.flds[i] || ('Field '+(i+1))}"`).join(', ');
+    const lanjut = confirm(
+      `${willOverwriteCount} dari ${rows.length} note udah ada isi di field tujuan (${dstNames}).\n\n`+
+      `Isi lamanya bakal DITIMPA TOTAL sama hasil terjemahan (bukan digabung jadi 2 terjemahan).\n\n`+
+      `Yakin mau lanjut? (Tenang, ada tombol "Undo Translate Terakhir" kalau berubah pikiran)`
+    );
+    if(!lanjut) return;
+  }
+
+  // Snapshot SEMUA note note type ini SEBELUM mulai nimpa -- biar bisa di-undo utuh
+  // kalau ternyata hasilnya berantakan / salah pilih field tujuan.
+  state.autoTranslateSnapshot = {
+    mid: state.currentMid,
+    entries: rows.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
+  };
+  document.getElementById('btnAutoTranslateUndo').disabled = true;
+
+  const btn = document.getElementById('btnAutoTranslate');
+  const cancelBtn = document.getElementById('btnAutoTranslateCancel');
+  const progEl = document.getElementById('atProgress');
+  state.autoTranslate.cancel = false;
+  btn.disabled = true;
+  cancelBtn.classList.remove('hidden');
+
+  const totalOps = rows.length * pairs.length;
+  let done = 0, failed = 0;
+
+  outer:
+  for(const note of rows){
+    for(const { src, dst } of pairs){
+      if(state.autoTranslate.cancel) break outer;
+      const original = note.fields[src] || '';
+      if(original.trim()){
+        try{
+          const translated = await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
+          if(translated && note.fields[dst] !== translated){
+            note.fields[dst] = translated;
+            note.dirty = true;
+          }
+        }catch(e){
+          failed++;
+          console.warn('Auto-translate gagal buat note '+note.id+' field '+src+'->'+dst, e);
+        }
+      }
+      done++;
+      progEl.textContent = `Progress: ${done}/${totalOps}` + (failed ? ` (${failed} gagal)` : '');
+      if(engine === 'google-free') await ahSleep(200); // jaga-jaga rate limit di endpoint gratisan
+    }
+  }
+
+  // Mode 'mapped': pastiin field Tujuan ikut kecentang biar hasilnya langsung
+  // keliatan & bisa dicek di tabel Preview & Edit tanpa perlu centang manual.
+  if(mode === 'mapped'){
+    const dstIdxs = [...new Set(pairs.map(p=> p.dst))];
+    const merged = new Set(state.selectedFieldIdxs || []);
+    dstIdxs.forEach(i=> merged.add(i));
+    state.selectedFieldIdxs = [...merged].sort((a,b)=>a-b);
+    document.querySelectorAll('#fieldChecks .field-chip input[type=checkbox]').forEach((cb,idx)=>{
+      if(dstIdxs.includes(idx)){ cb.checked = true; cb.closest('.field-chip').classList.add('active'); }
+    });
+  }
+
+  renderTable();
+  updateStats();
+  btn.disabled = false;
+  cancelBtn.classList.add('hidden');
+  document.getElementById('btnAutoTranslateUndo').disabled = (done === 0);
+
+  if(isBatchScoped){
+    state.doneBatches.add(batchKeyFor(rows));
+    updateBatchUI();
+  }
+
+  const batchLabel = isBatchScoped ? `Batch ${state.batchIndex+1}: ` : '';
+  if(state.autoTranslate.cancel){
+    toast(`${batchLabel}Translate dibatalin di tengah jalan. ${done}/${totalOps} field udah sempet diproses~`, '⏹️');
+  } else if(failed){
+    toast(`${batchLabel}Translate selesai, tapi ${failed} field gagal (cek Console browser buat detail errornya) 😿`, '⚠️');
+  } else {
+    toast(`${batchLabel}${done} field berhasil ditranslate! Cek dulu di tabel sebelum disimpen ya~`, '🌐');
+  }
+}
+
+document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
+  const snap = state.autoTranslateSnapshot;
+  if(!snap){ toast('Gak ada translate otomatis yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  state.autoTranslateSnapshot = null;
+  document.getElementById('btnAutoTranslateUndo').disabled = true;
+  renderTable();
+  updateStats();
+  toast('Translate otomatis terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+});
+
+// Sama kayak "Translate Semua Field yang Dicentang", tapi cuma buat kartu di batch
+// yang lagi aktif (pakai ukuran batch & posisi batch yang sama kayak Copy/Paste
+// Batch) -- cocok buat deck gede biar gak nembak semua note sekaligus / bisa
+// dicek per batch kayak workflow translate manual yang lain.
+document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
+  const rows = getBatchRows();
+  if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
+  runAutoTranslate(rows);
+});
+
+document.getElementById('btnAutoTranslate').addEventListener('click', runAutoTranslate);
+document.getElementById('btnAutoTranslateCancel').addEventListener('click', ()=>{ state.autoTranslate.cancel = true; });
+
 document.getElementById('btnCopyBatch').addEventListener('click', async ()=>{
   const rows = getBatchRows();
   if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
@@ -2896,7 +3431,7 @@ function buildBlockText(rows){
   if(model){
     const instrLines = [];
     selIdxs.filter(fi=> !refIdxs.includes(fi)).forEach(fi=>{
-      const txt = state.fieldInstructions && state.fieldInstructions[fi];
+      const txt = state.fieldInstructionsByModel && state.fieldInstructionsByModel[state.currentMid] && state.fieldInstructionsByModel[state.currentMid][fi];
       if(txt && txt.trim()){
         const fname = model.flds[fi] || `Field${fi+1}`;
         instrLines.push(`• Field "${fname}":\n${txt.trim()}`);
