@@ -519,6 +519,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <p>Ambil field, terjemahin, suntik balik ke .apkg~</p>
     </div>
     <div class="speech" id="mascotSpeech">Yuk upload deck kamu dulu, nya~ 🍡</div>
+    <button class="btn ghost" id="btnThemeToggle" type="button" style="margin-left:auto; align-self:center;">🌙 Dark Mode</button>
   </header>
 
   <!-- STEP 1: UPLOAD -->
@@ -867,13 +868,16 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
       <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:10px 0 0;" id="atModeHint">⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b>. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.</p>
 
-      <div class="btn-row" style="margin-top:10px;">
+      <div class="btn-row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
         <button class="btn mint" id="btnAutoTranslate" type="button"><span id="btnAutoTranslateLabel">🌐 Translate Semua Field yang Dicentang</span></button>
+        <button class="btn ghost" id="btnAutoTranslatePreview" type="button">👀 Preview Sebelum Apply</button>
+        <button class="btn ghost hidden" id="btnRestoreDraft" type="button">↺ Restore Draft Autosave</button>
         <button class="btn ghost hidden" id="btnResumeAutoTranslate" type="button">↻ Resume Translate</button>
         <button class="btn ghost hidden" id="btnAutoTranslateCancel" type="button">⏹️ Batalin</button>
         <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled><span id="btnAutoTranslateUndoLabel">↩️ Undo Translate Terakhir</span></button>
         <button class="btn ghost hidden" id="btnAutoTranslateRetryFailed" type="button">🔁 <span id="btnAutoTranslateRetryFailedLabel">Mulai Ulang yang Gagal</span></button>
       </div>
+      <div id="atCostEstimate" style="margin-top:8px; font-weight:700; font-size:.85rem; color:var(--ink-soft);">Estimasi biaya/token: -</div>
       <div id="resumeInfo" style="margin-top:8px; font-size:.78rem; color:#6a4a85;"></div>
       <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <label style="display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--ink-soft);">
@@ -948,6 +952,17 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
   </div>
 
   <p class="footer-note">Semua proses jalan 100% di browser kamu — file .apkg ga pernah dikirim ke server manapun 🔒💕<br>Dibuat oleh <b>yumelyrics</b> × <b>yumesubs</b></p>
+</div>
+
+<div class="modal-bg diff-modal" id="diffModalBg">
+  <div class="modal">
+    <h3>Preview sebelum apply</h3>
+    <div id="diffModalContent" style="max-height:56vh; overflow:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnDiffCancel" type="button">Batal</button>
+      <button class="btn mint" id="btnDiffApply" type="button">Apply Semua</button>
+    </div>
+  </div>
 </div>
 
 <a class="wm-badge" id="wmBadge" href="https://yumelyrics.my.id/" target="_blank" rel="noopener">✨ yumelyrics <span>×</span> yumesubs</a>
@@ -1644,9 +1659,11 @@ async function handleApkgFile(file){
     if(notesRes.length){
       notesRes[0].values.forEach(row=>{
         const [id, guid, mid, tags, flds] = row;
+        const fields = String(flds).split('\x1f').map(f=> ahStripWmHtml(f));
         state.notes.push({
           id, guid: String(guid||''), mid: String(mid), tags: String(tags||''),
-          fields: String(flds).split('\x1f').map(f=> ahStripWmHtml(f)),
+          fields: fields.slice(),
+          originalFields: fields.slice(),
           dirty: false
         });
       });
@@ -1690,6 +1707,7 @@ async function handleApkgFile(file){
     state.resumeState = ahLoadResumeState(state.deckHash);
     ahSetResumeControls();
     ahDetectDuplicateCards();
+    ahCheckAutosaveRestore();
 
   }catch(err){
     console.error(err);
@@ -3329,6 +3347,8 @@ document.getElementById('btnBatchNext').addEventListener('click', ()=>{
 
 const AH_AT_STORAGE_PREFIX = 'ankihoney_autotranslate_';
 const AH_RESUME_PREFIX = 'ankihoney_resume_';
+const AH_AUTOSAVE_PREFIX = 'ankihoney_autosave_';
+const AH_THEME_KEY = 'ankihoney_theme';
 function ahAtLoadSetting(key, fallback){
   try{ const v = localStorage.getItem(AH_AT_STORAGE_PREFIX+key); return v === null ? fallback : v; }catch(e){ return fallback; }
 }
@@ -3354,6 +3374,210 @@ function ahClearResumeState(hash){
   if(!hash) return;
   try{ localStorage.removeItem(ahResumeKey(hash)); }
   catch(e){ console.warn('Gagal hapus resume state', e); }
+}
+function ahAutosaveKey(hash){
+  return AH_AUTOSAVE_PREFIX + String(hash || '');
+}
+function ahLoadAutosaveState(hash){
+  if(!hash) return null;
+  try{
+    const raw = localStorage.getItem(ahAutosaveKey(hash));
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ console.warn('Gagal load autosave state', e); return null; }
+}
+function ahSaveAutosaveState(stateObj){
+  if(!stateObj || !stateObj.deckHash) return;
+  try{ localStorage.setItem(ahAutosaveKey(stateObj.deckHash), JSON.stringify(stateObj)); }
+  catch(e){ console.warn('Gagal simpan autosave state', e); }
+}
+function ahClearAutosaveState(hash){
+  if(!hash) return;
+  try{ localStorage.removeItem(ahAutosaveKey(hash)); }
+  catch(e){ console.warn('Gagal hapus autosave state', e); }
+}
+let ahAutosaveDraftTimer = null;
+function ahScheduleAutosaveDraft(){
+  clearTimeout(ahAutosaveDraftTimer);
+  ahAutosaveDraftTimer = setTimeout(()=> ahSaveDraftAutosave(), 700);
+}
+function ahSaveDraftAutosave(){
+  if(!state.deckHash) return;
+  const notes = state.notes.filter(n=> n.dirty).map(n=> ({ id:n.id, fields:n.fields.slice() }));
+  if(!notes.length){ ahClearAutosaveState(state.deckHash); ahCheckAutosaveRestore(); return; }
+  try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify({ deckHash: state.deckHash, savedAt: Date.now(), notes })); }
+  catch(e){ console.warn('Gagal simpan autosave draft', e); }
+  ahCheckAutosaveRestore();
+}
+function ahRestoreAutosaveDraft(){
+  if(!state.deckHash) return;
+  const draft = ahLoadAutosaveState(state.deckHash);
+  if(!draft || !draft.notes?.length){ toast('Gak ada draft autosave buat deck ini~', '⚠️'); return; }
+  const byId = Object.fromEntries(state.notes.map(n=> [n.id, n]));
+  let restored = 0;
+  draft.notes.forEach(item=>{
+    const note = byId[item.id];
+    if(note && Array.isArray(item.fields)){
+      note.fields = item.fields.slice();
+      note.dirty = true;
+      restored++;
+    }
+  });
+  if(restored){
+    renderTable();
+    updateStats();
+    toast(`Draft autosave dipulihkan (${restored} note).`, '↺');
+  } else {
+    toast('Draft autosave ada tapi gak cocok dengan deck ini.', '⚠️');
+  }
+}
+function ahCheckAutosaveRestore(){
+  const btn = document.getElementById('btnRestoreDraft');
+  if(!btn) return;
+  const draft = ahLoadAutosaveState(state.deckHash);
+  if(draft && draft.notes?.length){
+    btn.classList.remove('hidden');
+    btn.textContent = `↺ Restore Draft Autosave (${draft.notes.length})`;
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+function ahLoadTheme(){
+  try{ return localStorage.getItem(AH_THEME_KEY) || 'light'; }catch(e){ return 'light'; }
+}
+function ahSaveTheme(theme){
+  try{ localStorage.setItem(AH_THEME_KEY, theme); }catch(e){}
+}
+function ahApplyTheme(theme){
+  document.body.classList.toggle('dark', theme === 'dark');
+  const btn = document.getElementById('btnThemeToggle');
+  if(btn){ btn.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'; }
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if(metaTheme){ metaTheme.setAttribute('content', theme === 'dark' ? '#12131f' : '#ff8fc7'); }
+}
+function ahCostRateForEngine(engine){
+  if(engine === 'openai') return 0.0004;
+  if(engine === 'claude') return 0.00035;
+  if(engine === 'gemini') return 0.00038;
+  if(engine === 'deepseek') return 0.00025;
+  if(engine === 'google-cloud') return 0.00018;
+  return 0;
+}
+function ahUpdateCostEstimate(){
+  const el = document.getElementById('atCostEstimate');
+  if(!el) return;
+  const engine = document.getElementById('atEngineSelect')?.value;
+  if(!engine){ el.textContent = 'Estimasi biaya/token: -'; return; }
+  if(engine === 'google-free'){
+    el.textContent = 'Estimasi biaya/token: Google Translate gratis, tanpa biaya.';
+    return;
+  }
+  const rows = currentRows();
+  if(!rows.length){ el.textContent = 'Estimasi biaya/token: Pilih note type dulu.'; return; }
+  const targetIdxs = state.autoTranslate.mode === 'mapped'
+    ? [...document.querySelectorAll('.at-mapping-row')].map(row=>({ src: parseInt(row.querySelector('.atMapSrc').value), dst: parseInt(row.querySelector('.atMapDst').value) }))
+    : (state.selectedFieldIdxs||[]).filter(i=> !(state.referenceFieldIdxs||[]).includes(i)).map(i=> ({ src:i, dst:i }));
+  if(!targetIdxs.length){ el.textContent = 'Estimasi biaya/token: Pilih field target dulu.'; return; }
+  let totalChars = 0;
+  rows.forEach(note=>{
+    targetIdxs.forEach(p=>{
+      const src = Number.isFinite(p.src) ? p.src : -1;
+      const text = note.fields[src] || '';
+      totalChars += text.length;
+    });
+  });
+  const tokens = Math.max(1, Math.ceil(totalChars / 4));
+  const rate = ahCostRateForEngine(engine);
+  const cost = rate ? (tokens * rate / 1000) : 0;
+  const currency = rate ? `≈ $${cost.toFixed(5)}` : '≈ $0.00000';
+  el.textContent = `Estimasi biaya/token: sekitar ${tokens.toLocaleString()} token ${currency} untuk ${rows.length} note.`;
+}
+function ahShowDiffPreview(){
+  const model = state.models[state.currentMid];
+  if(!model){ toast('Pilih note type dulu supaya bisa preview diff.', '⚠️'); return; }
+  const rows = currentRows();
+  const diffs = [];
+  rows.forEach(note=>{
+    if(!note.originalFields) return;
+    const changed = [];
+    note.fields.forEach((value, idx)=>{
+      const before = note.originalFields[idx] || '';
+      const after = value || '';
+      if(before !== after){
+        changed.push({ idx, name: model.flds[idx] || `Field ${idx+1}`, before, after });
+      }
+    });
+    if(changed.length) diffs.push({ note, changes: changed });
+  });
+  if(!diffs.length){ toast('Belum ada perubahan yang bisa dipreview.', '⚠️'); return; }
+  const content = document.getElementById('diffModalContent');
+  content.innerHTML = '';
+  const summary = document.createElement('div');
+  summary.style.marginBottom = '12px';
+  summary.innerHTML = `<strong>${diffs.length} note berubah.</strong> Klik Apply Semua untuk mengonfirmasi bahwa perubahan ini sudah siap disimpan.`;
+  content.appendChild(summary);
+  const table = document.createElement('table');
+  table.className = 'diff-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>ID</th><th>Field</th><th>Asli</th><th>Baru</th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  diffs.slice(0, 40).forEach(entry=>{
+    entry.changes.slice(0, 2).forEach(change=>{
+      const tr = document.createElement('tr');
+      const idTd = document.createElement('td'); idTd.textContent = entry.note.id; idTd.style.fontWeight='700';
+      const fieldTd = document.createElement('td'); fieldTd.textContent = change.name;
+      const oldTd = document.createElement('td'); oldTd.className='diff-old'; oldTd.textContent = change.before;
+      const newTd = document.createElement('td'); newTd.className='diff-new'; newTd.textContent = change.after;
+      tr.appendChild(idTd); tr.appendChild(fieldTd); tr.appendChild(oldTd); tr.appendChild(newTd);
+      tbody.appendChild(tr);
+    });
+    if(entry.changes.length > 2){
+      const tr = document.createElement('tr');
+      const noteTd = document.createElement('td'); noteTd.textContent = entry.note.id; noteTd.style.fontWeight='700';
+      noteTd.colSpan = 4;
+      noteTd.style.fontSize = '0.85rem';
+      noteTd.textContent = `... ${entry.changes.length} perubahan field untuk note ${entry.note.id}`;
+      tr.appendChild(noteTd);
+      tbody.appendChild(tr);
+    }
+  });
+  table.appendChild(tbody);
+  content.appendChild(table);
+  document.getElementById('diffModalBg').classList.add('show');
+}
+function ahHideDiffModal(){
+  document.getElementById('diffModalBg').classList.remove('show');
+}
+function ahApplyDiffPreview(){
+  ahHideDiffModal();
+  toast('Preview diff dikonfirmasi. Lanjutkan menyimpan deck untuk simpan perubahan.', '✨');
+}
+function ahInitTheme(){
+  ahApplyTheme(ahLoadTheme());
+}
+function ahEnableAutoTranslateEstimateHooks(){
+  ahUpdateCostEstimate();
+  document.getElementById('atEngineSelect')?.addEventListener('change', ahUpdateCostEstimate);
+  document.getElementById('atSourceLang')?.addEventListener('input', ahUpdateCostEstimate);
+  document.getElementById('atTargetLang')?.addEventListener('input', ahUpdateCostEstimate);
+}
+function ahAtRefreshEstimate(){
+  ahUpdateCostEstimate();
+}
+function ahMaybeRefreshEstimate(){
+  ahUpdateCostEstimate();
+}
+function ahAtRefreshSelection(){
+  ahUpdateCostEstimate();
+}
+function ahAtRefreshModeAndOp(){
+  ahUpdateCostEstimate();
+}
+function ahInBackgroundUpdate(){
+  ahUpdateCostEstimate();
+}
+function ahRefreshAllAuxiliary(){
+  ahUpdateCostEstimate();
 }
 function ahNormalizeDuplicateKey(text){
   const stripped = stripHtml(text||'').toLowerCase();
@@ -3459,6 +3683,9 @@ document.getElementById('btnAutoTranslateRetryFailed').addEventListener('click',
 
   ahAtSetOp(ahAtLoadSetting('op', 'translate'));
 })();
+
+ahInitTheme();
+ahEnableAutoTranslateEstimateHooks();
 
 function ahAtSetMode(mode){
   state.autoTranslate.mode = mode;
@@ -4167,8 +4394,18 @@ document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnAutoTranslate').addEventListener('click', runAutoTranslate);
+document.getElementById('btnAutoTranslatePreview').addEventListener('click', ahShowDiffPreview);
+document.getElementById('btnRestoreDraft').addEventListener('click', ahRestoreAutosaveDraft);
+document.getElementById('btnThemeToggle').addEventListener('click', ()=>{
+  const current = document.body.classList.contains('dark') ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  ahApplyTheme(next);
+  ahSaveTheme(next);
+});
 document.getElementById('btnResumeAutoTranslate').addEventListener('click', ()=> runAutoTranslate(null, null, true));
 document.getElementById('btnAutoTranslateCancel').addEventListener('click', ()=>{ state.autoTranslate.cancel = true; });
+document.getElementById('btnDiffCancel').addEventListener('click', ahHideDiffModal);
+document.getElementById('btnDiffApply').addEventListener('click', ahApplyDiffPreview);
 
 document.getElementById('btnCopyBatch').addEventListener('click', async ()=>{
   const rows = getBatchRows();
@@ -4267,6 +4504,7 @@ function renderTable(){
         const dotEl = document.getElementById('dot-'+note.id);
         if(dotEl){ dotEl.className='row-dot dirty'; }
         updateStats();
+        ahScheduleAutosaveDraft();
       });
       editTd.appendChild(ta);
     });
