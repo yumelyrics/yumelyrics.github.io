@@ -163,6 +163,7 @@ header.hero{
   display:inline-block; background:var(--lavender); color:#fff; font-size:.65rem;
   font-weight:800; padding:3px 10px; border-radius:999px; font-family:'Nunito';
 }
+.badge-mint{ background:var(--mint); color:#0e4230; }
 
 /* dropzone */
 .dropzone{
@@ -347,11 +348,46 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 .modal h3{ font-family:'Baloo 2'; color:var(--pink-deep); margin-top:0; }
 .modal textarea{ min-height:260px; font-family:'Fredoka', monospace; font-size:.8rem; }
 .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+  body.dark{ background:
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,.06) 0%, transparent 36%),
+    radial-gradient(circle at 90% 18%, rgba(184,166,255,.08) 0%, transparent 40%),
+    radial-gradient(circle at 30% 88%, rgba(143,227,192,.05) 0%, transparent 40%),
+    #0f1020;
+    color:#e8e8ff;
+  }
+  body.dark header.hero{ background:#181b2e; border-color:#2f3150; }
+  body.dark .card{ background:#131625; border-color:#2c3046; box-shadow:0 12px 26px rgba(0,0,0,.45); }
+  body.dark .hero{ background:#171b2e; border-color:#2f3251; }
+  body.dark .speech{ background:#24253a; color:#d7d7ff; border-color:#373a5f; }
+  body.dark .btn{ background:#232943; color:#f7f7ff; border-color:rgba(255,255,255,.08); }
+  body.dark .btn.ghost{ background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.12); }
+  body.dark .btn.mint{ background:#3da083; color:#fff; }
+  body.dark .btn.ghost:hover{ background:rgba(255,255,255,.08); }
+  body.dark input, body.dark textarea, body.dark select{ background:#15182b; color:#eef0ff; border-color:#313753; }
+  body.dark .at-progress-track{ background:rgba(255,255,255,.08); }
+  body.dark .at-progress-fill{ background:#4ed5b4; }
+  body.dark .row-dot.clean{ background:#66749d; }
+  body.dark .row-dot.dirty{ background:#3ac89d; }
+  body.dark .modal{ background:#171b2f; border-color:#2f3351; color:#eef0ff; }
+  body.dark .modal h3{ color:#f5b0dc; }
+  body.dark .toast{ background:#292f4f; color:#fff; }
+  body.dark .wm-badge{ background:rgba(18,21,41,.92); border-color:rgba(255,143,199,.18); color:#f5d5f2; }
+  body.dark .wm-badge span{ color:#b8a6ff; }
+  body.dark .badge-mint{ background:#3da083; color:#eafff6; }
+  body.dark .badge{ background:#5c4fb8; color:#eef0ff; }
+  body.dark .stat-pill{ background:#221b3a; color:#f5b0dc; border-color:#3a2f55; }
+  body.dark .table-wrap{ border-color:#2c3046; }
+  body.dark thead th{ background:#3a2f55; color:#fff; }
+  body.dark tbody tr:nth-child(even){ background:#171a2c; }
+  body.dark tbody tr:hover{ background:#1d2136; }
+  body.dark td{ border-bottom-color:#262a42; }
+  body.dark .id-cell, body.dark .preview-cell{ color:#a7a9c9; }
+  body.dark .edit-cell textarea.dirty{ border-color:var(--mint); background:#12241d; }
+  body.dark .dropzone{ background:linear-gradient(160deg,#171b2e,#1b1430); color:#f5b0dc; border-color:#3a2f55; }
+  body.dark .dropzone small{ color:#a7a9c9; }
+  body.dark .dropzone.drag{ background:#231a3d; }
 
 .toast{
-  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
-  background:var(--ink); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700;
-  font-family:'Baloo 2'; box-shadow:0 10px 30px rgba(0,0,0,.25); opacity:0; transition:.25s; z-index:80;
   display:flex; align-items:center; gap:8px;
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -555,7 +591,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
   <!-- STEP 2.5: CARD BACKGROUND -->
   <div class="card hidden" id="bgCard">
-    <h2 class="collapsible-header" id="bgCardHeader" data-target="bgCardBody"><span class="step-num">✨</span> Background Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
+    <h2 class="collapsible-header" id="bgCardHeader" data-target="bgCardBody"><span class="step-num">✨</span> Background Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="bgCardBody">
     <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Ganti background tampilan kartu di Anki pakai foto sendiri. Berlaku buat note type <b id="bgModelName">-</b> yang lagi dipilih di atas.</p>
 
@@ -716,7 +752,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
   <!-- STEP 2.7: TEMPLATE & STYLING EDITOR -->
   <div class="card hidden" id="tplCard">
-    <h2 class="collapsible-header" id="tplCardHeader" data-target="tplCardBody"><span class="step-num">🎨</span> Edit Template &amp; Styling Kartu <span class="badge" style="background:var(--mint); color:#0e4230;">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
+    <h2 class="collapsible-header" id="tplCardHeader" data-target="tplCardBody"><span class="step-num">🎨</span> Edit Template &amp; Styling Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik buat buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="tplCardBody">
     <p style="font-weight:700; color:var(--ink-soft); font-size:.82rem; margin-top:0;">Edit langsung HTML tampilan kartu Depan/Belakang & CSS-nya, lengkap sama preview real-time. Berlaku buat note type <b id="tplModelName">-</b> yang lagi dipilih di atas.</p>
 
@@ -1339,7 +1375,8 @@ const state = {
   mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
   _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
   autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
-  autoTranslateSnapshot: null // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
+  autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
+  pendingDiffReview: [] // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
 };
 
 /* ---------------- init sql.js ---------------- */
@@ -3137,7 +3174,7 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; state.tablePageIndex = 0; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; state.tablePageIndex = 0; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); ahDetectDuplicateCards(); ahUpdateCostEstimate(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
@@ -3246,6 +3283,7 @@ function populateFieldSelect(){
       }
       saveFieldSelectionCache();
       renderTable();
+      ahUpdateCostEstimate();
     });
 
     lockBtn.addEventListener('click', (e)=>{
@@ -3264,11 +3302,13 @@ function populateFieldSelect(){
       }
       state.referenceFieldIdxs = refs;
       saveFieldSelectionCache();
+      ahUpdateCostEstimate();
     });
 
     container.appendChild(chip);
   });
   updateStats();
+  ahUpdateCostEstimate();
 }
 
 function updateStats(){
@@ -3493,53 +3533,38 @@ function ahUpdateCostEstimate(){
 }
 function ahShowDiffPreview(){
   const model = state.models[state.currentMid];
-  if(!model){ toast('Pilih note type dulu supaya bisa preview diff.', '⚠️'); return; }
-  const rows = currentRows();
-  const diffs = [];
-  rows.forEach(note=>{
-    if(!note.originalFields) return;
-    const changed = [];
-    note.fields.forEach((value, idx)=>{
-      const before = note.originalFields[idx] || '';
-      const after = value || '';
-      if(before !== after){
-        changed.push({ idx, name: model.flds[idx] || `Field ${idx+1}`, before, after });
-      }
-    });
-    if(changed.length) diffs.push({ note, changes: changed });
-  });
-  if(!diffs.length){ toast('Belum ada perubahan yang bisa dipreview.', '⚠️'); return; }
+  const diffs = state.pendingDiffReview || [];
+  if(!diffs.length){ toast('Belum ada hasil translate yang bisa dipreview. Pencet "Preview Sebelum Apply" dulu.', '⚠️'); return; }
   const content = document.getElementById('diffModalContent');
   content.innerHTML = '';
   const summary = document.createElement('div');
   summary.style.marginBottom = '12px';
-  summary.innerHTML = `<strong>${diffs.length} note berubah.</strong> Klik Apply Semua untuk mengonfirmasi bahwa perubahan ini sudah siap disimpan.`;
+  summary.innerHTML = `<strong>${diffs.length} field siap ditimpa.</strong> Centang yang mau di-apply, uncek yang mau di-skip (isi lama tetap dipertahankan), lalu klik Apply Yang Dicentang.`;
   content.appendChild(summary);
   const table = document.createElement('table');
   table.className = 'diff-table';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>ID</th><th>Field</th><th>Asli</th><th>Baru</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>ID</th><th>Field</th><th>Asli</th><th>Baru</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
-  diffs.slice(0, 40).forEach(entry=>{
-    entry.changes.slice(0, 2).forEach(change=>{
-      const tr = document.createElement('tr');
-      const idTd = document.createElement('td'); idTd.textContent = entry.note.id; idTd.style.fontWeight='700';
-      const fieldTd = document.createElement('td'); fieldTd.textContent = change.name;
-      const oldTd = document.createElement('td'); oldTd.className='diff-old'; oldTd.textContent = change.before;
-      const newTd = document.createElement('td'); newTd.className='diff-new'; newTd.textContent = change.after;
-      tr.appendChild(idTd); tr.appendChild(fieldTd); tr.appendChild(oldTd); tr.appendChild(newTd);
-      tbody.appendChild(tr);
-    });
-    if(entry.changes.length > 2){
-      const tr = document.createElement('tr');
-      const noteTd = document.createElement('td'); noteTd.textContent = entry.note.id; noteTd.style.fontWeight='700';
-      noteTd.colSpan = 4;
-      noteTd.style.fontSize = '0.85rem';
-      noteTd.textContent = `... ${entry.changes.length} perubahan field untuk note ${entry.note.id}`;
-      tr.appendChild(noteTd);
-      tbody.appendChild(tr);
-    }
+  diffs.forEach((change, i)=>{
+    const note = state.notes.find(n=> n.id === change.noteId);
+    const fieldModel = note ? state.models[note.mid] : model;
+    const fieldName = (fieldModel && fieldModel.flds[change.dst]) || `Field ${change.dst+1}`;
+    const tr = document.createElement('tr');
+    const checkTd = document.createElement('td');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = change.checked !== false;
+    cb.dataset.diffIdx = i;
+    cb.addEventListener('change', ()=>{ change.checked = cb.checked; });
+    checkTd.appendChild(cb);
+    const idTd = document.createElement('td'); idTd.textContent = change.noteId; idTd.style.fontWeight='700';
+    const fieldTd = document.createElement('td'); fieldTd.textContent = fieldName;
+    const oldTd = document.createElement('td'); oldTd.className='diff-old'; oldTd.textContent = change.before;
+    const newTd = document.createElement('td'); newTd.className='diff-new'; newTd.textContent = change.after;
+    tr.appendChild(checkTd); tr.appendChild(idTd); tr.appendChild(fieldTd); tr.appendChild(oldTd); tr.appendChild(newTd);
+    tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   content.appendChild(table);
@@ -3549,8 +3574,23 @@ function ahHideDiffModal(){
   document.getElementById('diffModalBg').classList.remove('show');
 }
 function ahApplyDiffPreview(){
+  const diffs = state.pendingDiffReview || [];
+  let applied = 0, skipped = 0;
+  diffs.forEach(change=>{
+    const note = state.notes.find(n=> n.id === change.noteId);
+    if(change.checked === false){ skipped++; return; }
+    if(note){
+      note.fields[change.dst] = change.after;
+      note.dirty = true;
+      applied++;
+    }
+  });
+  state.pendingDiffReview = [];
   ahHideDiffModal();
-  toast('Preview diff dikonfirmasi. Lanjutkan menyimpan deck untuk simpan perubahan.', '✨');
+  renderTable();
+  updateStats();
+  ahScheduleAutosaveDraft();
+  toast(`${applied} field di-apply${skipped ? `, ${skipped} di-skip` : ''}. Jangan lupa download ulang .apkg-nya ya~`, '✨');
 }
 function ahInitTheme(){
   ahApplyTheme(ahLoadTheme());
@@ -3594,7 +3634,7 @@ function ahSetResumeControls(){
   const resume = state.resumeState && state.resumeState.deckHash === state.deckHash && state.resumeState.pendingOps && state.resumeState.pendingOps.length;
   btn.classList.toggle('hidden', !resume);
   if(resume){
-    info.textContent = `⏳ Ada proses translate tersimpan untuk deck ini. Klik Resume Translate untuk lanjut.`;
+    info.textContent = `⏳ Ada proses translate tersimpan untuk deck ini (${state.resumeState.pendingOps.length} field belum kelar). Pilih ulang engine & isi API key-nya, lalu klik Resume Translate untuk lanjut.`;
   } else {
     info.textContent = '';
   }
@@ -3697,10 +3737,11 @@ function ahAtSetMode(mode){
   if(mode === 'mapped' && !document.querySelectorAll('.at-mapping-row').length){
     ahAtAddMappingRow();
   }
+  ahUpdateCostEstimate();
 }
 document.getElementById('atModeInplace').addEventListener('click', ()=> ahAtSetMode('inplace'));
 document.getElementById('atModeMapped').addEventListener('click', ()=> ahAtSetMode('mapped'));
-document.getElementById('atAddMapping').addEventListener('click', ()=> ahAtAddMappingRow());
+document.getElementById('atAddMapping').addEventListener('click', ()=> { ahAtAddMappingRow(); ahUpdateCostEstimate(); });
 
 // Toggle antara mode "Terjemahin" (dispatcher lama, ahTranslateDispatch) dan "Jelasin
 // Kosakata" (dispatcher baru, ahExplainDispatch pakai instruksi custom). Ganti-ganti label
@@ -3787,6 +3828,8 @@ function ahAtAddMappingRow(srcIdx, dstIdx){
   const dstSel = ahAtBuildFieldSelect(model, dstIdx ?? Math.min(1, model.flds.length-1));
   dstSel.className = 'atMapDst';
   dstInner.appendChild(dstSel);
+  srcSel.addEventListener('change', ahUpdateCostEstimate);
+  dstSel.addEventListener('change', ahUpdateCostEstimate);
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn ghost';
@@ -3795,6 +3838,7 @@ function ahAtAddMappingRow(srcIdx, dstIdx){
   removeBtn.addEventListener('click', ()=>{
     row.remove();
     if(!document.querySelectorAll('.at-mapping-row').length) ahAtAddMappingRow();
+    ahUpdateCostEstimate();
   });
   dstWrap.appendChild(dstInner);
   dstWrap.appendChild(removeBtn);
@@ -4081,10 +4125,20 @@ async function ahExplainDispatch(engine, text, instruction, lang, apiKey, contex
 // biar gak ngebejek endpoint/rate-limit, dan bisa dibatalin di tengah jalan.
 // Dukung 2 mode: 'inplace' (timpa isi field yang sama) dan 'mapped' (baca dari
 // field A, tulis hasilnya ke field B yang beda -- A gak ikut berubah).
-async function runAutoTranslate(rowsOverride, retryEntries){
+async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly){
   const model = state.models[state.currentMid];
   if(!model) return;
   const isRetry = !!(retryEntries && retryEntries.length);
+
+  if(isResume){
+    const rs = state.resumeState;
+    if(!rs || rs.deckHash !== state.deckHash || !rs.pendingOps || !rs.pendingOps.length){
+      toast('Gak ada proses translate tersimpan buat deck ini~', '⚠️');
+      ahSetResumeControls();
+      return;
+    }
+  }
+
   let rows = rowsOverride && rowsOverride.length ? rowsOverride : currentRows();
   if(isRetry){
     // Retry cuma peduli sama note yang tadi ada field-nya yang gagal -- ambil dari
@@ -4092,14 +4146,24 @@ async function runAutoTranslate(rowsOverride, retryEntries){
     // udah pindah batch/scroll dari posisi pas run pertama gagal.
     const idSet = new Set(retryEntries.map(e=> e.id));
     rows = state.notes.filter(n=> n.mid === state.currentMid && idSet.has(n.id));
+  } else if(isResume){
+    // Resume: ambil SEMUA note yang direferensiin di pendingOps yang kesimpen, bukan
+    // cuma currentRows() -- biar tetep ketemu walau user pindah note type/filter/reload
+    // halaman sebelum sempet lanjutin translate-nya.
+    const idSet = new Set(state.resumeState.pendingOps.map(e=> e.id));
+    rows = state.notes.filter(n=> idSet.has(n.id));
   }
-  if(!rows.length){ toast('Gak ada note buat ditranslate~', '⚠️'); return; }
-  const isBatchScoped = !!(rowsOverride && rowsOverride.length) && !isRetry;
+  if(!rows.length && !isResume){ toast('Gak ada note buat ditranslate~', '⚠️'); return; }
+  const isBatchScoped = !!(rowsOverride && rowsOverride.length) && !isRetry && !isResume;
 
-  const mode = state.autoTranslate.mode;
+  const mode = isResume ? (state.resumeState.mode || state.autoTranslate.mode) : state.autoTranslate.mode;
   let pairs = []; // array of {src, dst} field index -- buat 'inplace', src===dst
 
-  if(mode === 'mapped'){
+  if(isResume){
+    // Pasangan field udah kesimpen pas resumeState dibuat -- gak perlu baca ulang dari
+    // UI (yang mode/pilihan field-nya bisa aja udah keganti sejak proses ke-interrupt).
+    pairs = (state.resumeState.pairs || []).slice();
+  } else if(mode === 'mapped'){
     document.querySelectorAll('.at-mapping-row').forEach(row=>{
       const src = parseInt(row.querySelector('.atMapSrc').value);
       const dst = parseInt(row.querySelector('.atMapDst').value);
@@ -4114,10 +4178,10 @@ async function runAutoTranslate(rowsOverride, retryEntries){
     pairs = targetIdxs.map(i=> ({ src:i, dst:i }));
   }
 
-  const op = state.autoTranslate.op;
+  const op = isResume ? (state.resumeState.op || state.autoTranslate.op) : state.autoTranslate.op;
   const engine = document.getElementById('atEngineSelect').value;
-  const targetLang = document.getElementById('atTargetLang').value.trim() || 'id';
-  const sourceLang = document.getElementById('atSourceLang').value.trim() || 'auto';
+  const targetLang = document.getElementById('atTargetLang').value.trim() || (isResume && state.resumeState.targetLang) || 'id';
+  const sourceLang = document.getElementById('atSourceLang').value.trim() || (isResume && state.resumeState.sourceLang) || 'auto';
   const apiKey = document.getElementById('atApiKey').value.trim();
   const explainInstruction = document.getElementById('atExplainInstrArea').value.trim();
   const skipDuplicate = document.getElementById('skipDuplicateCards').checked;
@@ -4141,9 +4205,11 @@ async function runAutoTranslate(rowsOverride, retryEntries){
   // gak mubazir manggil API buat field yang udah berhasil).
   const retryKeySet = isRetry ? new Set(retryEntries.map(e=> e.id+'#'+e.src+'#'+e.dst)) : null;
 
-  // Retry: gak perlu nanya konfirmasi timpa lagi (field yang diulang emang niatnya
-  // ditimpa sama hasil yang baru, itu emang tujuan "ulang yang gagal"-nya).
-  if(!isRetry){
+  // Retry/Resume: gak perlu nanya konfirmasi timpa lagi (field yang diulang/dilanjut
+  // emang niatnya ditimpa sama hasil yang baru -- resume juga udah dikonfirmasi pas
+  // proses pertama kali dimulai). stageOnly (mode "Preview Sebelum Apply") juga gak
+  // perlu nanya karena BELUM ada yang ditimpa sampai user approve di modal diff.
+  if(!isRetry && !isResume && !stageOnly){
     // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasilnya
     // bakal NIMPA TOTAL isi lama (bukan digabung/append jadi dua). Kalau ada yang bakal
     // ketimpa, user harus konfirmasi dulu sebelum lanjut.
@@ -4163,12 +4229,15 @@ async function runAutoTranslate(rowsOverride, retryEntries){
   }
 
   // Snapshot SEMUA note note type ini SEBELUM mulai nimpa -- biar bisa di-undo utuh
-  // kalau ternyata hasilnya berantakan / salah pilih field tujuan.
-  state.autoTranslateSnapshot = {
-    mid: state.currentMid,
-    entries: rows.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
-  };
-  document.getElementById('btnAutoTranslateUndo').disabled = true;
+  // kalau ternyata hasilnya berantakan / salah pilih field tujuan. Dilewatin buat
+  // stageOnly karena belum ada field yang ditimpa sampai user approve di modal diff.
+  if(!stageOnly){
+    state.autoTranslateSnapshot = {
+      mid: state.currentMid,
+      entries: rows.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
+    };
+    document.getElementById('btnAutoTranslateUndo').disabled = true;
+  }
 
   const btn = document.getElementById('btnAutoTranslate');
   const cancelBtn = document.getElementById('btnAutoTranslateCancel');
@@ -4200,7 +4269,7 @@ async function runAutoTranslate(rowsOverride, retryEntries){
         pendingOps.push({ id: note.id, src: p.src, dst: p.dst, key: ahNormalizeDuplicateKey(note.fields[0]||'') });
       }
     }));
-  } else if(resumeSaved){
+  } else if(isResume){
     pendingOps.push(...(state.resumeState?.pendingOps || []));
   } else {
     rows.forEach(note=> pairs.forEach(p=>{
@@ -4215,7 +4284,7 @@ async function runAutoTranslate(rowsOverride, retryEntries){
     return;
   }
 
-  if(!isRetry && !resumeSaved){
+  if(!isRetry && !isResume && !stageOnly){
     state.resumeState = {
       deckHash: state.deckHash,
       pendingOps: pendingOps.slice(),
@@ -4229,6 +4298,8 @@ async function runAutoTranslate(rowsOverride, retryEntries){
     };
     ahSaveResumeState(state.resumeState);
   }
+
+  if(stageOnly) state.pendingDiffReview = [];
 
   let totalOps = pendingOps.length;
   let done = 0, failed = 0, opIdx = 0;
@@ -4255,8 +4326,13 @@ async function runAutoTranslate(rowsOverride, retryEntries){
       if(firstNote){
         const firstValue = firstNote.fields[entry.dst] || '';
         if(firstValue.trim()){
-          note.fields[entry.dst] = firstValue;
-          note.dirty = true;
+          if(stageOnly){
+            const before = note.fields[entry.dst] || '';
+            if(before !== firstValue) state.pendingDiffReview.push({ noteId: note.id, dst: entry.dst, before, after: firstValue, checked: true });
+          } else {
+            note.fields[entry.dst] = firstValue;
+            note.dirty = true;
+          }
           done++;
           progFill.style.width = Math.round((done/totalOps)*100) + '%';
           progEl.innerHTML = `<span style="display:inline-flex; align-items:center; gap:7px;">${loaderHtml} ${opEmojiRun} Kartu ${opIdx+1}/${totalOps}...</span>`;
@@ -4274,9 +4350,14 @@ async function runAutoTranslate(rowsOverride, retryEntries){
         ? await ahExplainDispatch(engine, original, explainInstruction, targetLang, apiKey, contextText)
         : await ahTranslateDispatch(engine, original, sourceLang, targetLang, apiKey);
       const result = (op === 'explain' && rawResult) ? ahFormatExplainResult(rawResult) : rawResult;
-      if(result && note.fields[entry.dst] !== result){
-        note.fields[entry.dst] = result;
-        note.dirty = true;
+      if(result){
+        if(stageOnly){
+          const before = note.fields[entry.dst] || '';
+          if(before !== result) state.pendingDiffReview.push({ noteId: note.id, dst: entry.dst, before, after: result, checked: true });
+        } else if(note.fields[entry.dst] !== result){
+          note.fields[entry.dst] = result;
+          note.dirty = true;
+        }
       }
     }catch(e){
       failed++;
@@ -4330,8 +4411,16 @@ async function runAutoTranslate(rowsOverride, retryEntries){
   updateStats();
   btn.disabled = false;
   cancelBtn.classList.add('hidden');
-  document.getElementById('btnAutoTranslateUndo').disabled = (done === 0);
+  if(!stageOnly) document.getElementById('btnAutoTranslateUndo').disabled = (done === 0);
   ahSetResumeControls();
+
+  if(stageOnly){
+    if(state.pendingDiffReview.length){
+      ahShowDiffPreview();
+    } else if(!state.autoTranslate.cancel && !failed){
+      toast('Gak ada perubahan buat dipreview (hasil translate sama kayak isi field sekarang).', 'ℹ️');
+    }
+  }
 
   if(isBatchScoped){
     state.doneBatches.add(batchKeyFor(rows));
@@ -4360,8 +4449,8 @@ async function runAutoTranslate(rowsOverride, retryEntries){
     ahShowModelIssuePopup(modelIssueInfo.provider, modelIssueInfo.message);
   } else if(failed){
     toast(`${batchLabel}${verbNoun} selesai, tapi ${failed} field gagal 😿`, '⚠️');
-    ahShowFailedRetryPopup(op, newFailedEntries, ()=> runAutoTranslate(null, state.autoTranslate.lastFailedEntries));
-  } else {
+    ahShowFailedRetryPopup(op, newFailedEntries, ()=> runAutoTranslate(null, state.autoTranslate.lastFailedEntries, false, stageOnly));
+  } else if(!stageOnly){
     toast(`${batchLabel}${done} field berhasil ${verbDone}! Cek dulu di tabel sebelum disimpen ya~`, opEmoji);
   }
 }
@@ -4394,7 +4483,7 @@ document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnAutoTranslate').addEventListener('click', runAutoTranslate);
-document.getElementById('btnAutoTranslatePreview').addEventListener('click', ahShowDiffPreview);
+document.getElementById('btnAutoTranslatePreview').addEventListener('click', ()=> runAutoTranslate(null, null, false, true));
 document.getElementById('btnRestoreDraft').addEventListener('click', ahRestoreAutosaveDraft);
 document.getElementById('btnThemeToggle').addEventListener('click', ()=>{
   const current = document.body.classList.contains('dark') ? 'dark' : 'light';
@@ -4404,7 +4493,7 @@ document.getElementById('btnThemeToggle').addEventListener('click', ()=>{
 });
 document.getElementById('btnResumeAutoTranslate').addEventListener('click', ()=> runAutoTranslate(null, null, true));
 document.getElementById('btnAutoTranslateCancel').addEventListener('click', ()=>{ state.autoTranslate.cancel = true; });
-document.getElementById('btnDiffCancel').addEventListener('click', ahHideDiffModal);
+document.getElementById('btnDiffCancel').addEventListener('click', ()=>{ state.pendingDiffReview = []; ahHideDiffModal(); });
 document.getElementById('btnDiffApply').addEventListener('click', ahApplyDiffPreview);
 
 document.getElementById('btnCopyBatch').addEventListener('click', async ()=>{
