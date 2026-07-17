@@ -848,7 +848,7 @@ footer{background:linear-gradient(180deg,transparent,var(--mist))}
 }
 .sc-img-wrap img{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
-  object-fit:cover!important;transform:scale(1);
+  object-fit:cover!important;transform:scale(1);will-change:transform;
   transition:transform .5s ease!important;
 }
 .sc:hover .sc-img-wrap img{transform:scale(1.08)!important}
