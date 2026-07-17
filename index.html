@@ -707,7 +707,7 @@ nav{box-shadow:var(--sh-sm)}
 /* Kartu lagu — sudut membulat & elevasi lembut saat hover */
 .sc-img-wrap,.sc-skel-img{border-radius:var(--r-md);box-shadow:var(--sh-sm)}
 .sc-img-wrap img{border-radius:inherit}
-.sc:hover .sc-img-wrap{box-shadow:var(--sh-md)}
+.sc:hover .sc-img-wrap{box-shadow:none}
 .sc:hover .scjp{color:var(--gold)}
 .sc-learn{border-radius:var(--r-full)}
 .rec-tag,.pop-tag{padding:.2rem .6rem;border-radius:var(--r-full);background:var(--sakura-dim)}
@@ -733,9 +733,30 @@ footer{background:linear-gradient(180deg,transparent,var(--mist))}
 @media(prefers-reduced-motion:reduce){.toast{transition:opacity .01s}}
 
 /* ══════════════════════════════════════════════════════════════
-   REDESIGN TAHAP 2 — hero, pencarian, filter, & kartu lagu
-   Struktur & fungsi JS tidak diubah; hanya tampilan visualnya.
+   HILANGKAN KOTAK BIRU TAP DI MOBILE
    ══════════════════════════════════════════════════════════════ */
+*{-webkit-tap-highlight-color:transparent}
+.sc,.fbtn,.gbtn,.nb,.nd-item,.fbtn-artis-link,.continue-read-btn,.continue-read-top,.scar-link,.footer-artists a{
+  -webkit-tap-highlight-color:transparent;outline:none;
+}
+.sc:focus,.sc:focus-visible{outline:none}
+
+/* ══════════════════════════════════════════════════════════════
+   MENU DROPDOWN — lebih tenang & terkelompok, tidak lagi berat
+   ══════════════════════════════════════════════════════════════ */
+#nav-dropdown{min-width:200px;padding:.4rem 0;max-height:calc(100vh - 5rem);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nd-item{
+  text-transform:none!important;letter-spacing:.01em!important;
+  font-family:var(--serif)!important;font-size:.86rem!important;font-weight:500!important;
+  padding:.52rem 1.25rem!important;
+}
+.nd-item.on{font-weight:700!important;font-style:italic}
+.nd-group-label{
+  font-family:var(--en);font-size:.52rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--smoke);padding:.55rem 1.25rem .2rem;
+}
+.nd-divider{margin:.35rem 0}
+
 
 /* ── HERO ── */
 .page-header{
@@ -805,13 +826,16 @@ footer{background:linear-gradient(180deg,transparent,var(--mist))}
 /* ── KARTU LAGU — gaya poster, judul di atas gambar ── */
 .song-grid{gap:1.7rem 1.3rem}
 .sc{
-  position:relative;display:block!important;
+  position:relative;display:block;
   border-radius:var(--r-lg)!important;overflow:hidden!important;
   aspect-ratio:3/4!important;height:auto!important;
   background:var(--cream);box-shadow:var(--sh-sm);
+  transform:translateZ(0);-webkit-transform:translateZ(0);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  isolation:isolate;
   transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s ease!important;
 }
-.sc:hover{transform:translateY(-6px)!important;box-shadow:var(--sh-lg)}
+.sc:hover{transform:translateZ(0) translateY(-6px)!important;box-shadow:var(--sh-lg)}
 .sc::after{
   content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(180deg,rgba(10,8,6,0) 32%,rgba(10,8,6,.58) 64%,rgba(6,5,3,.93) 100%);
@@ -820,18 +844,19 @@ footer{background:linear-gradient(180deg,transparent,var(--mist))}
 .sc-img-wrap{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
   border:none!important;border-radius:0!important;padding-top:0!important;
+  transform:translateZ(0);
 }
 .sc-img-wrap img{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
-  object-fit:cover!important;transition:transform .5s ease!important;
+  object-fit:cover!important;transform:scale(1) translateZ(0);
+  transition:transform .5s ease!important;
 }
-.sc:hover .sc-img-wrap img{transform:scale(1.08)!important}
+.sc:hover .sc-img-wrap img{transform:scale(1.08) translateZ(0)!important}
 .scb{
   position:absolute!important;left:0;right:0;bottom:0;z-index:2;
   padding:.95rem .85rem .9rem!important;
 }
-.scn{color:rgba(245,239,230,.6)!important}
-.scn::before{color:rgba(232,200,144,.85)!important}
+.scn{display:none!important}
 .rec-tag,.pop-tag{color:#f5efe6!important;background:rgba(245,239,230,.16)!important;padding:.2rem .6rem!important;border-radius:var(--r-full)}
 .rec-tag::before,.pop-tag::before{background:#f5efe6!important}
 .scjp{color:#fff!important}
@@ -869,17 +894,22 @@ footer{background:linear-gradient(180deg,transparent,var(--mist))}
     <button class="nd-item on" id="nd-cat" onclick="sv('cat');closeNavMenu()">Katalog</button>
     <a class="nd-item" href="artis/index.html">Artis</a>
     <a class="nd-item" href="manga/index.html">Manga</a>
+    <div class="nd-divider"></div>
+    <div class="nd-group-label">Belajar</div>
+    <a class="nd-item" href="bunpou-jlpt/bunpou-jlpt.html">Bunpou JLPT</a>
+    <a class="nd-item" href="bunpou-saved.html">Bunpou Tersimpan</a>
+    <a class="nd-item" href="kata/index.html">Glosarium</a>
+    <a class="nd-item" href="resources.html">Resources</a>
+    <div class="nd-divider"></div>
+    <div class="nd-group-label">Alat</div>
     <a class="nd-item" href="ankiconverter/index.html">Anki Converter</a>
     <a class="nd-item" href="ankihoney/index.html">AnkiHoney</a>
     <a class="nd-item" href="batchrename.html">Batch Rename</a>
     <a class="nd-item" href="metaclean">Meta Clean</a>
     <a class="nd-item" href="yt-fetcher">Youtuber Fetcher</a>
     <a class="nd-item" href="playlists.html">Setlist</a>
-    <a class="nd-item" href="bunpou-jlpt/bunpou-jlpt.html">Bunpou JLPT</a>
-    <a class="nd-item" href="bunpou-saved.html">Bunpou tersimpan</a>
-    <a class="nd-item" href="kata/index.html">Glosarium</a>
-    <a class="nd-item" href="resources.html">Resources</a>
     <a class="nd-item" href="spotify_lirik.html">Spotify Lirik</a>
+    <div class="nd-divider"></div>
     <a class="nd-item" href="stories.html">Cerita</a>
     <a class="nd-item" href="contact.html">Hubungi</a>
   </div>
@@ -1185,7 +1215,7 @@ function rc(filter='', animate=false){
   const q = filter.trim();
   let filtered = q ? songs.filter(s=>matches(s,q)) : [...songs];
   if(recOnly) filtered = filtered.filter(s=>s.recommended);
-  if(popOnly) filtered = filtered.sort((a,b)=>(b.views||0)-(a.views||0));
+  if(popOnly) filtered = filtered.filter(s=>(s.views||0)>0).sort((a,b)=>(b.views||0)-(a.views||0));
   if(artistFilterKey) filtered = filtered.filter(s => normalizeArtistKey(s.artist) === artistFilterKey);
   if(favOnly) filtered = filtered.filter(isSongFav);
 
