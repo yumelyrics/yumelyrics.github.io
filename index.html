@@ -651,6 +651,201 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sec-hd.ym-reveal,.filter-row.ym-reveal{transform:translate3d(0,8px,0)}
 }
 
+/* ══════════════════════════════════════════════════════════════
+   REFRESH VISUAL — lapisan modernisasi (sudut, kedalaman, kaca)
+   Semua aturan lama tetap utuh; blok ini hanya menghaluskan tampilan.
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-full:999px;
+  --sh-sm:0 1px 3px rgba(26,22,18,.07),0 1px 2px rgba(26,22,18,.04);
+  --sh-md:0 10px 26px rgba(26,22,18,.09),0 2px 8px rgba(26,22,18,.05);
+  --sh-lg:0 22px 50px rgba(26,22,18,.14),0 8px 20px rgba(26,22,18,.06);
+}
+[data-theme="dark"]{
+  --sh-sm:0 1px 3px rgba(0,0,0,.35);
+  --sh-md:0 12px 28px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3);
+  --sh-lg:0 26px 56px rgba(0,0,0,.55),0 8px 20px rgba(0,0,0,.35);
+}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* Nav — sedikit efek kaca di desktop, tetap solid & ringan di HP */
+nav{box-shadow:var(--sh-sm)}
+@media(pointer:fine){
+  nav{backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);background:rgba(245,240,234,.82)!important}
+  [data-theme="dark"] nav{background:rgba(15,13,11,.78)!important}
+}
+.nljp{transition:color .25s ease}
+.nav-logo:hover .nljp{color:var(--gold)}
+.nb,#nav-menu-btn,#theme-toggle{border-radius:var(--r-md)}
+.nb.adm{border-radius:var(--r-full)}
+#nav-dropdown{border-radius:var(--r-md);box-shadow:var(--sh-lg);overflow:hidden;backdrop-filter:blur(16px) saturate(1.3)}
+@keyframes dropDown{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.nd-item{position:relative}
+.nd-item.on::before{content:'';position:absolute;left:0;top:.45rem;bottom:.45rem;width:3px;border-radius:var(--r-full);background:var(--gold)}
+
+/* Header halaman — wash lembut di atas */
+.page-header{background:linear-gradient(180deg,var(--mist),transparent 75%)}
+.sec-ln{background:linear-gradient(90deg,var(--border),transparent)}
+[data-theme="dark"] .sec-ln{background:linear-gradient(90deg,rgba(201,169,110,.3),transparent)}
+
+/* Search — kotak lebih lembut & jelas fokusnya */
+.search-inp{border-radius:var(--r-lg);background:var(--cream);border-color:transparent;box-shadow:inset 0 0 0 1px var(--border);transition:box-shadow .25s ease,background .25s ease}
+.search-inp:focus{box-shadow:inset 0 0 0 1.5px var(--gold),0 0 0 4px var(--sakura-dim);background:var(--paper)}
+.search-box:focus-within .search-icon{color:var(--gold)}
+
+/* Filter — jadi pill terisi saat aktif (segmented control modern) */
+.fbtn,.fbtn-artis-link{border-radius:var(--r-full);background:var(--cream)}
+.fbtn.on{background:var(--ink);color:var(--paper)!important}
+[data-theme="dark"] .fbtn.on{background:var(--gold);color:#1a1612!important}
+.fbtn.on .fbtn-inner::after{display:none}
+.fbtn.on .fbtn-indicator{background:currentColor}
+#artistFilter{border-radius:var(--r-full);background:var(--cream);border-color:transparent}
+@media(min-width:769px){
+  .filter-row .fbtn,.filter-row .fbtn-artis-link{padding:.5rem 1.1rem!important}
+}
+
+/* Kartu lagu — sudut membulat & elevasi lembut saat hover */
+.sc-img-wrap,.sc-skel-img{border-radius:var(--r-md);box-shadow:var(--sh-sm)}
+.sc-img-wrap img{border-radius:inherit}
+.sc:hover .sc-img-wrap{box-shadow:var(--sh-md)}
+.sc:hover .scjp{color:var(--gold)}
+.sc-learn{border-radius:var(--r-full)}
+.rec-tag,.pop-tag{padding:.2rem .6rem;border-radius:var(--r-full);background:var(--sakura-dim)}
+.pop-tag{background:rgba(196,154,64,.12)}
+
+/* Kartu "lanjutkan baca" */
+.continue-read{border-radius:var(--r-md);box-shadow:var(--sh-sm)}
+.continue-read-cover{border-radius:var(--r-sm)}
+.continue-read-btn{border-radius:var(--r-full)}
+
+/* Tombol umum */
+.gbtn,.spbtn{border-radius:var(--r-full)}
+
+/* Footer */
+footer{background:linear-gradient(180deg,transparent,var(--mist))}
+.footer-artists a{padding:.32rem .8rem;border:1px solid var(--border);border-radius:var(--r-full);background:var(--cream);transition:color .2s,background-color .2s,border-color .2s}
+.footer-artists a:hover{background:var(--sakura-dim);border-color:var(--gold)}
+
+/* Toast — belum ada gaya dasar sebelumnya, ditambahkan agar tampil rapi */
+.toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--paper);padding:.8rem 1.4rem;border-radius:var(--r-full);font-size:.75rem;font-family:var(--serif);font-style:italic;box-shadow:var(--sh-lg);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:500;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:768px){.toast{transform:translateY(12px)}.toast.on{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.toast{transition:opacity .01s}}
+
+/* ══════════════════════════════════════════════════════════════
+   REDESIGN TAHAP 2 — hero, pencarian, filter, & kartu lagu
+   Struktur & fungsi JS tidak diubah; hanya tampilan visualnya.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── HERO ── */
+.page-header{
+  position:relative;overflow:hidden;
+  padding:3.5rem 3rem 3rem!important;
+  background:
+    radial-gradient(1100px 420px at 12% -15%, rgba(196,154,64,.16), transparent 60%),
+    radial-gradient(900px 380px at 100% -10%, rgba(168,55,78,.13), transparent 55%);
+}
+[data-theme="dark"] .page-header{
+  background:
+    radial-gradient(1100px 420px at 12% -15%, rgba(201,169,110,.15), transparent 60%),
+    radial-gradient(900px 380px at 100% -10%, rgba(196,99,122,.16), transparent 55%);
+}
+.page-header-inner{position:relative;z-index:1}
+.page-header-meta>span{display:inline-flex;align-items:center;padding:.35rem .85rem;border-radius:var(--r-full);background:var(--mist);border:1px solid var(--border)}
+#online-counter{padding:.32rem .8rem;border-radius:var(--r-full);background:var(--mist);border:1px solid var(--border)}
+.page-header h1{
+  font-size:clamp(2.2rem,5.6vw,3.6rem)!important;
+  font-weight:300!important;line-height:1.06!important;
+  letter-spacing:-.01em;margin-bottom:.65rem!important;
+}
+.hero-accent{
+  background:linear-gradient(100deg,var(--gold2),var(--rose) 75%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.page-header p{font-size:.95rem!important;font-style:normal!important;color:var(--muted)}
+
+/* ── SEARCH — pill besar, melayang di atas daftar ── */
+.search-wrap{position:relative;z-index:3}
+.search-box{max-width:640px}
+.search-inp{
+  padding:1.05rem 1.3rem 1.05rem 3.1rem!important;
+  font-size:.92rem!important;
+  border-radius:var(--r-full)!important;
+  box-shadow:var(--sh-md)!important;
+}
+.search-icon{left:1.35rem!important;font-size:1.05rem!important}
+.search-clear{right:1.2rem!important}
+@media(min-width:769px){
+  .search-wrap{margin-top:-1.6rem;padding-bottom:1.6rem!important}
+}
+
+/* ── FILTER — chip berisi ikon, aktif jadi gradient ── */
+.fbtn-icon{display:inline-flex;margin-right:.4rem;opacity:.7;transition:opacity .2s}
+.fbtn.on .fbtn-icon{opacity:1}
+.fbtn-indicator{display:none!important}
+.fbtn.on{
+  background:linear-gradient(135deg,var(--gold2),var(--rose))!important;
+  color:#fff!important;border-color:transparent!important;
+  box-shadow:0 10px 22px rgba(168,55,78,.24);
+}
+[data-theme="dark"] .fbtn.on{
+  background:linear-gradient(135deg,var(--gold),var(--rose))!important;
+  color:#1a1612!important;
+  box-shadow:0 10px 22px rgba(201,169,110,.2);
+}
+.fbtn-artis-link{background:transparent!important;border:1px solid var(--border)!important}
+.fbtn-artis-link:hover{background:var(--sakura-dim)!important;border-color:var(--gold)!important}
+#artistFilter{
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e5349' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat;background-position:right .85rem center;background-size:13px;
+  padding-right:2.2rem!important;
+}
+
+/* ── KARTU LAGU — gaya poster, judul di atas gambar ── */
+.song-grid{gap:1.7rem 1.3rem}
+.sc{
+  position:relative;display:block!important;
+  border-radius:var(--r-lg)!important;overflow:hidden!important;
+  aspect-ratio:3/4!important;height:auto!important;
+  background:var(--cream);box-shadow:var(--sh-sm);
+  transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s ease!important;
+}
+.sc:hover{transform:translateY(-6px)!important;box-shadow:var(--sh-lg)}
+.sc::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,8,6,0) 32%,rgba(10,8,6,.58) 64%,rgba(6,5,3,.93) 100%);
+}
+[data-theme="dark"] .sc::after{background:linear-gradient(180deg,rgba(0,0,0,0) 28%,rgba(0,0,0,.62) 60%,rgba(0,0,0,.95) 100%)}
+.sc-img-wrap{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  border:none!important;border-radius:0!important;padding-top:0!important;
+}
+.sc-img-wrap img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;transition:transform .5s ease!important;
+}
+.sc:hover .sc-img-wrap img{transform:scale(1.08)!important}
+.scb{
+  position:absolute!important;left:0;right:0;bottom:0;z-index:2;
+  padding:.95rem .85rem .9rem!important;
+}
+.scn{color:rgba(245,239,230,.6)!important}
+.scn::before{color:rgba(232,200,144,.85)!important}
+.rec-tag,.pop-tag{color:#f5efe6!important;background:rgba(245,239,230,.16)!important;padding:.2rem .6rem!important;border-radius:var(--r-full)}
+.rec-tag::before,.pop-tag::before{background:#f5efe6!important}
+.scjp{color:#fff!important}
+.sc:hover .scjp{color:var(--gold2)!important}
+.scro{color:rgba(245,239,230,.78)!important}
+.scid{color:#f0c6d2!important}
+.scar,.scar-link{color:rgba(245,239,230,.75)!important}
+.scarr{color:#fff!important}
+.sc-learn{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.35)!important;color:#fff!important}
+@media(max-width:768px){
+  .sc{aspect-ratio:3/4!important}
+  .scb{padding:.7rem .6rem .65rem!important}
+}
+
 </style>
 </head>
 <body>
@@ -701,7 +896,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
           <div class="online-text"><span id="online-count" class="online-num">—</span><span class="online-sub">online</span></div>
         </div>
       </div>
-      <h1>Lirik &amp; Terjemahan Lagu Jepang</h1>
+      <h1><span class="hero-accent">Lirik &amp; Terjemahan</span><br>Lagu Jepang</h1>
       <p>Romaji · Terjemahan Indonesia · <span class="js-hero-song-count" id="heroStatCount">—</span> lagu</p>
       <div id="continue-read" class="continue-read" style="display:none"></div>
     </div>
@@ -718,9 +913,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
   <div class="filter-row">
     <div class="filter-grid">
-      <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Rekomendasi</span></span></button>
-      <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Populer</span></span></button>
-      <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-text">Favorit</span></span></button>
+      <button class="fbtn" id="recBtn" onclick="toggleRec(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-icon"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 22 12 18.27 5.8 22 7 14.14 2 9.27l7.1-1.01L12 2z"/></svg></span><span class="fbtn-text">Rekomendasi</span></span></button>
+      <button class="fbtn" id="popBtn" onclick="togglePop(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-icon"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2c1 3-3 4-3 8a3 3 0 006 0c0-1-1-2-1-2 2 1 4 3 4 6a6 6 0 11-12 0c0-5 3-6 6-12z"/></svg></span><span class="fbtn-text">Populer</span></span></button>
+      <button class="fbtn" id="favBtn" onclick="toggleFavFilter(event)"><span class="fbtn-inner"><span class="fbtn-indicator"></span><span class="fbtn-icon"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.7 1.2 6 3.6C14.3 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg></span><span class="fbtn-text">Favorit</span></span></button>
       <a href="artis/index.html" class="fbtn-artis-link">Semua Artis →</a>
     </div>
     <select id="artistFilter" onchange="onArtistFilter(this.value)" aria-label="Filter artis">
