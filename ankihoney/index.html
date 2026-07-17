@@ -386,12 +386,12 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
   body.dark .dropzone{ background:linear-gradient(160deg,#171b2e,#1b1430); color:#f5b0dc; border-color:#3a2f55; }
   body.dark .dropzone small{ color:#a7a9c9; }
   body.dark .dropzone.drag{ background:#231a3d; }
-  body.dark #autoTranslatePanel, body.dark #batchPanel{ background:#221b3a !important; border-color:#5c4a7a !important; }
-  body.dark #autoTranslatePanel .field-label, body.dark #batchPanel .field-label{ color:#f5b0dc; }
-  body.dark #autoTranslatePanel p, body.dark #batchPanel p,
-  body.dark #autoTranslatePanel small, body.dark #batchPanel small,
-  body.dark #atCostEstimate, body.dark #atProgress, body.dark #batchInfo, body.dark #resumeInfo{ color:#b8a6ff; }
-  body.dark #autoTranslatePanel label, body.dark #batchPanel label{ color:#d7d7ff; }
+  body.dark #autoTranslatePanel, body.dark #batchPanel, body.dark #mergeDeckPanel{ background:#221b3a !important; border-color:#5c4a7a !important; }
+  body.dark #autoTranslatePanel .field-label, body.dark #batchPanel .field-label, body.dark #mergeDeckPanel .field-label{ color:#f5b0dc; }
+  body.dark #autoTranslatePanel p, body.dark #batchPanel p, body.dark #mergeDeckPanel p,
+  body.dark #autoTranslatePanel small, body.dark #batchPanel small, body.dark #mergeDeckPanel small,
+  body.dark #atCostEstimate, body.dark #atProgress, body.dark #batchInfo, body.dark #resumeInfo, body.dark #mergeDeckStatus{ color:#b8a6ff; }
+  body.dark #autoTranslatePanel label, body.dark #batchPanel label, body.dark #mergeDeckPanel label{ color:#d7d7ff; }
 
 .toast{
   display:flex; align-items:center; gap:8px;
@@ -823,6 +823,16 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
         <button class="btn ghost" id="btnClearTableSearch" type="button" style="white-space:nowrap; padding:10px 14px;">✖️ Clear</button>
       </div>
       <div id="tableSearchInfo" style="font-weight:800; color:var(--ink-soft); white-space:nowrap;"></div>
+    </div>
+
+    <div id="mergeDeckPanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
+      <label class="field-label" style="margin-bottom:8px;">🧩 Gabung Deck Kedua <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(opsional — tambahin semua kartu dari file .apkg lain ke deck yang lagi dibuka di atas)</span></label>
+      <p style="font-size:.72rem; color:var(--ink-soft); font-weight:600; margin:2px 0 10px;">Deck yang lagi kebuka sekarang otomatis jadi <b>deck utama</b>. Pilih file .apkg <b>kedua</b> di bawah buat digabung masuk ke deck utama ini -- note type &amp; deck yang namanya sama bakal disatuin, yang beda bakal ditambahin baru, dan ID yang bentrok otomatis diganti biar aman. Gabungan barunya baru beneran kesimpen pas kamu klik tombol Download di bawah nanti.</p>
+      <div class="btn-row">
+        <button class="btn ghost" id="btnMergeDeckPick" type="button">📂 Pilih Deck Kedua (.apkg)<small>digabungin ke deck utama di atas</small></button>
+        <input type="file" id="mergeDeckInput" accept=".apkg" class="hidden" />
+      </div>
+      <div id="mergeDeckStatus" style="margin-top:8px; font-weight:700; font-size:.82rem; color:var(--ink-soft);"></div>
     </div>
 
     <div id="autoTranslatePanel" style="margin-top:14px; padding:14px 16px; border-radius:16px; background:var(--blush); border:2px dashed var(--pink);">
@@ -1339,6 +1349,8 @@ const state = {
   cardsRows: null,
   revlogRows: null,
   isMergedDeck: false,
+  extraDeckSources: [], // dari fitur "Gabung Deck Kedua": [{ zip, mediaMap (nomor->nama asli file media deck itu), renameMap (nama lama->nama baru KALAU ada tabrakan nama sama deck utama) }]
+  primaryMediaMap: null, // cache nomor->nama file media deck UTAMA (dibaca sekali pas gabung deck pertama kali), dipakai buat ngecek tabrakan nama file
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
   fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
@@ -1512,6 +1524,12 @@ async function ahLoadApkgFileData(fileName, buf, zip, SQL){
   };
 }
 
+function ahMaxNum(arr){
+  let m = 0;
+  for(let i=0;i<arr.length;i++){ if(arr[i] > m) m = arr[i]; }
+  return m;
+}
+
 function ahHashBytesList(bytesList){
   let h1 = 2166136261, h2 = 2166136261;
   for(const bytes of bytesList){
@@ -1621,6 +1639,11 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   state.doneBatches = new Set();
   state.pasteSnapshot = null;
   state.cardBg = state.cardBg || { mode:'upload', imageUrl:'', dataUrl:null, bytes:null, mediaFilename:'_ankihoney_card_bg.jpg', fit:'cover', posX:50, posY:50, mobilePosX:50, mobilePosY:50, previewDevice:'desktop' };
+  // (state.isMergedDeck udah di-set true sama caller-nya buat kasus ini, jangan ditimpa balik jadi false di sini)
+  state.extraDeckSources = [];
+  state.primaryMediaMap = null;
+  const mergeStatusEl0 = document.getElementById('mergeDeckStatus');
+  if(mergeStatusEl0) mergeStatusEl0.innerHTML = '';
 
   populateModelSelect();
   populateDeckNameInputs();
@@ -1632,6 +1655,205 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   state.resumeState = ahLoadResumeState(state.deckHash);
   ahSetResumeControls();
   ahDetectDuplicateCards();
+}
+
+/* ---------------- Gabung Deck Kedua ---------------- */
+const mergeDeckInput = document.getElementById('mergeDeckInput');
+document.getElementById('btnMergeDeckPick').addEventListener('click', ()=> mergeDeckInput.click());
+mergeDeckInput.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(f) handleMergeSecondDeck(f);
+  mergeDeckInput.value = '';
+});
+
+async function handleMergeSecondDeck(file){
+  const statusEl = document.getElementById('mergeDeckStatus');
+  const btn = document.getElementById('btnMergeDeckPick');
+
+  if(!state.notes || !state.notes.length || (!state.db && !state.isMergedDeck)){
+    statusEl.innerHTML = '😿 Buka deck utama dulu ya (Step 1), baru bisa gabungin deck kedua.';
+    return;
+  }
+  if(!file.name || !file.name.toLowerCase().endsWith('.apkg')){
+    statusEl.innerHTML = '😿 File kedua harus format .apkg juga ya.';
+    return;
+  }
+
+  btn.disabled = true;
+  const origLabel = btn.innerHTML;
+  statusEl.innerHTML = '<span class="loader"><span></span><span></span><span></span></span> Lagi baca &amp; gabungin deck kedua...';
+  say('Lagi gabungin deck kedua ke deck utama, tunggu ya~ 🧩');
+
+  try{
+    const [SQL] = await Promise.all([sqlReadyPromise]);
+    const buf2 = await file.arrayBuffer();
+    const zip2 = await JSZip.loadAsync(buf2);
+    const file2 = await ahLoadApkgFileData(file.name, buf2, zip2, SQL);
+
+    if(!file2.notes.length){
+      statusEl.innerHTML = '😿 Deck kedua ini kosong, gak ada kartu yang ketemu. Gak jadi digabung.';
+      return;
+    }
+
+    // Pas pertama kali fitur ini dipake: cardsRows/revlogRows deck UTAMA masih cuma
+    // ada di dalam state.db (SQLite), belum jadi array JS -- ambil dulu apa adanya
+    // di sini SEBELUM ditambahin data deck kedua.
+    if(!state.isMergedDeck){
+      state.cardsRows = readRowsSafe(state.db,
+        "SELECT id,nid,did,ord,mod,usn,type,queue,due,ivl,factor,reps,lapses,left,odue,odid,flags,data FROM cards");
+      state.revlogRows = readRowsSafe(state.db,
+        "SELECT id,cid,usn,ease,ivl,lastIvl,factor,time,type FROM revlog");
+      state.extraDeckSources = [];
+      state.primaryMediaMap = await ahReadZipMediaMap(state.zip);
+    }
+
+    // --- cek tabrakan nama file media (gambar/audio) sama deck utama / deck yang udah digabung sebelumnya ---
+    const existingMediaNames = new Set(Object.values(state.primaryMediaMap || {}));
+    state.extraDeckSources.forEach(src=>{
+      Object.keys(src.mediaMap).forEach(num=>{
+        const orig = src.mediaMap[num];
+        const final = (src.renameMap && src.renameMap[orig]) || orig;
+        existingMediaNames.add(final);
+      });
+    });
+    const media2Map = await ahReadZipMediaMap(zip2);
+    const renameMap = {};
+    Object.values(media2Map).forEach(orig=>{
+      if(!existingMediaNames.has(orig)){ existingMediaNames.add(orig); return; }
+      const dotIdx = orig.lastIndexOf('.');
+      const base = dotIdx > 0 ? orig.slice(0, dotIdx) : orig;
+      const ext = dotIdx > 0 ? orig.slice(dotIdx) : '';
+      let n = 2, candidate;
+      do{ candidate = `${base}_deck2-${n}${ext}`; n++; }while(existingMediaNames.has(candidate));
+      renameMap[orig] = candidate;
+      existingMediaNames.add(candidate);
+    });
+    // Nama file yang bentrok udah diganti -- update referensinya di isi field note deck kedua
+    // (contoh: <img src="nama.jpg"> atau [sound:nama.mp3]) biar tetep nunjuk ke file yang bener.
+    if(Object.keys(renameMap).length){
+      file2.notes.forEach(n=>{
+        n.fields = n.fields.map(f=>{
+          let out = f;
+          Object.keys(renameMap).forEach(oldName=>{
+            if(out.indexOf(oldName) !== -1) out = out.split(oldName).join(renameMap[oldName]);
+          });
+          return out;
+        });
+      });
+    }
+    state.extraDeckSources.push({ zip: zip2, mediaMap: media2Map, renameMap });
+
+    // --- dedup & remap note type (model): note type yang namanya + field-nya SAMA PERSIS disatuin, sisanya ditambahin baru ---
+    const midMap = {};
+    Object.keys(file2.models).forEach(mid=>{
+      const incoming = file2.models[mid];
+      const existingId = Object.keys(state.models).find(id=>
+        state.models[id].name === incoming.name &&
+        JSON.stringify(state.models[id].flds) === JSON.stringify(incoming.flds)
+      );
+      if(existingId){ midMap[mid] = existingId; return; }
+      let n = 1;
+      while(state.models[String(n)]) n++;
+      const newMid = String(n);
+      state.models[newMid] = Object.assign({}, incoming, { id: newMid });
+      midMap[mid] = newMid;
+    });
+
+    // --- dedup & remap deck: deck yang namanya SAMA PERSIS disatuin, sisanya ditambahin baru ---
+    const didMap = {};
+    Object.keys(file2.decksMap).forEach(did=>{
+      const existingId = Object.keys(state.decksMap).find(id=> state.decksMap[id] === file2.decksMap[did]);
+      if(existingId){ didMap[did] = existingId; return; }
+      let n = 1;
+      while(state.decksMap[String(n)]) n++;
+      const newDid = String(n);
+      state.decksMap[newDid] = file2.decksMap[did];
+      if(file2.decksDescMap && file2.decksDescMap[did] !== undefined) state.decksDescMap[newDid] = file2.decksDescMap[did];
+      didMap[did] = newDid;
+    });
+
+    // --- remap ID note/card/revlog deck kedua biar gak tabrakan sama punya deck utama ---
+    let nextNoteId = ahMaxNum(state.notes.map(n=> parseInt(n.id)||0)) + 1;
+    const noteIdMap = {};
+    file2.notes.forEach(n=>{ noteIdMap[n.id] = nextNoteId++; });
+
+    let nextCardId = ahMaxNum(state.cardsRows.map(r=> parseInt(r[0])||0)) + 1;
+    const cardIdMap = {};
+
+    let nextRevlogId = ahMaxNum(state.revlogRows.map(r=> parseInt(r[0])||0)) + 1;
+
+    file2.notes.forEach(n=>{
+      state.notes.push({
+        id: noteIdMap[n.id],
+        guid: n.guid,
+        mid: midMap[n.mid] || n.mid,
+        tags: n.tags,
+        fields: n.fields.slice(),
+        originalFields: n.fields.slice(),
+        dirty: false
+      });
+    });
+
+    file2.cardsRows.forEach(row=>{
+      const newId = nextCardId++;
+      cardIdMap[row[0]] = newId;
+      const nid = noteIdMap[row[1]];
+      const did = didMap[String(row[2])] || String(row[2]);
+      state.cardsRows.push([newId, nid, parseInt(did), row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17]]);
+    });
+
+    file2.revlogRows.forEach(row=>{
+      const newId = nextRevlogId++;
+      const cid = cardIdMap[row[1]] !== undefined ? cardIdMap[row[1]] : row[1];
+      state.revlogRows.push([newId, cid, row[2], row[3], row[4], row[5], row[6], row[7], row[8]]);
+    });
+
+    state.usedDeckIds = [...new Set(state.cardsRows.map(r=> String(r[2])))];
+    state.isMergedDeck = true;
+    // Paksa lewat jalur "rebuild penuh" pas save -- data note/card gabungan cuma ada
+    // di array JS (state.notes/cardsRows/revlogRows), BUKAN di dalam state.db, jadi
+    // jalur "quick update" (yang nulis balik ke state.db) gak boleh dipake lagi.
+    state.isLatest = true;
+    state.deckHash = (state.deckHash || 'm') + '_+_' + ahHashBytes(new Uint8Array(buf2));
+    state.originalFileName = state.originalFileName.replace(/\.apkg$/i, '') + '_gabung.apkg';
+
+    // --- refresh UI, jaga supaya model/rename deck yang lagi dipilih user gak ke-reset ---
+    const prevMid = state.currentMid;
+    const prevOverrides = Object.assign({}, state.deckNameOverrides);
+
+    populateModelSelect();
+    if(prevMid && state.models[prevMid]){
+      state.currentMid = prevMid;
+      const sel = document.getElementById('modelSelect');
+      if(sel) sel.value = prevMid;
+      populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor();
+      ahAtRefreshMappingsForModel(); ahDetectDuplicateCards(); ahUpdateCostEstimate();
+    }
+
+    populateDeckNameInputs();
+    Object.keys(prevOverrides).forEach(did=>{
+      if(state.decksMap[did] !== undefined){
+        state.deckNameOverrides[did] = prevOverrides[did];
+        const inp = document.querySelector(`.deckNameInput[data-did="${did}"]`);
+        if(inp) inp.value = prevOverrides[did];
+      }
+    });
+
+    state.resumeState = ahLoadResumeState(state.deckHash);
+    ahSetResumeControls();
+    ahDetectDuplicateCards();
+
+    statusEl.innerHTML = `✅ Deck kedua digabung! Total sekarang <b>${state.notes.length}</b> catatan.`;
+    toast('Deck kedua berhasil digabung ke deck utama!', '🧩');
+    say(`Yeay~ dua deck udah jadi satu! Total ${state.notes.length} kartu sekarang~ 🎉`);
+  }catch(err){
+    console.error(err);
+    statusEl.innerHTML = '😿 Gagal gabungin deck kedua: ' + (err.message || err);
+    say('Aduh error pas gabungin deck-nya... coba cek lagi file-nya ya 😿');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = origLabel;
+  }
 }
 
 async function handleApkgFile(file){
@@ -1733,6 +1955,12 @@ async function handleApkgFile(file){
     toast('Deck berhasil dibuka!', '🎉');
 
     state.deckHash = ahHashBytes(new Uint8Array(buf));
+    state.isMergedDeck = false; // reset fitur "Gabung Deck Kedua" tiap kali buka deck utama baru dari awal
+    state.extraDeckSources = [];
+    state.primaryMediaMap = null;
+    state.cardsRows = null;
+    state.revlogRows = null;
+    document.getElementById('mergeDeckStatus').innerHTML = '';
     state.templateOriginals = {}; // reset cache "desain asli" tiap kali buka deck baru
     state.fieldInstructionsByModel = {}; // reset instruksi khusus field juga -- deck baru = note type baru semua
     state.fieldSelectionByModel = {}; // reset juga cache centang/lock field per note type
@@ -2391,6 +2619,26 @@ function switchTemplatePreviewSide(side){
 // asli), sama kayak logic pas export (termasuk bongkar zstd kalau manifestnya
 // sendiri kekompres) -- dipakai biar preview realtime bisa nunjukin gambar &
 // muterin audio ASLI dari deck, bukan cuma teks mentah [sound:...]/ikon patah.
+// Versi generik (gak di-cache, bisa dipake buat zip APAPUN, bukan cuma state.zip)
+// dari pembaca manifest 'media' -- dipakai fitur Gabung Deck buat baca nama file
+// media asli dari deck KEDUA yang lagi digabungin.
+async function ahReadZipMediaMap(zip){
+  if(!zip) return {};
+  const entry = zip.file('media');
+  if(!entry) return {};
+  let bytes = await entry.async('uint8array');
+  if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+    try{ bytes = zstdDecompressSafe(bytes); }
+    catch(e){ console.warn('gagal bongkar manifest media zstd (best-effort, generik)', e); return {}; }
+  }
+  try{
+    const asText = new TextDecoder().decode(bytes);
+    return JSON.parse(asText);
+  }catch(e){
+    return tryParseMediaProtobuf(bytes) || {};
+  }
+}
+
 async function ahGetMediaNameMap(){
   if(state._mediaMapPromise) return state._mediaMapPromise;
   state._mediaMapPromise = (async ()=>{
@@ -2427,9 +2675,20 @@ async function ahGetMediaBlobUrl(filename){
   if(state.mediaBlobUrlCache[filename]) return state.mediaBlobUrlCache[filename];
   const nameMap = await ahGetMediaNameMap();
   let num = null;
+  let sourceZip = state.zip;
   for(const k in nameMap){ if(nameMap[k] === filename){ num = k; break; } }
+  // Ga ketemu di deck utama -- coba cari di deck(-deck) tambahan hasil fitur Gabung Deck
+  if(num === null && state.extraDeckSources && state.extraDeckSources.length){
+    for(const src of state.extraDeckSources){
+      for(const k in src.mediaMap){
+        const finalName = (src.renameMap && src.renameMap[src.mediaMap[k]]) || src.mediaMap[k];
+        if(finalName === filename){ num = k; sourceZip = src.zip; break; }
+      }
+      if(num !== null) break;
+    }
+  }
   if(num === null) return null;
-  const entry = state.zip.file(num);
+  const entry = sourceZip.file(num);
   if(!entry) return null;
   let bytes;
   try{ bytes = await entry.async('uint8array'); }catch(e){ return null; }
@@ -5145,7 +5404,7 @@ importFileInput.addEventListener('change', async e=>{
 
 /* ---------------- save final apkg ---------------- */
 document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
-  if(!state.db){ toast('Belum ada deck yang dibuka!', '😿'); return; }
+  if(!state.notes || !state.notes.length || (!state.db && !state.isMergedDeck)){ toast('Belum ada deck yang dibuka!', '😿'); return; }
   const btn = document.getElementById('btnDownloadApkg');
   const origLabel = btn.innerHTML;
   btn.disabled = true;
@@ -5154,7 +5413,7 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
   try{
     let updatedCount = state.notes.filter(n=>n.dirty).length;
 
-    if(!state.isLatest){
+    if(!state.isLatest && !state.isMergedDeck){
       // Format lama: UPDATE flds+tags di database yang sama. Semua note ditulis ulang
       // (bukan cuma yang dirty) supaya tag watermark ikut ke-suntik ke semuanya.
       const stmt = state.db.prepare("UPDATE notes SET flds=?, tags=?, mod=? WHERE id=?");
@@ -5377,10 +5636,13 @@ async function rebuildAsLegacyApkg(){
   const now = Math.floor(Date.now()/1000);
   const nowMs = Date.now();
 
-  // 1. Ambil cards & revlog apa adanya (kolomnya stabil lintas skema v11-v18)
-  const cardsRows = readRowsSafe(state.db,
+  // 1. Ambil cards & revlog apa adanya (kolomnya stabil lintas skema v11-v18).
+  // KALAU deck ini hasil gabungan (fitur Gabung Deck Kedua), note/card/revlog
+  // tambahannya cuma ada di array JS (state.cardsRows/revlogRows), BUKAN di
+  // dalam state.db -- jadi ambil dari situ, bukan query ulang ke state.db.
+  const cardsRows = (state.isMergedDeck && state.cardsRows) ? state.cardsRows : readRowsSafe(state.db,
     "SELECT id,nid,did,ord,mod,usn,type,queue,due,ivl,factor,reps,lapses,left,odue,odid,flags,data FROM cards");
-  const revlogRows = readRowsSafe(state.db,
+  const revlogRows = (state.isMergedDeck && state.revlogRows) ? state.revlogRows : readRowsSafe(state.db,
     "SELECT id,cid,usn,ease,ivl,lastIvl,factor,time,type FROM revlog");
 
   // 2. Siapkan database baru dengan skema 11 (Legacy 2, kompatibel semua versi Anki)
@@ -5577,6 +5839,40 @@ async function rebuildAsLegacyApkg(){
       mediaDecompressFailed.length + ' dari ' + mediaFiles.length + ' file media (audio/gambar) gagal dibongkar & mungkin gak kebaca di Anki.\n' +
       'Nomor file: ' + contoh
     );
+  }
+
+  // Gabungin media dari deck KEDUA (kalau user pake fitur "Gabung Deck Kedua") --
+  // tiap sumber tambahan dikasih nomor file baru (lanjutan dari nomor tertinggi
+  // yang udah dipakai) biar gak tabrakan sama nomor file media deck utama. Nama
+  // file ASLI yang direferensiin di field notes tetep dipertahankan apa adanya,
+  // kecuali yang udah di-rename otomatis pas proses gabung (lihat renameMap,
+  // dibikin di handleMergeSecondDeck) buat ngehindarin tabrakan nama.
+  if(state.extraDeckSources && state.extraDeckSources.length){
+    let mergedMediaMap = {};
+    try{ mergedMediaMap = JSON.parse(mediaJson); }catch(e){ mergedMediaMap = {}; }
+    for(const extra of state.extraDeckSources){
+      const usedNums = Object.keys(mergedMediaMap).map(n=>parseInt(n))
+        .concat(Object.keys(newZip.files).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n)))
+        .filter(n=>!isNaN(n));
+      let nextNum = ahMaxNum(usedNums.map(n=>n+1));
+      for(const num in extra.mediaMap){
+        const entry = extra.zip.file(num);
+        if(!entry) continue;
+        let bytes;
+        try{ bytes = await entry.async('uint8array'); }catch(e){ continue; }
+        if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+          try{ bytes = zstdDecompressSafe(bytes); }
+          catch(e){ console.warn('gagal decompress media zstd deck kedua (best-effort), file='+num, e); continue; }
+        }
+        const origName = extra.mediaMap[num];
+        const finalName = (extra.renameMap && extra.renameMap[origName]) || origName;
+        const key = String(nextNum++);
+        newZip.file(key, bytes);
+        mergedMediaMap[key] = finalName;
+      }
+    }
+    mediaJson = JSON.stringify(mergedMediaMap);
+    newZip.file('media', mediaJson);
   }
 
   // Sisipin foto background (kalau ada & mode upload) sebagai file media baru + update mapping-nya.
