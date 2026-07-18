@@ -814,6 +814,7 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
       <button class="btn ghost" id="btnImportFile">⬆️ Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
+      <button class="btn alt" id="btnExportPdf">🖨️ Export ke PDF<small>cetak jadi flashcard fisik</small></button>
     </div>
 
     <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -1028,6 +1029,168 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
     <div class="modal-actions">
       <button class="btn ghost" id="btnCancelPaste">Batal</button>
       <button class="btn mint" id="btnApplyPaste">✨ Terapkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF / PRINT FLASHCARD MODAL -->
+<div class="modal-bg" id="ahPdfModalBg">
+  <div class="modal">
+    <h3>🖨️ Export ke PDF — Cetak Flashcard Fisik</h3>
+    <p style="font-weight:700; color:var(--ink-soft); font-size:.85rem; margin-top:0;">Pilih sendiri field mana yang masuk ke sisi Depan &amp; Belakang kartu (layout polos & rapi, gak pake desain asli note type biar gak berantakan pas dicetak kecil). Disusun jadi grid siap cetak, dibuka di tab baru. Di tab itu ada tombol <b>"🖨️ Cetak / Save as PDF"</b> -- klik kalau udah siap (dialog print browser BARU kebuka pas itu, bukan otomatis, biar lo bebas balik ke sini dulu buat ubah-ubah pengaturan tanpa keblokir).</p>
+
+    <div id="pdfFieldPickerWrap" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <div style="flex:1 1 220px;">
+        <label class="field-label">Field buat Sisi Depan</label>
+        <div id="pdfFrontFieldList" style="max-height:140px; overflow-y:auto; border:2px solid var(--blush); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+      <div style="flex:1 1 220px;">
+        <label class="field-label">Field buat Sisi Belakang</label>
+        <div id="pdfBackFieldList" style="max-height:140px; overflow-y:auto; border:2px solid var(--blush); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+      <div style="flex:1 1 140px;">
+        <label class="field-label">Ukuran Font</label>
+        <select id="pdfFieldFontSize">
+          <option value="small">Kecil</option>
+          <option value="medium" selected>Sedang</option>
+          <option value="large">Besar</option>
+        </select>
+        <label class="field-label" style="margin-top:10px; display:flex; align-items:center; gap:8px; text-transform:none;">
+          <input type="checkbox" id="pdfFieldShowLabel" checked style="width:16px; height:16px; cursor:pointer;" /> Tampilin nama field
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <div style="flex:1 1 140px;">
+        <label class="field-label">Ukuran Kertas</label>
+        <select id="pdfPaperSize">
+          <option value="a4">A4</option>
+          <option value="letter">Letter (US)</option>
+        </select>
+      </div>
+      <div style="flex:1 1 160px;">
+        <label class="field-label">Ukuran Kotak Kartu</label>
+        <select id="pdfSizeMode">
+          <option value="grid" selected>Otomatis (isi Kolom × Baris)</option>
+          <option value="custom">Custom (tentuin lebar × tinggi sendiri)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="pdfColsRowsWrap" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <div style="flex:1 1 100px;">
+        <label class="field-label">Kolom</label>
+        <select id="pdfCols">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div style="flex:1 1 100px;">
+        <label class="field-label">Baris</label>
+        <select id="pdfRows">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="pdfCustomSizeWrap" class="hidden" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <div style="flex:1 1 120px;">
+        <label class="field-label">Lebar Kartu (cm)</label>
+        <input type="number" id="pdfCardWidthCm" value="6" min="1" max="20" step="0.1" style="width:100%; padding:8px 10px; border-radius:10px; border:2px solid var(--blush); font-weight:700;" />
+      </div>
+      <div style="flex:1 1 120px;">
+        <label class="field-label">Tinggi Kartu (cm)</label>
+        <input type="number" id="pdfCardHeightCm" value="4" min="1" max="20" step="0.1" style="width:100%; padding:8px 10px; border-radius:10px; border:2px solid var(--blush); font-weight:700;" />
+      </div>
+      <p id="pdfCustomSizeHint" style="flex:1 1 100%; font-weight:600; color:var(--ink-soft); font-size:.78rem; margin:2px 0 0;">Kartu bakal disusun otomatis sebanyak yang muat per halaman sesuai ukuran ini (sisa ruang di halaman dibiarin kosong).</p>
+    </div>
+
+    <label class="field-label" style="margin-top:14px;">Posisi Konten dalam Kotak</label>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div style="flex:1 1 140px;">
+        <label class="field-label" style="font-size:.68rem;">Horizontal</label>
+        <select id="pdfAlignH">
+          <option value="left" selected>Kiri</option>
+          <option value="center">Tengah</option>
+          <option value="right">Kanan</option>
+        </select>
+      </div>
+      <div style="flex:1 1 140px;">
+        <label class="field-label" style="font-size:.68rem;">Vertikal</label>
+        <select id="pdfAlignV">
+          <option value="top" selected>Atas</option>
+          <option value="center">Tengah</option>
+          <option value="bottom">Bawah</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="field-label" style="margin-top:14px;">Cakupan Kartu</label>
+    <select id="pdfScope">
+      <option value="filtered">Cuma yang cocok pencarian/filter saat ini (<span id="pdfScopeFilteredCount">0</span> kartu)</option>
+      <option value="all">SEMUA kartu di note type ini (<span id="pdfScopeAllCount">0</span> kartu)</option>
+    </select>
+
+    <label class="field-label" style="margin-top:14px; display:flex; align-items:center; gap:8px; text-transform:none;">
+      <input type="checkbox" id="pdfIncludeBack" checked style="width:16px; height:16px; cursor:pointer;" /> Sertakan sisi belakang (buat cetak bolak-balik)
+    </label>
+
+    <label class="field-label" style="margin-top:14px;">Urutan Halaman Belakang</label>
+    <select id="pdfBackOrder">
+      <option value="match" selected>Samain Posisi (kartu A depan tetep di posisi yang sama di halaman belakang -- disaranin buat digunting satu-satu)</option>
+      <option value="mirror">Cerminan per Baris (buat printer duplex otomatis / tumpukan kertas dibalik)</option>
+    </select>
+    <label class="field-label" style="display:flex; align-items:center; gap:8px; text-transform:none;">
+      <input type="checkbox" id="pdfCutLines" checked style="width:16px; height:16px; cursor:pointer;" /> Tampilkan garis potong putus-putus
+    </label>
+    <label class="field-label" style="display:flex; align-items:center; gap:8px; text-transform:none;">
+      <input type="checkbox" id="pdfShowTags" style="width:16px; height:16px; cursor:pointer;" /> Tampilin Tags kartu (di luar template asli, kalau ada)
+    </label>
+
+    <label class="field-label" style="margin-top:14px;">Ukuran Konten Kartu <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(kecilin kalau field-nya panjang/banyak dan kepotong)</span></label>
+    <select id="pdfContentScale">
+      <option value="0.6">Kecil (60%)</option>
+      <option value="0.75">Kecil-Sedang (75%)</option>
+      <option value="1" selected>Normal (100%)</option>
+      <option value="1.25">Besar (125%)</option>
+    </select>
+
+    <label class="field-label" style="margin-top:14px;">Kualitas Gambar di Kartu <span id="pdfImageQualityHint" style="font-weight:600; color:var(--ink-soft); text-transform:none;">(kecilin kalau kartunya banyak & banyak gambar -- biar print preview gak nge-freeze)</span></label>
+    <select id="pdfImageQuality">
+      <option value="500">Kecil (disarankan buat kartu banyak/foto resolusi tinggi)</option>
+      <option value="900">Sedang</option>
+      <option value="0">Original (paling berat, cuma buat kartu dikit)</option>
+    </select>
+
+    <label class="field-label" style="margin-top:14px;">Pecah Jadi Beberapa Tab (Batch) <span style="font-weight:600; color:var(--ink-soft); text-transform:none;">(deck gede lebih aman diproses per batch drpd sekaligus)</span></label>
+    <select id="pdfBatchSize">
+      <option value="100">100 kartu / batch</option>
+      <option value="250">250 kartu / batch</option>
+      <option value="500">500 kartu / batch</option>
+      <option value="0">Semua sekaligus (1 tab, bisa berat kalau kartunya ribuan)</option>
+    </select>
+    <div id="pdfBatchStatus" style="display:none; margin-top:10px; font-size:.8rem; font-weight:700; color:var(--pink-deep); background:var(--blush); padding:8px 12px; border-radius:12px;"></div>
+    <div id="pdfBatchNav" class="btn-row" style="display:none; margin-top:8px; gap:8px;">
+      <button type="button" class="btn ghost" id="btnPdfBatchPrev" style="flex:1;">◀ Batch Sebelumnya</button>
+      <button type="button" class="btn ghost" id="btnPdfBatchNext" style="flex:1;">Batch Berikutnya ▶</button>
+    </div>
+
+    <div id="pdfDuplexHint" style="margin-top:12px; font-size:.72rem; color:var(--ink-soft); font-weight:600; background:var(--blush); padding:10px 12px; border-radius:12px; line-height:1.5;">
+      💡 <b>Mode "Samain Posisi" (default):</b> tiap kartu di halaman belakang ada di posisi grid yang SAMA kayak di halaman depan -- paling gampang buat digunting satu-satu terus dicocokin depan-belakangnya, gak perlu mikirin arah balik kertas.<br>
+      💡 <b>Mode "Cerminan per Baris":</b> khusus buat yang nyetak bolak-balik otomatis pake printer duplex ("Flip on Long Edge / Balik Sisi Panjang") atau yang manual balikin tumpukan kertas hasil cetak halaman DEPAN (posisi atas-bawah tetep sama, cuma mukanya dibalik) baru dimasukin lagi ke printer buat cetak halaman BELAKANG.<br>
+      💡 <b>Field-nya banyak?</b> Yang dicetak cuma field yang lo centang di "Field buat Sisi Depan/Belakang" di atas. Kalau hasilnya kepanjangan/kepotong, kurangin jumlah kolom &amp; baris (kartu jadi lebih gede), pake "Ukuran Konten Kartu" di atas, atau atur "Posisi Konten dalam Kotak" biar rapi.<br>
+      💡 <b>Deck-nya banyak catatan (kartu)?</b> Tetep bisa, cuma rendering-nya butuh waktu lebih lama sebelum print preview siap — tab barunya bakal nunjukin progress "Merender kartu X / Y" dulu, tunggu sampe selesai. Kalau kartunya ribuan & banyak gambar, PASTIKAN "Kualitas Gambar" di atas gak di-set "Original" dan pake mode Batch, biar print preview-nya gak nge-freeze browser.
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnPdfCancel" type="button">Batal</button>
+      <button class="btn mint" id="btnPdfGenerate" type="button">🖨️ Buka Print Preview</button>
     </div>
   </div>
 </div>
@@ -1391,6 +1554,8 @@ const state = {
   templateOriginals: {}, // mid -> {css, tmpls:[...]} snapshot "asli" (sebelum diedit user), buat tombol Reset
   templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
   mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
+  printMediaBlobUrlCache: {}, // key "namafile\u0000maxDim" -> blob: URL KHUSUS proses print/PDF (biasanya udah di-downscale) -- dipisah dari mediaBlobUrlCache biar gak numpuk/nyampur sama cache preview interaktif
+  pdfExportSession: null, // { noteList, batchSize, totalBatches, batchIndex, ord, cols, rows, includeBack, cutLines, showTags, contentScale, paper, maxDim } -- kepake pas export PDF dipecah jadi beberapa batch/tab (deck gede)
   _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
   autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
   autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
@@ -2670,9 +2835,17 @@ const AH_MEDIA_MIME_MAP = {
 // Ambil (atau bikin & cache) blob: URL buat 1 file media, dibaca langsung dari
 // zip .apkg yang lagi dibuka (termasuk bongkar zstd per-file kalau formatnya
 // anki21b, sama kayak logic pas export). Balikin null kalau filenya gak ketemu.
-async function ahGetMediaBlobUrl(filename){
+// SAFEGUARD: kalau file terkompresinya kegedean (kemungkinan besar audio/video
+// panjang atau data korup), decompress-nya DISKIP -- fzstd jalan sinkron di
+// main thread, jadi file yang kegedean/korup bisa bikin tab beneran hang
+// ("Page Unresponsive") tanpa ada cara buat interrupt di tengah jalan.
+const AH_MEDIA_DECOMPRESS_SIZE_CAP = 15 * 1024 * 1024; // 15MB terkompresi
+
+// Bagian "cari & bongkar bytes mentah" dipisah dari ahGetMediaBlobUrl biar bisa
+// dipakai bareng sama jalur print/PDF (yang butuh bytes-nya DULU sebelum
+// di-downscale, bukan langsung jadi blob URL ukuran asli).
+async function ahGetMediaBytesRaw(filename){
   if(!filename || !state.zip) return null;
-  if(state.mediaBlobUrlCache[filename]) return state.mediaBlobUrlCache[filename];
   const nameMap = await ahGetMediaNameMap();
   let num = null;
   let sourceZip = state.zip;
@@ -2693,14 +2866,83 @@ async function ahGetMediaBlobUrl(filename){
   let bytes;
   try{ bytes = await entry.async('uint8array'); }catch(e){ return null; }
   if(bytes.length >= 4 && bytes[0]===0x28 && bytes[1]===0xb5 && bytes[2]===0x2f && bytes[3]===0xfd){
+    if(bytes.length > AH_MEDIA_DECOMPRESS_SIZE_CAP){
+      console.warn('media kegedean (>15MB terkompresi), dilewatin biar gak macetin browser: '+filename+' ('+bytes.length+' bytes)');
+      return null;
+    }
     try{ bytes = zstdDecompressSafe(bytes); }
-    catch(e){ console.warn('gagal bongkar media zstd buat preview (best-effort), file='+filename, e); return null; }
+    catch(e){ console.warn('gagal bongkar media zstd (best-effort), file='+filename, e); return null; }
   }
   const ext = (filename.split('.').pop() || '').toLowerCase();
   const mime = AH_MEDIA_MIME_MAP[ext] || 'application/octet-stream';
-  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  return { bytes, mime };
+}
+
+async function ahGetMediaBlobUrl(filename){
+  if(!filename || !state.zip) return null;
+  if(state.mediaBlobUrlCache[filename]) return state.mediaBlobUrlCache[filename];
+  const res = await ahGetMediaBytesRaw(filename);
+  if(!res) return null;
+  const url = URL.createObjectURL(new Blob([res.bytes], { type: res.mime }));
   state.mediaBlobUrlCache[filename] = url;
   return url;
+}
+
+// FIX freeze pas print preview: kalau deck-nya banyak kartu & hampir semua
+// pake gambar resolusi asli (misal foto kamera / screenshot beberapa MB),
+// ribuan gambar full-res itu semuanya bakal didekode & dirasterisasi
+// BARENGAN sama browser pas ngebangun print preview -- ini yang bikin tab
+// literally hang/"Page Unresponsive", bukan cuma lambat. Solusinya: buat
+// jalur print, kecilin dulu gambarnya (resize + re-encode ke JPEG) sebelum
+// dipasang ke <img>, jadi total data yang mesti didekode+dirender jauh lebih
+// kecil walau kartunya ribuan. createImageBitmap dipake karena decode-nya
+// gak nge-block main thread separah <img>+canvas biasa.
+async function ahDownscaleImageBytesForPrint(bytes, mime, maxDim){
+  if(!maxDim || mime === 'image/svg+xml') return { bytes, mime }; // 0 = "Original" / SVG udah vektor, gak usah diapa-apain
+  try{
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: mime }));
+    const longest = Math.max(bitmap.width, bitmap.height);
+    if(longest <= maxDim){ bitmap.close(); return { bytes, mime }; } // udah kecil, gak usah diapa-apain
+    const scale = maxDim / longest;
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const outBlob = await new Promise(res=> canvas.toBlob(res, 'image/jpeg', 0.78));
+    if(!outBlob) return { bytes, mime };
+    const outBytes = new Uint8Array(await outBlob.arrayBuffer());
+    return { bytes: outBytes, mime: 'image/jpeg' };
+  }catch(e){
+    console.warn('gagal downscale gambar buat print (best-effort, dipake ukuran asli):', e);
+    return { bytes, mime };
+  }
+}
+
+// Versi khusus print/PDF dari ahGetMediaBlobUrl -- cache-nya TERPISAH
+// (state.printMediaBlobUrlCache, key-nya ikutan maxDim) biar gak nyampur sama
+// cache preview interaktif yang emang sengaja disimpen ukuran asli.
+async function ahGetMediaBlobUrlForPrint(filename, maxDim){
+  if(!filename) return null;
+  const cacheKey = filename + '\u0000' + maxDim;
+  if(state.printMediaBlobUrlCache[cacheKey]) return state.printMediaBlobUrlCache[cacheKey];
+  const res = await ahGetMediaBytesRaw(filename);
+  if(!res) return null;
+  let { bytes, mime } = res;
+  if(/^image\//.test(mime)){
+    const down = await ahDownscaleImageBytesForPrint(bytes, mime, maxDim);
+    bytes = down.bytes; mime = down.mime;
+  }
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  state.printMediaBlobUrlCache[cacheKey] = url;
+  return url;
+}
+
+function ahRevokePrintMediaCache(){
+  Object.values(state.printMediaBlobUrlCache).forEach(url=>{ try{ URL.revokeObjectURL(url); }catch(e){} });
+  state.printMediaBlobUrlCache = {};
 }
 
 // Ganti referensi media di HTML hasil render (<img src="nama.jpg"> dan tag
@@ -2729,6 +2971,68 @@ async function ahResolveMediaInHtml(html){
       : `<span style="display:inline-block; font-size:.75em; opacity:.65; border:1px dashed #ff6bb3; border-radius:6px; padding:2px 6px;">🔊 audio '${fname}' gak ketemu di media deck</span>`;
     html = html.split(tag).join(replacement);
   }
+  return html;
+}
+
+// (Catatan: resolusi media buat export PDF sekarang dilakuin lewat
+// ahPrewarmMediaForPrint + ahResolveMediaForPrintSync di bawah -- lebih
+// cepat karena tiap file gambar cuma di-resolve SEKALI buat seluruh batch,
+// bukan diulang per kartu.)
+
+// Ngasih jeda balik ke event loop TANPA kena "clamp" minimum ~4ms yang
+// dipaksain browser ke setTimeout(fn,0) -- pakai MessageChannel (trik
+// setImmediate-shim klasik) jauh lebih murah, jadi buat export PDF ribuan
+// kartu, total overhead jeda-nya gak signifikan lagi kayak sebelumnya.
+function ahYield(){
+  return new Promise(resolve=>{
+    const ch = new MessageChannel();
+    ch.port2.onmessage = ()=> resolve();
+    ch.port1.postMessage(0);
+  });
+}
+
+// Cari SEMUA nama file gambar unik yang dipake di sekumpulan html (front+back
+// gabungan seluruh kartu yang mau dicetak), terus resolve SEKALI per file
+// (bukan berulang-ulang per kartu kayak sebelumnya -- walau ada cache, tetep
+// ada overhead scan+await per kartu). Ini yang bikin proses gambar jauh lebih
+// cepat buat deck gede, apalagi kalau banyak kartu pake gambar yang sama.
+async function ahPrewarmMediaForPrint(htmlList, progressWin, maxDim){
+  const filenames = new Set();
+  for(const html of htmlList){
+    const imgTags = html.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi) || [];
+    for(const tag of imgTags){
+      const m = tag.match(/\bsrc=["']([^"']+)["']/i);
+      if(!m) continue;
+      const src = m[1];
+      if(/^(https?:|data:|blob:)/i.test(src)) continue;
+      filenames.add(decodeURIComponent(src));
+    }
+  }
+  const list = [...filenames];
+  for(let i=0;i<list.length;i++){
+    if(progressWin && progressWin.closed) throw new Error('Tab print preview ditutup, proses dibatalin.');
+    if(progressWin && (i % 10 === 0)){
+      const stEl = progressWin.document && progressWin.document.getElementById('st');
+      if(stEl) stEl.textContent = `Nyiapin gambar ${i+1} / ${list.length}...`;
+    }
+    await ahGetMediaBlobUrlForPrint(list[i], maxDim);
+    if(i % 25 === 24) await ahYield();
+  }
+}
+
+// Versi SINKRON (gak ada await sama sekali) dari resolver di atas -- dipakai
+// SETELAH ahPrewarmMediaForPrint, jadi semua blob URL gambar (yang udah
+// di-downscale kalau perlu) udah pasti ada di printMediaBlobUrlCache dan
+// tinggal string-replace biasa. Jauh lebih cepat karena gak ada overhead
+// promise/scheduling per kartu.
+function ahResolveMediaForPrintSync(html, maxDim){
+  html = html.replace(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi, (tag, src)=>{
+    if(/^(https?:|data:|blob:)/i.test(src)) return tag;
+    const filename = decodeURIComponent(src);
+    const url = state.printMediaBlobUrlCache[filename + '\u0000' + maxDim];
+    return url ? tag.replace(src, url) : tag.replace('<img ', `<img title="⚠️ gambar '${src}' gak ketemu / kegedean" style="outline:2px dashed #ff6bb3;" `);
+  });
+  html = html.replace(/\[sound:[^\]]+\]/gi, '');
   return html;
 }
 
@@ -5357,6 +5661,521 @@ document.getElementById('btnExportCsv').addEventListener('click', ()=>{
 document.getElementById('btnExportTxt').addEventListener('click', ()=>{
   downloadBlob(buildBlockText(), 'anki_field_export.txt', 'text/plain;charset=utf-8;');
   toast('TXT berhasil didownload!', '⬇️');
+});
+
+/* ---------------- export ke PDF / cetak flashcard fisik ----------------
+   Pendekatan: render tiap note pake field yang dipilih user sendiri (polos,
+   gak pake desain asli note type -- lebih rapi & gak gampang berantakan pas
+   dicetak kecil), lengkap sama gambar (ahPrewarmMediaForPrint/
+   ahResolveMediaForPrintSync -- audio dibuang total karena gak relevan buat
+   kartu kertas & buat ngindarin resiko hang di file audio gede/korup), susun
+   jadi grid per halaman, buka di tab baru. Tab itu ada tombol cetak MANUAL
+   ("🖨️ Cetak / Save as PDF") -- window.print() SENGAJA gak auto-trigger,
+   soalnya dialog print bawaan browser itu blocking (di banyak browser bisa
+   mem-blok SELURUH browser, bukan cuma tab itu) sampe di-Save/Cancel, jadi
+   kalau auto-trigger, tab AnkiHoney bakal kerasa "kebeku"/gak bisa dipencet
+   pas user coba balik buat ubah-ubah pengaturan. */
+
+// Isi checklist field buat sisi Depan/Belakang -- default cerdas: field
+// PERTAMA dicentang buat sisi depan (biasanya kosakata/istilah), sisa
+// field-nya dicentang buat sisi belakang (biasanya arti/keterangan), user
+// tinggal sesuaiin centangannya sendiri kalau mau beda.
+function ahPdfPopulateFieldPicker(){
+  const model = state.models[state.currentMid];
+  const fieldNames = (model && model.flds) || [];
+  const frontWrap = document.getElementById('pdfFrontFieldList');
+  const backWrap = document.getElementById('pdfBackFieldList');
+  frontWrap.innerHTML = '';
+  backWrap.innerHTML = '';
+  fieldNames.forEach((name, idx)=>{
+    [[frontWrap, idx === 0], [backWrap, idx !== 0]].forEach(([wrap, defaultChecked])=>{
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex; align-items:center; gap:6px; font-size:.82rem; font-weight:600; cursor:pointer;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = name;
+      cb.checked = defaultChecked;
+      cb.style.cssText = 'width:15px; height:15px; cursor:pointer;';
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(name));
+      wrap.appendChild(label);
+    });
+  });
+}
+
+function ahPdfGetCheckedFields(containerId){
+  return [...document.querySelectorAll('#'+containerId+' input[type=checkbox]:checked')].map(cb=> cb.value);
+}
+
+document.getElementById('pdfSizeMode').addEventListener('change', ()=>{
+  const isCustom = document.getElementById('pdfSizeMode').value === 'custom';
+  document.getElementById('pdfColsRowsWrap').classList.toggle('hidden', isCustom);
+  document.getElementById('pdfCustomSizeWrap').classList.toggle('hidden', !isCustom);
+});
+
+// Halaman A4/Letter, area kepake = ukuran kertas dikurangin margin 10mm tiap
+// sisi (samain kayak @page margin di CSS print-nya). Dari situ, itung berapa
+// kolom & baris kartu ukuran custom (cm) yang muat, minimal 1x1 biar gak 0.
+function ahPdfGridFromCustomSize(paper, widthCm, heightCm){
+  const pageWmm = paper === 'letter' ? 215.9 : 210;
+  const pageHmm = paper === 'letter' ? 279.4 : 297;
+  const usableWmm = pageWmm - 20;
+  const usableHmm = pageHmm - 20;
+  const cardWmm = Math.max(1, (parseFloat(widthCm)||6) * 10);
+  const cardHmm = Math.max(1, (parseFloat(heightCm)||4) * 10);
+  return {
+    cols: Math.max(1, Math.floor(usableWmm / cardWmm)),
+    rows: Math.max(1, Math.floor(usableHmm / cardHmm)),
+  };
+}
+
+function ahPdfResolveScopeNoteList(){
+  const scope = document.getElementById('pdfScope').value;
+  return scope === 'all' ? state.notes.filter(n=>n.mid===state.currentMid) : currentRows();
+}
+
+// Saranin default "Kualitas Gambar" & "Batch" berdasarkan berapa banyak kartu
+// yang bakal dicetak -- ini FIX buat freeze pas print preview: sebelumnya
+// default-nya "Original" + "semua sekaligus", jadi deck ribuan kartu (apalagi
+// banyak gambar) langsung bikin browser hang pas ngerender print preview-nya.
+// Sekarang, kalau kartunya banyak, otomatis disaranin kecilin gambar & pecah
+// jadi beberapa tab -- user yang gak ngeh soal ini pun tetep ke-protect.
+function ahPdfSuggestDefaults(totalCount){
+  const qualitySel = document.getElementById('pdfImageQuality');
+  const batchSel = document.getElementById('pdfBatchSize');
+  if(totalCount > 600){
+    qualitySel.value = '500';
+    batchSel.value = '100';
+  } else if(totalCount > 150){
+    qualitySel.value = '500';
+    batchSel.value = '250';
+  } else {
+    qualitySel.value = '900';
+    batchSel.value = '0';
+  }
+}
+
+function ahPdfResetSession(){
+  state.pdfExportSession = null;
+  ahRevokePrintMediaCache();
+  const statusEl = document.getElementById('pdfBatchStatus');
+  statusEl.style.display = 'none';
+  document.getElementById('pdfBatchNav').style.display = 'none';
+  const btn = document.getElementById('btnPdfGenerate');
+  btn.textContent = '🖨️ Buka Print Preview';
+  btn.dataset.originalLabel = '🖨️ Buka Print Preview';
+}
+
+// Sinkronin tombol utama, status text, & tombol nav ◀▶ sama posisi
+// session.batchIndex saat ini -- dipanggil tiap kali batch selesai digenerate
+// ATAU tiap kali user pindah batch pake tombol ◀▶ (TANPA nge-generate ulang),
+// jadi user bebas maju-mundur ke batch manapun (termasuk balik ke batch 1)
+// kapan aja sebelum klik tombol utama buat beneran buka tab print-nya.
+function ahPdfUpdateBatchUI(session){
+  const statusEl = document.getElementById('pdfBatchStatus');
+  const navEl = document.getElementById('pdfBatchNav');
+  const btn = document.getElementById('btnPdfGenerate');
+  const prevBtn = document.getElementById('btnPdfBatchPrev');
+  const nextBtn = document.getElementById('btnPdfBatchNext');
+  if(session.totalBatches > 1){
+    navEl.style.display = 'flex';
+    statusEl.style.display = 'block';
+    statusEl.textContent = `📄 Batch ${session.batchIndex+1}/${session.totalBatches} lagi dipilih. Klik tombol di bawah buat buka/buka-ulang tab print batch ini -- pake ◀ ▶ buat pindah ke batch lain (termasuk balik ke batch sebelumnya) kapan aja.`;
+    btn.textContent = `🖨️ Buka Print Preview — Batch ${session.batchIndex+1}/${session.totalBatches}`;
+    prevBtn.disabled = session.batchIndex <= 0;
+    nextBtn.disabled = session.batchIndex >= session.totalBatches - 1;
+  } else {
+    navEl.style.display = 'none';
+    statusEl.style.display = 'none';
+    btn.textContent = '🖨️ Buka Print Preview';
+  }
+  btn.dataset.originalLabel = btn.textContent;
+}
+
+document.getElementById('btnExportPdf').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || !model.flds.length){
+    ahShowErrorPopup('Note type ini belum kebaca field-nya, jadi belum bisa dirender jadi PDF siap cetak.');
+    return;
+  }
+  ahPdfPopulateFieldPicker();
+  const filteredCount = currentRows().length;
+  const allCount = state.notes.filter(n=>n.mid===state.currentMid).length;
+  document.getElementById('pdfScopeFilteredCount').textContent = filteredCount;
+  document.getElementById('pdfScopeAllCount').textContent = allCount;
+  ahPdfResetSession(); // jaga-jaga kalau ada sesi batch sebelumnya yang belum kelar
+  const scope = document.getElementById('pdfScope').value;
+  ahPdfSuggestDefaults(scope === 'all' ? allCount : filteredCount);
+  document.getElementById('ahPdfModalBg').classList.add('show');
+});
+
+document.getElementById('pdfScope').addEventListener('change', ()=>{
+  const filteredCount = parseInt(document.getElementById('pdfScopeFilteredCount').textContent) || 0;
+  const allCount = parseInt(document.getElementById('pdfScopeAllCount').textContent) || 0;
+  ahPdfSuggestDefaults(document.getElementById('pdfScope').value === 'all' ? allCount : filteredCount);
+});
+
+document.getElementById('btnPdfCancel').addEventListener('click', ()=>{
+  document.getElementById('ahPdfModalBg').classList.remove('show');
+  ahPdfResetSession();
+});
+
+// Halaman loading sederhana yang langsung ditulis ke tab baru SEBELUM proses
+// render async dimulai -- ini PENTING biar window.open() masih keitung sebagai
+// aksi langsung dari klik user (kalau ditunda sampe abis await, browser bakal
+// nganggep bukan hasil klik user lagi & mem-blok tab-nya jadi blank/kebuka
+// terus stuck kosong gak bisa diapa-apain, kayak yang kejadian sebelumnya).
+function ahPdfLoadingHtml(){
+  return `<!doctype html><html><head><meta charset="utf-8"><title>AnkiHoney — Menyiapkan PDF...</title><style>
+html,body{ margin:0; height:100%; display:flex; align-items:center; justify-content:center; font-family:Arial, sans-serif; background:#fff8fb; color:#4a3358; }
+.box{ text-align:center; }
+.spin{ font-size:2.4rem; animation: spin 1.2s linear infinite; display:inline-block; }
+@keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+#st{ margin-top:10px; font-weight:700; font-size:.95rem; }
+</style></head><body><div class="box"><div class="spin">🍯</div><div id="st">Nyiapin kartu buat dicetak...</div></div></body></html>`;
+}
+
+// noteList = potongan kartu buat batch INI SAJA (bukan seluruh cakupan --
+// pemecahan per batch dilakuin di caller/click handler). session = opsi2 yang
+// udah dikumpulin sekali di awal (batch 1) & dipake konsisten di semua batch.
+async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
+  const model = state.models[state.currentMid];
+  const { cols, rows, sizeMode, cardWidthCm, cardHeightCm, alignH, alignV, includeBack, backOrder, cutLines, showTags, contentScale, paper, maxDim, batchIndex, totalBatches, frontFields, backFields, fieldFontSize, showFieldLabel } = session;
+
+  if(!noteList.length){
+    toast('Gak ada kartu buat dicetak di cakupan ini~', '😿');
+    return null;
+  }
+
+  const fieldNames = model.flds || [];
+  const perPage = cols * rows;
+  // Mode "grid" (default): kolom/baris rata bagi penuh lebar/tinggi halaman
+  // (1fr). Mode "custom": tiap kotak ukurannya FIX sesuai cm yang diisi user
+  // (sisa ruang di halaman dibiarin kosong, gak ikut di-stretch).
+  const trackCols = sizeMode === 'custom' ? `repeat(${cols}, ${cardWidthCm}cm)` : `repeat(${cols}, 1fr)`;
+  const trackRows = sizeMode === 'custom' ? `repeat(${rows}, ${cardHeightCm}cm)` : `repeat(${rows}, 1fr)`;
+
+  function tagsHtml(tagStr){
+    const tags = String(tagStr||'').split(' ').map(s=>s.trim()).filter(Boolean);
+    if(!tags.length) return '';
+    return `<div class="ah-flash-tags">${tags.map(tg=>`<span>${tg}</span>`).join('')}</div>`;
+  }
+
+  function ahEscapeHtml(str){
+    return String(str||'').replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Susun label+isi field secara berurutan (flow dokumen biasa) -- gak pake
+  // desain asli (qfmt/afmt/CSS) note type karena itu didesain buat ukuran
+  // layar penuh (kadang pake vw/vh atau posisi absolute), yang berantakan/
+  // numpuk kalau dipaksa masuk ke sel grid kecil di kertas. Layout polos gini
+  // gak ada elemen yang bisa numpuk/nabrak walau kartunya beragam panjangnya.
+  function buildFieldsHtml(fields, chosenNames){
+    return chosenNames.map(name=>{
+      const val = ahFieldValueByName(fields, fieldNames, name);
+      if(!val || !String(val).trim()) return '';
+      return `<div class="ah-flash-field-block">${showFieldLabel ? `<div class="ah-flash-field-label">${ahEscapeHtml(name)}</div>` : ''}<div class="ah-flash-field-value">${val}</div></div>`;
+    }).join('');
+  }
+
+  const rendered = [];
+
+  // TAHAP 1: render tiap kartu (murni sinkron & cepat, gak ada await sama
+  // sekali di sini -- ribuan kartu tetep keitung instan). Media (gambar)
+  // sengaja BELUM diresolve di tahap ini.
+  const rawList = [];
+  for(let i=0;i<noteList.length;i++){
+    if(progressWin && progressWin.closed){
+      throw new Error('Tab print preview ditutup, proses dibatalin.');
+    }
+    if(progressWin && (i % 200 === 0)){
+      const stEl = progressWin.document && progressWin.document.getElementById('st');
+      if(stEl) stEl.textContent = (totalBatches > 1 ? `[Batch ${batchIndex+1}/${totalBatches}] ` : '') + `Nyusun kartu ${i+1} / ${noteList.length}...`;
+    }
+    const n = noteList[i];
+    const frontRaw = buildFieldsHtml(n.fields, frontFields);
+    const backRaw = buildFieldsHtml(n.fields, backFields);
+    rawList.push({ front: frontRaw, back: backRaw, tags: n.tags || '' });
+    if(i % 300 === 299) await ahYield();
+  }
+
+  // TAHAP 2: kumpulin SEMUA nama file gambar unik yang kepake di seluruh
+  // kartu (batch ini), terus resolve sekali per file (bukan diulang-ulang per
+  // kartu) -- SEKALIAN di-downscale (kalau maxDim disetel) biar gambar
+  // resolusi tinggi gak bikin print preview-nya freeze.
+  await ahPrewarmMediaForPrint(rawList.flatMap(r=> [r.front, r.back]), progressWin, maxDim);
+
+  // TAHAP 3: tinggal ganti referensi gambar pake blob URL yang udah kesiapin
+  // di cache (sinkron semua, gak ada await lagi) + buang tag [sound:...].
+  for(let i=0;i<rawList.length;i++){
+    if(progressWin && (i % 300 === 0)){
+      const stEl = progressWin.document && progressWin.document.getElementById('st');
+      if(stEl) stEl.textContent = (totalBatches > 1 ? `[Batch ${batchIndex+1}/${totalBatches}] ` : '') + `Finalisasi kartu ${i+1} / ${rawList.length}...`;
+    }
+    rendered.push({
+      front: ahResolveMediaForPrintSync(rawList[i].front, maxDim),
+      back: ahResolveMediaForPrintSync(rawList[i].back, maxDim),
+      tags: rawList[i].tags
+    });
+    if(i % 300 === 299) await ahYield();
+  }
+
+  const pages = [];
+  for(let i=0;i<rendered.length;i+=perPage){ pages.push(rendered.slice(i, i+perPage)); }
+
+  function cell(html, tagStr){
+    return `<div class="ah-flash-cell"><div class="ah-flash-inner"><div class="ah-flash-inner-scale">${html || ''}${showTags ? tagsHtml(tagStr) : ''}</div></div></div>`;
+  }
+  function emptyCell(){
+    return `<div class="ah-flash-cell ah-flash-empty"></div>`;
+  }
+
+  let bodyHtml = '';
+  pages.forEach(pageNotes=>{
+    // Halaman DEPAN, urutan biasa kiri-ke-kanan atas-ke-bawah.
+    bodyHtml += `<div class="ah-flash-page" style="grid-template-columns: ${trackCols}; grid-template-rows: ${trackRows};">`;
+    pageNotes.forEach(nn=> bodyHtml += cell(nn.front, nn.tags));
+    for(let i=pageNotes.length;i<perPage;i++) bodyHtml += emptyCell();
+    bodyHtml += `</div>`;
+
+    if(includeBack){
+      bodyHtml += `<div class="ah-flash-page" style="grid-template-columns: ${trackCols}; grid-template-rows: ${trackRows};">`;
+      if(backOrder === 'mirror'){
+        // Cerminan per baris: buat printer duplex otomatis ("Flip on Long
+        // Edge") atau tumpukan kertas yang dibalik manual (posisi atas-bawah
+        // tetep sama, cuma mukanya dibalik) -- kolom tiap baris DIBALIK
+        // urutannya biar sisi belakang tiap kartu jatuh persis di balik sisi
+        // depannya secara FISIK.
+        for(let r=0;r<rows;r++){
+          const rowItems = pageNotes.slice(r*cols, (r+1)*cols);
+          while(rowItems.length < cols) rowItems.push(null);
+          rowItems.reverse().forEach(nn=>{ bodyHtml += nn ? cell(nn.back, nn.tags) : emptyCell(); });
+        }
+      } else {
+        // Samain Posisi (default): urutan grid SAMA persis kayak halaman
+        // depan, jadi kartu A yang di kiri-atas halaman depan, arti/sisi
+        // belakangnya juga di kiri-atas halaman belakang -- paling gampang
+        // buat digunting satu-satu terus dicocokin depan-belakangnya tanpa
+        // perlu mikirin arah balik kertas.
+        pageNotes.forEach(nn=> bodyHtml += cell(nn.back, nn.tags));
+        for(let i=pageNotes.length;i<perPage;i++) bodyHtml += emptyCell();
+      }
+      bodyHtml += `</div>`;
+    }
+  });
+
+  const pageSize = paper === 'letter' ? '8.5in 11in' : '210mm 297mm';
+  const pageHeight = paper === 'letter' ? '10.5in' : '277mm';
+  const cutLineCss = cutLines ? `outline:1px dashed #999; outline-offset:-1px;` : '';
+  const titleSuffix = totalBatches > 1 ? ` (Batch ${batchIndex+1}/${totalBatches})` : '';
+  const fieldFontSizePx = { small: 12, medium: 15, large: 19 }[fieldFontSize] || 15;
+  const alignItemsCss = { top: 'flex-start', center: 'center', bottom: 'flex-end' }[alignV] || 'flex-start';
+  const textAlignCss = { left: 'left', center: 'center', right: 'right' }[alignH] || 'left';
+
+  return `<!doctype html><html><head><meta charset="utf-8"><title>AnkiHoney — Cetak Flashcard${titleSuffix}</title><style>
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; font-family:Arial, sans-serif; background:#fff; }
+@page{ size: ${pageSize}; margin: 10mm; }
+.ah-flash-page{
+  display:grid; width:100%; height:${pageHeight};
+  page-break-after: always; break-after: page;
+}
+.ah-flash-page:last-child{ page-break-after: auto; break-after: auto; }
+.ah-flash-cell{
+  display:flex; align-items:stretch; justify-content:stretch; overflow:hidden;
+  ${cutLineCss}
+}
+.ah-flash-empty{ opacity:.2; }
+/* Posisi konten dalam kotak: align-items ngatur vertikal (Atas/Tengah/Bawah),
+   text-align ngatur horizontal (Kiri/Tengah/Kanan) -- diatur user lewat
+   "Posisi Konten dalam Kotak" di modal export. */
+.ah-flash-inner{
+  width:100%; height:100%; overflow:hidden; box-sizing:border-box;
+  display:flex; align-items:${alignItemsCss}; justify-content:center;
+  padding:10px; text-align:${textAlignCss};
+}
+/* Skala konten -- berguna kalau field kartu kepanjangan / banyak dan jadi
+   kepotong di sel yang kecil (misal pilih kolom/baris banyak). "zoom"
+   didukung Chrome/Edge (paling umum dipakai buat print-to-PDF); browser lain
+   yang gak dukung bakal nampilin ukuran normal (100%) apa adanya. */
+.ah-flash-inner-scale{ zoom: ${contentScale}; width:100%; }
+.ah-flash-inner img{ max-width:100%; max-height:100%; }
+.ah-flash-tags{ margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.ah-flash-tags span{
+  font-size:.62rem; font-weight:700; color:#8a7398; background:#ffe8f3;
+  border-radius:20px; padding:2px 8px; white-space:nowrap;
+}
+/* Layout polos (bukan CSS template asli), jadi gak ada elemen yang bisa
+   numpuk/nabrak walau kartunya beragam panjangnya. overflow:hidden di
+   .ah-flash-inner tetep jadi batas terakhir kalau field-nya kepanjangan buat
+   sel yang dipilih -- kecilin Ukuran Font/Kolom-Baris atau pake Ukuran Konten
+   Kartu kalau masih kepotong. */
+.ah-flash-field-block{ margin-bottom:8px; }
+.ah-flash-field-block:last-child{ margin-bottom:0; }
+.ah-flash-field-label{
+  font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+  color:#8a7398; margin-bottom:2px;
+}
+.ah-flash-field-value{
+  font-size:${fieldFontSizePx}px; line-height:1.35; word-wrap:break-word; overflow-wrap:break-word;
+}
+.ah-flash-field-value img{ max-width:100%; max-height:180px; }
+/* Bar tombol cetak -- floating & GAK ikut ke-print (@media print di bawah).
+   Print baru dipicu MANUAL kalau user klik tombolnya sendiri, SENGAJA gak
+   auto-trigger window.print() begitu tab ini kebuka -- soalnya di banyak
+   browser (terutama Firefox) dialog print itu blocking buat SELURUH browser
+   sampe di-Save/Cancel dulu, jadi kalau auto kebuka user bisa ngerasa tab
+   AnkiHoney "kebeku" pas balik buat ubah-ubah pengaturan. */
+.ah-print-bar{
+  position:sticky; top:0; z-index:9999; display:flex; justify-content:center;
+  padding:10px; background:#fff8fb; border-bottom:2px solid #ffe0ef;
+}
+.ah-print-bar button{
+  font-family:Arial, sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;
+  background:#ff8fc7; color:#fff; border:none; border-radius:999px; padding:10px 22px;
+}
+.ah-print-bar button:hover{ background:#ff6fb8; }
+@media print{ .ah-print-bar{ display:none !important; } }
+</style></head><body>
+<div class="ah-print-bar"><button type="button" onclick="window.print()">🖨️ Cetak / Save as PDF</button></div>
+${bodyHtml}
+</body></html>`;
+}
+
+document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnPdfGenerate');
+
+  let session = state.pdfExportSession;
+  if(!session){
+    // Mulai export BARU (bukan lanjutan/ulangan batch) -- kumpulin semua opsi
+    // dari modal SEKALI di sini, terus dipake konsisten di semua batch, dan
+    // pecah cakupan kartu jadi beberapa batch kalau perlu.
+    const fullNoteList = ahPdfResolveScopeNoteList();
+    if(!fullNoteList.length){
+      toast('Gak ada kartu buat dicetak di cakupan ini~', '😿');
+      return;
+    }
+    const frontFields = ahPdfGetCheckedFields('pdfFrontFieldList');
+    const backFields = ahPdfGetCheckedFields('pdfBackFieldList');
+    if(!frontFields.length && !backFields.length){
+      toast('Pilih dulu minimal 1 field (Sisi Depan/Belakang) buat dicetak~', '😿');
+      return;
+    }
+    const batchSizeSel = parseInt(document.getElementById('pdfBatchSize').value) || 0;
+    const batchSize = batchSizeSel > 0 ? batchSizeSel : fullNoteList.length;
+    const paper = document.getElementById('pdfPaperSize').value;
+    const sizeMode = document.getElementById('pdfSizeMode').value;
+    const cardWidthCm = parseFloat(document.getElementById('pdfCardWidthCm').value) || 6;
+    const cardHeightCm = parseFloat(document.getElementById('pdfCardHeightCm').value) || 4;
+    const gridSize = sizeMode === 'custom'
+      ? ahPdfGridFromCustomSize(paper, cardWidthCm, cardHeightCm)
+      : { cols: parseInt(document.getElementById('pdfCols').value) || 3, rows: parseInt(document.getElementById('pdfRows').value) || 3 };
+    session = state.pdfExportSession = {
+      fullNoteList,
+      batchSize,
+      totalBatches: Math.ceil(fullNoteList.length / batchSize),
+      batchIndex: 0,
+      maxDim: parseInt(document.getElementById('pdfImageQuality').value) || 0,
+      cols: gridSize.cols,
+      rows: gridSize.rows,
+      sizeMode,
+      cardWidthCm,
+      cardHeightCm,
+      alignH: document.getElementById('pdfAlignH').value,
+      alignV: document.getElementById('pdfAlignV').value,
+      includeBack: document.getElementById('pdfIncludeBack').checked,
+      backOrder: document.getElementById('pdfBackOrder').value,
+      cutLines: document.getElementById('pdfCutLines').checked,
+      showTags: document.getElementById('pdfShowTags').checked,
+      contentScale: parseFloat(document.getElementById('pdfContentScale').value) || 1,
+      paper,
+      frontFields,
+      backFields,
+      fieldFontSize: document.getElementById('pdfFieldFontSize').value,
+      showFieldLabel: document.getElementById('pdfFieldShowLabel').checked,
+    };
+    ahRevokePrintMediaCache(); // buang sisa cache print dari percobaan export sebelumnya (opsi bisa udah beda)
+  }
+
+  const batchNoteList = session.fullNoteList.slice(session.batchIndex*session.batchSize, (session.batchIndex+1)*session.batchSize);
+
+  // PENTING: window.open() dipanggil DULUAN, sinkron, sebelum ada `await`
+  // apapun -- ini masih dianggap browser sebagai hasil langsung klik user
+  // jadi gak diblokir. Kalau ditunda sampe rendering selesai (yang bisa lama
+  // buat deck gede), banyak browser bakal nolak/nge-freeze tab barunya.
+  const w = window.open('', '_blank');
+  if(!w){
+    toast('Popup diblokir browser -- izinin popup buat situs ini ya, terus coba lagi~', '😿');
+    return;
+  }
+  w.document.open();
+  w.document.write(ahPdfLoadingHtml());
+  w.document.close();
+
+  btn.disabled = true;
+  document.getElementById('btnPdfBatchPrev').disabled = true;
+  document.getElementById('btnPdfBatchNext').disabled = true;
+  btn.textContent = session.totalBatches > 1
+    ? `⏳ Nyiapin batch ${session.batchIndex+1}/${session.totalBatches}...`
+    : '⏳ Nyiapin kartu...';
+
+  try{
+    const doc = await ahBuildFlashcardPrintDoc(w, batchNoteList, session);
+    if(doc){
+      if(w.closed){
+        toast('Tab print preview-nya kebetulan ke-close duluan, coba klik lagi ya~', '😿');
+      } else {
+        w.document.open();
+        w.document.write(doc);
+        w.document.close();
+        toast(session.totalBatches > 1 ? `Batch ${session.batchIndex+1}/${session.totalBatches} siap~ Klik "🖨️ Cetak" di tab barunya kalau udah siap.` : 'Print preview siap -- klik "🖨️ Cetak / Save as PDF" di tab barunya kalau udah siap~', '🖨️');
+      }
+      if(session.totalBatches <= 1){
+        document.getElementById('ahPdfModalBg').classList.remove('show');
+        ahPdfResetSession();
+        return;
+      }
+      // Auto-maju ke batch berikutnya yang belum pernah dibuka (kalau ada) --
+      // tapi modal SENGAJA dibiarin kebuka & session-nya tetep idup, jadi
+      // user bisa pake tombol ◀ ▶ buat pindah ke batch manapun (termasuk
+      // balik lagi ke batch 1) & buka-ulang tab-nya kapan aja lewat tombol
+      // utama, gak cuma bisa maju terus kayak sebelumnya.
+      if(session.batchIndex < session.totalBatches - 1) session.batchIndex++;
+      ahPdfUpdateBatchUI(session);
+    } else {
+      w.close();
+      ahPdfResetSession();
+    }
+  } catch(e){
+    console.error(e);
+    if(!w.closed) w.close();
+    ahPdfResetSession();
+    if(/dibatalin/i.test(e.message||'')){
+      toast('Export PDF dibatalin.', '↩️');
+    } else {
+      ahShowErrorPopup('Gagal nyiapin PDF flashcard.\nError: ' + (e.message||e));
+    }
+  } finally {
+    btn.disabled = false;
+    if(state.pdfExportSession) ahPdfUpdateBatchUI(state.pdfExportSession);
+  }
+});
+
+// Tombol ◀ ▶ cuma MINDAHIN batch yang lagi "dipilih" (gak langsung nge-
+// generate) -- user klik tombol utama abis ini buat beneran buka tab print
+// buat batch yang lagi kepilih. Gini user bisa bolak-balik bebas ke batch
+// manapun, termasuk balik ke batch 1 walau udah sempet lanjut ke batch 2/3/dst.
+document.getElementById('btnPdfBatchPrev').addEventListener('click', ()=>{
+  const session = state.pdfExportSession;
+  if(!session) return;
+  session.batchIndex = Math.max(0, session.batchIndex - 1);
+  ahPdfUpdateBatchUI(session);
+});
+document.getElementById('btnPdfBatchNext').addEventListener('click', ()=>{
+  const session = state.pdfExportSession;
+  if(!session) return;
+  session.batchIndex = Math.min(session.totalBatches - 1, session.batchIndex + 1);
+  ahPdfUpdateBatchUI(session);
 });
 
 /* ---------------- import csv/txt ---------------- */
