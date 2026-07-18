@@ -1133,8 +1133,8 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
 
     <label class="field-label" style="margin-top:14px;">Cakupan Kartu</label>
     <select id="pdfScope">
-      <option value="filtered">Cuma yang cocok pencarian/filter saat ini (<span id="pdfScopeFilteredCount">0</span> kartu)</option>
-      <option value="all">SEMUA kartu di note type ini (<span id="pdfScopeAllCount">0</span> kartu)</option>
+      <option value="filtered" id="pdfScopeFilteredOpt" data-count="0">Cuma yang cocok pencarian/filter saat ini (0 kartu)</option>
+      <option value="all" id="pdfScopeAllOpt" data-count="0">SEMUA kartu di note type ini (0 kartu)</option>
     </select>
 
     <label class="field-label" style="margin-top:14px; display:flex; align-items:center; gap:8px; text-transform:none;">
@@ -5792,6 +5792,12 @@ function ahPdfUpdateBatchUI(session){
   btn.dataset.originalLabel = btn.textContent;
 }
 
+function ahPdfSetScopeOptionCount(optId, label, count){
+  const opt = document.getElementById(optId);
+  opt.dataset.count = count;
+  opt.textContent = `${label} (${count} kartu)`;
+}
+
 document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   const model = state.models[state.currentMid];
   if(!model || !model.flds || !model.flds.length){
@@ -5801,8 +5807,8 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   ahPdfPopulateFieldPicker();
   const filteredCount = currentRows().length;
   const allCount = state.notes.filter(n=>n.mid===state.currentMid).length;
-  document.getElementById('pdfScopeFilteredCount').textContent = filteredCount;
-  document.getElementById('pdfScopeAllCount').textContent = allCount;
+  ahPdfSetScopeOptionCount('pdfScopeFilteredOpt', 'Cuma yang cocok pencarian/filter saat ini', filteredCount);
+  ahPdfSetScopeOptionCount('pdfScopeAllOpt', 'SEMUA kartu di note type ini', allCount);
   ahPdfResetSession(); // jaga-jaga kalau ada sesi batch sebelumnya yang belum kelar
   const scope = document.getElementById('pdfScope').value;
   ahPdfSuggestDefaults(scope === 'all' ? allCount : filteredCount);
@@ -5810,8 +5816,8 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
 });
 
 document.getElementById('pdfScope').addEventListener('change', ()=>{
-  const filteredCount = parseInt(document.getElementById('pdfScopeFilteredCount').textContent) || 0;
-  const allCount = parseInt(document.getElementById('pdfScopeAllCount').textContent) || 0;
+  const filteredCount = parseInt(document.getElementById('pdfScopeFilteredOpt').dataset.count) || 0;
+  const allCount = parseInt(document.getElementById('pdfScopeAllOpt').dataset.count) || 0;
   ahPdfSuggestDefaults(document.getElementById('pdfScope').value === 'all' ? allCount : filteredCount);
 });
 
