@@ -574,7 +574,6 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <input type="file" id="fileInput" accept=".apkg" multiple />
     </div>
     <div id="uploadStatus" style="margin-top:12px; font-weight:700; color:var(--ink-soft);"></div>
-    <div id="duplicateInfo" style="margin-top:12px; font-size:.85rem; color:#b24f5f;"></div>
     <div id="formatWarning" class="hidden" style="margin-top:12px; background:#fff6da; border:2px solid #ffd97a; border-radius:14px; padding:12px 16px; font-weight:700; font-size:.82rem; color:#8a6a1f;"></div>
   </div>
 
@@ -935,9 +934,10 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <label style="display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--ink-soft);">
           <input type="checkbox" id="skipDuplicateCards" style="width:16px; height:16px; cursor:pointer;" />
-          Skip kartu duplikat field pertama (pakai hasil terjemahan kartu pertama untuk grup duplikat)
+          Skip kartu duplikat field pertama (hemat API, pakai hasil kartu pertama untuk grup yang field pertamanya identik/nyaris identik setelah dinormalisasi)
         </label>
       </div>
+      <p style="font-size:.72rem; color:#b24f5f; font-weight:600; margin:4px 0 0;">⚠️ Kecocokan dicek best-effort (HTML/tanda baca diabaikan) -- kalau kartu yang "mirip" ternyata beda makna, hasil terjemahannya bisa ikut kesalin sama. Cuma nyalain ini kalau yakin duplikatnya beneran identik.</p>
       <div id="atProgress" style="margin-top:8px; font-weight:800; font-size:.8rem; color:var(--ink-soft);"></div>
       <div id="atProgressTrackWrap" class="hidden"><div id="atProgressBar" class="at-progress-track"><div class="at-progress-fill"></div></div></div>
     </div>
@@ -1258,10 +1258,7 @@ function toast(msg, emoji='💗'){
   toast._tm = setTimeout(()=> t.classList.remove('show'), 2600);
 }
 
-// Popup buat error teknis (bukan sekadar console.warn) -- beda sama toast() yang
-// buat notif ringan & cepet ilang, ini nunggu di-dismiss manual & ngarahin user
-// buat lapor ke Discord kalau mereka nemuin kasus ini, soalnya biasanya artinya
-// ada bentuk data baru yang belum ke-handle sama tool ini.
+// Popup error teknis (beda dari toast()): nunggu di-dismiss manual & ngarahin user lapor ke Discord kalau nemu data baru yang belum ke-handle.
 const AH_DISCORD_URL = 'https://discord.gg/SW9bTRHK8H';
 function ahShowErrorPopup(msg){
   let bg = document.getElementById('ahErrorModalBg');
@@ -1288,12 +1285,7 @@ function ahShowErrorPopup(msg){
   bg.classList.add('show');
 }
 
-// Popup khusus kalau kecium ada engine AI translate (OpenAI/Claude/Gemini/DeepSeek) yang
-// nolak request-nya gara-gara NAMA MODEL udah dihapus/diganti sama provider-nya (lihat
-// ahMakeEngineError). Beda sama ahShowErrorPopup biasa -- ini negesin jelas ke user kalau
-// ini BUKAN salah mereka & bukan salah API key, tapi tool ini yang butuh diupdate nama
-// modelnya. Cuma nongol SEKALI per proses translate (dipicu dari kegagalan pertama yang
-// kedeteksi modelIssue), biar gak spam popup kalau banyak field yang gagal bareng-bareng.
+// Popup khusus kalau engine AI translate nolak request karena nama model udah dihapus/diganti provider -- negesin ini bukan salah user/API key. Nongol sekali per proses translate.
 function ahShowModelIssuePopup(provider, errMsg){
   let bg = document.getElementById('ahModelIssueModalBg');
   if(!bg){
@@ -1321,11 +1313,7 @@ function ahShowModelIssuePopup(provider, errMsg){
   bg.classList.add('show');
 }
 
-// Popup buat kegagalan proses Translate Otomatis / Jelasin Kosakata (AI) yang BUKAN
-// kasus "model usang" (lihat ahShowModelIssuePopup di atas buat itu) -- misal timeout,
-// rate limit, atau error lain dari engine-nya. Beda sama ahShowErrorPopup generik: ini
-// nunjukkin CONTOH nyata field mana aja yang gagal + pesan errornya, dan nyediain tombol
-// buat langsung ngulang proses TAPI CUMA buat field yang gagal doang (gak perlu dari nol).
+// Popup kegagalan Translate Otomatis/Jelasin Kosakata yang BUKAN kasus "model usang" (timeout, rate limit, dll) -- nunjukin contoh field yang gagal + tombol retry cuma buat yang gagal.
 function ahShowFailedRetryPopup(op, entries, onRetry){
   if(!entries || !entries.length) return;
   let bg = document.getElementById('ahFailedRetryModalBg');
@@ -1368,40 +1356,25 @@ function ahShowFailedRetryPopup(op, entries, onRetry){
   bg.classList.add('show');
 }
 
-// Template default buat field kayak "Notes" -- dipasang otomatis pas pertama kali user
-// buka modal instruksi field yang namanya keliatan kayak field catatan/penjelasan, biar
-// gak nulis dari nol. Tetep bisa diedit/dihapus bebas sama user.
+// Template default field "Notes" -- dipasang otomatis pas modal instruksi field dibuka pertama kali, tetap bisa diedit/dihapus user.
 const AH_DEFAULT_NOTES_INSTRUCTION =
 `Isi field ini dengan penjelasan SUPER LENGKAP & MENDALAM tentang kosakata/kalimat yang lagi diterjemahin -- posisikan diri kamu kayak GURU BAHASA yang lagi nerangin ke murid secara tatap muka: sabar, telaten, runtut, dan pastiin muridnya bener-bener paham dari akar sampai daun, bukan cuma dikasih arti mentah terus selesai. Tiap poin di bawah ini WAJIB dijabarin dengan kalimat penjelasan yang jelas (bukan cuma disebut judulnya doang atau dijawab satu kata) -- kalau memang suatu poin gak relevan sama sekali buat kata/kalimat yang lagi dibahas (misal poin konjugasi buat kata benda), boleh dilewatin, tapi selebihnya WAJIB diisi:
-- Arti & nuansa: jelasin makna detailnya, bukan cuma terjemahan kata per kata. Kalau kata/kalimatnya punya makna ganda atau makna kiasan, sebutin semua kemungkinannya & jelasin kapan makna yang mana yang biasanya dipakai.
-- Tingkat kesulitan/level: kalau ada tolok ukur level yang relevan buat bahasanya (misal JLPT N5-N1 buat bahasa Jepang, CEFR A1-C2, dll), sebutin perkiraan levelnya -- biar murid punya gambaran ini kosakata dasar atau udah level lanjut.
-- Frekuensi pemakaian: kosakata ini sering dipakai di percakapan sehari-hari, atau jarang/terkesan sastra-formal-kaku?
-- Konteks pemakaian: biasanya dipakai di situasi apa (ngobrol santai sama teman, situasi formal/kerja, tulisan/surat, percakapan keluarga, dll) dan kapan pas dipakainya.
-- Tingkat kesopanan: ini bentuk sopan (teineigo/keigo) atau bentuk biasa/kasual (futsuukei)? Kasih tau juga versi sopan/kasualnya kalau ada padanannya.
-- Cara penulisan: kalau kata ini bisa ditulis dengan lebih dari satu cara (misal pakai kanji vs cukup hiragana/kana aja, atau ada varian ejaan lain), jelasin kapan sebaiknya pakai yang mana & apa bedanya kesan yang ditimbulin (misal kanji kesannya lebih formal/tertulis, hiragana kesannya lebih lembut/kasual).
-- Pelafalan/aksen (kalau relevan & krusial buat dibedain, misal ada kata yang beda makna karena beda aksen/nada baca), sebutin secukupnya -- gak usah dipaksain kalau bahasanya gak punya sistem aksen yang signifikan.
-- Perubahan bentuk/konjugasi: kalau kata ini kata kerja, kata sifat, atau kata yang punya bentuk berubah-ubah, kasih beberapa bentuk pentingnya (misal bentuk kamus, bentuk -masu/sopan, bentuk lampau, bentuk negatif, bentuk te/menyambung, dll sesuai yang relevan sama bahasanya) biar murid liat polanya, bukan cuma satu bentuk doang.
-- Breakdown/struktur: kalau berupa kalimat, frasa, atau kata gabungan (kata majemuk, kata + imbuhan, kata + partikel, pola tata bahasa, dll), PECAH jadi bagian-bagian kecilnya satu-satu terus jelasin fungsi/arti tiap bagian itu -- tujuannya biar murid ngerti KENAPA gabungan itu bisa berarti begitu secara logis, bukan cuma disuruh ngapalin utuh-utuh tanpa tau alasannya.
-- Contoh kalimat: kasih MINIMAL 2 contoh kalimat pemakaian nyata (usahain beda situasi/konteks satu sama lain, dan kalau ada bentuk konjugasi yang beda-beda, coba wakilin beberapa bentuk itu di contohnya), lengkap sama terjemahan Indonesia-nya, biar keliatan gimana kata/pola ini beneran dipakai dalam kalimat utuh sehari-hari, bukan cuma berdiri sendiri sebagai definisi kamus.
-- Kosakata/ungkapan yang mirip: sebutin kata atau frasa lain yang artinya mirip atau sering ketuker, terus jelasin bedanya apa (nuansa, tingkat formalitas, konteks pemakaian, atau kapan salah satu lebih natural dipakai dibanding yang lain).
-- Lawan kata (kalau ada): sebutin antonim/lawan katanya biar makin kebayang posisi makna kata ini dibanding kata yang berlawanan.
-- Kesalahan umum pembelajar: kalau ada, sebutin kesalahan yang sering dibuat pembelajar terkait kata/pola ini (misal ketuker sama kata yang mirip, salah tingkat kesopanan, salah partikel, salah konjugasi, salah konteks pemakaian, dll) biar bisa diantisipasi/dihindarin dari awal.
-- Cara gampang inget (opsional): kalau ada cara yang natural buat bantu inget kata/pola ini (misal asosiasi bunyi, keterkaitan sama kanji/kata lain yang udah familiar, cerita singkat, dll), kasih 1 tips singkat -- tapi JANGAN dipaksain kalau emang gak ada asosiasi yang masuk akal.
-- Kalau ada nuansa budaya, kolokasi umum (kata yang sering bareng), atau catatan pemakaian unik lainnya (misal cuma dipakai di kalimat tertentu, gender tertentu, atau ada di dialek tertentu), sebutin juga sesingkat & sejelas mungkin.
-- Ringkasan penutup: tutup penjelasan dengan 1-2 kalimat ringkasan singkat (semacam "intinya") yang ngerangkum poin paling penting dari kata/kalimat ini, biar kalau murid buru-buru ngulang, tetep nangkep inti yang paling wajib diinget.
+- Arti & nuansa: makna detail (bukan cuma terjemahan kata per kata), termasuk makna ganda/kiasan kalau ada & kapan tiap makna dipakai.
+- Level, frekuensi & konteks pemakaian: perkiraan level (misal JLPT/CEFR kalau relevan), seberapa sering dipakai, situasi/kapan biasanya dipakai, dan tingkat kesopanannya (formal/kasual, beserta padanannya kalau ada).
+- Cara penulisan & pelafalan: variasi penulisan (misal kanji vs kana) dan bedanya kesan, plus pelafalan/aksen kalau krusial buat dibedain.
+- Perubahan bentuk/konjugasi: beberapa bentuk penting (kamus, sopan, lampau, negatif, dll sesuai relevansi) biar keliatan polanya.
+- Breakdown/struktur: kalau kalimat/frasa/kata gabungan, pecah jadi bagian-bagian & jelasin fungsi tiap bagian biar ngerti KENAPA-nya, bukan cuma dihafal.
+- Contoh kalimat: MINIMAL 2 contoh pemakaian nyata beda konteks, lengkap terjemahan Indonesia-nya.
+- Kata mirip/lawan kata & kesalahan umum pembelajar: sebutin padanan yang sering ketuker (beserta bedanya), lawan katanya kalau ada, dan kesalahan umum yang perlu diantisipasi.
+- Tips inget (opsional) & nuansa budaya/kolokasi: kasih 1 tips singkat kalau ada asosiasi yang natural, sebutin juga catatan budaya/pemakaian unik lainnya kalau relevan.
+- Ringkasan penutup: 1-2 kalimat "intinya" yang ngerangkum poin paling penting.
 - Kanji & furigana: kalau ada kanji di penjelasan (termasuk di contoh kalimat), WAJIB kasih cara baca furigana-nya, dengan format PERSIS begini: kanji (atau blok kanji beruntun yang sama-sama dibaca jadi satu furigana) diikuti kurung siku berisi hiragana-nya, contoh: 私[わたし]。 Jangan pakai tanda kurung biasa ( ) atau format lain. Kurung siku-nya HARUS nempel PERSIS cuma ngelingkupin blok kanji-nya doang, JANGAN sampe furigana-nya keanggep nyebar ke karakter lain yang nempel SEBELUM blok kanji itu (baik itu hiragana atau kanji lain) — caranya, kasih SATU spasi pemisah sebelum karakter PALING DEPAN dari blok kanji yang mau dikasih furigana (bukan di antara kanji-kanji di dalam bloknya sendiri, itu tetep nempel gak pake spasi). Contoh kasus hiragana+kanji: たった今 (dibaca たったいま, cuma "今" yang kanji) ditulis jadi "たった 今[いま]", BUKAN "たった今[いま]" atau "たった[いま]今". Contoh kasus kanji ketemu kanji (blok kanji-nya lebih dari 1 karakter): 巫山戯る (dibaca ふざける, "巫山戯" bertiga sama-sama masuk satu bacaan ふざけ) ditulis jadi "巫山戯[ふざけ]る" tapi kalau sebelum "巫" ada karakter lain yang nempel (misal hiragana atau kanji kata sebelumnya atau romaji, atau tidak ada karakter sama sekali), WAJIB kasih spasi sebelum "巫"-nya aja (bukan di antara 巫/山/戯), biar furigana-nya cuma ngelingkupin 3 kanji itu dan gak ikut nyebar ke kata sebelumnya.
 Tulis dengan nada guru yang hangat, sabar, & enak diikutin -- boleh panjang demi kelengkapan (jangan dipotong-potong/diringkas berlebihan), tapi tetap runtut per poin, gak muter-muter, dan jangan bertele-tele di luar topik. Jangan kaku kayak kamus, dan jangan cuma nge-list istilah tanpa penjelasan.`;
 
-// Instruksi default buat fitur "Jelasin Kosakata (AI)" di panel Translate Otomatis --
-// sengaja dipakein isi yang SAMA kayak template Notes di atas, karena tujuannya emang
-// sama (AI ngejelasin kosakata/kalimat secara lengkap), cuma beda jalur eksekusinya:
-// yang ini langsung manggil API & nulis ke field tujuan, bukan cuma nempel pas copy-paste.
+// Instruksi default fitur "Jelasin Kosakata (AI)" -- sama kayak template Notes di atas, tapi jalurnya beda: langsung manggil API & nulis ke field tujuan.
 const AH_DEFAULT_EXPLAIN_INSTRUCTION = AH_DEFAULT_NOTES_INSTRUCTION;
 
-// Engine yang boleh dipakai buat mode "Jelasin Kosakata" -- cuma yang beneran AI chat model
-// (Google Translate gratis/Cloud itu API terjemahan literal, gak bisa diinstruksiin bebas).
-// Didefinisiin di sini (bukan deket ahExplainDispatch di bawah) biar udah kebaca duluan
-// sebelum initAutoTranslatePanel IIFE manggil ahAtSetOp() pas halaman pertama kali dimuat.
+// Engine yang boleh dipakai buat mode "Jelasin Kosakata" -- cuma AI chat model (Google Translate gratis/Cloud gak masuk karena literal, bukan bisa diinstruksiin).
 const AH_EXPLAIN_ENGINES = ['openai', 'claude', 'gemini', 'deepseek'];
 
 function ahLooksLikeNotesField(fieldName){
@@ -1409,19 +1382,14 @@ function ahLooksLikeNotesField(fieldName){
   return n.includes('note') || n.includes('catatan') || n.includes('keterangan') || n.includes('penjelasan');
 }
 
-// Instruksi khusus per field disimpen TERPISAH per note type (mid), biar instruksi yang
-// udah ditulis buat note type A gak ke-reset/ilang kalau user pindah ke note type B lalu
-// balik lagi ke A (dulu ke-reset jadi {} tiap ganti note type -- bug, sekarang dibikin
-// persisten selama deck yang sama masih kebuka).
+// Instruksi per field disimpen terpisah per note type (mid) biar gak ke-reset kalau user pindah note type lalu balik lagi.
 function ahCurrentFieldInstructions(){
   const mid = state.currentMid;
   if(!state.fieldInstructionsByModel[mid]) state.fieldInstructionsByModel[mid] = {};
   return state.fieldInstructionsByModel[mid];
 }
 
-// Modal buat nulis/edit instruksi khusus per field, yang bakal ikut ditempelin ke
-// [INSTRUKSI BUAT AI TRANSLATOR] pas user copy teks buat ditranslate -- jadi AI-nya
-// langsung tau field itu mau diisi kayak gimana (misal Notes: jelasin lengkap + furigana).
+// Modal instruksi khusus per field, ditempelin ke [INSTRUKSI BUAT AI TRANSLATOR] pas user copy teks buat ditranslate.
 function openFieldInstructionModal(idx, fieldName, onSaved){
   let bg = document.getElementById('ahFieldInstrModalBg');
   if(!bg){
@@ -1506,7 +1474,6 @@ const state = {
   tablePageSize: 50,   // buat pagination tabel Preview & Edit doang (biar gak ngelag di deck gede) -- terpisah dari batchSize/batchIndex di atas, yang itu buat fitur Copy/Paste/Translate per Batch
   tablePageIndex: 0,
   searchQuery: '',
-  duplicateGroups: [],
   resumeState: null,
   deckHash: null,
   cardsRows: null,
@@ -1567,11 +1534,7 @@ let sqlReadyPromise = initSqlJs({
   locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
 }).then(SQL => { state.SQL = SQL; return SQL; });
 
-// Konfirmasi kalau user coba nutup tab / refresh SETELAH file .apkg berhasil dimuat --
-// semua kerjaan (translate, edit field, dll) cuma kesimpen di memori browser aja, belum
-// ada auto-save ke server/disk, jadi kalau ke-close/refresh tanpa sengaja progress-nya ilang.
-// Browser modern gak nampilin teks custom ini (cuma dialog konfirmasi bawaan browser),
-// tapi listener-nya harus tetep dipasang biar dialognya nongol sama sekali.
+// Konfirmasi nutup tab/refresh setelah .apkg dimuat -- progress cuma di memori browser, belum ada auto-save.
 window.addEventListener('beforeunload', (e)=>{
   if(state.notes && state.notes.length){
     e.preventDefault();
@@ -1622,7 +1585,6 @@ async function handleApkgFiles(files){
     statusEl.innerHTML = `✅ ${loaded.length} deck digabung, ketemu ${state.notes.length} catatan.`;
     toast(`Beberapa deck berhasil digabung jadi satu!`, '🎉');
     ahSetResumeControls();
-    ahDetectDuplicateCards();
   }catch(err){
     console.error(err);
     statusEl.innerHTML = '😿 Gagal baca file: ' + (err.message || err);
@@ -1819,7 +1781,6 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   document.getElementById('saveCard').classList.remove('hidden');
   state.resumeState = ahLoadResumeState(state.deckHash);
   ahSetResumeControls();
-  ahDetectDuplicateCards();
 }
 
 /* ---------------- Gabung Deck Kedua ---------------- */
@@ -1992,7 +1953,7 @@ async function handleMergeSecondDeck(file){
       const sel = document.getElementById('modelSelect');
       if(sel) sel.value = prevMid;
       populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor();
-      ahAtRefreshMappingsForModel(); ahDetectDuplicateCards(); ahUpdateCostEstimate();
+      ahAtRefreshMappingsForModel(); ahUpdateCostEstimate();
     }
 
     populateDeckNameInputs();
@@ -2006,7 +1967,6 @@ async function handleMergeSecondDeck(file){
 
     state.resumeState = ahLoadResumeState(state.deckHash);
     ahSetResumeControls();
-    ahDetectDuplicateCards();
 
     statusEl.innerHTML = `✅ Deck kedua digabung! Total sekarang <b>${state.notes.length}</b> catatan.`;
     toast('Deck kedua berhasil digabung ke deck utama!', '🧩');
@@ -2142,7 +2102,6 @@ async function handleApkgFile(file){
     document.getElementById('saveCard').classList.remove('hidden');
     state.resumeState = ahLoadResumeState(state.deckHash);
     ahSetResumeControls();
-    ahDetectDuplicateCards();
     ahCheckAutosaveRestore();
 
   }catch(err){
@@ -2260,9 +2219,7 @@ async function handleBgImage(file){
 
 document.getElementById('bgFit').addEventListener('change', e=>{ state.cardBg.fit = e.target.value; updateBgPreview(); });
 
-// Tab pemilih device yang lagi diatur posisinya -- Desktop & Mobile disimpen
-// terpisah (state.cardBg.posX/posY vs mobilePosX/mobilePosY), pindah tab cuma
-// ganti device MANA yang lagi di-drag/dipreview, gak nge-reset yang lain.
+// Tab pemilih device (Desktop/Mobile) -- posisi X/Y disimpen terpisah per device, pindah tab gak nge-reset yang lain.
 function setBgPreviewDevice(device){
   state.cardBg.previewDevice = device;
   updateBgPreview();
@@ -2303,17 +2260,9 @@ function ahHexToRgb(hex){
   return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
 }
 
-// Bangun value CSS text-shadow (tanpa prefix "text-shadow:") berdasarkan config custom.
-// Dipakai bareng buat live preview di browser & buat CSS beneran yang disuntik ke Anki.
-// Bangun deklarasi CSS (bukan cuma text-shadow) buat efek teks vocab.
-// 'outline' = garis tepi tegas ala komik: isi huruf putih polos, cuma
-//   PINGGIRANNYA doang yang kena warna custom. Pake -webkit-text-stroke
-//   (stroke digambar di tengah tepi glyph) + paint-order:stroke fill supaya
-//   fill putih ditumpuk DI ATAS separuh stroke yang ada di dalam huruf, jadi
-//   yang keliatan cuma separuh luar strokenya -> persis kayak garis outline.
-//   Ga pake blur sama sekali, jadi gak nyebar/numpuk ke karakter sebelahnya.
-// 'glow'    = bayangan lembut ngeblur di sekeliling teks, warna asli teks
-//   tetep dipertahankan (dipakai kalau user mau efek lebih soft, bukan outline).
+// Bangun CSS text-shadow/efek teks vocab dari config custom, dipakai buat preview & CSS yang disuntik ke Anki.
+// 'outline' = garis tepi tegas (webkit-text-stroke + paint-order:stroke fill, gak pake blur).
+// 'glow' = bayangan lembut ngeblur di sekitar teks, warna asli tetap.
 function ahBuildTextFxCss(cfg){
   const fx = (cfg && cfg.textFx) || {};
   const s = Math.max(1, Math.min(6, fx.strength || 3));
@@ -2525,12 +2474,7 @@ function toggleBgPreviewSide(force){
   updateBgPreview();
 }
 
-// Versi ringan dari updateBgPreview() -- CUMA nulis ulang background-position &
-// angka readout-nya, tanpa nyentuh innerHTML teks/efek FX yang berat. Dipanggil
-// terus-menerus SELAMA drag (biar posisi kerasa nempel di jari/kursor), sedangkan
-// updateBgPreview() yang lengkap cuma dipanggil sekali di akhir drag. Sebelumnya
-// updateBgPreview() penuh dipanggil di TIAP pointermove, yang nge-reset innerHTML
-// & CSS teks berkali-kali per detik -> inilah biang glitch/patah-patahnya foto pas digeser.
+// Versi ringan dari updateBgPreview() -- cuma update background-position & readout, dipanggil terus selama drag biar gak glitch (versi lengkap cuma sekali di akhir drag).
 function updateBgPreviewPositionOnly(){
   const cfg = state.cardBg;
   const device = cfg.previewDevice || 'desktop';
@@ -2636,10 +2580,7 @@ function ahFieldValueByName(fields, fieldNames, name){
   return idx >= 0 ? (fields[idx] || '') : '';
 }
 
-// Render 1 tag {{...}} handlebars ala Anki jadi HTML preview. Best-effort:
-// dukung {{Field}}, {{FrontSide}}, {{cloze:Field}}, {{Tags}}/{{Type}}/{{Deck}}/{{Card}},
-// dan modifier field kayak {{text:Field}}/{{furigana:Field}} (modifier-nya
-// diabaikan, langsung tampilin isi field-nya apa adanya).
+// Render 1 tag {{...}} handlebars ala Anki jadi HTML preview (best-effort): {{Field}}, {{FrontSide}}, {{cloze:Field}}, {{Tags}}/{{Type}}/{{Deck}}/{{Card}}, modifier field diabaikan.
 function ahRenderTemplateTag(tag, fields, fieldNames, extra){
   tag = tag.trim();
   if(tag === 'FrontSide') return extra.frontSide || '';
@@ -2660,10 +2601,7 @@ function ahRenderTemplateTag(tag, fields, fieldNames, extra){
   return ahFieldValueByName(fields, fieldNames, fname);
 }
 
-// Render qfmt/afmt (handlebars ala Anki) jadi HTML buat preview. Dukung blok
-// kondisional {{#Field}}...{{/Field}} (tampil kalau field ISI) dan
-// {{^Field}}...{{/Field}} (tampil kalau field KOSONG). Ini rendering
-// best-effort buat preview aja, bukan pengganti engine asli Anki.
+// Render qfmt/afmt jadi HTML preview, dukung blok kondisional {{#Field}} dan {{^Field}} -- best-effort, bukan pengganti engine asli Anki.
 function ahRenderAnkiTemplate(tpl, fields, fieldNames, extra){
   tpl = tpl || '';
   let prev;
@@ -2780,13 +2718,7 @@ function switchTemplatePreviewSide(side){
   renderTemplateLivePreview();
 }
 
-// Baca manifest 'media' dari zip .apkg yang lagi dibuka (nomor file <-> nama file
-// asli), sama kayak logic pas export (termasuk bongkar zstd kalau manifestnya
-// sendiri kekompres) -- dipakai biar preview realtime bisa nunjukin gambar &
-// muterin audio ASLI dari deck, bukan cuma teks mentah [sound:...]/ikon patah.
-// Versi generik (gak di-cache, bisa dipake buat zip APAPUN, bukan cuma state.zip)
-// dari pembaca manifest 'media' -- dipakai fitur Gabung Deck buat baca nama file
-// media asli dari deck KEDUA yang lagi digabungin.
+// Baca manifest 'media' dari zip .apkg (nomor <-> nama file asli, termasuk bongkar zstd) buat preview realtime gambar/audio asli. Versi generik dipakai fitur Gabung Deck buat baca deck kedua.
 async function ahReadZipMediaMap(zip){
   if(!zip) return {};
   const entry = zip.file('media');
@@ -2832,18 +2764,10 @@ const AH_MEDIA_MIME_MAP = {
   flac:'audio/flac', weba:'audio/webm', mp4:'video/mp4', webm:'video/webm'
 };
 
-// Ambil (atau bikin & cache) blob: URL buat 1 file media, dibaca langsung dari
-// zip .apkg yang lagi dibuka (termasuk bongkar zstd per-file kalau formatnya
-// anki21b, sama kayak logic pas export). Balikin null kalau filenya gak ketemu.
-// SAFEGUARD: kalau file terkompresinya kegedean (kemungkinan besar audio/video
-// panjang atau data korup), decompress-nya DISKIP -- fzstd jalan sinkron di
-// main thread, jadi file yang kegedean/korup bisa bikin tab beneran hang
-// ("Page Unresponsive") tanpa ada cara buat interrupt di tengah jalan.
+// Ambil/cache blob: URL 1 file media dari zip .apkg (bongkar zstd per-file kalau anki21b). SAFEGUARD: file terkompresi kegedean di-skip decompress-nya biar gak hang tab.
 const AH_MEDIA_DECOMPRESS_SIZE_CAP = 15 * 1024 * 1024; // 15MB terkompresi
 
-// Bagian "cari & bongkar bytes mentah" dipisah dari ahGetMediaBlobUrl biar bisa
-// dipakai bareng sama jalur print/PDF (yang butuh bytes-nya DULU sebelum
-// di-downscale, bukan langsung jadi blob URL ukuran asli).
+// "Cari & bongkar bytes mentah" dipisah dari ahGetMediaBlobUrl biar dipakai bareng jalur print/PDF.
 async function ahGetMediaBytesRaw(filename){
   if(!filename || !state.zip) return null;
   const nameMap = await ahGetMediaNameMap();
@@ -2888,15 +2812,7 @@ async function ahGetMediaBlobUrl(filename){
   return url;
 }
 
-// FIX freeze pas print preview: kalau deck-nya banyak kartu & hampir semua
-// pake gambar resolusi asli (misal foto kamera / screenshot beberapa MB),
-// ribuan gambar full-res itu semuanya bakal didekode & dirasterisasi
-// BARENGAN sama browser pas ngebangun print preview -- ini yang bikin tab
-// literally hang/"Page Unresponsive", bukan cuma lambat. Solusinya: buat
-// jalur print, kecilin dulu gambarnya (resize + re-encode ke JPEG) sebelum
-// dipasang ke <img>, jadi total data yang mesti didekode+dirender jauh lebih
-// kecil walau kartunya ribuan. createImageBitmap dipake karena decode-nya
-// gak nge-block main thread separah <img>+canvas biasa.
+// FIX freeze print preview: gambar full-res ribuan kartu didekode barengan bikin tab hang. Solusi: resize+re-encode ke JPEG dulu sebelum dipasang ke <img>, pakai createImageBitmap biar gak block main thread.
 async function ahDownscaleImageBytesForPrint(bytes, mime, maxDim){
   if(!maxDim || mime === 'image/svg+xml') return { bytes, mime }; // 0 = "Original" / SVG udah vektor, gak usah diapa-apain
   try{
@@ -2921,9 +2837,7 @@ async function ahDownscaleImageBytesForPrint(bytes, mime, maxDim){
   }
 }
 
-// Versi khusus print/PDF dari ahGetMediaBlobUrl -- cache-nya TERPISAH
-// (state.printMediaBlobUrlCache, key-nya ikutan maxDim) biar gak nyampur sama
-// cache preview interaktif yang emang sengaja disimpen ukuran asli.
+// Versi khusus print/PDF dari ahGetMediaBlobUrl, cache terpisah (state.printMediaBlobUrlCache) biar gak nyampur cache preview.
 async function ahGetMediaBlobUrlForPrint(filename, maxDim){
   if(!filename) return null;
   const cacheKey = filename + '\u0000' + maxDim;
@@ -2945,10 +2859,7 @@ function ahRevokePrintMediaCache(){
   state.printMediaBlobUrlCache = {};
 }
 
-// Ganti referensi media di HTML hasil render (<img src="nama.jpg"> dan tag
-// [sound:nama.mp3]) jadi blob: URL yang beneran bisa ditampilin/diputer di
-// iframe preview, diambil dari media asli yang ada di dalam .apkg. Kalau
-// filenya gak ketemu di deck, dikasih placeholder yang jelas (bukan silently gagal).
+// Ganti referensi media di HTML render (<img>, [sound:...]) jadi blob: URL dari .apkg. Kalau file gak ketemu, dikasih placeholder jelas.
 async function ahResolveMediaInHtml(html){
   const imgTags = [...new Set((html.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi) || []))];
   for(const tag of imgTags){
@@ -2974,15 +2885,9 @@ async function ahResolveMediaInHtml(html){
   return html;
 }
 
-// (Catatan: resolusi media buat export PDF sekarang dilakuin lewat
-// ahPrewarmMediaForPrint + ahResolveMediaForPrintSync di bawah -- lebih
-// cepat karena tiap file gambar cuma di-resolve SEKALI buat seluruh batch,
-// bukan diulang per kartu.)
+// Catatan: resolusi media buat export PDF sekarang lewat ahPrewarmMediaForPrint + ahResolveMediaForPrintSync -- tiap gambar cuma di-resolve sekali per batch.
 
-// Ngasih jeda balik ke event loop TANPA kena "clamp" minimum ~4ms yang
-// dipaksain browser ke setTimeout(fn,0) -- pakai MessageChannel (trik
-// setImmediate-shim klasik) jauh lebih murah, jadi buat export PDF ribuan
-// kartu, total overhead jeda-nya gak signifikan lagi kayak sebelumnya.
+// Jeda balik ke event loop tanpa clamp ~4ms setTimeout -- pakai MessageChannel biar overhead export PDF ribuan kartu gak signifikan.
 function ahYield(){
   return new Promise(resolve=>{
     const ch = new MessageChannel();
@@ -2991,11 +2896,7 @@ function ahYield(){
   });
 }
 
-// Cari SEMUA nama file gambar unik yang dipake di sekumpulan html (front+back
-// gabungan seluruh kartu yang mau dicetak), terus resolve SEKALI per file
-// (bukan berulang-ulang per kartu kayak sebelumnya -- walau ada cache, tetep
-// ada overhead scan+await per kartu). Ini yang bikin proses gambar jauh lebih
-// cepat buat deck gede, apalagi kalau banyak kartu pake gambar yang sama.
+// Cari semua nama file gambar unik yang dipake sekumpulan kartu, resolve sekali per file (bukan per kartu) -- jauh lebih cepat buat deck gede.
 async function ahPrewarmMediaForPrint(htmlList, progressWin, maxDim){
   const filenames = new Set();
   for(const html of htmlList){
@@ -3020,11 +2921,7 @@ async function ahPrewarmMediaForPrint(htmlList, progressWin, maxDim){
   }
 }
 
-// Versi SINKRON (gak ada await sama sekali) dari resolver di atas -- dipakai
-// SETELAH ahPrewarmMediaForPrint, jadi semua blob URL gambar (yang udah
-// di-downscale kalau perlu) udah pasti ada di printMediaBlobUrlCache dan
-// tinggal string-replace biasa. Jauh lebih cepat karena gak ada overhead
-// promise/scheduling per kartu.
+// Versi sinkron dari resolver di atas, dipakai setelah ahPrewarmMediaForPrint (semua blob URL udah di cache) -- lebih cepat, gak ada overhead promise per kartu.
 function ahResolveMediaForPrintSync(html, maxDim){
   html = html.replace(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi, (tag, src)=>{
     if(/^(https?:|data:|blob:)/i.test(src)) return tag;
@@ -3164,11 +3061,7 @@ function ahApplyDeckDesc(origDesc){
 /* ---- helper suntik background ke template Anki (qfmt/afmt/css), dipakai pas save ---- */
 const AH_BG_START = '/* === AnkiHoney Background START === */';
 const AH_BG_END = '/* === AnkiHoney Background END === */';
-// Lebar viewport (px) buat mbedain render Desktop vs Mobile pas kartu dibuka
-// beneran di Anki -- app Anki di HP (AnkiDroid/AnkiMobile) rendernya webview
-// selebar layar device (biasanya jauh di bawah ini), sedangkan Anki desktop
-// window-nya biasanya lebih lebar dari ini. Dipakai di @media buat milih
-// posisi foto mana (Desktop atau Mobile) yang berlaku.
+// Lebar viewport buat bedain render Desktop vs Mobile Anki, dipakai @media buat milih posisi foto mana yang berlaku.
 const AH_MOBILE_BREAKPOINT = 600;
 const AH_WRAP_OPEN = '<div class="ankihoney-bg">';
 const AH_WRAP_CLOSE = '</div><!-- /ankihoney-bg -->';
@@ -3363,11 +3256,7 @@ function applyWatermarkToModel(model){
   model.usn = -1;
 }
 
-// Suntik watermark ke TAG asli Anki (bukan ke isi field manapun) — jadi gak pernah
-// numpang ke field konten (yang bisa aja lagi dipakai template buat nampilin sesuatu,
-// misal field "Tags" custom milik user sendiri) dan gak ngerusak tampilan kartu sama
-// sekali. Tetep nempel ke DATA note (bukan cuma template), cuma gak keliatan di kartu,
-// cuma keliatan di list tag / browser Anki. Dipanggil pas EXPORT aja.
+// Suntik watermark ke tag asli Anki (bukan ke field), jadi gak numpang field konten user & gak ngerusak tampilan kartu. Cuma dipanggil pas export.
 const AH_WM_TAG = 'yumelyrics/ankihoney';
 function injectWmIntoTags(tags){
   const parts = (tags || '').trim().split(/\s+/).filter(t=> t && t !== AH_WM_TAG);
@@ -3394,14 +3283,7 @@ async function ensureBgMediaInZip(zip, bytes, filename){
   return filename;
 }
 
-// Suntik background ke note type yang lagi dipilih, langsung ke col.models di db format lama (schema 11/legacy)
-// Terapin nama deck custom dari form user ke database format lama (in-place edit).
-// PENTING: Anki nyocokin deck pas import berdasarkan ID, bukan nama — kalau ID-nya
-// sama kayak deck yang udah ada di koleksi Anki user, nama baru bakal DIABAIKAN dan
-// tetep pake nama lama. Makanya di sini bikin ID deck BARU (belum pernah ada) buat
-// deck yang namanya diganti, biar Anki nganggep itu deck baru & beneran pake nama
-// custom-nya, kartu-kartunya ikut dipindah ke ID baru itu (jadwal belajar tetap aman,
-// gak kepengaruh karena disimpen di tabel cards, bukan di deck).
+// Suntik background & nama deck custom ke db format lama (in-place). PENTING: Anki cocokin deck pas import by ID bukan nama, jadi bikin ID deck baru biar nama custom kepake (jadwal belajar tetap aman).
 function applyDeckRenamesLegacy(){
   const res = state.db.exec("SELECT decks FROM col");
   if(!res.length || !res[0].values.length) return;
@@ -3429,11 +3311,7 @@ function applyDeckRenamesLegacy(){
   state.db.run("UPDATE col SET decks=?", [JSON.stringify(decksJson)]);
 }
 
-// Salin balik perubahan Front/Back Template & Styling (CSS) yang dibikin lewat
-// editor -- kesimpen di state.models -- ke JSON models mentah yang baru dibaca
-// ulang dari db. Perlu ini karena export format lama baca ulang langsung dari
-// db (bukan dari state.models), jadi tanpa ini editan template/CSS user bisa
-// "ke-skip" diem-diem walau udah keliatan berubah di preview.
+// Salin balik editan Front/Back Template & CSS dari state.models ke JSON models mentah, karena export format lama baca ulang dari db bukan dari state.models.
 function applyTemplateEditsToModelsJson(modelsJson){
   Object.keys(modelsJson).forEach(mid=>{
     const edited = state.models[mid];
@@ -3527,10 +3405,7 @@ function pbGetVarint(fields, num){
   return last.wireType === 0 ? last.varint : null;
 }
 
-// Nomor field css di NotetypeConfig (best-effort tebakan = 3) gak sepenuhnya
-// bisa diverifikasi dari luar source Anki, jadi biar gak gampang ketuker sama
-// string field lain di config yang sama (misal latex_pre/latex_post), kita
-// scoring semua kandidat string top-level & pilih yang paling "keliatan CSS".
+// Nomor field css di NotetypeConfig (best-effort tebakan = 3) gak bisa diverifikasi pasti, jadi scoring semua kandidat string & pilih yang paling "keliatan CSS".
 function pbGuessCss(fields){
   let best = '', bestScore = -Infinity;
   Object.keys(fields).forEach(numStr=>{
@@ -3551,9 +3426,7 @@ function pbGuessCss(fields){
   return bestScore > 0 ? best : (pbGetString(fields, 3) || '');
 }
 
-// Baca desain kartu asli (css + qfmt/afmt tiap template) dari tabel notetypes/templates
-// skema baru. Balikin mid -> {css, type, tmpls:[{name,ord,qfmt,afmt}]}. Best-effort:
-// kalau satu blob gagal di-decode, note type itu aja yang dilewatin (gak nge-crash semua).
+// Baca css + qfmt/afmt tiap template dari tabel notetypes/templates skema baru -> mid -> {css, type, tmpls}. Best-effort: satu blob gagal decode, note type itu aja dilewatin.
 function getNewSchemaModelDesigns(db){
   const designs = {};
   try{
@@ -3587,9 +3460,7 @@ function getNewSchemaModelDesigns(db){
   return designs;
 }
 
-// Note type / model: skema lama (v11) simpan JSON di col.models, lengkap sama
-// desain kartunya (tmpls: qfmt/afmt, css). Skema baru (v15+/v18) pindahin ke
-// tabel notetypes+fields+templates, desainnya dibungkus protobuf (getNewSchemaModelDesigns).
+// Note type: skema lama (v11) simpan JSON di col.models, skema baru (v15+/v18) pindah ke tabel notetypes+fields+templates dibungkus protobuf.
 function getModelsAnyVersion(db){
   let models = {};
   try{
@@ -3674,9 +3545,7 @@ function getDecksAnyVersion(db){
   return decks;
 }
 
-// Ambil baris tabel apa adanya, dengan kolom eksplisit yang formatnya stabil
-// dari skema v11 sampai v18 — dipakai buat mindahin cards/revlog apa adanya
-// pas kita harus rebuild collection ke format legacy.
+// Ambil baris tabel apa adanya (kolom eksplisit stabil v11-v18) buat mindahin cards/revlog pas rebuild collection ke format legacy.
 function readRowsSafe(db, sql){
   try{
     const res = db.exec(sql);
@@ -3743,7 +3612,7 @@ function populateModelSelect(){
     opt.textContent = `${model.name} (${count} notes)`;
     sel.appendChild(opt);
   });
-  sel.onchange = ()=>{ state.currentMid = sel.value; state.tablePageIndex = 0; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); ahDetectDuplicateCards(); ahUpdateCostEstimate(); };
+  sel.onchange = ()=>{ state.currentMid = sel.value; state.tablePageIndex = 0; populateFieldSelect(); updateBgModelLabel(); renderTable(); populateTemplateEditor(); ahAtRefreshMappingsForModel(); ahUpdateCostEstimate(); };
   if(midsUsed.length){
     state.currentMid = midsUsed[0];
     sel.value = midsUsed[0];
@@ -3910,9 +3779,7 @@ function getBatchRows(){
   return rows.slice(start, end);
 }
 
-// Kunci unik buat satu "batch" berdasarkan gabungan ID kartunya (bukan cuma nomor index batch),
-// biar tetep valid walau jumlah kartu per batch diubah-ubah. Dipakai buat nandain batch yang
-// udah pernah di-apply, jadi kalau di-paste ulang bisa diingetin dulu sebelum ke-overwrite diam-diam.
+// Kunci unik 1 batch dari gabungan ID kartu (bukan index) -- dipakai nandain batch yang udah di-apply biar gak ke-overwrite diam-diam.
 function batchKeyFor(rows){
   return (rows||[]).map(n=> String(n.id)).sort((a,b)=> a.localeCompare(b, undefined, {numeric:true})).join(',');
 }
@@ -4188,6 +4055,8 @@ function ahInBackgroundUpdate(){
 function ahRefreshAllAuxiliary(){
   ahUpdateCostEstimate();
 }
+// Normalisasi field pertama (strip HTML/tanda baca/diakritik) buat cocokin kartu
+// "duplikat" pas checkbox "Skip kartu duplikat" dinyalain -- best-effort, bukan exact match.
 function ahNormalizeDuplicateKey(text){
   const stripped = stripHtml(text||'').toLowerCase();
   return stripped
@@ -4208,27 +4077,6 @@ function ahSetResumeControls(){
     info.textContent = '';
   }
 }
-function ahDetectDuplicateCards(){
-  const rows = currentRows();
-  const groups = {};
-  rows.forEach(note=>{
-    const raw = note.fields[0] || '';
-    const key = ahNormalizeDuplicateKey(raw);
-    if(!key) return;
-    if(!groups[key]) groups[key] = { key, notes: [] };
-    groups[key].notes.push(note);
-  });
-  const duplicateGroups = Object.values(groups).filter(g=> g.notes.length > 1);
-  state.duplicateGroups = duplicateGroups;
-  const info = document.getElementById('duplicateInfo');
-  if(!info) return;
-  if(!duplicateGroups.length){
-    info.textContent = '';
-    return;
-  }
-  const counts = duplicateGroups.map(g=> g.notes.length).sort((a,b)=>b-a);
-  info.textContent = `⚠️ Ditemukan ${duplicateGroups.length} grup kartu duplikat/mirip di field pertama (${counts.join(', ')}). Aktifkan "Skip duplicate source cards" untuk hemat API.`;
-}
 
 const AT_HINT_INPLACE = '⚠️ Yang ditranslate cuma field yang <b>dicentang tapi BUKAN ditandain 🔒 sumber</b> (isinya bakal DITIMPA sama hasil terjemahan). API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen, apalagi buat field yang banyak tag HTML/gambar/audio.';
 const AT_HINT_MAPPED = '⚠️ Field <b>Sumber</b> DIBACA doang (gak diubah), hasil terjemahannya ditaruh/nimpa isi field <b>Tujuan</b> yang kamu pilih. API key (kalau diisi) cuma kesimpen lokal di browser kamu sendiri, dan teksnya dikirim LANGSUNG dari browser kamu ke server engine yang dipilih (bukan lewat server AnkiHoney) — jadi dobel-cek hasilnya sebelum disimpen.';
@@ -4242,9 +4090,7 @@ function ahAtCurrentHint(){
   return mapped ? AT_HINT_MAPPED : AT_HINT_INPLACE;
 }
 
-// Kosongin & sembunyiin tombol "Mulai Ulang yang Gagal" -- dipanggil tiap kali user
-// ganti pengaturan (op/mode) yang bikin daftar kegagalan lama gak relevan lagi, atau
-// pas mulai proses translate/jelasin BARU dari awal (bukan retry).
+// Kosongin & sembunyiin tombol "Mulai Ulang yang Gagal" tiap ganti pengaturan atau mulai proses baru.
 function ahAtClearFailedRetry(){
   state.autoTranslate.lastFailedEntries = [];
   const btn = document.getElementById('btnAutoTranslateRetryFailed');
@@ -4256,9 +4102,7 @@ document.getElementById('btnAutoTranslateRetryFailed').addEventListener('click',
   runAutoTranslate(null, entries);
 });
 
-// Inget pilihan terakhir user (engine/API key/bahasa) -- CUMA kesimpen lokal di
-// browser dia sendiri (localStorage), gak pernah dikirim ke server manapun selain
-// pas beneran manggil API translate-nya langsung.
+// Inget pilihan terakhir user (engine/API key/bahasa) di localStorage -- gak pernah dikirim ke server kecuali manggil API translate.
 (function initAutoTranslatePanel(){
   const engineSel = document.getElementById('atEngineSelect');
   const apiKeyWrap = document.getElementById('atApiKeyWrap');
@@ -4312,10 +4156,7 @@ document.getElementById('atModeInplace').addEventListener('click', ()=> ahAtSetM
 document.getElementById('atModeMapped').addEventListener('click', ()=> ahAtSetMode('mapped'));
 document.getElementById('atAddMapping').addEventListener('click', ()=> { ahAtAddMappingRow(); ahUpdateCostEstimate(); });
 
-// Toggle antara mode "Terjemahin" (dispatcher lama, ahTranslateDispatch) dan "Jelasin
-// Kosakata" (dispatcher baru, ahExplainDispatch pakai instruksi custom). Ganti-ganti label
-// tombol/hint biar gak bikin bingung, dan matiin opsi engine yang gak support mode explain
-// (Google Translate gratis/Cloud, karena itu API terjemahan literal bukan AI chat model).
+// Toggle mode "Terjemahin" vs "Jelasin Kosakata" -- ganti label/hint & matiin opsi engine yang gak support explain (Google Translate).
 function ahAtSetOp(op){
   state.autoTranslate.op = op;
   ahAtSaveSetting('op', op);
@@ -4358,9 +4199,7 @@ document.getElementById('atEngineSelect').addEventListener('change', function(){
   }
 });
 
-// Bikin 1 baris pasangan "ambil dari field X -> taruh ke field Y" buat mode
-// translate "Field beda". Dipakai pas user nambah pasangan baru, atau pas note
-// type diganti (dropdown-nya di-refresh biar sesuai daftar field yang baru).
+// Bikin 1 baris pasangan "field X -> field Y" buat mode translate "Field beda".
 function ahAtBuildFieldSelect(model, preferIdx){
   const sel = document.createElement('select');
   (model.flds||[]).forEach((name, idx)=>{
@@ -4426,11 +4265,7 @@ function ahAtRefreshMappingsForModel(){
   ahAtRefreshExplainContextField();
 }
 
-// Field opsional buat "Jelasin Kosakata (AI)" -- isinya DIBACA doang dan dikirim ke AI
-// sebagai KONTEKS TAMBAHAN (misal kalimat lengkap "SentKanji" pas field Sumber-nya cuma
-// kosakata tunggal "VocabKanji"), biar penjelasannya nyambung sama pemakaian aslinya di
-// kalimat, bukan cuma makna umum kamus. Dropdown-nya di-refresh tiap ganti note type,
-// dan coba dipertahanin (by NAMA field, bukan index) kalau field yang sama masih ada.
+// Field opsional "Jelasin Kosakata (AI)": dibaca & dikirim ke AI sebagai konteks tambahan biar penjelasan nyambung sama pemakaian asli, bukan cuma makna kamus.
 function ahAtRefreshExplainContextField(){
   const sel = document.getElementById('atExplainContextField');
   if(!sel) return;
@@ -4460,12 +4295,7 @@ document.getElementById('atExplainContextField')?.addEventListener('change', fun
 
 function ahSleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
 
-// Helper bareng buat semua engine AI (OpenAI/Claude/Gemini/DeepSeek): provider-provider ini
-// SERING banget ganti/hapus nama model (kejadian beberapa kali cuma dalam beberapa bulan),
-// jadi kalau request gagal, kita coba tebak apa penyebabnya "model ini udah gak didukung lagi"
-// (HTTP 404, atau pesan error nyebut kata "model" bareng "not found/deprecated/decommissioned/dst")
-// biar user dikasih tau JELAS kalau ini bukan salah mereka -- tool ini yang butuh diupdate,
-// bukan cuma error generik yang bikin bingung.
+// Helper AI engine: provider sering ganti/hapus nama model, jadi deteksi error "model not found/deprecated" biar user tau ini bukan salah mereka.
 function ahMakeEngineError(provider, status, bodyText){
   const snippet = (bodyText||'').slice(0,200);
   const lower = (bodyText||'').toLowerCase();
@@ -4478,11 +4308,7 @@ function ahMakeEngineError(provider, status, bodyText){
   return err;
 }
 
-// Engine #1: endpoint Google Translate versi gratis/gak resmi (trik yang sama dipakai
-// banyak tool client-side lain) -- gak butuh API key sama sekali, tapi sifatnya
-// BEST-EFFORT: bisa aja kena rate-limit atau diblokir sewaktu-waktu sama Google
-// karena ini bukan endpoint publik resmi. Kalau gagal terus, disaranin pindah ke
-// engine yang pakai API key.
+// Engine #1: Google Translate gratis/gak resmi, gak butuh API key, best-effort (bisa kena rate-limit/blokir).
 async function ahTranslateGoogleFree(text, sl, tl){
   if(!text || !text.trim()) return text;
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl||'auto')}&tl=${encodeURIComponent(tl||'id')}&dt=t&q=${encodeURIComponent(text)}`;
@@ -4492,9 +4318,7 @@ async function ahTranslateGoogleFree(text, sl, tl){
   return ((data && data[0]) || []).map(seg=> (seg && seg[0]) || '').join('');
 }
 
-// Engine #2: Google Cloud Translate API resmi (v2), butuh API key sendiri dari Google
-// Cloud Console. format:'html' dipakai biar tag HTML di field Anki (bold, ruby
-// furigana, dst) gak ikut kena terjemahin/rusak -- cuma teks di dalamnya aja.
+// Engine #2: Google Cloud Translate API resmi, butuh API key. format:'html' biar tag HTML gak ikut ketranslate.
 async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const body = { q:text, target: tl||'id', format:'html' };
@@ -4507,9 +4331,7 @@ async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
   return data?.data?.translations?.[0]?.translatedText ?? text;
 }
 
-// Engine #3: OpenAI API (butuh API key sendiri) -- paling aman dipakai buat field yang
-// isinya banyak tag HTML/furigana/[sound:...], karena model-nya diinstruksiin eksplisit
-// buat mempertahankan semua tag persis apa adanya & cuma nerjemahin teks yang kebaca doang.
+// Engine #3: OpenAI API -- aman buat field ber-HTML/furigana karena diinstruksiin mempertahankan tag persis.
 async function ahTranslateOpenAI(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const sys = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
@@ -4527,9 +4349,7 @@ async function ahTranslateOpenAI(text, sl, tl, apiKey){
 
 const AH_AI_TRANSLATE_SYS = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
 
-// Engine #4: Anthropic Claude API (butuh API key sendiri dari console.anthropic.com).
-// Header 'anthropic-dangerous-direct-browser-access' dibutuhin karena API-nya dipanggil
-// LANGSUNG dari browser (bukan lewat server), sama kayak engine lain di tool ini.
+// Engine #4: Anthropic Claude API -- header anthropic-dangerous-direct-browser-access dibutuhin karena dipanggil langsung dari browser.
 async function ahTranslateClaude(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
@@ -4689,11 +4509,7 @@ async function ahExplainDispatch(engine, text, instruction, lang, apiKey, contex
   throw new Error('Engine "'+engine+'" gak support mode Jelasin Kosakata -- pilih OpenAI/Claude/Gemini/DeepSeek ya~');
 }
 
-// Translate SEMUA field yang dicentang (minus yang ditandain 🔒 sumber) buat SEMUA
-// note dari note type yang lagi aktif, sekali klik. Jalan sekuensial (bukan paralel)
-// biar gak ngebejek endpoint/rate-limit, dan bisa dibatalin di tengah jalan.
-// Dukung 2 mode: 'inplace' (timpa isi field yang sama) dan 'mapped' (baca dari
-// field A, tulis hasilnya ke field B yang beda -- A gak ikut berubah).
+// Translate semua field yang dicentang buat semua note dari note type aktif, sekuensial (bisa dibatalin). Mode 'inplace' (timpa) atau 'mapped' (field A -> field B).
 async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly){
   const model = state.models[state.currentMid];
   if(!model) return;
@@ -4931,7 +4747,7 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
     }catch(e){
       failed++;
       const errMsg = (e && e.message) || String(e);
-      newFailedEntries.push({ id: note.id, src: entry.src, dst: entry.dst, err: errMsg, key: entry.key });
+      newFailedEntries.push({ id: note.id, src: entry.src, dst: entry.dst, err: errMsg });
       console.warn((op === 'explain' ? 'Auto-explain' : 'Auto-translate')+' gagal buat note '+note.id+' field '+entry.src+'->'+entry.dst, e);
       if(!modelIssueInfo && e && e.modelIssue){
         modelIssueInfo = { provider: e.provider || engine, message: e.message || String(e) };
@@ -4943,7 +4759,7 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
     progEl.innerHTML = `<span style="display:inline-flex; align-items:center; gap:7px;">${loaderHtml} Kartu ${noteIdx}/${totalOps} — Progress: ${done}/${totalOps}` + (failed ? ` (${failed} gagal)` : '') + `</span>`;
     if(engine === 'google-free') await ahSleep(200);
     if(state.resumeState && (opIdx % 5 === 0 || opIdx === pendingOps.length-1)){
-      const remaining = pendingOps.slice(opIdx+1).concat(newFailedEntries.map(fe=> ({ id: fe.id, src: fe.src, dst: fe.dst, key: fe.key })));
+      const remaining = pendingOps.slice(opIdx+1).concat(newFailedEntries.map(fe=> ({ id: fe.id, src: fe.src, dst: fe.dst })));
       state.resumeState.pendingOps = remaining;
       ahSaveResumeState(state.resumeState);
     }
@@ -4957,7 +4773,7 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
 
   if(state.autoTranslate.cancel || failed){
     if(state.resumeState){
-      const remaining = pendingOps.slice(opIdx+1).concat(newFailedEntries.map(fe=> ({ id: fe.id, src: fe.src, dst: fe.dst, key: fe.key })));
+      const remaining = pendingOps.slice(opIdx+1).concat(newFailedEntries.map(fe=> ({ id: fe.id, src: fe.src, dst: fe.dst })));
       state.resumeState.pendingOps = remaining;
       ahSaveResumeState(state.resumeState);
     }
@@ -5041,10 +4857,7 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
   toast('Translate otomatis terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
 });
 
-// Sama kayak "Translate Semua Field yang Dicentang", tapi cuma buat kartu di batch
-// yang lagi aktif (pakai ukuran batch & posisi batch yang sama kayak Copy/Paste
-// Batch) -- cocok buat deck gede biar gak nembak semua note sekaligus / bisa
-// dicek per batch kayak workflow translate manual yang lain.
+// Sama kayak Translate Semua Field, tapi cuma buat kartu di batch aktif -- cocok buat deck gede.
 document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
   const rows = getBatchRows();
   if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
@@ -5404,11 +5217,7 @@ function snippetOf(str, n){
   return s.length > n ? s.slice(0, n) + '…' : (s || '(kosong)');
 }
 
-// Referensi yang HARUS tetap sama persis walau bahasanya beda (nama file audio, gambar, link) --
-// dipakai sebagai "sidik jari" konten buat nangkep kasus dua field ke-swap biar ID-nya sendiri
-// tetep valid dua-duanya. Kalau includeFullText true (field ditandain SUMBER/REFERENSI oleh user),
-// seluruh isi field itu sendiri juga dipakai sebagai "token" -- soalnya field sumber emang
-// harusnya PERSIS SAMA, gak peduli isinya bahasa apa.
+// Referensi yang harus sama persis walau beda bahasa (file audio/gambar/link) dipakai sebagai fingerprint nangkep field ke-swap. Field SUMBER: seluruh isinya jadi token.
 function extractInvariantTokens(str, includeFullText){
   const tokens = [];
   const s = str || '';
@@ -5676,10 +5485,7 @@ document.getElementById('btnExportTxt').addEventListener('click', ()=>{
    kalau auto-trigger, tab AnkiHoney bakal kerasa "kebeku"/gak bisa dipencet
    pas user coba balik buat ubah-ubah pengaturan. */
 
-// Isi checklist field buat sisi Depan/Belakang -- default cerdas: field
-// PERTAMA dicentang buat sisi depan (biasanya kosakata/istilah), sisa
-// field-nya dicentang buat sisi belakang (biasanya arti/keterangan), user
-// tinggal sesuaiin centangannya sendiri kalau mau beda.
+// Default checklist Depan/Belakang: field pertama buat depan, sisanya buat belakang -- user bisa sesuaikan.
 function ahPdfPopulateFieldPicker(){
   const model = state.models[state.currentMid];
   const fieldNames = (model && model.flds) || [];
@@ -5713,9 +5519,7 @@ document.getElementById('pdfSizeMode').addEventListener('change', ()=>{
   document.getElementById('pdfCustomSizeWrap').classList.toggle('hidden', !isCustom);
 });
 
-// Halaman A4/Letter, area kepake = ukuran kertas dikurangin margin 10mm tiap
-// sisi (samain kayak @page margin di CSS print-nya). Dari situ, itung berapa
-// kolom & baris kartu ukuran custom (cm) yang muat, minimal 1x1 biar gak 0.
+// Hitung kolom & baris kartu custom (cm) yang muat di halaman A4/Letter dikurangi margin 10mm, minimal 1x1.
 function ahPdfGridFromCustomSize(paper, widthCm, heightCm){
   const pageWmm = paper === 'letter' ? 215.9 : 210;
   const pageHmm = paper === 'letter' ? 279.4 : 297;
@@ -5734,12 +5538,7 @@ function ahPdfResolveScopeNoteList(){
   return scope === 'all' ? state.notes.filter(n=>n.mid===state.currentMid) : currentRows();
 }
 
-// Saranin default "Kualitas Gambar" & "Batch" berdasarkan berapa banyak kartu
-// yang bakal dicetak -- ini FIX buat freeze pas print preview: sebelumnya
-// default-nya "Original" + "semua sekaligus", jadi deck ribuan kartu (apalagi
-// banyak gambar) langsung bikin browser hang pas ngerender print preview-nya.
-// Sekarang, kalau kartunya banyak, otomatis disaranin kecilin gambar & pecah
-// jadi beberapa tab -- user yang gak ngeh soal ini pun tetep ke-protect.
+// FIX freeze print preview: saranin "Kualitas Gambar" & "Batch" berdasar jumlah kartu, biar deck ribuan kartu otomatis dikecilin/dipecah tab (dulu default "Original"+semua sekaligus bikin hang).
 function ahPdfSuggestDefaults(totalCount){
   const qualitySel = document.getElementById('pdfImageQuality');
   const batchSel = document.getElementById('pdfBatchSize');
@@ -5766,11 +5565,7 @@ function ahPdfResetSession(){
   btn.dataset.originalLabel = '🖨️ Buka Print Preview';
 }
 
-// Sinkronin tombol utama, status text, & tombol nav ◀▶ sama posisi
-// session.batchIndex saat ini -- dipanggil tiap kali batch selesai digenerate
-// ATAU tiap kali user pindah batch pake tombol ◀▶ (TANPA nge-generate ulang),
-// jadi user bebas maju-mundur ke batch manapun (termasuk balik ke batch 1)
-// kapan aja sebelum klik tombol utama buat beneran buka tab print-nya.
+// Sinkronin tombol utama/status/nav ◀▶ sama batchIndex saat ini -- dipanggil tiap batch selesai atau user pindah batch tanpa generate ulang.
 function ahPdfUpdateBatchUI(session){
   const statusEl = document.getElementById('pdfBatchStatus');
   const navEl = document.getElementById('pdfBatchNav');
@@ -5826,11 +5621,7 @@ document.getElementById('btnPdfCancel').addEventListener('click', ()=>{
   ahPdfResetSession();
 });
 
-// Halaman loading sederhana yang langsung ditulis ke tab baru SEBELUM proses
-// render async dimulai -- ini PENTING biar window.open() masih keitung sebagai
-// aksi langsung dari klik user (kalau ditunda sampe abis await, browser bakal
-// nganggep bukan hasil klik user lagi & mem-blok tab-nya jadi blank/kebuka
-// terus stuck kosong gak bisa diapa-apain, kayak yang kejadian sebelumnya).
+// Halaman loading ditulis ke tab baru SEBELUM render async -- penting biar window.open() masih keitung aksi klik user (kalau ditunda, browser blok tab-nya).
 function ahPdfLoadingHtml(){
   return `<!doctype html><html><head><meta charset="utf-8"><title>AnkiHoney — Menyiapkan PDF...</title><style>
 html,body{ margin:0; height:100%; display:flex; align-items:center; justify-content:center; font-family:Arial, sans-serif; background:#fff8fb; color:#4a3358; }
@@ -5841,9 +5632,7 @@ html,body{ margin:0; height:100%; display:flex; align-items:center; justify-cont
 </style></head><body><div class="box"><div class="spin">🍯</div><div id="st">Nyiapin kartu buat dicetak...</div></div></body></html>`;
 }
 
-// noteList = potongan kartu buat batch INI SAJA (bukan seluruh cakupan --
-// pemecahan per batch dilakuin di caller/click handler). session = opsi2 yang
-// udah dikumpulin sekali di awal (batch 1) & dipake konsisten di semua batch.
+// noteList = kartu buat batch ini saja; session = opsi yang dikumpulin sekali di batch 1, dipake konsisten semua batch.
 async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
   const model = state.models[state.currentMid];
   const { cols, rows, sizeMode, cardWidthCm, cardHeightCm, alignH, alignV, includeBack, backOrder, cutLines, showTags, contentScale, paper, maxDim, batchIndex, totalBatches, frontFields, backFields, fieldFontSize, showFieldLabel } = session;
@@ -6167,10 +5956,7 @@ document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
   }
 });
 
-// Tombol ◀ ▶ cuma MINDAHIN batch yang lagi "dipilih" (gak langsung nge-
-// generate) -- user klik tombol utama abis ini buat beneran buka tab print
-// buat batch yang lagi kepilih. Gini user bisa bolak-balik bebas ke batch
-// manapun, termasuk balik ke batch 1 walau udah sempet lanjut ke batch 2/3/dst.
+// Tombol ◀▶ cuma mindahin batch "dipilih" (gak langsung generate) -- tombol utama yang beneran buka tab print.
 document.getElementById('btnPdfBatchPrev').addEventListener('click', ()=>{
   const session = state.pdfExportSession;
   if(!session) return;
@@ -6279,16 +6065,7 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
 
 /* ---------------- rebuild ke format Legacy (schema 11) ---------------- */
 
-// modelType: 0 = standard, 1 = cloze (dari m.type note type asli — dipertahankan
-// biar note Cloze yang jatuh ke fallback ini tetep dirender pake {{cloze:...}},
-// bukan ketampilin mentah sebagai teks "{{c1::...}}" ala note type biasa.
-// templateCount: jumlah template minimum yang dibutuhkan, dihitung dari ord
-// tertinggi yang beneran dipakai di tabel cards (lihat rebuildAsLegacyApkg) —
-// note type standar custom yang punya >1 kartu per note (mis. "and reversed")
-// butuh template sejumlah itu juga, atau kartu ber-ord>=1 bakal nunjuk ke
-// template yang gak ada pas diimport ke Anki. Cloze SELALU 1 template
-// (jumlah kartu-nya diatur Anki sendiri lewat banyaknya c1/c2/dst, bukan
-// lewat banyaknya template), jadi templateCount diabaikan kalau modelType===1.
+// modelType: 0=standard, 1=cloze (dari note type asli, biar cloze tetep render {{cloze:...}}). templateCount dari ord tertinggi yang dipakai di tabel cards, diabaikan kalau cloze.
 function buildLegacyModel(mid, deckId, modelName, fieldNames, modelType, templateCount){
   modelType = modelType === 1 ? 1 : 0;
   templateCount = Math.max(1, templateCount || 1);
@@ -6371,15 +6148,7 @@ function buildLegacyDconf(){
   }};
 }
 
-// FIX: pengganti fzstd.decompress(bytes) satu-shot. fzstd butuh tau ukuran hasil
-// decompress di awal (dari header frame ATAU dari buffer yang kita kasih manual) --
-// kalau frame-nya "streaming" (content size gak ketulis di header, yang ternyata
-// beneran dipakai Anki buat media per-file), fzstd.decompress() bakal throw, atau
-// lebih parah lagi diam-diam ngasih hasil KEPOTONG kalau kita paksa kasih buffer
-// yang kekecilan. Solusinya: pakai API streaming (fzstd.Decompress) yang emang
-// didesain buat nerima frame tanpa content-size di depan -- dia terima data
-// sepotong demi sepotong (di sini kita kasih sekaligus) & ngumpulin chunk hasil
-// decompress apa adanya, jadi ga pernah nebak-nebak ukuran buffer.
+// FIX: pengganti fzstd.decompress satu-shot. Frame "streaming" (content size gak di header, dipakai Anki buat media per-file) bikin fzstd throw atau hasil kepotong. Solusi: pakai API streaming fzstd.Decompress.
 function zstdDecompressSafe(bytes){
   const chunks = [];
   const stream = new fzstd.Decompress(chunk => chunks.push(chunk));
