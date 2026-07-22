@@ -809,6 +809,8 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <button class="btn ghost" id="btnCopyAll">📋 Copy SEMUA Field<small>buat ditranslate</small></button>
       <button class="btn alt" id="btnPasteAll">📥 Paste Hasil Terjemahan</button>
       <button class="btn ghost" id="btnUndoPaste" disabled>↩️ Undo Paste Terakhir<small>balikin paste sebelumnya</small></button>
+      <button class="btn ghost" id="btnFixFurigana">🔤 Perbaiki Spasi Furigana<small>biar gak nyebar pas ditampilin</small></button>
+      <button class="btn ghost" id="btnFixFuriganaUndo" disabled>↩️ Undo Perbaikan Furigana</button>
       <button class="btn ghost" id="btnExportCsv">⬇️ Export CSV</button>
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
       <button class="btn ghost" id="btnImportFile">⬆️ Import CSV/TXT</button>
@@ -1523,7 +1525,8 @@ const state = {
   _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
   autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
   autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
-  pendingDiffReview: [] // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
+  pendingDiffReview: [], // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
+  fixFuriganaSnapshot: null // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
 };
 
 /* ---------------- init sql.js ---------------- */
@@ -4852,6 +4855,76 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
   renderTable();
   updateStats();
   toast('Translate otomatis terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+});
+
+/* ---------------- perbaiki spasi furigana ---------------- */
+// Bug format furigana Anki "kanji[reading]": kalau ada karakter APAPUN yang nempel
+// LANGSUNG persis sebelum sebuah blok kanji yang mau dikasih furigana (baik itu hiragana,
+// katakana, kanji kata lain, angka, atau malah furigana LAIN yang ketutup ']' sebelumnya)
+// tanpa spasi pemisah, hasilnya furigana-nya jadi kebaca ikut nyebar/salah nempel pas
+// ditampilin di Anki. Fix-nya: kasih 1 spasi kosong PERSIS sebelum blok kanji itu -- kanji
+// & bacaannya sendiri gak diubah sama sekali. Kalau blok kanjinya lebih dari 1 karakter
+// (misal 明日[あした], 日本語[にほんご]), spasinya ditaruh SEBELUM karakter kanji PALING
+// DEPAN dari blok itu, BUKAN di tengah-tengah kanjinya (dicek pake lookbehind biar gak
+// kepotong salah, verified terhadap field "Word Furigana"/"Sentence Furigana" bawaan
+// deck Kaishi yang emang udah bener formatnya -- itu jadi acuan/ground truth rule ini).
+const AH_FURIGANA_NEEDS_SPACE_RE = /(?<![\u4E00-\u9FFF\u3005])(?<=[^\s>])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
+
+function ahFixFuriganaSpacing(){
+  if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
+
+  const changes = [];
+  let totalFixes = 0;
+  state.notes.forEach(n=>{
+    let fixCount = 0;
+    const newFields = n.fields.map(val=>{
+      if(typeof val !== 'string' || val.indexOf('[') === -1) return val;
+      const fixed = val.replace(AH_FURIGANA_NEEDS_SPACE_RE, ()=>{ fixCount++; return ' '; });
+      return fixed;
+    });
+    if(fixCount > 0){
+      changes.push({ note: n, newFields, oldFields: n.fields.slice(), oldDirty: n.dirty });
+      totalFixes += fixCount;
+    }
+  });
+
+  if(!changes.length){ toast('Furigana di semua field udah rapi, gak ada yang nempel~ ✨', '✨'); return; }
+
+  const lanjut = confirm(
+    `Ketemu ${totalFixes} tempat furigana yang nempel/salah posisi (bikin nyebar pas ditampilin di Anki) di ${changes.length} catatan.\n\n`+
+    `Mau diperbaiki sekarang? Ini cuma nambahin 1 spasi kosong persis sebelum tiap blok kanji yang nempel ke karakter sebelumnya -- kanji & bacaannya sendiri GAK diubah sama sekali.\n\n`+
+    `Tenang, ada tombol "Undo Perbaikan Furigana" kalau hasilnya kurang pas.`
+  );
+  if(!lanjut) return;
+
+  state.fixFuriganaSnapshot = {
+    entries: changes.map(c=> ({ id: c.note.id, fields: c.oldFields, dirty: c.oldDirty }))
+  };
+
+  changes.forEach(c=>{ c.note.fields = c.newFields; c.note.dirty = true; });
+
+  document.getElementById('btnFixFuriganaUndo').disabled = false;
+  renderTable();
+  updateStats();
+  toast(`${totalFixes} furigana yang nempel di ${changes.length} catatan udah dirapihin! 🔤`, '✨');
+}
+
+document.getElementById('btnFixFurigana').addEventListener('click', ahFixFuriganaSpacing);
+
+document.getElementById('btnFixFuriganaUndo').addEventListener('click', ()=>{
+  const snap = state.fixFuriganaSnapshot;
+  if(!snap){ toast('Gak ada perbaikan furigana yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  state.fixFuriganaSnapshot = null;
+  document.getElementById('btnFixFuriganaUndo').disabled = true;
+  renderTable();
+  updateStats();
+  toast('Perbaikan furigana terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
 });
 
 // Sama kayak Translate Semua Field, tapi cuma buat kartu di batch aktif -- cocok buat deck gede.
