@@ -811,11 +811,17 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <button class="btn ghost" id="btnUndoPaste" disabled>↩️ Undo Paste Terakhir<small>balikin paste sebelumnya</small></button>
       <button class="btn ghost" id="btnFixFurigana">🔤 Perbaiki Spasi Furigana<small>biar gak nyebar pas ditampilin</small></button>
       <button class="btn ghost" id="btnFixFuriganaUndo" disabled>↩️ Undo Perbaikan Furigana</button>
+      <button class="btn ghost" id="btnRapikanNotes">🧹 Rapikan Notes<small>kasih baris baru biar gak numpuk 1 paragraf</small></button>
+      <button class="btn ghost" id="btnRapikanNotesUndo" disabled>↩️ Undo Rapikan Notes</button>
       <button class="btn ghost" id="btnExportCsv">⬇️ Export CSV</button>
     </div>
     <div id="furiganaFieldWrap" style="background:var(--blush); border:2px solid #ffd3ea; border-radius:14px; padding:12px 14px; margin:14px 0;">
       <small style="display:block; color:var(--ink); font-weight:800; margin-bottom:8px;">🔤 Field yang mau diperiksa/diperbaiki spasi furigana-nya:</small>
       <div class="field-checks" id="furiganaFieldChecks"></div>
+    </div>
+    <div id="rapikanFieldWrap" style="background:var(--blush); border:2px solid #ffd3ea; border-radius:14px; padding:12px 14px; margin:14px 0;">
+      <small style="display:block; color:var(--ink); font-weight:800; margin-bottom:8px;">🧹 Field yang mau dirapihin (dikasih baris baru per bagian):</small>
+      <div class="field-checks" id="rapikanFieldChecks"></div>
     </div>
     <div class="btn-row">
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
@@ -1490,6 +1496,8 @@ const state = {
   fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
   furiganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIPERIKSA/DIPERBAIKI sama tombol "Perbaiki Spasi Furigana", inget per note type (default: semua field kecentang)
   furiganaFieldIdxs: [], // field yang lagi kecentang di checklist "Perbaiki Spasi Furigana" buat note type yang lagi aktif
+  rapikanFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIRAPIHIN sama tombol "Rapikan Notes", inget per note type (default: semua field kecentang)
+  rapikanFieldIdxs: [], // field yang lagi kecentang di checklist "Rapikan Notes" buat note type yang lagi aktif
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
   batchSize: 50,
   batchIndex: 0,
@@ -1534,7 +1542,8 @@ const state = {
   autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
   autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
   pendingDiffReview: [], // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
-  fixFuriganaSnapshot: null // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
+  fixFuriganaSnapshot: null, // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
+  rapikanNotesSnapshot: null // snapshot fields SEBELUM tombol "Rapikan Notes" jalan (buat tombol Undo-nya)
 };
 
 /* ---------------- init sql.js ---------------- */
@@ -3822,6 +3831,58 @@ function populateFuriganaFieldSelect(){
     });
     container.appendChild(chip);
   });
+  populateRapikanFieldSelect();
+}
+
+// Checklist KHUSUS buat tombol "Rapikan Notes" -- sama polanya kayak checklist furigana
+// di atas, tapi buat field yang mau dikasih baris baru antar bagian (Kosakata & makna
+// utama / Penjelasan / Contoh kalimat / Kosakata yang mirip), biar gak numpuk jadi 1
+// paragraf gede yang pusing dibaca. Default: semua field kecentang, diinget per note type.
+function populateRapikanFieldSelect(){
+  const container = document.getElementById('rapikanFieldChecks');
+  const wrap = document.getElementById('rapikanFieldWrap');
+  if(!container || !wrap) return;
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || !model.flds.length){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const cached = state.rapikanFieldIdxsByModel[state.currentMid];
+  if(cached && cached.length){
+    state.rapikanFieldIdxs = cached.filter(i=> i < model.flds.length);
+    if(!state.rapikanFieldIdxs.length) state.rapikanFieldIdxs = model.flds.map((_,i)=>i);
+  } else {
+    state.rapikanFieldIdxs = model.flds.map((_,i)=>i); // default: semua field kecentang
+  }
+
+  model.flds.forEach((name, idx)=>{
+    const isSelected = state.rapikanFieldIdxs.includes(idx);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip' + (isSelected ? ' active' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isSelected;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = state.rapikanFieldIdxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      if(idxs.length === 0){
+        cb.checked = true;
+        idxs = [idx];
+        toast('Minimal 1 field harus dicentang ya~', '⚠️');
+      }
+      idxs.sort((a,b)=>a-b);
+      state.rapikanFieldIdxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      state.rapikanFieldIdxsByModel[state.currentMid] = idxs.slice();
+    });
+    container.appendChild(chip);
+  });
 }
 
 function updateStats(){
@@ -4943,7 +5004,20 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
 // DEPAN dari blok itu, BUKAN di tengah-tengah kanjinya (dicek pake lookbehind biar gak
 // kepotong salah, verified terhadap field "Word Furigana"/"Sentence Furigana" bawaan
 // deck Kaishi yang emang udah bener formatnya -- itu jadi acuan/ground truth rule ini).
-const AH_FURIGANA_NEEDS_SPACE_RE = /(?<![\u4E00-\u9FFF\u3005])(?<=[^\s>])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
+// PENTING (fix ke-2): filter furigana bawaan Anki ( " ?([^ >]+?)\[(.+?)\]" ) cuma nganggep
+// SPASI ASCII BIASA (U+0020) atau '>' (abis tag HTML) sebagai "pemisah yang valid" -- karakter
+// APAPUN selain itu (termasuk kanji/hiragana/katakana/romaji/angka, TERMASUK JUGA whitespace
+// non-standar kayak non-breaking space U+00A0, tab, atau newline mentah) ikut ke-anggep bagian
+// dari "kata dasar" yang dikasih ruby/furigana. Dulu di sini dipake `\s` (kelas whitespace JS)
+// buat ngecek "udah ada spasi apa belum" -- masalahnya `\s` di JS ikut nganggep non-breaking
+// space/tab/newline SEBAGAI spasi, padahal Anki TIDAK nganggep itu valid. Makanya kalau hasil
+// AI translator kebetulan keluar non-breaking space (sering kejadian dari API AI) bukannya
+// spasi biasa, fixer versi lama ini ngira "udah dikasih spasi, aman" padahal buat ANKI itu
+// tetep ke-anggep 1 kata sama kanji sebelahnya -- hasilnya furigana ketarik nyebar ke romaji
+// sebelumnya (kadang keliatan nempel di romaji-nya, bukan di kanjinya). Fix: ganti definisi
+// "udah aman" jadi PERSIS spasi ASCII biasa atau '>' doang (samain kayak definisi Anki), biar
+// whitespace non-standar ikut kepaksa dikasih spasi ASCII biasa juga.
+const AH_FURIGANA_NEEDS_SPACE_RE = /(?<=[\s\S])(?<![\u4E00-\u9FFF\u3005 >])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
 
 // Modal konfirmasi KHUSUS buat "Perbaiki Spasi Furigana" -- dulu pake window.confirm() bawaan
 // browser, tapi itu bisa silently gagal/no-op (balikin false tanpa nampilin dialog apapun) di
@@ -5071,6 +5145,162 @@ document.getElementById('btnFixFuriganaUndo').addEventListener('click', ()=>{
   } catch(err){
     console.error('undo furigana:', err);
     ahShowErrorPopup('Gagal ngundo perbaikan furigana: ' + (err && err.message ? err.message : err));
+  }
+});
+
+/* ---------------- rapikan notes ---------------- */
+// Masalah: field hasil AI (Note dkk) diinstruksiin misahin tiap bagian pakai baris kosong
+// PLAIN TEXT (\n\n), bukan <br>, soalnya field ini diproses filter furigana bawaan note type
+// yang nge-anggep isinya plain text. Tapi HTML nge-collapse newline polos jadi 1 spasi pas
+// ditampilin di Anki -- hasilnya numpuk jadi 1 paragraf raksasa yang pusing dibaca (padahal
+// datanya sendiri gak "rusak"). Kadang malah gak ada newline sama sekali di antara bagian
+// (ketimpa jadi 1 spasi doang dari sononya), jadi gak cukup cuma convert newline->br aja.
+// Fix: (1) convert newline polos yang ADA jadi <br> beneran, (2) kasih baris baru paksa
+// SEBELUM label bagian yang dikenal (Penjelasan/Contoh kalimat/Kosakata yang mirip/dst),
+// idempotent -- aman dipencet berkali-kali, gak bakal numpuk <br> dobel-dobel.
+const AH_RAPIKAN_LABELS = [
+  'Kosakata & makna utama:',
+  'Penjelasan:',
+  'Contoh kalimat:',
+  'Kosakata yang mirip:'
+];
+
+function ahRapikanText(val){
+  if(typeof val !== 'string' || !val) return val;
+  let out = val
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{2,}/g, '<br><br>') // baris kosong (paragraf) -> 2x <br>
+    .replace(/\n/g, '<br>');        // sisa newline tunggal -> 1x <br>
+
+  AH_RAPIKAN_LABELS.forEach(label=>{
+    const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Bersihin dulu spasi/<br> yang MUNGKIN udah ada persis sebelum label (biar gak dobel
+    // pas tombolnya dipencet berkali-kali), baru pasang ulang <br><br> yang seragam --
+    // kecuali kalau labelnya ada di posisi PALING AWAL field (gak butuh baris baru).
+    const re = new RegExp('(?:[ \\t]|<br\\s*/?>)*' + esc, 'g');
+    out = out.replace(re, (m, offset)=> offset === 0 ? label : '<br><br>' + label);
+  });
+
+  return out;
+}
+
+function ahHasRapikanChange(oldVal, newVal){
+  return typeof oldVal === 'string' && oldVal !== newVal;
+}
+
+function ahShowRapikanConfirmModal(message, onConfirm){
+  let bg = document.getElementById('ahRapikanConfirmModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahRapikanConfirmModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3>🧹 Rapikan Notes?</h3>
+        <p id="ahRapikanConfirmMsg" style="white-space:pre-wrap; font-size:.85rem; color:var(--ink-soft);"></p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="ahRapikanConfirmCancel" type="button">Batal</button>
+          <button class="btn mint" id="ahRapikanConfirmOk" type="button">✨ Rapikan Sekarang</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+    bg.querySelector('#ahRapikanConfirmCancel').addEventListener('click', ()=> bg.classList.remove('show'));
+  }
+  bg.querySelector('#ahRapikanConfirmMsg').textContent = message;
+  const okBtn = bg.querySelector('#ahRapikanConfirmOk');
+  const freshOk = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(freshOk, okBtn);
+  freshOk.addEventListener('click', ()=>{ bg.classList.remove('show'); onConfirm(); });
+  bg.classList.add('show');
+}
+
+function ahRapikanNotes(){
+  try {
+    if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
+
+    const model = state.models[state.currentMid];
+    const rows = state.notes.filter(n=> n.mid === state.currentMid);
+    if(!rows.length){ toast('Gak ada catatan buat note type yang lagi dipilih~', '😿'); return; }
+
+    let fieldIdxs = (state.rapikanFieldIdxs && state.rapikanFieldIdxs.length) ? state.rapikanFieldIdxs.slice() : null;
+
+    const changes = [];
+    let totalFixes = 0;
+    const perFieldFixes = {};
+    rows.forEach(n=>{
+      let fixCount = 0;
+      const idxsToScan = fieldIdxs || n.fields.map((_,i)=>i);
+      const newFields = n.fields.slice();
+      idxsToScan.forEach(idx=>{
+        const val = n.fields[idx];
+        const fixed = ahRapikanText(val);
+        if(ahHasRapikanChange(val, fixed)){
+          newFields[idx] = fixed;
+          fixCount++;
+          perFieldFixes[idx] = (perFieldFixes[idx]||0) + 1;
+        }
+      });
+      if(fixCount > 0){
+        changes.push({ note: n, newFields, oldFields: n.fields.slice(), oldDirty: n.dirty });
+        totalFixes += fixCount;
+      }
+    });
+
+    if(!changes.length){ toast('Field yang dicentang udah rapi, gak ada yang numpuk jadi 1 paragraf~ ✨', '✨'); return; }
+
+    const fieldNames = model && model.flds ? model.flds : [];
+    const breakdown = Object.keys(perFieldFixes)
+      .sort((a,b)=> a-b)
+      .map(idx=> `- ${fieldNames[idx] || ('Field '+(Number(idx)+1))}: ${perFieldFixes[idx]} catatan`)
+      .join('\n');
+
+    const message =
+      `Ketemu ${changes.length} catatan yang field-nya bakal dirapihin (dikasih baris baru antar bagian).\n\n`+
+      `Field yang bakal dirapihin:\n${breakdown}\n\n`+
+      `Ini cuma nambahin baris baru (<br>) di antara bagian kayak "Penjelasan:", "Contoh kalimat:", dst -- isi teks/furigana-nya sendiri GAK diubah sama sekali. Ada tombol "Undo Rapikan Notes" kalau hasilnya kurang pas.`;
+
+    ahShowRapikanConfirmModal(message, ()=>{
+      try {
+        state.rapikanNotesSnapshot = {
+          entries: changes.map(c=> ({ id: c.note.id, fields: c.oldFields, dirty: c.oldDirty }))
+        };
+        changes.forEach(c=>{ c.note.fields = c.newFields; c.note.dirty = true; });
+        document.getElementById('btnRapikanNotesUndo').disabled = false;
+        renderTable();
+        updateStats();
+        toast(`${changes.length} catatan udah dirapihin biar gak numpuk 1 paragraf! 🧹`, '✨');
+      } catch(err){
+        console.error('ahRapikanNotes (apply):', err);
+        ahShowErrorPopup('Gagal nerapin rapikan notes: ' + (err && err.message ? err.message : err));
+      }
+    });
+  } catch(err){
+    console.error('ahRapikanNotes:', err);
+    ahShowErrorPopup('Gagal ngecek field buat dirapihin: ' + (err && err.message ? err.message : err));
+  }
+}
+
+document.getElementById('btnRapikanNotes').addEventListener('click', ahRapikanNotes);
+
+document.getElementById('btnRapikanNotesUndo').addEventListener('click', ()=>{
+  try {
+    const snap = state.rapikanNotesSnapshot;
+    if(!snap){ toast('Gak ada rapikan notes yang bisa di-undo~', '⚠️'); return; }
+    const byId = {};
+    state.notes.forEach(n=>{ byId[n.id] = n; });
+    snap.entries.forEach(e=>{
+      const note = byId[e.id];
+      if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+    });
+    state.rapikanNotesSnapshot = null;
+    document.getElementById('btnRapikanNotesUndo').disabled = true;
+    renderTable();
+    updateStats();
+    toast('Rapikan Notes terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+  } catch(err){
+    console.error('undo rapikan notes:', err);
+    ahShowErrorPopup('Gagal ngundo rapikan notes: ' + (err && err.message ? err.message : err));
   }
 });
 
