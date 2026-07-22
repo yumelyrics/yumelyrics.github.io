@@ -6245,12 +6245,25 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
     if(!state.isLatest && !state.isMergedDeck){
       // Format lama: UPDATE flds+tags di database yang sama. Semua note ditulis ulang
       // (bukan cuma yang dirty) supaya tag watermark ikut ke-suntik ke semuanya.
-      const stmt = state.db.prepare("UPDATE notes SET flds=?, tags=?, mod=? WHERE id=?");
+      // PENTING (fix): dulu cuma flds/tags/mod yang diupdate, usn-nya kebiar apa
+      // adanya (biasanya udah pernah ke-sync -> usn>=0). Anki nganggep usn>=0
+      // artinya "note ini state-nya udah sama kayak yang terakhir di-sync ke
+      // server", jadi walau flds-nya keubah lewat SQLite langsung kayak gini,
+      // pas collection ini di-sync ke AnkiWeb, Anki GAK bakal ngirim
+      // perubahannya ke server (nganggep gak ada yg berubah) -- makanya di
+      // desktop keliatan beres pas dibuka lokal tapi abis sync jadi gak konsisten
+      // lagi, dan di HP baru keliatan beneran abis note-nya "disentuh" manual
+      // (Edit Card + centang) yang bikin Anki sendiri nyetel usn=-1 buat note itu.
+      // Fix: paksa usn=-1 (angka sentinel resmi Anki buat "berubah, perlu
+      // di-push pas sync berikutnya") di SETIAP note yang ditulis ulang di sini,
+      // biar perubahannya langsung ke-push pas collection ini disync, gak perlu
+      // disentuh manual satu-satu lagi kayak sebelumnya.
+      const stmt = state.db.prepare("UPDATE notes SET flds=?, tags=?, mod=?, usn=? WHERE id=?");
       const now = Math.floor(Date.now()/1000);
       state.notes.forEach(n=>{
         const flds = n.fields.join('\x1f');
         const tags = injectWmIntoTags(n.tags);
-        stmt.run([flds, tags, now, n.id]);
+        stmt.run([flds, tags, now, -1, n.id]);
       });
       stmt.free();
 
