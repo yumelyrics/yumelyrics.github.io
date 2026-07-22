@@ -812,6 +812,12 @@ td{ padding:8px 12px; vertical-align:top; border-bottom:1px solid #ffe9f3; }
       <button class="btn ghost" id="btnFixFurigana">🔤 Perbaiki Spasi Furigana<small>biar gak nyebar pas ditampilin</small></button>
       <button class="btn ghost" id="btnFixFuriganaUndo" disabled>↩️ Undo Perbaikan Furigana</button>
       <button class="btn ghost" id="btnExportCsv">⬇️ Export CSV</button>
+    </div>
+    <div id="furiganaFieldWrap" style="margin:-6px 0 12px;">
+      <small style="display:block; color:var(--ink-soft); font-weight:700; margin-bottom:6px;">🔤 Field yang mau diperiksa/diperbaiki spasi furigana-nya:</small>
+      <div class="field-checks" id="furiganaFieldChecks"></div>
+    </div>
+    <div class="btn-row">
       <button class="btn ghost" id="btnExportTxt">⬇️ Export TXT</button>
       <button class="btn ghost" id="btnImportFile">⬆️ Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
@@ -1482,6 +1488,8 @@ const state = {
   primaryMediaMap: null, // cache nomor->nama file media deck UTAMA (dibaca sekali pas gabung deck pertama kali), dipakai buat ngecek tabrakan nama file
   doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
   fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
+  furiganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIPERIKSA/DIPERBAIKI sama tombol "Perbaiki Spasi Furigana", inget per note type (default: semua field kecentang)
+  furiganaFieldIdxs: [], // field yang lagi kecentang di checklist "Perbaiki Spasi Furigana" buat note type yang lagi aktif
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
   batchSize: 50,
   batchIndex: 0,
@@ -1530,9 +1538,23 @@ const state = {
 };
 
 /* ---------------- init sql.js ---------------- */
-let sqlReadyPromise = initSqlJs({
-  locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
-}).then(SQL => { state.SQL = SQL; return SQL; });
+// PENTING: dibungkus try/catch. Ini pemanggilan library eksternal PALING ATAS di script gede
+// ini -- kalau CDN sql.js gagal/telat keload (koneksi jelek, ad-blocker, dll) dan initSqlJs
+// belum kedefinisi pas baris ini jalan, exception yang gak ketangkep bakal nge-stop SELURUH
+// sisa script ini, alias SEMUA tombol/fitur di bawah baris ini (termasuk tombol-tombol biasa
+// yang gak ada hubungannya sama sql.js) gak bakal pernah ke-daftar listener-nya sama sekali.
+let sqlReadyPromise;
+try {
+  sqlReadyPromise = initSqlJs({
+    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+  }).then(SQL => { state.SQL = SQL; return SQL; }).catch(err=>{
+    console.error('sql.js gagal diinisialisasi:', err);
+    return null;
+  });
+} catch(err){
+  console.error('sql.js (initSqlJs) gagal dipanggil, kemungkinan CDN-nya gagal keload:', err);
+  sqlReadyPromise = Promise.resolve(null);
+}
 
 // Konfirmasi nutup tab/refresh setelah .apkg dimuat -- progress cuma di memori browser, belum ada auto-save.
 window.addEventListener('beforeunload', (e)=>{
@@ -3747,6 +3769,59 @@ function populateFieldSelect(){
   });
   updateStats();
   ahUpdateCostEstimate();
+  populateFuriganaFieldSelect();
+}
+
+// Checklist KHUSUS buat tombol "Perbaiki Spasi Furigana" -- terpisah dari checklist field
+// AI-translate di atas (field-nya beda tujuan: yang atas itu field TARGET translate, ini
+// field yang mau DISCAN/DIPERBAIKI spasi furigana-nya). Default-nya SEMUA field kecentang
+// (sama kayak perilaku lama sebelum ada checklist ini), tapi diinget per note type (mid)
+// biar gak ke-reset tiap gonta-ganti note type kayak checklist yang lain.
+function populateFuriganaFieldSelect(){
+  const container = document.getElementById('furiganaFieldChecks');
+  const wrap = document.getElementById('furiganaFieldWrap');
+  if(!container || !wrap) return;
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || !model.flds.length){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const cached = state.furiganaFieldIdxsByModel[state.currentMid];
+  if(cached && cached.length){
+    state.furiganaFieldIdxs = cached.filter(i=> i < model.flds.length);
+    if(!state.furiganaFieldIdxs.length) state.furiganaFieldIdxs = model.flds.map((_,i)=>i);
+  } else {
+    state.furiganaFieldIdxs = model.flds.map((_,i)=>i); // default: semua field kecentang
+  }
+
+  model.flds.forEach((name, idx)=>{
+    const isSelected = state.furiganaFieldIdxs.includes(idx);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip' + (isSelected ? ' active' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isSelected;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = state.furiganaFieldIdxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      if(idxs.length === 0){
+        cb.checked = true;
+        idxs = [idx];
+        toast('Minimal 1 field harus dicentang ya~', '⚠️');
+      }
+      idxs.sort((a,b)=>a-b);
+      state.furiganaFieldIdxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      state.furiganaFieldIdxsByModel[state.currentMid] = idxs.slice();
+    });
+    container.appendChild(chip);
+  });
 }
 
 function updateStats(){
@@ -4870,62 +4945,135 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
 // deck Kaishi yang emang udah bener formatnya -- itu jadi acuan/ground truth rule ini).
 const AH_FURIGANA_NEEDS_SPACE_RE = /(?<![\u4E00-\u9FFF\u3005])(?<=[^\s>])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
 
+// Modal konfirmasi KHUSUS buat "Perbaiki Spasi Furigana" -- dulu pake window.confirm() bawaan
+// browser, tapi itu bisa silently gagal/no-op (balikin false tanpa nampilin dialog apapun) di
+// banyak WebView/in-app-browser/iframe (misal dibuka di dalem app lain, PWA ke-install, dst),
+// jadi kliknya keliatan "gak ngapa-ngapain" padahal sebenernya nemu perubahan. Diganti modal
+// custom biar konsisten & reliable kayak modal-modal lain di tool ini (ahShowErrorPopup, dst).
+function ahShowFuriganaConfirmModal(message, onConfirm){
+  let bg = document.getElementById('ahFuriganaConfirmModalBg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'ahFuriganaConfirmModalBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal">
+        <h3>🔤 Perbaiki Spasi Furigana?</h3>
+        <p id="ahFuriganaConfirmMsg" style="white-space:pre-wrap; font-size:.85rem; color:var(--ink-soft);"></p>
+        <div class="modal-actions">
+          <button class="btn ghost" id="ahFuriganaConfirmCancel" type="button">Batal</button>
+          <button class="btn mint" id="ahFuriganaConfirmOk" type="button">✨ Perbaiki Sekarang</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click', e=>{ if(e.target === bg) bg.classList.remove('show'); });
+    bg.querySelector('#ahFuriganaConfirmCancel').addEventListener('click', ()=> bg.classList.remove('show'));
+  }
+  bg.querySelector('#ahFuriganaConfirmMsg').textContent = message;
+  const okBtn = bg.querySelector('#ahFuriganaConfirmOk');
+  const freshOk = okBtn.cloneNode(true); // buang listener lama biar gak numpuk tiap kepanggil ulang
+  okBtn.parentNode.replaceChild(freshOk, okBtn);
+  freshOk.addEventListener('click', ()=>{ bg.classList.remove('show'); onConfirm(); });
+  bg.classList.add('show');
+}
+
 function ahFixFuriganaSpacing(){
-  if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
+  try {
+    if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
 
-  const changes = [];
-  let totalFixes = 0;
-  state.notes.forEach(n=>{
-    let fixCount = 0;
-    const newFields = n.fields.map(val=>{
-      if(typeof val !== 'string' || val.indexOf('[') === -1) return val;
-      const fixed = val.replace(AH_FURIGANA_NEEDS_SPACE_RE, ()=>{ fixCount++; return ' '; });
-      return fixed;
+    const model = state.models[state.currentMid];
+    // Cuma proses catatan dari note type yang lagi aktif di dropdown "Note type" -- sama kayak
+    // fitur-fitur lain di tool ini (Translate, dst), soalnya index field beda arti antar note
+    // type kalau deck-nya punya lebih dari 1 note type.
+    const rows = state.notes.filter(n=> n.mid === state.currentMid);
+    if(!rows.length){ toast('Gak ada catatan buat note type yang lagi dipilih~', '😿'); return; }
+
+    // Field mana yang mau discan: dari checklist "Field yang mau diperiksa/diperbaiki" di atas
+    // tombol. Kalau checklist-nya somehow belum siap (misal model.flds belum kebaca), fallback
+    // ke SEMUA field per catatan (perilaku lama).
+    let fieldIdxs = (state.furiganaFieldIdxs && state.furiganaFieldIdxs.length) ? state.furiganaFieldIdxs.slice() : null;
+
+    const changes = [];
+    let totalFixes = 0;
+    const perFieldFixes = {}; // idx -> jumlah fix, buat ditampilin di ringkasan
+    rows.forEach(n=>{
+      let fixCount = 0;
+      const idxsToScan = fieldIdxs || n.fields.map((_,i)=>i);
+      const newFields = n.fields.slice();
+      idxsToScan.forEach(idx=>{
+        const val = n.fields[idx];
+        if(typeof val !== 'string' || val.indexOf('[') === -1) return;
+        let localFixes = 0;
+        const fixed = val.replace(AH_FURIGANA_NEEDS_SPACE_RE, ()=>{ localFixes++; return ' '; });
+        if(localFixes > 0){
+          newFields[idx] = fixed;
+          fixCount += localFixes;
+          perFieldFixes[idx] = (perFieldFixes[idx]||0) + localFixes;
+        }
+      });
+      if(fixCount > 0){
+        changes.push({ note: n, newFields, oldFields: n.fields.slice(), oldDirty: n.dirty });
+        totalFixes += fixCount;
+      }
     });
-    if(fixCount > 0){
-      changes.push({ note: n, newFields, oldFields: n.fields.slice(), oldDirty: n.dirty });
-      totalFixes += fixCount;
-    }
-  });
 
-  if(!changes.length){ toast('Furigana di semua field udah rapi, gak ada yang nempel~ ✨', '✨'); return; }
+    if(!changes.length){ toast('Furigana di field yang dicentang udah rapi, gak ada yang nempel~ ✨', '✨'); return; }
 
-  const lanjut = confirm(
-    `Ketemu ${totalFixes} tempat furigana yang nempel/salah posisi (bikin nyebar pas ditampilin di Anki) di ${changes.length} catatan.\n\n`+
-    `Mau diperbaiki sekarang? Ini cuma nambahin 1 spasi kosong persis sebelum tiap blok kanji yang nempel ke karakter sebelumnya -- kanji & bacaannya sendiri GAK diubah sama sekali.\n\n`+
-    `Tenang, ada tombol "Undo Perbaikan Furigana" kalau hasilnya kurang pas.`
-  );
-  if(!lanjut) return;
+    const fieldNames = model && model.flds ? model.flds : [];
+    const breakdown = Object.keys(perFieldFixes)
+      .sort((a,b)=> a-b)
+      .map(idx=> `- ${fieldNames[idx] || ('Field '+(Number(idx)+1))}: ${perFieldFixes[idx]}x`)
+      .join('\n');
 
-  state.fixFuriganaSnapshot = {
-    entries: changes.map(c=> ({ id: c.note.id, fields: c.oldFields, dirty: c.oldDirty }))
-  };
+    const message =
+      `Ketemu ${totalFixes} tempat furigana yang nempel/salah posisi (bikin nyebar pas ditampilin di Anki) di ${changes.length} catatan.\n\n`+
+      `Field yang bakal diperbaiki:\n${breakdown}\n\n`+
+      `Ini cuma nambahin 1 spasi kosong persis sebelum tiap blok kanji yang nempel ke karakter sebelumnya -- kanji & bacaannya sendiri GAK diubah sama sekali. Ada tombol "Undo Perbaikan Furigana" kalau hasilnya kurang pas.`;
 
-  changes.forEach(c=>{ c.note.fields = c.newFields; c.note.dirty = true; });
-
-  document.getElementById('btnFixFuriganaUndo').disabled = false;
-  renderTable();
-  updateStats();
-  toast(`${totalFixes} furigana yang nempel di ${changes.length} catatan udah dirapihin! 🔤`, '✨');
+    ahShowFuriganaConfirmModal(message, ()=>{
+      try {
+        state.fixFuriganaSnapshot = {
+          entries: changes.map(c=> ({ id: c.note.id, fields: c.oldFields, dirty: c.oldDirty }))
+        };
+        changes.forEach(c=>{ c.note.fields = c.newFields; c.note.dirty = true; });
+        document.getElementById('btnFixFuriganaUndo').disabled = false;
+        renderTable();
+        updateStats();
+        toast(`${totalFixes} furigana yang nempel di ${changes.length} catatan udah dirapihin! 🔤`, '✨');
+      } catch(err){
+        console.error('ahFixFuriganaSpacing (apply):', err);
+        ahShowErrorPopup('Gagal nerapin perbaikan furigana: ' + (err && err.message ? err.message : err));
+      }
+    });
+  } catch(err){
+    console.error('ahFixFuriganaSpacing:', err);
+    ahShowErrorPopup('Gagal ngecek furigana di field-nya: ' + (err && err.message ? err.message : err));
+  }
 }
 
 document.getElementById('btnFixFurigana').addEventListener('click', ahFixFuriganaSpacing);
 
 document.getElementById('btnFixFuriganaUndo').addEventListener('click', ()=>{
-  const snap = state.fixFuriganaSnapshot;
-  if(!snap){ toast('Gak ada perbaikan furigana yang bisa di-undo~', '⚠️'); return; }
-  const byId = {};
-  state.notes.forEach(n=>{ byId[n.id] = n; });
-  snap.entries.forEach(e=>{
-    const note = byId[e.id];
-    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
-  });
-  state.fixFuriganaSnapshot = null;
-  document.getElementById('btnFixFuriganaUndo').disabled = true;
-  renderTable();
-  updateStats();
-  toast('Perbaikan furigana terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+  try {
+    const snap = state.fixFuriganaSnapshot;
+    if(!snap){ toast('Gak ada perbaikan furigana yang bisa di-undo~', '⚠️'); return; }
+    const byId = {};
+    state.notes.forEach(n=>{ byId[n.id] = n; });
+    snap.entries.forEach(e=>{
+      const note = byId[e.id];
+      if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+    });
+    state.fixFuriganaSnapshot = null;
+    document.getElementById('btnFixFuriganaUndo').disabled = true;
+    renderTable();
+    updateStats();
+    toast('Perbaikan furigana terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+  } catch(err){
+    console.error('undo furigana:', err);
+    ahShowErrorPopup('Gagal ngundo perbaikan furigana: ' + (err && err.message ? err.message : err));
+  }
 });
+
 
 // Sama kayak Translate Semua Field, tapi cuma buat kartu di batch aktif -- cocok buat deck gede.
 document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
