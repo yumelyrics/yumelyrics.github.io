@@ -5412,12 +5412,22 @@ function renderTable(){
         editTd.appendChild(lbl);
       }
       const ta = document.createElement('textarea');
-      ta.value = note.fields[fi] || '';
+      // Field Anki isinya HTML -- kalau ta.value diisi mentah-mentah, <br> yang udah
+      // ada di dalamnya bakal keliatan literal sbg teks "<br>" di textarea (bukan
+      // baris baru beneran). Makanya buat DITAMPILIN, <br> diubah dulu jadi newline
+      // biasa (\n) biar enak diedit & baris kosongnya keliatan kayak harusnya.
+      ta.value = ahFieldToPlainForEdit(note.fields[fi] || '');
       ta.dataset.noteId = note.id;
       ta.dataset.fieldIdx = fi;
       if(note.dirty) ta.classList.add('dirty');
       ta.addEventListener('input', ()=>{
-        note.fields[fi] = ta.value;
+        // Sebaliknya pas DISIMPEN: newline (\n) hasil user pencet Enter di textarea
+        // diubah balik jadi <br> beneran. Kalau ini gak dilakuin, baris kosong cuma
+        // "keliatan" doang di textarea (krn textarea emang nampilin \n sbg baris baru),
+        // tapi begitu field-nya jadi HTML asli (dibuka di Anki), \n polos bakal
+        // di-collapse browser/Anki jadi 1 spasi -- makanya kalau di-import ke Anki,
+        // baris kosongnya ilang & semua kata nyatu jadi 1 paragraf.
+        note.fields[fi] = ahPlainEditToField(ta.value);
         note.dirty = true;
         ta.classList.add('dirty');
         const dotEl = document.getElementById('dot-'+note.id);
@@ -5447,6 +5457,26 @@ document.getElementById('tablePageSizeSelect').addEventListener('change', functi
   state.tablePageIndex = 0; // balik ke halaman pertama biar gak bingung posisinya geser
   renderTable();
 });
+
+// ---------------------------------------------------------------------------
+// Konversi dua arah antara "field HTML asli" (yang beneran kesimpen & diexport
+// ke .apkg) <-> "teks polos" yang enak diedit manual di textarea "Field (bisa
+// diedit langsung)". Tanpa ini, baris kosong yang keliatan pas ngedit di
+// website cuma newline (\n) polos doang di dalam field -- begitu diimport ke
+// Anki, \n polos itu di-collapse jadi 1 spasi kayak HTML biasa, jadi baris
+// kosongnya ilang & semua kata keliatan nyatu.
+function ahFieldToPlainForEdit(html){
+  if(typeof html !== 'string' || !html) return html || '';
+  return html
+    .replace(/<br\s*\/?>\s*/gi, '\n')   // <br> / <br/> / <br /> -> newline
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') // antar <p> -> baris kosong
+    .replace(/<\/?p[^>]*>/gi, '');      // sisa <p>/</p> tunggal dibuang aja
+}
+
+function ahPlainEditToField(text){
+  if(typeof text !== 'string' || !text) return text || '';
+  return text.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
+}
 
 function stripHtml(str){
   const tmp = document.createElement('div');
