@@ -577,11 +577,16 @@ async function doFetch(append) {
         const vid = item.id.videoId;
         if (!vid) return;
         const d   = details[vid] || {};
+        // Buat live stream, snippet.publishedAt = waktu broadcast dibuat/dijadwalkan,
+        // bukan waktu beneran mulai live -> bisa geser tanggal. Pakai actualStartTime
+        // (waktu live sungguhan mulai) kalau ada, biar tanggalnya akurat.
+        const live = d.liveStreamingDetails;
+        const realDate = live?.actualStartTime || live?.scheduledStartTime || item.snippet.publishedAt;
         allVideos.push({
           id:          vid,
           title:       item.snippet.title,
           thumb:       item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
-          publishedAt: item.snippet.publishedAt,
+          publishedAt: realDate,
           views:       d.statistics?.viewCount  || '0',
           likes:       d.statistics?.likeCount  || '0',
           type:        detectType(d),
