@@ -516,8 +516,18 @@ function detectType(detail) {
   const tags  = (detail.snippet?.tags || []).join(' ').toLowerCase();
   const title = (detail.snippet?.title || '').toLowerCase();
   const desc  = (detail.snippet?.description || '').toLowerCase();
-  const isShorts = secs > 0 && secs <= 180 &&
-    (tags.includes('#shorts') || title.includes('#shorts') || desc.includes('#shorts') || secs <= 60);
+  const hasShortsHint = tags.includes('#shorts') || title.includes('#shorts') || desc.includes('#shorts')
+    || tags.includes('#short') || title.includes('#short') || desc.includes('#short');
+
+  // Sinyal tambahan: thumbnail shorts biasanya vertikal (tinggi > lebar),
+  // beda dari video biasa yang selalu 16:9. Banyak shorts nggak dikasih
+  // tag/caption "#shorts" sama sekali, jadi deteksi lama sering meleset
+  // (ke-tag jadi "video" biasa). Cek orientasi thumbnail buat nutup celah itu.
+  const thumbs = detail.snippet?.thumbnails || {};
+  const t = thumbs.maxres || thumbs.standard || thumbs.high || thumbs.medium || {};
+  const isPortraitThumb = (t.width || 0) > 0 && (t.height || 0) > (t.width || 0);
+
+  const isShorts = secs > 0 && secs <= 180 && (secs <= 60 || hasShortsHint || isPortraitThumb);
   if (isShorts) return 'shorts';
   return 'video';
 }
@@ -655,6 +665,9 @@ function renderVideos() {
       </div>
       <div class="video-actions">
         <button class="copy-btn" onclick="copyLink('${v.url}', this)">Copy link</button>
+        <button class="copy-btn" onclick="copyDate('${v.publishedAt}', this)">Copy tanggal</button>
+        <button class="copy-btn" onclick="copyViews('${v.views}', this)">Copy views</button>
+        ${v.duration ? `<button class="copy-btn" onclick="copyDuration(${v.duration}, this)">Copy durasi</button>` : ''}
         <a class="open-link" href="${v.url}" target="_blank" rel="noopener noreferrer">Buka ↗</a>
       </div>
     `;
@@ -664,10 +677,34 @@ function renderVideos() {
 
 /* ─── Copy & export ─── */
 function copyLink(url, btn) {
-  navigator.clipboard.writeText(url).then(() => {
+  copyPlainText(url, btn, 'Copy link');
+}
+
+function copyDate(iso, btn) {
+  copyPlainText(fmtDateCopy(iso), btn, 'Copy tanggal');
+}
+
+function copyViews(views, btn) {
+  copyPlainText(fmtNum(views), btn, 'Copy views');
+}
+
+function copyDuration(secs, btn) {
+  copyPlainText(fmtDur(secs), btn, 'Copy durasi');
+}
+
+// Selalu nulis sebagai text/plain murni (bukan text/html) supaya pas di-paste
+// ke Google Sheets / Excel nggak ikut bawa background gelap dari halaman ini.
+function copyPlainText(text, btn, label) {
+  const done = () => {
     btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy link'; btn.classList.remove('copied'); }, 1800);
-  });
+    setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1800);
+  };
+  if (navigator.clipboard && window.ClipboardItem) {
+    const item = new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }) });
+    navigator.clipboard.write([item]).then(done).catch(() => navigator.clipboard.writeText(text).then(done));
+  } else {
+    navigator.clipboard.writeText(text).then(done);
+  }
 }
 
 function copyAllLinks() {
