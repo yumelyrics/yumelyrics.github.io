@@ -587,6 +587,17 @@ body.dark input[type=range]::-moz-range-thumb {
   opacity: 0.9;
   transition: opacity 0.18s, filter 0.18s;
 }
+.bg-preview-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  background: #000;
+  transition: opacity 0.35s ease, filter 0.18s;
+  pointer-events: none;
+}
 .bg-preview-overlay {
   position: absolute;
   inset: 0;
@@ -638,6 +649,7 @@ body.dark input[type=range]::-moz-range-thumb {
   white-space: nowrap;
 }
 .bg-preview-card.empty .bg-preview-img,
+.bg-preview-card.empty .bg-preview-video,
 .bg-preview-card.empty .bg-preview-overlay { opacity: 0 !important; }
 .bg-preview-card.empty .bg-preview-hint {
   background: var(--accent-light);
@@ -1246,6 +1258,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div class="bg-preview-wrap">
         <div class="bg-preview-card empty" id="bgPreviewCard">
           <div class="bg-preview-img" id="bgPreviewImg"></div>
+          <video class="bg-preview-video hidden" id="bgPreviewVideo" muted loop autoplay playsinline></video>
           <div class="bg-preview-overlay" id="bgPreviewOverlay"></div>
           <span class="bg-preview-device-badge" id="bgPreviewDeviceBadge">Desktop</span>
           <span class="bg-preview-device-badge hidden" id="bgPreviewKindBadge" style="left:10px; right:auto;">🎬 Preview = frame pertama video</span>
@@ -3266,13 +3279,27 @@ function getSampleCardHtml(side){
   return safe;
 }
 
-// Buat sumber 'video', preview kecil di form ini cuma nampilin FRAME FALLBACK-nya (poster) --
-// bukan muterin video asli -- biar ringan & gak ribet, sambil tetep kasih gambaran posisi/crop-nya.
+// Referensi buat lapisan foto/GIF paling belakang di preview kecil: kalau sumbernya video, ini
+// balikin POSTER-nya (frame pertama) yang dudukin di belakang <video> asli sbg fallback selama
+// videonya masih ke-load -- videonya sendiri yang beneran MUTER, di-handle terpisah di updateBgPreview().
 function ahPreviewImageRefForSource(src){
   if(!ahHasBgSource(src)) return '';
   if(src.kind === 'video') return src.mode === 'url' ? '' : (src.posterDataUrl || '');
-  return src.mode === 'url' ? src.imageUrl.trim() : src.dataUrl;
+  return src.mode === 'url' ? src.imageUrl.trim() : src.dataUrl; // GIF ikut lewat sini & animasinya jalan normal (data/URL GIF di background-image otomatis animasi di browser)
 }
+
+const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
+
+// Sekali doang dipasang: begitu video di preview kecil beneran udah bisa diputer, fade-in ke
+// opacity target (bukan langsung nongol dadakan) -- niruin persis behavior di kartu Anki asli.
+(function setupBgPreviewVideoFade(){
+  const v = document.getElementById('bgPreviewVideo');
+  if(!v) return;
+  const reveal = ()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; };
+  v.addEventListener('loadeddata', reveal);
+  v.addEventListener('canplay', reveal);
+  v.addEventListener('playing', reveal);
+})();
 
 function updateBgPreview(){
   const cfg = state.cardBg;
@@ -3285,6 +3312,7 @@ function updateBgPreview(){
 
   const card = document.getElementById('bgPreviewCard');
   const img = document.getElementById('bgPreviewImg');
+  const video = document.getElementById('bgPreviewVideo');
   const overlay = document.getElementById('bgPreviewOverlay');
   const sideLabel = document.getElementById('bgPreviewSideLabel');
   const textEl = document.getElementById('bgPreviewText');
@@ -3302,10 +3330,11 @@ function updateBgPreview(){
   card.classList.toggle('device-mobile', device === 'mobile');
   const deviceBadge = document.getElementById('bgPreviewDeviceBadge');
   if(deviceBadge) deviceBadge.textContent = device === 'mobile' ? '📱 Mobile' : '🖥️ Desktop';
+  const isVideo = hasSrc && src.kind === 'video';
   const kindBadge = document.getElementById('bgPreviewKindBadge');
   if(kindBadge){
-    kindBadge.classList.toggle('hidden', !hasSrc || src.kind !== 'video');
-    kindBadge.textContent = '🎬 Preview = frame pertama video';
+    kindBadge.classList.toggle('hidden', !isVideo);
+    kindBadge.textContent = '🎬 Video (muter otomatis)';
   }
   const posReadout = document.getElementById('bgPosReadout');
   if(posReadout) posReadout.textContent = `Posisi: ${Math.round(pos.x)}%, ${Math.round(pos.y)}%`;
@@ -3327,6 +3356,37 @@ function updateBgPreview(){
     overlay.style.backgroundColor = `rgba(0,0,0,${cfg.overlay/100})`;
   }
 
+  // <video> beneran diputer di preview kecil ini (bukan cuma foto diem) -- sumbernya blob URL file
+  // yang di-upload (atau link langsung kalau mode URL), ga usah lewat proses/kompresi apapun lagi.
+  if(video){
+    if(isVideo){
+      const vref = src.mode === 'url' ? (src.imageUrl || '').trim() : src.dataUrl;
+      if(vref && video.dataset.srcRef !== vref){
+        video.dataset.srcRef = vref;
+        video.classList.remove('loaded');
+        video.style.opacity = '0';
+        video.src = vref;
+        video.load();
+        const p = video.play();
+        if(p && p.catch) p.catch(()=>{}); // autoplay browser policy kadang nolak diem-diem, biarin aja -- poster fallback tetep keliatan
+      }
+      video.classList.remove('hidden');
+      video.style.objectFit = objectFitMap[cfg.fit] || 'cover';
+      video.style.objectPosition = `${pos.x}% ${pos.y}%`;
+      video.style.filter = `blur(${cfg.blur}px)`;
+      video.dataset.targetOpacity = String(cfg.opacity/100);
+      if(video.readyState >= 2) video.style.opacity = String(cfg.opacity/100);
+    } else {
+      video.classList.add('hidden');
+      if(video.dataset.srcRef){
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        delete video.dataset.srcRef;
+      }
+    }
+  }
+
   document.getElementById('btnApplyFront').classList.toggle('applied', cfg.front);
   document.getElementById('btnApplyBack').classList.toggle('applied', cfg.back);
 }
@@ -3342,8 +3402,10 @@ function updateBgPreviewPositionOnly(){
   const device = cfg.previewDevice || 'desktop';
   const pos = ahBgPos(cfg, device);
   const img = document.getElementById('bgPreviewImg');
+  const video = document.getElementById('bgPreviewVideo');
   const posReadout = document.getElementById('bgPosReadout');
   if(img) img.style.backgroundPosition = `${pos.x}% ${pos.y}%`;
+  if(video && !video.classList.contains('hidden')) video.style.objectPosition = `${pos.x}% ${pos.y}%`;
   if(posReadout) posReadout.textContent = `Posisi: ${Math.round(pos.x)}%, ${Math.round(pos.y)}%`;
 }
 
