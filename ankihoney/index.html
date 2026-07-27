@@ -4053,6 +4053,39 @@ function ahBuildBgMediaHtml(cfg){
     if(desktopSrc.kind === 'video' && ahHasBgSource(desktopSrc)) html += mkVideo(desktopSrc, 'ankihoney-bg-video-desktop');
     if(mobileSrc.kind === 'video' && ahHasBgSource(mobileSrc)) html += mkVideo(mobileSrc, 'ankihoney-bg-video-mobile');
   }
+  // Script "jaring pengaman" -- benerin 2 bug: (1) foto/poster yang nutupin video SELAMANYA
+  // kalau event loadeddata/canplay/playing gagal fire duluan, (2) layar kepotong setengah /
+  // teks melenceng pas resize/fullscreen karena lapisan position:fixed gak ke-reflow ulang
+  // ngikutin ukuran window yang baru (dipakai bareng var CSS --ah-vw/--ah-vh di ahBuildCssBlock).
+  html += `<script>(function(){
+  var root = document.currentScript.closest('.ankihoney-bg');
+  if(!root) return;
+  function ahSyncViewport(){
+    var vv = window.visualViewport;
+    var w = (vv && vv.width) || window.innerWidth || document.documentElement.clientWidth;
+    var h = (vv && vv.height) || window.innerHeight || document.documentElement.clientHeight;
+    root.style.setProperty('--ah-vw', w + 'px');
+    root.style.setProperty('--ah-vh', h + 'px');
+  }
+  ahSyncViewport();
+  var t = null;
+  function ahOnResize(){
+    ahSyncViewport();
+    clearTimeout(t);
+    t = setTimeout(ahSyncViewport, 260);
+  }
+  window.addEventListener('resize', ahOnResize);
+  window.addEventListener('orientationchange', ahOnResize);
+  document.addEventListener('fullscreenchange', ahOnResize);
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', ahOnResize);
+  var vids = root.querySelectorAll('.ankihoney-bg-video');
+  for(var i=0;i<vids.length;i++){
+    (function(v){
+      if(v.readyState >= 2) v.classList.add('ah-loaded');
+      setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800);
+    })(vids[i]);
+  }
+})();</` + `script>`;
   return html;
 }
 
@@ -4139,8 +4172,8 @@ ${fxDeclarations}
   // (dipicu attribute onloadeddata/oncanplay/onplaying di tag <video>-nya) -- itu yang bikin video
   // gak "muncul dadakan", & selama nunggu videonya siap, poster/foto fallback yang keliatan.
   const videoCss = `.ankihoney-bg-video{
-  position:fixed; inset:0; z-index:-2;
-  width:100%; height:100%;
+  position:fixed; top:0; left:0; z-index:-2;
+  width:var(--ah-vw); height:var(--ah-vh);
   object-fit:${objectFitMap[cfg.fit]||'cover'};
   object-position:${desktopPos.x}% ${desktopPos.y}%;
   opacity:0;
@@ -4169,9 +4202,17 @@ ${fxDeclarations}
 ${AH_BG_START}
 .card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }
 html, body{ background-color:transparent !important; }
-.ankihoney-bg{ position:relative; isolation:isolate; }
+/* --ah-vw/--ah-vh: ukuran viewport (dalam px) yang di-sync terus lewat JS di
+   ahBuildBgMediaHtml (liat <script> yang disisipin bareng media) -- dipakai buat nge-size
+   semua lapisan position:fixed di bawah ini (ganti dari cuma "inset:0"). Ini benerin bug
+   layar kepotong setengah / teks melenceng pas resize atau masuk-keluar fullscreen: sebagian
+   versi Anki gagal langsung "reflow" ulang elemen position:fixed ngikutin ukuran window yang
+   baru, jadi lapisan background-nya nyangkut di ukuran lama. Default-nya tetep vw/vh biasa
+   (kepake sebelum script sempet jalan / kalau scriptnya somehow gagal). */
+.ankihoney-bg{ position:relative; isolation:isolate; --ah-vw:100vw; --ah-vh:100vh; }
 .ankihoney-bg::before{
-  content:""; position:fixed; inset:0; z-index:-3;
+  content:""; position:fixed; top:0; left:0; z-index:-3;
+  width:var(--ah-vw); height:var(--ah-vh);
   background-image:${desktopBgImg};
   background-size:${sizeMap[cfg.fit]||'cover'};
   background-position:${desktopPos.x}% ${desktopPos.y}%;
@@ -4181,7 +4222,8 @@ html, body{ background-color:transparent !important; }
   filter:blur(${blur}px);
 }
 .ankihoney-bg::after{
-  content:""; position:fixed; inset:0; z-index:-1;
+  content:""; position:fixed; top:0; left:0; z-index:-1;
+  width:var(--ah-vw); height:var(--ah-vh);
   background:rgba(0,0,0,${overlay});
 }
 ${videoCss}${videoVisibilityCss}/* Posisi & (kalau "background beda per platform" aktif) SUMBER foto/GIF/poster-nya sendiri
