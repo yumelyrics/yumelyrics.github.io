@@ -4031,62 +4031,122 @@ function ahBgFallbackRef(src){
   return src.kind === 'video' ? ahBgPosterRef(src) : ahBgSourceRef(src);
 }
 
-// Bangun HTML <video> yang disisipin ke dalam wrapper .ankihoney-bg (kosong kalau gak ada
-// sumber bertipe video sama sekali). autoplay+muted+loop+playsinline biar bisa autoplay tanpa
-// interaksi user; onloadeddata/oncanplay/onplaying nambahin class 'ah-loaded' yang micu fade-in
-// opacity lewat CSS (lihat ahBuildCssBlock) -- SEBELUM itu, poster/fallback foto di ::before yang keliatan.
+// Bangun script yang bikin/pake-ulang <video> background secara DINAMIS lewat JS (bukan nulis
+// tag <video> statis langsung di HTML kartu lagi). SEBABNYA: Anki ganti tampilan Depan->Belakang
+// (dan pindah ke kartu berikutnya) itu cuma dengan REPLACE innerHTML div#qa doang -- webview-nya
+// sendiri gak reload. Kalau <video> ditulis statis di dalam qfmt/afmt (yang notabene ada di
+// dalam #qa), videonya ikut kehapus & dibuat ulang dari 0 setiap kali itu, makanya videonya
+// selalu "restart" pas Depan->Belakang. Fixnya: videonya dibikin/nempel di <body> (di LUAR
+// #qa, lewat JS) SEKALI aja & dipake ULANG terus selama sumbernya (file) masih sama persis --
+// baru di-reset kalau sumbernya beneran ganti (misal kartu lain punya video background beda).
 function ahBuildBgMediaHtml(cfg){
   const desktopSrc = ahActiveBgSource(cfg, 'desktop');
   const mobileSrc = ahActiveBgSource(cfg, 'mobile');
-  const onReady = "this.classList.add('ah-loaded')";
-  const mkVideo = (src, cls)=>{
+
+  const videoDescs = [];
+  const pushVideo = (src, cls) => {
+    if(src.kind !== 'video' || !ahHasBgSource(src)) return;
     const ref = ahBgSourceRef(src);
-    if(!ref) return '';
-    const poster = ahBgPosterRef(src);
-    return `<video class="ankihoney-bg-video ${cls}" autoplay muted loop playsinline preload="auto"${poster ? ` poster="${poster}"` : ''} onloadeddata="${onReady}" oncanplay="${onReady}" onplaying="${onReady}"><source src="${ref}"></video>`;
+    if(!ref) return;
+    videoDescs.push({ cls, ref, poster: ahBgPosterRef(src) || '' });
   };
-  let html = '';
   if(cfg.syncPlatforms){
     // 1 sumber dipakai bareng Desktop & Mobile -- 1 elemen <video> aja, SELALU tampil di kedua breakpoint.
-    if(desktopSrc.kind === 'video' && ahHasBgSource(desktopSrc)) html += mkVideo(desktopSrc, 'ankihoney-bg-video-shared');
+    pushVideo(desktopSrc, 'ankihoney-bg-video-shared');
   } else {
-    if(desktopSrc.kind === 'video' && ahHasBgSource(desktopSrc)) html += mkVideo(desktopSrc, 'ankihoney-bg-video-desktop');
-    if(mobileSrc.kind === 'video' && ahHasBgSource(mobileSrc)) html += mkVideo(mobileSrc, 'ankihoney-bg-video-mobile');
+    pushVideo(desktopSrc, 'ankihoney-bg-video-desktop');
+    pushVideo(mobileSrc, 'ankihoney-bg-video-mobile');
   }
-  // Script "jaring pengaman" -- benerin 2 bug: (1) foto/poster yang nutupin video SELAMANYA
-  // kalau event loadeddata/canplay/playing gagal fire duluan, (2) layar kepotong setengah /
-  // teks melenceng pas resize/fullscreen karena lapisan position:fixed gak ke-reflow ulang
-  // ngikutin ukuran window yang baru (dipakai bareng var CSS --ah-vw/--ah-vh di ahBuildCssBlock).
-  html += `<script>(function(){
+  const videoDescsJson = JSON.stringify(videoDescs).replace(/</g, '\\u003c'); // jaga2 kalau ada karakter aneh di nama file yg bisa kebaca sbg tag
+
+  // Script ini jalan tiap kali sisi (Depan/Belakang) yang aktifin background ke-render, tapi
+  // EFEKNYA cuma "bikin baru kalau belum ada / videonya beda" -- video yang UDAH ada & lagi
+  // muter otomatis DIBIARIN nempel & lanjut muter, gak disentuh sama sekali.
+  return `<script>(function(){
   var root = document.currentScript.closest('.ankihoney-bg');
   if(!root) return;
+
+  // --- (1) Sinkronin --ah-vw/--ah-vh ke ukuran viewport ASLI (di <html>, bukan di wrapper --
+  // videonya sekarang nempel di <body>, jadi variable-nya harus bisa di-inherit dari situ juga).
+  // Benerin bug layar kepotong setengah / teks melenceng pas resize atau masuk-keluar fullscreen:
+  // sebagian versi Anki gagal langsung reflow ulang elemen position:fixed ngikutin ukuran window
+  // yang baru, jadi lapisan background-nya nyangkut di ukuran lama.
+  var rootEl = document.documentElement;
   function ahSyncViewport(){
     var vv = window.visualViewport;
     var w = (vv && vv.width) || window.innerWidth || document.documentElement.clientWidth;
     var h = (vv && vv.height) || window.innerHeight || document.documentElement.clientHeight;
-    root.style.setProperty('--ah-vw', w + 'px');
-    root.style.setProperty('--ah-vh', h + 'px');
+    rootEl.style.setProperty('--ah-vw', w + 'px');
+    rootEl.style.setProperty('--ah-vh', h + 'px');
   }
   ahSyncViewport();
-  var t = null;
-  function ahOnResize(){
-    ahSyncViewport();
-    clearTimeout(t);
-    t = setTimeout(ahSyncViewport, 260);
+  if(!window.__ahResizeBound){
+    window.__ahResizeBound = true;
+    var t = null;
+    function ahOnResize(){
+      ahSyncViewport();
+      clearTimeout(t);
+      t = setTimeout(ahSyncViewport, 260);
+    }
+    window.addEventListener('resize', ahOnResize);
+    window.addEventListener('orientationchange', ahOnResize);
+    document.addEventListener('fullscreenchange', ahOnResize);
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', ahOnResize);
   }
-  window.addEventListener('resize', ahOnResize);
-  window.addEventListener('orientationchange', ahOnResize);
-  document.addEventListener('fullscreenchange', ahOnResize);
-  if(window.visualViewport) window.visualViewport.addEventListener('resize', ahOnResize);
-  var vids = root.querySelectorAll('.ankihoney-bg-video');
-  for(var i=0;i<vids.length;i++){
-    (function(v){
-      if(v.readyState >= 2) v.classList.add('ah-loaded');
-      setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800);
-    })(vids[i]);
+
+  // --- (2) Video background persisten -- nempel di <body>, DILUAR #qa, biar SELAMAT dari
+  // Anki yang cuma replace innerHTML #qa pas ganti Depan->Belakang / pindah kartu. Video cuma
+  // di-(re)buat kalau memang belum ada / sumbernya (file-nya) beneran beda dari yang lagi
+  // nempel sekarang -- kalau sama persis, DIBIARIN lanjut muter tanpa keputus/restart.
+  var wanted = ${videoDescsJson};
+  var host = document.getElementById('ankihoney-bg-video-host');
+  if(!host){
+    host = document.createElement('div');
+    host.id = 'ankihoney-bg-video-host';
+    document.body.appendChild(host);
   }
+  var existing = {};
+  var oldVids = host.querySelectorAll('video[data-ah-cls]');
+  for(var i=0;i<oldVids.length;i++){ existing[oldVids[i].dataset.ahCls] = oldVids[i]; }
+  // Buang video yang classnya udah gak dipake lagi di sisi kartu ini (misal ganti dari 1
+  // video bareng jadi video Desktop/Mobile terpisah, atau background videonya dimatiin).
+  for(var cls in existing){
+    var stillWanted = false;
+    for(var j=0;j<wanted.length;j++){ if(wanted[j].cls === cls){ stillWanted = true; break; } }
+    if(!stillWanted) existing[cls].remove();
+  }
+  wanted.forEach(function(w){
+    var v = existing[w.cls];
+    if(v && v.dataset.ahRef === w.ref){
+      // Sumbernya SAMA kayak sebelumnya -> jangan disentuh, biar lanjut muter dari posisi sekarang.
+      v.classList.add('ah-loaded');
+      return;
+    }
+    if(!v){
+      v = document.createElement('video');
+      v.dataset.ahCls = w.cls;
+      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      host.appendChild(v);
+    }
+    // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
+    v.className = 'ankihoney-bg-video ' + w.cls;
+    v.dataset.ahRef = w.ref;
+    if(w.poster) v.poster = w.poster;
+    v.innerHTML = '';
+    var source = document.createElement('source');
+    source.src = w.ref;
+    v.appendChild(source);
+    v.classList.remove('ah-loaded');
+    var onReady = function(){ v.classList.add('ah-loaded'); };
+    v.addEventListener('loadeddata', onReady);
+    v.addEventListener('canplay', onReady);
+    v.addEventListener('playing', onReady);
+    v.load();
+    var p = v.play(); if(p && p.catch) p.catch(function(){});
+    if(v.readyState >= 2) v.classList.add('ah-loaded');
+    setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
+  });
 })();</` + `script>`;
-  return html;
 }
 
 function ahBuildCssBlock(cfg){
@@ -4169,8 +4229,9 @@ ${fxDeclarations}
   // ::before (foto/poster fallback, z-index -3) tapi DI BAWAH ::after (overlay gelap, z-index -1),
   // jadi urutannya dari belakang ke depan: foto/poster fallback -> video -> overlay gelap -> teks
   // kartu. opacity:0 dulu & baru di-fade-in ke opacity target pas class 'ah-loaded' udah nempel
-  // (dipicu attribute onloadeddata/oncanplay/onplaying di tag <video>-nya) -- itu yang bikin video
-  // gak "muncul dadakan", & selama nunggu videonya siap, poster/foto fallback yang keliatan.
+  // (dipicu listener loadeddata/canplay/playing yang dipasang lewat JS di ahBuildBgMediaHtml,
+  // + jaring pengaman timeout 1.8 detik) -- itu yang bikin video gak "muncul dadakan", & selama
+  // nunggu videonya siap, poster/foto fallback yang keliatan.
   const videoCss = `.ankihoney-bg-video{
   position:fixed; top:0; left:0; z-index:-2;
   width:var(--ah-vw); height:var(--ah-vh);
@@ -4207,9 +4268,12 @@ html, body{ background-color:transparent !important; }
    semua lapisan position:fixed di bawah ini (ganti dari cuma "inset:0"). Ini benerin bug
    layar kepotong setengah / teks melenceng pas resize atau masuk-keluar fullscreen: sebagian
    versi Anki gagal langsung "reflow" ulang elemen position:fixed ngikutin ukuran window yang
-   baru, jadi lapisan background-nya nyangkut di ukuran lama. Default-nya tetep vw/vh biasa
-   (kepake sebelum script sempet jalan / kalau scriptnya somehow gagal). */
-.ankihoney-bg{ position:relative; isolation:isolate; --ah-vw:100vw; --ah-vh:100vh; }
+   baru, jadi lapisan background-nya nyangkut di ukuran lama. Dideklarasiin di :root (bukan di
+   .ankihoney-bg doang) soalnya video background-nya sekarang nempel LANGSUNG di <body> (di luar
+   wrapper .ankihoney-bg) biar bisa lanjut muter tanpa restart pas Depan->Belakang -- default-nya
+   tetep vw/vh biasa (kepake sebelum script sempet jalan / kalau scriptnya somehow gagal). */
+:root{ --ah-vw:100vw; --ah-vh:100vh; }
+.ankihoney-bg{ position:relative; isolation:isolate; }
 .ankihoney-bg::before{
   content:""; position:fixed; top:0; left:0; z-index:-3;
   width:var(--ah-vw); height:var(--ah-vh);
@@ -4240,11 +4304,11 @@ ${videoCss}${videoVisibilityCss}/* Posisi & (kalau "background beda per platform
 }
 ${fxCss}${mutedHeadwordCss}${panelCss}/* Cegah dobel lapis: kalau Belakang pake {{FrontSide}}, HTML Depan yang udah
    dibungkus .ankihoney-bg ikut ke-embed di dalam Belakang, jadi ada wrapper
-   nested. Matiin pseudo-element & video punya wrapper yang ke-nested itu biar overlay/blur/video
-   cuma ke-apply 1x, gak numpuk 2x.  */
+   nested. Matiin pseudo-element punya wrapper yang ke-nested itu biar overlay/blur cuma ke-apply
+   1x, gak numpuk 2x. (Video-nya sendiri udah gak lagi ditulis statis di HTML kartu -- dibikin
+   lewat JS nempel ke <body>, lihat ahBuildBgMediaHtml -- jadi otomatis gak pernah dobel lagi.) */
 .ankihoney-bg .ankihoney-bg::before,
 .ankihoney-bg .ankihoney-bg::after{ content:none !important; display:none !important; }
-.ankihoney-bg .ankihoney-bg .ankihoney-bg-video{ display:none !important; }
 ${AH_BG_END}
 `;
 }
