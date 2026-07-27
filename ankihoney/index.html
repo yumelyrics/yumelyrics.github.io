@@ -4028,7 +4028,11 @@ function ahStripCssBlock(css){
 // sebelum videonya sendiri kebaca & fade-in di atas lapisan ini.
 function ahBgFallbackRef(src){
   if(!ahHasBgSource(src)) return '';
-  return src.kind === 'video' ? ahBgPosterRef(src) : ahBgSourceRef(src);
+  // Poster/foto fallback buat video DIMATIIN sesuai request -- video-nya sekarang udah
+  // reliable jalan, jadi gak perlu lagi lapisan foto yang nutupin sebelum video siap.
+  // Foto/GIF beneran (kind !== 'video') TETAP lewat sini soalnya itu bukan "fallback",
+  // itu emang backgroundnya sendiri.
+  return src.kind === 'video' ? '' : ahBgSourceRef(src);
 }
 
 // Bangun script yang bikin/pake-ulang <video> background secara DINAMIS lewat JS (bukan nulis
@@ -4154,19 +4158,9 @@ function ahBuildBgMediaHtml(cfg){
     // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
     v.className = 'ankihoney-bg-video ' + w.cls;
     v.dataset.ahRef = w.ref;
-    if(w.poster) v.poster = w.poster;
     v.innerHTML = '';
     var source = document.createElement('source');
     source.src = w.ref;
-    // PENTING (fix AnkiDroid/AnkiMobile gak mau muter sama sekali): tanpa atribut `type` di
-    // <source>, sebagian WebView Android (bukan cuma Chrome desktop) GAK nyoba nebak-nebak
-    // format dari isi filenya -- dianggap "gak didukung" & video-nya gak pernah kebaca, walau
-    // container/codec-nya sendiri sebenernya valid & keputer normal di Anki Desktop. Kasih hint
-    // eksplisit dari ekstensi filenya biar WebView-nya yakin cara buka filenya.
-    var extMatch = /\.([a-z0-9]+)(?:\?.*)?$/i.exec(w.ref || '');
-    var ext = extMatch ? extMatch[1].toLowerCase() : '';
-    var mimeByExt = { mp4:'video/mp4', m4v:'video/mp4', webm:'video/webm', mov:'video/quicktime' };
-    if(mimeByExt[ext]) source.type = mimeByExt[ext];
     v.appendChild(source);
     v.classList.remove('ah-loaded');
     var onReady = function(){ v.classList.add('ah-loaded'); };
@@ -4227,6 +4221,13 @@ function ahBuildCssBlock(cfg){
   const mobileFallback = ahBgFallbackRef(mobileSrc);
   const desktopBgImg = desktopFallback ? `url('${desktopFallback}')` : 'none';
   const mobileBgImg = mobileFallback ? `url('${mobileFallback}')` : 'none';
+  // Poster video sengaja dikosongin di ahBgFallbackRef (bukan berarti gak ada background sama
+  // sekali) -- jadi warna fallback-nya harus tetep transparent (bukan solid gelap #12121a) biar
+  // gak keliatan "kotak item" nunggu videonya kebaca. #12121a cuma buat kondisi beneran GAK ada
+  // background sama sekali.
+  const ahBgLayerColor = src => ahHasBgSource(src) ? 'transparent' : '#12121a';
+  const desktopBgColor = ahBgLayerColor(desktopSrc);
+  const mobileBgColor = ahBgLayerColor(mobileSrc);
 
   const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
   // Selector ini SENGAJA dibatesin ke <b>/<strong> literal doang (yang cuma
@@ -4353,7 +4354,7 @@ html, body{ background-color:transparent !important; }
   background-size:${sizeMap[cfg.fit]||'cover'};
   background-position:${desktopPos.x}% ${desktopPos.y}%;
   background-repeat:no-repeat;
-  background-color:${desktopFallback ? 'transparent' : '#12121a'};
+  background-color:${desktopBgColor};
   opacity:${opacity};
   filter:blur(${blur}px);
   pointer-events:none;
@@ -4373,7 +4374,7 @@ ${videoCss}${videoVisibilityCss}/* Posisi & (kalau "background beda per platform
   .ankihoney-bg-photo-layer{
     background-image:${mobileBgImg};
     background-position:${mobilePos.x}% ${mobilePos.y}%;
-    background-color:${mobileFallback ? 'transparent' : '#12121a'};
+    background-color:${mobileBgColor};
   }
 }
 ${fxCss}${mutedHeadwordCss}${panelCss}
