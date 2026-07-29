@@ -42,6 +42,16 @@
       <!-- FORM COLUMN -->
       <div>
         <section class="panel">
+          <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">PENGATURAN UPLOAD</h2>
+          <div class="field">
+            <label for="fImgbbKey">ImgBB API Key (gratis)</label>
+            <input type="password" id="fImgbbKey" placeholder="Tempel API key dari api.imgbb.com">
+            <p class="status-msg" id="imgbbKeyStatus"></p>
+            <p class="field-hint">Dipakai untuk tombol "Upload dari perangkat" di bawah. Ambil gratis di <a href="https://api.imgbb.com/" target="_blank" style="color:var(--gold-soft)">api.imgbb.com</a> (daftar → dashboard → copy API key). Key ini cuma tersimpan di browser kamu, tidak ikut ke Firestore.</p>
+          </div>
+        </section>
+
+        <section class="panel">
           <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">PROFIL</h2>
           <div class="field">
             <label for="fName">Nama</label>
