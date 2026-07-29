@@ -5,9 +5,6 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc,
 } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-import {
-  getStorage, ref as storageRef, uploadBytes, getDownloadURL,
-} from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js';
 import { firebaseConfig, PROFILE_PATH } from './firebase-config.js';
 import { ICONS } from './icons.js';
 import { renderProfile, applyBackground } from './render.js';
@@ -15,38 +12,43 @@ import { renderProfile, applyBackground } from './render.js';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const profileRef = doc(db, PROFILE_PATH.collection, PROFILE_PATH.doc);
 
-// ---------- image upload (Firebase Storage) ----------
-function safeExt(file) {
-  const rawExt = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : '';
-  if (/^[a-z0-9]{2,5}$/.test(rawExt)) return rawExt === 'jpeg' ? 'jpg' : rawExt;
-  const typeExt = (file.type && file.type.includes('/')) ? file.type.split('/')[1].toLowerCase() : '';
-  return /^[a-z0-9]{2,5}$/.test(typeExt) ? (typeExt === 'jpeg' ? 'jpg' : typeExt) : 'jpg';
-}
-async function uploadImageToFirebase(file, folder = 'uploads') {
-  if (!auth.currentUser) throw new Error('Kamu harus login dulu sebelum upload gambar.');
+// ---------- image upload (ImgBB — free, no paid plan needed) ----------
+const IMGBB_KEY_STORAGE = 'linkprofile_imgbb_key';
+function imgbbKeyGet() { return localStorage.getItem(IMGBB_KEY_STORAGE) || ''; }
+function imgbbKeySet(k) { localStorage.setItem(IMGBB_KEY_STORAGE, k); }
+
+async function uploadImageViaImgbb(file) {
+  const key = imgbbKeyGet().trim();
+  if (!key) throw new Error('Isi dulu ImgBB API Key di panel "Pengaturan upload" di atas.');
   if (!file) throw new Error('Tidak ada file yang dipilih.');
   if (!file.type.startsWith('image/')) throw new Error('File harus berupa gambar.');
   if (file.size > 5 * 1024 * 1024) throw new Error('Ukuran gambar maksimal 5MB.');
-  const rand = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-  const path = `${folder}/${Date.now()}_${rand}.${safeExt(file)}`;
-  const fileRef = storageRef(storage, path);
-  const snapshot = await uploadBytes(fileRef, file, { contentType: file.type });
-  const url = await getDownloadURL(snapshot.ref);
-  if (!url) throw new Error('Gagal mengambil URL gambar.');
+  const fd = new FormData();
+  fd.append('key', key);
+  fd.append('image', file, file.name || 'image.jpg');
+  let res;
+  try {
+    res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
+  } catch {
+    throw new Error('Tidak bisa hubungi ImgBB. Cek koneksi internet.');
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!json.success) throw new Error(json.error?.message || 'ImgBB menolak upload — cek API key.');
+  const url = json.data?.url || json.data?.display_url;
+  if (!url) throw new Error('URL gambar tidak ada di respons ImgBB.');
   return url;
 }
 /** Wires a file input to upload into `targetInput`'s value and fire the given callback. */
-function wireUploadButton({ fileInput, statusEl, targetInput, folder, onDone }) {
+function wireUploadButton({ fileInput, statusEl, targetInput, onDone }) {
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files[0];
     if (!file) return;
     statusEl.textContent = 'Mengunggah…';
     statusEl.className = 'status-msg';
     try {
-      const url = await uploadImageToFirebase(file, folder);
+      const url = await uploadImageViaImgbb(file);
       targetInput.value = url;
       statusEl.textContent = 'Berhasil diunggah ✓';
       statusEl.className = 'status-msg ok';
@@ -89,11 +91,19 @@ const socialsList = el('socialsList'), addSocialBtn = el('addSocialBtn');
 const saveBtn = el('saveBtn'), saveStatus = el('saveStatus');
 const linkRowTpl = el('linkRowTpl'), socialRowTpl = el('socialRowTpl');
 const pvRoot = el('pvRoot'), pvBgLayer = el('pvBgLayer'), pvBgOverlay = el('pvBgOverlay');
+const fImgbbKey = el('fImgbbKey'), imgbbKeyStatus = el('imgbbKeyStatus');
 
 function iconOptionsHtml(selected) {
   return Object.entries(ICONS).map(([key, v]) =>
     `<option value="${key}" ${key === selected ? 'selected' : ''}>${v.label}</option>`).join('');
 }
+
+fImgbbKey.value = imgbbKeyGet();
+fImgbbKey.addEventListener('input', () => {
+  imgbbKeySet(fImgbbKey.value.trim());
+  imgbbKeyStatus.textContent = fImgbbKey.value.trim() ? 'Tersimpan di browser ini ✓' : '';
+  imgbbKeyStatus.className = 'status-msg ok';
+});
 
 // ---------- auth ----------
 onAuthStateChanged(auth, async (user) => {
@@ -204,7 +214,7 @@ function buildLinkRow(link, index) {
     iconStatusEl.textContent = 'Mengunggah…';
     iconStatusEl.className = 'status-msg';
     try {
-      const url = await uploadImageToFirebase(file, 'link-icons');
+      const url = await uploadImageViaImgbb(file);
       iconUrlI.value = url;
       state.links[index].iconUrl = url;
       iconStatusEl.textContent = 'Berhasil ✓';
@@ -276,14 +286,12 @@ wireUploadButton({
   fileInput: fAvatarFile,
   statusEl: avatarUploadStatus,
   targetInput: fAvatar,
-  folder: 'avatars',
   onDone: (url) => { state.avatar = url; updatePreview(); },
 });
 wireUploadButton({
   fileInput: fBgImageFile,
   statusEl: bgImageUploadStatus,
   targetInput: fBgImage,
-  folder: 'backgrounds',
   onDone: () => syncBackgroundFromForm(),
 });
 
