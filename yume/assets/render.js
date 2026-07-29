@@ -74,7 +74,7 @@ export function renderProfile(container, data) {
       ${bio ? `<p class="bio">${bio}</p>` : ''}
       <ul class="links">${linksHtml || ''}</ul>
       ${socialsHtml ? `<div class="socials">${socialsHtml}</div>` : ''}
-      <p class="footer-mark">dibuat dengan link-profile</p>
+      <p class="footer-mark">yumesubs</p>
     </div>
   `;
 }
