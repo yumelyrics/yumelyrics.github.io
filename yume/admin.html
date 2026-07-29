@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Edit Profil</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <div id="loginView" class="login-wrap panel" hidden>
+    <h1 class="admin-title" style="margin-bottom:18px">Masuk ke <span>Admin</span></h1>
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary">Masuk</button>
+      <p class="status-msg" id="loginStatus"></p>
+    </form>
+    <p class="field-hint">Belum ada akun? Buat lewat Firebase Console → Authentication → Users → Add user. Lihat README.md.</p>
+  </div>
+
+  <!-- ===== EDITOR VIEW ===== -->
+  <div id="editorView" class="admin-shell" hidden>
+    <div class="admin-header">
+      <h1 class="admin-title">Edit <span>Profil</span></h1>
+      <div style="display:flex;gap:16px;align-items:center">
+        <a class="public-link" href="index.html" target="_blank">Lihat halaman publik ↗</a>
+        <button class="btn btn-ghost btn-icon" id="logoutBtn">Keluar</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- FORM COLUMN -->
+      <div>
+        <section class="panel">
+          <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">PROFIL</h2>
+          <div class="field">
+            <label for="fName">Nama</label>
+            <input type="text" id="fName" placeholder="Nama kamu">
+          </div>
+          <div class="field">
+            <label for="fBio">Bio</label>
+            <textarea id="fBio" placeholder="Deskripsi singkat tentang kamu"></textarea>
+          </div>
+          <div class="field">
+            <label for="fAvatar">URL Foto Profil</label>
+            <input type="url" id="fAvatar" placeholder="https://...">
+            <p class="field-hint">Kosongkan untuk pakai inisial nama sebagai avatar.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">BACKGROUND</h2>
+          <div class="field">
+            <label for="fBgType">Tipe background</label>
+            <select id="fBgType">
+              <option value="color">Warna solid</option>
+              <option value="gradient">Gradient</option>
+              <option value="image">Gambar (URL)</option>
+            </select>
+          </div>
+          <div class="field" id="bgColorField">
+            <label>Warna</label>
+            <div class="row">
+              <input type="color" id="fBgColor" value="#101018">
+              <input type="text" id="fBgColorHex" placeholder="#101018">
+            </div>
+          </div>
+          <div class="field" id="bgGradientField" hidden>
+            <label>Gradient (2 warna + sudut)</label>
+            <div class="row">
+              <input type="color" id="fGradA" value="#1a1024">
+              <input type="color" id="fGradB" value="#3a2a13">
+              <input type="text" id="fGradAngle" value="135" placeholder="135">
+            </div>
+            <p class="field-hint">Sudut dalam derajat (0–360).</p>
+          </div>
+          <div class="field" id="bgImageField" hidden>
+            <label for="fBgImage">URL Gambar</label>
+            <input type="url" id="fBgImage" placeholder="https://...">
+          </div>
+          <div class="field">
+            <label for="fOverlay">Gelap-terangkan background (overlay)</label>
+            <input type="range" id="fOverlay" min="0" max="90" value="40">
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">LINK</h2>
+          <div id="linksList"></div>
+          <button type="button" class="btn btn-ghost" id="addLinkBtn">+ Tambah link</button>
+        </section>
+
+        <section class="panel">
+          <h2 class="field-hint" style="font-size:13px;color:var(--gold-soft);margin:0 0 14px">IKON SOSIAL (opsional, baris kecil di bawah link)</h2>
+          <div id="socialsList"></div>
+          <button type="button" class="btn btn-ghost" id="addSocialBtn">+ Tambah ikon sosial</button>
+        </section>
+
+        <section class="panel">
+          <button type="button" class="btn btn-primary" id="saveBtn">Simpan perubahan</button>
+          <p class="status-msg" id="saveStatus"></p>
+        </section>
+      </div>
+
+      <!-- PREVIEW COLUMN -->
+      <div class="preview-outer">
+        <div class="preview-frame">
+          <div class="bg-layer" id="pvBgLayer"></div>
+          <div class="bg-overlay" id="pvBgOverlay"></div>
+          <div class="stage">
+            <div id="pvRoot"></div>
+          </div>
+        </div>
+        <p class="preview-label">PRATINJAU LANGSUNG</p>
+      </div>
+    </div>
+  </div>
+
+  <template id="linkRowTpl">
+    <div class="link-row" data-role="link-row">
+      <div class="link-row-top">
+        <input type="text" data-field="label" placeholder="Label (mis. Instagram)">
+        <input type="url" data-field="url" placeholder="https://...">
+      </div>
+      <div class="row">
+        <select data-field="icon"></select>
+        <input type="url" data-field="iconUrl" placeholder="URL ikon custom" hidden>
+      </div>
+      <div class="link-row-actions">
+        <button type="button" class="btn btn-ghost btn-icon" data-action="up">↑</button>
+        <button type="button" class="btn btn-ghost btn-icon" data-action="down">↓</button>
+        <button type="button" class="btn btn-danger btn-icon" data-action="del">Hapus</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="socialRowTpl">
+    <div class="social-row" data-role="social-row">
+      <div class="row">
+        <select data-field="icon"></select>
+        <input type="url" data-field="url" placeholder="https://...">
+      </div>
+      <div class="link-row-actions">
+        <button type="button" class="btn btn-ghost btn-icon" data-action="up">↑</button>
+        <button type="button" class="btn btn-ghost btn-icon" data-action="down">↓</button>
+        <button type="button" class="btn btn-danger btn-icon" data-action="del">Hapus</button>
+      </div>
+    </div>
+  </template>
+
+  <script type="module" src="assets/admin.js"></script>
+</body>
+</html>
