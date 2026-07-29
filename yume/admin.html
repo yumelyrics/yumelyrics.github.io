@@ -52,8 +52,13 @@
             <textarea id="fBio" placeholder="Deskripsi singkat tentang kamu"></textarea>
           </div>
           <div class="field">
-            <label for="fAvatar">URL Foto Profil</label>
-            <input type="url" id="fAvatar" placeholder="https://...">
+            <label for="fAvatar">Foto Profil</label>
+            <input type="url" id="fAvatar" placeholder="https://... (atau upload di bawah)">
+            <div class="row" style="margin-top:8px;align-items:center">
+              <label class="btn btn-ghost" style="text-align:center;cursor:pointer" for="fAvatarFile">Upload dari perangkat</label>
+              <input type="file" id="fAvatarFile" accept="image/*" hidden>
+            </div>
+            <p class="status-msg" id="avatarUploadStatus"></p>
             <p class="field-hint">Kosongkan untuk pakai inisial nama sebagai avatar.</p>
           </div>
         </section>
@@ -85,8 +90,13 @@
             <p class="field-hint">Sudut dalam derajat (0–360).</p>
           </div>
           <div class="field" id="bgImageField" hidden>
-            <label for="fBgImage">URL Gambar</label>
-            <input type="url" id="fBgImage" placeholder="https://...">
+            <label for="fBgImage">Gambar Background</label>
+            <input type="url" id="fBgImage" placeholder="https://... (atau upload di bawah)">
+            <div class="row" style="margin-top:8px;align-items:center">
+              <label class="btn btn-ghost" style="text-align:center;cursor:pointer" for="fBgImageFile">Upload dari perangkat</label>
+              <input type="file" id="fBgImageFile" accept="image/*" hidden>
+            </div>
+            <p class="status-msg" id="bgImageUploadStatus"></p>
           </div>
           <div class="field">
             <label for="fOverlay">Gelap-terangkan background (overlay)</label>
@@ -136,6 +146,13 @@
         <select data-field="icon"></select>
         <input type="url" data-field="iconUrl" placeholder="URL ikon custom" hidden>
       </div>
+      <div class="row" style="align-items:center;margin-top:8px" data-role="icon-upload-wrap" hidden>
+        <label class="btn btn-ghost btn-icon" style="cursor:pointer">
+          Upload ikon
+          <input type="file" data-field="iconFile" accept="image/*" hidden>
+        </label>
+      </div>
+      <p class="status-msg" data-role="icon-status"></p>
       <div class="link-row-actions">
         <button type="button" class="btn btn-ghost btn-icon" data-action="up">↑</button>
         <button type="button" class="btn btn-ghost btn-icon" data-action="down">↓</button>
