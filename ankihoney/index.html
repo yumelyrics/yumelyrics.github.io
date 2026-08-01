@@ -1193,6 +1193,11 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <input type="file" id="fileInput" accept=".apkg" multiple />
     </div>
     <div id="uploadStatus" style="margin-top:12px; font-weight:500; color:var(--ink-soft);"></div>
+    <div id="sessionBar" class="hidden" style="margin-top:12px; padding:12px 16px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span id="sessionStatusText" style="font-weight:500; font-size:.82rem; color:var(--warning-text); flex:1; min-width:200px;"></span>
+      <button class="btn ghost hidden" id="btnLoadSession" type="button">📂 Muat Sesi Tersimpan</button>
+      <button class="btn mint" id="btnSaveSession" type="button">💾 Simpan Sesi</button>
+    </div>
     <div id="formatWarning" class="hidden" style="margin-top:12px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); padding:12px 16px; font-weight:500; font-size:.82rem; color:var(--warning-text);"></div>
   </div>
 
@@ -1575,7 +1580,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div class="btn-row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
         <button class="btn mint" id="btnAutoTranslate" type="button"><span id="btnAutoTranslateLabel">Translate Semua Field yang Dicentang</span></button>
         <button class="btn ghost" id="btnAutoTranslatePreview" type="button">Preview Sebelum Apply</button>
-        <button class="btn ghost hidden" id="btnRestoreDraft" type="button">Restore Draft Autosave</button>
         <button class="btn ghost hidden" id="btnResumeAutoTranslate" type="button">Resume Translate</button>
         <button class="btn ghost hidden" id="btnAutoTranslateCancel" type="button">Batalkan</button>
         <button class="btn ghost" id="btnAutoTranslateUndo" type="button" disabled><span id="btnAutoTranslateUndoLabel">Undo Translate Terakhir</span></button>
@@ -2258,6 +2262,7 @@ async function handleApkgFiles(files){
     statusEl.innerHTML = `✅ ${loaded.length} deck digabung, ketemu ${state.notes.length} catatan.`;
     toast(`Beberapa deck berhasil digabung jadi satu!`, '🎉');
     ahSetResumeControls();
+    ahUpdateSessionBar();
   }catch(err){
     console.error(err);
     statusEl.innerHTML = '😿 Gagal baca file: ' + (err.message || err);
@@ -2454,6 +2459,7 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   document.getElementById('saveCard').classList.remove('hidden');
   state.resumeState = ahLoadResumeState(state.deckHash);
   ahSetResumeControls();
+  ahUpdateSessionBar();
 }
 
 /* ---------------- Gabung Deck Kedua ---------------- */
@@ -2640,6 +2646,7 @@ async function handleMergeSecondDeck(file){
 
     state.resumeState = ahLoadResumeState(state.deckHash);
     ahSetResumeControls();
+    ahUpdateSessionBar();
 
     statusEl.innerHTML = `✅ Deck kedua digabung! Total sekarang <b>${state.notes.length}</b> catatan.`;
     toast('Deck kedua berhasil digabung ke deck utama!', '🧩');
@@ -2775,7 +2782,7 @@ async function handleApkgFile(file){
     document.getElementById('saveCard').classList.remove('hidden');
     state.resumeState = ahLoadResumeState(state.deckHash);
     ahSetResumeControls();
-    ahCheckAutosaveRestore();
+    ahUpdateSessionBar();
 
   }catch(err){
     console.error(err);
@@ -4765,6 +4772,10 @@ function readRowsSafe(db, sql){
 }
 
 function populateDeckNameInputs(){
+  // Kalau ahRestoreSession() baru aja nitipin nama deck custom dari sesi tersimpan, pakai
+  // itu sebagai nilai awal; kalau nggak ada, reset kosong kayak biasa (perilaku lama).
+  const pending = state._pendingDeckNameOverrides || {};
+  state._pendingDeckNameOverrides = null;
   state.deckNameOverrides = {};
   const wrap = document.getElementById('deckNameList');
   wrap.innerHTML = '';
@@ -4779,18 +4790,22 @@ function populateDeckNameInputs(){
   if(idsToShow.length === 1){
     const id = idsToShow[0];
     const origName = state.decksMap[id];
+    const useName = pending[id] || origName;
+    if(pending[id] && pending[id] !== origName) state.deckNameOverrides[id] = pending[id];
     const row = document.createElement('div');
     row.className = 'deck-name-row';
-    row.innerHTML = `<input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${origName}" />`;
+    row.innerHTML = `<input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${useName}" />`;
     wrap.appendChild(row);
   } else {
     idsToShow.forEach(id=>{
       const origName = state.decksMap[id];
+      const useName = pending[id] || origName;
+      if(pending[id] && pending[id] !== origName) state.deckNameOverrides[id] = pending[id];
       const row = document.createElement('div');
       row.className = 'deck-name-row';
       row.innerHTML = `
         <div class="deck-name-orig">Ganti nama deck: "${origName}"</div>
-        <input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${origName}" />
+        <input type="text" class="deckNameInput" data-did="${id}" placeholder="${origName}" value="${useName}" />
       `;
       wrap.appendChild(row);
     });
@@ -5183,50 +5198,177 @@ function ahClearAutosaveState(hash){
   try{ localStorage.removeItem(ahAutosaveKey(hash)); }
   catch(e){ console.warn('Gagal hapus autosave state', e); }
 }
+// Ambil setting background KECUALI data biner berat (dataUrl/bytes/poster*) -- itu kalau
+// disimpen ke localStorage bisa gampang kelewat limit ~5-10MB & bikin SEMUA sesi gagal
+// kesimpen. Jadi background mode "upload file" cuma keinget setting-nya doang (opacity,
+// posisi, dll), fotonya sendiri harus di-upload ulang manual pas sesi dipulihin. Background
+// mode "url" (link online) full aman dipulihin krn cuma nyimpen teks link-nya doang.
+function ahExtractBgSettingsOnly(cardBg){
+  if(!cardBg) return null;
+  const stripSource = (src)=>{
+    if(!src) return null;
+    return { kind: src.kind, mode: src.mode, imageUrl: src.mode === 'url' ? (src.imageUrl||'') : '' };
+  };
+  return {
+    syncPlatforms: cardBg.syncPlatforms,
+    pos: cardBg.pos,
+    fit: cardBg.fit,
+    opacity: cardBg.opacity,
+    overlay: cardBg.overlay,
+    blur: cardBg.blur,
+    front: cardBg.front,
+    back: cardBg.back,
+    previewSide: cardBg.previewSide,
+    textFx: cardBg.textFx,
+    desktop: stripSource(cardBg.desktop),
+    mobile: stripSource(cardBg.mobile)
+  };
+}
+// Kumpulin SEMUA progress edit user yang penting buat dipulihin lagi nanti: isi field yang
+// udah diedit, nama deck custom, centang/lock field per note type, instruksi khusus AI per
+// field, checklist furigana/rapikan, progress batch, kata kunci pencarian, & setting
+// background (kecuali file foto/video mentahnya, lihat ahExtractBgSettingsOnly di atas).
+function ahBuildSessionSnapshot(){
+  const notes = state.notes.filter(n=> n.dirty).map(n=> ({ id:n.id, fields:n.fields.slice() }));
+  return {
+    deckHash: state.deckHash,
+    savedAt: Date.now(),
+    notes,
+    deckNameOverrides: Object.assign({}, state.deckNameOverrides || {}),
+    fieldSelectionByModel: state.fieldSelectionByModel || {},
+    furiganaFieldIdxsByModel: state.furiganaFieldIdxsByModel || {},
+    rapikanFieldIdxsByModel: state.rapikanFieldIdxsByModel || {},
+    fieldInstructionsByModel: state.fieldInstructionsByModel || {},
+    doneBatches: Array.from(state.doneBatches || []),
+    searchQuery: state.searchQuery || '',
+    batchSize: state.batchSize,
+    tablePageSize: state.tablePageSize,
+    cardBgSettings: ahExtractBgSettingsOnly(state.cardBg)
+  };
+}
+// Cek apakah snapshot ini beneran ada isinya yang worth disimpen (biar gak nyampah localStorage
+// nyimpen sesi kosong tiap kali user buka deck baru tanpa ngedit apa-apa).
+function ahSnapshotHasContent(snap){
+  if(!snap) return false;
+  if(snap.notes && snap.notes.length) return true;
+  if(snap.deckNameOverrides && Object.keys(snap.deckNameOverrides).length) return true;
+  if(snap.fieldInstructionsByModel && Object.values(snap.fieldInstructionsByModel).some(m=> m && Object.values(m).some(v=> v && v.trim()))) return true;
+  if(snap.doneBatches && snap.doneBatches.length) return true;
+  return false;
+}
+function ahSaveDraftAutosave(){
+  if(!state.deckHash) return;
+  const snapshot = ahBuildSessionSnapshot();
+  if(!ahSnapshotHasContent(snapshot)){ ahClearAutosaveState(state.deckHash); ahUpdateSessionBar(); return; }
+  try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(snapshot)); }
+  catch(e){ console.warn('Gagal simpan sesi', e); toast('Gagal simpan sesi -- mungkin penyimpanan browser penuh~', '⚠️'); }
+  ahUpdateSessionBar();
+}
+// Dipanggil pas user klik tombol "💾 Simpan Sesi" secara manual -- selalu simpan (walau
+// snapshot-nya keliatan minim) & kasih konfirmasi jelas ke user, beda sama autosave diam-diam.
+function ahManualSaveSession(){
+  if(!state.deckHash){ toast('Upload deck dulu sebelum simpan sesi ya~', '⚠️'); return; }
+  const snapshot = ahBuildSessionSnapshot();
+  try{
+    localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(snapshot));
+    toast('Sesi berhasil disimpan! Selama file .apkg yang sama diupload lagi, progress ini bisa dipulihin~', '💾');
+  }catch(e){
+    console.warn('Gagal simpan sesi', e);
+    toast('Gagal simpan sesi -- mungkin penyimpanan browser penuh~', '⚠️');
+  }
+  ahUpdateSessionBar();
+}
+function ahRestoreSession(){
+  if(!state.deckHash) return;
+  const snap = ahLoadAutosaveState(state.deckHash);
+  if(!snap){ toast('Gak ada sesi tersimpan buat deck ini~', '⚠️'); return; }
+
+  // 1. Pulihin isi field yang udah diedit
+  const byId = Object.fromEntries(state.notes.map(n=> [n.id, n]));
+  let restoredNotes = 0;
+  (snap.notes||[]).forEach(item=>{
+    const note = byId[item.id];
+    if(note && Array.isArray(item.fields)){
+      note.fields = item.fields.slice();
+      note.dirty = true;
+      restoredNotes++;
+    }
+  });
+
+  // 2. Pulihin centang/lock field, checklist furigana/rapikan, & instruksi khusus per note
+  //    type -- semua ini kepake OTOMATIS pas populateModelSelect()/populateFieldSelect()
+  //    dipanggil ulang di bawah, karena fungsi-fungsi itu emang baca dari state ini.
+  if(snap.fieldSelectionByModel) state.fieldSelectionByModel = snap.fieldSelectionByModel;
+  if(snap.furiganaFieldIdxsByModel) state.furiganaFieldIdxsByModel = snap.furiganaFieldIdxsByModel;
+  if(snap.rapikanFieldIdxsByModel) state.rapikanFieldIdxsByModel = snap.rapikanFieldIdxsByModel;
+  if(snap.fieldInstructionsByModel) state.fieldInstructionsByModel = snap.fieldInstructionsByModel;
+  if(snap.doneBatches) state.doneBatches = new Set(snap.doneBatches);
+  if(snap.searchQuery !== undefined) state.searchQuery = snap.searchQuery;
+  if(snap.batchSize) state.batchSize = snap.batchSize;
+  if(snap.tablePageSize) state.tablePageSize = snap.tablePageSize;
+
+  // 3. Titipin nama deck custom -- dibaca & dipasang sama populateDeckNameInputs() di bawah
+  state._pendingDeckNameOverrides = snap.deckNameOverrides || {};
+
+  // 4. Pulihin setting background (kecuali foto/video mentahnya, kalau mode "upload" user
+  //    perlu upload ulang manual -- link "url" full kepulihin)
+  if(snap.cardBgSettings && state.cardBg){
+    const cb = snap.cardBgSettings;
+    Object.assign(state.cardBg, {
+      syncPlatforms: cb.syncPlatforms, pos: cb.pos, fit: cb.fit, opacity: cb.opacity,
+      overlay: cb.overlay, blur: cb.blur, front: cb.front, back: cb.back,
+      previewSide: cb.previewSide, textFx: cb.textFx
+    });
+    ['desktop','mobile'].forEach(dev=>{
+      const src = cb[dev];
+      if(src && src.mode === 'url' && src.imageUrl){
+        Object.assign(state.cardBg[dev], { kind: src.kind, mode: 'url', imageUrl: src.imageUrl });
+      }
+    });
+  }
+
+  // 5. Render ulang semua UI yang bergantung ke state di atas
+  populateModelSelect();
+  populateDeckNameInputs();
+  renderTable();
+  updateStats();
+  try{ updateBgPreview(); }catch(e){}
+
+  const savedAgo = ahFormatTimeAgo(snap.savedAt);
+  const bgNote = (snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'))
+    ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.'
+    : '';
+  toast(`Sesi dipulihkan (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.${bgNote}`, '↺');
+}
+function ahFormatTimeAgo(ts){
+  if(!ts) return 'baru-baru ini';
+  const diffMin = Math.round((Date.now() - ts) / 60000);
+  if(diffMin < 1) return 'barusan';
+  if(diffMin < 60) return `${diffMin} menit lalu`;
+  const diffHour = Math.round(diffMin / 60);
+  if(diffHour < 24) return `${diffHour} jam lalu`;
+  const diffDay = Math.round(diffHour / 24);
+  return `${diffDay} hari lalu`;
+}
 let ahAutosaveDraftTimer = null;
 function ahScheduleAutosaveDraft(){
   clearTimeout(ahAutosaveDraftTimer);
   ahAutosaveDraftTimer = setTimeout(()=> ahSaveDraftAutosave(), 700);
 }
-function ahSaveDraftAutosave(){
-  if(!state.deckHash) return;
-  const notes = state.notes.filter(n=> n.dirty).map(n=> ({ id:n.id, fields:n.fields.slice() }));
-  if(!notes.length){ ahClearAutosaveState(state.deckHash); ahCheckAutosaveRestore(); return; }
-  try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify({ deckHash: state.deckHash, savedAt: Date.now(), notes })); }
-  catch(e){ console.warn('Gagal simpan autosave draft', e); }
-  ahCheckAutosaveRestore();
-}
-function ahRestoreAutosaveDraft(){
-  if(!state.deckHash) return;
-  const draft = ahLoadAutosaveState(state.deckHash);
-  if(!draft || !draft.notes?.length){ toast('Gak ada draft autosave buat deck ini~', '⚠️'); return; }
-  const byId = Object.fromEntries(state.notes.map(n=> [n.id, n]));
-  let restored = 0;
-  draft.notes.forEach(item=>{
-    const note = byId[item.id];
-    if(note && Array.isArray(item.fields)){
-      note.fields = item.fields.slice();
-      note.dirty = true;
-      restored++;
-    }
-  });
-  if(restored){
-    renderTable();
-    updateStats();
-    toast(`Draft autosave dipulihkan (${restored} note).`, '↺');
+function ahUpdateSessionBar(){
+  const bar = document.getElementById('sessionBar');
+  const statusText = document.getElementById('sessionStatusText');
+  const loadBtn = document.getElementById('btnLoadSession');
+  if(!bar || !statusText || !loadBtn) return;
+  if(!state.deckHash){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  const snap = ahLoadAutosaveState(state.deckHash);
+  if(snap && ahSnapshotHasContent(snap)){
+    loadBtn.classList.remove('hidden');
+    statusText.textContent = `📂 Ada sesi tersimpan buat deck ini (disimpan ${ahFormatTimeAgo(snap.savedAt)}, ${snap.notes?.length||0} note diedit). Klik "Muat Sesi Tersimpan" buat lanjut, atau lanjut edit & simpan lagi kapan aja.`;
   } else {
-    toast('Draft autosave ada tapi gak cocok dengan deck ini.', '⚠️');
-  }
-}
-function ahCheckAutosaveRestore(){
-  const btn = document.getElementById('btnRestoreDraft');
-  if(!btn) return;
-  const draft = ahLoadAutosaveState(state.deckHash);
-  if(draft && draft.notes?.length){
-    btn.classList.remove('hidden');
-    btn.textContent = `↺ Restore Draft Autosave (${draft.notes.length})`;
-  } else {
-    btn.classList.add('hidden');
+    loadBtn.classList.add('hidden');
+    statusText.textContent = '💡 Progress edit kamu bisa disimpen di browser ini (butuh file .apkg yang sama tetap ada buat dipulihin lagi). Klik "Simpan Sesi" kapan aja.';
   }
 }
 function ahLoadTheme(){
@@ -6490,7 +6632,8 @@ document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
 
 document.getElementById('btnAutoTranslate').addEventListener('click', runAutoTranslate);
 document.getElementById('btnAutoTranslatePreview').addEventListener('click', ()=> runAutoTranslate(null, null, false, true));
-document.getElementById('btnRestoreDraft').addEventListener('click', ahRestoreAutosaveDraft);
+document.getElementById('btnLoadSession').addEventListener('click', ahRestoreSession);
+document.getElementById('btnSaveSession').addEventListener('click', ahManualSaveSession);
 document.getElementById('btnThemeToggle').addEventListener('click', ()=>{
   const current = document.body.classList.contains('dark') ? 'dark' : 'light';
   const next = current === 'dark' ? 'light' : 'dark';
