@@ -1196,6 +1196,9 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div id="sessionBar" class="hidden" style="margin-top:12px; padding:12px 16px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <span id="sessionStatusText" style="font-weight:500; font-size:.82rem; color:var(--warning-text); flex:1; min-width:200px;"></span>
       <button class="btn ghost hidden" id="btnLoadSession" type="button">📂 Muat Sesi Tersimpan</button>
+      <button class="btn ghost" id="btnExportSession" type="button">⬇️ Export Sesi ke File</button>
+      <button class="btn ghost" id="btnImportSession" type="button">⬆️ Import Sesi dari File</button>
+      <input type="file" id="importSessionInput" accept=".json" class="hidden" />
       <button class="btn mint" id="btnSaveSession" type="button">💾 Simpan Sesi</button>
     </div>
     <div id="formatWarning" class="hidden" style="margin-top:12px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); padding:12px 16px; font-weight:500; font-size:.82rem; color:var(--warning-text);"></div>
@@ -5278,11 +5281,10 @@ function ahManualSaveSession(){
   }
   ahUpdateSessionBar();
 }
-function ahRestoreSession(){
-  if(!state.deckHash) return;
-  const snap = ahLoadAutosaveState(state.deckHash);
-  if(!snap){ toast('Gak ada sesi tersimpan buat deck ini~', '⚠️'); return; }
-
+// Inti logic "pasang" sebuah snapshot sesi ke state yang lagi aktif + render ulang UI --
+// dipakai bareng sama ahRestoreSession() (dari localStorage) DAN ahImportSessionFromFile()
+// (dari file .json yang diimport, misal buat pindah sesi dari desktop ke HP).
+function ahApplySessionSnapshot(snap){
   // 1. Pulihin isi field yang udah diedit
   const byId = Object.fromEntries(state.notes.map(n=> [n.id, n]));
   let restoredNotes = 0;
@@ -5334,11 +5336,72 @@ function ahRestoreSession(){
   updateStats();
   try{ updateBgPreview(); }catch(e){}
 
+  return restoredNotes;
+}
+function ahRestoreSession(){
+  if(!state.deckHash) return;
+  const snap = ahLoadAutosaveState(state.deckHash);
+  if(!snap){ toast('Gak ada sesi tersimpan buat deck ini~', '⚠️'); return; }
+  const restoredNotes = ahApplySessionSnapshot(snap);
   const savedAgo = ahFormatTimeAgo(snap.savedAt);
   const bgNote = (snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'))
     ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.'
     : '';
   toast(`Sesi dipulihkan (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.${bgNote}`, '↺');
+}
+// Download snapshot sesi jadi file .json -- buat dipindahin manual antar device (misal
+// desktop ke HP) lewat WhatsApp/Drive/kabel/dll, karena localStorage gak bisa nyambung
+// otomatis antar browser/device beda.
+function ahExportSessionToFile(){
+  if(!state.deckHash){ toast('Upload deck dulu sebelum export sesi ya~', '⚠️'); return; }
+  const snapshot = ahBuildSessionSnapshot();
+  if(!ahSnapshotHasContent(snapshot)){ toast('Belum ada progress yang bisa diexport -- coba edit dulu sesuatu~', '⚠️'); return; }
+  try{
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date(snapshot.savedAt).toISOString().slice(0,16).replace(/[:T]/g,'-');
+    a.href = url;
+    a.download = `ankihoney-sesi-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 2000);
+    toast('File sesi berhasil didownload! Pindahin file ini ke device lain buat lanjut edit di sana~', '⬇️');
+  }catch(e){
+    console.warn('Gagal export sesi', e);
+    toast('Gagal export sesi.', '⚠️');
+  }
+}
+// Baca file .json hasil export dari device lain, lalu pasang ke deck yang lagi kebuka
+// sekarang. Sesi tetap dicocokin ke ISI file .apkg (deckHash) -- kalau beda, dikasih
+// peringatan tapi tetap boleh dipaksa apply (misal buat kasus edge tertentu).
+function ahImportSessionFromFile(file){
+  if(!state.deckHash){ toast('Upload deck .apkg dulu sebelum import sesi ya~', '⚠️'); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let snap;
+    try{ snap = JSON.parse(reader.result); }
+    catch(e){ toast('File sesi gak kebaca -- pastiin file .json yang bener hasil export~', '⚠️'); return; }
+    if(!snap || typeof snap !== 'object' || !Array.isArray(snap.notes)){
+      toast('Format file sesi gak dikenali~', '⚠️');
+      return;
+    }
+    const proceed = ()=>{
+      const restoredNotes = ahApplySessionSnapshot(snap);
+      try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(Object.assign({}, snap, { deckHash: state.deckHash }))); }catch(e){}
+      ahUpdateSessionBar();
+      const savedAgo = ahFormatTimeAgo(snap.savedAt);
+      toast(`Sesi berhasil diimport (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.`, '⬆️');
+    };
+    if(snap.deckHash && snap.deckHash !== state.deckHash){
+      const ok = confirm('⚠️ File sesi ini kelihatannya bukan buat deck .apkg yang lagi kebuka sekarang (isinya beda). Tetap mau coba pasang sesinya? Note yang gak ketemu ID-nya bakal dilewatin otomatis.');
+      if(!ok) return;
+    }
+    proceed();
+  };
+  reader.onerror = ()=> toast('Gagal baca file sesi.', '⚠️');
+  reader.readAsText(file);
 }
 function ahFormatTimeAgo(ts){
   if(!ts) return 'baru-baru ini';
@@ -5368,7 +5431,7 @@ function ahUpdateSessionBar(){
     statusText.textContent = `📂 Ada sesi tersimpan buat deck ini (disimpan ${ahFormatTimeAgo(snap.savedAt)}, ${snap.notes?.length||0} note diedit). Klik "Muat Sesi Tersimpan" buat lanjut, atau lanjut edit & simpan lagi kapan aja.`;
   } else {
     loadBtn.classList.add('hidden');
-    statusText.textContent = '💡 Progress edit kamu bisa disimpen di browser ini (butuh file .apkg yang sama tetap ada buat dipulihin lagi). Klik "Simpan Sesi" kapan aja.';
+    statusText.textContent = '💡 Progress edit kamu bisa disimpen di browser ini (butuh file .apkg yang sama tetap ada buat dipulihin lagi). Klik "Simpan Sesi", atau "Export Sesi ke File" kalau mau lanjut di device lain (misal dari desktop ke HP).';
   }
 }
 function ahLoadTheme(){
@@ -6634,6 +6697,13 @@ document.getElementById('btnAutoTranslate').addEventListener('click', runAutoTra
 document.getElementById('btnAutoTranslatePreview').addEventListener('click', ()=> runAutoTranslate(null, null, false, true));
 document.getElementById('btnLoadSession').addEventListener('click', ahRestoreSession);
 document.getElementById('btnSaveSession').addEventListener('click', ahManualSaveSession);
+document.getElementById('btnExportSession').addEventListener('click', ahExportSessionToFile);
+document.getElementById('btnImportSession').addEventListener('click', ()=> document.getElementById('importSessionInput').click());
+document.getElementById('importSessionInput').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(file) ahImportSessionFromFile(file);
+  e.target.value = '';
+});
 document.getElementById('btnThemeToggle').addEventListener('click', ()=>{
   const current = document.body.classList.contains('dark') ? 'dark' : 'light';
   const next = current === 'dark' ? 'light' : 'dark';
