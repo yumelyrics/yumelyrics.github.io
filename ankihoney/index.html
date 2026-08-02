@@ -4139,6 +4139,11 @@ function ahBuildBgMediaHtml(cfg){
     try{ storedPref = localStorage.getItem(AH_AUDIO_KEY) || '0'; }catch(e){}
     window.__ahAudioOn = storedPref === '1';
   }
+  // Ketauan-belum-ketauan-nya video ini punya audio track atau enggak. Default FALSE (tombol
+  // disembunyiin) sampe kebukti videonya beneran punya suara -- baru tombolnya dimunculin.
+  // Kalau semua video di kartu ini ternyata gak ada audionya sama sekali, tombol tetep
+  // disembunyiin selamanya (gak ada gunanya dipajang kalau gak bakal ngebunyiin apa-apa).
+  if(window.__ahVideoHasAudio === undefined) window.__ahVideoHasAudio = false;
   window.ahApplyAudioState = function(){
     var vids = document.querySelectorAll('.ankihoney-bg-video');
     for(var vi=0; vi<vids.length; vi++){ vids[vi].muted = !window.__ahAudioOn; }
@@ -4147,7 +4152,36 @@ function ahBuildBgMediaHtml(cfg){
       btns[bi].textContent = window.__ahAudioOn ? '🔊' : '🔇';
       btns[bi].setAttribute('aria-pressed', window.__ahAudioOn ? 'true' : 'false');
       btns[bi].title = window.__ahAudioOn ? 'Matikan suara background' : 'Nyalakan suara background';
+      btns[bi].style.display = window.__ahVideoHasAudio ? 'flex' : 'none';
     }
+  };
+  // Cek apakah sebuah <video> beneran punya audio track. Dipanggil beberapa kali abis video-nya
+  // mulai kebaca (deteksinya butuh videonya udah sempet decode dikit, gak bisa instan). Begitu
+  // KETAUAN ada audio (di video mana pun), tombolnya langsung dimunculin & gak dicek-cek lagi.
+  window.ahCheckVideoAudio = function(v){
+    if(window.__ahVideoHasAudio) return;
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      var has = false;
+      if(v.audioTracks && typeof v.audioTracks.length === 'number' && v.audioTracks.length > 0) has = true;
+      else if(typeof v.webkitAudioDecodedByteCount === 'number' && v.webkitAudioDecodedByteCount > 0) has = true;
+      else if(typeof v.mozHasAudio === 'boolean' && v.mozHasAudio) has = true;
+      if(has){
+        window.__ahVideoHasAudio = true;
+        window.ahApplyAudioState();
+        clearInterval(iv);
+      } else if(tries >= 6){
+        // Abis ~3 detik gak kedeteksi ada audio -- kalau browsernya gak dukung API
+        // deteksinya sama sekali (audioTracks & webkitAudioDecodedByteCount dua2nya
+        // undefined), mending tetep TAMPILIN tombolnya drpd nyembunyiin yg mungkin
+        // sebenernya berfungsi. Kalau API-nya ADA tapi hasilnya 0, berarti emang gak
+        // ada audio -> tombol tetep disembunyiin.
+        var apiAvailable = (v.audioTracks && typeof v.audioTracks.length === 'number') || typeof v.webkitAudioDecodedByteCount === 'number' || typeof v.mozHasAudio === 'boolean';
+        if(!apiAvailable){ window.__ahVideoHasAudio = true; window.ahApplyAudioState(); }
+        clearInterval(iv);
+      }
+    }, 500);
   };
   window.ahToggleBgAudio = function(){
     window.__ahAudioOn = !window.__ahAudioOn;
@@ -4248,14 +4282,32 @@ function ahBuildBgMediaHtml(cfg){
       // pas pertama kali dicoba), coba play() lagi -- gak masalah dipanggil berkali-kali.
       v.classList.add('ah-loaded');
       if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
+      if(!window.__ahVideoHasAudio) window.ahCheckVideoAudio(v);
       return;
     }
     if(!v){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
       v.muted = !window.__ahAudioOn; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      // Set literal HTML attributes juga (bukan cuma properti JS) -- sebagian WebView Android
+      // (termasuk yang dipake AnkiDroid) cuma ngizinin autoplay tanpa gesture kalau atribut
+      // muted/playsinline/autoplay beneran ADA di elemen, gak cukup cuma di-set lewat JS property.
+      v.setAttribute('muted', '');
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.setAttribute('autoplay', '');
+      v.setAttribute('loop', '');
+      v.disablePictureInPicture = true;
+      v.controls = false;
       host.appendChild(v);
     }
+    // Poster (frame pertama, udah di-capture otomatis pas upload) dipasang ke elemen <video>
+    // itu sendiri -- ini yang bikin AnkiDroid nampilin FOTO frame pertama sebagai placeholder
+    // selama nunggu videonya kebaca/autoplay, BUKAN kotak abu-abu polos + ikon play besar
+    // (placeholder bawaan WebView pas <video> gak punya poster & belum mulai muter).
+    if(w.poster){ v.poster = w.poster; v.setAttribute('poster', w.poster); }
+    else { v.removeAttribute('poster'); }
+    window.ahCheckVideoAudio(v);
     // Baru / sumbernya BENERAN beda -> mulai dari posisi TERAKHIR yang kesimpen (kalau ada),
     // biar kalau ini cuma restart gara2 Anki reload halaman (pindah kartu), videonya kerasa
     // nerus. Kalau videonya emang beneran beda (ref beda), posisi lama gak nyambung -> mulai 0.
@@ -4316,6 +4368,19 @@ function ahBuildBgMediaHtml(cfg){
     ['pointerdown','touchstart','keydown'].forEach(function(evt){
       document.addEventListener(evt, ahRetryPlay, { passive:true });
     });
+    // Beberapa percobaan play() ulang OTOMATIS (gak nunggu interaksi user sama sekali) --
+    // ini yang nutupin kasus AnkiDroid pas kartu PERTAMA kebuka: play() yang dipanggil pas
+    // <video> baru aja dibikin kadang gagal diam-diam gara2 elemen belum sepenuhnya "settle"
+    // di WebView, padahal videonya sendiri gak diblokir kebijakan autoplay (udah muted).
+    [150, 500, 1200, 2500].forEach(function(ms){ setTimeout(ahRetryPlay, ms); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) ahRetryPlay(); });
+  } else {
+    setTimeout(function(){
+      var vids = document.querySelectorAll('.ankihoney-bg-video');
+      for(var k2=0;k2<vids.length;k2++){
+        if(vids[k2].paused){ var pr2 = vids[k2].play(); if(pr2 && pr2.catch) pr2.catch(function(){}); }
+      }
+    }, 150);
   }
 
   // Tombol toggle audio (kalau ada di template Depan) baru muncul BELAKANGAN di HTML
@@ -4446,7 +4511,10 @@ ${fxDeclarations}
   border:1px solid rgba(255,255,255,0.35);
   background:rgba(20,10,20,0.55);
   color:#fff; font-size:17px; line-height:1;
-  display:flex; align-items:center; justify-content:center;
+  /* Default DISEMBUNYIIN -- baru dimunculin (lewat JS, display:flex) begitu kedetek
+     video background-nya beneran punya audio track. Kalau videonya emang gak ada
+     suaranya, tombol ini tetep gak pernah nongol sama sekali. */
+  display:none; align-items:center; justify-content:center;
   cursor:pointer; -webkit-tap-highlight-color:transparent;
   backdrop-filter:blur(4px);
 }
