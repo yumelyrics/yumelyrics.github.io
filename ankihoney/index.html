@@ -3130,12 +3130,12 @@ async function ahLoadFfmpegModules(){
   try{
     const ffmpegMod = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');
     const utilMod = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
-    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm' };
+    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm', ffmpegPkgURL: 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm' };
   }catch(e){
     console.warn('Gagal load ffmpeg dari unpkg, coba jsdelivr...', e);
     const ffmpegMod = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');
     const utilMod = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js');
-    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm' };
+    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm', ffmpegPkgURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm' };
   }
 }
 async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
@@ -3147,7 +3147,7 @@ async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
   if(window.location.protocol === 'file:'){
     throw new Error('Fitur kompres video butuh halaman ini dibuka lewat alamat website beneran (https://...), bukan dibuka langsung dari file lokal di komputer/HP. Coba akses lewat link hosting-nya ya, bukan dobel-klik file .html-nya.');
   }
-  const { FFmpeg, toBlobURL, fetchFile, baseURL } = await ahLoadFfmpegModules();
+  const { FFmpeg, toBlobURL, fetchFile, baseURL, ffmpegPkgURL } = await ahLoadFfmpegModules();
   const ffmpeg = new FFmpeg();
   if(onProgress){
     ffmpeg.on('progress', ({ progress })=>{
@@ -3155,9 +3155,15 @@ async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
       onProgress(pct);
     });
   }
+  // PENTING: worker.js juga wajib di-blob-in kayak coreURL/wasmURL di atas. Kalau enggak,
+  // browser bakal nolak `new Worker(...)`-nya library ini krn URL-nya cross-origin (langsung
+  // ke CDN unpkg/jsdelivr) -- itu penyebab error "Failed to construct 'Worker': ... cannot be
+  // accessed from origin ...". Worker (beda dari <script>/import biasa) emang gak bisa dikasih
+  // URL cross-origin sama sekali walau CDN-nya udah ngasih header CORS.
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    workerURL: await toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'),
   });
 
   const duration = await ahGetVideoDuration(file);
