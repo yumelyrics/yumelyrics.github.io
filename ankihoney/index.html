@@ -3160,10 +3160,12 @@ async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
   // ke CDN unpkg/jsdelivr) -- itu penyebab error "Failed to construct 'Worker': ... cannot be
   // accessed from origin ...". Worker (beda dari <script>/import biasa) emang gak bisa dikasih
   // URL cross-origin sama sekali walau CDN-nya udah ngasih header CORS.
+  // Catatan: opsi yang bener buat ini namanya `classWorkerURL` (bukan `workerURL` -- itu punya
+  // core versi multi-thread/core-mt yang gak kita pakai).
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    workerURL: await toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'),
+    classWorkerURL: await toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'),
   });
 
   const duration = await ahGetVideoDuration(file);
