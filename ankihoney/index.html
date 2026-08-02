@@ -5201,6 +5201,22 @@ function ahClearAutosaveState(hash){
   try{ localStorage.removeItem(ahAutosaveKey(hash)); }
   catch(e){ console.warn('Gagal hapus autosave state', e); }
 }
+// Hapus semua sesi tersimpan buat deck LAIN (deckHash beda dari yang lagi aktif) --
+// dipanggil tiap kali ada sesi baru mau disimpen, biar localStorage gak numpuk penuh sama
+// sesi-sesi deck lama yang udah gak kepake lagi (yang biasanya bikin "Simpan Sesi" ujung-
+// ujungnya gagal karena kepenuhan).
+function ahPurgeOtherSessions(keepHash){
+  try{
+    const toRemove = [];
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(key && key.startsWith(AH_AUTOSAVE_PREFIX) && key !== ahAutosaveKey(keepHash)){
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach(key=> localStorage.removeItem(key));
+  }catch(e){ console.warn('Gagal beresin sesi lama', e); }
+}
 // Ambil setting background KECUALI data biner berat (dataUrl/bytes/poster*) -- itu kalau
 // disimpen ke localStorage bisa gampang kelewat limit ~5-10MB & bikin SEMUA sesi gagal
 // kesimpen. Jadi background mode "upload file" cuma keinget setting-nya doang (opacity,
@@ -5263,7 +5279,7 @@ function ahSaveDraftAutosave(){
   if(!state.deckHash) return;
   const snapshot = ahBuildSessionSnapshot();
   if(!ahSnapshotHasContent(snapshot)){ ahClearAutosaveState(state.deckHash); ahUpdateSessionBar(); return; }
-  try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(snapshot)); }
+  try{ ahPurgeOtherSessions(state.deckHash); localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(snapshot)); }
   catch(e){ console.warn('Gagal simpan sesi', e); toast('Gagal simpan sesi -- mungkin penyimpanan browser penuh~', '⚠️'); }
   ahUpdateSessionBar();
 }
@@ -5273,6 +5289,7 @@ function ahManualSaveSession(){
   if(!state.deckHash){ toast('Upload deck dulu sebelum simpan sesi ya~', '⚠️'); return; }
   const snapshot = ahBuildSessionSnapshot();
   try{
+    ahPurgeOtherSessions(state.deckHash);
     localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(snapshot));
     toast('Sesi berhasil disimpan! Selama file .apkg yang sama diupload lagi, progress ini bisa dipulihin~', '💾');
   }catch(e){
@@ -5389,7 +5406,10 @@ function ahImportSessionFromFile(file){
     }
     const proceed = ()=>{
       const restoredNotes = ahApplySessionSnapshot(snap);
-      try{ localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(Object.assign({}, snap, { deckHash: state.deckHash }))); }catch(e){}
+      try{
+        ahPurgeOtherSessions(state.deckHash);
+        localStorage.setItem(ahAutosaveKey(state.deckHash), JSON.stringify(Object.assign({}, snap, { deckHash: state.deckHash })));
+      }catch(e){}
       ahUpdateSessionBar();
       const savedAgo = ahFormatTimeAgo(snap.savedAt);
       toast(`Sesi berhasil diimport (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.`, '⬆️');
