@@ -1708,6 +1708,9 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
         <div id="ahCompressProgressBar" style="height:100%; width:0%; background:var(--mint,#4CAF88); transition:width .2s;"></div>
       </div>
       <div id="ahCompressProgressText" style="font-size:.78rem; color:var(--ink-soft); margin-top:6px;"></div>
+      <div style="margin-top:12px; text-align:right;">
+        <button class="btn ghost" id="btnCompressCancel" type="button">✖️ Batal</button>
+      </div>
     </div>
     <div class="modal-actions" id="ahCompressModalActions">
       <button class="btn ghost" id="btnCompressSkip">Pakai Video Asli (Gak Dikompres)</button>
@@ -3138,7 +3141,15 @@ async function ahLoadFfmpegModules(){
     return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm', ffmpegPkgURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm' };
   }
 }
-async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
+// Bungkus promise apapun sama batas waktu -- kalau kelamaan, langsung reject sama pesan yang
+// jelas alih-alih nge-hang selamanya tanpa kepastian ke user.
+function ahRaceTimeout(promise, ms, message){
+  let timer;
+  const timeout = new Promise((_, reject)=>{ timer = setTimeout(()=> reject(new Error(message)), ms); });
+  return Promise.race([promise, timeout]).finally(()=> clearTimeout(timer));
+}
+
+async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress, onFfmpegReady){
   // Fitur kompres ini butuh bikin Web Worker yang scriptnya diambil dari CDN (unpkg/jsdelivr).
   // Browser BLOKIR ini total kalau halamannya dibuka langsung dari file lokal (file://,
   // misal dobel-klik file .html-nya dari File Explorer) -- origin halamannya jadi "null" &
@@ -3149,6 +3160,10 @@ async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
   }
   const { FFmpeg, toBlobURL, fetchFile, baseURL, ffmpegPkgURL } = await ahLoadFfmpegModules();
   const ffmpeg = new FFmpeg();
+  // Kasih tau pemanggil instance ffmpeg-nya SEKARANG JUGA (sebelum load() jalan), biar tombol
+  // Batal di UI bisa nge-terminate() worker-nya kapan aja -- termasuk pas masih di tahap
+  // download modul, bukan cuma pas lagi proses kompres.
+  if(onFfmpegReady) onFfmpegReady(ffmpeg);
   if(onProgress){
     ffmpeg.on('progress', ({ progress })=>{
       const pct = Math.max(0, Math.min(100, Math.round((progress||0)*100)));
@@ -3162,11 +3177,17 @@ async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress){
   // URL cross-origin sama sekali walau CDN-nya udah ngasih header CORS.
   // Catatan: opsi yang bener buat ini namanya `classWorkerURL` (bukan `workerURL` -- itu punya
   // core versi multi-thread/core-mt yang gak kita pakai).
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    classWorkerURL: await toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'),
-  });
+  // Semua fetch+load di bawah ini dibatesin waktu -- kalau CDN-nya lelet/gak kejangkau, proses
+  // bakal reject dengan pesan yang jelas dalam waktu wajar, bukan nge-hang selamanya kayak
+  // sebelumnya (dan user tetep bisa klik Batal kapan aja lewat onFfmpegReady di atas).
+  const coreURL = await ahRaceTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 60000, 'Gagal download ffmpeg-core.js (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
+  const wasmURL = await ahRaceTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'Gagal download ffmpeg-core.wasm (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
+  const classWorkerURL = await ahRaceTimeout(toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'), 60000, 'Gagal download worker.js (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
+  await ahRaceTimeout(
+    ffmpeg.load({ coreURL, wasmURL, classWorkerURL }),
+    60000,
+    'Nyiapin modul compressor kelamaan (lebih dari 60 detik) -- biasanya krn koneksi lambat atau ada extension/adblock/firewall yang nge-block unpkg/jsdelivr. Coba refresh & ulangi, atau matiin adblock buat halaman ini.'
+  );
 
   const duration = await ahGetVideoDuration(file);
   if(!duration || duration < 0.1) throw new Error('Gak bisa baca durasi videonya');
@@ -3217,6 +3238,24 @@ document.getElementById('btnCompressSkip').addEventListener('click', async ()=>{
   if(file) await ahFinishBgVideoAssign(file);
 });
 
+// Ref ke instance ffmpeg yang lagi jalan (kalau ada) + flag biar tau kompresnya di-reject krn
+// user sendiri yang batalin (jadi gak perlu nampilin toast error yang serem2 buat itu).
+let ahCompressFfmpegRef = null;
+let ahCompressCancelledByUser = false;
+
+document.getElementById('btnCompressCancel').addEventListener('click', ()=>{
+  ahCompressCancelledByUser = true;
+  if(ahCompressFfmpegRef){
+    // terminate() langsung matiin worker-nya paksa -- ini bikin promise load()/exec() yang
+    // lagi ke-gantung otomatis reject, jadi UI-nya gak bakal nyangkut lagi kayak sebelumnya.
+    try{ ahCompressFfmpegRef.terminate(); }catch(e){ console.warn('Gagal terminate ffmpeg worker', e); }
+  }
+  ahCompressFfmpegRef = null;
+  ahPendingBgVideoFile = null;
+  document.getElementById('ahCompressModalBg').classList.remove('show');
+  toast('Kompres video dibatalin~', '✖️');
+});
+
 document.getElementById('btnCompressStart').addEventListener('click', async ()=>{
   const file = ahPendingBgVideoFile;
   if(!file) return;
@@ -3228,11 +3267,13 @@ document.getElementById('btnCompressStart').addEventListener('click', async ()=>
   actionsEl.classList.add('hidden');
   progWrap.classList.remove('hidden');
   progText.textContent = 'Nyiapin modul compressor video (download pertama kali bisa agak lama, sabar ya)...';
+  ahCompressCancelledByUser = false;
   try{
     const compressedBlob = await ahCompressVideoWithFfmpeg(file, targetMB, (pct)=>{
       progBar.style.width = pct + '%';
       progText.textContent = `Lagi kompres videonya... ${pct}%`;
-    });
+    }, (ffmpegInst)=>{ ahCompressFfmpegRef = ffmpegInst; });
+    ahCompressFfmpegRef = null;
     const newSizeMB = compressedBlob.size / 1024 / 1024;
     progText.textContent = `Selesai! Ukuran baru: ${newSizeMB.toFixed(1)}MB`;
     const compressedFile = new File([compressedBlob], (file.name||'video').replace(/\.[^.]+$/, '') + '_compressed.mp4', { type:'video/mp4' });
@@ -3241,6 +3282,12 @@ document.getElementById('btnCompressStart').addEventListener('click', async ()=>
     await ahFinishBgVideoAssign(compressedFile);
     toast(`Video berhasil dikompres dari ${(file.size/1024/1024).toFixed(1)}MB jadi ${newSizeMB.toFixed(1)}MB!`, '🗜️');
   }catch(err){
+    ahCompressFfmpegRef = null;
+    if(ahCompressCancelledByUser){
+      // Udah dihandle sama toast "dibatalin" pas klik tombol Batal-nya, jadi di sini diem aja.
+      ahCompressCancelledByUser = false;
+      return;
+    }
     console.error(err);
     progText.textContent = 'Gagal kompres: ' + (err.message||err);
     toast('Gagal kompres video -- coba pakai video aslinya, atau kompres manual dulu pakai aplikasi lain kayak HandBrake~', '⚠️');
