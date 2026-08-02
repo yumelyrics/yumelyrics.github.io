@@ -2841,6 +2841,14 @@ function ahBgPosterRef(src){
   if(src.mode === 'url') return ''; // video dari link internet: gak bisa di-capture frame-nya (batasan CORS), overlay gelap jadi fallback-nya
   return src.posterBytes ? src.posterMediaFilename : '';
 }
+// Cek apakah config background ini punya minimal 1 sumber berupa VIDEO (foto/GIF gak
+// punya audio, jadi tombol toggle suara cuma relevan & ditampilin kalau ada videonya).
+function ahCfgHasVideo(cfg){
+  if(!cfg) return false;
+  const desktopSrc = ahActiveBgSource(cfg, 'desktop');
+  const mobileSrc = ahActiveBgSource(cfg, 'mobile');
+  return (desktopSrc.kind === 'video' && ahHasBgSource(desktopSrc)) || (mobileSrc.kind === 'video' && ahHasBgSource(mobileSrc));
+}
 function ahDetectKindFromFile(file){ return (file.type||'').toLowerCase().startsWith('video/') ? 'video' : 'image'; }
 function ahDetectKindFromUrl(url){
   const clean = (url||'').split('?')[0].split('#')[0].toLowerCase();
@@ -4121,6 +4129,85 @@ function ahBuildBgMediaHtml(cfg){
     document.body.appendChild(host);
   }
 
+  // --- (0) Preferensi ON/OFF suara background, disimpen di localStorage biar keinget
+  // walau pindah kartu / tutup-buka Anki lagi. Default OFF (video tetep mute) biar gak
+  // dadakan bunyi keras pas pertama kali buka kartu. Tombol toggle-nya sendiri disisipin
+  // di template Depan (lihat ahBuildAudioToggleHtml) & manggil window.ahToggleBgAudio.
+  var AH_AUDIO_KEY = 'ankihoneyBgAudioOn';
+  if(window.__ahAudioOn === undefined){
+    var storedPref = '0';
+    try{ storedPref = localStorage.getItem(AH_AUDIO_KEY) || '0'; }catch(e){}
+    window.__ahAudioOn = storedPref === '1';
+  }
+  window.ahApplyAudioState = function(){
+    var vids = document.querySelectorAll('.ankihoney-bg-video');
+    for(var vi=0; vi<vids.length; vi++){ vids[vi].muted = !window.__ahAudioOn; }
+    var btns = document.querySelectorAll('.ankihoney-audio-toggle');
+    for(var bi=0; bi<btns.length; bi++){
+      btns[bi].textContent = window.__ahAudioOn ? '🔊' : '🔇';
+      btns[bi].setAttribute('aria-pressed', window.__ahAudioOn ? 'true' : 'false');
+      btns[bi].title = window.__ahAudioOn ? 'Matikan suara background' : 'Nyalakan suara background';
+    }
+  };
+  window.ahToggleBgAudio = function(){
+    window.__ahAudioOn = !window.__ahAudioOn;
+    try{ localStorage.setItem(AH_AUDIO_KEY, window.__ahAudioOn ? '1' : '0'); }catch(e){}
+    window.ahApplyAudioState();
+    // Klik tombol itu sendiri = user gesture asli, jadi browser gak bakal nge-block
+    // audio-nya begitu di-unmute (beda kasus sama autoplay video pas kartu pertama kebuka).
+    var vids2 = document.querySelectorAll('.ankihoney-bg-video');
+    for(var vk=0; vk<vids2.length; vk++){ if(vids2[vk].paused){ var pr2 = vids2[vk].play(); if(pr2 && pr2.catch) pr2.catch(function(){}); } }
+    // Diagnostik best-effort: kalau baru DINYALAIN suaranya, cek abis sekitar 700ms apa
+    // videonya BENERAN punya audio track sama sekali (pake webkitAudioDecodedByteCount,
+    // properti non-standar tapi kepake di WebView Chromium -- ini yang dipake Anki Desktop
+    // (QtWebEngine) & AnkiDroid, jadi nyangkup 2 platform paling umum). Kalau ternyata 0 di
+    // SEMUA video, kemungkinan besar file videonya emang gak ada suaranya sama sekali (bukan
+    // tombolnya yang rusak) -- kasih tau user lewat notif kecil biar gak bingung.
+    if(window.__ahAudioOn){
+      setTimeout(function(){
+        var vids3 = document.querySelectorAll('.ankihoney-bg-video');
+        var anySupported = false, anyHasAudio = false;
+        for(var vc=0; vc<vids3.length; vc++){
+          var vEl3 = vids3[vc];
+          if(typeof vEl3.webkitAudioDecodedByteCount === 'number'){
+            anySupported = true;
+            if(vEl3.webkitAudioDecodedByteCount > 0) anyHasAudio = true;
+          }
+        }
+        if(anySupported && !anyHasAudio && window.__ahAudioOn) ahShowAudioHint('🔇 Video ini kayaknya emang gak ada audio-nya (file sumbernya sendiri gak punya suara)');
+      }, 700);
+    }
+  };
+
+  // Notif kecil sementara di deket tombol, buat kasih tau kalau video-nya kedeteksi gak
+  // punya audio -- ilang sendiri abis beberapa detik, gak numpuk kalau dipanggil berkali-kali.
+  function ahShowAudioHint(msg){
+    var old = document.getElementById('ankihoney-audio-hint');
+    if(old) old.remove();
+    var hint = document.createElement('div');
+    hint.id = 'ankihoney-audio-hint';
+    hint.textContent = msg;
+    hint.style.cssText = 'position:fixed; bottom:52px; left:10px; z-index:2147483647; max-width:min(78vw,320px); background:rgba(20,10,20,0.85); color:#fff; font-size:12px; line-height:1.4; padding:8px 10px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3); pointer-events:none;';
+    document.body.appendChild(hint);
+    setTimeout(function(){ if(hint.parentNode) hint.remove(); }, 4500);
+  }
+
+  // --- (0b) Simpen posisi terakhir video (currentTime) ke localStorage, di-key per file
+  // video (ref) biar video beda gak kebawa-bawa. INI YANG BIKIN VIDEO KERASA "NERUS" pas
+  // pindah kartu: sebagian Anki (terutama AnkiDroid/AnkiMobile) beneran ngereload ulang
+  // seluruh halaman kartu tiap pindah ke kartu lain (bukan cuma innerHTML #qa doang kayak
+  // Depan->Belakang), jadi elemen <video>-nya beneran dibikin dari nol lagi tiap kartu baru
+  // & posisi putarnya ilang. Fixnya: pas video BARU dibikin, langsung "loncat" ke posisi
+  // terakhir yang kesimpen, jadi keliatan nerus bukan ngulang dari awal -- baru bener2 mulai
+  // dari 0 lagi kalau videonya emang udah kelar 1 putaran penuh (loop natural).
+  var AH_VIDEO_TIME_PREFIX = 'ankihoneyBgVideoTime:';
+  function ahLoadVideoTime(ref){
+    try{ var t = parseFloat(localStorage.getItem(AH_VIDEO_TIME_PREFIX + ref)); return isNaN(t) ? 0 : t; }catch(e){ return 0; }
+  }
+  function ahSaveVideoTime(ref, time){
+    try{ localStorage.setItem(AH_VIDEO_TIME_PREFIX + ref, String(time)); }catch(e){}
+  }
+
   // --- (2) Foto/poster & overlay gelap -- elemen persisten juga (SEKALI dibikin per sesi),
   // ditempel bareng video di <body> yang sama, biar SELALU dibandingin di stacking context
   // ROOT yang sama kayak video (lihat komentar panjang di ahBuildCssBlock deket
@@ -4166,10 +4253,12 @@ function ahBuildBgMediaHtml(cfg){
     if(!v){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
-      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      v.muted = !window.__ahAudioOn; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
       host.appendChild(v);
     }
-    // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
+    // Baru / sumbernya BENERAN beda -> mulai dari posisi TERAKHIR yang kesimpen (kalau ada),
+    // biar kalau ini cuma restart gara2 Anki reload halaman (pindah kartu), videonya kerasa
+    // nerus. Kalau videonya emang beneran beda (ref beda), posisi lama gak nyambung -> mulai 0.
     v.className = 'ankihoney-bg-video ' + w.cls;
     v.dataset.ahRef = w.ref;
     v.innerHTML = '';
@@ -4181,6 +4270,19 @@ function ahBuildBgMediaHtml(cfg){
     v.addEventListener('loadeddata', onReady);
     v.addEventListener('canplay', onReady);
     v.addEventListener('playing', onReady);
+    (function(vEl, ref){
+      vEl.addEventListener('loadedmetadata', function(){
+        var resumeAt = ahLoadVideoTime(ref);
+        if(resumeAt > 0.2 && isFinite(vEl.duration) && resumeAt < vEl.duration - 0.25){
+          try{ vEl.currentTime = resumeAt; }catch(e){}
+        }
+      });
+      var ahLastSave = 0;
+      vEl.addEventListener('timeupdate', function(){
+        var now = Date.now();
+        if(now - ahLastSave > 400){ ahLastSave = now; ahSaveVideoTime(ref, vEl.currentTime); }
+      });
+    })(v, w.ref);
     // Diagnostik: kalau videonya beneran GAGAL dibuka (bukan cuma kena block autoplay), catet
     // alesannya jelas-jelas di console -- ini yang paling sering kejadian di AnkiDroid/AnkiMobile
     // pas file videonya .mov (QuickTime/HEVC dari iPhone) atau codec yang emang gak didukung
@@ -4215,7 +4317,22 @@ function ahBuildBgMediaHtml(cfg){
       document.addEventListener(evt, ahRetryPlay, { passive:true });
     });
   }
+
+  // Tombol toggle audio (kalau ada di template Depan) baru muncul BELAKANGAN di HTML
+  // #qa dibanding video (yang dibikin duluan di atas), jadi sinkronin ikon & state
+  // muted-nya sekali lagi di akhir biar konsisten sama preferensi yang lagi aktif.
+  window.ahApplyAudioState();
 })();</` + `script>`;
+}
+
+// Tombol kecil buat nyala/matiin AUDIO video background, disisipin cuma di kartu Depan
+// (lihat pemanggilannya di applyCardBackgroundToModel). Videonya sendiri nempel persisten
+// di <body> lewat script di ahBuildBgMediaHtml, jadi tombol ini cuma manggil fungsi global
+// window.ahToggleBgAudio yang udah didefinisiin di sana -- state ON/OFF-nya kesimpen di
+// localStorage biar keinget terus antar kartu & antar sesi belajar.
+function ahBuildAudioToggleHtml(){
+  return `<button type="button" class="ankihoney-audio-toggle" onclick="window.ahToggleBgAudio && window.ahToggleBgAudio()" aria-pressed="false" title="Nyalakan suara background">🔇</button>` +
+    `<script>if(window.ahApplyAudioState) window.ahApplyAudioState();</` + `script>`;
 }
 
 function ahBuildCssBlock(cfg){
@@ -4320,6 +4437,20 @@ ${fxDeclarations}
 }
 .ankihoney-bg-video.ah-loaded{ opacity:${opacity}; }
 .ankihoney-bg-video-mobile{ display:none; }
+/* Tombol nyala/matiin suara video background -- ngambang di pojok kanan atas, di
+   ATAS video/overlay (z-index positif) & di atas teks kartu juga, tapi tetep kecil
+   & gak ganggu. Cuma disisipin di kartu Depan (lihat applyCardBackgroundToModel). */
+.ankihoney-audio-toggle{
+  position:fixed; bottom:10px; left:10px; z-index:2147483647;
+  width:36px; height:36px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.35);
+  background:rgba(20,10,20,0.55);
+  color:#fff; font-size:17px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  backdrop-filter:blur(4px);
+}
+.ankihoney-audio-toggle:active{ transform:scale(0.92); }
 `;
   // syncPlatforms aktif -> 1 video dipakai bareng, TETAP tampil di kedua breakpoint, cuma titik
   // crop-nya (object-position) yang beda. syncPlatforms nonaktif -> video Desktop & Mobile beda
@@ -4402,12 +4533,17 @@ function applyCardBackgroundToModel(model, cfg){
   let css = ahStripCssBlock(model.css || '');
   const hasBg = !!(cfg && ahHasAnyBg(cfg) && (cfg.front || cfg.back));
   const mediaHtml = hasBg ? ahBuildBgMediaHtml(cfg) : '';
+  // Tombol toggle suara masuk ke sisi yang backgroundnya diterapkan (Depan &/atau
+  // Belakang) & cuma kalau backgroundnya beneran video (foto/GIF gak ada audio-nya).
+  const hasVideoBg = ahCfgHasVideo(cfg);
+  const frontMediaHtml = (hasBg && cfg.front && hasVideoBg) ? (mediaHtml + ahBuildAudioToggleHtml()) : mediaHtml;
+  const backMediaHtml = (hasBg && cfg.back && hasVideoBg) ? (mediaHtml + ahBuildAudioToggleHtml()) : mediaHtml;
   if(hasBg) css = css + ahBuildCssBlock(cfg);
   model.css = css;
   model.tmpls = (model.tmpls || []).map(t=> ({
     ...t,
-    qfmt: ahWrapTemplate(t.qfmt, hasBg && cfg.front, mediaHtml),
-    afmt: ahWrapTemplate(t.afmt, hasBg && cfg.back, mediaHtml)
+    qfmt: ahWrapTemplate(t.qfmt, hasBg && cfg.front, frontMediaHtml),
+    afmt: ahWrapTemplate(t.afmt, hasBg && cfg.back, backMediaHtml)
   }));
   // PENTING: kalau note type ini ID-nya udah ada di koleksi Anki user (kepake bareng
   // di banyak deck), Anki cuma nge-update note type pas IMPORT kalau field `mod`
