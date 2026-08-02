@@ -3123,101 +3123,124 @@ function ahGetVideoDuration(file){
   });
 }
 
-// Kompres video di DALAM browser pakai ffmpeg.wasm (didownload on-demand dari CDN pas
-// pertama kali dipakai, jadi gak nambah berat halaman buat orang yang gak butuh fitur ini).
-// Target ukurannya dicapai dengan ngitung bitrate video yang pas berdasarkan durasi & target
-// MB, terus di-encode ulang jadi H.264 (format paling universal didukung Anki di semua
-// platform). Proses ini butuh koneksi internet (buat download modulnya) & bisa berat/lambat
-// di HP low-end krn semua proses jalan di browser sendiri (bukan di server).
-async function ahLoadFfmpegModules(){
-  try{
-    const ffmpegMod = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');
-    const utilMod = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
-    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm', ffmpegPkgURL: 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm' };
-  }catch(e){
-    console.warn('Gagal load ffmpeg dari unpkg, coba jsdelivr...', e);
-    const ffmpegMod = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');
-    const utilMod = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js');
-    return { FFmpeg: ffmpegMod.FFmpeg, toBlobURL: utilMod.toBlobURL, fetchFile: utilMod.fetchFile, baseURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm', ffmpegPkgURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm' };
+// Kompres video di DALAM browser PAKAI API BAWAAN BROWSER SENDIRI (video.captureStream() +
+// MediaRecorder) -- BUKAN ffmpeg.wasm lagi. Sengaja dipindah dari ffmpeg.wasm krn library itu
+// butuh download modul dari CDN & bikin Web Worker yang di banyak kombinasi
+// browser/koneksi/extension suka nge-hang diem2 tanpa error sama sekali pas load() (bug
+// terkenal di ffmpeg.wasm, dicoba berbagai cara tetep gak reliable). Pendekatan native ini
+// GAK butuh internet/CDN sama sekali & gak ada Worker cross-origin, jadi seluruh masalah CORS
+// /hang yang kemarin dialami otomatis ilang krn akarnya emang udah gak ada.
+// Cara kerja: video-nya diputer ulang secara real-time (makanya proses kompres makan waktu
+// KIRA-KIRA SEPANJANG DURASI VIDEONYA -- ini trade-off yang gak terhindarin krn browser cuma
+// bisa nangkep frame se-cepat video-nya diputer), framenya "direkam ulang" pakai MediaRecorder
+// dengan bitrate yang udah dihitung biar ngepas ke target ukuran. Hasilnya WebM (VP9/VP8 + Opus)
+// -- ini didukung penuh sama Anki modern di semua platform.
+async function ahCompressVideoNative(file, targetMB, onProgress, onControllerReady){
+  if(typeof MediaRecorder === 'undefined'){
+    throw new Error('Browser lo gak dukung fitur rekam-ulang video (MediaRecorder API). Coba pakai Chrome/Edge/Firefox versi terbaru, atau kompres manual dulu pakai aplikasi lain kayak HandBrake.');
   }
-}
-// Bungkus promise apapun sama batas waktu -- kalau kelamaan, langsung reject sama pesan yang
-// jelas alih-alih nge-hang selamanya tanpa kepastian ke user.
-function ahRaceTimeout(promise, ms, message){
-  let timer;
-  const timeout = new Promise((_, reject)=>{ timer = setTimeout(()=> reject(new Error(message)), ms); });
-  return Promise.race([promise, timeout]).finally(()=> clearTimeout(timer));
-}
 
-async function ahCompressVideoWithFfmpeg(file, targetMB, onProgress, onFfmpegReady){
-  // Fitur kompres ini butuh bikin Web Worker yang scriptnya diambil dari CDN (unpkg/jsdelivr).
-  // Browser BLOKIR ini total kalau halamannya dibuka langsung dari file lokal (file://,
-  // misal dobel-klik file .html-nya dari File Explorer) -- origin halamannya jadi "null" &
-  // Worker cross-origin gak diizinin sama sekali dalam kondisi itu. Fixnya: buka halaman ini
-  // lewat domain yang beneran di-hosting (https://...), bukan langsung dari file lokal.
-  if(window.location.protocol === 'file:'){
-    throw new Error('Fitur kompres video butuh halaman ini dibuka lewat alamat website beneran (https://...), bukan dibuka langsung dari file lokal di komputer/HP. Coba akses lewat link hosting-nya ya, bukan dobel-klik file .html-nya.');
-  }
-  const { FFmpeg, toBlobURL, fetchFile, baseURL, ffmpegPkgURL } = await ahLoadFfmpegModules();
-  const ffmpeg = new FFmpeg();
-  // Kasih tau pemanggil instance ffmpeg-nya SEKARANG JUGA (sebelum load() jalan), biar tombol
-  // Batal di UI bisa nge-terminate() worker-nya kapan aja -- termasuk pas masih di tahap
-  // download modul, bukan cuma pas lagi proses kompres.
-  if(onFfmpegReady) onFfmpegReady(ffmpeg);
-  if(onProgress){
-    ffmpeg.on('progress', ({ progress })=>{
-      const pct = Math.max(0, Math.min(100, Math.round((progress||0)*100)));
-      onProgress(pct);
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.src = url;
+  video.muted = true;   // biar gak keputer suaranya ke speaker pas proses -- audio tetep KEREKAM
+                         // krn captureStream() nangkep audio dari decoder, bukan dari output speaker.
+  video.volume = 0;
+  video.playsInline = true;
+  video.preload = 'auto';
+  // Ditempel ke DOM (bukan display:none, biar tetep dirender browser) tapi disingkirin dari
+  // pandangan -- beberapa browser berhenti ngedecode video kalau elemennya display:none.
+  video.style.cssText = 'position:fixed; left:-9999px; top:0; width:2px; height:2px; opacity:0.01;';
+  document.body.appendChild(video);
+
+  let cancelled = false;
+  let recorder = null;
+  const cleanup = ()=>{
+    try{ video.pause(); }catch(e){}
+    try{ video.remove(); }catch(e){}
+    try{ URL.revokeObjectURL(url); }catch(e){}
+  };
+  if(onControllerReady){
+    onControllerReady({
+      cancel(){
+        cancelled = true;
+        try{ if(recorder && recorder.state !== 'inactive') recorder.stop(); }catch(e){}
+        cleanup();
+      }
     });
   }
-  // PENTING: worker.js juga wajib di-blob-in kayak coreURL/wasmURL di atas. Kalau enggak,
-  // browser bakal nolak `new Worker(...)`-nya library ini krn URL-nya cross-origin (langsung
-  // ke CDN unpkg/jsdelivr) -- itu penyebab error "Failed to construct 'Worker': ... cannot be
-  // accessed from origin ...". Worker (beda dari <script>/import biasa) emang gak bisa dikasih
-  // URL cross-origin sama sekali walau CDN-nya udah ngasih header CORS.
-  // Catatan: opsi yang bener buat ini namanya `classWorkerURL` (bukan `workerURL` -- itu punya
-  // core versi multi-thread/core-mt yang gak kita pakai).
-  // Semua fetch+load di bawah ini dibatesin waktu -- kalau CDN-nya lelet/gak kejangkau, proses
-  // bakal reject dengan pesan yang jelas dalam waktu wajar, bukan nge-hang selamanya kayak
-  // sebelumnya (dan user tetep bisa klik Batal kapan aja lewat onFfmpegReady di atas).
-  const coreURL = await ahRaceTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 60000, 'Gagal download ffmpeg-core.js (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
-  const wasmURL = await ahRaceTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'Gagal download ffmpeg-core.wasm (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
-  const classWorkerURL = await ahRaceTimeout(toBlobURL(`${ffmpegPkgURL}/worker.js`, 'text/javascript'), 60000, 'Gagal download worker.js (kelamaan). Kemungkinan koneksi lambat atau CDN diblokir jaringanmu.');
-  await ahRaceTimeout(
-    ffmpeg.load({ coreURL, wasmURL, classWorkerURL }),
-    60000,
-    'Nyiapin modul compressor kelamaan (lebih dari 60 detik) -- biasanya krn koneksi lambat atau ada extension/adblock/firewall yang nge-block unpkg/jsdelivr. Coba refresh & ulangi, atau matiin adblock buat halaman ini.'
-  );
 
-  const duration = await ahGetVideoDuration(file);
-  if(!duration || duration < 0.1) throw new Error('Gak bisa baca durasi videonya');
+  try{
+    await new Promise((resolve, reject)=>{
+      video.onloadedmetadata = ()=> resolve();
+      video.onerror = ()=> reject(new Error('Gagal baca file videonya -- mungkin filenya corrupt atau formatnya gak didukung browser.'));
+    });
+    if(cancelled) throw new Error('__cancelled__');
 
-  // Sisain margin ~10% dari target biar hasil akhirnya gak overshoot lewat target (encoding
-  // 1-pass emang gak bisa 100% presisi pas di angka target-nya).
-  const targetBits = targetMB * 8 * 1024 * 1024 * 0.90;
-  const audioKbps = 96;
-  let videoKbps = Math.floor((targetBits / duration / 1000) - audioKbps);
-  if(videoKbps < 150) videoKbps = 150; // batas bawah biar kualitasnya gak terlalu ancur
+    const duration = video.duration;
+    if(!duration || !isFinite(duration)) throw new Error('Gak bisa baca durasi videonya.');
 
-  const inExt = (file.name||'').split('.').pop() || 'mp4';
-  const inName = 'input.' + inExt;
-  const outName = 'output.mp4';
-  await ffmpeg.writeFile(inName, await fetchFile(file));
-  await ffmpeg.exec([
-    '-i', inName,
-    '-c:v', 'libx264',
-    '-b:v', `${videoKbps}k`,
-    '-maxrate', `${Math.round(videoKbps*1.3)}k`,
-    '-bufsize', `${Math.round(videoKbps*2)}k`,
-    '-preset', 'veryfast',
-    '-vf', "scale='min(1280,iw)':-2",
-    '-c:a', 'aac',
-    '-b:a', `${audioKbps}k`,
-    '-movflags', '+faststart',
-    '-y', outName
-  ]);
-  const data = await ffmpeg.readFile(outName);
-  return new Blob([data.buffer], { type: 'video/mp4' });
+    let stream;
+    if(video.captureStream) stream = video.captureStream();
+    else if(video.mozCaptureStream) stream = video.mozCaptureStream();
+    if(!stream) throw new Error('Browser lo gak dukung captureStream buat video (fitur ini butuh Chrome/Edge/Firefox versi baru). Coba update browser atau kompres manual pakai HandBrake.');
+
+    // Sisain margin ~15% dari target biar hasil akhirnya gak overshoot (kontrol bitrate encoder
+    // browser gak bisa presisi 100% kayak ffmpeg 1-pass).
+    const targetBits = targetMB * 8 * 1024 * 1024 * 0.85;
+    const audioKbps = 96;
+    let videoKbps = Math.floor((targetBits / duration / 1000) - audioKbps);
+    if(videoKbps < 150) videoKbps = 150; // batas bawah biar kualitasnya gak terlalu ancur
+
+    const mimeCandidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ];
+    const mimeType = mimeCandidates.find(m => window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported(m)) || '';
+
+    recorder = new MediaRecorder(stream, Object.assign(
+      {},
+      mimeType ? { mimeType } : {},
+      { videoBitsPerSecond: videoKbps * 1000, audioBitsPerSecond: audioKbps * 1000 }
+    ));
+
+    const chunks = [];
+    recorder.ondataavailable = (e)=>{ if(e.data && e.data.size > 0) chunks.push(e.data); };
+
+    const stopPromise = new Promise((resolve, reject)=>{
+      recorder.onstop = ()=> resolve();
+      recorder.onerror = (e)=> reject((e && e.error) || new Error('Gagal proses rekam-ulang videonya.'));
+    });
+
+    recorder.start(250);
+    await video.play();
+
+    const progTimer = setInterval(()=>{
+      if(onProgress && duration > 0){
+        const pct = Math.max(0, Math.min(99, Math.round((video.currentTime / duration) * 100)));
+        onProgress(pct);
+      }
+    }, 200);
+
+    await new Promise((resolve, reject)=>{
+      video.onended = resolve;
+      video.onerror = ()=> reject(new Error('Video-nya berhenti sendiri di tengah proses kompres.'));
+    });
+    clearInterval(progTimer);
+    if(cancelled) throw new Error('__cancelled__');
+
+    if(recorder.state !== 'inactive') recorder.stop();
+    await stopPromise;
+    if(onProgress) onProgress(100);
+
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    cleanup();
+    return blob;
+  }catch(err){
+    cleanup();
+    throw err;
+  }
 }
 
 function ahOpenCompressModal(sizeMB){
@@ -3238,19 +3261,17 @@ document.getElementById('btnCompressSkip').addEventListener('click', async ()=>{
   if(file) await ahFinishBgVideoAssign(file);
 });
 
-// Ref ke instance ffmpeg yang lagi jalan (kalau ada) + flag biar tau kompresnya di-reject krn
-// user sendiri yang batalin (jadi gak perlu nampilin toast error yang serem2 buat itu).
-let ahCompressFfmpegRef = null;
+// Ref ke "controller" proses kompres yang lagi jalan (kalau ada) + flag biar tau kompresnya
+// di-reject krn user sendiri yang batalin (jadi gak perlu nampilin toast error yang serem2).
+let ahCompressCtrlRef = null;
 let ahCompressCancelledByUser = false;
 
 document.getElementById('btnCompressCancel').addEventListener('click', ()=>{
   ahCompressCancelledByUser = true;
-  if(ahCompressFfmpegRef){
-    // terminate() langsung matiin worker-nya paksa -- ini bikin promise load()/exec() yang
-    // lagi ke-gantung otomatis reject, jadi UI-nya gak bakal nyangkut lagi kayak sebelumnya.
-    try{ ahCompressFfmpegRef.terminate(); }catch(e){ console.warn('Gagal terminate ffmpeg worker', e); }
+  if(ahCompressCtrlRef){
+    try{ ahCompressCtrlRef.cancel(); }catch(e){ console.warn('Gagal cancel proses kompres', e); }
   }
-  ahCompressFfmpegRef = null;
+  ahCompressCtrlRef = null;
   ahPendingBgVideoFile = null;
   document.getElementById('ahCompressModalBg').classList.remove('show');
   toast('Kompres video dibatalin~', '✖️');
@@ -3266,24 +3287,25 @@ document.getElementById('btnCompressStart').addEventListener('click', async ()=>
   const progText = document.getElementById('ahCompressProgressText');
   actionsEl.classList.add('hidden');
   progWrap.classList.remove('hidden');
-  progText.textContent = 'Nyiapin modul compressor video (download pertama kali bisa agak lama, sabar ya)...';
+  progBar.style.width = '0%';
+  progText.textContent = 'Nyiapin proses kompres... (video bakal diputer ulang sebentar, gak lama)';
   ahCompressCancelledByUser = false;
   try{
-    const compressedBlob = await ahCompressVideoWithFfmpeg(file, targetMB, (pct)=>{
+    const compressedBlob = await ahCompressVideoNative(file, targetMB, (pct)=>{
       progBar.style.width = pct + '%';
-      progText.textContent = `Lagi kompres videonya... ${pct}%`;
-    }, (ffmpegInst)=>{ ahCompressFfmpegRef = ffmpegInst; });
-    ahCompressFfmpegRef = null;
+      progText.textContent = `Lagi kompres videonya... ${pct}% (proses ini kira-kira sepanjang durasi videonya, sabar ya~)`;
+    }, (ctrl)=>{ ahCompressCtrlRef = ctrl; });
+    ahCompressCtrlRef = null;
     const newSizeMB = compressedBlob.size / 1024 / 1024;
     progText.textContent = `Selesai! Ukuran baru: ${newSizeMB.toFixed(1)}MB`;
-    const compressedFile = new File([compressedBlob], (file.name||'video').replace(/\.[^.]+$/, '') + '_compressed.mp4', { type:'video/mp4' });
+    const compressedFile = new File([compressedBlob], (file.name||'video').replace(/\.[^.]+$/, '') + '_compressed.webm', { type:'video/webm' });
     document.getElementById('ahCompressModalBg').classList.remove('show');
     ahPendingBgVideoFile = null;
     await ahFinishBgVideoAssign(compressedFile);
     toast(`Video berhasil dikompres dari ${(file.size/1024/1024).toFixed(1)}MB jadi ${newSizeMB.toFixed(1)}MB!`, '🗜️');
   }catch(err){
-    ahCompressFfmpegRef = null;
-    if(ahCompressCancelledByUser){
+    ahCompressCtrlRef = null;
+    if(ahCompressCancelledByUser || (err && err.message === '__cancelled__')){
       // Udah dihandle sama toast "dibatalin" pas klik tombol Batal-nya, jadi di sini diem aja.
       ahCompressCancelledByUser = false;
       return;
