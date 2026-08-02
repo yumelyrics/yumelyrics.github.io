@@ -1694,31 +1694,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-<!-- KOMPRES VIDEO BACKGROUND MODAL -->
-<div class="modal-bg" id="ahCompressModalBg">
-  <div class="modal">
-    <h3>🗜️ Video Background Kegedean</h3>
-    <p id="ahCompressModalSub" style="font-weight:400; color:var(--ink-soft); font-size:.85rem;"></p>
-    <div style="display:flex; align-items:center; gap:10px; margin:10px 0;">
-      <label for="ahCompressTargetMb" style="font-size:.82rem; font-weight:500; color:var(--ink-soft);">Target ukuran hasil kompres (MB):</label>
-      <input type="number" id="ahCompressTargetMb" value="45" min="5" max="150" step="1" style="width:70px; padding:6px 8px; border:1px solid var(--border); border-radius:8px;" />
-    </div>
-    <div id="ahCompressProgressWrap" class="hidden" style="margin:14px 0;">
-      <div style="background:var(--border); border-radius:999px; height:10px; overflow:hidden;">
-        <div id="ahCompressProgressBar" style="height:100%; width:0%; background:var(--mint,#4CAF88); transition:width .2s;"></div>
-      </div>
-      <div id="ahCompressProgressText" style="font-size:.78rem; color:var(--ink-soft); margin-top:6px;"></div>
-      <div style="margin-top:12px; text-align:right;">
-        <button class="btn ghost" id="btnCompressCancel" type="button">✖️ Batal</button>
-      </div>
-    </div>
-    <div class="modal-actions" id="ahCompressModalActions">
-      <button class="btn ghost" id="btnCompressSkip">Pakai Video Asli (Gak Dikompres)</button>
-      <button class="btn mint" id="btnCompressStart">🗜️ Kompres Sekarang</button>
-    </div>
-  </div>
-</div>
-
 <!-- PDF / PRINT FLASHCARD MODAL -->
 <div class="modal-bg" id="ahPdfModalBg">
   <div class="modal">
@@ -3047,32 +3022,13 @@ async function handleBgImageFile(file){
   }
 }
 
-// Di atas ukuran segini, video ditawarin buat dikompres dulu sebelum dipasang jadi
-// background (dari pengalaman: video HP jaman sekarang gampang banget 100MB+, padahal
-// buat background kartu Anki idealnya jauh di bawah itu).
-const AH_COMPRESS_PROMPT_MB = 20;
-let ahPendingBgVideoFile = null;
-
 async function handleBgVideoFile(file){
+  const src = ahActiveBgSource(state.cardBg);
   const mime = (file.type||'').toLowerCase();
   if(!/^video\/(mp4|webm)$/.test(mime)){
     toast('Video harus format MP4 atau WebM ya~ (format lain belum pasti didukung Anki)', '😿');
     return;
   }
-  const sizeMB = file.size / 1024 / 1024;
-  if(sizeMB > AH_COMPRESS_PROMPT_MB){
-    ahPendingBgVideoFile = file;
-    ahOpenCompressModal(sizeMB);
-    return;
-  }
-  await ahFinishBgVideoAssign(file);
-}
-
-// Bagian INTI proses video (baca bytes, ambil poster, pasang ke state.cardBg) -- dipisah
-// dari handleBgVideoFile() biar bisa dipanggil lagi setelah video-nya (mungkin) dikompres
-// dulu di ahOpenCompressModal().
-async function ahFinishBgVideoAssign(file){
-  const src = ahActiveBgSource(state.cardBg);
   toast('Lagi proses videonya...', '🎬');
   try{
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -3080,7 +3036,7 @@ async function ahFinishBgVideoAssign(file){
     if(bytes.length > MAX_VIDEO_MB * 1024 * 1024){
       toast(`Videonya gede juga ya (${(bytes.length/1024/1024).toFixed(1)}MB) — file .apkg hasil akhir bisa jadi berat. Kalau bisa, kompres/potong dulu videonya~`, '⚠️');
     }
-    const ext = (file.type||'').toLowerCase().includes('webm') ? 'webm' : 'mp4';
+    const ext = mime.includes('webm') ? 'webm' : 'mp4';
     src.kind = 'video';
     src.mode = 'upload';
     src.bytes = bytes;
@@ -3109,272 +3065,6 @@ async function ahFinishBgVideoAssign(file){
     toast('Gagal proses video: '+(err.message||err), '😿');
   }
 }
-
-// Ambil durasi video (detik) lewat elemen <video> biasa -- dipakai buat itung target bitrate
-// pas kompres, biar hasil akhirnya ngepas sesuai target ukuran yang diminta.
-function ahGetVideoDuration(file){
-  return new Promise((resolve, reject)=>{
-    const url = URL.createObjectURL(file);
-    const v = document.createElement('video');
-    v.preload = 'metadata';
-    v.onloadedmetadata = ()=>{ URL.revokeObjectURL(url); resolve(v.duration || 0); };
-    v.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('Gagal baca durasi video')); };
-    v.src = url;
-  });
-}
-
-// Kompres video di DALAM browser PAKAI API BAWAAN BROWSER (Canvas 2D + Web Audio API +
-// MediaRecorder) -- BUKAN ffmpeg.wasm. ffmpeg.wasm butuh download modul dari CDN & bikin Web
-// Worker yang di banyak kombinasi browser/koneksi/extension suka nge-hang diem2 tanpa error
-// pas load() (bug terkenal, sering gagal krn CORS/CDN/adblock/offline). Pendekatan native ini
-// GAK butuh internet/CDN sama sekali (semua modul udah bawaan browser), jadi masalah
-// CORS/hang/gagal-download itu ilang total krn akarnya emang udah gak ada.
-//
-// Cara kerja: frame video digambar satu-satu ke <canvas> pakai requestAnimationFrame (BUKAN
-// video.captureStream() langsung -- itu API baru & suka gak konsisten antar browser, terutama
-// buat nangkep audio-nya, kadang track audio-nya kosong/putus). Audio-nya diambil terpisah
-// lewat Web Audio API (MediaElementAudioSourceNode -> MediaStreamAudioDestinationNode), ini
-// cara yang jauh lebih stabil buat nangkep audio dari elemen <video>. Video-track dari canvas
-// & audio-track dari Web Audio digabung jadi satu MediaStream, baru direkam pakai MediaRecorder
-// dengan bitrate yang udah dihitung biar ngepas ke target ukuran. Konsekuensinya: proses ini
-// makan waktu KIRA-KIRA SEPANJANG DURASI VIDEONYA (browser cuma bisa nangkep frame secepat
-// video-nya diputer, ini trade-off yang gak terhindarin tanpa ffmpeg) -- makanya disediain
-// tombol Batal. Hasil akhirnya WebM (VP9/VP8 + Opus), didukung penuh sama Anki modern di semua
-// platform (desktop, AnkiDroid, AnkiMobile).
-async function ahCompressVideoNative(file, targetMB, onProgress, onControllerReady){
-  if(typeof MediaRecorder === 'undefined'){
-    throw new Error('Browser lo gak dukung fitur rekam-ulang video (MediaRecorder API). Coba pakai Chrome/Edge/Firefox versi terbaru, atau kompres manual dulu pakai aplikasi lain kayak HandBrake.');
-  }
-
-  const url = URL.createObjectURL(file);
-  const video = document.createElement('video');
-  video.src = url;
-  video.muted = true;   // biar gak keputer suaranya dobel ke speaker pas proses -- audio
-                         // tetep KEREKAM krn diambil lewat Web Audio API, bukan dari speaker.
-  video.playsInline = true;
-  video.preload = 'auto';
-  // Ditempel ke DOM (bukan display:none, biar tetep didecode browser) tapi disingkirin dari
-  // pandangan -- beberapa browser berhenti ngedecode video kalau elemennya display:none.
-  video.style.cssText = 'position:fixed; left:-9999px; top:0; width:2px; height:2px; opacity:0.01;';
-  document.body.appendChild(video);
-
-  const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:fixed; left:-9999px; top:0;';
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d', { alpha:false });
-
-  let cancelled = false;
-  let recorder = null;
-  let rafId = null;
-  let audioCtx = null;
-  const cleanup = ()=>{
-    try{ if(rafId) cancelAnimationFrame(rafId); }catch(e){}
-    try{ video.pause(); }catch(e){}
-    try{ video.remove(); }catch(e){}
-    try{ canvas.remove(); }catch(e){}
-    try{ URL.revokeObjectURL(url); }catch(e){}
-    try{ if(audioCtx && audioCtx.state !== 'closed') audioCtx.close(); }catch(e){}
-  };
-  if(onControllerReady){
-    onControllerReady({
-      cancel(){
-        cancelled = true;
-        try{ if(recorder && recorder.state !== 'inactive') recorder.stop(); }catch(e){}
-        cleanup();
-      }
-    });
-  }
-
-  try{
-    await new Promise((resolve, reject)=>{
-      video.onloadedmetadata = ()=> resolve();
-      video.onerror = ()=> reject(new Error('Gagal baca file videonya -- mungkin filenya corrupt atau formatnya gak didukung browser.'));
-    });
-    if(cancelled) throw new Error('__cancelled__');
-
-    const duration = video.duration;
-    if(!duration || !isFinite(duration)) throw new Error('Gak bisa baca durasi videonya.');
-
-    // Samain skala kayak versi lama: lebar maksimal 1280px, tinggi ngikutin rasio aslinya,
-    // dibulatin genap (encoder video umumnya butuh dimensi genap).
-    const srcW = video.videoWidth || 1280;
-    const srcH = video.videoHeight || 720;
-    const scale = Math.min(1, 1280 / srcW);
-    let outW = Math.round(srcW * scale / 2) * 2;
-    let outH = Math.round(srcH * scale / 2) * 2;
-    if(outW < 2) outW = 2;
-    if(outH < 2) outH = 2;
-    canvas.width = outW;
-    canvas.height = outH;
-
-    const videoStream = canvas.captureStream(30);
-
-    // Ambil audio lewat Web Audio API (lebih stabil drpd video.captureStream() buat audio).
-    // Kalau videonya emang gak punya audio track, ini tetep aman -- hasil rekamannya cuma
-    // gak ada suara aja, gak bikin proses gagal.
-    let audioTracks = [];
-    try{
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const sourceNode = audioCtx.createMediaElementSource(video);
-      const destNode = audioCtx.createMediaStreamDestination();
-      sourceNode.connect(destNode);
-      // Sambungin juga ke output lewat gain 0 -- beberapa browser (terutama Safari) suka
-      // "malas" ngolah graph audio yang gak nyambung ke destination sama sekali, jadi audio
-      // hasil rekamannya bisa kosong/putus. Gain 0 = gak kedengeran tapi graph-nya tetep aktif.
-      const silentGain = audioCtx.createGain();
-      silentGain.gain.value = 0;
-      sourceNode.connect(silentGain);
-      silentGain.connect(audioCtx.destination);
-      audioTracks = destNode.stream.getAudioTracks();
-    }catch(e){
-      console.warn('Gagal setup audio track buat kompres, lanjut tanpa audio', e);
-    }
-
-    const combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioTracks]);
-
-    // Sisain margin ~15% dari target biar hasil akhirnya gak overshoot (kontrol bitrate encoder
-    // browser gak bisa presisi 100% kayak ffmpeg 1-pass).
-    const targetBits = targetMB * 8 * 1024 * 1024 * 0.85;
-    const audioKbps = audioTracks.length ? 96 : 0;
-    let videoKbps = Math.floor((targetBits / duration / 1000) - audioKbps);
-    if(videoKbps < 150) videoKbps = 150; // batas bawah biar kualitasnya gak terlalu ancur
-
-    const mimeCandidates = [
-      'video/webm;codecs=vp9,opus',
-      'video/webm;codecs=vp8,opus',
-      'video/webm',
-    ];
-    const mimeType = mimeCandidates.find(m => window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported(m)) || '';
-
-    const recOpts = Object.assign(
-      {},
-      mimeType ? { mimeType } : {},
-      { videoBitsPerSecond: videoKbps * 1000 }
-    );
-    if(audioKbps) recOpts.audioBitsPerSecond = audioKbps * 1000;
-    recorder = new MediaRecorder(combinedStream, recOpts);
-
-    const chunks = [];
-    recorder.ondataavailable = (e)=>{ if(e.data && e.data.size > 0) chunks.push(e.data); };
-
-    const stopPromise = new Promise((resolve, reject)=>{
-      recorder.onstop = ()=> resolve();
-      recorder.onerror = (e)=> reject((e && e.error) || new Error('Gagal proses rekam-ulang videonya.'));
-    });
-
-    // Loop gambar frame video ke canvas satu-satu selama video-nya main.
-    const drawLoop = ()=>{
-      if(cancelled || video.paused || video.ended) return;
-      ctx.drawImage(video, 0, 0, outW, outH);
-      rafId = requestAnimationFrame(drawLoop);
-    };
-
-    recorder.start(250);
-    if(audioCtx && audioCtx.state === 'suspended'){ try{ await audioCtx.resume(); }catch(e){} }
-    await video.play();
-    rafId = requestAnimationFrame(drawLoop);
-
-    const progTimer = setInterval(()=>{
-      if(onProgress && duration > 0){
-        const pct = Math.max(0, Math.min(99, Math.round((video.currentTime / duration) * 100)));
-        onProgress(pct);
-      }
-    }, 200);
-
-    await new Promise((resolve, reject)=>{
-      video.onended = resolve;
-      video.onerror = ()=> reject(new Error('Video-nya berhenti sendiri di tengah proses kompres.'));
-    });
-    clearInterval(progTimer);
-    if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
-    if(cancelled) throw new Error('__cancelled__');
-
-    if(recorder.state !== 'inactive') recorder.stop();
-    await stopPromise;
-    if(onProgress) onProgress(100);
-
-    const blob = new Blob(chunks, { type: 'video/webm' });
-    cleanup();
-    return blob;
-  }catch(err){
-    cleanup();
-    throw err;
-  }
-}
-
-function ahOpenCompressModal(sizeMB){
-  const bg = document.getElementById('ahCompressModalBg');
-  document.getElementById('ahCompressModalSub').textContent =
-    `Video yang dipilih ukurannya ${sizeMB.toFixed(1)}MB — lumayan berat buat background kartu Anki (bikin file .apkg hasil akhir jadi gede & lambat diimport). Mau dikompres dulu (kualitas dikecilin dikit biar muat di target ukuran), atau tetep mau pakai video aslinya apa adanya?`;
-  document.getElementById('ahCompressTargetMb').value = 45;
-  document.getElementById('ahCompressProgressWrap').classList.add('hidden');
-  document.getElementById('ahCompressModalActions').classList.remove('hidden');
-  document.getElementById('ahCompressProgressBar').style.width = '0%';
-  document.getElementById('ahCompressProgressText').textContent = '';
-  bg.classList.add('show');
-}
-
-// Ref ke "controller" proses kompres yang lagi jalan (kalau ada) + flag biar tau kompresnya
-// di-reject krn user sendiri yang batalin (jadi gak perlu nampilin toast error yang serem2).
-let ahCompressCtrlRef = null;
-let ahCompressCancelledByUser = false;
-
-document.getElementById('btnCompressCancel').addEventListener('click', ()=>{
-  ahCompressCancelledByUser = true;
-  if(ahCompressCtrlRef){
-    try{ ahCompressCtrlRef.cancel(); }catch(e){ console.warn('Gagal cancel proses kompres', e); }
-  }
-  ahCompressCtrlRef = null;
-  ahPendingBgVideoFile = null;
-  document.getElementById('ahCompressModalBg').classList.remove('show');
-  toast('Kompres video dibatalin~', '✖️');
-});
-
-document.getElementById('btnCompressSkip').addEventListener('click', async ()=>{
-  const file = ahPendingBgVideoFile; ahPendingBgVideoFile = null;
-  document.getElementById('ahCompressModalBg').classList.remove('show');
-  if(file) await ahFinishBgVideoAssign(file);
-});
-
-document.getElementById('btnCompressStart').addEventListener('click', async ()=>{
-  const file = ahPendingBgVideoFile;
-  if(!file) return;
-  const targetMB = Math.max(5, Math.min(150, Number(document.getElementById('ahCompressTargetMb').value) || 45));
-  const actionsEl = document.getElementById('ahCompressModalActions');
-  const progWrap = document.getElementById('ahCompressProgressWrap');
-  const progBar = document.getElementById('ahCompressProgressBar');
-  const progText = document.getElementById('ahCompressProgressText');
-  actionsEl.classList.add('hidden');
-  progWrap.classList.remove('hidden');
-  progBar.style.width = '0%';
-  progText.textContent = 'Nyiapin proses kompres... (video bakal diputer ulang sebentar, gak lama)';
-  ahCompressCancelledByUser = false;
-  try{
-    const compressedBlob = await ahCompressVideoNative(file, targetMB, (pct)=>{
-      progBar.style.width = pct + '%';
-      progText.textContent = `Lagi kompres videonya... ${pct}% (proses ini kira-kira sepanjang durasi videonya, sabar ya~)`;
-    }, (ctrl)=>{ ahCompressCtrlRef = ctrl; });
-    ahCompressCtrlRef = null;
-    const newSizeMB = compressedBlob.size / 1024 / 1024;
-    progText.textContent = `Selesai! Ukuran baru: ${newSizeMB.toFixed(1)}MB`;
-    const compressedFile = new File([compressedBlob], (file.name||'video').replace(/\.[^.]+$/, '') + '_compressed.webm', { type:'video/webm' });
-    document.getElementById('ahCompressModalBg').classList.remove('show');
-    ahPendingBgVideoFile = null;
-    await ahFinishBgVideoAssign(compressedFile);
-    toast(`Video berhasil dikompres dari ${(file.size/1024/1024).toFixed(1)}MB jadi ${newSizeMB.toFixed(1)}MB!`, '🗜️');
-  }catch(err){
-    ahCompressCtrlRef = null;
-    if(ahCompressCancelledByUser || (err && err.message === '__cancelled__')){
-      // Udah dihandle sama toast "dibatalin" pas klik tombol Batal-nya, jadi di sini diem aja.
-      ahCompressCancelledByUser = false;
-      return;
-    }
-    console.error(err);
-    progText.textContent = 'Gagal kompres: ' + (err.message||err);
-    toast('Gagal kompres video -- coba pakai video aslinya, atau kompres manual dulu pakai aplikasi lain kayak HandBrake~', '⚠️');
-    actionsEl.classList.remove('hidden');
-  }
-});
 
 async function handleBgMedia(file){
   const kind = ahDetectKindFromFile(file);
@@ -4431,29 +4121,6 @@ function ahBuildBgMediaHtml(cfg){
     document.body.appendChild(host);
   }
 
-  // --- (1.5) Preferensi suara background -- disimpen di localStorage biar keinget
-  // sepanjang sesi belajar (bahkan lintas kartu/lintas Depan-Belakang), sampe user klik
-  // tombol toggle-nya lagi. Default-nya SELALU dimatiin (muted) dulu pas kartu pertama kali
-  // kebuka, soalnya browser/webview umumnya blokir autoplay video BERSUARA sebelum ada
-  // interaksi user beneran (klik/tap) -- begitu user klik tombolnya sendiri, itu udah
-  // dianggap "gesture" yang sah buat nyalain suara.
-  var AH_AUDIO_KEY = 'ankihoney_bg_audio_on';
-  function ahAudioPref(){
-    try{ return localStorage.getItem(AH_AUDIO_KEY) === '1'; }catch(e){ return false; }
-  }
-  function ahSetAudioPref(on){
-    try{ localStorage.setItem(AH_AUDIO_KEY, on ? '1' : '0'); }catch(e){}
-  }
-  function ahApplyAudioPrefToVideos(){
-    var on = ahAudioPref();
-    var vids = document.querySelectorAll('.ankihoney-bg-video');
-    for(var vi=0; vi<vids.length; vi++){
-      vids[vi].muted = !on;
-      vids[vi].volume = 1;
-      if(on && vids[vi].paused){ var rp = vids[vi].play(); if(rp && rp.catch) rp.catch(function(){}); }
-    }
-  }
-
   // --- (2) Foto/poster & overlay gelap -- elemen persisten juga (SEKALI dibikin per sesi),
   // ditempel bareng video di <body> yang sama, biar SELALU dibandingin di stacking context
   // ROOT yang sama kayak video (lihat komentar panjang di ahBuildCssBlock deket
@@ -4490,17 +4157,16 @@ function ahBuildBgMediaHtml(cfg){
     var v = existing[w.cls];
     if(v && v.dataset.ahRef === w.ref){
       // Sumbernya SAMA kayak sebelumnya -> jangan disentuh, biar lanjut muter dari posisi sekarang.
-      // Cuma sinkronin properti muted-nya (ini gak bikin videonya keputus/restart) sesuai
-      // preferensi suara yang lagi aktif sekarang.
+      // Tapi kalau ternyata videonya somehow ke-pause (misal autoplay browser sempet nge-block
+      // pas pertama kali dicoba), coba play() lagi -- gak masalah dipanggil berkali-kali.
       v.classList.add('ah-loaded');
-      v.muted = !ahAudioPref();
       if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
       return;
     }
     if(!v){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
-      v.muted = !ahAudioPref(); v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
       host.appendChild(v);
     }
     // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
@@ -4529,32 +4195,6 @@ function ahBuildBgMediaHtml(cfg){
     if(v.readyState >= 2) v.classList.add('ah-loaded');
     setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
   });
-
-  // --- (3.5) Tombol toggle suara background -- cuma muncul kalau backgroundnya video (foto/GIF
-  // polos gak butuh ini). Tombolnya SATU elemen persisten (kayak video-nya), dibikin sekali &
-  // dipake ulang terus, biar gak ilang-muncul tiap ganti Depan<->Belakang atau pindah kartu.
-  var audioBtn = document.getElementById('ankihoney-audio-toggle');
-  if(wanted.length > 0){
-    if(!audioBtn){
-      audioBtn = document.createElement('button');
-      audioBtn.id = 'ankihoney-audio-toggle';
-      audioBtn.type = 'button';
-      audioBtn.className = 'ankihoney-audio-toggle-btn';
-      audioBtn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var newOn = !ahAudioPref();
-        ahSetAudioPref(newOn);
-        ahApplyAudioPrefToVideos();
-        audioBtn.textContent = newOn ? '🔊' : '🔇';
-        audioBtn.setAttribute('aria-label', newOn ? 'Matikan suara background' : 'Nyalain suara background');
-      });
-      document.body.appendChild(audioBtn);
-    }
-    audioBtn.style.display = '';
-    audioBtn.textContent = ahAudioPref() ? '🔊' : '🔇';
-  } else if(audioBtn){
-    audioBtn.style.display = 'none';
-  }
 
   // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
   // sebagian browser/webview nge-block autoplay video sampe ada interaksi user beneran
@@ -4739,14 +4379,6 @@ html, body{ background-color:transparent !important; }
   background:rgba(0,0,0,${overlay});
   pointer-events:none;
 }
-.ankihoney-audio-toggle-btn{
-  position:fixed; left:10px; bottom:8px; z-index:9999;
-  width:34px; height:34px; border-radius:50%; border:none;
-  background:rgba(0,0,0,.45); color:#fff; font-size:15px; line-height:34px;
-  text-align:center; padding:0; cursor:pointer; pointer-events:auto;
-  box-shadow:0 1px 4px rgba(0,0,0,.35);
-}
-.ankihoney-audio-toggle-btn:hover{ background:rgba(0,0,0,.65); }
 ${videoCss}${videoVisibilityCss}/* Posisi & (kalau "background beda per platform" aktif) SUMBER foto/GIF/poster-nya sendiri
    khusus buat layar sempit (HP -- AnkiDroid/AnkiMobile), diatur terpisah dari Desktop di atas
    lewat tab "📱 Mobile" pas ngatur background di AnkiHoney. Breakpoint ${AH_MOBILE_BREAKPOINT}px
