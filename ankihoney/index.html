@@ -2446,27 +2446,7 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   state.searchQuery = '';
   state.doneBatches = new Set();
   state.pasteSnapshot = null;
-  // FIX (bug: background/video deck LAMA nyangkut ke deck BARU): sebelumnya ini pakai
-  // 'state.cardBg || {...}', padahal state.cardBg SELALU udah keisi dari awal (didefinisiin
-  // pas deklarasi `state` literal), jadi kondisi itu gak pernah falsy & baris ini efeknya nol --
-  // reset gak pernah beneran kejadian. Akibatnya tiap import deck baru di tab yang sama (tanpa
-  // refresh), setting background & referensi video/foto dari deck SEBELUMNYA (termasuk
-  // front/back yang udah aktif) masih nempel ke deck baru. Sekarang SELALU dibikin objek baru.
-  state.cardBg = {
-    syncPlatforms: true,
-    desktop: ahNewBgSource(),
-    mobile: ahNewBgSource(),
-    pos: { desktop:{x:50,y:50}, mobile:{x:50,y:50} },
-    previewDevice: 'desktop',
-    fit: 'cover',
-    opacity: 90,
-    overlay: 25,
-    blur: 0,
-    front: false,
-    back: false,
-    previewSide: 'front',
-    textFx: { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' }
-  };
+  state.cardBg = state.cardBg || { syncPlatforms:true, desktop: ahNewBgSource(), mobile: ahNewBgSource(), pos:{ desktop:{x:50,y:50}, mobile:{x:50,y:50} }, fit:'cover', previewDevice:'desktop' };
   // (state.isMergedDeck udah di-set true sama caller-nya buat kasus ini, jangan ditimpa balik jadi false di sini)
   state.extraDeckSources = [];
   state.primaryMediaMap = null;
@@ -4186,7 +4166,15 @@ function ahBuildBgMediaHtml(cfg){
     if(!v){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
-      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      // Set juga sebagai ATTRIBUTE HTML (bukan cuma property JS) -- beberapa WebView Android
+      // (termasuk yang dipake AnkiDroid) baca attribute muted/playsinline pas video PERTAMA KALI
+      // nempel ke DOM buat mutusin boleh-tidaknya autoplay, jadi property doang kadang telat/gak
+      // kebaca sebelum keputusan autoplay-nya diambil.
+      v.setAttribute('muted', '');
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.setAttribute('autoplay', '');
       host.appendChild(v);
     }
     // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
@@ -4197,9 +4185,19 @@ function ahBuildBgMediaHtml(cfg){
     source.src = w.ref;
     v.appendChild(source);
     v.classList.remove('ah-loaded');
-    var onReady = function(){ v.classList.add('ah-loaded'); };
+    // Coba play() lagi tiap kali ada event yang nandain video makin siap -- BUKAN cuma nandain
+    // "ah-loaded" doang. Ini penting soalnya .play() yang dipanggil pas video BARU aja di-load()
+    // (di bawah) sering gagal karena datanya belum sempet siap (ke-reject diem2 sama .catch di
+    // bawah), dan di AnkiDroid gak ada jaminan bakal ke-retry lewat gesture (lihat komentar
+    // panjang di bagian (5) kenapa). Jadi tiap video makin "siap", kita coba play() lagi.
+    var onReady = function(){
+      v.classList.add('ah-loaded');
+      if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
+    };
+    v.addEventListener('loadedmetadata', onReady);
     v.addEventListener('loadeddata', onReady);
     v.addEventListener('canplay', onReady);
+    v.addEventListener('canplaythrough', onReady);
     v.addEventListener('playing', onReady);
     // Diagnostik: kalau videonya beneran GAGAL dibuka (bukan cuma kena block autoplay), catet
     // alesannya jelas-jelas di console -- ini yang paling sering kejadian di AnkiDroid/AnkiMobile
@@ -4216,7 +4214,7 @@ function ahBuildBgMediaHtml(cfg){
     setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
   });
 
-  // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
+  // --- (4) Jaring pengaman tambahan #1: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
   // sebagian browser/webview nge-block autoplay video sampe ada interaksi user beneran
   // (klik/tap/keyboard) -- makanya video baru "keliatan jalan" pas udah di kartu Belakang
   // (abis klik Show Answer), padahal pas kartu Depan awal videonya masih diem/ketutup foto.
@@ -4234,6 +4232,28 @@ function ahBuildBgMediaHtml(cfg){
     ['pointerdown','touchstart','keydown'].forEach(function(evt){
       document.addEventListener(evt, ahRetryPlay, { passive:true });
     });
+  }
+
+  // --- (5) Jaring pengaman tambahan #2, KHUSUS buat AnkiDroid: di AnkiDroid, tombol
+  // "Show Answer" & tombol jawaban (Again/Hard/Good/Easy) itu tombol NATIVE Android yang
+  // duduk DI LUAR WebView (bukan elemen HTML di dalam halaman ini) -- jadi tap di tombol2
+  // itu SAMA SEKALI GAK NYAMPE ke listener pointerdown/touchstart/keydown di atas (poin 4),
+  // beda sama Anki Desktop yang seluruh jendelanya emang WebView jadi semua klik kebaca.
+  // Efeknya: di AnkiDroid, video sering nyangkut ke-pause abis autoplay pertama gagal &
+  // GAK PERNAH ke-retry sama sekali selama sesi belajar itu. Fixnya: watchdog yang jalan
+  // sendiri secara berkala (gak butuh interaksi user sama sekali) & nyoba play() ulang tiap
+  // nemu video AnkiHoney yang lagi paused padahal harusnya jalan.
+  if(!window.__ahWatchdogBound){
+    window.__ahWatchdogBound = true;
+    setInterval(function(){
+      var vids = document.querySelectorAll('.ankihoney-bg-video');
+      for(var k=0;k<vids.length;k++){
+        var vv = vids[k];
+        if(vv.paused && vv.readyState >= 2){
+          var pr = vv.play(); if(pr && pr.catch) pr.catch(function(){});
+        }
+      }
+    }, 700);
   }
 })();</` + `script>`;
 }
@@ -5364,16 +5384,6 @@ function ahApplySessionSnapshot(snap){
         Object.assign(state.cardBg[dev], { kind: src.kind, mode: 'url', imageUrl: src.imageUrl });
       }
     });
-    // FIX (bug: background jadi HITAM POLOS abis restore sesi): src mode 'upload' (video/foto
-    // yang diupload manual) SENGAJA gak dipulihin isi filenya di atas (bytes video kegedean buat
-    // localStorage) -- tapi front/back tetep ketimpa `true` dari snapshot. Begitu front/back aktif
-    // TANPA sumber background yang valid, ahBgLayerColor() jatuh ke fallback '#12121a' (item
-    // solid) & gak ada <video>/foto yang ke-render sama sekali. Cegah di sini: kalau abis restore
-    // ternyata gak ada satupun sumber background yang valid, matiin front/back-nya juga.
-    if(!ahHasAnyBg(state.cardBg)){
-      state.cardBg.front = false;
-      state.cardBg.back = false;
-    }
   }
 
   // 5. Render ulang semua UI yang bergantung ke state di atas
@@ -5391,11 +5401,9 @@ function ahRestoreSession(){
   if(!snap){ toast('Gak ada sesi tersimpan buat deck ini~', '⚠️'); return; }
   const restoredNotes = ahApplySessionSnapshot(snap);
   const savedAgo = ahFormatTimeAgo(snap.savedAt);
-  const hadUploadBg = !!(snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'));
-  const bgStillOff = hadUploadBg && !ahHasAnyBg(state.cardBg);
-  const bgNote = bgStillOff
-    ? ' Background foto/video (mode upload) otomatis DIMATIIN sementara karena filenya gak ikut kepulihin (kegedean buat disimpen) -- upload ulang & aktifin lagi manual ya biar gak muncul hitam polos.'
-    : (hadUploadBg ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.' : '');
+  const bgNote = (snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'))
+    ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.'
+    : '';
   toast(`Sesi dipulihkan (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.${bgNote}`, '↺');
 }
 // Download snapshot sesi jadi file .json -- buat dipindahin manual antar device (misal
