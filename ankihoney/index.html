@@ -4050,11 +4050,13 @@ function ahStripCssBlock(css){
 // sebelum videonya sendiri kebaca & fade-in di atas lapisan ini.
 function ahBgFallbackRef(src){
   if(!ahHasBgSource(src)) return '';
-  // Poster/foto fallback buat video DIMATIIN sesuai request -- video-nya sekarang udah
-  // reliable jalan, jadi gak perlu lagi lapisan foto yang nutupin sebelum video siap.
-  // Foto/GIF beneran (kind !== 'video') TETAP lewat sini soalnya itu bukan "fallback",
-  // itu emang backgroundnya sendiri.
-  return src.kind === 'video' ? '' : ahBgSourceRef(src);
+  // Poster (frame pertama video, di-capture otomatis) dipake sbg lapisan ::before di
+  // BELAKANG <video> asli -- ini yang keliatan SELAMA video-nya sendiri belum kebaca/main
+  // (termasuk pas autoplay keblokir sepenuhnya, misal di sebagian WebView Android), jadi
+  // yang muncul foto frame pertama yang proper, BUKAN kotak abu-abu/placeholder bawaan
+  // WebView. Foto/GIF beneran (kind !== 'video') TETAP lewat sini soalnya itu bukan
+  // "fallback", itu emang backgroundnya sendiri.
+  return src.kind === 'video' ? ahBgPosterRef(src) : ahBgSourceRef(src);
 }
 
 // Bangun script yang bikin/pake-ulang <video> background secara DINAMIS lewat JS (bukan nulis
@@ -4289,24 +4291,8 @@ function ahBuildBgMediaHtml(cfg){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
       v.muted = !window.__ahAudioOn; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
-      // Set literal HTML attributes juga (bukan cuma properti JS) -- sebagian WebView Android
-      // (termasuk yang dipake AnkiDroid) cuma ngizinin autoplay tanpa gesture kalau atribut
-      // muted/playsinline/autoplay beneran ADA di elemen, gak cukup cuma di-set lewat JS property.
-      v.setAttribute('muted', '');
-      v.setAttribute('playsinline', '');
-      v.setAttribute('webkit-playsinline', '');
-      v.setAttribute('autoplay', '');
-      v.setAttribute('loop', '');
-      v.disablePictureInPicture = true;
-      v.controls = false;
       host.appendChild(v);
     }
-    // Poster (frame pertama, udah di-capture otomatis pas upload) dipasang ke elemen <video>
-    // itu sendiri -- ini yang bikin AnkiDroid nampilin FOTO frame pertama sebagai placeholder
-    // selama nunggu videonya kebaca/autoplay, BUKAN kotak abu-abu polos + ikon play besar
-    // (placeholder bawaan WebView pas <video> gak punya poster & belum mulai muter).
-    if(w.poster){ v.poster = w.poster; v.setAttribute('poster', w.poster); }
-    else { v.removeAttribute('poster'); }
     window.ahCheckVideoAudio(v);
     // Baru / sumbernya BENERAN beda -> mulai dari posisi TERAKHIR yang kesimpen (kalau ada),
     // biar kalau ini cuma restart gara2 Anki reload halaman (pindah kartu), videonya kerasa
