@@ -4146,11 +4146,38 @@ function ahBuildBgMediaHtml(cfg){
     var anyPlaying = false;
     for(var i=0;i<vids.length;i++){
       var v = vids[i];
-      if(v.classList.contains('ah-loaded') && !v.paused && window.getComputedStyle(v).display !== 'none'){
+      if(v.classList.contains('ah-loaded') && window.getComputedStyle(v).display !== 'none'){
         anyPlaying = true; break;
       }
     }
     photo.style.display = anyPlaying ? 'none' : '';
+  };
+  // Cara PALING bisa diandelin buat mastiin video BENERAN nge-render frame yang jalan:
+  // pantengin currentTime-nya beneran maju terus (bukan cuma sekali lompat, itu bisa keliru
+  // sama lompatan "resume ke posisi terakhir"). Sengaja GAK pake event 'playing'/property
+  // .paused sebagai penentu utama -- kebukti gak reliable di sebagian WebView Android (bisa
+  // gak fire / gak keupdate sama sekali walau videonya udah beneran jalan, ATAU sebaliknya).
+  window.ahWatchVideoProgress = function(v){
+    if(v.dataset.ahWatching === '1') return;
+    v.dataset.ahWatching = '1';
+    var lastT = null, confirmCount = 0;
+    var iv = setInterval(function(){
+      if(v.classList.contains('ah-loaded')){ clearInterval(iv); v.dataset.ahWatching = '0'; return; }
+      var t = v.currentTime;
+      if(lastT !== null){
+        var delta = t - lastT;
+        if(delta > 0.05 && delta < 1.5) confirmCount++; else confirmCount = 0;
+        if(confirmCount >= 2){
+          clearInterval(iv);
+          v.dataset.ahWatching = '0';
+          v.classList.add('ah-loaded');
+          window.ahSyncPhotoLayer();
+          return;
+        }
+      }
+      lastT = t;
+    }, 300);
+    setTimeout(function(){ clearInterval(iv); v.dataset.ahWatching = '0'; }, 10000);
   };
 
   // --- (0) Preferensi ON/OFF suara background, disimpen di localStorage biar keinget
@@ -4305,7 +4332,7 @@ function ahBuildBgMediaHtml(cfg){
       // Tapi kalau ternyata videonya somehow ke-pause (misal autoplay browser sempet nge-block
       // pas pertama kali dicoba), coba play() lagi -- gak masalah dipanggil berkali-kali.
       if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
-      else { v.classList.add('ah-loaded'); }
+      window.ahWatchVideoProgress(v);
       if(!window.__ahVideoHasAudio) window.ahCheckVideoAudio(v);
       window.ahSyncPhotoLayer();
       return;
@@ -4327,15 +4354,15 @@ function ahBuildBgMediaHtml(cfg){
     source.src = w.ref;
     v.appendChild(source);
     v.classList.remove('ah-loaded');
+    v.dataset.ahWatching = '0';
     // PENTING: video baru "kelihatan" (fade-in opacity) & foto/poster fallback baru
-    // disembunyiin begitu event 'playing' fire -- itu satu2nya event yang beneran cuma
-    // fire kalau playback-nya SUKSES jalan. 'loadeddata'/'canplay' sengaja GAK dipake buat
-    // reveal soalnya keduanya bisa fire walau play()-nya sendiri diblok browser/WebView --
-    // kalau ikutan reveal di situ, hasilnya video kebuka (opacity penuh) tapi videonya
-    // BEKU di frame pertama & foto fallback-nya udah disembunyiin -> layar keliatan kosong.
-    var onReady = function(){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); };
-    v.addEventListener('playing', onReady);
-    v.addEventListener('pause', function(){ window.ahSyncPhotoLayer(); });
+    // disembunyiin begitu kedetek currentTime-nya BENERAN maju terus (lihat
+    // ahWatchVideoProgress) -- bukan cuma pas event 'loadeddata'/'canplay'/'playing' fire,
+    // soalnya event2 itu kebukti gak reliable di sebagian WebView Android (bisa fire walau
+    // playback-nya sendiri diblok, atau sebaliknya gak fire walau videonya beneran jalan).
+    // Kalau reveal-nya salah timing, hasilnya video kebuka (opacity penuh) tapi frame-nya
+    // beku & foto fallback udah kesembunyiin -> layar keliatan kosong/placeholder WebView.
+    window.ahWatchVideoProgress(v);
     (function(vEl, ref){
       vEl.addEventListener('loadedmetadata', function(){
         var resumeAt = ahLoadVideoTime(ref);
@@ -4360,11 +4387,6 @@ function ahBuildBgMediaHtml(cfg){
     });
     v.load();
     var p = v.play(); if(p && p.catch) p.catch(function(){});
-    if(v.readyState >= 2 && !v.paused){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); }
-    // Jaring pengaman kalau event 'playing' gagal fire padahal videonya beneran udah muter
-    // (kejadian di sebagian WebView) -- cuma reveal kalau BENERAN gak lagi paused, biar gak
-    // salah nyembunyiin foto fallback pas videonya masih beku/keblokir.
-    setTimeout(function(){ if(!v.paused){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); } }, 1800);
   });
 
   // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
@@ -4379,7 +4401,10 @@ function ahBuildBgMediaHtml(cfg){
     var ahRetryPlay = function(){
       var vids = document.querySelectorAll('.ankihoney-bg-video');
       for(var k=0;k<vids.length;k++){
-        if(vids[k].paused){ var pr = vids[k].play(); if(pr && pr.catch) pr.catch(function(){}); }
+        if(!vids[k].classList.contains('ah-loaded')){
+          var pr = vids[k].play(); if(pr && pr.catch) pr.catch(function(){});
+          window.ahWatchVideoProgress(vids[k]);
+        }
       }
     };
     ['pointerdown','touchstart','keydown'].forEach(function(evt){
@@ -4395,7 +4420,10 @@ function ahBuildBgMediaHtml(cfg){
     setTimeout(function(){
       var vids = document.querySelectorAll('.ankihoney-bg-video');
       for(var k2=0;k2<vids.length;k2++){
-        if(vids[k2].paused){ var pr2 = vids[k2].play(); if(pr2 && pr2.catch) pr2.catch(function(){}); }
+        if(!vids[k2].classList.contains('ah-loaded')){
+          var pr2 = vids[k2].play(); if(pr2 && pr2.catch) pr2.catch(function(){});
+          window.ahWatchVideoProgress(vids[k2]);
+        }
       }
     }, 150);
   }
