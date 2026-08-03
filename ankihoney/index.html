@@ -2446,7 +2446,27 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   state.searchQuery = '';
   state.doneBatches = new Set();
   state.pasteSnapshot = null;
-  state.cardBg = state.cardBg || { syncPlatforms:true, desktop: ahNewBgSource(), mobile: ahNewBgSource(), pos:{ desktop:{x:50,y:50}, mobile:{x:50,y:50} }, fit:'cover', previewDevice:'desktop' };
+  // FIX (bug: background/video deck LAMA nyangkut ke deck BARU): sebelumnya ini pakai
+  // 'state.cardBg || {...}', padahal state.cardBg SELALU udah keisi dari awal (didefinisiin
+  // pas deklarasi `state` literal), jadi kondisi itu gak pernah falsy & baris ini efeknya nol --
+  // reset gak pernah beneran kejadian. Akibatnya tiap import deck baru di tab yang sama (tanpa
+  // refresh), setting background & referensi video/foto dari deck SEBELUMNYA (termasuk
+  // front/back yang udah aktif) masih nempel ke deck baru. Sekarang SELALU dibikin objek baru.
+  state.cardBg = {
+    syncPlatforms: true,
+    desktop: ahNewBgSource(),
+    mobile: ahNewBgSource(),
+    pos: { desktop:{x:50,y:50}, mobile:{x:50,y:50} },
+    previewDevice: 'desktop',
+    fit: 'cover',
+    opacity: 90,
+    overlay: 25,
+    blur: 0,
+    front: false,
+    back: false,
+    previewSide: 'front',
+    textFx: { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' }
+  };
   // (state.isMergedDeck udah di-set true sama caller-nya buat kasus ini, jangan ditimpa balik jadi false di sini)
   state.extraDeckSources = [];
   state.primaryMediaMap = null;
@@ -3022,76 +3042,6 @@ async function handleBgImageFile(file){
   }
 }
 
-// Baca box MP4 (moov > trak > mdia > minf > stbl > stsd) buat nemuin fourcc codec VIDEO yang
-// SEBENARNYA dipake di dalem file .mp4 -- soalnya ekstensi ".mp4" & MIME type "video/mp4" itu
-// CUMA soal container, bukan jaminan isinya H.264. Beberapa converter/downloader ngehasilin
-// file .mp4 yang isinya VP9 (biasanya buat .webm) atau HEVC -- itu suka gagal total dibuka di
-// WebView Anki (Anki Desktop/AnkiDroid/AnkiMobile), walau muter mulus di browser modern kayak
-// Chrome yang emang support decode VP9/HEVC. Makanya perlu dicek beneran isinya, bukan cuma
-// ekstensi/MIME doang. Cukup baca box-nya (gak perlu decode video-nya), jadi cepet & ringan.
-function ahDetectMp4VideoCodec(bytes){
-  try{
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const readStr = (off, len) => { let s=''; for(let i=0;i<len;i++) s += String.fromCharCode(bytes[off+i]); return s; };
-    // Cari box 'stsd' dengan brute-force scan (lebih simpel & tahan banting drpd walk rekursif
-    // penuh lewat semua box moov/trak/mdia/minf/stbl -- video umumnya cuma punya 1 track video).
-    function findBox(name, start, end){
-      let off = start;
-      while(off + 8 <= end){
-        let size = dv.getUint32(off);
-        const type = readStr(off+4, 4);
-        if(size === 1){ // 64-bit extended size, jarang kepake buat box sekecil ini tapi jaga2
-          if(off + 16 > end) break;
-          const hi = dv.getUint32(off+8), lo = dv.getUint32(off+12);
-          size = hi * 4294967296 + lo;
-        }
-        if(size < 8) break;
-        if(type === name) return { start: off, size };
-        off += size;
-      }
-      return null;
-    }
-    const moov = findBox('moov', 0, bytes.length);
-    if(!moov) return null;
-    // stsd biasanya nested di dalem trak->mdia->minf->stbl, tapi brute-force scan seluruh
-    // range moov juga cukup jalan (box2 lain gak akan kebetulan punya fourcc 'stsd' di posisi
-    // yang salah karena kita match exact 4-byte type di offset+4).
-    let off = moov.start + 8, end = moov.start + moov.size;
-    while(off < end){
-      const stsd = findBoxDeep(off, end);
-      if(stsd) return stsd;
-      break;
-    }
-    function findBoxDeep(start, limit){
-      let p = start;
-      while(p + 8 <= limit){
-        let size = dv.getUint32(p);
-        const type = readStr(p+4, 4);
-        if(size === 1){
-          const hi = dv.getUint32(p+8), lo = dv.getUint32(p+12);
-          size = hi * 4294967296 + lo;
-        }
-        if(size < 8 || p + size > limit) break;
-        if(type === 'stsd' && p + 16 <= limit){
-          // stsd: 4 byte version/flags, 4 byte entry count, lalu entry pertama: 4 byte size + 4 byte fourcc codec
-          const entryFourcc = readStr(p + 8 + 8 + 4, 4);
-          return entryFourcc;
-        }
-        // Container box yang wajar ada di dalemnya trak/video -- turun rekursif ke situ
-        if(['trak','mdia','minf','stbl','edts'].includes(type)){
-          const found = findBoxDeep(p+8, p+size);
-          if(found) return found;
-        }
-        p += size;
-      }
-      return null;
-    }
-    return findBoxDeep(moov.start+8, moov.start+moov.size);
-  }catch(e){ return null; }
-}
-
-const AH_MP4_SAFE_VIDEO_FOURCC = ['avc1','avc3']; // H.264 -- yang paling aman & luas didukung di semua Anki client
-
 async function handleBgVideoFile(file){
   const src = ahActiveBgSource(state.cardBg);
   const mime = (file.type||'').toLowerCase();
@@ -3107,13 +3057,6 @@ async function handleBgVideoFile(file){
       toast(`Videonya gede juga ya (${(bytes.length/1024/1024).toFixed(1)}MB) — file .apkg hasil akhir bisa jadi berat. Kalau bisa, kompres/potong dulu videonya~`, '⚠️');
     }
     const ext = mime.includes('webm') ? 'webm' : 'mp4';
-    if(ext === 'mp4'){
-      const fourcc = ahDetectMp4VideoCodec(bytes);
-      if(fourcc && !AH_MP4_SAFE_VIDEO_FOURCC.includes(fourcc)){
-        const codecName = { vp09:'VP9', vp08:'VP8', hev1:'HEVC/H.265', hvc1:'HEVC/H.265', av01:'AV1' }[fourcc] || fourcc;
-        toast(`⚠️ Video ini .mp4 tapi isinya codec ${codecName}, BUKAN H.264 — ini sering GAGAL dibuka & jadi LAYAR HITAM POLOS di Anki (Desktop/AnkiDroid/AnkiMobile), walau kliatan normal di preview browser ini. Convert ulang ke H.264 dulu (mis. pake HandBrake / ffmpeg: "-c:v libx264") sebelum dipakai ya~`, '🚨');
-      }
-    }
     src.kind = 'video';
     src.mode = 'upload';
     src.bytes = bytes;
@@ -4265,36 +4208,12 @@ function ahBuildBgMediaHtml(cfg){
     v.addEventListener('error', function(){
       var err = (v.error && v.error.code) || (source.error && source.error.code);
       console.warn('[AnkiHoney] Video background GAGAL dibuka di WebView ini (ref=' + w.ref + ', error code=' + err + '). ' +
-        'Kalau ini kejadian di AnkiDroid/AnkiMobile tapi normal di Anki Desktop, kemungkinan besar formatnya (mis. .mov/HEVC dari iPhone atau VP9 di-container .mp4) gak didukung decoder-nya -- coba convert ulang ke MP4 beneran H.264 (+ AAC/tanpa audio).');
-      // FIX (bug layar jadi kotak HITAM SOLID kalau videonya gagal dibuka): sebelumnya jaring
-      // pengaman di bawah tetep maksa nambahin class 'ah-loaded' walau videonya ERROR/gagal
-      // decode sama sekali -- <video> yang gagal decode tapi opacity-nya dipaksa nongol itu
-      // defaultnya keliatan kotak HITAM POLOS (bukan transparan), nutupin seluruh kartu.
-      // Sekarang: tandain gagal (v.dataset.ahFailed), video-nya DIBIARIN opacity 0 (gak
-      // pernah di-reveal), dan kalau ada poster/frame pertama yang kesimpen, pasang itu ke
-      // lapisan foto di belakang sbg fallback -- drpd user liat hitam polos doang.
-      v.dataset.ahFailed = '1';
-      v.classList.remove('ah-loaded');
-      if(w.poster){
-        var photoFallback = document.getElementById('ankihoney-bg-photo');
-        if(photoFallback && !photoFallback.style.backgroundImage){
-          photoFallback.style.backgroundImage = "url('" + w.poster + "')";
-          photoFallback.style.backgroundSize = 'cover';
-          photoFallback.style.backgroundPosition = '50% 50%';
-        }
-      }
+        'Kalau ini kejadian di AnkiDroid/AnkiMobile tapi normal di Anki Desktop, kemungkinan besar formatnya (mis. .mov/HEVC dari iPhone) gak didukung decoder Android-nya -- coba convert ulang ke MP4 (H.264 + AAC/tanpa audio).');
     });
     v.load();
     var p = v.play(); if(p && p.catch) p.catch(function(){});
     if(v.readyState >= 2) v.classList.add('ah-loaded');
-    // Jaring pengaman kalau semua event di atas gagal fire -- TAPI cuma nambahin 'ah-loaded'
-    // kalau videonya emang KEBUKTI punya frame beneran (videoWidth>0) DAN gak lagi ditandain
-    // gagal (ahFailed). Sebelumnya ini nambahin 'ah-loaded' TANPA SYARAT stelah 1.8 detik --
-    // itu akar masalah kotak hitamnya: video yang gagal decode pun ikut dipaksa nongol.
-    setTimeout(function(){
-      if(v.dataset.ahFailed) return;
-      if(v.videoWidth > 0 || v.readyState >= 2) v.classList.add('ah-loaded');
-    }, 1800);
+    setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
   });
 
   // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
@@ -5445,6 +5364,16 @@ function ahApplySessionSnapshot(snap){
         Object.assign(state.cardBg[dev], { kind: src.kind, mode: 'url', imageUrl: src.imageUrl });
       }
     });
+    // FIX (bug: background jadi HITAM POLOS abis restore sesi): src mode 'upload' (video/foto
+    // yang diupload manual) SENGAJA gak dipulihin isi filenya di atas (bytes video kegedean buat
+    // localStorage) -- tapi front/back tetep ketimpa `true` dari snapshot. Begitu front/back aktif
+    // TANPA sumber background yang valid, ahBgLayerColor() jatuh ke fallback '#12121a' (item
+    // solid) & gak ada <video>/foto yang ke-render sama sekali. Cegah di sini: kalau abis restore
+    // ternyata gak ada satupun sumber background yang valid, matiin front/back-nya juga.
+    if(!ahHasAnyBg(state.cardBg)){
+      state.cardBg.front = false;
+      state.cardBg.back = false;
+    }
   }
 
   // 5. Render ulang semua UI yang bergantung ke state di atas
@@ -5462,9 +5391,11 @@ function ahRestoreSession(){
   if(!snap){ toast('Gak ada sesi tersimpan buat deck ini~', '⚠️'); return; }
   const restoredNotes = ahApplySessionSnapshot(snap);
   const savedAgo = ahFormatTimeAgo(snap.savedAt);
-  const bgNote = (snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'))
-    ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.'
-    : '';
+  const hadUploadBg = !!(snap.cardBgSettings && (snap.cardBgSettings.desktop?.mode==='upload' || snap.cardBgSettings.mobile?.mode==='upload'));
+  const bgStillOff = hadUploadBg && !ahHasAnyBg(state.cardBg);
+  const bgNote = bgStillOff
+    ? ' Background foto/video (mode upload) otomatis DIMATIIN sementara karena filenya gak ikut kepulihin (kegedean buat disimpen) -- upload ulang & aktifin lagi manual ya biar gak muncul hitam polos.'
+    : (hadUploadBg ? ' Background foto/video (mode upload) perlu diupload ulang manual ya, cuma link URL yang otomatis kepulihin.' : '');
   toast(`Sesi dipulihkan (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.${bgNote}`, '↺');
 }
 // Download snapshot sesi jadi file .json -- buat dipindahin manual antar device (misal
