@@ -4117,6 +4117,7 @@ function ahBuildBgMediaHtml(cfg){
       ahSyncViewport();
       clearTimeout(t);
       t = setTimeout(ahSyncViewport, 260);
+      if(window.ahSyncPhotoLayer) window.ahSyncPhotoLayer();
     }
     window.addEventListener('resize', ahOnResize);
     window.addEventListener('orientationchange', ahOnResize);
@@ -4130,6 +4131,27 @@ function ahBuildBgMediaHtml(cfg){
     host.id = 'ankihoney-bg-video-host';
     document.body.appendChild(host);
   }
+
+  // Lapisan foto/poster (#ankihoney-bg-photo) itu SATU elemen yang dipakai bareng buat 2 hal:
+  // (a) background foto/GIF beneran (kalau sumbernya bukan video) -- ini HARUS selalu keliatan.
+  // (b) fallback frame-pertama video, SELAMA video-nya sendiri belum beneran muter.
+  // Begitu video-nya kebukti BENERAN muter (bukan cuma "loaded"/"canplay" doang, soalnya itu bisa
+  // fire walau play()-nya sendiri diblok), foto ini WAJIB disembunyiin -- kalau kagak, foto (opaque)
+  // bakal keliatan "nembus"/dobel-gambar di belakang video yang opacity-nya < 100% (bukan bug
+  // transparansi video, tapi 2 lapisan gambar numpuk & keduanya keliatan bareng).
+  window.ahSyncPhotoLayer = function(){
+    var photo = document.getElementById('ankihoney-bg-photo');
+    if(!photo) return;
+    var vids = document.querySelectorAll('.ankihoney-bg-video');
+    var anyPlaying = false;
+    for(var i=0;i<vids.length;i++){
+      var v = vids[i];
+      if(v.classList.contains('ah-loaded') && !v.paused && window.getComputedStyle(v).display !== 'none'){
+        anyPlaying = true; break;
+      }
+    }
+    photo.style.display = anyPlaying ? 'none' : '';
+  };
 
   // --- (0) Preferensi ON/OFF suara background, disimpen di localStorage biar keinget
   // walau pindah kartu / tutup-buka Anki lagi. Default OFF (video tetep mute) biar gak
@@ -4282,9 +4304,10 @@ function ahBuildBgMediaHtml(cfg){
       // Sumbernya SAMA kayak sebelumnya -> jangan disentuh, biar lanjut muter dari posisi sekarang.
       // Tapi kalau ternyata videonya somehow ke-pause (misal autoplay browser sempet nge-block
       // pas pertama kali dicoba), coba play() lagi -- gak masalah dipanggil berkali-kali.
-      v.classList.add('ah-loaded');
       if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
+      else { v.classList.add('ah-loaded'); }
       if(!window.__ahVideoHasAudio) window.ahCheckVideoAudio(v);
+      window.ahSyncPhotoLayer();
       return;
     }
     if(!v){
@@ -4304,10 +4327,15 @@ function ahBuildBgMediaHtml(cfg){
     source.src = w.ref;
     v.appendChild(source);
     v.classList.remove('ah-loaded');
-    var onReady = function(){ v.classList.add('ah-loaded'); };
-    v.addEventListener('loadeddata', onReady);
-    v.addEventListener('canplay', onReady);
+    // PENTING: video baru "kelihatan" (fade-in opacity) & foto/poster fallback baru
+    // disembunyiin begitu event 'playing' fire -- itu satu2nya event yang beneran cuma
+    // fire kalau playback-nya SUKSES jalan. 'loadeddata'/'canplay' sengaja GAK dipake buat
+    // reveal soalnya keduanya bisa fire walau play()-nya sendiri diblok browser/WebView --
+    // kalau ikutan reveal di situ, hasilnya video kebuka (opacity penuh) tapi videonya
+    // BEKU di frame pertama & foto fallback-nya udah disembunyiin -> layar keliatan kosong.
+    var onReady = function(){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); };
     v.addEventListener('playing', onReady);
+    v.addEventListener('pause', function(){ window.ahSyncPhotoLayer(); });
     (function(vEl, ref){
       vEl.addEventListener('loadedmetadata', function(){
         var resumeAt = ahLoadVideoTime(ref);
@@ -4332,8 +4360,11 @@ function ahBuildBgMediaHtml(cfg){
     });
     v.load();
     var p = v.play(); if(p && p.catch) p.catch(function(){});
-    if(v.readyState >= 2) v.classList.add('ah-loaded');
-    setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
+    if(v.readyState >= 2 && !v.paused){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); }
+    // Jaring pengaman kalau event 'playing' gagal fire padahal videonya beneran udah muter
+    // (kejadian di sebagian WebView) -- cuma reveal kalau BENERAN gak lagi paused, biar gak
+    // salah nyembunyiin foto fallback pas videonya masih beku/keblokir.
+    setTimeout(function(){ if(!v.paused){ v.classList.add('ah-loaded'); window.ahSyncPhotoLayer(); } }, 1800);
   });
 
   // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
