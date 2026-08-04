@@ -594,7 +594,7 @@ body.dark input[type=range]::-moz-range-thumb {
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  background: #000;
+  background: transparent;
   transition: opacity 0.35s ease, filter 0.18s;
   pointer-events: none;
 }
@@ -1231,6 +1231,13 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <b>Penting jika note type ini sudah dipakai di deck lain</b> yang sudah ada di Anki kamu: Anki hanya memperbarui tampilan note type saat import jika ada perubahan baru yang terdeteksi. Jika setelah import background <b>tetap tidak muncul</b>, hapus dulu deck versi lama dari Anki sebelum import ulang file yang baru.
     </div>
 
+    <div style="background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); padding:12px 14px; margin-bottom:14px; font-size:.78rem; font-weight:500; color:var(--warning-text); line-height:1.5;">
+      <b>Video background: Desktop &amp; AnkiDroid butuh format BEDA, gak ada yang overlap:</b><br>
+      • <b>Anki Desktop (Windows/Mac/Linux)</b> CUMA bisa muterin video format <b>.webm</b> sebagai background. Kalau dikasih <b>.mp4</b>, background bakal <b>hitam polos</b> (WebView bawaan Anki Desktop gak bisa muter .mp4).<br>
+      • <b>AnkiDroid (HP Android)</b> CUMA bisa muterin video format <b>.mp4</b> sebagai background. Kalau dikasih <b>.webm</b>, backgroundnya gak bakal jalan di AnkiDroid.<br><br>
+      Jadi gak ada 1 file video yang bisa dipakai bareng buat Desktop &amp; AnkiDroid sekaligus. Kalau kamu belajar di <b>Desktop dan HP sekaligus</b>: upload video <b>.webm</b> di tab <b>🖥️ Desktop</b> dan video <b>.mp4</b> di tab <b>📱 Mobile</b> di bawah (AnkiHoney bakal otomatis matiin "background sama" &amp; naruh video ke tab yang bener pas kamu upload). Kalau cuma mau isi salah satu platform aja, upload video sesuai formatnya masing-masing.
+    </div>
+
     <div class="btn-row" style="margin-bottom:10px;">
       <button type="button" class="btn ghost applied" id="bgModeUpload" style="flex:1;">Upload File</button>
       <button type="button" class="btn ghost" id="bgModeUrl" style="flex:1;">Gunakan Link</button>
@@ -1246,19 +1253,19 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 
     <div class="dropzone" id="bgDropzone" style="padding:20px 16px;">
       <span class="dz-emoji">🖼️</span>
-      Pilih atau seret foto, GIF, atau video ke sini
-      <small>Foto/GIF otomatis diproses; video MP4/WebM (disarankan &lt;8MB, tanpa audio) — file .apkg tetap ringan</small>
+      Pilih atau seret foto, GIF, WebP animasi, atau video ke sini
+      <small>Foto/GIF/WebP otomatis diproses (animasinya tetap aman); video (disarankan &lt;8MB, tanpa audio) — file .apkg tetap ringan. <b>Video .webm</b> = buat Anki Desktop, <b>video .mp4</b> = buat AnkiDroid (gak bisa disamain, upload dua-duanya kalau perlu keduanya).</small>
       <input type="file" id="bgFileInput" accept="image/*,video/mp4,video/webm" />
     </div>
     <small style="display:block; margin:6px 2px 4px; color:var(--ink-soft); font-weight:400; font-size:.72rem;">
-      File tersimpan di dalam .apkg sehingga tetap muncul secara offline. Khusus video: frame pertamanya otomatis dijadikan foto fallback yang muncul duluan, lalu videonya fade-in begitu siap dimainkan — jadi gak ada jeda "kosong" sebelum videonya kebaca. Jika note type ini sudah dipakai di deck lain yang lebih lama, baca peringatan di atas terlebih dahulu.
+      File tersimpan di dalam .apkg sehingga tetap muncul secara offline. Khusus video: frame pertamanya otomatis dijadikan foto fallback yang muncul duluan, lalu videonya fade-in begitu siap dimainkan — jadi gak ada jeda "kosong" sebelum videonya kebaca (tapi kalau formatnya gak sesuai platform tempat kamu belajar -- .mp4 di Desktop atau .webm di AnkiDroid -- background bakal keliatan hitam polos / gak jalan, lihat catatan platform di atas). Jika note type ini sudah dipakai di deck lain yang lebih lama, baca peringatan di atas terlebih dahulu.
     </small>
 
     <div class="hidden" id="bgUrlWrap" style="margin-bottom:4px;">
-      <label class="field-label">Link Foto / GIF / Video (harus dapat diakses publik dari internet)</label>
-      <input type="text" id="bgUrlInput" placeholder="https://contoh.com/background.jpg / .gif / .mp4" />
+      <label class="field-label">Link Foto / GIF / WebP / Video (harus dapat diakses publik dari internet)</label>
+      <input type="text" id="bgUrlInput" placeholder="https://contoh.com/background.jpg / .gif / .webp / .mp4 / .webm" />
       <small style="display:block; margin-top:6px; color:var(--ink-soft); font-weight:400; font-size:.72rem;">
-        Harus tetap online agar background tidak hilang saat dipelajari. Tidak tersimpan ke dalam .apkg (butuh koneksi internet), tapi paling aman karena tidak menyentuh media/note type sama sekali. Khusus video dari link: fallback foto otomatis <b>tidak bisa</b> dibuat (batasan browser), jadi sebelum video main cuma overlay gelap yang keliatan.
+        Harus tetap online agar background tidak hilang saat dipelajari. Tidak tersimpan ke dalam .apkg (butuh koneksi internet), tapi paling aman karena tidak menyentuh media/note type sama sekali. Khusus video dari link: fallback foto otomatis <b>tidak bisa</b> dibuat (batasan browser), jadi sebelum video main cuma overlay gelap yang keliatan. Ingat juga soal format per platform di atas: link <b>.mp4</b> gak bakal jalan di Anki Desktop, link <b>.webm</b> gak bakal jalan di AnkiDroid — mode link ini juga gak otomatis dipisah per platform kayak mode upload, jadi pilih salah satu format sesuai platform utama kamu.
       </small>
     </div>
 
@@ -1266,7 +1273,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div class="bg-preview-wrap">
         <div class="bg-preview-card empty" id="bgPreviewCard">
           <div class="bg-preview-img" id="bgPreviewImg"></div>
-          <video class="bg-preview-video hidden" id="bgPreviewVideo" muted loop autoplay playsinline></video>
+          <video class="bg-preview-video hidden" id="bgPreviewVideo" muted loop autoplay playsinline webkit-playsinline></video>
           <div class="bg-preview-overlay" id="bgPreviewOverlay"></div>
           <span class="bg-preview-device-badge" id="bgPreviewDeviceBadge">Desktop</span>
           <span class="bg-preview-device-badge hidden" id="bgPreviewKindBadge" style="left:10px; right:auto;">🎬 Preview = frame pertama video</span>
@@ -2866,8 +2873,10 @@ function updateBgKindBadge(src){
   if(!el) return;
   if(!ahHasBgSource(src)){ el.classList.add('hidden'); el.textContent = ''; return; }
   el.classList.remove('hidden');
-  const isGif = /\.gif(\?|#|$)/i.test(src.mode==='url' ? (src.imageUrl||'').toLowerCase() : (src.mediaFilename||'').toLowerCase());
-  el.textContent = src.kind === 'video' ? '🎬 Video' : (isGif ? '🎞️ GIF' : '🖼️ Foto');
+  const refLower = src.mode==='url' ? (src.imageUrl||'').toLowerCase() : (src.mediaFilename||'').toLowerCase();
+  const isGif = /\.gif(\?|#|$)/i.test(refLower);
+  const isWebp = /\.webp(\?|#|$)/i.test(refLower);
+  el.textContent = src.kind === 'video' ? '🎬 Video' : (isGif ? '🎞️ GIF' : (isWebp ? '🧩 WebP (animasi)' : '🖼️ Foto'));
 }
 
 // Sinkronin SEMUA kontrol form (tombol mode, dropzone, link, badge tipe, dsb) biar sesuai sama
@@ -2987,16 +2996,24 @@ function ahCaptureVideoPoster(file){
 
 async function handleBgImageFile(file){
   const src = ahActiveBgSource(state.cardBg);
-  const isGif = (file.type||'').toLowerCase() === 'image/gif';
-  toast(isGif ? 'Lagi proses GIF-nya...' : 'Lagi proses fotonya...', isGif ? '🎞️' : '🖼️');
+  const mimeLower = (file.type||'').toLowerCase();
+  const isGif = mimeLower === 'image/gif';
+  // WebP (animasi ATAU statis) WAJIB dipertahankan apa adanya juga, sama kayak GIF di bawah --
+  // WebP animasi itu gambar yang dianimasiin lewat CSS background-image biasa (BUKAN video),
+  // jadi ini fitur terpisah dari urusan kompatibilitas video .webm/.mp4 per platform (liat
+  // catatan di kotak peringatan atas soal itu). Kalau file WebP ini di-redraw ke <canvas> kayak
+  // foto JPEG biasa, animasinya bakal ke-"pipihin" jadi cuma 1 frame statis doang.
+  const isWebp = mimeLower === 'image/webp';
+  const isPassthrough = isGif || isWebp;
+  const label = isGif ? 'GIF' : (isWebp ? 'WebP' : 'foto');
+  const emoji = isGif ? '🎞️' : (isWebp ? '🧩' : '🖼️');
+  toast(isPassthrough ? `Lagi proses ${label}-nya...` : 'Lagi proses fotonya...', emoji);
   try{
     let dataUrl, bytes, ext;
-    if(isGif){
-      // GIF dipertahankan APA ADANYA (gak lewat kompresi kanvas) -- kalau di-redraw ke <canvas>
-      // kayak foto biasa, animasinya bakal ke-"pipihin" jadi cuma 1 frame statis doang.
+    if(isPassthrough){
       bytes = new Uint8Array(await file.arrayBuffer());
-      dataUrl = await ahBytesToDataUrl(bytes, 'image/gif');
-      ext = 'gif';
+      dataUrl = await ahBytesToDataUrl(bytes, mimeLower);
+      ext = isGif ? 'gif' : 'webp';
     } else {
       const res = await prepareBackgroundImage(file);
       dataUrl = res.dataUrl;
@@ -3014,8 +3031,8 @@ async function handleBgImageFile(file){
     document.getElementById('bgControls').classList.remove('hidden');
     updateBgKindBadge(src);
     updateBgPreview(); updateBgStatus();
-    toast(isGif ? 'GIF siap! Atur tampilannya, terus klik Terapkan~' : 'Foto siap! Atur tampilannya, terus klik Terapkan~', isGif ? '🎞️' : '📸');
-    say((isGif ? 'GIF' : 'Foto') + ' background udah siap dipasang! ✨');
+    toast(isPassthrough ? `${label} siap! Atur tampilannya, terus klik Terapkan~` : 'Foto siap! Atur tampilannya, terus klik Terapkan~', emoji);
+    say(`${isPassthrough ? label : 'Foto'} background udah siap dipasang! ✨`);
   }catch(err){
     console.error(err);
     toast('Gagal proses file: '+(err.message||err), '😿');
@@ -3023,12 +3040,23 @@ async function handleBgImageFile(file){
 }
 
 async function handleBgVideoFile(file){
-  const src = ahActiveBgSource(state.cardBg);
+  const cfg = state.cardBg;
   const mime = (file.type||'').toLowerCase();
   if(!/^video\/(mp4|webm)$/.test(mime)){
-    toast('Video harus format MP4 atau WebM ya~ (format lain belum pasti didukung Anki)', '😿');
+    toast('Video harus format MP4 atau WebM ya~', '😿');
     return;
   }
+  const ext = mime.includes('webm') ? 'webm' : 'mp4';
+  // PENTING (koreksi): Anki Desktop & AnkiDroid itu SALING KEBALIKAN & GAK ADA yang overlap --
+  // Anki Desktop (WebView bawaannya) CUMA bisa muterin .webm, AnkiDroid CUMA bisa muterin .mp4.
+  // Gak ada satu file video pun yang bisa dipakai bareng buat DUA-DUANYA sekaligus, jadi "video
+  // yang sama buat semua platform" itu MUSTAHIL -- makanya video otomatis diarahkan ke slot
+  // platform yang sesuai formatnya, "background sama" dipaksa nonaktif, dan user diminta upload
+  // versi satunya (format lain) di tab platform yang satunya lagi.
+  const requiredDevice = ext === 'webm' ? 'desktop' : 'mobile';
+  const requiredDeviceLabel = requiredDevice === 'desktop' ? '🖥️ Desktop' : '📱 Mobile (AnkiDroid)';
+  const otherDeviceLabel = requiredDevice === 'desktop' ? '📱 Mobile (AnkiDroid, butuh .mp4)' : '🖥️ Desktop (butuh .webm)';
+
   toast('Lagi proses videonya...', '🎬');
   try{
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -3036,7 +3064,14 @@ async function handleBgVideoFile(file){
     if(bytes.length > MAX_VIDEO_MB * 1024 * 1024){
       toast(`Videonya gede juga ya (${(bytes.length/1024/1024).toFixed(1)}MB) — file .apkg hasil akhir bisa jadi berat. Kalau bisa, kompres/potong dulu videonya~`, '⚠️');
     }
-    const ext = mime.includes('webm') ? 'webm' : 'mp4';
+
+    const wasSynced = cfg.syncPlatforms;
+    // Video HARUS masuk ke slot platform yang bener (bukan ke slot "aktif saat ini" / hasil sync)
+    // -- kalau sebelumnya "background sama" nyala, itu dimatiin di sini karena emang gak berlaku
+    // buat video.
+    if(wasSynced) cfg.syncPlatforms = false;
+    const src = cfg[requiredDevice];
+
     src.kind = 'video';
     src.mode = 'upload';
     src.bytes = bytes;
@@ -3054,11 +3089,28 @@ async function handleBgVideoFile(file){
       src.posterDataUrl = null; src.posterBytes = null; src.posterMediaFilename = '';
     }
 
+    // Pindahin tab preview ke platform yang barusan keisi, biar user langsung liat hasilnya --
+    // dan sinkronin toggle "background sama" di UI (checkbox) kalau tadi dipaksa dimatiin.
+    cfg.previewDevice = requiredDevice;
+    if(wasSynced && bgSyncToggle){
+      bgSyncToggle.checked = false;
+      const note = document.getElementById('bgPlatformNote');
+      if(note) note.classList.remove('hidden');
+    }
+
     document.getElementById('bgControls').classList.remove('hidden');
     refreshBgSourceUI();
-    toast(poster
-      ? 'Video siap! Frame pertamanya otomatis dipakai sbg tampilan awal sebelum video-nya main~'
-      : 'Video siap, tapi gagal ambil frame fallback-nya — sebelum video main, yang keliatan cuma overlay gelap.', poster ? '🎬' : '⚠️');
+
+    const routeNote = wasSynced
+      ? ` "Background sama" otomatis dimatiin (video gak bisa disamain) — video ini kepasang ke tab ${requiredDeviceLabel}.`
+      : ` Video ini kepasang ke tab ${requiredDeviceLabel}.`;
+    toast(
+      (poster
+        ? `Video (.${ext}) siap! Frame pertamanya otomatis dipakai sbg tampilan awal sebelum videonya main~`
+        : `Video (.${ext}) siap, tapi gagal ambil frame fallback-nya — sebelum video main, yang keliatan cuma overlay gelap.`)
+      + routeNote + ` Jangan lupa upload video .${ext==='webm'?'mp4':'webm'} juga di tab ${otherDeviceLabel} biar background videonya muncul di platform itu juga.`,
+      poster ? '🎬' : '⚠️'
+    );
     say('Video background udah siap dipasang! ✨');
   }catch(err){
     console.error(err);
@@ -3069,7 +3121,7 @@ async function handleBgVideoFile(file){
 async function handleBgMedia(file){
   const kind = ahDetectKindFromFile(file);
   if(kind === 'video'){ await handleBgVideoFile(file); return; }
-  if(!file.type || !file.type.startsWith('image/')){ toast('File harus foto, GIF, atau video (MP4/WebM) ya~', '😿'); return; }
+  if(!file.type || !file.type.startsWith('image/')){ toast('File harus foto, GIF, WebP, atau video (MP4/WebM) ya~', '😿'); return; }
   await handleBgImageFile(file);
 }
 
@@ -3955,7 +4007,27 @@ function updateBgStatus(){
     if(dHas && !mHas) platformInfo = ' (Mobile belum diisi, bakal kosong di HP)';
     else if(mHas && !dHas) platformInfo = ' (Desktop belum diisi, bakal kosong di komputer)';
   }
-  el.textContent = `✅ Background aktif di: ${sides}${platformInfo} — bakal ikut kesimpen pas kamu download .apkg`;
+  // Cek kecocokan FORMAT video per platform -- Desktop cuma bisa muter .webm, AnkiDroid cuma
+  // bisa muter .mp4 (saling kebalikan, gak ada yang overlap). Dicek programatis dari nama file
+  // /link videonya biar peringatan ini akurat sesuai file yang BENERAN diupload, bukan cuma
+  // nebak "video = pasti bermasalah di Desktop" kayak sebelumnya.
+  function ahVideoExtOf(src){
+    if(!src || src.kind !== 'video') return null;
+    const ref = (src.mode === 'url' ? (src.imageUrl||'') : (src.mediaFilename||'')).toLowerCase();
+    if(/\.webm(\?|#|$)/.test(ref)) return 'webm';
+    if(/\.mp4(\?|#|$)/.test(ref)) return 'mp4';
+    return null;
+  }
+  let videoWarn = '';
+  const dExt = ahVideoExtOf(cfg.desktop);
+  const mExt = ahVideoExtOf(cfg.syncPlatforms ? cfg.desktop : cfg.mobile);
+  if(dExt && dExt !== 'webm'){
+    videoWarn += ' ⚠️ Video buat Desktop formatnya .mp4 -- Anki Desktop CUMA bisa muter .webm, jadi background di Desktop bakal hitam polos. Upload video .webm di tab 🖥️ Desktop.';
+  }
+  if(mExt && mExt !== 'mp4'){
+    videoWarn += ' ⚠️ Video buat Mobile formatnya .webm -- AnkiDroid CUMA bisa muter .mp4, jadi background gak bakal jalan di AnkiDroid. Upload video .mp4 di tab 📱 Mobile.';
+  }
+  el.textContent = `✅ Background aktif di: ${sides}${platformInfo} — bakal ikut kesimpen pas kamu download .apkg${videoWarn}`;
 }
 
 /* ---- helper deskripsi deck otomatis, dipakai pas save ---- */
@@ -4166,38 +4238,42 @@ function ahBuildBgMediaHtml(cfg){
     if(!v){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
-      v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
-      // Set juga sebagai ATTRIBUTE HTML (bukan cuma property JS) -- beberapa WebView Android
-      // (termasuk yang dipake AnkiDroid) baca attribute muted/playsinline pas video PERTAMA KALI
-      // nempel ke DOM buat mutusin boleh-tidaknya autoplay, jadi property doang kadang telat/gak
-      // kebaca sebelum keputusan autoplay-nya diambil.
+      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      // Kompatibilitas WebView Android lama (AnkiDroid) -- beberapa versi
+      // hanya mengenali atribut HTML, bukan property JS.
       v.setAttribute('muted', '');
+      v.setAttribute('loop', '');
+      v.setAttribute('autoplay', '');
       v.setAttribute('playsinline', '');
       v.setAttribute('webkit-playsinline', '');
-      v.setAttribute('autoplay', '');
+      v.setAttribute('preload', 'auto');
       host.appendChild(v);
     }
     // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
     v.className = 'ankihoney-bg-video ' + w.cls;
     v.dataset.ahRef = w.ref;
     v.innerHTML = '';
+    v.removeAttribute('src');
+    v.classList.remove('ah-loaded');
+    // Gunakan <source> + v.src sekaligus untuk kompatibilitas maksimal:
+    // - v.src langsung: lebih reliable di desktop (Anki Desktop/Chrome/Firefox) -- event
+    //   loadeddata/canplay/playing konsisten fire. Fix background hitam pada .mp4 di desktop.
+    // - <source type="...">: WAJIB untuk AnkiDroid/WebView Android -- tanpa MIME type eksplisit,
+    //   WebView Android sering nolak load/play video dari local media sama sekali.
+    var refLower = w.ref.toLowerCase();
+    var mime = refLower.indexOf('.webm') !== -1 ? 'video/webm'
+             : refLower.indexOf('.mp4')  !== -1 ? 'video/mp4'
+             : refLower.indexOf('.ogg')  !== -1 ? 'video/ogg'
+             : 'video/mp4'; // fallback aman untuk Android
     var source = document.createElement('source');
     source.src = w.ref;
+    source.type = mime;
     v.appendChild(source);
-    v.classList.remove('ah-loaded');
-    // Coba play() lagi tiap kali ada event yang nandain video makin siap -- BUKAN cuma nandain
-    // "ah-loaded" doang. Ini penting soalnya .play() yang dipanggil pas video BARU aja di-load()
-    // (di bawah) sering gagal karena datanya belum sempet siap (ke-reject diem2 sama .catch di
-    // bawah), dan di AnkiDroid gak ada jaminan bakal ke-retry lewat gesture (lihat komentar
-    // panjang di bagian (5) kenapa). Jadi tiap video makin "siap", kita coba play() lagi.
-    var onReady = function(){
-      v.classList.add('ah-loaded');
-      if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
-    };
-    v.addEventListener('loadedmetadata', onReady);
+    // v.src juga di-set langsung (redundan tapi mempercepat load di desktop browser)
+    v.src = w.ref;
+    var onReady = function(){ v.classList.add('ah-loaded'); };
     v.addEventListener('loadeddata', onReady);
     v.addEventListener('canplay', onReady);
-    v.addEventListener('canplaythrough', onReady);
     v.addEventListener('playing', onReady);
     // Diagnostik: kalau videonya beneran GAGAL dibuka (bukan cuma kena block autoplay), catet
     // alesannya jelas-jelas di console -- ini yang paling sering kejadian di AnkiDroid/AnkiMobile
@@ -4208,13 +4284,18 @@ function ahBuildBgMediaHtml(cfg){
       console.warn('[AnkiHoney] Video background GAGAL dibuka di WebView ini (ref=' + w.ref + ', error code=' + err + '). ' +
         'Kalau ini kejadian di AnkiDroid/AnkiMobile tapi normal di Anki Desktop, kemungkinan besar formatnya (mis. .mov/HEVC dari iPhone) gak didukung decoder Android-nya -- coba convert ulang ke MP4 (H.264 + AAC/tanpa audio).');
     });
+    // Pasang load() SETELAH source+src di-set, lalu play() -- urutan ini penting di Android WebView.
     v.load();
     var p = v.play(); if(p && p.catch) p.catch(function(){});
+    // Cek readyState SETELAH load+play dipanggil -- kalau sudah ready langsung mark loaded
+    // (fix background hitam di desktop: event mungkin sudah fire sebelum listener dipasang).
     if(v.readyState >= 2) v.classList.add('ah-loaded');
-    setTimeout(function(){ v.classList.add('ah-loaded'); }, 1800); // jaring pengaman kalau semua event di atas gagal fire
+    // Jaring pengaman: force-show setelah 800ms (lebih cepat dari 1800ms sebelumnya)
+    // agar background hitam tidak keliatan terlalu lama di desktop maupun mobile.
+    setTimeout(function(){ v.classList.add('ah-loaded'); }, 800);
   });
 
-  // --- (4) Jaring pengaman tambahan #1: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
+  // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
   // sebagian browser/webview nge-block autoplay video sampe ada interaksi user beneran
   // (klik/tap/keyboard) -- makanya video baru "keliatan jalan" pas udah di kartu Belakang
   // (abis klik Show Answer), padahal pas kartu Depan awal videonya masih diem/ketutup foto.
@@ -4226,34 +4307,20 @@ function ahBuildBgMediaHtml(cfg){
     var ahRetryPlay = function(){
       var vids = document.querySelectorAll('.ankihoney-bg-video');
       for(var k=0;k<vids.length;k++){
-        if(vids[k].paused){ var pr = vids[k].play(); if(pr && pr.catch) pr.catch(function(){}); }
+        var vid = vids[k];
+        // Pastikan atribut penting terpasang sebelum coba play (defensive untuk AnkiDroid)
+        if(!vid.getAttribute('muted')){ vid.setAttribute('muted',''); vid.muted = true; }
+        if(!vid.getAttribute('playsinline')){ vid.setAttribute('playsinline',''); }
+        if(!vid.getAttribute('webkit-playsinline')){ vid.setAttribute('webkit-playsinline',''); }
+        if(vid.paused){ var pr = vid.play(); if(pr && pr.catch) pr.catch(function(){}); }
+        vid.classList.add('ah-loaded'); // force-tampilkan walau belum fire event
       }
     };
-    ['pointerdown','touchstart','keydown'].forEach(function(evt){
+    // 'click' & 'touchend' ditambah agar AnkiDroid (yang sering pakai touch events)
+    // langsung trigger unlock autoplay setelah tap pertama user.
+    ['pointerdown','touchstart','touchend','click','keydown'].forEach(function(evt){
       document.addEventListener(evt, ahRetryPlay, { passive:true });
     });
-  }
-
-  // --- (5) Jaring pengaman tambahan #2, KHUSUS buat AnkiDroid: di AnkiDroid, tombol
-  // "Show Answer" & tombol jawaban (Again/Hard/Good/Easy) itu tombol NATIVE Android yang
-  // duduk DI LUAR WebView (bukan elemen HTML di dalam halaman ini) -- jadi tap di tombol2
-  // itu SAMA SEKALI GAK NYAMPE ke listener pointerdown/touchstart/keydown di atas (poin 4),
-  // beda sama Anki Desktop yang seluruh jendelanya emang WebView jadi semua klik kebaca.
-  // Efeknya: di AnkiDroid, video sering nyangkut ke-pause abis autoplay pertama gagal &
-  // GAK PERNAH ke-retry sama sekali selama sesi belajar itu. Fixnya: watchdog yang jalan
-  // sendiri secara berkala (gak butuh interaksi user sama sekali) & nyoba play() ulang tiap
-  // nemu video AnkiHoney yang lagi paused padahal harusnya jalan.
-  if(!window.__ahWatchdogBound){
-    window.__ahWatchdogBound = true;
-    setInterval(function(){
-      var vids = document.querySelectorAll('.ankihoney-bg-video');
-      for(var k=0;k<vids.length;k++){
-        var vv = vids[k];
-        if(vv.paused && vv.readyState >= 2){
-          var pr = vv.play(); if(pr && pr.catch) pr.catch(function(){});
-        }
-      }
-    }, 700);
   }
 })();</` + `script>`;
 }
