@@ -3699,7 +3699,9 @@ function switchTemplatePreviewSide(side){
   state.templateEditor.side = side;
   document.getElementById('tplPreviewFront').classList.toggle('applied', side === 'front');
   document.getElementById('tplPreviewBack').classList.toggle('applied', side === 'back');
-  renderTemplateLivePreview();
+  // Gunakan sideOnly=true: hanya ganti isi body tanpa reload iframe,
+  // supaya video background tetap lanjut muter (tidak restart dari awal).
+  renderTemplateLivePreview(true);
 }
 
 // Baca manifest 'media' dari zip .apkg (nomor <-> nama file asli, termasuk bongkar zstd) buat preview realtime gambar/audio asli. Versi generik dipakai fitur Gabung Deck buat baca deck kedua.
@@ -3940,18 +3942,76 @@ async function buildTemplatePreviewDoc(){
   </style></head><body class="card">${bodyHtml}</body></html>`;
 }
 
+// Ambil hanya bodyHtml (konten sisi kartu) tanpa rebuild CSS/doc penuh.
+// Dipakai buat update preview sisi Depan<->Belakang tanpa reload iframe
+// (biar video background tetap lanjut muter, tidak restart dari awal).
+async function buildTemplatePreviewBodyOnly(){
+  const model = ahCurrentTplModel();
+  if(!model || !model.tmpls || !model.tmpls.length) return null;
+  const t = model.tmpls.find(t=> t.ord === state.templateEditor.ord) || model.tmpls[0];
+  const rows = (typeof currentRows === 'function') ? currentRows() : [];
+  const fieldNames = model.flds || [];
+  const fields = (rows && rows.length) ? rows[0].fields : fieldNames.map(f=> `[Contoh ${f}]`);
+  const extra = { tags:'contoh-tag', type: model.name || '', deck: 'Deck Contoh', card: t.name || '' };
+  const frontHtml = ahRenderAnkiTemplate(t.qfmt, fields, fieldNames, extra);
+  let bodyHtml = frontHtml;
+  if(state.templateEditor.side === 'back'){
+    extra.frontSide = frontHtml;
+    bodyHtml = ahRenderAnkiTemplate(t.afmt, fields, fieldNames, extra);
+  }
+  bodyHtml = await ahResolveMediaInHtml(bodyHtml);
+  return bodyHtml;
+}
+
 let _tplPreviewDebounce = null;
 let _tplPreviewToken = 0;
-function renderTemplateLivePreview(){
+// true = update berikutnya boleh hanya ganti body (tidak reload iframe penuh)
+// false = update berikutnya harus full reload (srcdoc diganti)
+// Dimulai false; di-set true hanya oleh switchTemplatePreviewSide,
+// di-reset ke false begitu ada trigger perubahan template/CSS/kartu.
+let _tplPreviewSideOnly = false;
+
+function renderTemplateLivePreview(sideOnly){
   // Debounce dikit (~120ms) biar preview tetep kerasa realtime pas ngetik cepat,
   // tapi gak nge-rebuild iframe di TIAP keystroke (yang bisa berat/nge-lag).
   if(_tplPreviewDebounce) clearTimeout(_tplPreviewDebounce);
+
+  // Aturan: flag hanya true kalau SEMUA request yang masih pending adalah sideOnly.
+  // Satu full-reload saja cukup untuk override flag jadi false.
+  if(sideOnly){
+    // Pertahankan false kalau sudah false (ada full-reload pending), set true kalau belum ada
+    if(_tplPreviewSideOnly !== false) _tplPreviewSideOnly = true;
+  } else {
+    _tplPreviewSideOnly = false; // full reload selalu menang
+  }
+
   _tplPreviewDebounce = setTimeout(async ()=>{
     const myToken = ++_tplPreviewToken;
-    const doc = await buildTemplatePreviewDoc();
-    if(myToken !== _tplPreviewToken) return; // ada render lain yang nyusul lebih baru, buang hasil yang ini (cegah race condition/flicker)
     const iframe = document.getElementById('tplPreviewFrame');
-    if(iframe) iframe.srcdoc = doc;
+    if(!iframe) return;
+
+    const doSideOnly = _tplPreviewSideOnly;
+    _tplPreviewSideOnly = false; // reset setelah diambil
+
+    // --- Update body-only: tidak reload iframe, video tetap lanjut muter ---
+    if(doSideOnly){
+      const idoc = iframe.contentDocument;
+      // Pastikan iframe sudah ter-load (srcdoc sudah pernah di-set sebelumnya)
+      if(idoc && idoc.body && idoc.body.innerHTML !== ''){
+        const bodyHtml = await buildTemplatePreviewBodyOnly();
+        if(myToken !== _tplPreviewToken) return; // ada render baru yang nyusul, batalkan
+        if(bodyHtml !== null){
+          idoc.body.innerHTML = bodyHtml;
+          return; // selesai — video tidak kena reload
+        }
+      }
+      // Fallback: iframe belum siap / body kosong → lakukan full reload di bawah
+    }
+
+    // --- Full reload: ganti srcdoc (perubahan template/CSS/kartu/pertama kali) ---
+    const doc = await buildTemplatePreviewDoc();
+    if(myToken !== _tplPreviewToken) return; // ada render lain yang nyusul lebih baru
+    iframe.srcdoc = doc;
   }, 120);
 }
 
@@ -4211,9 +4271,10 @@ function ahBuildBgMediaHtml(cfg){
   }
 
   // --- (3) Video background persisten -- nempel di <body>, DILUAR #qa, biar SELAMAT dari
-  // Anki yang cuma replace innerHTML #qa pas ganti Depan->Belakang / pindah kartu. Video cuma
-  // di-(re)buat kalau memang belum ada / sumbernya (file-nya) beneran beda dari yang lagi
-  // nempel sekarang -- kalau sama persis, DIBIARIN lanjut muter tanpa keputus/restart.
+  // Anki yang cuma replace innerHTML #qa pas ganti Depan->Belakang. Untuk pindah kartu
+  // (yang me-reload halaman penuh), posisi video disimpan ke localStorage sesaat sebelum
+  // unload dan di-restore kembali begitu video siap -- jadi video tetap lanjut dari posisi
+  // yang sama, tidak restart dari detik 0.
   var wanted = ${videoDescsJson};
   var existing = {};
   var oldVids = host.querySelectorAll('video[data-ah-cls]');
@@ -4225,6 +4286,30 @@ function ahBuildBgMediaHtml(cfg){
     for(var j=0;j<wanted.length;j++){ if(wanted[j].cls === cls){ stillWanted = true; break; } }
     if(!stillWanted) existing[cls].remove();
   }
+
+  // Simpan currentTime tiap video ke localStorage sesaat sebelum halaman di-unload
+  // (ganti kartu berikutnya = reload halaman penuh di Anki Desktop/AnkiDroid).
+  // Kunci: 'ahvt__' + nama-file-video, nilainya: timestamp posisi dalam detik.
+  if(!window.__ahUnloadBound){
+    window.__ahUnloadBound = true;
+    var ahSaveVideoTimes = function(){
+      try{
+        var vids = document.querySelectorAll('video[data-ah-cls][data-ah-ref]');
+        for(var i=0;i<vids.length;i++){
+          var vid = vids[i];
+          if(vid.duration && vid.currentTime > 0){
+            localStorage.setItem('ahvt__' + vid.dataset.ahRef, String(vid.currentTime));
+          }
+        }
+      }catch(e){}
+    };
+    // pagehide lebih reliable dari beforeunload di mobile WebView
+    window.addEventListener('pagehide', ahSaveVideoTimes);
+    window.addEventListener('beforeunload', ahSaveVideoTimes);
+    // Simpan juga tiap beberapa detik sebagai cadangan (kalau event unload tidak fire)
+    setInterval(ahSaveVideoTimes, 2000);
+  }
+
   wanted.forEach(function(w){
     var v = existing[w.cls];
     if(v && v.dataset.ahRef === w.ref){
@@ -4249,12 +4334,20 @@ function ahBuildBgMediaHtml(cfg){
       v.setAttribute('preload', 'auto');
       host.appendChild(v);
     }
-    // Baru / sumbernya BENERAN beda -> wajar mulai dari awal, karena emang videonya beda.
+    // Baru / sumbernya BENERAN beda -> set src dan restore posisi kalau ada.
     v.className = 'ankihoney-bg-video ' + w.cls;
     v.dataset.ahRef = w.ref;
     v.innerHTML = '';
     v.removeAttribute('src');
     v.classList.remove('ah-loaded');
+
+    // Ambil posisi terakhir yang tersimpan (dari sesi/kartu sebelumnya).
+    var savedTime = 0;
+    try{
+      var st = localStorage.getItem('ahvt__' + w.ref);
+      if(st){ savedTime = parseFloat(st) || 0; }
+    }catch(e){}
+
     // Gunakan <source> + v.src sekaligus untuk kompatibilitas maksimal:
     // - v.src langsung: lebih reliable di desktop (Anki Desktop/Chrome/Firefox) -- event
     //   loadeddata/canplay/playing konsisten fire. Fix background hitam pada .mp4 di desktop.
@@ -4271,7 +4364,18 @@ function ahBuildBgMediaHtml(cfg){
     v.appendChild(source);
     // v.src juga di-set langsung (redundan tapi mempercepat load di desktop browser)
     v.src = w.ref;
-    var onReady = function(){ v.classList.add('ah-loaded'); };
+
+    var onReady = (function(vid, t){
+      return function(){
+        vid.classList.add('ah-loaded');
+        // Restore posisi video dari sesi sebelumnya (supaya tidak restart dari detik 0).
+        if(t > 0 && vid.duration && isFinite(vid.duration)){
+          // Modulo durasi supaya posisi tetap valid kalau video sudah looping
+          vid.currentTime = t % vid.duration;
+        }
+      };
+    })(v, savedTime);
+
     v.addEventListener('loadeddata', onReady);
     v.addEventListener('canplay', onReady);
     v.addEventListener('playing', onReady);
@@ -4289,7 +4393,12 @@ function ahBuildBgMediaHtml(cfg){
     var p = v.play(); if(p && p.catch) p.catch(function(){});
     // Cek readyState SETELAH load+play dipanggil -- kalau sudah ready langsung mark loaded
     // (fix background hitam di desktop: event mungkin sudah fire sebelum listener dipasang).
-    if(v.readyState >= 2) v.classList.add('ah-loaded');
+    if(v.readyState >= 2){
+      v.classList.add('ah-loaded');
+      if(savedTime > 0 && v.duration && isFinite(v.duration)){
+        v.currentTime = savedTime % v.duration;
+      }
+    }
     // Jaring pengaman: force-show setelah 800ms (lebih cepat dari 1800ms sebelumnya)
     // agar background hitam tidak keliatan terlalu lama di desktop maupun mobile.
     setTimeout(function(){ v.classList.add('ah-loaded'); }, 800);
