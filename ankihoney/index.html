@@ -4201,7 +4201,16 @@ function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function ahWrapTemplate(html, enable, mediaHtml){
   html = html || '';
   mediaHtml = mediaHtml || '';
-  const trimmed = html.trim();
+  // PENTING (fix double-wrap bug): applyWatermarkToModel selalu dipanggil SETELAH fungsi ini,
+  // dan nempelin watermark baru di ujung template -- SETELAH AH_WRAP_CLOSE. Jadi template yang
+  // udah pernah disave sama tool ini bakal selalu berakhir dengan
+  // "...AH_WRAP_CLOSE + watermark", BUKAN "...AH_WRAP_CLOSE" doang. Kalau watermark ini gak
+  // di-strip dulu sebelum ngecek, trimmed.endsWith(AH_WRAP_CLOSE) SELALU false, alreadyWrapped
+  // gak pernah kedeteksi bener, dan tiap kali user apply ulang background, seluruh konten LAMA
+  // (termasuk script video lama & SEMUA konten asli kartu di dalamnya) ke-wrap lagi jadi
+  // lapisan baru yang nested -- bukan di-replace bersih. ahStripWmHtml di sini bikin deteksi
+  // "udah di-wrap apa belum" tetep akurat walau ada watermark nemplok di belakang.
+  const trimmed = ahStripWmHtml(html).trim();
   const alreadyWrapped = trimmed.startsWith(AH_WRAP_OPEN) && trimmed.endsWith(AH_WRAP_CLOSE);
   let inner = trimmed;
   if(alreadyWrapped){
