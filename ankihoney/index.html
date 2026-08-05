@@ -1667,6 +1667,11 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <p style="font-size:.76rem; color:var(--ink-soft); font-weight:400; margin-top:-4px; margin-bottom:8px;">Jika nama deck ini diganti dari nama aslinya, saat diimport ke Anki akan <b>membuat deck BARU</b> dengan nama itu (bukan memperbarui nama deck yang lama). Deck lama tetap ada di Anki tapi kosong — bisa dihapus manual jika sudah tidak dibutuhkan.</p>
       <div id="deckNameList"></div>
     </div>
+    <div id="noteTypeNameCard" style="margin-bottom:16px;">
+      <label class="field-label">Nama Note Type</label>
+      <p style="font-size:.76rem; color:var(--ink-soft); font-weight:400; margin-top:-4px; margin-bottom:8px;">Ganti nama note type kalau background/template <b>tidak muncul setelah import</b> — biasanya karena note type dengan nama yang sama sudah ada di Anki dengan versi lama. Nama baru = Anki anggap note type baru = desain langsung kepasang.</p>
+      <div id="noteTypeNameList"></div>
+    </div>
     <div class="btn-row">
       <button class="btn mint" id="btnDownloadApkg">Download .apkg Hasil Update</button>
     </div>
@@ -2132,6 +2137,7 @@ const state = {
   decksMap: {},     // did -> deck name
   decksDescMap: {}, // did -> deck description asli
   deckNameOverrides: {}, // did -> custom deck name (override, dari form user)
+  modelNameOverrides: {}, // mid (string) -> custom note type name
   notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
   currentMid: null,
   selectedFieldIdxs: [0],
@@ -2461,7 +2467,7 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   if(mergeStatusEl0) mergeStatusEl0.innerHTML = '';
 
   populateModelSelect();
-  populateDeckNameInputs();
+  populateDeckNameInputs(); populateNoteTypeNameInputs();
   document.getElementById('selectCard').classList.remove('hidden');
   document.getElementById('bgCard').classList.remove('hidden');
   document.getElementById('tplCard').classList.remove('hidden');
@@ -2645,7 +2651,7 @@ async function handleMergeSecondDeck(file){
       ahAtRefreshMappingsForModel(); ahUpdateCostEstimate();
     }
 
-    populateDeckNameInputs();
+    populateDeckNameInputs(); populateNoteTypeNameInputs();
     Object.keys(prevOverrides).forEach(did=>{
       if(state.decksMap[did] !== undefined){
         state.deckNameOverrides[did] = prevOverrides[did];
@@ -2784,7 +2790,7 @@ async function handleApkgFile(file){
     state._mediaMapPromise = null;
 
     populateModelSelect();
-    populateDeckNameInputs();
+    populateDeckNameInputs(); populateNoteTypeNameInputs();
     document.getElementById('selectCard').classList.remove('hidden');
     document.getElementById('bgCard').classList.remove('hidden');
     document.getElementById('tplCard').classList.remove('hidden');
@@ -3996,19 +4002,67 @@ function renderTemplateLivePreview(sideOnly){
     // --- Update body-only: tidak reload iframe, video tetap lanjut muter ---
     if(doSideOnly){
       const idoc = iframe.contentDocument;
-      // Pastikan iframe sudah ter-load (srcdoc sudah pernah di-set sebelumnya)
-      if(idoc && idoc.body && idoc.body.innerHTML !== ''){
+      // Pastikan iframe sudah ter-load (srcdoc sudah pernah di-set sebelumnya).
+      // Cek readyState 'complete' atau 'interactive' AND body ada; innerHTML !== ''
+      // tidak cukup reliable karena bisa kosong sesaat setelah srcdoc di-set.
+      const iframeReady = idoc && idoc.readyState !== 'loading' && idoc.body &&
+                          (idoc.body.children.length > 0 || idoc.body.innerHTML.trim() !== '');
+      if(iframeReady){
         const bodyHtml = await buildTemplatePreviewBodyOnly();
         if(myToken !== _tplPreviewToken) return; // ada render baru yang nyusul, batalkan
         if(bodyHtml !== null){
+          // FIX: Sebelum ganti innerHTML, cabut dulu elemen persisten AnkiHoney
+          // (ankihoney-bg-video-host + isinya) dari body supaya tidak ikut terhapus.
+          // Cara: pindahkan sementara ke documentElement; setelah innerHTML di-set
+          // kembalikan ke body. Ini memastikan elemen <video> yang sedang muter
+          // tidak disentuh sama sekali selama proses ganti sisi kartu.
+          const savedNodes = [];
+          ['ankihoney-bg-video-host'].forEach(id => {
+            const el = idoc.getElementById(id);
+            if(el){ savedNodes.push(el); idoc.documentElement.appendChild(el); }
+          });
+
           idoc.body.innerHTML = bodyHtml;
+
+          // Kembalikan elemen persisten ke body (setelah innerHTML di-set)
+          savedNodes.forEach(el => idoc.body.appendChild(el));
+
+          // Eksekusi ulang script ankihoney yang ada di dalam bodyHtml secara manual.
+          // innerHTML TIDAK otomatis menjalankan <script> yang baru di-inject (security
+          // policy browser). Script ankihoney berisi logika "kalau video-host & ref sama
+          // → jangan disentuh, biarkan lanjut muter" — harus jalan supaya state video
+          // tetap terjaga (play(), ah-loaded, dsb).
+          // Teknik: ganti tiap <script> lama dengan elemen <script> baru via replaceChild
+          // — inilah satu-satunya cara browser mau mengeksekusinya.
+          idoc.body.querySelectorAll('script').forEach(oldScript => {
+            const newScript = idoc.createElement('script');
+            newScript.textContent = oldScript.textContent;
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          });
+
           return; // selesai — video tidak kena reload
         }
       }
-      // Fallback: iframe belum siap / body kosong → lakukan full reload di bawah
+      // Fallback: iframe belum siap → lakukan full reload di bawah
     }
 
     // --- Full reload: ganti srcdoc (perubahan template/CSS/kartu/pertama kali) ---
+    // Sebelum srcdoc diganti, simpan currentTime tiap video AnkiHoney ke localStorage
+    // iframe supaya setelah reload script di template bisa restore posisi video (mekanisme
+    // yang sama yang dipakai di Anki Desktop/AnkiDroid saat pindah kartu).
+    try {
+      const idocPrev = iframe.contentDocument;
+      if(idocPrev && idocPrev.defaultView){
+        const ls = idocPrev.defaultView.localStorage;
+        if(ls){
+          idocPrev.querySelectorAll('video[data-ah-cls][data-ah-ref]').forEach(vid => {
+            if(vid.duration && vid.currentTime > 0){
+              try{ ls.setItem('ahvt__' + vid.dataset.ahRef, String(vid.currentTime)); }catch(e){}
+            }
+          });
+        }
+      }
+    } catch(e){}
     const doc = await buildTemplatePreviewDoc();
     if(myToken !== _tplPreviewToken) return; // ada render lain yang nyusul lebih baru
     iframe.srcdoc = doc;
@@ -4700,6 +4754,36 @@ async function ensureBgMediaInZip(zip, bytes, filename){
 }
 
 // Suntik background & nama deck custom ke db format lama (in-place). PENTING: Anki cocokin deck pas import by ID bukan nama, jadi bikin ID deck baru biar nama custom kepake (jadwal belajar tetap aman).
+function applyModelRenamesLegacy(){
+  if(!state.modelNameOverrides || !Object.keys(state.modelNameOverrides).length) return;
+  const res = state.db.exec("SELECT models FROM col");
+  if(!res.length || !res[0].values.length) return;
+  let modelsJson;
+  try{ modelsJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
+
+  let offset = 0;
+  const overrides = state.modelNameOverrides || {};
+  Object.keys(overrides).forEach(mid=>{
+    const newName = overrides[mid];
+    // Toleran string/number key
+    const orig = modelsJson[mid] || modelsJson[parseInt(mid)] || modelsJson[String(mid)];
+    if(!orig || orig.name === newName) return;
+    const oldId = orig.id || parseInt(mid);
+    const newId = Date.now() + 900000 + (offset++);
+    modelsJson[String(newId)] = { ...orig, id: newId, name: newName, mod: Math.floor(Date.now()/1000), usn: -1 };
+    // Remap mid di tabel notes
+    state.db.run("UPDATE notes SET mid=? WHERE mid=?", [newId, oldId]);
+    delete modelsJson[String(mid)];
+    if(mid !== String(oldId)) delete modelsJson[String(oldId)];
+    // Update currentMid kalau yang di-rename adalah model aktif
+    if(String(state.currentMid) === String(mid) || String(state.currentMid) === String(oldId)){
+      state.currentMid = String(newId);
+    }
+  });
+
+  state.db.run("UPDATE col SET models=?", [JSON.stringify(modelsJson)]);
+}
+
 function applyDeckRenamesLegacy(){
   const res = state.db.exec("SELECT decks FROM col");
   if(!res.length || !res[0].values.length) return;
@@ -4763,7 +4847,10 @@ async function applyCardBackgroundLegacy(){
   let modelsJson;
   try{ modelsJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
   applyTemplateEditsToModelsJson(modelsJson);
-  const model = modelsJson[state.currentMid];
+  // Toleran string/number key: coba currentMid as-is, lalu sebagai string, lalu sebagai int
+  const model = modelsJson[state.currentMid]
+             || modelsJson[String(state.currentMid)]
+             || modelsJson[parseInt(state.currentMid)];
   if(!model) return;
 
   const cfg = state.cardBg;
@@ -5037,6 +5124,50 @@ function populateDeckNameInputs(){
       if(val) state.deckNameOverrides[did] = val;
       else delete state.deckNameOverrides[did];
     });
+  });
+}
+
+function populateNoteTypeNameInputs(){
+  const pending = state._pendingModelNameOverrides || {};
+  state._pendingModelNameOverrides = null;
+  state.modelNameOverrides = {};
+  const wrap = document.getElementById('noteTypeNameList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  // Kumpulkan semua mid yang dipakai oleh notes, sebagai string
+  const midsUsed = [...new Set(state.notes.map(n => String(n.mid)))];
+  if(midsUsed.length === 0) return;
+  midsUsed.forEach(mid => {
+    // Toleran key string vs number di state.models
+    const model = state.models[mid] || state.models[parseInt(mid)];
+    if(!model) return;
+    const origName = model.name || 'Note Type';
+    // Ambil nilai pending dari string key atau number key
+    const pendingVal = pending[mid] !== undefined ? pending[mid]
+                     : pending[parseInt(mid)] !== undefined ? pending[parseInt(mid)]
+                     : origName;
+    if(pendingVal && pendingVal !== origName) state.modelNameOverrides[mid] = pendingVal;
+    const row = document.createElement('div');
+    row.className = 'deck-name-row';
+    if(midsUsed.length > 1){
+      const label = document.createElement('div');
+      label.className = 'deck-name-orig';
+      label.textContent = `Ganti nama note type: "${origName}"`;
+      row.appendChild(label);
+    }
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'deckNameInput';
+    inp.dataset.mid = mid;
+    inp.placeholder = origName;
+    inp.value = pendingVal;
+    inp.addEventListener('input', () => {
+      const val = inp.value.trim();
+      if(val && val !== origName) state.modelNameOverrides[String(mid)] = val;
+      else delete state.modelNameOverrides[String(mid)];
+    });
+    row.appendChild(inp);
+    wrap.appendChild(row);
   });
 }
 
@@ -5470,6 +5601,7 @@ function ahBuildSessionSnapshot(){
     savedAt: Date.now(),
     notes,
     deckNameOverrides: Object.assign({}, state.deckNameOverrides || {}),
+    modelNameOverrides: Object.assign({}, state.modelNameOverrides || {}),
     fieldSelectionByModel: state.fieldSelectionByModel || {},
     furiganaFieldIdxsByModel: state.furiganaFieldIdxsByModel || {},
     rapikanFieldIdxsByModel: state.rapikanFieldIdxsByModel || {},
@@ -5487,6 +5619,7 @@ function ahSnapshotHasContent(snap){
   if(!snap) return false;
   if(snap.notes && snap.notes.length) return true;
   if(snap.deckNameOverrides && Object.keys(snap.deckNameOverrides).length) return true;
+  if(snap.modelNameOverrides && Object.keys(snap.modelNameOverrides).length) return true;
   if(snap.fieldInstructionsByModel && Object.values(snap.fieldInstructionsByModel).some(m=> m && Object.values(m).some(v=> v && v.trim()))) return true;
   if(snap.doneBatches && snap.doneBatches.length) return true;
   return false;
@@ -5544,6 +5677,7 @@ function ahApplySessionSnapshot(snap){
 
   // 3. Titipin nama deck custom -- dibaca & dipasang sama populateDeckNameInputs() di bawah
   state._pendingDeckNameOverrides = snap.deckNameOverrides || {};
+  state._pendingModelNameOverrides = snap.modelNameOverrides || {};
 
   // 4. Pulihin setting background (kecuali foto/video mentahnya, kalau mode "upload" user
   //    perlu upload ulang manual -- link "url" full kepulihin)
@@ -5564,7 +5698,7 @@ function ahApplySessionSnapshot(snap){
 
   // 5. Render ulang semua UI yang bergantung ke state di atas
   populateModelSelect();
-  populateDeckNameInputs();
+  populateDeckNameInputs(); populateNoteTypeNameInputs();
   renderTable();
   updateStats();
   try{ updateBgPreview(); }catch(e){}
@@ -8152,6 +8286,7 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
       });
       stmt.free();
 
+      applyModelRenamesLegacy();
       applyDeckRenamesLegacy();
       await applyCardBackgroundLegacy();
 
@@ -8393,22 +8528,40 @@ async function rebuildAsLegacyApkg(){
     templateCountByMid[mid] = Math.max(templateCountByMid[mid] || 1, ord + 1);
   });
 
+  // Kalau user ganti nama note type → generate ID baru, sama seperti logika deckIdRemap.
+  // Anki cocokkan note type berdasarkan ID; ID sama = update nama diabaikan, ID baru = note type baru.
+  const midRemap = {}; // old mid string -> new mid number
+  let midOffset = 0;
+  if(state.modelNameOverrides){
+    Object.keys(state.modelNameOverrides).forEach(mid=>{
+      const newName = state.modelNameOverrides[mid];
+      const m = state.models[mid] || state.models[parseInt(mid)];
+      const origName = (m && m.name) || '';
+      if(newName && newName !== origName){
+        midRemap[String(mid)] = Date.now() + 900000 + (midOffset++);
+      }
+    });
+  }
+
   let models = {};
   usedMids.forEach(mid=>{
-    const m = state.models[mid];
+    const m = state.models[mid] || state.models[parseInt(mid)];
     if(!m) return;
     const fieldNames = m.flds && m.flds.length ? m.flds : ['Front','Back'];
     const deckIdForModel = Object.keys(state.decksMap)[0] || 1;
     const neededTemplateCount = templateCountByMid[mid] || 1;
-    models[mid] = modelHasOriginalDesign(m)
-      ? buildLegacyModelFromDesign(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames, m)
-      : buildLegacyModel(parseInt(mid), parseInt(deckIdForModel), m.name || 'Note Type', fieldNames, m.type || 0, neededTemplateCount);
+    const effectiveName = (state.modelNameOverrides && (state.modelNameOverrides[String(mid)] || state.modelNameOverrides[parseInt(mid)])) || m.name || 'Note Type';
+    const effectiveMid = midRemap[String(mid)] !== undefined ? midRemap[String(mid)] : parseInt(mid);
+    const builtModel = modelHasOriginalDesign(m)
+      ? buildLegacyModelFromDesign(effectiveMid, parseInt(deckIdForModel), effectiveName, fieldNames, m)
+      : buildLegacyModel(effectiveMid, parseInt(deckIdForModel), effectiveName, fieldNames, m.type || 0, neededTemplateCount);
+    models[String(effectiveMid)] = builtModel;
     if(String(mid) === String(state.currentMid)){
       const cfg = state.cardBg;
       const hasBg = ahHasAnyBg(cfg) && (cfg.front || cfg.back);
-      applyCardBackgroundToModel(models[mid], hasBg ? cfg : { front:false, back:false });
+      applyCardBackgroundToModel(models[String(effectiveMid)], hasBg ? cfg : { front:false, back:false });
     }
-    applyWatermarkToModel(models[mid]);
+    applyWatermarkToModel(models[String(effectiveMid)]);
   });
   if(Object.keys(models).length === 0){
     models['1'] = buildLegacyModel(1, 1, 'Basic', ['Front','Back']);
@@ -8471,7 +8624,8 @@ async function rebuildAsLegacyApkg(){
     const flds = n.fields.join('\x1f');
     const sfld = stripHtml(n.fields[0] || '');
     const tags = injectWmIntoTags(n.tags);
-    noteStmt.run([n.id, n.guid || ('n'+n.id.toString(36)), parseInt(n.mid), now, -1, tags, flds, sfld, simpleChecksumLocal(sfld), 0, '']);
+    const effectiveNoteMid = midRemap[String(n.mid)] !== undefined ? midRemap[String(n.mid)] : parseInt(n.mid);
+    noteStmt.run([n.id, n.guid || ('n'+n.id.toString(36)), effectiveNoteMid, now, -1, tags, flds, sfld, simpleChecksumLocal(sfld), 0, '']);
   });
   noteStmt.free();
 
