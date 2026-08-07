@@ -1457,6 +1457,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <button class="btn ghost" id="btnUndoPaste" disabled>Undo Paste<small>kembalikan paste sebelumnya</small></button>
       <button class="btn ghost" id="btnFixFurigana">Perbaiki Spasi Furigana<small>agar tidak menyebar saat ditampilkan</small></button>
       <button class="btn ghost" id="btnFixFuriganaUndo" disabled>Undo Perbaikan Furigana</button>
+      <button class="btn ghost" id="btnRapikanFurigana">Rapikan Furigana っ<small>gabung compound っ yang terpisah</small></button>
+      <button class="btn ghost" id="btnRapikanFuriganaUndo" disabled>Undo Rapikan Furigana っ</button>
       <button class="btn ghost" id="btnRapikanNotes">Rapikan Notes<small>tambah baris baru agar tidak menumpuk</small></button>
       <button class="btn ghost" id="btnRapikanNotesUndo" disabled>Undo Rapikan Notes</button>
       <button class="btn ghost" id="btnExportCsv">Export CSV</button>
@@ -1464,6 +1466,10 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div id="furiganaFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
       <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin diperiksa/diperbaiki spasi furigana-nya:</small>
       <div class="field-checks" id="furiganaFieldChecks"></div>
+    </div>
+    <div id="rapikanFuriganaFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
+      <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin dirapihin furigana っ-nya (gabung compound っ/ッ yang terpisah):</small>
+      <div class="field-checks" id="rapikanFuriganaFieldChecks"></div>
     </div>
     <div id="rapikanFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
       <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin dirapihin (diberi baris baru per bagian):</small>
@@ -2160,6 +2166,8 @@ const state = {
   fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
   furiganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIPERIKSA/DIPERBAIKI sama tombol "Perbaiki Spasi Furigana", inget per note type (default: semua field kecentang)
   furiganaFieldIdxs: [], // field yang lagi kecentang di checklist "Perbaiki Spasi Furigana" buat note type yang lagi aktif
+  rapikanFuriganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau dirapihin sama tombol "Rapikan Furigana っ"
+  rapikanFuriganaFieldIdxs: [], // field yang lagi kecentang di checklist "Rapikan Furigana っ" buat note type yang lagi aktif
   rapikanFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIRAPIHIN sama tombol "Rapikan Notes", inget per note type (default: semua field kecentang)
   rapikanFieldIdxs: [], // field yang lagi kecentang di checklist "Rapikan Notes" buat note type yang lagi aktif
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
@@ -2205,6 +2213,7 @@ const state = {
   autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
   pendingDiffReview: [], // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
   fixFuriganaSnapshot: null, // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
+  rapikanFuriganaSnapshot: null, // snapshot fields SEBELUM tombol "Rapikan Furigana っ" jalan (buat tombol Undo-nya)
   rapikanNotesSnapshot: null // snapshot fields SEBELUM tombol "Rapikan Notes" jalan (buat tombol Undo-nya)
 };
 
@@ -5381,7 +5390,59 @@ function populateFuriganaFieldSelect(){
     });
     container.appendChild(chip);
   });
+  populateRapikanFuriganaFieldSelect();
   populateRapikanFieldSelect();
+}
+
+// Checklist KHUSUS buat tombol "Rapikan Furigana っ" -- sama polanya kayak checklist furigana
+// di atas, tapi buat fitur yang menggabungkan compound っ/ッ yang terpisah (misal:
+// 末っ 子[すえっこ] → 末っ子[すえっこ], 引[ひ]っ 越[こ] → 引っ越[ひっこ]).
+// Default: semua field kecentang, diinget per note type.
+function populateRapikanFuriganaFieldSelect(){
+  const container = document.getElementById('rapikanFuriganaFieldChecks');
+  const wrap = document.getElementById('rapikanFuriganaFieldWrap');
+  if(!container || !wrap) return;
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || !model.flds.length){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const cached = state.rapikanFuriganaFieldIdxsByModel[state.currentMid];
+  if(cached && cached.length){
+    state.rapikanFuriganaFieldIdxs = cached.filter(i=> i < model.flds.length);
+    if(!state.rapikanFuriganaFieldIdxs.length) state.rapikanFuriganaFieldIdxs = model.flds.map((_,i)=>i);
+  } else {
+    state.rapikanFuriganaFieldIdxs = model.flds.map((_,i)=>i); // default: semua field kecentang
+  }
+
+  model.flds.forEach((name, idx)=>{
+    const isSelected = state.rapikanFuriganaFieldIdxs.includes(idx);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip' + (isSelected ? ' active' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isSelected;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = state.rapikanFuriganaFieldIdxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      if(idxs.length === 0){
+        cb.checked = true;
+        idxs = [idx];
+        toast('Minimal 1 field harus dicentang ya~', '⚠️');
+      }
+      idxs.sort((a,b)=>a-b);
+      state.rapikanFuriganaFieldIdxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      state.rapikanFuriganaFieldIdxsByModel[state.currentMid] = idxs.slice();
+    });
+    container.appendChild(chip);
+  });
 }
 
 // Checklist KHUSUS buat tombol "Rapikan Notes" -- sama polanya kayak checklist furigana
@@ -6779,6 +6840,59 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
 // whitespace non-standar ikut kepaksa dikasih spasi ASCII biasa juga.
 const AH_FURIGANA_NEEDS_SPACE_RE = /(?<=[\s\S])(?<![\u4E00-\u9FFF\u3005 >])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
 
+/* ---------------- rapikan furigana っ/ッ ---------------- */
+// っ/ッ (small tsu) bukan kanji, tidak boleh masuk bracket furigana [].
+// Ada 2 pola yang perlu ditangani:
+//
+// Pola A — SUDAH BENAR, DIBIARKAN:
+//   引[ひ]っ 越[こ]   ← tiap kanji punya furigana sendiri, っ di luar → sudah benar
+//   真[ま]っ 赤[か]   ← sama, sudah benar
+//   末[すえ]っ 子[こ]  ← sudah benar
+//
+// Pola B — PERLU DIFIX (furigana gabungan yang mencakup っ):
+//   末っ 子[すえっこ]      → 末[すえ]っ 子[こ]      (pecah di っ dalam furigana)
+//   一人っ 子[ひとりっこ]  → 一人[ひとり]っ 子[こ]
+//   引っ 越[ひっこ]        → 引[ひ]っ 越[こ]
+//   矢っ 張[やっぱ]        → 矢[や]っ 張[ぱ]
+//   真っ 赤[まっか]        → 真[ま]っ 赤[か]
+//
+// Kalau furigana gabungan tidak mengandung っ (tidak bisa dipecah) →
+// cukup hapus spasi saja: 末っ 子[すえこ] → 末っ子[すえこ] (edge case, jarang)
+function ahFixSmallTsuFurigana(val){
+  if(typeof val !== 'string' || !val) return { out: val, count: 0 };
+  if(val.indexOf('っ') === -1 && val.indexOf('ッ') === -1) return { out: val, count: 0 };
+  let out = val;
+  let count = 0;
+
+  // Pola B: kanji1(tanpa [furigana]) + っ/ッ + SPASI + kanji2[fur_gabungan]
+  // → pecah fur_gabungan di posisi っ/ッ pertama di dalamnya
+  // → kanji1[fur_sebelum_っ] + っ/ッ + SPASI + kanji2[fur_setelah_っ]
+  // Fallback (kalau fur tidak ada っ): hapus spasi saja
+  // Cara bedain dari Pola A: Pola A punya ']' tepat sebelum っ
+  out = out.replace(
+    /(?<!\])([\u4e00-\u9fff\u3005\u4e00-\u9FFF]+)([っッ]) ([\u4e00-\u9fff\u3005\u4e00-\u9FFF]+)\[([^\[\]]+)\]/g,
+    (match, k1, tsu, k2, fur) => {
+      const smallTsu = fur.includes('っ') ? 'っ' : fur.includes('ッ') ? 'ッ' : null;
+      count++;
+      if(!smallTsu){
+        // Tidak bisa dipecah → hapus spasi saja: k1っk2[fur]
+        return k1 + tsu + k2 + '[' + fur + ']';
+      }
+      const splitIdx = fur.indexOf(smallTsu);
+      const fur1 = fur.slice(0, splitIdx);
+      const fur2 = fur.slice(splitIdx + 1);
+      if(!fur1 || !fur2){
+        // Split tidak bersih → hapus spasi saja
+        return k1 + tsu + k2 + '[' + fur + ']';
+      }
+      // Berhasil dipecah: kanji1[fur1]っ kanji2[fur2]
+      return k1 + '[' + fur1 + ']' + tsu + ' ' + k2 + '[' + fur2 + ']';
+    }
+  );
+
+  return { out, count };
+}
+
 // Modal konfirmasi KHUSUS buat "Perbaiki Spasi Furigana" -- dulu pake window.confirm() bawaan
 // browser, tapi itu bisa silently gagal/no-op (balikin false tanpa nampilin dialog apapun) di
 // banyak WebView/in-app-browser/iframe (misal dibuka di dalem app lain, PWA ke-install, dst),
@@ -6886,6 +7000,101 @@ function ahFixFuriganaSpacing(){
 }
 
 document.getElementById('btnFixFurigana').addEventListener('click', ahFixFuriganaSpacing);
+
+/* ---------------- rapikan furigana っ (tombol baru) ---------------- */
+function ahRapikanFurigana(){
+  try {
+    if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
+
+    const model = state.models[state.currentMid];
+    const rows = state.notes.filter(n=> n.mid === state.currentMid);
+    if(!rows.length){ toast('Gak ada catatan buat note type yang lagi dipilih~', '😿'); return; }
+
+    let fieldIdxs = (state.rapikanFuriganaFieldIdxs && state.rapikanFuriganaFieldIdxs.length)
+      ? state.rapikanFuriganaFieldIdxs.slice() : null;
+
+    const changes = [];
+    let totalFixes = 0;
+    const perFieldFixes = {};
+    rows.forEach(n=>{
+      let fixCount = 0;
+      const idxsToScan = fieldIdxs || n.fields.map((_,i)=>i);
+      const newFields = n.fields.slice();
+      idxsToScan.forEach(idx=>{
+        const val = n.fields[idx];
+        if(typeof val !== 'string') return;
+        if(val.indexOf('っ') === -1 && val.indexOf('ッ') === -1) return;
+        const { out, count } = ahFixSmallTsuFurigana(val);
+        if(count > 0){
+          newFields[idx] = out;
+          fixCount += count;
+          perFieldFixes[idx] = (perFieldFixes[idx]||0) + count;
+        }
+      });
+      if(fixCount > 0){
+        changes.push({ note: n, newFields, oldFields: n.fields.slice(), oldDirty: n.dirty });
+        totalFixes += fixCount;
+      }
+    });
+
+    if(!changes.length){ toast('Compound っ/ッ di field yang dicentang udah rapi~ ✨', '✨'); return; }
+
+    const fieldNames = model && model.flds ? model.flds : [];
+    const breakdown = Object.keys(perFieldFixes)
+      .sort((a,b)=> a-b)
+      .map(idx=> `- ${fieldNames[idx] || ('Field '+(Number(idx)+1))}: ${perFieldFixes[idx]}x`)
+      .join('\n');
+
+    const message =
+      `Ketemu ${totalFixes} compound っ/ッ yang perlu dirapihin di ${changes.length} catatan.\n\n`+
+      `Field yang bakal diperbaiki:\n${breakdown}\n\n`+
+      `Contoh: 末っ 子[すえっこ] → 末っ子[すえっこ], 引[ひ]っ 越[こ] → 引っ越[ひっこ].\n`+
+      `Format 真[ま]っ 赤[か] (tiap kanji punya furigana sendiri) TIDAK diubah.\n\n`+
+      `Ada tombol "Undo" kalau hasilnya kurang pas.`;
+
+    ahShowFuriganaConfirmModal(message, ()=>{
+      try {
+        state.rapikanFuriganaSnapshot = {
+          entries: changes.map(c=> ({ id: c.note.id, fields: c.oldFields, dirty: c.oldDirty }))
+        };
+        changes.forEach(c=>{ c.note.fields = c.newFields; c.note.dirty = true; });
+        document.getElementById('btnRapikanFuriganaUndo').disabled = false;
+        renderTable();
+        updateStats();
+        toast(`${totalFixes} compound っ/ッ di ${changes.length} catatan udah dirapihin! ✨`, '✨');
+      } catch(err){
+        console.error('ahRapikanFurigana (apply):', err);
+        ahShowErrorPopup('Gagal nerapin rapikan furigana: ' + (err && err.message ? err.message : err));
+      }
+    });
+  } catch(err){
+    console.error('ahRapikanFurigana:', err);
+    ahShowErrorPopup('Gagal ngecek compound っ/ッ: ' + (err && err.message ? err.message : err));
+  }
+}
+
+document.getElementById('btnRapikanFurigana').addEventListener('click', ahRapikanFurigana);
+
+document.getElementById('btnRapikanFuriganaUndo').addEventListener('click', ()=>{
+  try {
+    const snap = state.rapikanFuriganaSnapshot;
+    if(!snap){ toast('Gak ada rapikan furigana yang bisa di-undo~', '⚠️'); return; }
+    const byId = {};
+    state.notes.forEach(n=>{ byId[n.id] = n; });
+    snap.entries.forEach(e=>{
+      const note = byId[e.id];
+      if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+    });
+    state.rapikanFuriganaSnapshot = null;
+    document.getElementById('btnRapikanFuriganaUndo').disabled = true;
+    renderTable();
+    updateStats();
+    toast('Rapikan furigana っ terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
+  } catch(err){
+    console.error('undo rapikan furigana:', err);
+    ahShowErrorPopup('Gagal ngundo rapikan furigana: ' + (err && err.message ? err.message : err));
+  }
+});
 
 document.getElementById('btnFixFuriganaUndo').addEventListener('click', ()=>{
   try {
