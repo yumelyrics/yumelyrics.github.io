@@ -1329,6 +1329,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div style="margin-top:12px;">
         <label class="field-label">Overlay Gelap (agar teks tetap terbaca) — <span id="bgOverlayVal">25</span>%</label>
         <input type="range" id="bgOverlay" min="0" max="80" value="25" />
+        <small style="display:block; margin-top:4px; opacity:0.7;">Overlay ini lapisan hitam TERPISAH di atas foto/video, numpuk sama Kecerahan di atas -- jadi hasil akhirnya lebih gelap dari sekadar angka Kecerahan sendirian.</small>
       </div>
       <div style="margin-top:12px;">
         <label class="field-label">Blur — <span id="bgBlurVal">0</span>px</label>
@@ -3494,10 +3495,28 @@ const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
   const v = document.getElementById('bgPreviewVideo');
   if(!v) return;
   const reveal = ()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; };
+  v.addEventListener('loadedmetadata', reveal);
   v.addEventListener('loadeddata', reveal);
   v.addEventListener('canplay', reveal);
   v.addEventListener('playing', reveal);
 })();
+
+// Paksa opacity video preview ke target-nya TANPA gantung ke event media (loadeddata/canplay/dst)
+// sama sekali -- event2 itu ternyata gak selalu bisa diandelin timing-nya (beda2 tiap browser,
+// dan kadang gak fire ulang pas video element di-reuse buat src baru). Dipanggil abis tiap kali
+// updateBgPreview() nyetel dataset.targetOpacity, pake double requestAnimationFrame biar browser
+// pasti udah sempet ngerender frame pertama & style-nya (repaint) sebelum opacity beneran diset.
+function ahForceRevealBgPreviewVideo(){
+  const v = document.getElementById('bgPreviewVideo');
+  if(!v) return;
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    const t = v.dataset.targetOpacity;
+    if(t) v.style.opacity = t;
+  }));
+  // Safety net kedua: kalau entah kenapa masih belum keupdate (misal rAF sempet ke-skip pas tab
+  // background), paksa lagi abis delay singkat.
+  setTimeout(()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; }, 350);
+}
 
 function updateBgPreview(){
   const cfg = state.cardBg;
@@ -3573,7 +3592,8 @@ function updateBgPreview(){
       video.style.objectPosition = `${pos.x}% ${pos.y}%`;
       video.style.filter = `blur(${cfg.blur}px)`;
       video.dataset.targetOpacity = String(cfg.opacity/100);
-      if(video.readyState >= 2) video.style.opacity = String(cfg.opacity/100);
+      if(video.readyState >= 1) video.style.opacity = String(cfg.opacity/100);
+      ahForceRevealBgPreviewVideo();
     } else {
       video.classList.add('hidden');
       if(video.dataset.srcRef){
@@ -5037,6 +5057,15 @@ async function ensureBgMediaInZip(zip, bytes, filename){
     const bytes2 = await mediaEntry.async('uint8array');
     try{ mediaMap = JSON.parse(new TextDecoder().decode(bytes2)); }
     catch(e){ const parsed = tryParseMediaProtobuf(bytes2); if(parsed) mediaMap = parsed; }
+  }
+  // PENTING (fix bengkak): kalau nama file ini (mediaFilename-nya deterministik dari hash isi
+  // filenya, lihat ahHashBytes) UDAH ADA di media map -- entah dari export sebelumnya di sesi
+  // yang sama atau emang udah ke-embed pas deck ini diimport -- jangan nambahin salinan BARU.
+  // Tanpa cek ini, tiap kali user pencet Download tanpa ganti background pun file yang SAMA
+  // kesisip lagi & lagi di bawah nomor key yang beda-beda, bikin .apkg numpuk salinan duplikat.
+  const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === filename);
+  if(existingKey !== undefined){
+    if(zip.files[existingKey]) return filename; // udah ada persis, gak usah nulis ulang bytes-nya
   }
   const usedNums = Object.keys(zip.files).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n));
   const mapNums = Object.keys(mediaMap).map(n=>parseInt(n)).filter(n=>!isNaN(n));
@@ -9880,12 +9909,19 @@ async function rebuildAsLegacyApkg(){
     try{ mediaMap = JSON.parse(mediaJson); }catch(e){ mediaMap = {}; }
     let usedNums = mediaFiles.map(n=>parseInt(n)).concat(Object.keys(mediaMap).map(n=>parseInt(n))).filter(n=>!isNaN(n));
     let nextNum = Math.max(-1, ...usedNums) + 1;
+    // PENTING (fix bengkak): sama kayak ensureBgMediaInZip -- kalau nama file background ini
+    // (deterministik dari hash isinya) UDAH ADA di media map, jangan sisipin salinan baru lagi,
+    // biar export ulang tanpa ganti background gak numpuk duplikat byte yang sama tiap kali.
+    let mapChanged = false;
     for(const f of bgFiles){
+      const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === f.filename);
+      if(existingKey !== undefined && newZip.files[existingKey]) continue;
       const key = String(nextNum++);
       mediaMap[key] = f.filename;
       newZip.file(key, f.bytes);
+      mapChanged = true;
     }
-    newZip.file('media', JSON.stringify(mediaMap));
+    if(mapChanged) newZip.file('media', JSON.stringify(mediaMap));
   }
 
   return await newZip.generateAsync({type:'blob'});
