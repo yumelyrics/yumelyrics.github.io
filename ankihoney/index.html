@@ -1489,6 +1489,10 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <button class="btn ghost" id="btnXntExport">Export Field ke Note Type Lain<small>buat dipindah ke note type/deck lain</small></button>
       <button class="btn ghost" id="btnXntImport">Import Field dari Note Type Lain<small>tempel hasil export di atas ke sini</small></button>
       <button class="btn ghost" id="btnXntUndo" disabled>Undo Import Field</button>
+      <button class="btn ghost" id="btnClearField">Kosongkan Isi Field<small>field tetap ada, isinya aja yang dikosongin</small></button>
+      <button class="btn ghost" id="btnClearFieldUndo" disabled>Undo Kosongkan Field</button>
+      <button class="btn ghost" id="btnDeleteField" style="border-color:#c0392b; color:#c0392b;">Hapus Field dari Note Type<small>field-nya beneran dihapus, bukan cuma dikosongin</small></button>
+      <button class="btn ghost" id="btnDeleteFieldUndo" disabled>Undo Hapus Field</button>
     </div>
 
     <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -1770,6 +1774,41 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div class="modal-actions">
       <button class="btn ghost" id="btnXntCancelImport">Batal</button>
       <button class="btn mint" id="btnXntApply">Terapkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- HAPUS ISI FIELD -->
+<div class="modal-bg" id="clearFieldModalBg">
+  <div class="modal">
+    <h3>🗑️ Hapus Isi Field</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Note type: <b id="clearFieldModelName">-</b>. Field yang dicentang bakal <b>dikosongin total</b> (bukan digabung/ditambah) di semua kartu yang lagi tampil di tabel (ikut filter pencarian kalau lagi aktif). Cocok dipakai sebelum re-import biar isinya gak numpuk lama+baru.
+    </p>
+    <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang mau dikosongin:</small>
+    <div class="field-checks" id="clearFieldChecks"></div>
+    <div id="clearFieldSummary" style="font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:8px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnClearFieldCancel">Batal</button>
+      <button class="btn mint" id="btnClearFieldApply">Kosongkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- HAPUS FIELD DARI NOTE TYPE (beneran ilang, bukan cuma dikosongin) -->
+<div class="modal-bg" id="deleteFieldModalBg">
+  <div class="modal">
+    <h3>🗑️ Hapus Field dari Note Type</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Note type: <b id="deleteFieldModelName">-</b>. Field yang dicentang bakal <b>DIHAPUS PERMANEN</b> dari struktur note type ini (jumlah field berkurang beneran, bukan cuma isinya yang dikosongin) — datanya di semua kartu note type ini ikut kebuang. Field yang gak dicentang gak kesentuh.
+    </p>
+    <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang mau dihapus:</small>
+    <div class="field-checks" id="deleteFieldChecks"></div>
+    <div id="deleteFieldWarn" class="hidden" style="background:#fff3cd; border:1px solid #ffe08a; color:#7a5b00; border-radius:var(--radius); padding:10px 12px; font-size:.8rem; font-weight:600; margin:10px 0;"></div>
+    <div id="deleteFieldSummary" style="font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:8px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnDeleteFieldCancel">Batal</button>
+      <button class="btn" id="btnDeleteFieldApply" style="background:#c0392b;">Hapus Field</button>
     </div>
   </div>
 </div>
@@ -8177,6 +8216,285 @@ document.getElementById('btnXntUndo').addEventListener('click', ()=>{
   say('Oke, aku balikin lagi field-nya kayak sebelum di-import tadi~ 🔙');
 });
 /* ============ END EXPORT / IMPORT FIELD LINTAS NOTE TYPE ============ */
+
+/* ============ HAPUS ISI FIELD ============ */
+const clearFieldState = { idxs: [] };
+
+function populateClearFieldChecks(){
+  const container = document.getElementById('clearFieldChecks');
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  clearFieldState.idxs = [];
+  model.flds.forEach((name, idx)=>{
+    const chip = document.createElement('label');
+    chip.className = 'field-chip';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = clearFieldState.idxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      idxs.sort((a,b)=>a-b);
+      clearFieldState.idxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      updateClearFieldSummary();
+    });
+    container.appendChild(chip);
+  });
+}
+
+function updateClearFieldSummary(){
+  const el = document.getElementById('clearFieldSummary');
+  const count = currentRows().length;
+  if(!clearFieldState.idxs.length){
+    el.textContent = 'Belum ada field yang dicentang.';
+    return;
+  }
+  el.textContent = `${count} kartu bakal kena (sesuai yang lagi tampil di tabel) — field yang dikosongin: ${clearFieldState.idxs.length} field.`;
+}
+
+document.getElementById('btnClearField').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  if(!model || !currentRows().length){ toast('Belum ada note type / kartu yang dibuka~', '⚠️'); return; }
+  document.getElementById('clearFieldModelName').textContent = model.name;
+  populateClearFieldChecks();
+  updateClearFieldSummary();
+  document.getElementById('clearFieldModalBg').classList.add('show');
+});
+document.getElementById('btnClearFieldCancel').addEventListener('click', ()=> document.getElementById('clearFieldModalBg').classList.remove('show'));
+
+document.getElementById('btnClearFieldApply').addEventListener('click', ()=>{
+  const idxs = clearFieldState.idxs;
+  if(!idxs.length){ toast('Centang minimal 1 field dulu ya~', '⚠️'); return; }
+  const model = state.models[state.currentMid];
+  const rows = currentRows();
+  if(!rows.length){ toast('Gak ada kartu yang kena (cek lagi filter pencarian kamu)~', '⚠️'); return; }
+  const fieldNames = idxs.map(i=> model.flds[i] || `Field${i+1}`).join(', ');
+  const lanjut = confirm(
+    `Field "${fieldNames}" bakal DIKOSONGIN total di ${rows.length} kartu note type "${model.name}".\n\n`+
+    `Ini gak bisa di-undo lewat tombol Undo yang lain (tapi ada tombol "Undo Hapus Field" khusus buat aksi INI, selama kamu belum lakuin aksi hapus lain sesudahnya).\n\n`+
+    `Yakin lanjut?`
+  );
+  if(!lanjut) return;
+
+  state.clearFieldSnapshot = {
+    mid: state.currentMid,
+    entries: rows.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
+  };
+
+  rows.forEach(n=>{
+    idxs.forEach(fi=>{ n.fields[fi] = ''; });
+    n.dirty = true;
+  });
+
+  document.getElementById('clearFieldModalBg').classList.remove('show');
+  renderTable();
+  document.getElementById('btnClearFieldUndo').disabled = false;
+  toast(`Field "${fieldNames}" berhasil dikosongin di ${rows.length} kartu!`, '🗑️');
+  say('Field-nya udah aku kosongin~ Sekarang bisa di-import ulang tanpa numpuk sama konten lama. 🧹');
+});
+
+document.getElementById('btnClearFieldUndo').addEventListener('click', ()=>{
+  const snap = state.clearFieldSnapshot;
+  if(!snap){ toast('Gak ada penghapusan field yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  state.clearFieldSnapshot = null;
+  document.getElementById('btnClearFieldUndo').disabled = true;
+  if(state.currentMid === snap.mid) renderTable();
+  toast('Penghapusan field terakhir dibatalin~', '↩️');
+  say('Oke, field-nya aku balikin lagi kayak sebelum dikosongin~ 🔙');
+});
+/* ============ END HAPUS ISI FIELD ============ */
+
+/* ============ HAPUS FIELD DARI NOTE TYPE (permanen, bukan cuma isinya) ============
+   Beda sama "Kosongkan Isi Field" di atas: fitur ini beneran ngurangin jumlah field
+   di note type-nya (model.flds) DAN motong index yang sama di fields array tiap note
+   yang pake note type itu, biar tetep sejajar. Semua cache pilihan field per note type
+   (centang terjemahan, furigana, rapikan, instruksi field) di-reset buat note type ini
+   karena index field-nya udah geser semua -- biar gak ada centang yang nyasar ke field
+   yang salah abis dihapus. */
+
+function ahFieldsUsedInTemplates(model, fieldNames){
+  const hits = [];
+  (model.tmpls || []).forEach(t=>{
+    fieldNames.forEach(fname=>{
+      const re = new RegExp('\\{\\{[^}]*\\b' + fname.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b[^}]*\\}\\}');
+      if(re.test(t.qfmt||'') || re.test(t.afmt||'')){
+        hits.push({ template: t.name || 'Card', field: fname });
+      }
+    });
+  });
+  return hits;
+}
+
+function populateDeleteFieldChecks(){
+  const container = document.getElementById('deleteFieldChecks');
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  deleteFieldState.idxs = [];
+  model.flds.forEach((name, idx)=>{
+    const chip = document.createElement('label');
+    chip.className = 'field-chip';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = deleteFieldState.idxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      idxs.sort((a,b)=>a-b);
+      deleteFieldState.idxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      updateDeleteFieldSummary();
+    });
+    container.appendChild(chip);
+  });
+}
+
+const deleteFieldState = { idxs: [] };
+
+function updateDeleteFieldSummary(){
+  const summaryEl = document.getElementById('deleteFieldSummary');
+  const warnEl = document.getElementById('deleteFieldWarn');
+  const model = state.models[state.currentMid];
+  const noteCount = state.notes.filter(n=> n.mid === state.currentMid).length;
+  if(!deleteFieldState.idxs.length){
+    summaryEl.textContent = 'Belum ada field yang dicentang.';
+    warnEl.classList.add('hidden');
+    return;
+  }
+  const remaining = model.flds.length - deleteFieldState.idxs.length;
+  summaryEl.textContent = `${deleteFieldState.idxs.length} field bakal dihapus dari ${noteCount} note. Sisa field setelah dihapus: ${remaining}.`;
+  if(remaining < 1){
+    summaryEl.textContent += ' ⚠️ Note type minimal harus punya 1 field, gak bisa dihapus semua.';
+  }
+  const fieldNames = deleteFieldState.idxs.map(i=> model.flds[i]);
+  const usedInTmpl = ahFieldsUsedInTemplates(model, fieldNames);
+  if(usedInTmpl.length){
+    const lines = usedInTmpl.map(h=> `• [${h.field}] dipakai di desain kartu "${h.template}"`).join('\n');
+    warnEl.textContent = `⚠️ Field yang mau dihapus ini masih dipakai di desain kartu (qfmt/afmt):\n${lines}\n\nKalau tetap dihapus, bagian itu di desain kartu bakal tampil kosong -- kamu mungkin perlu edit ulang desain kartunya juga (lewat Template Editor) biar gak ada bagian kosong nyangkut.`;
+    warnEl.style.whiteSpace = 'pre-line';
+    warnEl.classList.remove('hidden');
+  } else {
+    warnEl.classList.add('hidden');
+  }
+}
+
+document.getElementById('btnDeleteField').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  if(!model){ toast('Belum ada note type yang dibuka~', '⚠️'); return; }
+  document.getElementById('deleteFieldModelName').textContent = model.name;
+  populateDeleteFieldChecks();
+  updateDeleteFieldSummary();
+  document.getElementById('deleteFieldModalBg').classList.add('show');
+});
+document.getElementById('btnDeleteFieldCancel').addEventListener('click', ()=> document.getElementById('deleteFieldModalBg').classList.remove('show'));
+
+document.getElementById('btnDeleteFieldApply').addEventListener('click', ()=>{
+  const idxs = deleteFieldState.idxs;
+  if(!idxs.length){ toast('Centang minimal 1 field dulu ya~', '⚠️'); return; }
+  const mid = state.currentMid;
+  const model = state.models[mid];
+  if(!model){ toast('Note type gak valid~', '⚠️'); return; }
+  if(model.flds.length - idxs.length < 1){
+    toast('Note type minimal harus punya 1 field, gak bisa dihapus semua~', '⚠️');
+    return;
+  }
+  const fieldNames = idxs.map(i=> model.flds[i]);
+  const affectedNotes = state.notes.filter(n=> n.mid === mid);
+
+  const lanjut = confirm(
+    `Field "${fieldNames.join(', ')}" bakal DIHAPUS PERMANEN dari note type "${model.name}".\n\n`+
+    `Ini ngurangin jumlah field note type ini dari ${model.flds.length} jadi ${model.flds.length - idxs.length}, dan datanya di ${affectedNotes.length} note ikut kebuang.\n\n`+
+    `Ada tombol "Undo Hapus Field" kalau ternyata salah -- tapi cuma jalan selama kamu belum tutup/reload halaman ini.\n\n`+
+    `Yakin lanjut?`
+  );
+  if(!lanjut) return;
+
+  // Snapshot lengkap dulu (model + fields tiap note + cache field per note type) biar bisa di-undo.
+  state.deleteFieldSnapshot = {
+    mid,
+    model: JSON.parse(JSON.stringify(model)),
+    notes: affectedNotes.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty })),
+    fieldSelectionByModel: state.fieldSelectionByModel[mid] ? JSON.parse(JSON.stringify(state.fieldSelectionByModel[mid])) : null,
+    furiganaFieldIdxsByModel: state.furiganaFieldIdxsByModel[mid] ? state.furiganaFieldIdxsByModel[mid].slice() : null,
+    rapikanFuriganaFieldIdxsByModel: state.rapikanFuriganaFieldIdxsByModel[mid] ? state.rapikanFuriganaFieldIdxsByModel[mid].slice() : null,
+    rapikanFieldIdxsByModel: state.rapikanFieldIdxsByModel[mid] ? state.rapikanFieldIdxsByModel[mid].slice() : null,
+    fieldInstructionsByModel: state.fieldInstructionsByModel[mid] ? JSON.parse(JSON.stringify(state.fieldInstructionsByModel[mid])) : null
+  };
+
+  const delSet = new Set(idxs);
+  model.flds = model.flds.filter((_, i)=> !delSet.has(i));
+  affectedNotes.forEach(n=>{
+    n.fields = n.fields.filter((_, i)=> !delSet.has(i));
+    n.dirty = true;
+  });
+
+  // Semua cache index field per note type ini udah gak valid lagi -- reset biar
+  // di-generate ulang dari awal (default: field pertama / semua field kecentang).
+  delete state.fieldSelectionByModel[mid];
+  delete state.furiganaFieldIdxsByModel[mid];
+  delete state.rapikanFuriganaFieldIdxsByModel[mid];
+  delete state.rapikanFieldIdxsByModel[mid];
+  delete state.fieldInstructionsByModel[mid];
+
+  document.getElementById('deleteFieldModalBg').classList.remove('show');
+  populateFieldSelect();
+  populateFuriganaFieldSelect();
+  renderTable();
+  populateTemplateEditor();
+  if(typeof ahAtRefreshMappingsForModel === 'function') ahAtRefreshMappingsForModel();
+  if(typeof ahUpdateCostEstimate === 'function') ahUpdateCostEstimate();
+
+  document.getElementById('btnDeleteFieldUndo').disabled = false;
+  toast(`${fieldNames.length} field berhasil dihapus dari "${model.name}"!`, '🗑️');
+  say(`Field "${fieldNames.join(', ')}" udah aku hapus permanen dari note type "${model.name}"~ Cek dulu desain kartu & tabelnya ya! 🧹`);
+});
+
+document.getElementById('btnDeleteFieldUndo').addEventListener('click', ()=>{
+  const snap = state.deleteFieldSnapshot;
+  if(!snap){ toast('Gak ada penghapusan field yang bisa di-undo~', '⚠️'); return; }
+  state.models[snap.mid] = snap.model;
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.notes.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  if(snap.fieldSelectionByModel) state.fieldSelectionByModel[snap.mid] = snap.fieldSelectionByModel;
+  if(snap.furiganaFieldIdxsByModel) state.furiganaFieldIdxsByModel[snap.mid] = snap.furiganaFieldIdxsByModel;
+  if(snap.rapikanFuriganaFieldIdxsByModel) state.rapikanFuriganaFieldIdxsByModel[snap.mid] = snap.rapikanFuriganaFieldIdxsByModel;
+  if(snap.rapikanFieldIdxsByModel) state.rapikanFieldIdxsByModel[snap.mid] = snap.rapikanFieldIdxsByModel;
+  if(snap.fieldInstructionsByModel) state.fieldInstructionsByModel[snap.mid] = snap.fieldInstructionsByModel;
+
+  state.deleteFieldSnapshot = null;
+  document.getElementById('btnDeleteFieldUndo').disabled = true;
+  populateFieldSelect();
+  populateFuriganaFieldSelect();
+  renderTable();
+  populateTemplateEditor();
+  if(typeof ahAtRefreshMappingsForModel === 'function') ahAtRefreshMappingsForModel();
+  if(typeof ahUpdateCostEstimate === 'function') ahUpdateCostEstimate();
+  toast('Penghapusan field terakhir dibatalin, field-nya balik lagi!', '↩️');
+  say('Oke, field-nya aku balikin lagi kayak sebelum dihapus~ 🔙');
+});
+/* ============ END HAPUS FIELD DARI NOTE TYPE ============ */
 
 function snippetOf(str, n){
   n = n || 50;
