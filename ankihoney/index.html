@@ -3075,10 +3075,19 @@ function ahCaptureVideoPoster(file){
   return new Promise(resolve=>{
     let done = false;
     const url = URL.createObjectURL(file);
-    const finishNull = ()=>{ if(done) return; done = true; URL.revokeObjectURL(url); resolve(null); };
+    let vid = null;
+    const cleanup = ()=>{ URL.revokeObjectURL(url); if(vid && vid.parentNode) vid.parentNode.removeChild(vid); };
+    const finishNull = ()=>{ if(done) return; done = true; cleanup(); resolve(null); };
     try{
-      const vid = document.createElement('video');
+      vid = document.createElement('video');
       vid.muted = true; vid.playsInline = true; vid.preload = 'auto'; vid.src = url;
+      // PENTING (fix poster gagal kecapture): video element yang gak ditempel ke DOM sering gak
+      // reliable di-decode di beberapa browser (event loadeddata/seeked kadang gak fire sama
+      // sekali), yang bikin poster selalu gagal & fallback ke kotak gelap solid (#111). Nempelin
+      // ke DOM (disembunyiin off-screen, bukan display:none -- beberapa browser skip decode utk
+      // display:none) bikin decode-nya jauh lebih reliable.
+      vid.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;';
+      document.body.appendChild(vid);
       const grabFrame = ()=>{
         if(done) return; done = true;
         try{
@@ -3089,20 +3098,24 @@ function ahCaptureVideoPoster(file){
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
           canvas.toBlob(blob=>{
-            URL.revokeObjectURL(url);
+            cleanup();
             if(!blob){ resolve(null); return; }
             const reader = new FileReader();
             reader.onload = ()=> resolve({ dataUrl: reader.result, blob });
             reader.onerror = ()=> resolve(null);
             reader.readAsDataURL(blob);
           }, 'image/jpeg', 0.8);
-        }catch(err){ URL.revokeObjectURL(url); resolve(null); }
+        }catch(err){ cleanup(); resolve(null); }
       };
       vid.addEventListener('loadeddata', ()=>{
         try{ vid.currentTime = Math.min(0.15, (vid.duration || 1) / 4); }
         catch(err){ grabFrame(); }
       });
       vid.addEventListener('seeked', grabFrame);
+      // Fallback tambahan: kalau 'seeked' gak kunjung fire (currentTime gak berubah dari 0 --
+      // beberapa browser gak fire seeked kalau target time-nya kebetulan sama kayak posisi
+      // sekarang), 'canplay' jadi jaring pengaman kedua buat tetep grab frame yang ada.
+      vid.addEventListener('canplay', ()=> setTimeout(grabFrame, 120));
       vid.addEventListener('error', finishNull);
       setTimeout(finishNull, 5000); // safety net kalau video gagal fire event sama sekali
       vid.load();
@@ -3494,7 +3507,13 @@ const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
 (function setupBgPreviewVideoFade(){
   const v = document.getElementById('bgPreviewVideo');
   if(!v) return;
-  const reveal = ()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; };
+  const reveal = ()=>{
+    const t = v.dataset.targetOpacity;
+    if(t) v.style.opacity = t;
+    // Full refresh juga (bukan cuma opacity) -- jaga2 ada layer lain (poster/overlay) yang
+    // perlu ke-update begitu video-nya beneran ready diputer.
+    if(typeof updateBgPreview === 'function') updateBgPreview();
+  };
   v.addEventListener('loadedmetadata', reveal);
   v.addEventListener('loadeddata', reveal);
   v.addEventListener('canplay', reveal);
@@ -4496,12 +4515,23 @@ async function ahDetectBgFromModel(){
   cfg.syncPlatforms = syncPlatforms;
   cfg.front = front; cfg.back = back;
   cfg.pos = { desktop: desktopPos, mobile: mobilePos };
-  cfg.opacity = opacity; cfg.blur = blur; cfg.overlay = overlay; cfg.fit = fit;
+  // PENTING (fix bug utama "preview gelap sampe slider digeser"): opacity & overlay yang
+  // diekstrak dari CSS di atas itu FRACTION 0-1 (misal opacity:0.9 -> 0.9, rgba alpha 0.25 -> 0.25),
+  // sedangkan cfg.opacity & cfg.overlay di SELURUH bagian lain kode ini skalanya 0-100 (persen) --
+  // makanya harus dikali 100 dulu di sini. Sebelumnya fraction mentah langsung ditaro ke cfg (misal
+  // cfg.opacity = 0.9), jadi pas dipakai render (cfg.opacity/100) hasilnya 0.009 -- opacity foto/video
+  // jadi praktis 0% alias nyaris gak keliatan, walau slider di UI kelihatan nunjuk "90%" (karena
+  // elemen <input>-nya di-sync terpisah, lihat baris di bawah). Baru pas user geser slider manual,
+  // handler slider nyetel cfg.opacity ke angka integer yang BENAR, makanya "tiba-tiba kelihatan".
+  cfg.opacity = Math.round(opacity*100); cfg.blur = blur; cfg.overlay = Math.round(overlay*100); cfg.fit = fit;
 
   // --- Sync slider/checkbox UI ---
   const opEl = document.getElementById('bgOpacity'); if(opEl) opEl.value = Math.round(opacity*100);
+  const opValEl = document.getElementById('bgOpacityVal'); if(opValEl) opValEl.textContent = Math.round(opacity*100);
   const blEl = document.getElementById('bgBlur'); if(blEl) blEl.value = blur;
+  const blValEl = document.getElementById('bgBlurVal'); if(blValEl) blValEl.textContent = blur;
   const ovEl = document.getElementById('bgOverlay'); if(ovEl) ovEl.value = Math.round(overlay*100);
+  const ovValEl = document.getElementById('bgOverlayVal'); if(ovValEl) ovValEl.textContent = Math.round(overlay*100);
   const ftEl = document.getElementById('bgFit'); if(ftEl) ftEl.value = fit;
   const frEl = document.getElementById('bgFront'); if(frEl) frEl.checked = front;
   const bkEl = document.getElementById('bgBack'); if(bkEl) bkEl.checked = back;
