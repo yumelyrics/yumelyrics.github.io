@@ -4610,6 +4610,21 @@ function ahBuildBgMediaHtml(cfg){
   // unload dan di-restore kembali begitu video siap -- jadi video tetap lanjut dari posisi
   // yang sama, tidak restart dari detik 0.
   var wanted = ${videoDescsJson};
+  // --- Cuma mainin video background yang SESUAI device yang lagi kepake (Desktop vs Mobile) ---
+  // Sebelumnya, kalau "background beda per platform" aktif, DUA-DUANYA (video Desktop & video
+  // Mobile) sama-sama dibikin/di-load/di-play() bareng, terus yang gak kepake cuma DISEMBUNYIIN
+  // lewat CSS (@media) -- video-nya sendiri tetep jalan di background walau gak keliatan. Ini
+  // boros banget di HP (AnkiDroid/AnkiMobile): 2 video decoder jalan bareng padahal yang keliatan
+  // cuma 1. Filter di sini mastiin video platform yang LAGI GAK dipakai gak usah dibikin/di-load/
+  // di-play() SAMA SEKALI (bukan cuma disembunyiin) -- kelas 'ankihoney-bg-video-shared' (background
+  // sama buat semua platform) tetap lolos apa adanya karena emang cuma ada 1 video buat semuanya.
+  var __ahVw = (window.visualViewport && window.visualViewport.width) || window.innerWidth || document.documentElement.clientWidth;
+  var __ahIsMobile = __ahVw < ${AH_MOBILE_BREAKPOINT};
+  wanted = wanted.filter(function(w){
+    if(w.cls === 'ankihoney-bg-video-desktop') return !__ahIsMobile;
+    if(w.cls === 'ankihoney-bg-video-mobile') return __ahIsMobile;
+    return true;
+  });
   var existing = {};
   var oldVids = host.querySelectorAll('video[data-ah-cls]');
   for(var i=0;i<oldVids.length;i++){ existing[oldVids[i].dataset.ahCls] = oldVids[i]; }
@@ -5121,6 +5136,49 @@ function ahCollectBgMediaFiles(cfg){
   return list;
 }
 
+// Prefix yang dipakai SEMUA file media background bikinan AnkiHoney (foto/GIF/webp/video/poster) --
+// dipakai buat bedain "file kita" vs media asli milik user pas beberesin file lama yang udah gak kepake.
+const AH_BG_MEDIA_PREFIX = /^_ankihoney_bg/;
+
+// Kumpulin nama file background yang LAGI aktif dipakai sekarang (Desktop + Mobile, termasuk
+// poster videonya) -- dipakai buat dibandingin pas beberesin file lama yang udah gak dipake lagi.
+function ahActiveBgMediaFilenames(cfg){
+  const set = new Set();
+  [cfg && cfg.desktop, cfg && cfg.mobile].forEach(src=>{
+    if(!src || src.mode === 'url') return;
+    if(src.mediaFilename) set.add(src.mediaFilename);
+    if(src.posterMediaFilename) set.add(src.posterMediaFilename);
+  });
+  return set;
+}
+
+// Hapus file background LAMA (bikinan AnkiHoney -- misal dari deck yang emang udah ada background-nya
+// pas diimport, atau dari upload sebelumnya di sesi ini) yang GAK ADA lagi di sumber background yang
+// aktif sekarang. Dipanggil tiap kali mau nyimpen/nge-apply background, biar begitu user ganti
+// foto/video, file LAMA-nya ke-hapus dari deck alih-alih numpuk jadi sampah nganggur yang bikin
+// ukuran .apkg hasil akhir makin lama makin gede tiap kali ganti.
+async function ahPurgeOrphanBgMedia(zip, cfg){
+  const mediaEntry = zip.file('media');
+  if(!mediaEntry) return;
+  let mediaMap = {};
+  try{
+    const raw = await mediaEntry.async('uint8array');
+    try{ mediaMap = JSON.parse(new TextDecoder().decode(raw)); }
+    catch(e){ const parsed = tryParseMediaProtobuf(raw); if(parsed) mediaMap = parsed; }
+  }catch(e){ return; }
+  const active = ahActiveBgMediaFilenames(cfg);
+  let changed = false;
+  Object.keys(mediaMap).forEach(key=>{
+    const fname = mediaMap[key];
+    if(AH_BG_MEDIA_PREFIX.test(fname) && !active.has(fname)){
+      delete mediaMap[key];
+      if(zip.files[key]) zip.remove(key);
+      changed = true;
+    }
+  });
+  if(changed) zip.file('media', JSON.stringify(mediaMap));
+}
+
 async function applyCardBackgroundLegacy(){
   const res = state.db.exec("SELECT models FROM col");
   if(!res.length || !res[0].values.length) return;
@@ -5135,6 +5193,9 @@ async function applyCardBackgroundLegacy(){
 
   const cfg = state.cardBg;
   const hasBg = ahHasAnyBg(cfg) && (cfg.front || cfg.back);
+  // Beberesin file background LAMA dulu (yang udah gak kepake lagi karena user ganti foto/video baru)
+  // SEBELUM nambahin yang baru -- biar file lamanya beneran kehapus dari deck, gak numpuk jadi sampah.
+  await ahPurgeOrphanBgMedia(state.zip, cfg);
   if(hasBg){
     const files = ahCollectBgMediaFiles(cfg);
     for(const f of files){
@@ -9792,6 +9853,27 @@ async function rebuildAsLegacyApkg(){
   // internet. Bisa lebih dari 1 file sekarang: foto/GIF/video Desktop, poster video-nya (kalau
   // ada), dan -- kalau "background beda per platform" aktif -- foto/GIF/video + poster Mobile juga.
   const bgCfg = state.cardBg;
+
+  // Beberesin file background LAMA (bikinan AnkiHoney, misal dari deck yang emang udah ada
+  // background-nya pas diimport) yang udah gak kepake lagi karena user ganti foto/video baru --
+  // biar file lamanya beneran KEHAPUS dari deck, bukan ikut ke-copy apa adanya & numpuk jadi
+  // sampah nganggur di .apkg hasil akhir.
+  {
+    let mediaMapPurge = {};
+    try{ mediaMapPurge = JSON.parse(mediaJson); }catch(e){ mediaMapPurge = {}; }
+    const activeBg = ahActiveBgMediaFilenames(bgCfg);
+    let purged = false;
+    Object.keys(mediaMapPurge).forEach(key=>{
+      const fname = mediaMapPurge[key];
+      if(AH_BG_MEDIA_PREFIX.test(fname) && !activeBg.has(fname)){
+        delete mediaMapPurge[key];
+        if(newZip.files[key]) newZip.remove(key);
+        purged = true;
+      }
+    });
+    if(purged){ mediaJson = JSON.stringify(mediaMapPurge); newZip.file('media', mediaJson); }
+  }
+
   const bgFiles = ahCollectBgMediaFiles(bgCfg);
   if(bgFiles.length){
     let mediaMap = {};
