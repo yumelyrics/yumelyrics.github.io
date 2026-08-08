@@ -1329,6 +1329,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div style="margin-top:12px;">
         <label class="field-label">Overlay Gelap (agar teks tetap terbaca) — <span id="bgOverlayVal">25</span>%</label>
         <input type="range" id="bgOverlay" min="0" max="80" value="25" />
+        <small style="display:block; margin-top:4px; opacity:0.7;">Overlay ini lapisan hitam TERPISAH di atas foto/video, numpuk sama Kecerahan di atas -- jadi hasil akhirnya lebih gelap dari sekadar angka Kecerahan sendirian.</small>
       </div>
       <div style="margin-top:12px;">
         <label class="field-label">Blur — <span id="bgBlurVal">0</span>px</label>
@@ -1460,6 +1461,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <button class="btn ghost" id="btnUndoPaste" disabled>Undo Paste<small>kembalikan paste sebelumnya</small></button>
       <button class="btn ghost" id="btnFixFurigana">Perbaiki Spasi Furigana<small>agar tidak menyebar saat ditampilkan</small></button>
       <button class="btn ghost" id="btnFixFuriganaUndo" disabled>Undo Perbaikan Furigana</button>
+      <button class="btn ghost" id="btnRapikanFurigana">Rapikan Furigana っ<small>gabung compound っ/ッ yang terpisah</small></button>
+      <button class="btn ghost" id="btnRapikanFuriganaUndo" disabled>Undo Rapikan Furigana っ</button>
       <button class="btn ghost" id="btnRapikanNotes">Rapikan Notes<small>tambah baris baru agar tidak menumpuk</small></button>
       <button class="btn ghost" id="btnRapikanNotesUndo" disabled>Undo Rapikan Notes</button>
       <button class="btn ghost" id="btnExportCsv">Export CSV</button>
@@ -1467,6 +1470,10 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div id="furiganaFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
       <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin diperiksa/diperbaiki spasi furigana-nya:</small>
       <div class="field-checks" id="furiganaFieldChecks"></div>
+    </div>
+    <div id="rapikanFuriganaFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
+      <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin dirapihin furigana っ-nya:</small>
+      <div class="field-checks" id="rapikanFuriganaFieldChecks"></div>
     </div>
     <div id="rapikanFieldWrap" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin:14px 0;">
       <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin dirapihin (diberi baris baru per bagian):</small>
@@ -1477,6 +1484,16 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <button class="btn ghost" id="btnImportFile">Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
       <button class="btn" id="btnExportPdf">Export ke PDF<small>cetak jadi flashcard fisik</small></button>
+    </div>
+
+    <div class="btn-row" style="margin-top:6px;">
+      <button class="btn ghost" id="btnXntExport">Export Field ke Note Type Lain<small>buat dipindah ke note type/deck lain</small></button>
+      <button class="btn ghost" id="btnXntImport">Import Field dari Note Type Lain<small>tempel hasil export di atas ke sini</small></button>
+      <button class="btn ghost" id="btnXntUndo" disabled>Undo Import Field</button>
+      <button class="btn ghost" id="btnClearField">Kosongkan Isi Field<small>field tetap ada, isinya aja yang dikosongin</small></button>
+      <button class="btn ghost" id="btnClearFieldUndo" disabled>Undo Kosongkan Field</button>
+      <button class="btn ghost" id="btnDeleteField" style="border-color:#c0392b; color:#c0392b;">Hapus Field dari Note Type<small>field-nya beneran dihapus, bukan cuma dikosongin</small></button>
+      <button class="btn ghost" id="btnDeleteFieldUndo" disabled>Undo Hapus Field</button>
     </div>
 
     <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -1710,6 +1727,93 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 </div>
 
 <!-- PDF / PRINT FLASHCARD MODAL -->
+<!-- EXPORT FIELD LINTAS NOTE TYPE -->
+<div class="modal-bg" id="xntExportModalBg">
+  <div class="modal">
+    <h3>📤 Export Field ke Note Type Lain</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Note type sumber: <b id="xntExportModelName">-</b> · Deck: <b id="xntExportDeckName">-</b><br>
+      Pilih field yang mau di-export. Nanti nilainya dicocokkan ke note tujuan <b>berdasarkan urutan baris</b> (baris ke-1 → note ke-1, dst), jadi jumlah note di note type tujuan harus sama persis.
+    </p>
+    <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang mau di-export:</small>
+    <div class="field-checks" id="xntExportFieldChecks"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnXntCancelExport">Tutup</button>
+      <button class="btn ghost" id="btnXntDownloadExport">Download TXT</button>
+      <button class="btn mint" id="btnXntCopyExport">Salin ke Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT FIELD LINTAS NOTE TYPE -->
+<div class="modal-bg" id="xntImportModalBg">
+  <div class="modal">
+    <h3>📥 Import Field dari Note Type Lain</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Tempel teks hasil "Export Field ke Note Type Lain" di sini, pilih note type tujuan, lalu petakan tiap field sumber ke field tujuan. Diterapkan berdasarkan <b>urutan baris</b>, bukan ID.
+    </p>
+    <label class="field-label">Note Type Tujuan</label>
+    <select id="xntTargetModelSelect" style="width:100%; margin-bottom:10px;"></select>
+    <div id="xntDeckWarn" class="hidden" style="background:#fff3cd; border:1px solid #ffe08a; color:#7a5b00; border-radius:var(--radius); padding:10px 12px; font-size:.8rem; font-weight:600; margin-bottom:10px;"></div>
+
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px;">
+      <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:6px;">Alias Nama Field (opsional)</small>
+      <p style="font-weight:400; color:var(--ink-soft); font-size:.75rem; margin:0 0 8px;">
+        Kalau nama field sumber &amp; tujuan beda (misal <code>Arti</code> di sumber = <code>SentEng</code> di tujuan), daftarin di sini satu baris satu pasang pakai format <code>NamaSumber=NamaTujuan</code>. Otomatis dipakai buat pemetaan pas klik "Cek &amp; Petakan Field", dan tersimpan di browser buat dipakai lagi nanti.
+      </p>
+      <textarea id="xntAliasArea" placeholder="Arti=SentEng&#10;Catatan=Notes" style="min-height:70px;"></textarea>
+    </div>
+
+    <textarea id="xntImportArea" placeholder="[[[ANKIHONEY-FIELD-EXPORT]]]&#10;NoteType: ...&#10;Fields: ...&#10;Count: ...&#10;&#10;[[[ROW]]] (asal id:12345)&#10;[NamaField]&#10;isi..."></textarea>
+    <div class="modal-actions" style="justify-content:flex-start;">
+      <button class="btn ghost" id="btnXntUploadTxt" type="button">Upload File .txt</button>
+      <input type="file" id="xntImportFileInput" accept=".txt" class="hidden" />
+      <button class="btn ghost" id="btnXntParse">Cek &amp; Petakan Field</button>
+    </div>
+    <div id="xntImportSummary" style="font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:8px 0;"></div>
+    <div id="xntFieldMapWrap"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnXntCancelImport">Batal</button>
+      <button class="btn mint" id="btnXntApply">Terapkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- HAPUS ISI FIELD -->
+<div class="modal-bg" id="clearFieldModalBg">
+  <div class="modal">
+    <h3>🗑️ Hapus Isi Field</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Note type: <b id="clearFieldModelName">-</b>. Field yang dicentang bakal <b>dikosongin total</b> (bukan digabung/ditambah) di semua kartu yang lagi tampil di tabel (ikut filter pencarian kalau lagi aktif). Cocok dipakai sebelum re-import biar isinya gak numpuk lama+baru.
+    </p>
+    <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang mau dikosongin:</small>
+    <div class="field-checks" id="clearFieldChecks"></div>
+    <div id="clearFieldSummary" style="font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:8px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnClearFieldCancel">Batal</button>
+      <button class="btn mint" id="btnClearFieldApply">Kosongkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- HAPUS FIELD DARI NOTE TYPE (beneran ilang, bukan cuma dikosongin) -->
+<div class="modal-bg" id="deleteFieldModalBg">
+  <div class="modal">
+    <h3>🗑️ Hapus Field dari Note Type</h3>
+    <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem;">
+      Note type: <b id="deleteFieldModelName">-</b>. Field yang dicentang bakal <b>DIHAPUS PERMANEN</b> dari struktur note type ini (jumlah field berkurang beneran, bukan cuma isinya yang dikosongin) — datanya di semua kartu note type ini ikut kebuang. Field yang gak dicentang gak kesentuh.
+    </p>
+    <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang mau dihapus:</small>
+    <div class="field-checks" id="deleteFieldChecks"></div>
+    <div id="deleteFieldWarn" class="hidden" style="background:#fff3cd; border:1px solid #ffe08a; color:#7a5b00; border-radius:var(--radius); padding:10px 12px; font-size:.8rem; font-weight:600; margin:10px 0;"></div>
+    <div id="deleteFieldSummary" style="font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:8px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnDeleteFieldCancel">Batal</button>
+      <button class="btn" id="btnDeleteFieldApply" style="background:#c0392b;">Hapus Field</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="ahPdfModalBg">
   <div class="modal">
     <h3>Export ke PDF — Cetak Flashcard Fisik</h3>
@@ -2163,6 +2267,8 @@ const state = {
   fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
   furiganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIPERIKSA/DIPERBAIKI sama tombol "Perbaiki Spasi Furigana", inget per note type (default: semua field kecentang)
   furiganaFieldIdxs: [], // field yang lagi kecentang di checklist "Perbaiki Spasi Furigana" buat note type yang lagi aktif
+  rapikanFuriganaFieldIdxsByModel: {},
+  rapikanFuriganaFieldIdxs: [],
   rapikanFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIRAPIHIN sama tombol "Rapikan Notes", inget per note type (default: semua field kecentang)
   rapikanFieldIdxs: [], // field yang lagi kecentang di checklist "Rapikan Notes" buat note type yang lagi aktif
   fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
@@ -2208,6 +2314,7 @@ const state = {
   autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
   pendingDiffReview: [], // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
   fixFuriganaSnapshot: null, // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
+  rapikanFuriganaSnapshot: null,
   rapikanNotesSnapshot: null // snapshot fields SEBELUM tombol "Rapikan Notes" jalan (buat tombol Undo-nya)
 };
 
@@ -2968,10 +3075,19 @@ function ahCaptureVideoPoster(file){
   return new Promise(resolve=>{
     let done = false;
     const url = URL.createObjectURL(file);
-    const finishNull = ()=>{ if(done) return; done = true; URL.revokeObjectURL(url); resolve(null); };
+    let vid = null;
+    const cleanup = ()=>{ URL.revokeObjectURL(url); if(vid && vid.parentNode) vid.parentNode.removeChild(vid); };
+    const finishNull = ()=>{ if(done) return; done = true; cleanup(); resolve(null); };
     try{
-      const vid = document.createElement('video');
+      vid = document.createElement('video');
       vid.muted = true; vid.playsInline = true; vid.preload = 'auto'; vid.src = url;
+      // PENTING (fix poster gagal kecapture): video element yang gak ditempel ke DOM sering gak
+      // reliable di-decode di beberapa browser (event loadeddata/seeked kadang gak fire sama
+      // sekali), yang bikin poster selalu gagal & fallback ke kotak gelap solid (#111). Nempelin
+      // ke DOM (disembunyiin off-screen, bukan display:none -- beberapa browser skip decode utk
+      // display:none) bikin decode-nya jauh lebih reliable.
+      vid.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;';
+      document.body.appendChild(vid);
       const grabFrame = ()=>{
         if(done) return; done = true;
         try{
@@ -2982,20 +3098,24 @@ function ahCaptureVideoPoster(file){
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(vid, 0, 0, w, h);
           canvas.toBlob(blob=>{
-            URL.revokeObjectURL(url);
+            cleanup();
             if(!blob){ resolve(null); return; }
             const reader = new FileReader();
             reader.onload = ()=> resolve({ dataUrl: reader.result, blob });
             reader.onerror = ()=> resolve(null);
             reader.readAsDataURL(blob);
           }, 'image/jpeg', 0.8);
-        }catch(err){ URL.revokeObjectURL(url); resolve(null); }
+        }catch(err){ cleanup(); resolve(null); }
       };
       vid.addEventListener('loadeddata', ()=>{
         try{ vid.currentTime = Math.min(0.15, (vid.duration || 1) / 4); }
         catch(err){ grabFrame(); }
       });
       vid.addEventListener('seeked', grabFrame);
+      // Fallback tambahan: kalau 'seeked' gak kunjung fire (currentTime gak berubah dari 0 --
+      // beberapa browser gak fire seeked kalau target time-nya kebetulan sama kayak posisi
+      // sekarang), 'canplay' jadi jaring pengaman kedua buat tetep grab frame yang ada.
+      vid.addEventListener('canplay', ()=> setTimeout(grabFrame, 120));
       vid.addEventListener('error', finishNull);
       setTimeout(finishNull, 5000); // safety net kalau video gagal fire event sama sekali
       vid.load();
@@ -3387,11 +3507,35 @@ const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
 (function setupBgPreviewVideoFade(){
   const v = document.getElementById('bgPreviewVideo');
   if(!v) return;
-  const reveal = ()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; };
+  const reveal = ()=>{
+    const t = v.dataset.targetOpacity;
+    if(t) v.style.opacity = t;
+    // Full refresh juga (bukan cuma opacity) -- jaga2 ada layer lain (poster/overlay) yang
+    // perlu ke-update begitu video-nya beneran ready diputer.
+    if(typeof updateBgPreview === 'function') updateBgPreview();
+  };
+  v.addEventListener('loadedmetadata', reveal);
   v.addEventListener('loadeddata', reveal);
   v.addEventListener('canplay', reveal);
   v.addEventListener('playing', reveal);
 })();
+
+// Paksa opacity video preview ke target-nya TANPA gantung ke event media (loadeddata/canplay/dst)
+// sama sekali -- event2 itu ternyata gak selalu bisa diandelin timing-nya (beda2 tiap browser,
+// dan kadang gak fire ulang pas video element di-reuse buat src baru). Dipanggil abis tiap kali
+// updateBgPreview() nyetel dataset.targetOpacity, pake double requestAnimationFrame biar browser
+// pasti udah sempet ngerender frame pertama & style-nya (repaint) sebelum opacity beneran diset.
+function ahForceRevealBgPreviewVideo(){
+  const v = document.getElementById('bgPreviewVideo');
+  if(!v) return;
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    const t = v.dataset.targetOpacity;
+    if(t) v.style.opacity = t;
+  }));
+  // Safety net kedua: kalau entah kenapa masih belum keupdate (misal rAF sempet ke-skip pas tab
+  // background), paksa lagi abis delay singkat.
+  setTimeout(()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; }, 350);
+}
 
 function updateBgPreview(){
   const cfg = state.cardBg;
@@ -3467,7 +3611,8 @@ function updateBgPreview(){
       video.style.objectPosition = `${pos.x}% ${pos.y}%`;
       video.style.filter = `blur(${cfg.blur}px)`;
       video.dataset.targetOpacity = String(cfg.opacity/100);
-      if(video.readyState >= 2) video.style.opacity = String(cfg.opacity/100);
+      if(video.readyState >= 1) video.style.opacity = String(cfg.opacity/100);
+      ahForceRevealBgPreviewVideo();
     } else {
       video.classList.add('hidden');
       if(video.dataset.srcRef){
@@ -4370,12 +4515,23 @@ async function ahDetectBgFromModel(){
   cfg.syncPlatforms = syncPlatforms;
   cfg.front = front; cfg.back = back;
   cfg.pos = { desktop: desktopPos, mobile: mobilePos };
-  cfg.opacity = opacity; cfg.blur = blur; cfg.overlay = overlay; cfg.fit = fit;
+  // PENTING (fix bug utama "preview gelap sampe slider digeser"): opacity & overlay yang
+  // diekstrak dari CSS di atas itu FRACTION 0-1 (misal opacity:0.9 -> 0.9, rgba alpha 0.25 -> 0.25),
+  // sedangkan cfg.opacity & cfg.overlay di SELURUH bagian lain kode ini skalanya 0-100 (persen) --
+  // makanya harus dikali 100 dulu di sini. Sebelumnya fraction mentah langsung ditaro ke cfg (misal
+  // cfg.opacity = 0.9), jadi pas dipakai render (cfg.opacity/100) hasilnya 0.009 -- opacity foto/video
+  // jadi praktis 0% alias nyaris gak keliatan, walau slider di UI kelihatan nunjuk "90%" (karena
+  // elemen <input>-nya di-sync terpisah, lihat baris di bawah). Baru pas user geser slider manual,
+  // handler slider nyetel cfg.opacity ke angka integer yang BENAR, makanya "tiba-tiba kelihatan".
+  cfg.opacity = Math.round(opacity*100); cfg.blur = blur; cfg.overlay = Math.round(overlay*100); cfg.fit = fit;
 
   // --- Sync slider/checkbox UI ---
   const opEl = document.getElementById('bgOpacity'); if(opEl) opEl.value = Math.round(opacity*100);
+  const opValEl = document.getElementById('bgOpacityVal'); if(opValEl) opValEl.textContent = Math.round(opacity*100);
   const blEl = document.getElementById('bgBlur'); if(blEl) blEl.value = blur;
+  const blValEl = document.getElementById('bgBlurVal'); if(blValEl) blValEl.textContent = blur;
   const ovEl = document.getElementById('bgOverlay'); if(ovEl) ovEl.value = Math.round(overlay*100);
+  const ovValEl = document.getElementById('bgOverlayVal'); if(ovValEl) ovValEl.textContent = Math.round(overlay*100);
   const ftEl = document.getElementById('bgFit'); if(ftEl) ftEl.value = fit;
   const frEl = document.getElementById('bgFront'); if(frEl) frEl.checked = front;
   const bkEl = document.getElementById('bgBack'); if(bkEl) bkEl.checked = back;
@@ -4504,6 +4660,21 @@ function ahBuildBgMediaHtml(cfg){
   // unload dan di-restore kembali begitu video siap -- jadi video tetap lanjut dari posisi
   // yang sama, tidak restart dari detik 0.
   var wanted = ${videoDescsJson};
+  // --- Cuma mainin video background yang SESUAI device yang lagi kepake (Desktop vs Mobile) ---
+  // Sebelumnya, kalau "background beda per platform" aktif, DUA-DUANYA (video Desktop & video
+  // Mobile) sama-sama dibikin/di-load/di-play() bareng, terus yang gak kepake cuma DISEMBUNYIIN
+  // lewat CSS (@media) -- video-nya sendiri tetep jalan di background walau gak keliatan. Ini
+  // boros banget di HP (AnkiDroid/AnkiMobile): 2 video decoder jalan bareng padahal yang keliatan
+  // cuma 1. Filter di sini mastiin video platform yang LAGI GAK dipakai gak usah dibikin/di-load/
+  // di-play() SAMA SEKALI (bukan cuma disembunyiin) -- kelas 'ankihoney-bg-video-shared' (background
+  // sama buat semua platform) tetap lolos apa adanya karena emang cuma ada 1 video buat semuanya.
+  var __ahVw = (window.visualViewport && window.visualViewport.width) || window.innerWidth || document.documentElement.clientWidth;
+  var __ahIsMobile = __ahVw < ${AH_MOBILE_BREAKPOINT};
+  wanted = wanted.filter(function(w){
+    if(w.cls === 'ankihoney-bg-video-desktop') return !__ahIsMobile;
+    if(w.cls === 'ankihoney-bg-video-mobile') return __ahIsMobile;
+    return true;
+  });
   var existing = {};
   var oldVids = host.querySelectorAll('video[data-ah-cls]');
   for(var i=0;i<oldVids.length;i++){ existing[oldVids[i].dataset.ahCls] = oldVids[i]; }
@@ -4917,6 +5088,15 @@ async function ensureBgMediaInZip(zip, bytes, filename){
     try{ mediaMap = JSON.parse(new TextDecoder().decode(bytes2)); }
     catch(e){ const parsed = tryParseMediaProtobuf(bytes2); if(parsed) mediaMap = parsed; }
   }
+  // PENTING (fix bengkak): kalau nama file ini (mediaFilename-nya deterministik dari hash isi
+  // filenya, lihat ahHashBytes) UDAH ADA di media map -- entah dari export sebelumnya di sesi
+  // yang sama atau emang udah ke-embed pas deck ini diimport -- jangan nambahin salinan BARU.
+  // Tanpa cek ini, tiap kali user pencet Download tanpa ganti background pun file yang SAMA
+  // kesisip lagi & lagi di bawah nomor key yang beda-beda, bikin .apkg numpuk salinan duplikat.
+  const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === filename);
+  if(existingKey !== undefined){
+    if(zip.files[existingKey]) return filename; // udah ada persis, gak usah nulis ulang bytes-nya
+  }
   const usedNums = Object.keys(zip.files).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n));
   const mapNums = Object.keys(mediaMap).map(n=>parseInt(n)).filter(n=>!isNaN(n));
   const maxNum = Math.max(-1, ...usedNums, ...mapNums);
@@ -5015,6 +5195,49 @@ function ahCollectBgMediaFiles(cfg){
   return list;
 }
 
+// Prefix yang dipakai SEMUA file media background bikinan AnkiHoney (foto/GIF/webp/video/poster) --
+// dipakai buat bedain "file kita" vs media asli milik user pas beberesin file lama yang udah gak kepake.
+const AH_BG_MEDIA_PREFIX = /^_ankihoney_bg/;
+
+// Kumpulin nama file background yang LAGI aktif dipakai sekarang (Desktop + Mobile, termasuk
+// poster videonya) -- dipakai buat dibandingin pas beberesin file lama yang udah gak dipake lagi.
+function ahActiveBgMediaFilenames(cfg){
+  const set = new Set();
+  [cfg && cfg.desktop, cfg && cfg.mobile].forEach(src=>{
+    if(!src || src.mode === 'url') return;
+    if(src.mediaFilename) set.add(src.mediaFilename);
+    if(src.posterMediaFilename) set.add(src.posterMediaFilename);
+  });
+  return set;
+}
+
+// Hapus file background LAMA (bikinan AnkiHoney -- misal dari deck yang emang udah ada background-nya
+// pas diimport, atau dari upload sebelumnya di sesi ini) yang GAK ADA lagi di sumber background yang
+// aktif sekarang. Dipanggil tiap kali mau nyimpen/nge-apply background, biar begitu user ganti
+// foto/video, file LAMA-nya ke-hapus dari deck alih-alih numpuk jadi sampah nganggur yang bikin
+// ukuran .apkg hasil akhir makin lama makin gede tiap kali ganti.
+async function ahPurgeOrphanBgMedia(zip, cfg){
+  const mediaEntry = zip.file('media');
+  if(!mediaEntry) return;
+  let mediaMap = {};
+  try{
+    const raw = await mediaEntry.async('uint8array');
+    try{ mediaMap = JSON.parse(new TextDecoder().decode(raw)); }
+    catch(e){ const parsed = tryParseMediaProtobuf(raw); if(parsed) mediaMap = parsed; }
+  }catch(e){ return; }
+  const active = ahActiveBgMediaFilenames(cfg);
+  let changed = false;
+  Object.keys(mediaMap).forEach(key=>{
+    const fname = mediaMap[key];
+    if(AH_BG_MEDIA_PREFIX.test(fname) && !active.has(fname)){
+      delete mediaMap[key];
+      if(zip.files[key]) zip.remove(key);
+      changed = true;
+    }
+  });
+  if(changed) zip.file('media', JSON.stringify(mediaMap));
+}
+
 async function applyCardBackgroundLegacy(){
   const res = state.db.exec("SELECT models FROM col");
   if(!res.length || !res[0].values.length) return;
@@ -5029,6 +5252,9 @@ async function applyCardBackgroundLegacy(){
 
   const cfg = state.cardBg;
   const hasBg = ahHasAnyBg(cfg) && (cfg.front || cfg.back);
+  // Beberesin file background LAMA dulu (yang udah gak kepake lagi karena user ganti foto/video baru)
+  // SEBELUM nambahin yang baru -- biar file lamanya beneran kehapus dari deck, gak numpuk jadi sampah.
+  await ahPurgeOrphanBgMedia(state.zip, cfg);
   if(hasBg){
     const files = ahCollectBgMediaFiles(cfg);
     for(const f of files){
@@ -5550,7 +5776,45 @@ function populateFuriganaFieldSelect(){
     });
     container.appendChild(chip);
   });
+  populateRapikanFuriganaFieldSelect();
   populateRapikanFieldSelect();
+}
+
+function populateRapikanFuriganaFieldSelect(){
+  const container = document.getElementById('rapikanFuriganaFieldChecks');
+  const wrap = document.getElementById('rapikanFuriganaFieldWrap');
+  if(!container || !wrap) return;
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model || !model.flds || !model.flds.length){ wrap.style.display='none'; return; }
+  wrap.style.display='';
+  const cached = state.rapikanFuriganaFieldIdxsByModel[state.currentMid];
+  if(cached && cached.length){
+    state.rapikanFuriganaFieldIdxs = cached.filter(i=>i<model.flds.length);
+    if(!state.rapikanFuriganaFieldIdxs.length) state.rapikanFuriganaFieldIdxs = model.flds.map((_,i)=>i);
+  } else {
+    state.rapikanFuriganaFieldIdxs = model.flds.map((_,i)=>i);
+  }
+  model.flds.forEach((name,idx)=>{
+    const isSelected = state.rapikanFuriganaFieldIdxs.includes(idx);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip'+(isSelected?' active':'');
+    const cb = document.createElement('input');
+    cb.type='checkbox'; cb.checked=isSelected;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change',()=>{
+      let idxs = state.rapikanFuriganaFieldIdxs.slice();
+      if(cb.checked){ if(!idxs.includes(idx)) idxs.push(idx); }
+      else { idxs = idxs.filter(i=>i!==idx); }
+      if(!idxs.length){ cb.checked=true; idxs=[idx]; toast('Minimal 1 field harus dicentang ya~','⚠️'); }
+      idxs.sort((a,b)=>a-b);
+      state.rapikanFuriganaFieldIdxs = idxs;
+      chip.classList.toggle('active',cb.checked);
+      state.rapikanFuriganaFieldIdxsByModel[state.currentMid] = idxs.slice();
+    });
+    container.appendChild(chip);
+  });
 }
 
 // Checklist KHUSUS buat tombol "Rapikan Notes" -- sama polanya kayak checklist furigana
@@ -6948,6 +7212,86 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
 // whitespace non-standar ikut kepaksa dikasih spasi ASCII biasa juga.
 const AH_FURIGANA_NEEDS_SPACE_RE = /(?<=[\s\S])(?<![\u4E00-\u9FFF\u3005 >])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
 
+// Rapikan furigana っ/ッ:
+// Pola B (DIFIX): kanji+っ+SPASI+kanji[fur_gabungan] → pecah furigana di posisi っ
+//   末っ 子[すえっこ] → 末[すえ]っ 子[こ]
+//   引っ 越[ひっこ]  → 引[ひ]っ 越[こ]
+// Pola A (DIBIARKAN): kanji[fur1]っ kanji[fur2] → sudah benar
+//   真[ま]っ 赤[か]  → tidak diubah
+function ahFixSmallTsuFurigana(val){
+  if(typeof val !== 'string' || !val) return { out: val, count: 0 };
+  if(val.indexOf('っ') === -1 && val.indexOf('ッ') === -1) return { out: val, count: 0 };
+  let out = val, count = 0;
+  // (?<!\]) = pastiin tidak ada ] sebelum kanji (berarti kanji tidak punya furigana sendiri = Pola B)
+  out = out.replace(
+    /(?<!\])([\u4e00-\u9fff\u3005]+)([っッ]) ([\u4e00-\u9fff\u3005]+)\[([^\[\]]+)\]/g,
+    (match, k1, tsu, k2, fur) => {
+      const smallTsu = fur.includes('っ') ? 'っ' : fur.includes('ッ') ? 'ッ' : null;
+      count++;
+      if(!smallTsu) return k1 + tsu + k2 + '[' + fur + ']'; // fallback: hapus spasi saja
+      const si = fur.indexOf(smallTsu);
+      const fur1 = fur.slice(0, si), fur2 = fur.slice(si + 1);
+      if(!fur1 || !fur2) return k1 + tsu + k2 + '[' + fur + ']';
+      return k1 + '[' + fur1 + ']' + tsu + ' ' + k2 + '[' + fur2 + ']';
+    }
+  );
+  return { out, count };
+}
+
+function ahRapikanFurigana(){
+  try {
+    if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!','😿'); return; }
+    const model = state.models[state.currentMid];
+    const rows = state.notes.filter(n=>n.mid===state.currentMid);
+    if(!rows.length){ toast('Gak ada catatan buat note type ini~','😿'); return; }
+    const fieldIdxs = (state.rapikanFuriganaFieldIdxs && state.rapikanFuriganaFieldIdxs.length)
+      ? state.rapikanFuriganaFieldIdxs.slice() : null;
+    const changes = []; let totalFixes = 0; const perFieldFixes = {};
+    rows.forEach(n=>{
+      let fixCount = 0;
+      const idxsToScan = fieldIdxs || n.fields.map((_,i)=>i);
+      const newFields = n.fields.slice();
+      idxsToScan.forEach(idx=>{
+        const val = n.fields[idx];
+        if(typeof val !== 'string') return;
+        if(val.indexOf('っ')===-1 && val.indexOf('ッ')===-1) return;
+        const { out, count } = ahFixSmallTsuFurigana(val);
+        if(count > 0){ newFields[idx]=out; fixCount+=count; perFieldFixes[idx]=(perFieldFixes[idx]||0)+count; }
+      });
+      if(fixCount > 0){ changes.push({ note:n, newFields, oldFields:n.fields.slice(), oldDirty:n.dirty }); totalFixes+=fixCount; }
+    });
+    if(!changes.length){ toast('Furigana っ/ッ di field yang dicentang udah rapi~ ✨','✨'); return; }
+    const fieldNames = model && model.flds ? model.flds : [];
+    const breakdown = Object.keys(perFieldFixes).sort((a,b)=>a-b)
+      .map(idx=>`- ${fieldNames[idx]||('Field '+(Number(idx)+1))}: ${perFieldFixes[idx]}x`).join('\n');
+    const message = `Ketemu ${totalFixes} compound っ/ッ yang perlu dirapihin di ${changes.length} catatan.\n\nField yang bakal diperbaiki:\n${breakdown}\n\nContoh: 末っ 子[すえっこ] → 末[すえ]っ 子[こ]\nFormat 真[ま]っ 赤[か] (tiap kanji punya furigana sendiri) TIDAK diubah.\n\nAda tombol "Undo" kalau hasilnya kurang pas.`;
+    ahShowFuriganaConfirmModal(message, ()=>{
+      try {
+        state.rapikanFuriganaSnapshot = { entries: changes.map(c=>({ id:c.note.id, fields:c.oldFields, dirty:c.oldDirty })) };
+        changes.forEach(c=>{ c.note.fields=c.newFields; c.note.dirty=true; });
+        document.getElementById('btnRapikanFuriganaUndo').disabled = false;
+        renderTable(); updateStats();
+        toast(`${totalFixes} compound っ/ッ di ${changes.length} catatan udah dirapihin! ✨`,'✨');
+      } catch(err){ console.error('ahRapikanFurigana apply:',err); ahShowErrorPopup('Gagal: '+(err&&err.message?err.message:err)); }
+    });
+  } catch(err){ console.error('ahRapikanFurigana:',err); ahShowErrorPopup('Error: '+(err&&err.message?err.message:err)); }
+}
+
+document.getElementById('btnRapikanFurigana').addEventListener('click', ahRapikanFurigana);
+
+document.getElementById('btnRapikanFuriganaUndo').addEventListener('click', ()=>{
+  try {
+    const snap = state.rapikanFuriganaSnapshot;
+    if(!snap){ toast('Gak ada yang bisa di-undo~','⚠️'); return; }
+    const byId = {}; state.notes.forEach(n=>{ byId[n.id]=n; });
+    snap.entries.forEach(e=>{ const note=byId[e.id]; if(note){ note.fields=e.fields.slice(); note.dirty=e.dirty; } });
+    state.rapikanFuriganaSnapshot = null;
+    document.getElementById('btnRapikanFuriganaUndo').disabled = true;
+    renderTable(); updateStats();
+    toast('Rapikan furigana っ terakhir dibatalin~','↩️');
+  } catch(err){ console.error('undo rapikan furigana:',err); ahShowErrorPopup('Gagal undo: '+(err&&err.message?err.message:err)); }
+});
+
 // Modal konfirmasi KHUSUS buat "Perbaiki Spasi Furigana" -- dulu pake window.confirm() bawaan
 // browser, tapi itu bisa silently gagal/no-op (balikin false tanpa nampilin dialog apapun) di
 // banyak WebView/in-app-browser/iframe (misal dibuka di dalem app lain, PWA ke-install, dst),
@@ -7625,6 +7969,652 @@ document.getElementById('btnUndoPaste').addEventListener('click', ()=>{
   toast('Paste terakhir dibatalin, balik ke sebelum di-apply!', '↩️');
   say('Oke, aku balikin lagi kayak sebelum paste tadi~ 🔙');
 });
+
+/* ============ EXPORT / IMPORT FIELD LINTAS NOTE TYPE ============
+   Beda sama fitur Paste Terjemahan (yang matching-nya pakai [[[ID:...]]] dan
+   ID note SAMA), fitur ini buat mindahin isi field ke note type LAIN dalam
+   satu deck -- ID note-nya otomatis beda karena notenya emang beda. Jadi
+   matching dilakukan berdasarkan URUTAN BARIS (posisi ke-i sumber -> note
+   ke-i tujuan), bukan ID. ID asli tetap dicatat di teks export cuma buat
+   referensi/debug manusia, sama sekali gak dipakai buat matching. */
+
+// Sengaja gak di-cache ke state -- dipanggil cuma pas modal export/import dibuka
+// (bukan tiap render), dan biar selalu akurat walau abis ganti file / gabung deck
+// (yang bisa bikin cardsRows berubah tanpa event yang jelas buat invalidate cache).
+function ahNidToDid(){
+  const map = {};
+  (state.cardsRows || []).forEach(r=>{
+    const nid = String(r[1]);
+    if(!(nid in map)) map[nid] = String(r[2]);
+  });
+  return map;
+}
+
+function ahDidsForMid(mid){
+  const nidMap = ahNidToDid();
+  const dids = new Set();
+  state.notes.filter(n=> String(n.mid) === String(mid)).forEach(n=>{
+    const d = nidMap[String(n.id)];
+    if(d) dids.add(d);
+  });
+  return dids;
+}
+
+function ahDeckNamesForDids(dids){
+  return [...dids].map(d=> (state.deckNameOverrides && state.deckNameOverrides[d]) || state.decksMap[d] || `Deck ${d}`);
+}
+
+const xntState = { exportFieldIdxs: [] };
+
+function populateXntExportFieldChecks(){
+  const container = document.getElementById('xntExportFieldChecks');
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  xntState.exportFieldIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length)
+    ? state.selectedFieldIdxs.slice()
+    : (model.flds.length ? [0] : []);
+  model.flds.forEach((name, idx)=>{
+    const isSelected = xntState.exportFieldIdxs.includes(idx);
+    const chip = document.createElement('label');
+    chip.className = 'field-chip' + (isSelected ? ' active' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isSelected;
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = xntState.exportFieldIdxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      if(idxs.length === 0){
+        cb.checked = true;
+        idxs = [idx];
+        toast('Minimal 1 field harus dicentang ya~', '⚠️');
+      }
+      idxs.sort((a,b)=>a-b);
+      xntState.exportFieldIdxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+    });
+    container.appendChild(chip);
+  });
+}
+
+document.getElementById('btnXntExport').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  const rows = state.notes.filter(n=> n.mid === state.currentMid);
+  if(!model || !rows.length){ toast('Belum ada note type / kartu yang dibuka~', '⚠️'); return; }
+  document.getElementById('xntExportModelName').textContent = model.name;
+  const dids = ahDidsForMid(state.currentMid);
+  const deckNames = ahDeckNamesForDids(dids);
+  document.getElementById('xntExportDeckName').textContent = deckNames.length ? deckNames.join(', ') : '(tidak diketahui)';
+  populateXntExportFieldChecks();
+  document.getElementById('xntExportModalBg').classList.add('show');
+});
+document.getElementById('btnXntCancelExport').addEventListener('click', ()=> document.getElementById('xntExportModalBg').classList.remove('show'));
+
+function ahBuildXntExportText(){
+  const model = state.models[state.currentMid];
+  const idxs = xntState.exportFieldIdxs.length ? xntState.exportFieldIdxs : [0];
+  const fnames = idxs.map(i=> model.flds[i] || `Field${i+1}`);
+  const rows = state.notes.filter(n=> n.mid === state.currentMid);
+  const body = rows.map(n=>{
+    const parts = idxs.map(fi=>{
+      const fname = model.flds[fi] || `Field${fi+1}`;
+      const val = n.fields[fi] || '';
+      return `[${fname}]\n${val}`;
+    }).join('\n');
+    return `[[[ROW]]] (asal id:${n.id})\n${parts}`;
+  }).join('\n\n');
+  const header = `[[[ANKIHONEY-FIELD-EXPORT]]]\nNoteType: ${model.name}\nFields: ${fnames.join('|')}\nCount: ${rows.length}\n\n`;
+  return header + body;
+}
+
+document.getElementById('btnXntCopyExport').addEventListener('click', async ()=>{
+  const text = ahBuildXntExportText();
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Field berhasil disalin! Siap ditempel ke note type lain~', '📤');
+    say('Field-nya udah aku salin, tinggal buka "Import Field dari Note Type Lain" di note type tujuan ya~ 📤');
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Disalin (mode fallback)!', '📤');
+  }
+});
+
+document.getElementById('btnXntDownloadExport').addEventListener('click', ()=>{
+  downloadBlob(ahBuildXntExportText(), 'anki_field_export_lintas_notetype.txt', 'text/plain;charset=utf-8;');
+  toast('File export berhasil didownload!', '⬇️');
+});
+
+let xntImportParsed = null; // {sourceNoteType, fields:[names], declaredCount, rows:[{fieldName:value}]}
+let xntFieldMap = [];       // index sejajar xntImportParsed.fields -> index field note type tujuan (-1 = lewati)
+
+function populateXntTargetModelSelect(){
+  const sel = document.getElementById('xntTargetModelSelect');
+  sel.innerHTML = '';
+  const midsUsed = [...new Set(state.notes.map(n=> n.mid))];
+  midsUsed.forEach(mid=>{
+    const model = state.models[mid];
+    if(!model) return;
+    const count = state.notes.filter(n=> n.mid === mid).length;
+    const opt = document.createElement('option');
+    opt.value = mid;
+    opt.textContent = `${model.name} (${count} notes)`;
+    sel.appendChild(opt);
+  });
+  const otherMid = midsUsed.find(m=> m !== state.currentMid);
+  sel.value = otherMid || midsUsed[0] || '';
+}
+
+function ahXntUpdateDeckWarn(){
+  const warnEl = document.getElementById('xntDeckWarn');
+  const targetMid = document.getElementById('xntTargetModelSelect').value;
+  if(!targetMid){ warnEl.classList.add('hidden'); return; }
+  const srcDids = ahDidsForMid(state.currentMid);
+  const dstDids = ahDidsForMid(targetMid);
+  const overlap = [...srcDids].some(d=> dstDids.has(d));
+  if(srcDids.size && dstDids.size && !overlap){
+    warnEl.textContent = `⚠️ Note type sumber (deck: ${ahDeckNamesForDids(srcDids).join(', ')}) dan note type tujuan (deck: ${ahDeckNamesForDids(dstDids).join(', ')}) kelihatannya BEDA deck. Fitur ini idealnya dipakai buat mindahin field antar note type di deck yang SAMA -- lanjut cuma kalau kamu emang yakin.`;
+    warnEl.classList.remove('hidden');
+  } else {
+    warnEl.classList.add('hidden');
+  }
+}
+
+document.getElementById('btnXntImport').addEventListener('click', ()=>{
+  populateXntTargetModelSelect();
+  document.getElementById('xntImportArea').value = '';
+  document.getElementById('xntFieldMapWrap').innerHTML = '';
+  document.getElementById('xntImportSummary').textContent = '';
+  xntImportParsed = null;
+  ahXntUpdateDeckWarn();
+  ahXntLoadAliasArea();
+  document.getElementById('xntImportModalBg').classList.add('show');
+});
+document.getElementById('xntTargetModelSelect').addEventListener('change', ()=>{
+  ahXntUpdateDeckWarn();
+  // ganti note type tujuan -> pemetaan lama gak relevan lagi, minta parse ulang.
+  xntImportParsed = null;
+  document.getElementById('xntFieldMapWrap').innerHTML = '';
+  document.getElementById('xntImportSummary').textContent = 'Note type tujuan diganti, klik "Cek & Petakan Field" lagi ya~';
+});
+document.getElementById('btnXntCancelImport').addEventListener('click', ()=> document.getElementById('xntImportModalBg').classList.remove('show'));
+
+const AH_XNT_ALIAS_KEY = 'ankihoney_xnt_field_aliases';
+
+// Default alias kosong -- diisi user sendiri lewat textarea, disimpan otomatis tiap diketik.
+function ahXntLoadAliasArea(){
+  const ta = document.getElementById('xntAliasArea');
+  let saved = null;
+  try{ saved = localStorage.getItem(AH_XNT_ALIAS_KEY); }catch(e){}
+  if(saved === null){
+    saved = 'Arti=SentEng\nCatatan=Notes';
+    try{ localStorage.setItem(AH_XNT_ALIAS_KEY, saved); }catch(e){}
+  }
+  ta.value = saved;
+}
+document.getElementById('xntAliasArea').addEventListener('input', (e)=>{
+  try{ localStorage.setItem(AH_XNT_ALIAS_KEY, e.target.value); }catch(err){}
+});
+
+// Parse teks alias "NamaSumber=NamaTujuan" (satu baris satu pasang) jadi map
+// key lowercase-trim -> nama tujuan APA ADANYA (dicocokkan case-insensitive ke field asli).
+function ahXntParseAliasMap(){
+  const raw = document.getElementById('xntAliasArea').value || '';
+  const map = {};
+  raw.split('\n').forEach(line=>{
+    const idx = line.indexOf('=');
+    if(idx === -1) return;
+    const src = line.slice(0, idx).trim();
+    const dst = line.slice(idx+1).trim();
+    if(src && dst) map[src.toLowerCase()] = dst;
+  });
+  return map;
+}
+
+// Cari index field tujuan buat satu nama field sumber: exact match dulu, baru fallback ke alias.
+function ahXntResolveTargetFieldIdx(fname, targetModel, aliasMap){
+  if(!targetModel) return -1;
+  let idx = targetModel.flds.findIndex(t=> t === fname);
+  if(idx !== -1) return idx;
+  const aliasTarget = aliasMap[fname.trim().toLowerCase()];
+  if(aliasTarget){
+    idx = targetModel.flds.findIndex(t=> t.toLowerCase() === aliasTarget.toLowerCase());
+    if(idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function ahParseXntExportText(raw){
+  const headerMatch = raw.match(/\[\[\[ANKIHONEY-FIELD-EXPORT\]\]\]\s*\nNoteType:\s*(.*)\nFields:\s*(.*)\nCount:\s*(\d+)/);
+  if(!headerMatch) return null;
+  const fields = headerMatch[2].split('|').map(s=> s.trim()).filter(Boolean);
+  const declaredCount = parseInt(headerMatch[3]) || 0;
+  const rowRegex = /\[\[\[ROW\]\]\][^\n]*\n([\s\S]*?)(?=\n*\[\[\[ROW\]\]\]|$)/g;
+  let m; const rows = [];
+  while((m = rowRegex.exec(raw)) !== null){
+    const block = m[1];
+    const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|(?![\s\S]))/gm;
+    const fm = [...block.matchAll(fieldTagRegex)];
+    const values = {};
+    fm.forEach(f=>{ values[f[1].trim()] = f[2].replace(/\n+$/,''); });
+    rows.push(values);
+  }
+  return { sourceNoteType: headerMatch[1].trim(), fields, declaredCount, rows };
+}
+
+document.getElementById('btnXntUploadTxt').addEventListener('click', ()=> document.getElementById('xntImportFileInput').click());
+document.getElementById('xntImportFileInput').addEventListener('change', async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const text = await f.text();
+  document.getElementById('xntImportArea').value = text;
+  e.target.value = '';
+  toast('File berhasil dimuat! Klik "Cek & Petakan Field" buat lanjut~', '📄');
+  document.getElementById('btnXntParse').click();
+});
+
+document.getElementById('btnXntParse').addEventListener('click', ()=>{
+  const raw = document.getElementById('xntImportArea').value;
+  const parsed = ahParseXntExportText(raw);
+  const summaryEl = document.getElementById('xntImportSummary');
+  const mapWrap = document.getElementById('xntFieldMapWrap');
+  if(!parsed || !parsed.fields.length){
+    summaryEl.textContent = '❌ Format teks gak dikenali. Pastikan ini hasil dari "Export Field ke Note Type Lain" dan gak ada bagian yang kehapus/keubah.';
+    xntImportParsed = null;
+    mapWrap.innerHTML = '';
+    return;
+  }
+  xntImportParsed = parsed;
+  const targetMid = document.getElementById('xntTargetModelSelect').value;
+  const targetModel = state.models[targetMid];
+  const targetCount = state.notes.filter(n=> n.mid === targetMid).length;
+  const countMatch = parsed.rows.length === targetCount;
+  summaryEl.innerHTML = `Sumber: <b>${parsed.sourceNoteType}</b>, ${parsed.rows.length} baris field (${parsed.fields.join(', ')}).<br>`+
+    `Tujuan: <b>${targetModel ? targetModel.name : '?'}</b>, ${targetCount} note.<br>`+
+    (countMatch
+      ? `✅ Jumlah baris cocok, siap dipetakan & diterapkan per urutan.`
+      : `⚠️ Jumlah BEDA (${parsed.rows.length} baris sumber vs ${targetCount} note tujuan) — kalau tetap lanjut, cuma ${Math.min(parsed.rows.length, targetCount)} baris pertama (sesuai urutan) yang bakal diterapkan, sisanya dilewatin.`);
+
+  mapWrap.innerHTML = '';
+  xntFieldMap = parsed.fields.map(()=> -1);
+  parsed.fields.forEach((fname, i)=>{
+    const row = document.createElement('div');
+    row.className = 'deck-name-row';
+    const label = document.createElement('div');
+    label.className = 'deck-name-orig';
+    label.textContent = `[${fname}] →`;
+    row.appendChild(label);
+    const sel = document.createElement('select');
+    sel.className = 'deckNameInput';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '-1';
+    emptyOpt.textContent = '(lewati field ini)';
+    sel.appendChild(emptyOpt);
+    (targetModel ? targetModel.flds : []).forEach((tfname, ti)=>{
+      const opt = document.createElement('option');
+      opt.value = String(ti);
+      opt.textContent = `${ti+1}. ${tfname}`;
+      sel.appendChild(opt);
+    });
+    const autoIdx = ahXntResolveTargetFieldIdx(fname, targetModel, ahXntParseAliasMap());
+    if(autoIdx !== -1){ sel.value = String(autoIdx); xntFieldMap[i] = autoIdx; }
+    sel.addEventListener('change', ()=>{ xntFieldMap[i] = parseInt(sel.value); });
+    row.appendChild(sel);
+    mapWrap.appendChild(row);
+  });
+});
+
+document.getElementById('btnXntApply').addEventListener('click', ()=>{
+  if(!xntImportParsed){ toast('Klik "Cek & Petakan Field" dulu ya, sebelum Terapkan~', '⚠️'); return; }
+  const targetMid = document.getElementById('xntTargetModelSelect').value;
+  const targetModel = state.models[targetMid];
+  if(!targetModel){ toast('Note type tujuan gak valid~', '⚠️'); return; }
+  const usedIdxs = xntFieldMap.filter(i=> i >= 0);
+  if(!usedIdxs.length){ toast('Minimal 1 field harus dipetakan ke field tujuan~', '⚠️'); return; }
+  if(new Set(usedIdxs).size !== usedIdxs.length){ toast('Ada field tujuan yang dipilih dobel, betulin dulu ya~', '⚠️'); return; }
+
+  const targetNotes = state.notes.filter(n=> n.mid === targetMid);
+  const rows = xntImportParsed.rows;
+  const n = Math.min(rows.length, targetNotes.length);
+  if(!n){ toast('Gak ada baris/note yang bisa diterapkan~', '⚠️'); return; }
+  if(rows.length !== targetNotes.length){
+    const lanjut = confirm(
+      `Jumlah baris sumber (${rows.length}) beda sama jumlah note tujuan (${targetNotes.length}).\n\n`+
+      `Kalau lanjut, cuma ${n} baris pertama (sesuai urutan) yang bakal diterapkan, sisanya dilewatin.\n\n`+
+      `Lanjut?`
+    );
+    if(!lanjut) return;
+  }
+
+  // Snapshot dulu sebelum diterapin biar bisa di-undo.
+  state.xntImportSnapshot = {
+    mid: targetMid,
+    entries: targetNotes.slice(0, n).map(nt=> ({ id: nt.id, fields: nt.fields.slice(), dirty: nt.dirty }))
+  };
+
+  let applied = 0;
+  for(let i=0; i<n; i++){
+    const note = targetNotes[i];
+    const rowVals = rows[i];
+    xntImportParsed.fields.forEach((fname, fi)=>{
+      const targetIdx = xntFieldMap[fi];
+      if(targetIdx < 0) return;
+      note.fields[targetIdx] = rowVals[fname] !== undefined ? rowVals[fname] : '';
+    });
+    note.dirty = true;
+    applied++;
+  }
+
+  document.getElementById('xntImportModalBg').classList.remove('show');
+  if(state.currentMid === targetMid) renderTable();
+  const undoBtn = document.getElementById('btnXntUndo');
+  if(undoBtn) undoBtn.disabled = false;
+  toast(`${applied} note di "${targetModel.name}" berhasil diisi dari field yang di-export!`, '📥');
+  say(`Field-nya udah aku pindahin ke note type "${targetModel.name}"~ Cek dulu tabelnya sebelum download ya! 🎉`);
+});
+
+document.getElementById('btnXntUndo').addEventListener('click', ()=>{
+  const snap = state.xntImportSnapshot;
+  if(!snap){ toast('Gak ada import field yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  state.xntImportSnapshot = null;
+  document.getElementById('btnXntUndo').disabled = true;
+  if(state.currentMid === snap.mid) renderTable();
+  toast('Import field terakhir dibatalin~', '↩️');
+  say('Oke, aku balikin lagi field-nya kayak sebelum di-import tadi~ 🔙');
+});
+/* ============ END EXPORT / IMPORT FIELD LINTAS NOTE TYPE ============ */
+
+/* ============ HAPUS ISI FIELD ============ */
+const clearFieldState = { idxs: [] };
+
+function populateClearFieldChecks(){
+  const container = document.getElementById('clearFieldChecks');
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  clearFieldState.idxs = [];
+  model.flds.forEach((name, idx)=>{
+    const chip = document.createElement('label');
+    chip.className = 'field-chip';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = clearFieldState.idxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      idxs.sort((a,b)=>a-b);
+      clearFieldState.idxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      updateClearFieldSummary();
+    });
+    container.appendChild(chip);
+  });
+}
+
+function updateClearFieldSummary(){
+  const el = document.getElementById('clearFieldSummary');
+  const count = currentRows().length;
+  if(!clearFieldState.idxs.length){
+    el.textContent = 'Belum ada field yang dicentang.';
+    return;
+  }
+  el.textContent = `${count} kartu bakal kena (sesuai yang lagi tampil di tabel) — field yang dikosongin: ${clearFieldState.idxs.length} field.`;
+}
+
+document.getElementById('btnClearField').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  if(!model || !currentRows().length){ toast('Belum ada note type / kartu yang dibuka~', '⚠️'); return; }
+  document.getElementById('clearFieldModelName').textContent = model.name;
+  populateClearFieldChecks();
+  updateClearFieldSummary();
+  document.getElementById('clearFieldModalBg').classList.add('show');
+});
+document.getElementById('btnClearFieldCancel').addEventListener('click', ()=> document.getElementById('clearFieldModalBg').classList.remove('show'));
+
+document.getElementById('btnClearFieldApply').addEventListener('click', ()=>{
+  const idxs = clearFieldState.idxs;
+  if(!idxs.length){ toast('Centang minimal 1 field dulu ya~', '⚠️'); return; }
+  const model = state.models[state.currentMid];
+  const rows = currentRows();
+  if(!rows.length){ toast('Gak ada kartu yang kena (cek lagi filter pencarian kamu)~', '⚠️'); return; }
+  const fieldNames = idxs.map(i=> model.flds[i] || `Field${i+1}`).join(', ');
+  const lanjut = confirm(
+    `Field "${fieldNames}" bakal DIKOSONGIN total di ${rows.length} kartu note type "${model.name}".\n\n`+
+    `Ini gak bisa di-undo lewat tombol Undo yang lain (tapi ada tombol "Undo Hapus Field" khusus buat aksi INI, selama kamu belum lakuin aksi hapus lain sesudahnya).\n\n`+
+    `Yakin lanjut?`
+  );
+  if(!lanjut) return;
+
+  state.clearFieldSnapshot = {
+    mid: state.currentMid,
+    entries: rows.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty }))
+  };
+
+  rows.forEach(n=>{
+    idxs.forEach(fi=>{ n.fields[fi] = ''; });
+    n.dirty = true;
+  });
+
+  document.getElementById('clearFieldModalBg').classList.remove('show');
+  renderTable();
+  document.getElementById('btnClearFieldUndo').disabled = false;
+  toast(`Field "${fieldNames}" berhasil dikosongin di ${rows.length} kartu!`, '🗑️');
+  say('Field-nya udah aku kosongin~ Sekarang bisa di-import ulang tanpa numpuk sama konten lama. 🧹');
+});
+
+document.getElementById('btnClearFieldUndo').addEventListener('click', ()=>{
+  const snap = state.clearFieldSnapshot;
+  if(!snap){ toast('Gak ada penghapusan field yang bisa di-undo~', '⚠️'); return; }
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.entries.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  state.clearFieldSnapshot = null;
+  document.getElementById('btnClearFieldUndo').disabled = true;
+  if(state.currentMid === snap.mid) renderTable();
+  toast('Penghapusan field terakhir dibatalin~', '↩️');
+  say('Oke, field-nya aku balikin lagi kayak sebelum dikosongin~ 🔙');
+});
+/* ============ END HAPUS ISI FIELD ============ */
+
+/* ============ HAPUS FIELD DARI NOTE TYPE (permanen, bukan cuma isinya) ============
+   Beda sama "Kosongkan Isi Field" di atas: fitur ini beneran ngurangin jumlah field
+   di note type-nya (model.flds) DAN motong index yang sama di fields array tiap note
+   yang pake note type itu, biar tetep sejajar. Semua cache pilihan field per note type
+   (centang terjemahan, furigana, rapikan, instruksi field) di-reset buat note type ini
+   karena index field-nya udah geser semua -- biar gak ada centang yang nyasar ke field
+   yang salah abis dihapus. */
+
+function ahFieldsUsedInTemplates(model, fieldNames){
+  const hits = [];
+  (model.tmpls || []).forEach(t=>{
+    fieldNames.forEach(fname=>{
+      const re = new RegExp('\\{\\{[^}]*\\b' + fname.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b[^}]*\\}\\}');
+      if(re.test(t.qfmt||'') || re.test(t.afmt||'')){
+        hits.push({ template: t.name || 'Card', field: fname });
+      }
+    });
+  });
+  return hits;
+}
+
+function populateDeleteFieldChecks(){
+  const container = document.getElementById('deleteFieldChecks');
+  container.innerHTML = '';
+  const model = state.models[state.currentMid];
+  if(!model) return;
+  deleteFieldState.idxs = [];
+  model.flds.forEach((name, idx)=>{
+    const chip = document.createElement('label');
+    chip.className = 'field-chip';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    chip.appendChild(cb);
+    chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
+    cb.addEventListener('change', ()=>{
+      let idxs = deleteFieldState.idxs.slice();
+      if(cb.checked){
+        if(!idxs.includes(idx)) idxs.push(idx);
+      } else {
+        idxs = idxs.filter(i=> i!==idx);
+      }
+      idxs.sort((a,b)=>a-b);
+      deleteFieldState.idxs = idxs;
+      chip.classList.toggle('active', cb.checked);
+      updateDeleteFieldSummary();
+    });
+    container.appendChild(chip);
+  });
+}
+
+const deleteFieldState = { idxs: [] };
+
+function updateDeleteFieldSummary(){
+  const summaryEl = document.getElementById('deleteFieldSummary');
+  const warnEl = document.getElementById('deleteFieldWarn');
+  const model = state.models[state.currentMid];
+  const noteCount = state.notes.filter(n=> n.mid === state.currentMid).length;
+  if(!deleteFieldState.idxs.length){
+    summaryEl.textContent = 'Belum ada field yang dicentang.';
+    warnEl.classList.add('hidden');
+    return;
+  }
+  const remaining = model.flds.length - deleteFieldState.idxs.length;
+  summaryEl.textContent = `${deleteFieldState.idxs.length} field bakal dihapus dari ${noteCount} note. Sisa field setelah dihapus: ${remaining}.`;
+  if(remaining < 1){
+    summaryEl.textContent += ' ⚠️ Note type minimal harus punya 1 field, gak bisa dihapus semua.';
+  }
+  const fieldNames = deleteFieldState.idxs.map(i=> model.flds[i]);
+  const usedInTmpl = ahFieldsUsedInTemplates(model, fieldNames);
+  if(usedInTmpl.length){
+    const lines = usedInTmpl.map(h=> `• [${h.field}] dipakai di desain kartu "${h.template}"`).join('\n');
+    warnEl.textContent = `⚠️ Field yang mau dihapus ini masih dipakai di desain kartu (qfmt/afmt):\n${lines}\n\nKalau tetap dihapus, bagian itu di desain kartu bakal tampil kosong -- kamu mungkin perlu edit ulang desain kartunya juga (lewat Template Editor) biar gak ada bagian kosong nyangkut.`;
+    warnEl.style.whiteSpace = 'pre-line';
+    warnEl.classList.remove('hidden');
+  } else {
+    warnEl.classList.add('hidden');
+  }
+}
+
+document.getElementById('btnDeleteField').addEventListener('click', ()=>{
+  const model = state.models[state.currentMid];
+  if(!model){ toast('Belum ada note type yang dibuka~', '⚠️'); return; }
+  document.getElementById('deleteFieldModelName').textContent = model.name;
+  populateDeleteFieldChecks();
+  updateDeleteFieldSummary();
+  document.getElementById('deleteFieldModalBg').classList.add('show');
+});
+document.getElementById('btnDeleteFieldCancel').addEventListener('click', ()=> document.getElementById('deleteFieldModalBg').classList.remove('show'));
+
+document.getElementById('btnDeleteFieldApply').addEventListener('click', ()=>{
+  const idxs = deleteFieldState.idxs;
+  if(!idxs.length){ toast('Centang minimal 1 field dulu ya~', '⚠️'); return; }
+  const mid = state.currentMid;
+  const model = state.models[mid];
+  if(!model){ toast('Note type gak valid~', '⚠️'); return; }
+  if(model.flds.length - idxs.length < 1){
+    toast('Note type minimal harus punya 1 field, gak bisa dihapus semua~', '⚠️');
+    return;
+  }
+  const fieldNames = idxs.map(i=> model.flds[i]);
+  const affectedNotes = state.notes.filter(n=> n.mid === mid);
+
+  const lanjut = confirm(
+    `Field "${fieldNames.join(', ')}" bakal DIHAPUS PERMANEN dari note type "${model.name}".\n\n`+
+    `Ini ngurangin jumlah field note type ini dari ${model.flds.length} jadi ${model.flds.length - idxs.length}, dan datanya di ${affectedNotes.length} note ikut kebuang.\n\n`+
+    `Ada tombol "Undo Hapus Field" kalau ternyata salah -- tapi cuma jalan selama kamu belum tutup/reload halaman ini.\n\n`+
+    `Yakin lanjut?`
+  );
+  if(!lanjut) return;
+
+  // Snapshot lengkap dulu (model + fields tiap note + cache field per note type) biar bisa di-undo.
+  state.deleteFieldSnapshot = {
+    mid,
+    model: JSON.parse(JSON.stringify(model)),
+    notes: affectedNotes.map(n=> ({ id: n.id, fields: n.fields.slice(), dirty: n.dirty })),
+    fieldSelectionByModel: state.fieldSelectionByModel[mid] ? JSON.parse(JSON.stringify(state.fieldSelectionByModel[mid])) : null,
+    furiganaFieldIdxsByModel: state.furiganaFieldIdxsByModel[mid] ? state.furiganaFieldIdxsByModel[mid].slice() : null,
+    rapikanFuriganaFieldIdxsByModel: state.rapikanFuriganaFieldIdxsByModel[mid] ? state.rapikanFuriganaFieldIdxsByModel[mid].slice() : null,
+    rapikanFieldIdxsByModel: state.rapikanFieldIdxsByModel[mid] ? state.rapikanFieldIdxsByModel[mid].slice() : null,
+    fieldInstructionsByModel: state.fieldInstructionsByModel[mid] ? JSON.parse(JSON.stringify(state.fieldInstructionsByModel[mid])) : null
+  };
+
+  const delSet = new Set(idxs);
+  model.flds = model.flds.filter((_, i)=> !delSet.has(i));
+  affectedNotes.forEach(n=>{
+    n.fields = n.fields.filter((_, i)=> !delSet.has(i));
+    n.dirty = true;
+  });
+
+  // Semua cache index field per note type ini udah gak valid lagi -- reset biar
+  // di-generate ulang dari awal (default: field pertama / semua field kecentang).
+  delete state.fieldSelectionByModel[mid];
+  delete state.furiganaFieldIdxsByModel[mid];
+  delete state.rapikanFuriganaFieldIdxsByModel[mid];
+  delete state.rapikanFieldIdxsByModel[mid];
+  delete state.fieldInstructionsByModel[mid];
+
+  document.getElementById('deleteFieldModalBg').classList.remove('show');
+  populateFieldSelect();
+  populateFuriganaFieldSelect();
+  renderTable();
+  populateTemplateEditor();
+  if(typeof ahAtRefreshMappingsForModel === 'function') ahAtRefreshMappingsForModel();
+  if(typeof ahUpdateCostEstimate === 'function') ahUpdateCostEstimate();
+
+  document.getElementById('btnDeleteFieldUndo').disabled = false;
+  toast(`${fieldNames.length} field berhasil dihapus dari "${model.name}"!`, '🗑️');
+  say(`Field "${fieldNames.join(', ')}" udah aku hapus permanen dari note type "${model.name}"~ Cek dulu desain kartu & tabelnya ya! 🧹`);
+});
+
+document.getElementById('btnDeleteFieldUndo').addEventListener('click', ()=>{
+  const snap = state.deleteFieldSnapshot;
+  if(!snap){ toast('Gak ada penghapusan field yang bisa di-undo~', '⚠️'); return; }
+  state.models[snap.mid] = snap.model;
+  const byId = {};
+  state.notes.forEach(n=>{ if(n.mid === snap.mid) byId[n.id] = n; });
+  snap.notes.forEach(e=>{
+    const note = byId[e.id];
+    if(note){ note.fields = e.fields.slice(); note.dirty = e.dirty; }
+  });
+  if(snap.fieldSelectionByModel) state.fieldSelectionByModel[snap.mid] = snap.fieldSelectionByModel;
+  if(snap.furiganaFieldIdxsByModel) state.furiganaFieldIdxsByModel[snap.mid] = snap.furiganaFieldIdxsByModel;
+  if(snap.rapikanFuriganaFieldIdxsByModel) state.rapikanFuriganaFieldIdxsByModel[snap.mid] = snap.rapikanFuriganaFieldIdxsByModel;
+  if(snap.rapikanFieldIdxsByModel) state.rapikanFieldIdxsByModel[snap.mid] = snap.rapikanFieldIdxsByModel;
+  if(snap.fieldInstructionsByModel) state.fieldInstructionsByModel[snap.mid] = snap.fieldInstructionsByModel;
+
+  state.deleteFieldSnapshot = null;
+  document.getElementById('btnDeleteFieldUndo').disabled = true;
+  populateFieldSelect();
+  populateFuriganaFieldSelect();
+  renderTable();
+  populateTemplateEditor();
+  if(typeof ahAtRefreshMappingsForModel === 'function') ahAtRefreshMappingsForModel();
+  if(typeof ahUpdateCostEstimate === 'function') ahUpdateCostEstimate();
+  toast('Penghapusan field terakhir dibatalin, field-nya balik lagi!', '↩️');
+  say('Oke, field-nya aku balikin lagi kayak sebelum dihapus~ 🔙');
+});
+/* ============ END HAPUS FIELD DARI NOTE TYPE ============ */
 
 function snippetOf(str, n){
   n = n || 50;
@@ -8922,18 +9912,46 @@ async function rebuildAsLegacyApkg(){
   // internet. Bisa lebih dari 1 file sekarang: foto/GIF/video Desktop, poster video-nya (kalau
   // ada), dan -- kalau "background beda per platform" aktif -- foto/GIF/video + poster Mobile juga.
   const bgCfg = state.cardBg;
+
+  // Beberesin file background LAMA (bikinan AnkiHoney, misal dari deck yang emang udah ada
+  // background-nya pas diimport) yang udah gak kepake lagi karena user ganti foto/video baru --
+  // biar file lamanya beneran KEHAPUS dari deck, bukan ikut ke-copy apa adanya & numpuk jadi
+  // sampah nganggur di .apkg hasil akhir.
+  {
+    let mediaMapPurge = {};
+    try{ mediaMapPurge = JSON.parse(mediaJson); }catch(e){ mediaMapPurge = {}; }
+    const activeBg = ahActiveBgMediaFilenames(bgCfg);
+    let purged = false;
+    Object.keys(mediaMapPurge).forEach(key=>{
+      const fname = mediaMapPurge[key];
+      if(AH_BG_MEDIA_PREFIX.test(fname) && !activeBg.has(fname)){
+        delete mediaMapPurge[key];
+        if(newZip.files[key]) newZip.remove(key);
+        purged = true;
+      }
+    });
+    if(purged){ mediaJson = JSON.stringify(mediaMapPurge); newZip.file('media', mediaJson); }
+  }
+
   const bgFiles = ahCollectBgMediaFiles(bgCfg);
   if(bgFiles.length){
     let mediaMap = {};
     try{ mediaMap = JSON.parse(mediaJson); }catch(e){ mediaMap = {}; }
     let usedNums = mediaFiles.map(n=>parseInt(n)).concat(Object.keys(mediaMap).map(n=>parseInt(n))).filter(n=>!isNaN(n));
     let nextNum = Math.max(-1, ...usedNums) + 1;
+    // PENTING (fix bengkak): sama kayak ensureBgMediaInZip -- kalau nama file background ini
+    // (deterministik dari hash isinya) UDAH ADA di media map, jangan sisipin salinan baru lagi,
+    // biar export ulang tanpa ganti background gak numpuk duplikat byte yang sama tiap kali.
+    let mapChanged = false;
     for(const f of bgFiles){
+      const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === f.filename);
+      if(existingKey !== undefined && newZip.files[existingKey]) continue;
       const key = String(nextNum++);
       mediaMap[key] = f.filename;
       newZip.file(key, f.bytes);
+      mapChanged = true;
     }
-    newZip.file('media', JSON.stringify(mediaMap));
+    if(mapChanged) newZip.file('media', JSON.stringify(mediaMap));
   }
 
   return await newZip.generateAsync({type:'blob'});
