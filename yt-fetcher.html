@@ -394,11 +394,11 @@ button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
     <div class="filters-grid">
       <div class="field">
         <label>Dari tanggal</label>
-        <input type="date" id="dateFrom">
+        <input type="date" id="dateFrom" onchange="reRender()">
       </div>
       <div class="field">
         <label>Sampai tanggal</label>
-        <input type="date" id="dateTo">
+        <input type="date" id="dateTo" onchange="reRender()">
       </div>
       <div class="field">
         <label>Tipe video</label>
@@ -771,19 +771,41 @@ function renderVideos() {
   const type = document.getElementById('typeFilter').value;
   const sort = document.getElementById('sortBy').value;
 
-  let list = type === 'all' ? [...allVideos] : allVideos.filter(v => v.type === type);
+  // Filter ulang di sisi klien pakai tanggal TAMPILAN (realDate), bukan
+  // publishedAt mentah. Buat live/premiere, YouTube API cuma bisa filter
+  // publishedAfter/Before berdasarkan waktu broadcast DIBUAT/dijadwalkan,
+  // padahal yang kita tampilin & anggap "tanggal video" itu actualStartTime
+  // (waktu live beneran mulai). Dua-duanya bisa beda jauh -> video kadang
+  // lolos dari filter API padahal tanggal aslinya di luar rentang yang
+  // dipilih user. Jadi di sini kita saring ulang manual biar konsisten
+  // sama apa yang ditampilkan.
+  const fromVal = document.getElementById('dateFrom').value;
+  const toVal   = document.getElementById('dateTo').value;
+  let dateFiltered = allVideos;
+  if (fromVal) {
+    const from = new Date(fromVal);
+    dateFiltered = dateFiltered.filter(v => new Date(v.publishedAt) >= from);
+  }
+  if (toVal) {
+    const to = new Date(toVal); to.setHours(23,59,59,999);
+    dateFiltered = dateFiltered.filter(v => new Date(v.publishedAt) <= to);
+  }
+  const excludedByDate = allVideos.length - dateFiltered.length;
+
+  let list = type === 'all' ? [...dateFiltered] : dateFiltered.filter(v => v.type === type);
 
   if (sort === 'date_desc') list.sort((a,b) => +new Date(b.publishedAt) - +new Date(a.publishedAt));
   if (sort === 'date_asc')  list.sort((a,b) => +new Date(a.publishedAt) - +new Date(b.publishedAt));
   if (sort === 'views_desc') list.sort((a,b) => +b.views - +a.views);
   if (sort === 'views_asc')  list.sort((a,b) => +a.views - +b.views);
 
-  const cnt = { all: allVideos.length, video: 0, shorts: 0, live: 0 };
-  allVideos.forEach(v => cnt[v.type]++);
+  const cnt = { video: 0, shorts: 0, live: 0 };
+  dateFiltered.forEach(v => cnt[v.type]++);
 
   document.getElementById('resultsStat').innerHTML =
     `Menampilkan <strong>${list.length}</strong> dari <strong>${allVideos.length}</strong> video &nbsp;·&nbsp; ` +
-    `▶ ${cnt.video} video &nbsp; ⚡ ${cnt.shorts} shorts &nbsp; 🔴 ${cnt.live} live`;
+    `▶ ${cnt.video} video &nbsp; ⚡ ${cnt.shorts} shorts &nbsp; 🔴 ${cnt.live} live` +
+    (excludedByDate > 0 ? ` &nbsp;·&nbsp; <span style="color:var(--muted2)">${excludedByDate} disembunyikan (tgl asli di luar rentang)</span>` : '');
 
   const el = document.getElementById('videoList');
   el.innerHTML = '';
