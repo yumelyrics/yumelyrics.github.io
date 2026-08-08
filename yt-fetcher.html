@@ -168,63 +168,116 @@ button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
 .results-actions { display: flex; gap: 8px; }
 
 /* ── Video list ── */
-.video-list { display: flex; flex-direction: column; gap: 6px; }
+.video-list { display: flex; flex-direction: column; gap: 10px; }
 
 .video-row {
   background: var(--s1); border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
   border-radius: var(--radius);
   display: grid;
-  grid-template-columns: 130px 1fr auto;
-  gap: 14px; align-items: center;
-  padding: 10px;
-  transition: border-color 0.15s;
+  grid-template-columns: 28px 176px 1fr 176px;
+  gap: 16px; align-items: stretch;
+  padding: 12px;
+  transition: border-color 0.15s, background 0.15s;
 }
-.video-row:hover { border-color: var(--border2); }
-@media (max-width: 580px) {
-  .video-row { grid-template-columns: 90px 1fr; }
-  .video-row .video-actions { display: none; }
+.video-row:hover { border-color: var(--border2); border-left-color: var(--border2); }
+.video-row.row-complete { border-left-color: var(--green); }
+.video-row.row-complete:hover { border-left-color: var(--green); }
+
+.video-index {
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 3px;
+  font-size: 0.72rem; font-weight: 600; color: var(--muted2);
+  font-family: 'JetBrains Mono', monospace;
 }
 
+@media (max-width: 780px) {
+  .video-row { grid-template-columns: 24px 130px 1fr; }
+  .video-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .video-row { grid-template-columns: 20px 96px 1fr; gap: 10px; }
+}
+
+.thumb-link { position: relative; display: block; border-radius: 6px; overflow: hidden; }
 .video-thumb {
   width: 100%; aspect-ratio: 16/9;
-  object-fit: cover; border-radius: 5px;
+  object-fit: cover; border-radius: 6px;
   background: var(--s3); display: block; flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.thumb-link:hover .video-thumb { transform: scale(1.04); }
+.thumb-duration {
+  position: absolute; right: 4px; bottom: 4px;
+  background: rgba(0,0,0,0.8); color: #fff;
+  font-size: 0.65rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+  padding: 1px 5px; border-radius: 3px; letter-spacing: 0.02em;
 }
 
-.video-body { min-width: 0; }
+.video-body { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 
 .video-title {
-  font-size: 0.875rem; font-weight: 500; line-height: 1.45;
-  margin-bottom: 7px;
+  font-size: 0.9rem; font-weight: 600; line-height: 1.4; color: var(--text);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.video-title a { color: var(--text); text-decoration: none; }
+.video-title a { color: inherit; text-decoration: none; }
 .video-title a:hover { color: var(--red); }
 
 .video-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .badge {
-  font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
-  border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+  display: inline-flex; align-items: center; gap: 3px;
 }
 .badge-video   { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); }
 .badge-shorts  { background: rgba(168,85,247,0.2); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.35); }
 .badge-live    { background: rgba(255,45,45,0.2);  color: #fca5a5; border: 1px solid rgba(255,45,45,0.35); }
 
-.meta-pill { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.meta-pill {
+  font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 5px;
+  background: var(--s2); border: 1px solid var(--border);
+  padding: 3px 9px; border-radius: 20px;
+}
+.meta-pill svg { flex-shrink: 0; opacity: 0.75; }
+.meta-pill b { color: var(--text); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; }
 
-.video-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+/* ── Copy actions ── */
+.video-actions {
+  display: flex; flex-direction: column; gap: 8px;
+  justify-content: center;
+  border-left: 1px solid var(--border);
+  padding-left: 14px;
+}
+@media (max-width: 780px) {
+  .video-actions { border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 10px; margin-top: 2px; }
+}
+
+.copy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
 .copy-btn {
+  position: relative;
   background: var(--s2); border: 1px solid var(--border); color: var(--muted);
-  border-radius: var(--radius-sm); padding: 5px 11px; font-size: 0.72rem; font-weight: 500;
+  border-radius: var(--radius-sm); padding: 6px 8px; font-size: 0.72rem; font-weight: 600;
   font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
 }
 .copy-btn:hover { border-color: var(--red); color: var(--red); }
-.copy-btn.copied { border-color: var(--green); color: var(--green); }
+.copy-btn.flash { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.1); }
+.copy-btn.done {
+  border-color: rgba(34,197,94,0.4); color: var(--green);
+  background: rgba(34,197,94,0.08);
+}
+.copy-btn.done:hover { border-color: var(--green); }
+.copy-btn .tick { display: none; }
+.copy-btn.done .tick { display: inline; }
+
+.row-actions-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.copy-progress { font-size: 0.66rem; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+.copy-progress b { color: var(--green); }
 
 .open-link {
-  font-size: 0.72rem; color: var(--muted2); text-decoration: none;
+  font-size: 0.72rem; color: var(--muted2); text-decoration: none; font-weight: 500;
   transition: color 0.15s;
 }
 .open-link:hover { color: var(--text); }
@@ -362,6 +415,7 @@ button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
       <div class="results-actions">
         <button class="btn-ghost" onclick="exportCSV()">↓ CSV</button>
         <button class="btn-ghost" onclick="copyAllLinks()">📋 Copy semua link</button>
+        <button class="btn-ghost" onclick="resetMarks()" title="Hapus semua tanda 'sudah dicopy'">↺ Reset tanda</button>
       </div>
     </div>
     <div id="videoList" class="video-list"></div>
@@ -641,13 +695,19 @@ function renderVideos() {
     return;
   }
 
-  list.forEach(v => {
+  list.forEach((v, idx) => {
     const row = document.createElement('div');
-    row.className = 'video-row';
+    const marks = getMarks(v.id);
+    const fields = v.duration ? ['link','date','views','dur'] : ['link','date','views'];
+    const doneCount = fields.filter(f => marks[f]).length;
+    row.className = 'video-row' + (doneCount === fields.length ? ' row-complete' : '');
+    row.dataset.vid = v.id;
     row.innerHTML = `
-      <a href="${v.url}" target="_blank" rel="noopener noreferrer">
+      <div class="video-index">${idx + 1}</div>
+      <a class="thumb-link" href="${v.url}" target="_blank" rel="noopener noreferrer">
         <img class="video-thumb" src="${esc(v.thumb)}" loading="lazy"
           onerror="this.style.opacity='0'" alt="">
+        ${v.duration ? `<span class="thumb-duration">${fmtDur(v.duration)}</span>` : ''}
       </a>
       <div class="video-body">
         <div class="video-title">
@@ -659,50 +719,82 @@ function renderVideos() {
           </span>
           <span class="meta-pill">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            ${fmtDateDisplay(v.publishedAt)}
+            <b>${fmtDateSimple(v.publishedAt)}</b>
           </span>
           <span class="meta-pill">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            ${fmtNum(v.views)}
+            <b>${fmtNum(v.views)}</b> views
           </span>
-          ${v.duration ? `<span class="meta-pill">⏱ ${fmtDur(v.duration)}</span>` : ''}
         </div>
       </div>
       <div class="video-actions">
-        <button class="copy-btn" onclick="copyLink('${v.url}', this)">Copy link</button>
-        <button class="copy-btn" onclick="copyDate('${v.publishedAt}', this)">Copy tanggal</button>
-        <button class="copy-btn" onclick="copyViews('${v.views}', this)">Copy views</button>
-        ${v.duration ? `<button class="copy-btn" onclick="copyDuration(${v.duration}, this)">Copy durasi</button>` : ''}
-        <a class="open-link" href="${v.url}" target="_blank" rel="noopener noreferrer">Buka ↗</a>
+        <div class="copy-grid">
+          <button class="copy-btn ${marks.link ? 'done' : ''}" data-field="link" onclick="copyLink('${v.id}', '${v.url}', this)"><span class="tick">✓</span> Link</button>
+          <button class="copy-btn ${marks.date ? 'done' : ''}" data-field="date" onclick="copyDate('${v.id}', '${v.publishedAt}', this)"><span class="tick">✓</span> Tanggal</button>
+          <button class="copy-btn ${marks.views ? 'done' : ''}" data-field="views" onclick="copyViews('${v.id}', '${v.views}', this)"><span class="tick">✓</span> Views</button>
+          ${v.duration ? `<button class="copy-btn ${marks.dur ? 'done' : ''}" data-field="dur" onclick="copyDuration('${v.id}', ${v.duration}, this)"><span class="tick">✓</span> Durasi</button>` : `<span></span>`}
+        </div>
+        <div class="row-actions-bottom">
+          <span class="copy-progress"><b>${doneCount}</b>/${fields.length}</span>
+          <a class="open-link" href="${v.url}" target="_blank" rel="noopener noreferrer">Buka ↗</a>
+        </div>
       </div>
     `;
     el.appendChild(row);
   });
 }
 
+/* ─── Copied-mark persistence ───
+   Nandain field mana yang udah dicopy per video, disimpan permanen di
+   localStorage (nggak ke-reset kayak notif "Copied!" biasa) supaya pas
+   lagi analisis satu-satu nggak ke-copy dobel / ke-skip. */
+function loadMarks() {
+  try { return JSON.parse(localStorage.getItem('ytf_copied') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveMarks(obj) { localStorage.setItem('ytf_copied', JSON.stringify(obj)); }
+function getMarks(vid) {
+  const all = loadMarks();
+  return all[vid] || {};
+}
+function setMark(vid, field) {
+  const all = loadMarks();
+  if (!all[vid]) all[vid] = {};
+  all[vid][field] = true;
+  saveMarks(all);
+}
+function resetMarks() {
+  if (!confirm('Hapus semua tanda "sudah dicopy"? Ini nggak bisa dibatalkan.')) return;
+  localStorage.removeItem('ytf_copied');
+  reRender();
+}
+
 /* ─── Copy & export ─── */
-function copyLink(url, btn) {
-  copyPlainText(url, btn, 'Copy link');
+function copyLink(vid, url, btn) {
+  copyPlainText(url, btn, vid, 'link');
 }
 
-function copyDate(iso, btn) {
-  copyPlainText(fmtDateSimple(iso), btn, 'Copy tanggal');
+function copyDate(vid, iso, btn) {
+  copyPlainText(fmtDateSimple(iso), btn, vid, 'date');
 }
 
-function copyViews(views, btn) {
-  copyPlainText(fmtNum(views), btn, 'Copy views');
+function copyViews(vid, views, btn) {
+  copyPlainText(fmtNum(views), btn, vid, 'views');
 }
 
-function copyDuration(secs, btn) {
-  copyPlainText(fmtDur(secs), btn, 'Copy durasi');
+function copyDuration(vid, secs, btn) {
+  copyPlainText(fmtDur(secs), btn, vid, 'dur');
 }
 
 // Selalu nulis sebagai text/plain murni (bukan text/html) supaya pas di-paste
 // ke Google Sheets / Excel nggak ikut bawa background gelap dari halaman ini.
-function copyPlainText(text, btn, label) {
+function copyPlainText(text, btn, vid, field) {
   const done = () => {
-    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1800);
+    setMark(vid, field);
+    btn.classList.add('flash');
+    setTimeout(() => btn.classList.remove('flash'), 700);
+    btn.classList.add('done');
+    updateRowProgress(vid);
   };
   if (navigator.clipboard && window.ClipboardItem) {
     const item = new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }) });
@@ -710,6 +802,19 @@ function copyPlainText(text, btn, label) {
   } else {
     navigator.clipboard.writeText(text).then(done);
   }
+}
+
+// Update badge "x/y" + garis hijau di kiri kartu tanpa re-render seluruh list,
+// biar posisi scroll nggak lompat pas lagi copy satu-satu.
+function updateRowProgress(vid) {
+  const row = document.querySelector(`.video-row[data-vid="${vid}"]`);
+  if (!row) return;
+  const btns = row.querySelectorAll('.copy-btn');
+  const total = btns.length;
+  const done = row.querySelectorAll('.copy-btn.done').length;
+  const prog = row.querySelector('.copy-progress');
+  if (prog) prog.innerHTML = `<b>${done}</b>/${total}`;
+  row.classList.toggle('row-complete', done === total);
 }
 
 function copyAllLinks() {
