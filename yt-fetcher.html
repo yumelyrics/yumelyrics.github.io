@@ -158,6 +158,40 @@ button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
 }
 .err.show { display: block; }
 
+/* ── Channel profile ── */
+.channel-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+.channel-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--s3); border: 1px solid var(--border2);
+}
+.channel-info { min-width: 0; flex: 1; }
+.channel-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.channel-name { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.channel-badge-verified {
+  color: var(--muted); flex-shrink: 0;
+}
+.channel-handle { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.channel-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 9px; }
+.channel-stat { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.channel-stat b { color: var(--text); font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+.channel-open {
+  flex-shrink: 0; font-size: 0.78rem; color: var(--muted2); text-decoration: none;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 14px; font-weight: 600; transition: all 0.15s; white-space: nowrap;
+}
+.channel-open:hover { color: var(--text); border-color: var(--border2); }
+@media (max-width: 560px) {
+  .channel-card { flex-wrap: wrap; }
+  .channel-open { order: 3; width: 100%; text-align: center; }
+}
+
 /* ── Results header ── */
 .results-top {
   display: flex; justify-content: space-between; align-items: center;
@@ -408,6 +442,9 @@ button.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
     <div class="quota-note">💡 Setiap fetch ~3–6 unit quota per video. Batas default API: 10.000 unit/hari.</div>
   </div>
 
+  <!-- Channel profile -->
+  <div id="channelCard" class="channel-card" style="display:none"></div>
+
   <!-- Results -->
   <div id="resultsSec" style="display:none">
     <div class="results-top">
@@ -520,12 +557,57 @@ async function channelByUsername(name) {
   return d.items[0].id;
 }
 
-async function fetchChannelName(chId) {
+async function fetchChannelInfo(chId) {
   try {
-    const url = `${YT}/channels?part=snippet&id=${chId}&key=${apiKey}`;
+    const url = `${YT}/channels?part=snippet,statistics&id=${chId}&key=${apiKey}`;
     const d = await apiFetch(url);
-    return d.items?.[0]?.snippet?.title || chId;
-  } catch(e) { return chId; }
+    const item = d.items?.[0];
+    if (!item) return { name: chId };
+    const sn = item.snippet || {};
+    const st = item.statistics || {};
+    return {
+      name:       sn.title || chId,
+      handle:     sn.customUrl || '',
+      avatar:     sn.thumbnails?.medium?.url || sn.thumbnails?.default?.url || '',
+      subs:       st.hiddenSubscriberCount ? null : (st.subscriberCount || '0'),
+      subsHidden: !!st.hiddenSubscriberCount,
+      videoCount: st.videoCount || '0',
+      totalViews: st.viewCount || '0',
+      url:        `https://www.youtube.com/channel/${chId}`,
+    };
+  } catch(e) { return { name: chId }; }
+}
+
+function renderChannelCard(info) {
+  const el = document.getElementById('channelCard');
+  const subsText = info.subsHidden ? 'Disembunyikan' : fmtCompact(info.subs);
+  el.innerHTML = `
+    ${info.avatar
+      ? `<img class="channel-avatar" src="${esc(info.avatar)}" alt="" onerror="this.style.visibility='hidden'">`
+      : `<div class="channel-avatar"></div>`}
+    <div class="channel-info">
+      <div class="channel-name-row">
+        <span class="channel-name">${esc(info.name)}</span>
+      </div>
+      ${info.handle ? `<div class="channel-handle">@${esc(info.handle.replace(/^@/,''))}</div>` : ''}
+      <div class="channel-stats">
+        <span class="channel-stat">👥 <b>${subsText}</b> subscriber</span>
+        <span class="channel-stat">🎬 <b>${fmtCompact(info.videoCount)}</b> video</span>
+        <span class="channel-stat">👁 <b>${fmtCompact(info.totalViews)}</b> total views</span>
+      </div>
+    </div>
+    <a class="channel-open" href="${info.url}" target="_blank" rel="noopener noreferrer">Buka channel ↗</a>
+  `;
+  el.style.display = '';
+}
+
+// Format ringkas ala YouTube: 12.3rb / 4.5jt, biar nggak makan tempat di kartu profil.
+function fmtCompact(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1_000_000_000) return (n/1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'm';
+  if (n >= 1_000_000)     return (n/1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'jt';
+  if (n >= 1_000)         return (n/1_000).toFixed(n % 1_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'rb';
+  return fmtNum(n);
 }
 
 /* ─── API helpers ─── */
@@ -595,14 +677,17 @@ async function startFetch() {
 
   clearErr();
   allVideos = []; nextToken = null;
-  hide('resultsSec'); showState('loading');
+  hide('resultsSec'); hide('channelCard'); showState('loading');
 
   try {
     channelId = await resolveChannel(input);
-    channelName = await fetchChannelName(channelId);
+    const info = await fetchChannelInfo(channelId);
+    channelName = info.name;
+    renderChannelCard(info);
     await doFetch(false);
   } catch(e) {
     showState('idle');
+    hide('channelCard');
     showErr(e.message);
   }
 }
