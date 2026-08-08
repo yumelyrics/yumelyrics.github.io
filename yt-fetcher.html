@@ -601,12 +601,25 @@ function renderChannelCard(info) {
   el.style.display = '';
 }
 
-// Format ringkas ala YouTube: 12.3rb / 4.5jt, biar nggak makan tempat di kartu profil.
+// Format ringkas mengikuti gaya YouTube (3 angka penting): 12.3rb, 1.63jt, 4.5jt.
 function fmtCompact(n) {
   n = parseInt(n) || 0;
-  if (n >= 1_000_000_000) return (n/1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'm';
-  if (n >= 1_000_000)     return (n/1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'jt';
-  if (n >= 1_000)         return (n/1_000).toFixed(n % 1_000 === 0 ? 0 : 1).replace(/\.0$/,'') + 'rb';
+  const units = [
+    { v: 1_000_000_000, label: 'm'  },
+    { v: 1_000_000,     label: 'jt' },
+    { v: 1_000,         label: 'rb' },
+  ];
+  for (const u of units) {
+    if (n >= u.v) {
+      const val = n / u.v;
+      // 3 angka penting: <10 -> 2 desimal, <100 -> 1 desimal, sisanya bulat
+      const decimals = val < 10 ? 2 : val < 100 ? 1 : 0;
+      let str = val.toFixed(decimals);
+      // buang nol belakang yang nggak perlu (2.00 -> 2, 12.30 -> 12.3)
+      if (str.includes('.')) str = str.replace(/0+$/,'').replace(/\.$/,'');
+      return str + u.label;
+    }
+  }
   return fmtNum(n);
 }
 
