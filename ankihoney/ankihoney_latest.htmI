@@ -1292,7 +1292,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div class="btn-row" style="margin-bottom:8px;">
         <button class="btn alt" id="btnApplyFront">Terapkan ke Depan</button>
         <button class="btn alt" id="btnApplyBack">Terapkan ke Belakang</button>
-        <button class="btn ghost" id="btnClearBg">Hapus Background</button>
       </div>
       <div style="margin-bottom:16px;">
         <span class="badge badge-mint hidden" id="bgKindBadge">🖼️ Foto</span>
@@ -1397,6 +1396,10 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       </div>
 
       <div id="bgStatus" style="margin-top:14px; font-weight:500; font-size:.82rem; color:var(--ink-soft);"></div>
+    </div>
+    <div id="bgDetectStatus" class="hidden" style="margin-top:12px; padding:10px 14px; border-radius:var(--radius); font-size:.82rem; font-weight:500;"></div>
+    <div style="margin-top:12px;">
+      <button class="btn ghost" id="btnClearBg">🗑️ Hapus Background</button>
     </div>
     </div>
   </div>
@@ -3288,19 +3291,36 @@ document.getElementById('btnApplyBack').addEventListener('click', ()=>{
 });
 document.getElementById('btnClearBg').addEventListener('click', ()=>{
   const cfg = state.cardBg;
-  if(cfg.syncPlatforms){
-    cfg.desktop = ahNewBgSource();
-    cfg.mobile = ahNewBgSource();
-  } else {
-    cfg[cfg.previewDevice] = ahNewBgSource();
+
+  // Strip blok CSS AnkiHoney + unwrap template dari model
+  const model = state.models[state.currentMid];
+  if(model){
+    model.css = ahStripCssBlock(model.css || '');
+    model.tmpls = (model.tmpls || []).map(t => ({
+      ...t,
+      qfmt: ahWrapTemplate(t.qfmt, false, ''),
+      afmt: ahWrapTemplate(t.afmt, false, '')
+    }));
+    model.mod = Math.floor(Date.now()/1000);
+    model.usn = -1;
   }
-  if(!ahHasAnyBg(cfg)){ cfg.front = false; cfg.back = false; }
+
+  // Clear state UI
+  cfg.desktop = ahNewBgSource();
+  cfg.mobile = ahNewBgSource();
+  cfg.front = false;
+  cfg.back = false;
   document.getElementById('bgControls').classList.add('hidden');
   bgFileInput.value = '';
   bgUrlInput.value = '';
+
+  // Sembunyikan status deteksi
+  const statusEl = document.getElementById('bgDetectStatus');
+  if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
+
   updateBgKindBadge(ahActiveBgSource(cfg));
   updateBgPreview(); updateBgStatus();
-  toast(cfg.syncPlatforms ? 'Background dihapus~' : `Background ${cfg.previewDevice === 'mobile' ? 'Mobile' : 'Desktop'} dihapus~`, '🗑️');
+  toast('Background dihapus dari kartu & deck~', '🗑️');
 });
 
 function getSampleCardText(side){
@@ -4201,7 +4221,16 @@ function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function ahWrapTemplate(html, enable, mediaHtml){
   html = html || '';
   mediaHtml = mediaHtml || '';
-  const trimmed = html.trim();
+  // PENTING (fix double-wrap bug): applyWatermarkToModel selalu dipanggil SETELAH fungsi ini,
+  // dan nempelin watermark baru di ujung template -- SETELAH AH_WRAP_CLOSE. Jadi template yang
+  // udah pernah disave sama tool ini bakal selalu berakhir dengan
+  // "...AH_WRAP_CLOSE + watermark", BUKAN "...AH_WRAP_CLOSE" doang. Kalau watermark ini gak
+  // di-strip dulu sebelum ngecek, trimmed.endsWith(AH_WRAP_CLOSE) SELALU false, alreadyWrapped
+  // gak pernah kedeteksi bener, dan tiap kali user apply ulang background, seluruh konten LAMA
+  // (termasuk script video lama & SEMUA konten asli kartu di dalamnya) ke-wrap lagi jadi
+  // lapisan baru yang nested -- bukan di-replace bersih. ahStripWmHtml di sini bikin deteksi
+  // "udah di-wrap apa belum" tetep akurat walau ada watermark nemplok di belakang.
+  const trimmed = ahStripWmHtml(html).trim();
   const alreadyWrapped = trimmed.startsWith(AH_WRAP_OPEN) && trimmed.endsWith(AH_WRAP_CLOSE);
   let inner = trimmed;
   if(alreadyWrapped){
@@ -4220,6 +4249,151 @@ function ahStripCssBlock(css){
   css = css || '';
   const re = new RegExp(escapeRegex(AH_BG_START)+'[\\s\\S]*?'+escapeRegex(AH_BG_END)+'\\n?', 'g');
   return css.replace(re, '').trim();
+}
+
+// Deteksi otomatis background AnkiHoney dari model aktif.
+// Dipanggil saat deck dibuka atau note type berganti.
+// Kalau ketemu: reconstruct state.cardBg + refresh UI.
+// Kalau tidak: tidak mengubah apapun (user mungkin mau upload baru).
+async function ahDetectBgFromModel(){
+  const model = state.models[state.currentMid];
+  const statusEl = document.getElementById('bgDetectStatus');
+  if(!model || !model.css){
+    if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
+    return;
+  }
+  const css = model.css || '';
+  if(!css.includes(AH_BG_START)){
+    if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
+    return;
+  }
+
+  // Ada blok AnkiHoney — ekstrak semua pengaturan
+  const s = css.indexOf(AH_BG_START), e = css.indexOf(AH_BG_END);
+  const bgBlock = (s !== -1 && e > s) ? css.slice(s, e + AH_BG_END.length) : '';
+  if(!bgBlock){
+    if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
+    return;
+  }
+
+  const cfg = state.cardBg;
+
+  // --- Ekstrak foto (background-image) dari CSS ---
+  // Cari di blok UTAMA (bukan di dalam @media)
+  const mainBlockMatch = bgBlock.match(/\.ankihoney-bg-photo-layer\s*\{([^}]*)\}/s);
+  const mainBlock = mainBlockMatch ? mainBlockMatch[1] : '';
+  const desktopBgImgMatch = mainBlock.match(/background-image\s*:\s*url\(([^)]+)\)/);
+  const desktopBgRaw = desktopBgImgMatch ? desktopBgImgMatch[1].trim().replace(/^['"]|['"]$/g,'') : '';
+
+  // Cari @media (mobile) block
+  const mediaBlockMatch = bgBlock.match(/@media\s*\([^)]*max-width[^)]*\)\s*\{([\s\S]*?)\}\s*(?=@|\/\*|$)/);
+  const mediaBlock = mediaBlockMatch ? mediaBlockMatch[1] : '';
+  const mobileBgImgMatch = mediaBlock.match(/\.ankihoney-bg-photo-layer\s*\{[^}]*background-image\s*:\s*url\(([^)]+)\)/s);
+  const mobileBgRaw = mobileBgImgMatch ? mobileBgImgMatch[1].trim().replace(/^['"]|['"]$/g,'') : '';
+
+  // --- Ekstrak video dari template HTML ---
+  let desktopVideoFile = '', mobileVideoFile = '';
+  const tmpls = model.tmpls || [];
+  for(const tmpl of tmpls){
+    const html = (tmpl.qfmt || '') + (tmpl.afmt || '');
+    // Cari: ankihoney-bg-video-desktop / ankihoney-bg-video-mobile src atau data-src
+    const videoTags = [...html.matchAll(/<(?:video|source)[^>]+(?:src|data-src)\s*=\s*["']([^"']+\.(?:mp4|webm))["'][^>]*>/gi)];
+    videoTags.forEach(m => {
+      const tag = m[0];
+      const file = m[1];
+      if(tag.includes('mobile')) mobileVideoFile = file;
+      else if(!desktopVideoFile) desktopVideoFile = file;
+    });
+    if(desktopVideoFile || mobileVideoFile) break;
+  }
+
+  // --- Tentukan file per platform ---
+  const desktopIsVideo = !!desktopVideoFile;
+  const desktopFile = desktopIsVideo ? desktopVideoFile : desktopBgRaw;
+  const mobileIsVideo = !!mobileVideoFile;
+  const mobileFile = mobileIsVideo ? mobileVideoFile : mobileBgRaw;
+  const syncPlatforms = !mobileFile || (desktopFile === mobileFile);
+
+  // --- Ekstrak pengaturan slider ---
+  const opacityM = mainBlock.match(/opacity\s*:\s*([\d.]+)/);
+  const opacity = opacityM ? parseFloat(opacityM[1]) : 0.9;
+  const blurM = bgBlock.match(/filter\s*:\s*blur\((\d+)px\)/);
+  const blur = blurM ? parseInt(blurM[1]) : 0;
+  const overlayM = bgBlock.match(/rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*([\d.]+)\s*\)/);
+  const overlay = overlayM ? parseFloat(overlayM[1]) : 0.35;
+  const fitM = mainBlock.match(/background-size\s*:\s*(\w+)/);
+  const fitMap = { cover:'cover', contain:'contain' };
+  const fit = fitMap[fitM ? fitM[1].trim() : ''] || 'cover';
+  const posM = mainBlock.match(/background-position\s*:\s*([\d.]+)%\s+([\d.]+)%/);
+  const desktopPos = posM ? { x: parseFloat(posM[1]), y: parseFloat(posM[2]) } : { x:50, y:50 };
+  const posMM = mediaBlock.match(/background-position\s*:\s*([\d.]+)%\s+([\d.]+)%/);
+  const mobilePos = posMM ? { x: parseFloat(posMM[1]), y: parseFloat(posMM[2]) } : { x:50, y:50 };
+
+  // --- Deteksi front/back dari template ---
+  let front = false, back = false;
+  for(const tmpl of tmpls){
+    if(tmpl.qfmt && tmpl.qfmt.includes(AH_WRAP_OPEN)) front = true;
+    if(tmpl.afmt && tmpl.afmt.includes(AH_WRAP_OPEN)) back = true;
+  }
+
+  // --- Load bytes dari mediaMap ---
+  async function loadSrc(filename, isVideo){
+    const src = ahNewBgSource();
+    src.kind = isVideo ? 'video' : 'image';
+    if(!filename) return src;
+    if(filename.startsWith('http')){
+      src.mode = 'url'; src.imageUrl = filename; return src;
+    }
+    src.mediaFilename = filename;
+    try {
+      const mediaMap = await ahGetMediaMap();
+      const bytes = mediaMap && mediaMap[filename];
+      if(bytes && bytes.length){
+        src.bytes = bytes;
+        const mime = isVideo
+          ? (filename.endsWith('.webm') ? 'video/webm' : 'video/mp4')
+          : (filename.endsWith('.gif') ? 'image/gif'
+            : filename.endsWith('.png') ? 'image/png'
+            : filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg');
+        src.dataUrl = await ahBytesToDataUrl(bytes, mime);
+      }
+    } catch(err){ console.warn('ahDetectBg: gagal load', filename, err); }
+    return src;
+  }
+
+  const desktopSrc = await loadSrc(desktopFile, desktopIsVideo);
+  const mobileSrc = syncPlatforms ? ahNewBgSource() : await loadSrc(mobileFile, mobileIsVideo);
+
+  // --- Apply ke state ---
+  cfg.desktop = desktopSrc;
+  cfg.mobile = mobileSrc;
+  cfg.syncPlatforms = syncPlatforms;
+  cfg.front = front; cfg.back = back;
+  cfg.pos = { desktop: desktopPos, mobile: mobilePos };
+  cfg.opacity = opacity; cfg.blur = blur; cfg.overlay = overlay; cfg.fit = fit;
+
+  // --- Sync slider/checkbox UI ---
+  const opEl = document.getElementById('bgOpacity'); if(opEl) opEl.value = Math.round(opacity*100);
+  const blEl = document.getElementById('bgBlur'); if(blEl) blEl.value = blur;
+  const ovEl = document.getElementById('bgOverlay'); if(ovEl) ovEl.value = Math.round(overlay*100);
+  const ftEl = document.getElementById('bgFit'); if(ftEl) ftEl.value = fit;
+  const frEl = document.getElementById('bgFront'); if(frEl) frEl.checked = front;
+  const bkEl = document.getElementById('bgBack'); if(bkEl) bkEl.checked = back;
+  const syncCb = document.getElementById('bgSyncToggle');
+  if(syncCb){ syncCb.checked = syncPlatforms; syncCb.dispatchEvent(new Event('change')); }
+
+  // --- Tampilkan bgControls + status ---
+  if(ahHasAnyBg(cfg)) document.getElementById('bgControls').classList.remove('hidden');
+  updateBgKindBadge(ahActiveBgSource(cfg));
+  updateBgPreview(); updateBgStatus();
+
+  if(statusEl){
+    const kindLabel = desktopIsVideo ? (desktopFile.endsWith('.webm') ? 'video .webm' : 'video .mp4') : 'foto/GIF';
+    const mobileLabel = syncPlatforms ? '' : ` + mobile: ${mobileIsVideo ? (mobileFile.endsWith('.webm') ? 'video .webm' : 'video .mp4') : 'foto/GIF'}`;
+    statusEl.textContent = `✅ Background kedeteksi dari deck: ${kindLabel}${mobileLabel}${syncPlatforms ? '' : ' (Desktop & Mobile beda)'}`;
+    statusEl.style.cssText = 'background:var(--success-bg,#f0fdf4);border:1px solid var(--success-border,#bbf7d0);color:var(--success-text,#166534);padding:10px 14px;border-radius:var(--radius);font-size:.82rem;font-weight:500;margin-top:12px;';
+    statusEl.classList.remove('hidden');
+  }
 }
 
 // Apa yang keliatan di lapisan ::before (paling belakang, muncul PALING DULU/instan) --
@@ -5201,6 +5375,10 @@ function updateBgModelLabel(){
   if(!el) return;
   const model = state.models[state.currentMid];
   el.textContent = model ? model.name : '-';
+  // Reset detect status dulu, lalu cek otomatis
+  const statusEl = document.getElementById('bgDetectStatus');
+  if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
+  ahDetectBgFromModel().catch(err => console.warn('ahDetectBgFromModel:', err));
   updateBgPreview();
 }
 
