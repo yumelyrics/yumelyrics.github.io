@@ -135,6 +135,8 @@ body.dark {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
 }
 
 body {
@@ -333,7 +335,57 @@ header.hero {
   font-size: 0.78rem;
 }
 .dropzone input { display: none; }
-.dz-emoji { display: none; } 
+.dz-emoji { display: none; }
+
+.feature-nav {
+  position: sticky;
+  top: 10px;
+  z-index: 40;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 7px;
+  margin-bottom: 16px;
+}
+.feature-nav-inner {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.feature-nav-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.feature-nav-btn:hover { background: var(--accent-light); color: var(--accent); }
+.feature-nav-btn.active { background: var(--accent); color: #fff; }
+body.dark .feature-nav { background: #1a2438; }
+
+@keyframes navFlash {
+  0%   { box-shadow: 0 0 0 3px var(--accent); }
+  15%  { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+.nav-flash { animation: navFlash 2.4s ease; border-radius: var(--radius-lg); }
+
+[data-panel].ah-panel-off { display: none !important; }
+.feature-nav-btn.nav-all { margin-left: auto; border-left: 1px solid var(--border); padding-left: 16px; }
+@media (max-width: 640px) { .feature-nav-btn.nav-all { margin-left: 0; border-left: none; padding-left: 14px; } }
+
 
 .btn {
   font-family: 'Inter', system-ui, sans-serif;
@@ -1062,6 +1114,28 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   .btn { font-size: 0.76rem; padding: 8px 12px; }
 }
 
+/* ---- Desktop: use the extra horizontal/vertical space instead of a narrow centered column ---- */
+@media (min-width: 900px) {
+  .wrap { max-width: min(95vw, 1280px); padding: 32px 28px 90px; }
+  .card { padding: 26px 30px; }
+  header.hero { padding: 22px 28px; }
+  .dropzone { padding: 52px 28px; }
+  .table-wrap { max-height: min(64vh, 720px); }
+  .edit-cell { min-width: 300px; }
+  .preview-cell { max-width: 260px; }
+  .modal { max-width: 720px; }
+}
+
+@media (min-width: 1280px) {
+  .wrap { max-width: min(93vw, 1480px); }
+  .grid2 { gap: 18px; }
+}
+
+@media (min-width: 1600px) {
+  .wrap { max-width: min(90vw, 1680px); }
+  body { font-size: 14.5px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn:hover, .btn:active { transform: none; }
   * { scroll-behavior: auto !important; }
@@ -1112,9 +1186,22 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <button class="btn ghost" id="btnThemeToggle" type="button" style="margin-left:auto; align-self:center;">Dark Mode</button>
   </header>
 
+  <nav class="feature-nav hidden" id="featureNav" aria-label="Navigasi fitur">
+    <div class="feature-nav-inner">
+      <button type="button" class="feature-nav-btn" data-panel="bg" data-nav-target="bgCard" data-nav-open="bgCardHeader">🖼️<span>Background</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="tpl" data-nav-target="tplCard" data-nav-open="tplCardHeader">🎨<span>Edit Template</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="preview" data-nav-target="tableCard">📋<span>Preview &amp; Edit</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="mergeDeck" data-nav-target="mergeDeckPanel">🔗<span>Gabung Deck</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="translate" data-nav-target="autoTranslatePanel" data-nav-open="atPanelHeader">🌐<span>Translate Otomatis</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="export" data-nav-target="btnExportTxt">📄<span>Export TXT</span></button>
+      <button type="button" class="feature-nav-btn" data-panel="export" data-nav-target="btnExportPdf">🖨️<span>Export PDF</span></button>
+      <button type="button" class="feature-nav-btn nav-all" data-panel="all" data-nav-target="tableCard">🗂️<span>Tampilkan Semua</span></button>
+    </div>
+  </nav>
+
   
   <div class="card" id="uploadCard">
-    <h2><span class="step-num">1</span> Upload Deck .apkg</h2>
+    <h2>Upload Deck .apkg</h2>
     <div class="dropzone" id="dropzone">
       <span class="dz-emoji">📦</span>
       Seret file .apkg ke sini, atau klik untuk memilih file
@@ -1135,7 +1222,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 
   
   <div class="card hidden" id="selectCard">
-    <h2><span class="step-num">2</span> Pilih Note Type &amp; Field</h2>
+    <h2>Pilih Note Type &amp; Field</h2>
     <div class="grid2">
       <div>
         <label class="field-label">Note Type</label>
@@ -1151,7 +1238,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 
   
-  <div class="card hidden" id="bgCard">
+  <div class="card hidden" id="bgCard" data-panel="bg">
     <h2 class="collapsible-header" id="bgCardHeader" data-target="bgCardBody"><span class="step-num" style="background:var(--ink-muted);">+</span> Background Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik untuk buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="bgCardBody">
     <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem; margin-top:0;">Ganti background tampilan kartu di Anki dengan foto sendiri. Berlaku untuk note type <b id="bgModelName">-</b> yang sedang dipilih.</p>
@@ -1335,7 +1422,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 
   
-  <div class="card hidden" id="tplCard">
+  <div class="card hidden" id="tplCard" data-panel="tpl">
     <h2 class="collapsible-header" id="tplCardHeader" data-target="tplCardBody"><span class="step-num" style="background:var(--ink-muted);">+</span> Edit Template &amp; Styling Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik untuk buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="tplCardBody">
     <p style="font-weight:400; color:var(--ink-soft); font-size:.85rem; margin-top:0;">Edit langsung HTML tampilan kartu Depan/Belakang &amp; CSS-nya, lengkap dengan preview real-time. Berlaku untuk note type <b id="tplModelName">-</b> yang sedang dipilih.</p>
@@ -1383,7 +1470,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 
   
   <div class="card hidden" id="tableCard">
-    <h2><span class="step-num">3</span> Preview &amp; Edit <span class="badge" id="dirtyBadge">0 diubah</span></h2>
+    <div class="ah-panel" data-panel="preview">
+    <h2>Preview &amp; Edit <span class="badge" id="dirtyBadge">0 diubah</span></h2>
     <div class="btn-row">
       <button class="btn ghost" id="btnCopyAll">Salin Semua Field<small>untuk diterjemahkan</small></button>
       <button class="btn" id="btnPasteAll">Tempel Hasil Terjemahan</button>
@@ -1408,13 +1496,16 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <small style="display:block; color:var(--ink); font-weight:600; margin-bottom:8px;">Field yang ingin dirapihin (diberi baris baru per bagian):</small>
       <div class="field-checks" id="rapikanFieldChecks"></div>
     </div>
+    </div>
+    <div class="ah-panel" data-panel="export">
     <div class="btn-row">
       <button class="btn ghost" id="btnExportTxt">Export TXT</button>
       <button class="btn ghost" id="btnImportFile">Import CSV/TXT</button>
       <input type="file" id="importFileInput" accept=".csv,.txt" class="hidden" />
       <button class="btn" id="btnExportPdf">Export ke PDF<small>cetak jadi flashcard fisik</small></button>
     </div>
-
+    </div>
+    <div class="ah-panel" data-panel="preview">
     <div class="btn-row" style="margin-top:6px;">
       <button class="btn ghost" id="btnXntExport">Export Field ke Note Type Lain<small>buat dipindah ke note type/deck lain</small></button>
       <button class="btn ghost" id="btnXntImport">Import Field dari Note Type Lain<small>tempel hasil export di atas ke sini</small></button>
@@ -1434,7 +1525,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div id="tableSearchInfo" style="font-weight:600; color:var(--ink-soft); white-space:nowrap; font-size:.8rem;"></div>
     </div>
 
-    <div id="mergeDeckPanel" style="margin-top:14px; padding:14px 16px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border);">
+    </div>
+    <div id="mergeDeckPanel" data-panel="mergeDeck" style="margin-top:14px; padding:14px 16px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border);">
       <label class="field-label" style="margin-bottom:8px;">Gabung Deck Kedua <span style="font-weight:400; color:var(--ink-muted); text-transform:none;">(opsional — tambahkan semua kartu dari file .apkg lain ke deck yang sedang dibuka)</span></label>
       <p style="font-size:.72rem; color:var(--ink-soft); font-weight:400; margin:2px 0 10px;">Deck yang sedang terbuka otomatis menjadi <b>deck utama</b>. Pilih file .apkg <b>kedua</b> di bawah untuk digabung — note type &amp; deck yang namanya sama akan disatukan, yang berbeda akan ditambahkan baru, dan ID yang bentrok otomatis diganti agar aman. Hasil gabungan baru tersimpan saat kamu klik Download di bawah.</p>
       <div class="btn-row">
@@ -1444,8 +1536,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <div id="mergeDeckStatus" style="margin-top:8px; font-weight:500; font-size:.82rem; color:var(--ink-soft);"></div>
     </div>
 
-    <div id="autoTranslatePanel" style="margin-top:14px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border); overflow:hidden;">
-      <h2 class="collapsible-header" data-target="atPanelBody" aria-expanded="false"
+    <div id="autoTranslatePanel" data-panel="translate" style="margin-top:14px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border); overflow:hidden;">
+      <h2 class="collapsible-header" id="atPanelHeader" data-target="atPanelBody" aria-expanded="false"
           style="display:flex; align-items:center; gap:8px; margin:0; padding:14px 16px; font-size:.9rem; font-weight:600; letter-spacing:.01em; border-bottom:1px solid transparent; transition:border-color .2s;">
         Translate Otomatis
         <span class="collapse-hint">klik untuk buka/tutup pengaturan</span>
@@ -1558,7 +1650,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       </div>
     </div>
 
-    <div id="batchPanel" style="margin-top:14px; padding:14px 16px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border);">
+    <div id="batchPanel" data-panel="translate" style="margin-top:14px; padding:14px 16px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border);">
       <label class="field-label" style="margin-bottom:8px;">Salin per Batch <span style="font-weight:400; color:var(--ink-muted); text-transform:none;">(disarankan untuk deck besar — agar AI translate tidak keliru menggeser urutan)</span></label>
       <div class="grid2" style="align-items:end;">
         <div>
@@ -1578,6 +1670,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       </div>
     </div>
 
+    <div class="ah-panel" data-panel="preview">
     <div class="btn-row" style="margin-top:16px; align-items:center;">
       <span style="font-weight:600; font-size:.82rem; color:var(--ink-soft);" id="tablePageInfo"></span>
       <div style="flex:1;"></div>
@@ -1605,11 +1698,12 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
         <tbody id="tableBody"></tbody>
       </table>
     </div>
+    </div>
   </div>
 
   
   <div class="card hidden" id="saveCard">
-    <h2><span class="step-num">4</span> Simpan Deck Baru</h2>
+    <h2><span class="step-num" style="background:var(--success); font-size:.85rem;">💾</span> Simpan Deck Baru</h2>
     <p style="font-weight:400; color:var(--ink-soft); margin-top:0;">Setelah field diganti dengan hasil terjemahan, download ulang menjadi .apkg untuk diimport ke Anki kembali.</p>
     <div id="deckNameCard" style="margin-bottom:16px;">
       <label class="field-label">Nama Deck yang akan tampil di Anki</label>
@@ -1916,6 +2010,76 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     try{ saved = localStorage.getItem(storeKey); }catch(e){}
     setOpen(saved === '1'); 
     header.addEventListener('click', ()=> setOpen(body.classList.contains('hidden')));
+  });
+})();
+
+(function featureNav(){
+  const nav = document.getElementById('featureNav');
+  const tableCard = document.getElementById('tableCard');
+  if(!nav || !tableCard) return;
+
+  const panels = Array.from(document.querySelectorAll('[data-panel]')).filter(el=> !el.classList.contains('feature-nav-btn'));
+
+  function showPanel(key){
+    panels.forEach(el=>{
+      const match = (key === 'all') || (el.dataset.panel === key);
+      el.classList.toggle('ah-panel-off', !match);
+    });
+  }
+
+  // Default: tampilkan semua bagian begitu halaman dibuka.
+  showPanel('all');
+  nav.querySelectorAll('.feature-nav-btn').forEach(b=> b.classList.add('active'));
+
+  function syncVisibility(){
+    nav.classList.toggle('hidden', tableCard.classList.contains('hidden'));
+  }
+  syncVisibility();
+  new MutationObserver(syncVisibility).observe(tableCard, { attributes: true, attributeFilter: ['class'] });
+
+  nav.querySelectorAll('.feature-nav-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.panel;
+      showPanel(key);
+
+      // Buka collapsible terkait (Background / Template / Translate Otomatis) kalau lagi tertutup.
+      if(key === 'all'){
+        nav.querySelectorAll('.feature-nav-btn[data-nav-open]').forEach(b=>{
+          const header = document.getElementById(b.dataset.navOpen);
+          if(header && header.classList.contains('collapsible-header')){
+            const body = document.getElementById(header.dataset.target);
+            if(body && body.classList.contains('hidden')) header.click();
+          }
+        });
+      } else {
+        const openId = btn.dataset.navOpen;
+        if(openId){
+          const header = document.getElementById(openId);
+          if(header && header.classList.contains('collapsible-header')){
+            const body = document.getElementById(header.dataset.target);
+            if(body && body.classList.contains('hidden')) header.click();
+          }
+        }
+      }
+
+      nav.querySelectorAll('.feature-nav-btn').forEach(b=> b.classList.remove('active'));
+      if(key === 'all'){
+        nav.querySelectorAll('.feature-nav-btn').forEach(b=> b.classList.add('active'));
+      } else {
+        nav.querySelectorAll('.feature-nav-btn[data-panel="'+key+'"]').forEach(b=> b.classList.add('active'));
+      }
+
+      const target = document.getElementById(btn.dataset.navTarget);
+      if(target){
+        setTimeout(()=>{
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.classList.remove('nav-flash');
+          void target.offsetWidth;
+          target.classList.add('nav-flash');
+          setTimeout(()=> target.classList.remove('nav-flash'), 2400);
+        }, 60);
+      }
+    });
   });
 })();
 
