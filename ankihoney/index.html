@@ -4650,16 +4650,6 @@ function ahBuildBgMediaHtml(cfg){
   // EFEKNYA cuma "bikin baru kalau belum ada / videonya beda" -- video yang UDAH ada & lagi
   // muter otomatis DIBIARIN nempel & lanjut muter, gak disentuh sama sekali.
   return `<script>(function(){
-  // (Sengaja GAK pake document.currentScript buat nyari root lagi -- gak ada yang butuh itu
-  // lagi sekarang, dan kalau document.currentScript kebetulan null di sebagian cara Anki
-  // nge-eksekusi ulang <script> pas render kartu, itu bisa bikin SELURUH script ini diam-diam
-  // gagal jalan tanpa ketauan. Semua target sekarang langsung ke document.documentElement /
-  // document.body, jadi gak butuh currentScript sama sekali.)
-
-  // --- (1) Sinkronin --ah-vw/--ah-vh ke ukuran viewport ASLI. Benerin bug layar kepotong
-  // setengah / teks melenceng pas resize atau masuk-keluar fullscreen: sebagian versi Anki
-  // gagal langsung reflow ulang elemen position:fixed ngikutin ukuran window yang baru, jadi
-  // lapisan background-nya nyangkut di ukuran lama.
   var rootEl = document.documentElement;
   function ahSyncViewport(){
     var vv = window.visualViewport;
@@ -4690,10 +4680,6 @@ function ahBuildBgMediaHtml(cfg){
     document.body.appendChild(host);
   }
 
-  // --- (2) Foto/poster & overlay gelap -- elemen persisten juga (SEKALI dibikin per sesi),
-  // ditempel bareng video di <body> yang sama, biar SELALU dibandingin di stacking context
-  // ROOT yang sama kayak video (lihat komentar panjang di ahBuildCssBlock deket
-  // .ankihoney-bg-photo-layer buat penjelasan lengkap kenapa ini gak boleh nempel di dalam #qa).
   if(!document.getElementById('ankihoney-bg-photo')){
     var photoEl = document.createElement('div');
     photoEl.id = 'ankihoney-bg-photo';
@@ -4707,20 +4693,7 @@ function ahBuildBgMediaHtml(cfg){
     host.appendChild(overlayEl);
   }
 
-  // --- (3) Video background persisten -- nempel di <body>, DILUAR #qa, biar SELAMAT dari
-  // Anki yang cuma replace innerHTML #qa pas ganti Depan->Belakang. Untuk pindah kartu
-  // (yang me-reload halaman penuh), posisi video disimpan ke localStorage sesaat sebelum
-  // unload dan di-restore kembali begitu video siap -- jadi video tetap lanjut dari posisi
-  // yang sama, tidak restart dari detik 0.
   var wanted = ${videoDescsJson};
-  // --- Cuma mainin video background yang SESUAI device yang lagi kepake (Desktop vs Mobile) ---
-  // Sebelumnya, kalau "background beda per platform" aktif, DUA-DUANYA (video Desktop & video
-  // Mobile) sama-sama dibikin/di-load/di-play() bareng, terus yang gak kepake cuma DISEMBUNYIIN
-  // lewat CSS (@media) -- video-nya sendiri tetep jalan di background walau gak keliatan. Ini
-  // boros banget di HP (AnkiDroid/AnkiMobile): 2 video decoder jalan bareng padahal yang keliatan
-  // cuma 1. Filter di sini mastiin video platform yang LAGI GAK dipakai gak usah dibikin/di-load/
-  // di-play() SAMA SEKALI (bukan cuma disembunyiin) -- kelas 'ankihoney-bg-video-shared' (background
-  // sama buat semua platform) tetap lolos apa adanya karena emang cuma ada 1 video buat semuanya.
   var __ahVw = (window.visualViewport && window.visualViewport.width) || window.innerWidth || document.documentElement.clientWidth;
   var __ahIsMobile = __ahVw < ${AH_MOBILE_BREAKPOINT};
   wanted = wanted.filter(function(w){
@@ -4731,17 +4704,12 @@ function ahBuildBgMediaHtml(cfg){
   var existing = {};
   var oldVids = host.querySelectorAll('video[data-ah-cls]');
   for(var i=0;i<oldVids.length;i++){ existing[oldVids[i].dataset.ahCls] = oldVids[i]; }
-  // Buang video yang classnya udah gak dipake lagi di sisi kartu ini (misal ganti dari 1
-  // video bareng jadi video Desktop/Mobile terpisah, atau background videonya dimatiin).
   for(var cls in existing){
     var stillWanted = false;
     for(var j=0;j<wanted.length;j++){ if(wanted[j].cls === cls){ stillWanted = true; break; } }
     if(!stillWanted) existing[cls].remove();
   }
 
-  // Simpan currentTime tiap video ke localStorage sesaat sebelum halaman di-unload
-  // (ganti kartu berikutnya = reload halaman penuh di Anki Desktop/AnkiDroid).
-  // Kunci: 'ahvt__' + nama-file-video, nilainya: timestamp posisi dalam detik.
   if(!window.__ahUnloadBound){
     window.__ahUnloadBound = true;
     var ahSaveVideoTimes = function(){
@@ -4755,19 +4723,14 @@ function ahBuildBgMediaHtml(cfg){
         }
       }catch(e){}
     };
-    // pagehide lebih reliable dari beforeunload di mobile WebView
     window.addEventListener('pagehide', ahSaveVideoTimes);
     window.addEventListener('beforeunload', ahSaveVideoTimes);
-    // Simpan juga tiap beberapa detik sebagai cadangan (kalau event unload tidak fire)
     setInterval(ahSaveVideoTimes, 2000);
   }
 
   wanted.forEach(function(w){
     var v = existing[w.cls];
     if(v && v.dataset.ahRef === w.ref){
-      // Sumbernya SAMA kayak sebelumnya -> jangan disentuh, biar lanjut muter dari posisi sekarang.
-      // Tapi kalau ternyata videonya somehow ke-pause (misal autoplay browser sempet nge-block
-      // pas pertama kali dicoba), coba play() lagi -- gak masalah dipanggil berkali-kali.
       v.classList.add('ah-loaded');
       if(v.paused){ var rp = v.play(); if(rp && rp.catch) rp.catch(function(){}); }
       return;
@@ -4776,8 +4739,6 @@ function ahBuildBgMediaHtml(cfg){
       v = document.createElement('video');
       v.dataset.ahCls = w.cls;
       v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
-      // Kompatibilitas WebView Android lama (AnkiDroid) -- beberapa versi
-      // hanya mengenali atribut HTML, bukan property JS.
       v.setAttribute('muted', '');
       v.setAttribute('loop', '');
       v.setAttribute('autoplay', '');
@@ -4786,43 +4747,33 @@ function ahBuildBgMediaHtml(cfg){
       v.setAttribute('preload', 'auto');
       host.appendChild(v);
     }
-    // Baru / sumbernya BENERAN beda -> set src dan restore posisi kalau ada.
     v.className = 'ankihoney-bg-video ' + w.cls;
     v.dataset.ahRef = w.ref;
     v.innerHTML = '';
     v.removeAttribute('src');
     v.classList.remove('ah-loaded');
 
-    // Ambil posisi terakhir yang tersimpan (dari sesi/kartu sebelumnya).
     var savedTime = 0;
     try{
       var st = localStorage.getItem('ahvt__' + w.ref);
       if(st){ savedTime = parseFloat(st) || 0; }
     }catch(e){}
 
-    // Gunakan <source> + v.src sekaligus untuk kompatibilitas maksimal:
-    // - v.src langsung: lebih reliable di desktop (Anki Desktop/Chrome/Firefox) -- event
-    //   loadeddata/canplay/playing konsisten fire. Fix background hitam pada .mp4 di desktop.
-    // - <source type="...">: WAJIB untuk AnkiDroid/WebView Android -- tanpa MIME type eksplisit,
-    //   WebView Android sering nolak load/play video dari local media sama sekali.
     var refLower = w.ref.toLowerCase();
     var mime = refLower.indexOf('.webm') !== -1 ? 'video/webm'
              : refLower.indexOf('.mp4')  !== -1 ? 'video/mp4'
              : refLower.indexOf('.ogg')  !== -1 ? 'video/ogg'
-             : 'video/mp4'; // fallback aman untuk Android
+             : 'video/mp4';
     var source = document.createElement('source');
     source.src = w.ref;
     source.type = mime;
     v.appendChild(source);
-    // v.src juga di-set langsung (redundan tapi mempercepat load di desktop browser)
     v.src = w.ref;
 
     var onReady = (function(vid, t){
       return function(){
         vid.classList.add('ah-loaded');
-        // Restore posisi video dari sesi sebelumnya (supaya tidak restart dari detik 0).
         if(t > 0 && vid.duration && isFinite(vid.duration)){
-          // Modulo durasi supaya posisi tetap valid kalau video sudah looping
           vid.currentTime = t % vid.duration;
         }
       };
@@ -4831,54 +4782,34 @@ function ahBuildBgMediaHtml(cfg){
     v.addEventListener('loadeddata', onReady);
     v.addEventListener('canplay', onReady);
     v.addEventListener('playing', onReady);
-    // Diagnostik: kalau videonya beneran GAGAL dibuka (bukan cuma kena block autoplay), catet
-    // alesannya jelas-jelas di console -- ini yang paling sering kejadian di AnkiDroid/AnkiMobile
-    // pas file videonya .mov (QuickTime/HEVC dari iPhone) atau codec yang emang gak didukung
-    // decoder Android-nya, WALAU file yang sama muter mulus di Anki Desktop (decodernya beda).
     v.addEventListener('error', function(){
       var err = (v.error && v.error.code) || (source.error && source.error.code);
-      console.warn('[AnkiHoney] Video background GAGAL dibuka di WebView ini (ref=' + w.ref + ', error code=' + err + '). ' +
-        'Kalau ini kejadian di AnkiDroid/AnkiMobile tapi normal di Anki Desktop, kemungkinan besar formatnya (mis. .mov/HEVC dari iPhone) gak didukung decoder Android-nya -- coba convert ulang ke MP4 (H.264 + AAC/tanpa audio).');
+      console.warn('[AnkiHoney] Video background gagal dibuka (ref=' + w.ref + ', error code=' + err + ').');
     });
-    // Pasang load() SETELAH source+src di-set, lalu play() -- urutan ini penting di Android WebView.
     v.load();
     var p = v.play(); if(p && p.catch) p.catch(function(){});
-    // Cek readyState SETELAH load+play dipanggil -- kalau sudah ready langsung mark loaded
-    // (fix background hitam di desktop: event mungkin sudah fire sebelum listener dipasang).
     if(v.readyState >= 2){
       v.classList.add('ah-loaded');
       if(savedTime > 0 && v.duration && isFinite(v.duration)){
         v.currentTime = savedTime % v.duration;
       }
     }
-    // Jaring pengaman: force-show setelah 800ms (lebih cepat dari 1800ms sebelumnya)
-    // agar background hitam tidak keliatan terlalu lama di desktop maupun mobile.
     setTimeout(function(){ v.classList.add('ah-loaded'); }, 800);
   });
 
-  // --- (4) Jaring pengaman tambahan: di kartu PERTAMA yang kebuka dalam 1 sesi belajar,
-  // sebagian browser/webview nge-block autoplay video sampe ada interaksi user beneran
-  // (klik/tap/keyboard) -- makanya video baru "keliatan jalan" pas udah di kartu Belakang
-  // (abis klik Show Answer), padahal pas kartu Depan awal videonya masih diem/ketutup foto.
-  // Ini masang listener SEKALI per sesi yang nyoba play() ulang semua video AnkiHoney tiap
-  // ada interaksi user, biar begitu ada klik/tap pertama, videonya langsung jalan -- gak perlu
-  // nunggu sampe pindah sisi kartu.
   if(!window.__ahGestureBound){
     window.__ahGestureBound = true;
     var ahRetryPlay = function(){
       var vids = document.querySelectorAll('.ankihoney-bg-video');
       for(var k=0;k<vids.length;k++){
         var vid = vids[k];
-        // Pastikan atribut penting terpasang sebelum coba play (defensive untuk AnkiDroid)
         if(!vid.getAttribute('muted')){ vid.setAttribute('muted',''); vid.muted = true; }
         if(!vid.getAttribute('playsinline')){ vid.setAttribute('playsinline',''); }
         if(!vid.getAttribute('webkit-playsinline')){ vid.setAttribute('webkit-playsinline',''); }
         if(vid.paused){ var pr = vid.play(); if(pr && pr.catch) pr.catch(function(){}); }
-        vid.classList.add('ah-loaded'); // force-tampilkan walau belum fire event
+        vid.classList.add('ah-loaded');
       }
     };
-    // 'click' & 'touchend' ditambah agar AnkiDroid (yang sering pakai touch events)
-    // langsung trigger unlock autoplay setelah tap pertama user.
     ['pointerdown','touchstart','touchend','click','keydown'].forEach(function(evt){
       document.addEventListener(evt, ahRetryPlay, { passive:true });
     });
@@ -4920,12 +4851,7 @@ function ahBuildCssBlock(cfg){
   const fxSelector = fx.target === 'all' ? '.ankihoney-bg, .ankihoney-bg *' : '.ankihoney-bg b, .ankihoney-bg strong';
   const fxDeclarations = ahBuildTextFxCss(cfg).map(d => `  ${d};`).join('\n');
   const fxCss = fx.enabled !== false
-    ? `/* Kosakata yang di-bold di dalam field (Notes/Definitions/kalimat) dikasih
-   outline/glow custom biar tetep kebaca jelas di atas foto apa pun. Mode
-   'outline': isi huruf putih polos, cuma pinggirannya doang yang kena warna
-   custom (gak nyebar ke karakter lain). Gaya, warna & ketebalannya bisa
-   diatur di form. */
-${fxSelector}{
+    ? `${fxSelector}{
 ${fxDeclarations}
 }
 `
@@ -4940,7 +4866,7 @@ ${fxDeclarations}
   // warna isi huruf udah dipaksa putih polos sama fxDeclarations di atas, jadi
   // gak perlu diredam lagi.
   const mutedHeadwordCss = (fx.enabled !== false && fx.styleMode !== 'outline')
-    ? `/* Redam warna bold/strong bawaan deck (headword) pas Outline/Shadow aktif,\n   biar gak rebutan kontras sama efeknya. */\n.ankihoney-bg .jpsentence b,\n.ankihoney-bg .jpsentence strong{\n  opacity: 0.72;\n}\n`
+    ? `.ankihoney-bg .jpsentence b,\n.ankihoney-bg .jpsentence strong{\n  opacity: 0.72;\n}\n`
     : '';
 
   // Panel semi-solid di belakang blok teks non-vocab (Notes, Definitions, link footer,
@@ -4948,10 +4874,7 @@ ${fxDeclarations}
   // Outline/Shadow Teks Vocab di atas -- fitur itu sengaja cuma buat kosakata yang
   // di-bold. Tanpa panel ini, teks biasa (yang warnanya gelap secara default di
   // template) ketelen sama foto+overlay begitu di atas background gelap.
-  const panelCss = `/* Panel semi-solid biar Notes/Definitions/footer/link tetep kebaca jelas di
-   atas foto apa pun. Ini terpisah dari Outline/Shadow Vocab di atas (yang cuma
-   nyentuh teks bold) -- panel ini nyentuh blok teks non-bold. */
-.ankihoney-bg details,
+  const panelCss = `.ankihoney-bg details,
 .ankihoney-bg .headword_section,
 .ankihoney-bg footer,
 .ankihoney-bg div.ensentence > a.hint{
@@ -5007,28 +4930,8 @@ ${fxDeclarations}
 ${AH_BG_START}
 .card{ background-color:transparent !important; background-image:none !important; background:transparent !important; }
 html, body{ background-color:transparent !important; }
-/* --ah-vw/--ah-vh: ukuran viewport (dalam px) yang di-sync terus lewat JS di
-   ahBuildBgMediaHtml (liat <script> yang disisipin bareng media) -- dipakai buat nge-size
-   semua lapisan position:fixed di bawah ini (ganti dari cuma "inset:0"). Ini benerin bug
-   layar kepotong setengah / teks melenceng pas resize atau masuk-keluar fullscreen: sebagian
-   versi Anki gagal langsung "reflow" ulang elemen position:fixed ngikutin ukuran window yang
-   baru, jadi lapisan background-nya nyangkut di ukuran lama. Dideklarasiin di :root (bukan di
-   .ankihoney-bg doang) soalnya video background-nya sekarang nempel LANGSUNG di <body> (di luar
-   wrapper .ankihoney-bg) biar bisa lanjut muter tanpa restart pas Depan->Belakang -- default-nya
-   tetep vw/vh biasa (kepake sebelum script sempet jalan / kalau scriptnya somehow gagal). */
 :root{ --ah-vw:100vw; --ah-vh:100vh; }
 .ankihoney-bg{ position:relative; }
-/* Foto/poster (dulu ::before) & overlay gelap (dulu ::after) SEKARANG elemen <div> beneran,
-   dibikin/ditempelin ke <body> lewat JS bareng videonya (liat ahBuildBgMediaHtml), BUKAN lagi
-   pseudo-element nempel di .ankihoney-bg. Alasannya: .ankihoney-bg itu ada di DALAM #qa, yang
-   kadang kena "isolasi" tanpa sepengetahuan kita -- misalnya Anki sendiri suka kasih efek
-   fade/transition (opacity/transform) pas nampilin Depan kartu, dan property itu bikin
-   ANCESTOR-nya (bukan .ankihoney-bg-nya sendiri) diam-diam bikin stacking context baru. Begitu
-   itu kejadian, z-index foto yang nempel di dalam situ jadi ke-"kunci" dibandingin CUMA sesama
-   isi ancestor itu doang, gak nyambung lagi ke z-index video yang di luar #qa -- akibatnya foto
-   nutupin video (padahal videonya kebukti tetep muter di belakang layar). Solusinya: foto &
-   overlay-nya ikut dipindah keluar #qa juga, biar SEMUA lapisan (foto/video/overlay) selalu
-   dibandingin di stacking context ROOT yang sama, gak peduli ancestor #qa lagi ngapain. */
 .ankihoney-bg-photo-layer{
   position:fixed; top:0; left:0; z-index:-3;
   width:var(--ah-vw); height:var(--ah-vh);
@@ -5047,12 +4950,7 @@ html, body{ background-color:transparent !important; }
   background:rgba(0,0,0,${overlay});
   pointer-events:none;
 }
-${videoCss}${videoVisibilityCss}/* Posisi & (kalau "background beda per platform" aktif) SUMBER foto/GIF/poster-nya sendiri
-   khusus buat layar sempit (HP -- AnkiDroid/AnkiMobile), diatur terpisah dari Desktop di atas
-   lewat tab "📱 Mobile" pas ngatur background di AnkiHoney. Breakpoint ${AH_MOBILE_BREAKPOINT}px
-   dipakai karena app Anki di HP biasanya render webview selebar layar device (jauh lebih sempit
-   dibanding window Anki desktop). */
-@media (max-width:${AH_MOBILE_BREAKPOINT}px){
+${videoCss}${videoVisibilityCss}@media (max-width:${AH_MOBILE_BREAKPOINT}px){
   .ankihoney-bg-photo-layer{
     background-image:${mobileBgImg};
     background-position:${mobilePos.x}% ${mobilePos.y}%;
