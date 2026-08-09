@@ -4380,7 +4380,7 @@ function ahBuildDeckDescBlock(){
 }
 @keyframes ah-rgb-shift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
 </style>
-<span class="ah-rgb-text">✨ yumelyrics / ankihoney</span> — deck ini diupdate otomatis pada ${tgl}.<br>
+<span class="ah-rgb-text">✨ Yumelyrics / Ankihoney</span> — deck ini diupdate otomatis pada ${tgl}.<br>
 Gabung <a href="https://discord.gg/SW9bTRHK8H" target="_blank" rel="noopener" style="color:#5865F2; font-weight:700; text-decoration:none; border-bottom:1.5px dashed #5865F2;">Discord</a> kita buat request terjemahan deck &amp; update terbaru ya~
 </div>
 ${AH_DESC_END}`;
@@ -5090,7 +5090,7 @@ const AH_WM_CSS_START = '/* === AnkiHoney Watermark START === */';
 const AH_WM_CSS_END = '/* === AnkiHoney Watermark END === */';
 const AH_WM_HTML_START = '<!-- AnkiHoney Watermark START -->';
 const AH_WM_HTML_END = '<!-- AnkiHoney Watermark END -->';
-const AH_WM_TEXT = '🍯 yumelyrics / ankihoney';
+const AH_WM_TEXT = 'Yumesubs Discord';
 const AH_WM_URL = 'https://discord.gg/SW9bTRHK8H';
 const AH_WM_HTML = `${AH_WM_HTML_START}<a class="ankihoney-wm" href="${AH_WM_URL}" target="_blank" rel="noopener">${AH_WM_TEXT}</a>${AH_WM_HTML_END}`;
 const AH_WM_CSS = `\n${AH_WM_CSS_START}\n.ankihoney-wm{\n  position:fixed; right:8px; bottom:5px; z-index:9999;\n  font-family:'Poppins','Quicksand','Century Gothic','Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;\n  font-size:10.5px; font-weight:600; letter-spacing:.3px;\n  color:#a8a8a8; opacity:.6; text-decoration:none; pointer-events:auto; cursor:pointer;\n  transition:opacity .15s ease;\n}\n.ankihoney-wm:hover{ opacity:.95; color:#7a7a7a; text-decoration:underline; }\n${AH_WM_CSS_END}\n`;
@@ -5125,7 +5125,7 @@ function applyWatermarkToModel(model){
 }
 
 // Suntik watermark ke tag asli Anki (bukan ke field), jadi gak numpang field konten user & gak ngerusak tampilan kartu. Cuma dipanggil pas export.
-const AH_WM_TAG = 'yumelyrics/ankihoney';
+const AH_WM_TAG = 'Yumesubs';
 function injectWmIntoTags(tags){
   const parts = (tags || '').trim().split(/\s+/).filter(t=> t && t !== AH_WM_TAG);
   parts.push(AH_WM_TAG);
