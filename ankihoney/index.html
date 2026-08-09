@@ -61,9 +61,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js"></script>
 <style>
-/* ============================================================
-   AnkiHoney — Clean Professional Redesign
-   ============================================================ */
 
 :root {
   --bg: #F8FAFC;
@@ -95,7 +92,6 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
 
-  /* Legacy variable aliases for JS-injected inline styles */
   --pink: #2563EB;
   --pink-deep: #1D4ED8;
   --lavender: #7C3AED;
@@ -104,7 +100,6 @@
   --blush: #EFF6FF;
 }
 
-/* Dark mode */
 body.dark {
   --bg: #0F172A;
   --white: #1E293B;
@@ -156,13 +151,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Empty sparkle layer — keep element for JS compatibility, just hidden */
 .sparkle-layer { display: none; }
 .sparkle { display: none; }
 
-/* ============================================================
-   Layout
-   ============================================================ */
 .wrap {
   position: relative;
   max-width: 960px;
@@ -170,9 +161,6 @@ body {
   padding: 28px 20px 80px;
 }
 
-/* ============================================================
-   Header / Hero
-   ============================================================ */
 header.hero {
   display: flex;
   align-items: center;
@@ -186,7 +174,6 @@ header.hero {
   flex-wrap: wrap;
 }
 
-/* Mascot: kept in DOM (JS uses it) — hidden visually */
 .mascot {
   width: 40px;
   height: 40px;
@@ -232,9 +219,6 @@ header.hero {
 }
 .speech:after { display: none; }
 
-/* ============================================================
-   Cards
-   ============================================================ */
 .card {
   background: var(--white);
   border-radius: var(--radius-lg);
@@ -274,7 +258,6 @@ header.hero {
 }
 .collapsible-header.open .collapse-chevron { transform: rotate(90deg); }
 
-/* Auto-translate panel collapsible header border */
 #autoTranslatePanel .collapsible-header.open { border-bottom-color: var(--border) !important; }
 
 .collapsible-header .collapse-hint {
@@ -288,7 +271,6 @@ header.hero {
 
 .collapsible-body { margin-top: 16px; }
 
-/* Step indicators */
 .step-num {
   display: inline-flex;
   align-items: center;
@@ -303,7 +285,6 @@ header.hero {
   flex: none;
 }
 
-/* Badges */
 .badge {
   display: inline-block;
   background: var(--accent-light);
@@ -321,9 +302,6 @@ header.hero {
   border-color: var(--success-muted);
 }
 
-/* ============================================================
-   Dropzone
-   ============================================================ */
 .dropzone {
   border: 2px dashed var(--border-hover);
   border-radius: var(--radius-lg);
@@ -355,11 +333,8 @@ header.hero {
   font-size: 0.78rem;
 }
 .dropzone input { display: none; }
-.dz-emoji { display: none; } /* remove large emojis */
+.dz-emoji { display: none; } 
 
-/* ============================================================
-   Buttons
-   ============================================================ */
 .btn {
   font-family: 'Inter', system-ui, sans-serif;
   border: 1px solid transparent;
@@ -444,9 +419,6 @@ header.hero {
   margin-top: 6px;
 }
 
-/* ============================================================
-   Form Controls
-   ============================================================ */
 select,
 textarea,
 input[type=text],
@@ -492,7 +464,6 @@ label.field-label {
   margin-bottom: 3px;
 }
 
-/* Range inputs */
 input[type=range] {
   -webkit-appearance: none;
   appearance: none;
@@ -525,10 +496,6 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   border: none;
 }
-/* Di dark mode, --border (#334155) kebaca nyaris nyatu sama panel/card
-   background (#1E293B) -- kontrasnya kurang, jadi garis track slider ilang
-   keliatan. Dikasih warna sendiri (lebih terang & dikasih border tipis)
-   khusus dark mode biar tetep jelas kelihatan. */
 body.dark input[type=range] {
   background: #47556F;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
@@ -540,9 +507,6 @@ body.dark input[type=range]::-moz-range-thumb {
   box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
 }
 
-/* ============================================================
-   Background Preview (Card Customizer)
-   ============================================================ */
 .bg-preview-wrap {
   display: flex;
   flex-direction: column;
@@ -684,9 +648,6 @@ body.dark input[type=range]::-moz-range-thumb {
   border-radius: 999px;
 }
 
-/* ============================================================
-   Template Editor
-   ============================================================ */
 .tpl-editor {
   width: 100%;
   min-height: 200px;
@@ -743,9 +704,6 @@ body.dark input[type=range]::-moz-range-thumb {
   color: #fff;
 }
 
-/* ============================================================
-   Grid
-   ============================================================ */
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -753,9 +711,6 @@ body.dark input[type=range]::-moz-range-thumb {
 }
 @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
 
-/* ============================================================
-   Field Chips / Checks
-   ============================================================ */
 .field-checks { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .field-chip {
@@ -826,9 +781,6 @@ body.dark input[type=range]::-moz-range-thumb {
   border-top: 1px solid var(--border);
 }
 
-/* ============================================================
-   Stats
-   ============================================================ */
 .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .stat-pill {
   background: var(--bg);
@@ -840,9 +792,6 @@ body.dark input[type=range]::-moz-range-thumb {
   border: 1px solid var(--border);
 }
 
-/* ============================================================
-   Table
-   ============================================================ */
 .table-wrap {
   max-height: 520px;
   overflow: auto;
@@ -894,9 +843,6 @@ td {
 .row-dot.clean { background: var(--border-hover); }
 .row-dot.dirty { background: var(--success); }
 
-/* ============================================================
-   Modals
-   ============================================================ */
 .modal-bg {
   position: fixed;
   inset: 0;
@@ -936,9 +882,6 @@ td {
   margin-top: 16px;
 }
 
-/* ============================================================
-   Toast
-   ============================================================ */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -965,9 +908,6 @@ td {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ============================================================
-   Footer
-   ============================================================ */
 .footer-note {
   text-align: center;
   color: var(--ink-muted);
@@ -976,9 +916,6 @@ td {
   line-height: 1.6;
 }
 
-/* ============================================================
-   Watermark Badge
-   ============================================================ */
 .wm-badge {
   position: fixed;
   right: 16px;
@@ -1008,9 +945,6 @@ td {
   color: var(--ink);
 }
 
-/* ============================================================
-   Loader
-   ============================================================ */
 .loader { display: inline-flex; gap: 4px; align-items: center; }
 .loader span {
   width: 6px;
@@ -1026,9 +960,6 @@ td {
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* ============================================================
-   Progress Bar
-   ============================================================ */
 .at-progress-track {
   width: 100%;
   height: 5px;
@@ -1056,9 +987,6 @@ td {
   100% { background-position: 200% 50%; }
 }
 
-/* ============================================================
-   Info / Warning Panels
-   ============================================================ */
 #autoTranslatePanel,
 #batchPanel,
 #mergeDeckPanel {
@@ -1069,14 +997,8 @@ td {
   padding: 16px 18px !important;
 }
 
-/* ============================================================
-   Utility
-   ============================================================ */
 .hidden { display: none !important; }
 
-/* ============================================================
-   Dark Mode Overrides
-   ============================================================ */
 body.dark thead th { background: #1E293B; }
 body.dark .btn.ghost { background: #1E293B; color: var(--ink); border-color: var(--border); }
 body.dark .btn.ghost:hover { background: #273549; }
@@ -1107,9 +1029,6 @@ body.dark .field-chip { background: #1E293B; border-color: var(--border); }
 body.dark .field-chip.active { background: var(--accent-light); }
 body.dark .row-dot.clean { background: var(--ink-muted); }
 
-/* ============================================================
-   Responsive
-   ============================================================ */
 @media (max-width: 640px) {
   .wrap { padding: 14px 14px 64px; }
   header.hero { gap: 10px; padding: 16px 16px; border-radius: var(--radius-lg); margin-bottom: 14px; }
@@ -1171,13 +1090,13 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 })();
 </script>
 
-<!-- Sparkle layer kept for JS compatibility, visually hidden via CSS -->
+
 <div class="sparkle-layer" id="sparkleLayer"></div>
 
 <div class="wrap">
 
   <header class="hero">
-    <!-- Mascot SVG kept for JS (blink animation etc) but hidden visually -->
+    
     <svg class="mascot" viewBox="0 0 100 100" id="mascotSvg" aria-hidden="true">
       <circle cx="50" cy="55" r="34" fill="#fff" stroke="#ffb6d9" stroke-width="3"/>
       <circle cx="37" cy="53" r="5" fill="#4a3358" id="eyeL"/>
@@ -1193,7 +1112,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <button class="btn ghost" id="btnThemeToggle" type="button" style="margin-left:auto; align-self:center;">Dark Mode</button>
   </header>
 
-  <!-- STEP 1: UPLOAD -->
+  
   <div class="card" id="uploadCard">
     <h2><span class="step-num">1</span> Upload Deck .apkg</h2>
     <div class="dropzone" id="dropzone">
@@ -1214,7 +1133,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div id="formatWarning" class="hidden" style="margin-top:12px; background:var(--warning-bg); border:1px solid var(--warning-border); border-radius:var(--radius); padding:12px 16px; font-weight:500; font-size:.82rem; color:var(--warning-text);"></div>
   </div>
 
-  <!-- STEP 2: PILIH NOTE TYPE + FIELD -->
+  
   <div class="card hidden" id="selectCard">
     <h2><span class="step-num">2</span> Pilih Note Type &amp; Field</h2>
     <div class="grid2">
@@ -1231,7 +1150,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     <div class="stats" id="statsRow"></div>
   </div>
 
-  <!-- STEP 2.5: CARD BACKGROUND -->
+  
   <div class="card hidden" id="bgCard">
     <h2 class="collapsible-header" id="bgCardHeader" data-target="bgCardBody"><span class="step-num" style="background:var(--ink-muted);">+</span> Background Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik untuk buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="bgCardBody">
@@ -1415,7 +1334,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     </div>
   </div>
 
-  <!-- STEP 2.7: TEMPLATE & STYLING EDITOR -->
+  
   <div class="card hidden" id="tplCard">
     <h2 class="collapsible-header" id="tplCardHeader" data-target="tplCardBody"><span class="step-num" style="background:var(--ink-muted);">+</span> Edit Template &amp; Styling Kartu <span class="badge badge-mint">Opsional</span><span class="collapse-hint">klik untuk buka/tutup</span><span class="collapse-chevron">▸</span></h2>
     <div class="collapsible-body hidden" id="tplCardBody">
@@ -1462,7 +1381,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     </div>
   </div>
 
-  <!-- STEP 3: TABLE PREVIEW / EDIT -->
+  
   <div class="card hidden" id="tableCard">
     <h2><span class="step-num">3</span> Preview &amp; Edit <span class="badge" id="dirtyBadge">0 diubah</span></h2>
     <div class="btn-row">
@@ -1636,8 +1555,8 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
       <p style="font-size:.72rem; color:var(--danger); font-weight:500; margin:4px 0 0;">Kecocokan dicek best-effort (HTML/tanda baca diabaikan) — jika kartu yang "mirip" ternyata berbeda makna, hasil terjemahannya bisa ikut tersalin. Aktifkan hanya jika yakin duplikatnya benar-benar identik.</p>
       <div id="atProgress" style="margin-top:8px; font-weight:600; font-size:.8rem; color:var(--ink-soft);"></div>
       <div id="atProgressTrackWrap" class="hidden"><div id="atProgressBar" class="at-progress-track"><div class="at-progress-fill"></div></div></div>
-      </div><!-- /atPanelBody -->
-    </div><!-- /autoTranslatePanel -->
+      </div>
+    </div>
 
     <div id="batchPanel" style="margin-top:14px; padding:14px 16px; border-radius:var(--radius-lg); background:var(--bg); border:1px solid var(--border);">
       <label class="field-label" style="margin-bottom:8px;">Salin per Batch <span style="font-weight:400; color:var(--ink-muted); text-transform:none;">(disarankan untuk deck besar — agar AI translate tidak keliru menggeser urutan)</span></label>
@@ -1688,7 +1607,7 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     </div>
   </div>
 
-  <!-- STEP 4: SAVE -->
+  
   <div class="card hidden" id="saveCard">
     <h2><span class="step-num">4</span> Simpan Deck Baru</h2>
     <p style="font-weight:400; color:var(--ink-soft); margin-top:0;">Setelah field diganti dengan hasil terjemahan, download ulang menjadi .apkg untuk diimport ke Anki kembali.</p>
@@ -1723,7 +1642,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
 
 <a class="wm-badge" id="wmBadge" href="https://yumelyrics.my.id/" target="_blank" rel="noopener">yumelyrics <span>&times;</span> yumesubs</a>
 
-<!-- PASTE MODAL -->
 <div class="modal-bg" id="pasteModalBg">
   <div class="modal">
     <h3 id="pasteModalTitle">Tempel Hasil Terjemahan</h3>
@@ -1736,8 +1654,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-<!-- PDF / PRINT FLASHCARD MODAL -->
-<!-- EXPORT FIELD LINTAS NOTE TYPE -->
 <div class="modal-bg" id="xntExportModalBg">
   <div class="modal">
     <h3>📤 Export Field ke Note Type Lain</h3>
@@ -1755,7 +1671,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-<!-- IMPORT FIELD LINTAS NOTE TYPE -->
 <div class="modal-bg" id="xntImportModalBg">
   <div class="modal">
     <h3>📥 Import Field dari Note Type Lain</h3>
@@ -1789,7 +1704,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-<!-- HAPUS ISI FIELD -->
 <div class="modal-bg" id="clearFieldModalBg">
   <div class="modal">
     <h3>🗑️ Hapus Isi Field</h3>
@@ -1806,7 +1720,6 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-<!-- HAPUS FIELD DARI NOTE TYPE (beneran ilang, bukan cuma dikosongin) -->
 <div class="modal-bg" id="deleteFieldModalBg">
   <div class="modal">
     <h3>🗑️ Hapus Field dari Note Type</h3>
@@ -1985,14 +1898,9 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
   </div>
 </div>
 
-
 <div class="toast" id="toast"></div>
 
 <script>
-/* ---------------- collapsible optional card sections ---------------- */
-/* Background Kartu & Edit Template/Styling disembunyiin default (biar hemat
-   ruang), user klik headernya buat buka/tutup. State per-card diinget di
-   localStorage biar gak collapse lagi tiap reload/upload deck baru. */
 (function initCollapsibleCards(){
   document.querySelectorAll('.collapsible-header[data-target]').forEach(header=>{
     const body = document.getElementById(header.dataset.target);
@@ -2006,12 +1914,11 @@ body.dark .row-dot.clean { background: var(--ink-muted); }
     }
     let saved = null;
     try{ saved = localStorage.getItem(storeKey); }catch(e){}
-    setOpen(saved === '1'); // default tertutup kecuali user pernah buka & disimpen kebuka
+    setOpen(saved === '1'); 
     header.addEventListener('click', ()=> setOpen(body.classList.contains('hidden')));
   });
 })();
 
-/* ---------------- decorative sparkles ---------------- */
 (function sparkles(){
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduceMotion) return;
@@ -2048,7 +1955,6 @@ function toast(msg, emoji='💗'){
   toast._tm = setTimeout(()=> t.classList.remove('show'), 2600);
 }
 
-// Popup error teknis (beda dari toast()): nunggu di-dismiss manual & ngarahin user lapor ke Discord kalau nemu data baru yang belum ke-handle.
 const AH_DISCORD_URL = 'https://discord.gg/SW9bTRHK8H';
 function ahShowErrorPopup(msg){
   let bg = document.getElementById('ahErrorModalBg');
@@ -2075,7 +1981,6 @@ function ahShowErrorPopup(msg){
   bg.classList.add('show');
 }
 
-// Popup khusus kalau engine AI translate nolak request karena nama model udah dihapus/diganti provider -- negesin ini bukan salah user/API key. Nongol sekali per proses translate.
 function ahShowModelIssuePopup(provider, errMsg){
   let bg = document.getElementById('ahModelIssueModalBg');
   if(!bg){
@@ -2103,7 +2008,6 @@ function ahShowModelIssuePopup(provider, errMsg){
   bg.classList.add('show');
 }
 
-// Popup kegagalan Translate Otomatis/Jelasin Kosakata yang BUKAN kasus "model usang" (timeout, rate limit, dll) -- nunjukin contoh field yang gagal + tombol retry cuma buat yang gagal.
 function ahShowFailedRetryPopup(op, entries, onRetry){
   if(!entries || !entries.length) return;
   let bg = document.getElementById('ahFailedRetryModalBg');
@@ -2146,7 +2050,6 @@ function ahShowFailedRetryPopup(op, entries, onRetry){
   bg.classList.add('show');
 }
 
-// Template default field "Notes" -- dipasang otomatis pas modal instruksi field dibuka pertama kali, tetap bisa diedit/dihapus user.
 const AH_DEFAULT_NOTES_INSTRUCTION =
 `Jelasin kosakata/kalimat ini secara PADAT & GAK BERTELE-TELE -- tapi khusus bagian Penjelasan boleh agak detail kalau memang perlu buat ngejelasin nuansanya, poin-poin lain tetep ringkas to the point. FORMAT WAJIB: tulis tiap poin di baris/paragraf terpisah pake enter (baris kosong di antaranya), JANGAN digabung sebaris. Label tiap section (Kosakata & makna utama, Penjelasan, Contoh kalimat, Kosakata yang mirip, dst) WAJIB ditulis POLOS tanpa tanda apapun di depannya — JANGAN kasih "-", "•", "*", angka, atau simbol list apapun, cukup nama section + titik dua, pisah pake baris kosong doang (biar gak berantakan pas di-paste ke Anki).
 
@@ -2162,10 +2065,8 @@ Kanji & furigana: WAJIB SELALU kasih furigana di SETIAP kanji yang muncul di MAN
 
 JANGAN PAKAI tanda bold/italic markdown kayak **gini** atau *gini* — plain text polos aja.`;
 
-// Instruksi default fitur "Jelasin Kosakata (AI)" -- sama kayak template Notes di atas, tapi jalurnya beda: langsung manggil API & nulis ke field tujuan.
 const AH_DEFAULT_EXPLAIN_INSTRUCTION = AH_DEFAULT_NOTES_INSTRUCTION;
 
-// Engine yang boleh dipakai buat mode "Jelasin Kosakata" -- cuma AI chat model (Google Translate gratis/Cloud gak masuk karena literal, bukan bisa diinstruksiin).
 const AH_EXPLAIN_ENGINES = ['openai', 'claude', 'gemini', 'deepseek'];
 
 function ahLooksLikeNotesField(fieldName){
@@ -2173,14 +2074,12 @@ function ahLooksLikeNotesField(fieldName){
   return n.includes('note') || n.includes('catatan') || n.includes('keterangan') || n.includes('penjelasan');
 }
 
-// Instruksi per field disimpen terpisah per note type (mid) biar gak ke-reset kalau user pindah note type lalu balik lagi.
 function ahCurrentFieldInstructions(){
   const mid = state.currentMid;
   if(!state.fieldInstructionsByModel[mid]) state.fieldInstructionsByModel[mid] = {};
   return state.fieldInstructionsByModel[mid];
 }
 
-// Modal instruksi khusus per field, ditempelin ke [INSTRUKSI BUAT AI TRANSLATOR] pas user copy teks buat ditranslate.
 function openFieldInstructionModal(idx, fieldName, onSaved){
   let bg = document.getElementById('ahFieldInstrModalBg');
   if(!bg){
@@ -2208,7 +2107,6 @@ function openFieldInstructionModal(idx, fieldName, onSaved){
   const existing = ahCurrentFieldInstructions()[idx];
   ta.value = existing !== undefined ? existing : (ahLooksLikeNotesField(fieldName) ? AH_DEFAULT_NOTES_INSTRUCTION : '');
 
-  // clone tombol biar listener lama (dari field lain yang sebelumnya dibuka) kebuang, gak numpuk
   const oldCancel = bg.querySelector('#ahFieldInstrCancel');
   const oldSave = bg.querySelector('#ahFieldInstrSave');
   const oldTemplate = bg.querySelector('#ahFieldInstrUseTemplate');
@@ -2216,9 +2114,6 @@ function openFieldInstructionModal(idx, fieldName, onSaved){
   const saveBtn = oldSave.cloneNode(true); oldSave.replaceWith(saveBtn);
   const templateBtn = oldTemplate.cloneNode(true); oldTemplate.replaceWith(templateBtn);
 
-  // Klik tombol ini LANGSUNG ganti isi textarea jadi template Notes lengkap (bukan copy ke
-  // clipboard) -- biar field custom (misal "Extra", "Info") bisa pakai template yang sama
-  // kayak field yang namanya kedetect otomatis sebagai "Notes", tinggal diedit lalu Simpan.
   templateBtn.addEventListener('click', (e)=>{
     e.preventDefault();
     ta.value = AH_DEFAULT_NOTES_INSTRUCTION;
@@ -2243,27 +2138,26 @@ function openFieldInstructionModal(idx, fieldName, onSaved){
   bg.classList.add('show');
 }
 
-/* ---------------- state ---------------- */
 const state = {
   SQL: null,
   zip: null,
   db: null,
-  collectionFileName: null,   // nama file collection yang dipakai buat SIMPLE re-save (format lama)
-  isLatest: false,            // true kalau deck aslinya format terbaru (anki21b, zstd)
-  models: {},       // mid -> {name, flds:[names...]}
-  decksMap: {},     // did -> deck name
-  decksDescMap: {}, // did -> deck description asli
-  deckNameOverrides: {}, // did -> custom deck name (override, dari form user)
-  modelNameOverrides: {}, // mid (string) -> custom note type name
-  notes: [],         // {id, guid, mid, tags, fields:[...], dirty}
+  collectionFileName: null,   
+  isLatest: false,            
+  models: {},       
+  decksMap: {},     
+  decksDescMap: {}, 
+  deckNameOverrides: {}, 
+  modelNameOverrides: {}, 
+  notes: [],         
   currentMid: null,
   selectedFieldIdxs: [0],
-  referenceFieldIdxs: [], // subset dari selectedFieldIdxs yang ditandain SUMBER/REFERENSI -- field yang dipakai AI buat konteks tapi HARUSNYA gak berubah (misal SentKanji/VocabKanji asli), beda sama field TARGET yang emang diisi hasil terjemahan (SentEng/VocabDef/Notes)
-  fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type
-  fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi ke A.
+  referenceFieldIdxs: [], 
+  fieldSelectionByModel: {}, 
+  fieldInstructionsByModel: {}, 
   batchSize: 50,
   batchIndex: 0,
-  tablePageSize: 50,   // buat pagination tabel Preview & Edit doang (biar gak ngelag di deck gede) -- terpisah dari batchSize/batchIndex di atas, yang itu buat fitur Copy/Paste/Translate per Batch
+  tablePageSize: 50,   
   tablePageIndex: 0,
   searchQuery: '',
   resumeState: null,
@@ -2271,33 +2165,33 @@ const state = {
   cardsRows: null,
   revlogRows: null,
   isMergedDeck: false,
-  extraDeckSources: [], // dari fitur "Gabung Deck Kedua": [{ zip, mediaMap (nomor->nama asli file media deck itu), renameMap (nama lama->nama baru KALAU ada tabrakan nama sama deck utama) }]
-  primaryMediaMap: null, // cache nomor->nama file media deck UTAMA (dibaca sekali pas gabung deck pertama kali), dipakai buat ngecek tabrakan nama file
-  doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
-  fieldSelectionByModel: {}, // mid -> {selected:[idx,...], reference:[idx,...]} -- inget centang & tanda 🔒 sumber per note type biar gak ilang pas gonta-ganti note type
-  furiganaFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIPERIKSA/DIPERBAIKI sama tombol "Perbaiki Spasi Furigana", inget per note type (default: semua field kecentang)
-  furiganaFieldIdxs: [], // field yang lagi kecentang di checklist "Perbaiki Spasi Furigana" buat note type yang lagi aktif
+  extraDeckSources: [], 
+  primaryMediaMap: null, 
+  doneBatches: new Set(),  
+  fieldSelectionByModel: {}, 
+  furiganaFieldIdxsByModel: {}, 
+  furiganaFieldIdxs: [], 
   rapikanFuriganaFieldIdxsByModel: {},
   rapikanFuriganaFieldIdxs: [],
-  rapikanFieldIdxsByModel: {}, // mid -> [idx,...] field mana aja yang mau DIRAPIHIN sama tombol "Rapikan Notes", inget per note type (default: semua field kecentang)
-  rapikanFieldIdxs: [], // field yang lagi kecentang di checklist "Rapikan Notes" buat note type yang lagi aktif
-  fieldInstructionsByModel: {}, // mid -> { idx field -> teks instruksi khusus buat AI translator pas ngisi field itu (misal: "jelasin lengkap kosakatanya + furigana") }, ikut kecopy ke [INSTRUKSI BUAT AI TRANSLATOR]. Dipisah per note type (mid) biar instruksi note type A gak ilang pas pindah ke note type B lalu balik lagi.
+  rapikanFieldIdxsByModel: {}, 
+  rapikanFieldIdxs: [], 
+  fieldInstructionsByModel: {}, 
   batchSize: 50,
   batchIndex: 0,
-  tablePageSize: 50,   // buat pagination tabel Preview & Edit doang (biar gak ngelag di deck gede) -- terpisah dari batchSize/batchIndex di atas, yang itu buat fitur Copy/Paste/Translate per Batch
+  tablePageSize: 50,   
   tablePageIndex: 0,
   searchQuery: '',
-  doneBatches: new Set(),  // kumpulan "kunci batch" (gabungan ID terurut) yang udah pernah di-apply, biar ketauan kalau paste ulang bakal nimpa
-  pasteSnapshot: null,     // {mid, batchKey, entries:[{id, fields, dirty}]} -- buat fitur Undo Paste Terakhir
+  doneBatches: new Set(),  
+  pasteSnapshot: null,     
   cardBg: {
-    syncPlatforms: true,  // true = Desktop & Mobile pakai SATU background yang sama (default, kompatibel dgn deck lama). false = Desktop & Mobile masing-masing punya foto/GIF/video SENDIRI (beda konten, bukan cuma beda posisi)
-    desktop: ahNewBgSource(),  // sumber background buat Desktop -- juga dipakai sebagai sumber "bersama" pas syncPlatforms=true
-    mobile: ahNewBgSource(),   // sumber background KHUSUS Mobile -- cuma kepake pas syncPlatforms=false
-    pos: {                 // posisi geser (crop) foto/video -- SELALU tersimpan terpisah per device walau syncPlatforms=true (biar foto yg sama masih bisa di-crop beda antara desktop & mobile)
+    syncPlatforms: true,  
+    desktop: ahNewBgSource(),  
+    mobile: ahNewBgSource(),   
+    pos: {                 
       desktop: { x:50, y:50 },
       mobile: { x:50, y:50 }
     },
-    previewDevice: 'desktop', // 'desktop' | 'mobile' -- device mana yang lagi diatur/dipreview di form
+    previewDevice: 'desktop', 
     fit: 'cover',
     opacity: 90,
     overlay: 25,
@@ -2306,34 +2200,28 @@ const state = {
     back: false,
     previewSide: 'front',
     textFx: {
-      enabled: true,       // aktif/nonaktif outline/shadow custom
-      styleMode: 'glow',   // 'glow' (bayangan lembut) atau 'outline' (garis tegas)
-      color: '#000000',    // warna outline/shadow
-      strength: 3,         // ketebalan, 1-6
-      target: 'bold'       // 'bold' (cuma vocab yang di-bold) atau 'all' (semua teks)
+      enabled: true,       
+      styleMode: 'glow',   
+      color: '#000000',    
+      strength: 3,         
+      target: 'bold'       
     }
   },
   originalFileName: 'deck.apkg',
-  templateOriginals: {}, // mid -> {css, tmpls:[...]} snapshot "asli" (sebelum diedit user), buat tombol Reset
-  templateEditor: { ord: 0, side: 'front', tab: 'front' }, // state UI editor Template & Styling (bukan bagian dari deck)
-  mediaBlobUrlCache: {}, // nama file media -> blob: URL (dibikin on-demand), dipakai buat nampilin gambar/muterin audio asli di preview realtime
-  printMediaBlobUrlCache: {}, // key "namafile\u0000maxDim" -> blob: URL KHUSUS proses print/PDF (biasanya udah di-downscale) -- dipisah dari mediaBlobUrlCache biar gak numpuk/nyampur sama cache preview interaktif
-  pdfExportSession: null, // { noteList, batchSize, totalBatches, batchIndex, ord, cols, rows, includeBack, cutLines, showTags, contentScale, paper, maxDim } -- kepake pas export PDF dipecah jadi beberapa batch/tab (deck gede)
-  _mediaMapPromise: null, // cache promise pemetaan nomor file <-> nama file media asli di dalam .apkg
-  autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, // mode: 'inplace' (timpa field yg sama) atau 'mapped' (field A -> field B). op: 'translate' (terjemahin apa adanya) atau 'explain' (AI jelasin kosakata sesuai instruksi custom, ditaruh di field tujuan). lastFailedEntries: [{id,src,dst,err}] dari proses TERAKHIR, dipake buat tombol "Mulai Ulang yang Gagal"
-  autoTranslateSnapshot: null, // snapshot fields SEBELUM auto-translate jalan (buat tombol Undo Translate Terakhir)
-  pendingDiffReview: [], // hasil translate mode "Preview Sebelum Apply" -- {noteId, dst, before, after, checked} yang BELUM ditimpa ke note.fields sampai user approve per-kartu di modal diff
-  fixFuriganaSnapshot: null, // snapshot fields SEBELUM tombol "Perbaiki Spasi Furigana" jalan (buat tombol Undo-nya)
+  templateOriginals: {}, 
+  templateEditor: { ord: 0, side: 'front', tab: 'front' }, 
+  mediaBlobUrlCache: {}, 
+  printMediaBlobUrlCache: {}, 
+  pdfExportSession: null, 
+  _mediaMapPromise: null, 
+  autoTranslate: { cancel: false, mode: 'inplace', op: 'translate', lastFailedEntries: [] }, 
+  autoTranslateSnapshot: null, 
+  pendingDiffReview: [], 
+  fixFuriganaSnapshot: null, 
   rapikanFuriganaSnapshot: null,
-  rapikanNotesSnapshot: null // snapshot fields SEBELUM tombol "Rapikan Notes" jalan (buat tombol Undo-nya)
+  rapikanNotesSnapshot: null 
 };
 
-/* ---------------- init sql.js ---------------- */
-// PENTING: dibungkus try/catch. Ini pemanggilan library eksternal PALING ATAS di script gede
-// ini -- kalau CDN sql.js gagal/telat keload (koneksi jelek, ad-blocker, dll) dan initSqlJs
-// belum kedefinisi pas baris ini jalan, exception yang gak ketangkep bakal nge-stop SELURUH
-// sisa script ini, alias SEMUA tombol/fitur di bawah baris ini (termasuk tombol-tombol biasa
-// yang gak ada hubungannya sama sql.js) gak bakal pernah ke-daftar listener-nya sama sekali.
 let sqlReadyPromise;
 try {
   sqlReadyPromise = initSqlJs({
@@ -2347,7 +2235,6 @@ try {
   sqlReadyPromise = Promise.resolve(null);
 }
 
-// Konfirmasi nutup tab/refresh setelah .apkg dimuat -- progress cuma di memori browser, belum ada auto-save.
 window.addEventListener('beforeunload', (e)=>{
   if(state.notes && state.notes.length){
     e.preventDefault();
@@ -2356,7 +2243,6 @@ window.addEventListener('beforeunload', (e)=>{
   }
 });
 
-/* ---------------- upload / parse ---------------- */
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 
@@ -2528,7 +2414,6 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   function getNextDid(){ while(state.decksMap[String(nextDid.value)] || usedDids.has(String(nextDid.value))) nextDid.value++; return String(nextDid.value++); }
 
   for(const file of loadedFiles){
-    // remap models and decks
     Object.keys(file.models).forEach(mid=>{
       const existing = Object.values(state.models).find(m=> m.name === file.models[mid].name && JSON.stringify(m.flds) === JSON.stringify(file.models[mid].flds));
       if(existing){ midMap[mid] = existing.id || mid; return; }
@@ -2580,7 +2465,6 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   state.doneBatches = new Set();
   state.pasteSnapshot = null;
   state.cardBg = state.cardBg || { syncPlatforms:true, desktop: ahNewBgSource(), mobile: ahNewBgSource(), pos:{ desktop:{x:50,y:50}, mobile:{x:50,y:50} }, fit:'cover', previewDevice:'desktop' };
-  // (state.isMergedDeck udah di-set true sama caller-nya buat kasus ini, jangan ditimpa balik jadi false di sini)
   state.extraDeckSources = [];
   state.primaryMediaMap = null;
   const mergeStatusEl0 = document.getElementById('mergeDeckStatus');
@@ -2598,7 +2482,6 @@ async function ahMergeLoadedApkgFiles(loadedFiles){
   ahUpdateSessionBar();
 }
 
-/* ---------------- Gabung Deck Kedua ---------------- */
 const mergeDeckInput = document.getElementById('mergeDeckInput');
 document.getElementById('btnMergeDeckPick').addEventListener('click', ()=> mergeDeckInput.click());
 mergeDeckInput.addEventListener('change', e=>{
@@ -2636,9 +2519,6 @@ async function handleMergeSecondDeck(file){
       return;
     }
 
-    // Pas pertama kali fitur ini dipake: cardsRows/revlogRows deck UTAMA masih cuma
-    // ada di dalam state.db (SQLite), belum jadi array JS -- ambil dulu apa adanya
-    // di sini SEBELUM ditambahin data deck kedua.
     if(!state.isMergedDeck){
       state.cardsRows = readRowsSafe(state.db,
         "SELECT id,nid,did,ord,mod,usn,type,queue,due,ivl,factor,reps,lapses,left,odue,odid,flags,data FROM cards");
@@ -2648,7 +2528,6 @@ async function handleMergeSecondDeck(file){
       state.primaryMediaMap = await ahReadZipMediaMap(state.zip);
     }
 
-    // --- cek tabrakan nama file media (gambar/audio) sama deck utama / deck yang udah digabung sebelumnya ---
     const existingMediaNames = new Set(Object.values(state.primaryMediaMap || {}));
     state.extraDeckSources.forEach(src=>{
       Object.keys(src.mediaMap).forEach(num=>{
@@ -2669,8 +2548,6 @@ async function handleMergeSecondDeck(file){
       renameMap[orig] = candidate;
       existingMediaNames.add(candidate);
     });
-    // Nama file yang bentrok udah diganti -- update referensinya di isi field note deck kedua
-    // (contoh: <img src="nama.jpg"> atau [sound:nama.mp3]) biar tetep nunjuk ke file yang bener.
     if(Object.keys(renameMap).length){
       file2.notes.forEach(n=>{
         n.fields = n.fields.map(f=>{
@@ -2684,7 +2561,6 @@ async function handleMergeSecondDeck(file){
     }
     state.extraDeckSources.push({ zip: zip2, mediaMap: media2Map, renameMap });
 
-    // --- dedup & remap note type (model): note type yang namanya + field-nya SAMA PERSIS disatuin, sisanya ditambahin baru ---
     const midMap = {};
     Object.keys(file2.models).forEach(mid=>{
       const incoming = file2.models[mid];
@@ -2700,7 +2576,6 @@ async function handleMergeSecondDeck(file){
       midMap[mid] = newMid;
     });
 
-    // --- dedup & remap deck: deck yang namanya SAMA PERSIS disatuin, sisanya ditambahin baru ---
     const didMap = {};
     Object.keys(file2.decksMap).forEach(did=>{
       const existingId = Object.keys(state.decksMap).find(id=> state.decksMap[id] === file2.decksMap[did]);
@@ -2713,7 +2588,6 @@ async function handleMergeSecondDeck(file){
       didMap[did] = newDid;
     });
 
-    // --- remap ID note/card/revlog deck kedua biar gak tabrakan sama punya deck utama ---
     let nextNoteId = ahMaxNum(state.notes.map(n=> parseInt(n.id)||0)) + 1;
     const noteIdMap = {};
     file2.notes.forEach(n=>{ noteIdMap[n.id] = nextNoteId++; });
@@ -2751,14 +2625,10 @@ async function handleMergeSecondDeck(file){
 
     state.usedDeckIds = [...new Set(state.cardsRows.map(r=> String(r[2])))];
     state.isMergedDeck = true;
-    // Paksa lewat jalur "rebuild penuh" pas save -- data note/card gabungan cuma ada
-    // di array JS (state.notes/cardsRows/revlogRows), BUKAN di dalam state.db, jadi
-    // jalur "quick update" (yang nulis balik ke state.db) gak boleh dipake lagi.
     state.isLatest = true;
     state.deckHash = (state.deckHash || 'm') + '_+_' + ahHashBytes(new Uint8Array(buf2));
     state.originalFileName = state.originalFileName.replace(/\.apkg$/i, '') + '_gabung.apkg';
 
-    // --- refresh UI, jaga supaya model/rename deck yang lagi dipilih user gak ke-reset ---
     const prevMid = state.currentMid;
     const prevOverrides = Object.assign({}, state.deckNameOverrides);
 
@@ -2811,9 +2681,6 @@ async function handleApkgFile(file){
     const zip = await JSZip.loadAsync(buf);
     state.zip = zip;
 
-    // Deck format Anki terbaru (2.1.50+) simpan data asli di collection.anki21b
-    // yang dikompres zstd. File collection.anki21/anki2 di sebelahnya cuma dummy
-    // kompatibilitas (1 kartu placeholder). Makanya anki21b harus dicek duluan.
     const newEntry = zip.file('collection.anki21b');
     const legacyEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
 
@@ -2859,7 +2726,6 @@ async function handleApkgFile(file){
       if(cardsDidRes.length) state.usedDeckIds = cardsDidRes[0].values.map(r=>String(r[0]));
     }catch(e){ console.warn('gagal baca did dari cards', e); }
 
-    // load notes (kolom ini stabil di semua versi skema Anki)
     const notesRes = db.exec("SELECT id, guid, mid, tags, flds FROM notes");
     state.notes = [];
     if(notesRes.length){
@@ -2896,15 +2762,15 @@ async function handleApkgFile(file){
     toast('Deck berhasil dibuka!', '🎉');
 
     state.deckHash = ahHashBytes(new Uint8Array(buf));
-    state.isMergedDeck = false; // reset fitur "Gabung Deck Kedua" tiap kali buka deck utama baru dari awal
+    state.isMergedDeck = false; 
     state.extraDeckSources = [];
     state.primaryMediaMap = null;
     state.cardsRows = null;
     state.revlogRows = null;
     document.getElementById('mergeDeckStatus').innerHTML = '';
-    state.templateOriginals = {}; // reset cache "desain asli" tiap kali buka deck baru
-    state.fieldInstructionsByModel = {}; // reset instruksi khusus field juga -- deck baru = note type baru semua
-    state.fieldSelectionByModel = {}; // reset juga cache centang/lock field per note type
+    state.templateOriginals = {}; 
+    state.fieldInstructionsByModel = {}; 
+    state.fieldSelectionByModel = {}; 
     Object.values(state.mediaBlobUrlCache).forEach(url=>{ try{ URL.revokeObjectURL(url); }catch(e){} });
     state.mediaBlobUrlCache = {};
     state._mediaMapPromise = null;
@@ -2935,22 +2801,19 @@ function ahHashBytes(bytes){
   }
   return (h1>>>0).toString(16).padStart(8,'0') + (h2>>>0).toString(16).padStart(8,'0');
 }
-/* ---------------- background kartu (front/back) ---------------- */
-// "Sumber" background = 1 slot foto/GIF/video (dipunyai Desktop, dan (kalau syncPlatforms=false) Mobile punya slot sendiri).
 function ahNewBgSource(){
   return {
-    kind: 'image',           // 'image' (foto/GIF, ditampilin lewat CSS background-image) atau 'video' (mp4/webm, ditampilin lewat tag <video>)
-    mode: 'upload',           // 'upload' (file lokal) atau 'url' (link online)
-    imageUrl: '',              // dipakai kalau mode === 'url' -- boleh link foto, GIF, ATAU video (.mp4/.webm)
-    dataUrl: null,             // buat preview di browser (foto/GIF: data-URL hasil kompresi; video: blob URL file aslinya)
-    bytes: null,               // Uint8Array buat disisipin ke media apkg
-    mediaFilename: '',         // nama file di dalam media apkg
-    posterDataUrl: null,       // frame pertama video, di-capture OTOMATIS -- dipakai sbg fallback SEBELUM video-nya kebaca/main
-    posterBytes: null,         // Uint8Array frame itu (JPEG), ikut disisipin ke media apkg
-    posterMediaFilename: ''    // nama file poster di media apkg
+    kind: 'image',           
+    mode: 'upload',           
+    imageUrl: '',              
+    dataUrl: null,             
+    bytes: null,               
+    mediaFilename: '',         
+    posterDataUrl: null,       
+    posterBytes: null,         
+    posterMediaFilename: ''    
   };
 }
-// Sumber mana yang lagi "aktif" diedit di form: kalau syncPlatforms aktif, Desktop & Mobile berbagi SATU sumber (cfg.desktop dipakai buat berdua). Kalau nggak, masing-masing device punya sumbernya sendiri.
 function ahActiveBgSource(cfg, device){
   device = device || cfg.previewDevice || 'desktop';
   return cfg.syncPlatforms ? cfg.desktop : cfg[device];
@@ -2963,21 +2826,21 @@ function ahHasBgSource(src){
   if(!src) return false;
   return src.mode === 'url' ? !!(src.imageUrl && src.imageUrl.trim()) : !!(src.dataUrl && src.bytes);
 }
-function ahHasBgImage(cfg){ return ahHasBgSource(ahActiveBgSource(cfg)); } // cek sumber yang lagi ditampilin di tab preview aktif
-function ahHasAnyBg(cfg){ // ada background di SALAH SATU device -- dipakai buat tombol Terapkan Depan/Belakang & status keseluruhan
+function ahHasBgImage(cfg){ return ahHasBgSource(ahActiveBgSource(cfg)); } 
+function ahHasAnyBg(cfg){ 
   if(!cfg) return false;
   return cfg.syncPlatforms ? ahHasBgSource(cfg.desktop) : (ahHasBgSource(cfg.desktop) || ahHasBgSource(cfg.mobile));
 }
 function ahBgSourceRef(src){ return src.mode === 'url' ? src.imageUrl.trim() : src.mediaFilename; }
 function ahBgPosterRef(src){
   if(!src || src.kind !== 'video') return '';
-  if(src.mode === 'url') return ''; // video dari link internet: gak bisa di-capture frame-nya (batasan CORS), overlay gelap jadi fallback-nya
+  if(src.mode === 'url') return ''; 
   return src.posterBytes ? src.posterMediaFilename : '';
 }
 function ahDetectKindFromFile(file){ return (file.type||'').toLowerCase().startsWith('video/') ? 'video' : 'image'; }
 function ahDetectKindFromUrl(url){
   const clean = (url||'').split('?')[0].split('#')[0].toLowerCase();
-  return /\.(mp4|webm|mov|m4v)$/.test(clean) ? 'video' : 'image'; // GIF sengaja dianggap 'image' -- background-image CSS udah otomatis animasiin GIF sendiri, gak butuh <video>
+  return /\.(mp4|webm|mov|m4v)$/.test(clean) ? 'video' : 'image'; 
 }
 function ahBytesToDataUrl(bytes, mime){
   return new Promise((resolve, reject)=>{
@@ -3005,24 +2868,17 @@ function updateBgKindBadge(src){
   el.textContent = src.kind === 'video' ? '🎬 Video' : (isGif ? '🎞️ GIF' : (isWebp ? '🧩 WebP (animasi)' : '🖼️ Foto'));
 }
 
-// Video & GIF (animasi) itu "distraksi" kalau cuma nempel di 1 sisi doang -- makanya keduanya
-// WAJIB diterapkan ke Depan & Belakang SEKALIGUS, gak boleh dimatiin sepihak. Foto statis/WebP
-// biasa tetep bebas (boleh cuma di 1 sisi kayak biasa).
 function ahBgSourceForcesLock(src){
   if(!src || !ahHasBgSource(src)) return false;
   if(src.kind === 'video') return true;
   const refLower = src.mode==='url' ? (src.imageUrl||'').toLowerCase() : (src.mediaFilename||'').toLowerCase();
   return /\.gif(\?|#|$)/i.test(refLower);
 }
-// Dicek dari SEMUA sumber yang lagi aktif (Desktop, dan Mobile juga kalau syncPlatforms mati) --
-// video/GIF di platform manapun tetep ngunci Depan & Belakang buat KEDUANYA.
 function ahBgApplyLocked(cfg){
   if(!cfg) return false;
   return ahBgSourceForcesLock(cfg.desktop) || (!cfg.syncPlatforms && ahBgSourceForcesLock(cfg.mobile));
 }
 
-// Sinkronin SEMUA kontrol form (tombol mode, dropzone, link, badge tipe, dsb) biar sesuai sama
-// sumber background yang lagi aktif -- dipanggil tiap kali ganti tab Desktop/Mobile atau toggle "sama/beda".
 function refreshBgSourceUI(){
   const cfg = state.cardBg;
   const src = ahActiveBgSource(cfg);
@@ -3063,7 +2919,6 @@ bgFileInput.addEventListener('change', e=>{
   if(f) handleBgMedia(f);
 });
 
-// Resize + kompres foto ke JPEG biar file .apkg hasil akhir tetap ringan
 function prepareBackgroundImage(file){
   return new Promise((resolve, reject)=>{
     const url = URL.createObjectURL(file);
@@ -3093,10 +2948,6 @@ function prepareBackgroundImage(file){
   });
 }
 
-// Ambil 1 frame video (di sekitar 0.15s / seperempat durasi) buat dijadiin fallback/poster
-// OTOMATIS -- ini yang bikin background video gak "kosong/putih" dulu sebelum videonya kebaca &
-// mulai main. Cuma jalan buat video yang di-UPLOAD (blob lokal, same-origin); video dari LINK
-// internet biasanya gak bisa di-capture gara-gara batasan CORS browser, jadi bakal resolve(null).
 function ahCaptureVideoPoster(file){
   return new Promise(resolve=>{
     let done = false;
@@ -3107,11 +2958,6 @@ function ahCaptureVideoPoster(file){
     try{
       vid = document.createElement('video');
       vid.muted = true; vid.playsInline = true; vid.preload = 'auto'; vid.src = url;
-      // PENTING (fix poster gagal kecapture): video element yang gak ditempel ke DOM sering gak
-      // reliable di-decode di beberapa browser (event loadeddata/seeked kadang gak fire sama
-      // sekali), yang bikin poster selalu gagal & fallback ke kotak gelap solid (#111). Nempelin
-      // ke DOM (disembunyiin off-screen, bukan display:none -- beberapa browser skip decode utk
-      // display:none) bikin decode-nya jauh lebih reliable.
       vid.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;';
       document.body.appendChild(vid);
       const grabFrame = ()=>{
@@ -3138,12 +2984,9 @@ function ahCaptureVideoPoster(file){
         catch(err){ grabFrame(); }
       });
       vid.addEventListener('seeked', grabFrame);
-      // Fallback tambahan: kalau 'seeked' gak kunjung fire (currentTime gak berubah dari 0 --
-      // beberapa browser gak fire seeked kalau target time-nya kebetulan sama kayak posisi
-      // sekarang), 'canplay' jadi jaring pengaman kedua buat tetep grab frame yang ada.
       vid.addEventListener('canplay', ()=> setTimeout(grabFrame, 120));
       vid.addEventListener('error', finishNull);
-      setTimeout(finishNull, 5000); // safety net kalau video gagal fire event sama sekali
+      setTimeout(finishNull, 5000); 
       vid.load();
     }catch(err){ finishNull(); }
   });
@@ -3153,11 +2996,6 @@ async function handleBgImageFile(file){
   const src = ahActiveBgSource(state.cardBg);
   const mimeLower = (file.type||'').toLowerCase();
   const isGif = mimeLower === 'image/gif';
-  // WebP (animasi ATAU statis) WAJIB dipertahankan apa adanya juga, sama kayak GIF di bawah --
-  // WebP animasi itu gambar yang dianimasiin lewat CSS background-image biasa (BUKAN video),
-  // jadi ini fitur terpisah dari urusan kompatibilitas video .webm/.mp4 per platform (liat
-  // catatan di kotak peringatan atas soal itu). Kalau file WebP ini di-redraw ke <canvas> kayak
-  // foto JPEG biasa, animasinya bakal ke-"pipihin" jadi cuma 1 frame statis doang.
   const isWebp = mimeLower === 'image/webp';
   const isPassthrough = isGif || isWebp;
   const label = isGif ? 'GIF' : (isWebp ? 'WebP' : 'foto');
@@ -3175,16 +3013,11 @@ async function handleBgImageFile(file){
       bytes = new Uint8Array(await res.blob.arrayBuffer());
       ext = 'jpg';
     }
-    // PENTING: nama file media dibikin unik berdasarkan isi foto (hash), bukan nama statis.
-    // Ini nyegah Anki nge-rename file diem-diem pas import kalau kebetulan ada file lama dengan
-    // nama sama tapi isi beda di collection.media user -- yang bikin CSS nunjuk ke file salah.
     src.kind = 'image';
     src.dataUrl = dataUrl;
     src.bytes = bytes;
     src.mediaFilename = '_ankihoney_bg_' + ahHashBytes(bytes) + '.' + ext;
     src.posterDataUrl = null; src.posterBytes = null; src.posterMediaFilename = '';
-    // GIF (animasi) WAJIB tampil di Depan & Belakang sekaligus, sama kayak video -- otomatis
-    // di-ON-in & tombol Terapkan-nya bakal dikunci selama sumber ini masih GIF.
     if(isGif){ state.cardBg.front = true; state.cardBg.back = true; }
     document.getElementById('bgControls').classList.remove('hidden');
     updateBgKindBadge(src);
@@ -3205,12 +3038,6 @@ async function handleBgVideoFile(file){
     return;
   }
   const ext = mime.includes('webm') ? 'webm' : 'mp4';
-  // PENTING (koreksi): Anki Desktop & AnkiDroid itu SALING KEBALIKAN & GAK ADA yang overlap --
-  // Anki Desktop (WebView bawaannya) CUMA bisa muterin .webm, AnkiDroid CUMA bisa muterin .mp4.
-  // Gak ada satu file video pun yang bisa dipakai bareng buat DUA-DUANYA sekaligus, jadi "video
-  // yang sama buat semua platform" itu MUSTAHIL -- makanya video otomatis diarahkan ke slot
-  // platform yang sesuai formatnya, "background sama" dipaksa nonaktif, dan user diminta upload
-  // versi satunya (format lain) di tab platform yang satunya lagi.
   const requiredDevice = ext === 'webm' ? 'desktop' : 'mobile';
   const requiredDeviceLabel = requiredDevice === 'desktop' ? '🖥️ Desktop' : '📱 Mobile (AnkiDroid)';
   const otherDeviceLabel = requiredDevice === 'desktop' ? '📱 Mobile (AnkiDroid, butuh .mp4)' : '🖥️ Desktop (butuh .webm)';
@@ -3224,20 +3051,15 @@ async function handleBgVideoFile(file){
     }
 
     const wasSynced = cfg.syncPlatforms;
-    // Video HARUS masuk ke slot platform yang bener (bukan ke slot "aktif saat ini" / hasil sync)
-    // -- kalau sebelumnya "background sama" nyala, itu dimatiin di sini karena emang gak berlaku
-    // buat video.
     if(wasSynced) cfg.syncPlatforms = false;
     const src = cfg[requiredDevice];
 
     src.kind = 'video';
     src.mode = 'upload';
     src.bytes = bytes;
-    src.dataUrl = URL.createObjectURL(file); // cuma dipakai sbg tanda "sumber ini ada isinya"
+    src.dataUrl = URL.createObjectURL(file); 
     src.mediaFilename = '_ankihoney_bgvid_' + ahHashBytes(bytes) + '.' + ext;
 
-    // Ambil frame pertama videonya OTOMATIS buat dipakai sbg foto fallback -- ini yang nutupin
-    // "lubang" sebelum video-nya kebaca & mulai main (biar gak keliatan kosong/putih dulu).
     const poster = await ahCaptureVideoPoster(file);
     if(poster){
       src.posterDataUrl = poster.dataUrl;
@@ -3247,13 +3069,9 @@ async function handleBgVideoFile(file){
       src.posterDataUrl = null; src.posterBytes = null; src.posterMediaFilename = '';
     }
 
-    // Video WAJIB tampil di Depan & Belakang sekaligus (gak boleh cuma 1 sisi) -- otomatis di-ON-in
-    // & tombol Terapkan-nya bakal dikunci (gak bisa dimatiin) selama sumber ini masih video.
     cfg.front = true;
     cfg.back = true;
 
-    // Pindahin tab preview ke platform yang barusan keisi, biar user langsung liat hasilnya --
-    // dan sinkronin toggle "background sama" di UI (checkbox) kalau tadi dipaksa dimatiin.
     cfg.previewDevice = requiredDevice;
     if(wasSynced && bgSyncToggle){
       bgSyncToggle.checked = false;
@@ -3290,8 +3108,6 @@ async function handleBgMedia(file){
 
 document.getElementById('bgFit').addEventListener('change', e=>{ state.cardBg.fit = e.target.value; updateBgPreview(); });
 
-// Toggle "background sama utk semua platform" vs "beda per platform" -- pindahin sumber yang
-// ditampilin/diedit di form, TANPA nge-reset apa yang udah diisi di masing-masing slot.
 const bgSyncToggle = document.getElementById('bgSyncToggle');
 if(bgSyncToggle){
   bgSyncToggle.addEventListener('change', e=>{
@@ -3303,8 +3119,6 @@ if(bgSyncToggle){
   });
 }
 
-// Tab pemilih device (Desktop/Mobile) -- posisi X/Y SELALU disimpen terpisah per device.
-// Kalau syncPlatforms nonaktif, pindah tab ini juga ganti SUMBER (foto/GIF/video) yang diedit di form.
 function setBgPreviewDevice(device){
   state.cardBg.previewDevice = device;
   refreshBgSourceUI();
@@ -3333,7 +3147,6 @@ document.getElementById('bgBlur').addEventListener('input', e=>{
   updateBgPreview();
 });
 
-/* ---------------- custom outline/shadow teks vocab ---------------- */
 function ahHexToRgb(hex){
   hex = (hex || '#000000').replace('#','');
   if(hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
@@ -3342,9 +3155,6 @@ function ahHexToRgb(hex){
   return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
 }
 
-// Bangun CSS text-shadow/efek teks vocab dari config custom, dipakai buat preview & CSS yang disuntik ke Anki.
-// 'outline' = garis tepi tegas (webkit-text-stroke + paint-order:stroke fill, gak pake blur).
-// 'glow' = bayangan lembut ngeblur di sekitar teks, warna asli tetap.
 function ahBuildTextFxCss(cfg){
   const fx = (cfg && cfg.textFx) || {};
   const s = Math.max(1, Math.min(6, fx.strength || 3));
@@ -3353,7 +3163,7 @@ function ahBuildTextFxCss(cfg){
   const rgba = a => `rgba(${r},${g},${b},${a})`;
 
   if(fx.styleMode === 'outline'){
-    const strokeWidth = (s * 0.45).toFixed(2); // 0.45px - 2.7px, tetep tipis & tegas
+    const strokeWidth = (s * 0.45).toFixed(2); 
     return [
       `color: #ffffff`,
       `-webkit-text-stroke: ${strokeWidth}px ${color}`,
@@ -3363,7 +3173,6 @@ function ahBuildTextFxCss(cfg){
     ];
   }
 
-  // glow (default): bayangan lembut, warna huruf asli dipertahankan
   const shadow = [
     `0 0 ${s}px ${rgba(.95)}`,
     `0 0 ${s*2}px ${rgba(.85)}`,
@@ -3384,14 +3193,11 @@ function updateTextFxPreview(){
 
   const declarations = fx.enabled ? ahBuildTextFxCss(state.cardBg).join('; ') + ';' : '';
 
-  // demo mini di background terang & gelap -- font-weight:800 dipertahankan,
-  // sisanya (color/stroke/shadow) di-reset dulu baru ditimpa declarations baru
   ['bgTextFxDemoLight','bgTextFxDemoDark'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.cssText = 'font-weight:800; font-size:1rem;' + (declarations ? ' ' + declarations : '');
   });
 
-  // vocab bold di preview kartu utama (cuma yang di dalam field, bukan seluruh kartu)
   const target = document.querySelectorAll('#bgPreviewText b, #bgPreviewText strong');
   target.forEach(el=>{ el.style.cssText = declarations; });
 }
@@ -3454,7 +3260,6 @@ document.getElementById('btnApplyBack').addEventListener('click', ()=>{
 document.getElementById('btnClearBg').addEventListener('click', ()=>{
   const cfg = state.cardBg;
 
-  // Strip blok CSS AnkiHoney + unwrap template dari model
   const model = state.models[state.currentMid];
   if(model){
     model.css = ahStripCssBlock(model.css || '');
@@ -3467,7 +3272,6 @@ document.getElementById('btnClearBg').addEventListener('click', ()=>{
     model.usn = -1;
   }
 
-  // Clear state UI
   cfg.desktop = ahNewBgSource();
   cfg.mobile = ahNewBgSource();
   cfg.front = false;
@@ -3476,7 +3280,6 @@ document.getElementById('btnClearBg').addEventListener('click', ()=>{
   bgFileInput.value = '';
   bgUrlInput.value = '';
 
-  // Sembunyikan status deteksi
   const statusEl = document.getElementById('bgDetectStatus');
   if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
 
@@ -3496,8 +3299,6 @@ function getSampleCardText(side){
   return rest || 'Contoh teks belakang kartu';
 }
 
-// Buang semua tag HTML KECUALI <b>/<strong>, biar vocab yang di-highlight
-// di field asli tetep keliatan bold pas dipreview (buat nunjukkin efek outline/shadow-nya)
 function sanitizeKeepBold(str){
   const tmp = document.createElement('div');
   tmp.innerHTML = str || '';
@@ -3527,33 +3328,25 @@ function getSampleCardHtml(side){
   }
   let safe = sanitizeKeepBold(raw);
   if(!/<b>|<strong>/i.test(safe)){
-    // gak ada vocab yang di-bold di data asli → kasih contoh biar efeknya tetep keliatan
     safe = (safe ? safe + ' — ' : '') + 'contoh: <b>kosakata</b> yang di-bold';
   }
   return safe;
 }
 
-// Referensi buat lapisan foto/GIF paling belakang di preview kecil: kalau sumbernya video, ini
-// balikin POSTER-nya (frame pertama) yang dudukin di belakang <video> asli sbg fallback selama
-// videonya masih ke-load -- videonya sendiri yang beneran MUTER, di-handle terpisah di updateBgPreview().
 function ahPreviewImageRefForSource(src){
   if(!ahHasBgSource(src)) return '';
   if(src.kind === 'video') return src.mode === 'url' ? '' : (src.posterDataUrl || '');
-  return src.mode === 'url' ? src.imageUrl.trim() : src.dataUrl; // GIF ikut lewat sini & animasinya jalan normal (data/URL GIF di background-image otomatis animasi di browser)
+  return src.mode === 'url' ? src.imageUrl.trim() : src.dataUrl; 
 }
 
 const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
 
-// Sekali doang dipasang: begitu video di preview kecil beneran udah bisa diputer, fade-in ke
-// opacity target (bukan langsung nongol dadakan) -- niruin persis behavior di kartu Anki asli.
 (function setupBgPreviewVideoFade(){
   const v = document.getElementById('bgPreviewVideo');
   if(!v) return;
   const reveal = ()=>{
     const t = v.dataset.targetOpacity;
     if(t) v.style.opacity = t;
-    // Full refresh juga (bukan cuma opacity) -- jaga2 ada layer lain (poster/overlay) yang
-    // perlu ke-update begitu video-nya beneran ready diputer.
     if(typeof updateBgPreview === 'function') updateBgPreview();
   };
   v.addEventListener('loadedmetadata', reveal);
@@ -3562,11 +3355,6 @@ const objectFitMap = { cover:'cover', contain:'contain', stretch:'fill' };
   v.addEventListener('playing', reveal);
 })();
 
-// Paksa opacity video preview ke target-nya TANPA gantung ke event media (loadeddata/canplay/dst)
-// sama sekali -- event2 itu ternyata gak selalu bisa diandelin timing-nya (beda2 tiap browser,
-// dan kadang gak fire ulang pas video element di-reuse buat src baru). Dipanggil abis tiap kali
-// updateBgPreview() nyetel dataset.targetOpacity, pake double requestAnimationFrame biar browser
-// pasti udah sempet ngerender frame pertama & style-nya (repaint) sebelum opacity beneran diset.
 function ahForceRevealBgPreviewVideo(){
   const v = document.getElementById('bgPreviewVideo');
   if(!v) return;
@@ -3574,8 +3362,6 @@ function ahForceRevealBgPreviewVideo(){
     const t = v.dataset.targetOpacity;
     if(t) v.style.opacity = t;
   }));
-  // Safety net kedua: kalau entah kenapa masih belum keupdate (misal rAF sempet ke-skip pas tab
-  // background), paksa lagi abis delay singkat.
   setTimeout(()=>{ const t = v.dataset.targetOpacity; if(t) v.style.opacity = t; }, 350);
 }
 
@@ -3634,8 +3420,6 @@ function updateBgPreview(){
     overlay.style.backgroundColor = `rgba(0,0,0,${cfg.overlay/100})`;
   }
 
-  // <video> beneran diputer di preview kecil ini (bukan cuma foto diem) -- sumbernya blob URL file
-  // yang di-upload (atau link langsung kalau mode URL), ga usah lewat proses/kompresi apapun lagi.
   if(video){
     if(isVideo){
       const vref = src.mode === 'url' ? (src.imageUrl || '').trim() : src.dataUrl;
@@ -3646,7 +3430,7 @@ function updateBgPreview(){
         video.src = vref;
         video.load();
         const p = video.play();
-        if(p && p.catch) p.catch(()=>{}); // autoplay browser policy kadang nolak diem-diem, biarin aja -- poster fallback tetep keliatan
+        if(p && p.catch) p.catch(()=>{}); 
       }
       video.classList.remove('hidden');
       video.style.objectFit = objectFitMap[cfg.fit] || 'cover';
@@ -3672,8 +3456,6 @@ function updateBgPreview(){
     const btnBack = document.getElementById('btnApplyBack');
     btnFront.classList.toggle('applied', cfg.front);
     btnBack.classList.toggle('applied', cfg.back);
-    // Video/GIF ngunci Depan & Belakang biar gak bisa dimatiin sepihak -- kasih tanda gembok +
-    // tooltip di tombolnya biar user ngerti KENAPA gak bisa diklik-matiin, bukan cuma diem2 gak ngefek.
     btnFront.classList.toggle('locked', locked && cfg.front);
     btnBack.classList.toggle('locked', locked && cfg.back);
     btnFront.title = (locked && cfg.front) ? 'Video/GIF wajib tampil di Depan & Belakang -- gak bisa dimatiin sepihak' : '';
@@ -3686,7 +3468,6 @@ function toggleBgPreviewSide(force){
   updateBgPreview();
 }
 
-// Versi ringan dari updateBgPreview() -- cuma update background-position & readout, dipanggil terus selama drag biar gak glitch (versi lengkap cuma sekali di akhir drag).
 function updateBgPreviewPositionOnly(){
   const cfg = state.cardBg;
   const device = cfg.previewDevice || 'desktop';
@@ -3701,34 +3482,21 @@ function updateBgPreviewPositionOnly(){
 
 (function setupBgPreviewInteraction(){
   const card = document.getElementById('bgPreviewCard');
-  const MOVE_THRESHOLD = 5; // px -- di bawah ini dianggap tap (ganti sisi), bukan drag (atur posisi)
+  const MOVE_THRESHOLD = 5; 
   let startX = null, startY = null, moved = false, dragActive = false;
   let rafId = null, pendingEvent = null;
 
   function clampPct(v){ return Math.max(0, Math.min(100, v)); }
-  // FIX arah kebalik: background-position CSS itu makin gede % makin nunjukin
-  // sisi KANAN/BAWAH dari gambar asli -- efeknya gambar malah KELIATAN geser ke
-  // KIRI/ATAS pas persen-nya dinaikin. Kalau posisi dipetain APA ADANYA dari
-  // koordinat kursor (kursor makin ke kanan -> % makin gede), hasilnya gambar
-  // malah geser ke arah BERLAWANAN dari tarikan jari/kursor. Makanya di sini
-  // koordinatnya dibalik (100 - x, 100 - y) dulu, biar geser ke kanan/bawah
-  // beneran bikin gambar KELIATAN ikut geser ke kanan/bawah (searah tarikan).
   function posFromEvent(e){
     const rect = card.getBoundingClientRect();
     const rawX = clampPct(((e.clientX - rect.left) / rect.width) * 100);
     const rawY = clampPct(((e.clientY - rect.top) / rect.height) * 100);
     return { x: 100 - rawX, y: 100 - rawY };
   }
-  // Nulis posisi ke device yang lagi aktif di tab (Desktop atau Mobile) --
-  // 2 device ini disimpen terpisah, jadi geser pas tab Mobile aktif GAK
-  // ngubah posisi yang udah diatur buat Desktop, begitu juga sebaliknya.
   function applyDragPosition(e){
     const { x, y } = posFromEvent(e);
     const device = state.cardBg.previewDevice === 'mobile' ? 'mobile' : 'desktop';
     state.cardBg.pos[device] = { x: Math.round(x), y: Math.round(y) };
-    // Selama drag cuma update posisi gambar + angka readout (murah & cepat).
-    // Rebuild teks/efek FX yang berat baru dijalanin sekali di akhir drag lewat
-    // updateBgPreview() penuh (di pointerup) -- ini yang benerin glitch/patah-patah.
     updateBgPreviewPositionOnly();
   }
 
@@ -3742,10 +3510,6 @@ function updateBgPreviewPositionOnly(){
     const dist = Math.hypot(e.clientX-startX, e.clientY-startY);
     if(dist > MOVE_THRESHOLD) moved = true;
     if(dragActive && moved){
-      // Throttle lewat requestAnimationFrame -- pointermove bisa nembak jauh
-      // lebih sering daripada refresh rate layar, dan kalau tiap event langsung
-      // micu kerjaan DOM, updatenya numpuk & bikin gambar keliatan patah-patah/
-      // glitch pas digeser cepat. Cukup proses event TERBARU tiap 1 frame.
       pendingEvent = e;
       if(rafId === null){
         rafId = requestAnimationFrame(()=>{
@@ -3758,13 +3522,11 @@ function updateBgPreviewPositionOnly(){
   card.addEventListener('pointerup', e=>{
     if(startX === null) return;
     if(!(dragActive && moved)){
-      // Cuma tap (gak digeser signifikan), atau lagi belum ada foto -- perilaku
-      // lama tetep jalan: ketuk buat gonta-ganti preview sisi Depan/Belakang.
       toggleBgPreviewSide();
     } else {
       if(rafId !== null){ cancelAnimationFrame(rafId); rafId = null; }
       if(pendingEvent){ applyDragPosition(pendingEvent); pendingEvent = null; }
-      updateBgPreview(); // refresh penuh sekali di akhir drag (teks, dot, status, dll)
+      updateBgPreview(); 
       toast(`Posisi ${state.cardBg.previewDevice === 'mobile' ? 'Mobile' : 'Desktop'} diupdate~`, '🎯');
     }
     startX = null; startY = null; moved = false; dragActive = false;
@@ -3779,23 +3541,18 @@ function updateBgPreviewPositionOnly(){
   document.getElementById('dotBack').addEventListener('click', e=>{ e.stopPropagation(); toggleBgPreviewSide('back'); });
 })();
 
-/* ---------------- editor Front Template / Back Template / Styling (realtime) ---------------- */
 
-// Ambil nilai satu field dari note berdasarkan nama field-nya (best-effort,
-// dipakai buat rendering preview handlebars Anki di bawah).
 function ahFieldValueByName(fields, fieldNames, name){
   const idx = fieldNames.indexOf(name);
   return idx >= 0 ? (fields[idx] || '') : '';
 }
 
-// Render 1 tag {{...}} handlebars ala Anki jadi HTML preview (best-effort): {{Field}}, {{FrontSide}}, {{cloze:Field}}, {{Tags}}/{{Type}}/{{Deck}}/{{Card}}, modifier field diabaikan.
 function ahRenderTemplateTag(tag, fields, fieldNames, extra){
   tag = tag.trim();
   if(tag === 'FrontSide') return extra.frontSide || '';
   if(tag.toLowerCase().startsWith('cloze:')){
     const fname = tag.slice(tag.indexOf(':')+1);
     let val = ahFieldValueByName(fields, fieldNames, fname);
-    // best-effort: highlight cloze pertama yang ketemu, sisanya ditampilin apa adanya
     val = val.replace(/\{\{c\d+::(.*?)(::.*?)?\}\}/g, (m, txt)=> `<span style="background:#ffe08a; border-radius:4px; padding:0 3px;">[...${txt}...]</span>`);
     return val;
   }
@@ -3809,7 +3566,6 @@ function ahRenderTemplateTag(tag, fields, fieldNames, extra){
   return ahFieldValueByName(fields, fieldNames, fname);
 }
 
-// Render qfmt/afmt jadi HTML preview, dukung blok kondisional {{#Field}} dan {{^Field}} -- best-effort, bukan pengganti engine asli Anki.
 function ahRenderAnkiTemplate(tpl, fields, fieldNames, extra){
   tpl = tpl || '';
   let prev;
@@ -3832,8 +3588,6 @@ function ahCurrentTplModel(){
   return state.models[state.currentMid];
 }
 
-// Ambil/simpen snapshot "desain asli" model ini SEKALI doang (pas pertama kali
-// editor dibuka buat mid itu) -- dipakai tombol "Kembalikan ke Desain Asli".
 function ahEnsureTemplateSnapshot(mid, model){
   if(!model || state.templateOriginals[mid]) return;
   state.templateOriginals[mid] = {
@@ -3849,11 +3603,9 @@ function ahCurrentTplOrd(){
   return exists ? state.templateEditor.ord : model.tmpls[0].ord;
 }
 
-// Panggil pas note type dipilih/diganti (termasuk pas deck baru dibuka) --
-// nge-refresh dropdown template & isi ketiga textarea editor dari state.models.
 function populateTemplateEditor(){
   const card = document.getElementById('tplCard');
-  if(!card || card.classList.contains('hidden')) { /* tetep lanjut isi state walau card masih hidden di render pertama */ }
+  if(!card || card.classList.contains('hidden')) {  }
   const model = ahCurrentTplModel();
   const nameEl = document.getElementById('tplModelName');
   if(nameEl) nameEl.textContent = model ? model.name : '-';
@@ -3923,12 +3675,9 @@ function switchTemplatePreviewSide(side){
   state.templateEditor.side = side;
   document.getElementById('tplPreviewFront').classList.toggle('applied', side === 'front');
   document.getElementById('tplPreviewBack').classList.toggle('applied', side === 'back');
-  // Gunakan sideOnly=true: hanya ganti isi body tanpa reload iframe,
-  // supaya video background tetap lanjut muter (tidak restart dari awal).
   renderTemplateLivePreview(true);
 }
 
-// Baca manifest 'media' dari zip .apkg (nomor <-> nama file asli, termasuk bongkar zstd) buat preview realtime gambar/audio asli. Versi generik dipakai fitur Gabung Deck buat baca deck kedua.
 async function ahReadZipMediaMap(zip){
   if(!zip) return {};
   const entry = zip.file('media');
@@ -3974,17 +3723,14 @@ const AH_MEDIA_MIME_MAP = {
   flac:'audio/flac', weba:'audio/webm', mp4:'video/mp4', webm:'video/webm'
 };
 
-// Ambil/cache blob: URL 1 file media dari zip .apkg (bongkar zstd per-file kalau anki21b). SAFEGUARD: file terkompresi kegedean di-skip decompress-nya biar gak hang tab.
-const AH_MEDIA_DECOMPRESS_SIZE_CAP = 15 * 1024 * 1024; // 15MB terkompresi
+const AH_MEDIA_DECOMPRESS_SIZE_CAP = 15 * 1024 * 1024; 
 
-// "Cari & bongkar bytes mentah" dipisah dari ahGetMediaBlobUrl biar dipakai bareng jalur print/PDF.
 async function ahGetMediaBytesRaw(filename){
   if(!filename || !state.zip) return null;
   const nameMap = await ahGetMediaNameMap();
   let num = null;
   let sourceZip = state.zip;
   for(const k in nameMap){ if(nameMap[k] === filename){ num = k; break; } }
-  // Ga ketemu di deck utama -- coba cari di deck(-deck) tambahan hasil fitur Gabung Deck
   if(num === null && state.extraDeckSources && state.extraDeckSources.length){
     for(const src of state.extraDeckSources){
       for(const k in src.mediaMap){
@@ -4022,13 +3768,12 @@ async function ahGetMediaBlobUrl(filename){
   return url;
 }
 
-// FIX freeze print preview: gambar full-res ribuan kartu didekode barengan bikin tab hang. Solusi: resize+re-encode ke JPEG dulu sebelum dipasang ke <img>, pakai createImageBitmap biar gak block main thread.
 async function ahDownscaleImageBytesForPrint(bytes, mime, maxDim){
-  if(!maxDim || mime === 'image/svg+xml') return { bytes, mime }; // 0 = "Original" / SVG udah vektor, gak usah diapa-apain
+  if(!maxDim || mime === 'image/svg+xml') return { bytes, mime }; 
   try{
     const bitmap = await createImageBitmap(new Blob([bytes], { type: mime }));
     const longest = Math.max(bitmap.width, bitmap.height);
-    if(longest <= maxDim){ bitmap.close(); return { bytes, mime }; } // udah kecil, gak usah diapa-apain
+    if(longest <= maxDim){ bitmap.close(); return { bytes, mime }; } 
     const scale = maxDim / longest;
     const w = Math.max(1, Math.round(bitmap.width * scale));
     const h = Math.max(1, Math.round(bitmap.height * scale));
@@ -4047,7 +3792,6 @@ async function ahDownscaleImageBytesForPrint(bytes, mime, maxDim){
   }
 }
 
-// Versi khusus print/PDF dari ahGetMediaBlobUrl, cache terpisah (state.printMediaBlobUrlCache) biar gak nyampur cache preview.
 async function ahGetMediaBlobUrlForPrint(filename, maxDim){
   if(!filename) return null;
   const cacheKey = filename + '\u0000' + maxDim;
@@ -4069,7 +3813,6 @@ function ahRevokePrintMediaCache(){
   state.printMediaBlobUrlCache = {};
 }
 
-// Ganti referensi media di HTML render (<img>, [sound:...]) jadi blob: URL dari .apkg. Kalau file gak ketemu, dikasih placeholder jelas.
 async function ahResolveMediaInHtml(html){
   const imgTags = [...new Set((html.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi) || []))];
   for(const tag of imgTags){
@@ -4095,9 +3838,7 @@ async function ahResolveMediaInHtml(html){
   return html;
 }
 
-// Catatan: resolusi media buat export PDF sekarang lewat ahPrewarmMediaForPrint + ahResolveMediaForPrintSync -- tiap gambar cuma di-resolve sekali per batch.
 
-// Jeda balik ke event loop tanpa clamp ~4ms setTimeout -- pakai MessageChannel biar overhead export PDF ribuan kartu gak signifikan.
 function ahYield(){
   return new Promise(resolve=>{
     const ch = new MessageChannel();
@@ -4106,7 +3847,6 @@ function ahYield(){
   });
 }
 
-// Cari semua nama file gambar unik yang dipake sekumpulan kartu, resolve sekali per file (bukan per kartu) -- jauh lebih cepat buat deck gede.
 async function ahPrewarmMediaForPrint(htmlList, progressWin, maxDim){
   const filenames = new Set();
   for(const html of htmlList){
@@ -4131,7 +3871,6 @@ async function ahPrewarmMediaForPrint(htmlList, progressWin, maxDim){
   }
 }
 
-// Versi sinkron dari resolver di atas, dipakai setelah ahPrewarmMediaForPrint (semua blob URL udah di cache) -- lebih cepat, gak ada overhead promise per kartu.
 function ahResolveMediaForPrintSync(html, maxDim){
   html = html.replace(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi, (tag, src)=>{
     if(/^(https?:|data:|blob:)/i.test(src)) return tag;
@@ -4166,9 +3905,6 @@ async function buildTemplatePreviewDoc(){
   </style></head><body class="card">${bodyHtml}</body></html>`;
 }
 
-// Ambil hanya bodyHtml (konten sisi kartu) tanpa rebuild CSS/doc penuh.
-// Dipakai buat update preview sisi Depan<->Belakang tanpa reload iframe
-// (biar video background tetap lanjut muter, tidak restart dari awal).
 async function buildTemplatePreviewBodyOnly(){
   const model = ahCurrentTplModel();
   if(!model || !model.tmpls || !model.tmpls.length) return null;
@@ -4189,24 +3925,15 @@ async function buildTemplatePreviewBodyOnly(){
 
 let _tplPreviewDebounce = null;
 let _tplPreviewToken = 0;
-// true = update berikutnya boleh hanya ganti body (tidak reload iframe penuh)
-// false = update berikutnya harus full reload (srcdoc diganti)
-// Dimulai false; di-set true hanya oleh switchTemplatePreviewSide,
-// di-reset ke false begitu ada trigger perubahan template/CSS/kartu.
 let _tplPreviewSideOnly = false;
 
 function renderTemplateLivePreview(sideOnly){
-  // Debounce dikit (~120ms) biar preview tetep kerasa realtime pas ngetik cepat,
-  // tapi gak nge-rebuild iframe di TIAP keystroke (yang bisa berat/nge-lag).
   if(_tplPreviewDebounce) clearTimeout(_tplPreviewDebounce);
 
-  // Aturan: flag hanya true kalau SEMUA request yang masih pending adalah sideOnly.
-  // Satu full-reload saja cukup untuk override flag jadi false.
   if(sideOnly){
-    // Pertahankan false kalau sudah false (ada full-reload pending), set true kalau belum ada
     if(_tplPreviewSideOnly !== false) _tplPreviewSideOnly = true;
   } else {
-    _tplPreviewSideOnly = false; // full reload selalu menang
+    _tplPreviewSideOnly = false; 
   }
 
   _tplPreviewDebounce = setTimeout(async ()=>{
@@ -4215,25 +3942,16 @@ function renderTemplateLivePreview(sideOnly){
     if(!iframe) return;
 
     const doSideOnly = _tplPreviewSideOnly;
-    _tplPreviewSideOnly = false; // reset setelah diambil
+    _tplPreviewSideOnly = false; 
 
-    // --- Update body-only: tidak reload iframe, video tetap lanjut muter ---
     if(doSideOnly){
       const idoc = iframe.contentDocument;
-      // Pastikan iframe sudah ter-load (srcdoc sudah pernah di-set sebelumnya).
-      // Cek readyState 'complete' atau 'interactive' AND body ada; innerHTML !== ''
-      // tidak cukup reliable karena bisa kosong sesaat setelah srcdoc di-set.
       const iframeReady = idoc && idoc.readyState !== 'loading' && idoc.body &&
                           (idoc.body.children.length > 0 || idoc.body.innerHTML.trim() !== '');
       if(iframeReady){
         const bodyHtml = await buildTemplatePreviewBodyOnly();
-        if(myToken !== _tplPreviewToken) return; // ada render baru yang nyusul, batalkan
+        if(myToken !== _tplPreviewToken) return; 
         if(bodyHtml !== null){
-          // FIX: Sebelum ganti innerHTML, cabut dulu elemen persisten AnkiHoney
-          // (ankihoney-bg-video-host + isinya) dari body supaya tidak ikut terhapus.
-          // Cara: pindahkan sementara ke documentElement; setelah innerHTML di-set
-          // kembalikan ke body. Ini memastikan elemen <video> yang sedang muter
-          // tidak disentuh sama sekali selama proses ganti sisi kartu.
           const savedNodes = [];
           ['ankihoney-bg-video-host'].forEach(id => {
             const el = idoc.getElementById(id);
@@ -4242,32 +3960,19 @@ function renderTemplateLivePreview(sideOnly){
 
           idoc.body.innerHTML = bodyHtml;
 
-          // Kembalikan elemen persisten ke body (setelah innerHTML di-set)
           savedNodes.forEach(el => idoc.body.appendChild(el));
 
-          // Eksekusi ulang script ankihoney yang ada di dalam bodyHtml secara manual.
-          // innerHTML TIDAK otomatis menjalankan <script> yang baru di-inject (security
-          // policy browser). Script ankihoney berisi logika "kalau video-host & ref sama
-          // → jangan disentuh, biarkan lanjut muter" — harus jalan supaya state video
-          // tetap terjaga (play(), ah-loaded, dsb).
-          // Teknik: ganti tiap <script> lama dengan elemen <script> baru via replaceChild
-          // — inilah satu-satunya cara browser mau mengeksekusinya.
           idoc.body.querySelectorAll('script').forEach(oldScript => {
             const newScript = idoc.createElement('script');
             newScript.textContent = oldScript.textContent;
             oldScript.parentNode.replaceChild(newScript, oldScript);
           });
 
-          return; // selesai — video tidak kena reload
+          return; 
         }
       }
-      // Fallback: iframe belum siap → lakukan full reload di bawah
     }
 
-    // --- Full reload: ganti srcdoc (perubahan template/CSS/kartu/pertama kali) ---
-    // Sebelum srcdoc diganti, simpan currentTime tiap video AnkiHoney ke localStorage
-    // iframe supaya setelah reload script di template bisa restore posisi video (mekanisme
-    // yang sama yang dipakai di Anki Desktop/AnkiDroid saat pindah kartu).
     try {
       const idocPrev = iframe.contentDocument;
       if(idocPrev && idocPrev.defaultView){
@@ -4282,7 +3987,7 @@ function renderTemplateLivePreview(sideOnly){
       }
     } catch(e){}
     const doc = await buildTemplatePreviewDoc();
-    if(myToken !== _tplPreviewToken) return; // ada render lain yang nyusul lebih baru
+    if(myToken !== _tplPreviewToken) return; 
     iframe.srcdoc = doc;
   }, 120);
 }
@@ -4339,10 +4044,6 @@ function updateBgStatus(){
     if(dHas && !mHas) platformInfo = ' (Mobile belum diisi, bakal kosong di HP)';
     else if(mHas && !dHas) platformInfo = ' (Desktop belum diisi, bakal kosong di komputer)';
   }
-  // Cek kecocokan FORMAT video per platform -- Desktop cuma bisa muter .webm, AnkiDroid cuma
-  // bisa muter .mp4 (saling kebalikan, gak ada yang overlap). Dicek programatis dari nama file
-  // /link videonya biar peringatan ini akurat sesuai file yang BENERAN diupload, bukan cuma
-  // nebak "video = pasti bermasalah di Desktop" kayak sebelumnya.
   function ahVideoExtOf(src){
     if(!src || src.kind !== 'video') return null;
     const ref = (src.mode === 'url' ? (src.imageUrl||'') : (src.mediaFilename||'')).toLowerCase();
@@ -4362,7 +4063,6 @@ function updateBgStatus(){
   el.textContent = `✅ Background aktif di: ${sides}${platformInfo} — bakal ikut kesimpen pas kamu download .apkg${videoWarn}`;
 }
 
-/* ---- helper deskripsi deck otomatis, dipakai pas save ---- */
 const AH_DESC_START = '[AnkiHoney]';
 const AH_DESC_END = '[/AnkiHoney]';
 
@@ -4392,42 +4092,25 @@ function ahStripDeckDesc(desc){
   return desc.replace(re, '').trim();
 }
 
-// Gabungin deskripsi asli (kalau ada, keterangan lama user tetap dipertahankan) dengan
-// blok deskripsi AnkiHoney yang baru — dipanggil ulang tiap export biar tanggalnya update terus.
 function ahApplyDeckDesc(origDesc){
   const kept = ahStripDeckDesc(origDesc);
   const block = ahBuildDeckDescBlock();
   return kept ? (kept + '\n\n' + block) : block;
 }
 
-/* ---- helper suntik background ke template Anki (qfmt/afmt/css), dipakai pas save ---- */
 const AH_BG_START = '/* === AnkiHoney Background START === */';
 const AH_BG_END = '/* === AnkiHoney Background END === */';
-// Lebar viewport buat bedain render Desktop vs Mobile Anki, dipakai @media buat milih posisi foto mana yang berlaku.
 const AH_MOBILE_BREAKPOINT = 600;
 const AH_WRAP_OPEN = '<div class="ankihoney-bg">';
 const AH_WRAP_CLOSE = '</div><!-- /ankihoney-bg -->';
-// Marker buat bungkus HTML <video> (kalau ada) yang disisipin di DALAM wrapper -- dipisah dari
-// AH_WRAP_OPEN/CLOSE biar bisa DIGANTI ISINYA doang (nama file/poster beda) tanpa perlu nge-unwrap
-// & re-wrap seluruh konten asli tiap kali user gonta-ganti video-nya.
 const AH_WRAP_MEDIA_START = '<!-- ankihoney-bg-media-start -->';
 const AH_WRAP_MEDIA_END = '<!-- ankihoney-bg-media-end -->';
 
 function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-// enable = tampilin wrapper (+media) di sisi ini; mediaHtml = HTML <video> (boleh string kosong kalau backgroundnya cuma foto/GIF, gak butuh <video>)
 function ahWrapTemplate(html, enable, mediaHtml){
   html = html || '';
   mediaHtml = mediaHtml || '';
-  // PENTING (fix double-wrap bug): applyWatermarkToModel selalu dipanggil SETELAH fungsi ini,
-  // dan nempelin watermark baru di ujung template -- SETELAH AH_WRAP_CLOSE. Jadi template yang
-  // udah pernah disave sama tool ini bakal selalu berakhir dengan
-  // "...AH_WRAP_CLOSE + watermark", BUKAN "...AH_WRAP_CLOSE" doang. Kalau watermark ini gak
-  // di-strip dulu sebelum ngecek, trimmed.endsWith(AH_WRAP_CLOSE) SELALU false, alreadyWrapped
-  // gak pernah kedeteksi bener, dan tiap kali user apply ulang background, seluruh konten LAMA
-  // (termasuk script video lama & SEMUA konten asli kartu di dalamnya) ke-wrap lagi jadi
-  // lapisan baru yang nested -- bukan di-replace bersih. ahStripWmHtml di sini bikin deteksi
-  // "udah di-wrap apa belum" tetep akurat walau ada watermark nemplok di belakang.
   const trimmed = ahStripWmHtml(html).trim();
   const alreadyWrapped = trimmed.startsWith(AH_WRAP_OPEN) && trimmed.endsWith(AH_WRAP_CLOSE);
   let inner = trimmed;
@@ -4449,10 +4132,6 @@ function ahStripCssBlock(css){
   return css.replace(re, '').trim();
 }
 
-// Deteksi otomatis background AnkiHoney dari model aktif.
-// Dipanggil saat deck dibuka atau note type berganti.
-// Kalau ketemu: reconstruct state.cardBg + refresh UI.
-// Kalau tidak: tidak mengubah apapun (user mungkin mau upload baru).
 async function ahDetectBgFromModel(){
   const model = state.models[state.currentMid];
   const statusEl = document.getElementById('bgDetectStatus');
@@ -4466,7 +4145,6 @@ async function ahDetectBgFromModel(){
     return;
   }
 
-  // Ada blok AnkiHoney — ekstrak semua pengaturan
   const s = css.indexOf(AH_BG_START), e = css.indexOf(AH_BG_END);
   const bgBlock = (s !== -1 && e > s) ? css.slice(s, e + AH_BG_END.length) : '';
   if(!bgBlock){
@@ -4476,25 +4154,20 @@ async function ahDetectBgFromModel(){
 
   const cfg = state.cardBg;
 
-  // --- Ekstrak foto (background-image) dari CSS ---
-  // Cari di blok UTAMA (bukan di dalam @media)
   const mainBlockMatch = bgBlock.match(/\.ankihoney-bg-photo-layer\s*\{([^}]*)\}/s);
   const mainBlock = mainBlockMatch ? mainBlockMatch[1] : '';
   const desktopBgImgMatch = mainBlock.match(/background-image\s*:\s*url\(([^)]+)\)/);
   const desktopBgRaw = desktopBgImgMatch ? desktopBgImgMatch[1].trim().replace(/^['"]|['"]$/g,'') : '';
 
-  // Cari @media (mobile) block
   const mediaBlockMatch = bgBlock.match(/@media\s*\([^)]*max-width[^)]*\)\s*\{([\s\S]*?)\}\s*(?=@|\/\*|$)/);
   const mediaBlock = mediaBlockMatch ? mediaBlockMatch[1] : '';
   const mobileBgImgMatch = mediaBlock.match(/\.ankihoney-bg-photo-layer\s*\{[^}]*background-image\s*:\s*url\(([^)]+)\)/s);
   const mobileBgRaw = mobileBgImgMatch ? mobileBgImgMatch[1].trim().replace(/^['"]|['"]$/g,'') : '';
 
-  // --- Ekstrak video dari template HTML ---
   let desktopVideoFile = '', mobileVideoFile = '';
   const tmpls = model.tmpls || [];
   for(const tmpl of tmpls){
     const html = (tmpl.qfmt || '') + (tmpl.afmt || '');
-    // Cari: ankihoney-bg-video-desktop / ankihoney-bg-video-mobile src atau data-src
     const videoTags = [...html.matchAll(/<(?:video|source)[^>]+(?:src|data-src)\s*=\s*["']([^"']+\.(?:mp4|webm))["'][^>]*>/gi)];
     videoTags.forEach(m => {
       const tag = m[0];
@@ -4505,14 +4178,12 @@ async function ahDetectBgFromModel(){
     if(desktopVideoFile || mobileVideoFile) break;
   }
 
-  // --- Tentukan file per platform ---
   const desktopIsVideo = !!desktopVideoFile;
   const desktopFile = desktopIsVideo ? desktopVideoFile : desktopBgRaw;
   const mobileIsVideo = !!mobileVideoFile;
   const mobileFile = mobileIsVideo ? mobileVideoFile : mobileBgRaw;
   const syncPlatforms = !mobileFile || (desktopFile === mobileFile);
 
-  // --- Ekstrak pengaturan slider ---
   const opacityM = mainBlock.match(/opacity\s*:\s*([\d.]+)/);
   const opacity = opacityM ? parseFloat(opacityM[1]) : 0.9;
   const blurM = bgBlock.match(/filter\s*:\s*blur\((\d+)px\)/);
@@ -4527,14 +4198,12 @@ async function ahDetectBgFromModel(){
   const posMM = mediaBlock.match(/background-position\s*:\s*([\d.]+)%\s+([\d.]+)%/);
   const mobilePos = posMM ? { x: parseFloat(posMM[1]), y: parseFloat(posMM[2]) } : { x:50, y:50 };
 
-  // --- Deteksi front/back dari template ---
   let front = false, back = false;
   for(const tmpl of tmpls){
     if(tmpl.qfmt && tmpl.qfmt.includes(AH_WRAP_OPEN)) front = true;
     if(tmpl.afmt && tmpl.afmt.includes(AH_WRAP_OPEN)) back = true;
   }
 
-  // --- Load bytes dari mediaMap ---
   async function loadSrc(filename, isVideo){
     const src = ahNewBgSource();
     src.kind = isVideo ? 'video' : 'image';
@@ -4562,23 +4231,13 @@ async function ahDetectBgFromModel(){
   const desktopSrc = await loadSrc(desktopFile, desktopIsVideo);
   const mobileSrc = syncPlatforms ? ahNewBgSource() : await loadSrc(mobileFile, mobileIsVideo);
 
-  // --- Apply ke state ---
   cfg.desktop = desktopSrc;
   cfg.mobile = mobileSrc;
   cfg.syncPlatforms = syncPlatforms;
   cfg.front = front; cfg.back = back;
   cfg.pos = { desktop: desktopPos, mobile: mobilePos };
-  // PENTING (fix bug utama "preview gelap sampe slider digeser"): opacity & overlay yang
-  // diekstrak dari CSS di atas itu FRACTION 0-1 (misal opacity:0.9 -> 0.9, rgba alpha 0.25 -> 0.25),
-  // sedangkan cfg.opacity & cfg.overlay di SELURUH bagian lain kode ini skalanya 0-100 (persen) --
-  // makanya harus dikali 100 dulu di sini. Sebelumnya fraction mentah langsung ditaro ke cfg (misal
-  // cfg.opacity = 0.9), jadi pas dipakai render (cfg.opacity/100) hasilnya 0.009 -- opacity foto/video
-  // jadi praktis 0% alias nyaris gak keliatan, walau slider di UI kelihatan nunjuk "90%" (karena
-  // elemen <input>-nya di-sync terpisah, lihat baris di bawah). Baru pas user geser slider manual,
-  // handler slider nyetel cfg.opacity ke angka integer yang BENAR, makanya "tiba-tiba kelihatan".
   cfg.opacity = Math.round(opacity*100); cfg.blur = blur; cfg.overlay = Math.round(overlay*100); cfg.fit = fit;
 
-  // --- Sync slider/checkbox UI ---
   const opEl = document.getElementById('bgOpacity'); if(opEl) opEl.value = Math.round(opacity*100);
   const opValEl = document.getElementById('bgOpacityVal'); if(opValEl) opValEl.textContent = Math.round(opacity*100);
   const blEl = document.getElementById('bgBlur'); if(blEl) blEl.value = blur;
@@ -4591,7 +4250,6 @@ async function ahDetectBgFromModel(){
   const syncCb = document.getElementById('bgSyncToggle');
   if(syncCb){ syncCb.checked = syncPlatforms; syncCb.dispatchEvent(new Event('change')); }
 
-  // --- Tampilkan bgControls + status ---
   if(ahHasAnyBg(cfg)) document.getElementById('bgControls').classList.remove('hidden');
   updateBgKindBadge(ahActiveBgSource(cfg));
   updateBgPreview(); updateBgStatus();
@@ -4605,27 +4263,11 @@ async function ahDetectBgFromModel(){
   }
 }
 
-// Apa yang keliatan di lapisan ::before (paling belakang, muncul PALING DULU/instan) --
-// kalau sumbernya foto/GIF ya foto/GIF itu sendiri; kalau videonya, pakai frame pertama
-// (poster) yang udah di-capture otomatis pas upload, biar gak ada momen "kosong/putih"
-// sebelum videonya sendiri kebaca & fade-in di atas lapisan ini.
 function ahBgFallbackRef(src){
   if(!ahHasBgSource(src)) return '';
-  // Poster/foto fallback buat video DIMATIIN sesuai request -- video-nya sekarang udah
-  // reliable jalan, jadi gak perlu lagi lapisan foto yang nutupin sebelum video siap.
-  // Foto/GIF beneran (kind !== 'video') TETAP lewat sini soalnya itu bukan "fallback",
-  // itu emang backgroundnya sendiri.
   return src.kind === 'video' ? '' : ahBgSourceRef(src);
 }
 
-// Bangun script yang bikin/pake-ulang <video> background secara DINAMIS lewat JS (bukan nulis
-// tag <video> statis langsung di HTML kartu lagi). SEBABNYA: Anki ganti tampilan Depan->Belakang
-// (dan pindah ke kartu berikutnya) itu cuma dengan REPLACE innerHTML div#qa doang -- webview-nya
-// sendiri gak reload. Kalau <video> ditulis statis di dalam qfmt/afmt (yang notabene ada di
-// dalam #qa), videonya ikut kehapus & dibuat ulang dari 0 setiap kali itu, makanya videonya
-// selalu "restart" pas Depan->Belakang. Fixnya: videonya dibikin/nempel di <body> (di LUAR
-// #qa, lewat JS) SEKALI aja & dipake ULANG terus selama sumbernya (file) masih sama persis --
-// baru di-reset kalau sumbernya beneran ganti (misal kartu lain punya video background beda).
 function ahBuildBgMediaHtml(cfg){
   const desktopSrc = ahActiveBgSource(cfg, 'desktop');
   const mobileSrc = ahActiveBgSource(cfg, 'mobile');
@@ -4638,17 +4280,13 @@ function ahBuildBgMediaHtml(cfg){
     videoDescs.push({ cls, ref, poster: ahBgPosterRef(src) || '' });
   };
   if(cfg.syncPlatforms){
-    // 1 sumber dipakai bareng Desktop & Mobile -- 1 elemen <video> aja, SELALU tampil di kedua breakpoint.
     pushVideo(desktopSrc, 'ankihoney-bg-video-shared');
   } else {
     pushVideo(desktopSrc, 'ankihoney-bg-video-desktop');
     pushVideo(mobileSrc, 'ankihoney-bg-video-mobile');
   }
-  const videoDescsJson = JSON.stringify(videoDescs).replace(/</g, '\\u003c'); // jaga2 kalau ada karakter aneh di nama file yg bisa kebaca sbg tag
+  const videoDescsJson = JSON.stringify(videoDescs).replace(/</g, '\\u003c'); 
 
-  // Script ini jalan tiap kali sisi (Depan/Belakang) yang aktifin background ke-render, tapi
-  // EFEKNYA cuma "bikin baru kalau belum ada / videonya beda" -- video yang UDAH ada & lagi
-  // muter otomatis DIBIARIN nempel & lanjut muter, gak disentuh sama sekali.
   return `<script>(function(){
   var rootEl = document.documentElement;
   function ahSyncViewport(){
@@ -4824,8 +4462,6 @@ function ahBuildCssBlock(cfg){
   const overlay = Math.max(0, Math.min(100, cfg.overlay)) / 100;
   const blur = Math.max(0, Math.min(20, cfg.blur));
   const desktopPos = (cfg.pos && cfg.pos.desktop) || { x:50, y:50 };
-  // Kalau posisi Mobile belum pernah diatur user, jatuh ke posisi Desktop (bukan default 50/50
-  // mentah) biar hasilnya tetep masuk akal walau user cuma sempet ngatur satu device doang.
   const mobilePos = (cfg.pos && cfg.pos.mobile) || desktopPos;
 
   const desktopSrc = ahActiveBgSource(cfg, 'desktop');
@@ -4834,20 +4470,11 @@ function ahBuildCssBlock(cfg){
   const mobileFallback = ahBgFallbackRef(mobileSrc);
   const desktopBgImg = desktopFallback ? `url('${desktopFallback}')` : 'none';
   const mobileBgImg = mobileFallback ? `url('${mobileFallback}')` : 'none';
-  // Poster video sengaja dikosongin di ahBgFallbackRef (bukan berarti gak ada background sama
-  // sekali) -- jadi warna fallback-nya harus tetep transparent (bukan solid gelap #12121a) biar
-  // gak keliatan "kotak item" nunggu videonya kebaca. #12121a cuma buat kondisi beneran GAK ada
-  // background sama sekali.
   const ahBgLayerColor = src => ahHasBgSource(src) ? 'transparent' : '#12121a';
   const desktopBgColor = ahBgLayerColor(desktopSrc);
   const mobileBgColor = ahBgLayerColor(mobileSrc);
 
   const fx = cfg.textFx || { enabled:true, styleMode:'glow', color:'#000000', strength:3, target:'bold' };
-  // Selector ini SENGAJA dibatesin ke <b>/<strong> literal doang (yang cuma
-  // muncul dari isi field asli kayak SentKanji/VocabDef/Notes -- template ini
-  // gak nyisipin <b>/<strong> di tempat lain kayak header/footer/tags), jadi
-  // efeknya cuma nempel di kosakata yang emang dikutip/di-bold di dalam field,
-  // gak pernah ngerembet ke elemen lain di kartu.
   const fxSelector = fx.target === 'all' ? '.ankihoney-bg, .ankihoney-bg *' : '.ankihoney-bg b, .ankihoney-bg strong';
   const fxDeclarations = ahBuildTextFxCss(cfg).map(d => `  ${d};`).join('\n');
   const fxCss = fx.enabled !== false
@@ -4857,23 +4484,10 @@ ${fxDeclarations}
 `
     : '';
 
-  // Warna bold/strong BAWAAN deck (--color-headword, biasanya ungu/pink terang di
-  // .jpsentence b/strong) sengaja dibikin dulu kontrasnya -- soalnya begitu fitur
-  // Outline/Shadow di atas aktif, si outline/glow itu sendiri udah yang jadi
-  // "penanda" utama biar kosakata kebaca jelas, jadi warna isi hurufnya gak perlu
-  // se-vivid biasanya lagi (kalau tetep vivid, isi teks & outline malah rebutan
-  // perhatian / keliatan rame). Cuma jalan pas mode 'glow' -- di mode 'outline'
-  // warna isi huruf udah dipaksa putih polos sama fxDeclarations di atas, jadi
-  // gak perlu diredam lagi.
   const mutedHeadwordCss = (fx.enabled !== false && fx.styleMode !== 'outline')
     ? `.ankihoney-bg .jpsentence b,\n.ankihoney-bg .jpsentence strong{\n  opacity: 0.72;\n}\n`
     : '';
 
-  // Panel semi-solid di belakang blok teks non-vocab (Notes, Definitions, link footer,
-  // kotak "Reveal English translation"). Ini SELALU aktif & TIDAK ikut pengaturan
-  // Outline/Shadow Teks Vocab di atas -- fitur itu sengaja cuma buat kosakata yang
-  // di-bold. Tanpa panel ini, teks biasa (yang warnanya gelap secara default di
-  // template) ketelen sama foto+overlay begitu di atas background gelap.
   const panelCss = `.ankihoney-bg details,
 .ankihoney-bg .headword_section,
 .ankihoney-bg footer,
@@ -4892,13 +4506,6 @@ ${fxDeclarations}
 }
 `;
 
-  // Elemen <video> ASLI (bukan pseudo-element, biar bisa beneran main) -- duduk DI ATAS lapisan
-  // ::before (foto/poster fallback, z-index -3) tapi DI BAWAH ::after (overlay gelap, z-index -1),
-  // jadi urutannya dari belakang ke depan: foto/poster fallback -> video -> overlay gelap -> teks
-  // kartu. opacity:0 dulu & baru di-fade-in ke opacity target pas class 'ah-loaded' udah nempel
-  // (dipicu listener loadeddata/canplay/playing yang dipasang lewat JS di ahBuildBgMediaHtml,
-  // + jaring pengaman timeout 1.8 detik) -- itu yang bikin video gak "muncul dadakan", & selama
-  // nunggu videonya siap, poster/foto fallback yang keliatan.
   const videoCss = `.ankihoney-bg-video{
   position:fixed; top:0; left:0; z-index:-2;
   width:var(--ah-vw); height:var(--ah-vh);
@@ -4912,9 +4519,6 @@ ${fxDeclarations}
 .ankihoney-bg-video.ah-loaded{ opacity:${opacity}; }
 .ankihoney-bg-video-mobile{ display:none; }
 `;
-  // syncPlatforms aktif -> 1 video dipakai bareng, TETAP tampil di kedua breakpoint, cuma titik
-  // crop-nya (object-position) yang beda. syncPlatforms nonaktif -> video Desktop & Mobile beda
-  // elemen, jadi disembunyiin gantian sesuai breakpoint biar gak dobel/numpuk.
   const videoVisibilityCss = cfg.syncPlatforms
     ? `@media (max-width:${AH_MOBILE_BREAKPOINT}px){
   .ankihoney-bg-video-shared{ object-position:${mobilePos.x}% ${mobilePos.y}%; }
@@ -4962,7 +4566,6 @@ ${AH_BG_END}
 `;
 }
 
-// Suntik/lepas background ke satu objek model Anki (dipakai buat format lama & format rebuild legacy)
 function applyCardBackgroundToModel(model, cfg){
   if(!model) return;
   let css = ahStripCssBlock(model.css || '');
@@ -4975,15 +4578,10 @@ function applyCardBackgroundToModel(model, cfg){
     qfmt: ahWrapTemplate(t.qfmt, hasBg && cfg.front, mediaHtml),
     afmt: ahWrapTemplate(t.afmt, hasBg && cfg.back, mediaHtml)
   }));
-  // PENTING: kalau note type ini ID-nya udah ada di koleksi Anki user (kepake bareng
-  // di banyak deck), Anki cuma nge-update note type pas IMPORT kalau field `mod`
-  // (waktu edit) di file yang diimport lebih baru dari yang ada di koleksi. Tanpa ini,
-  // perubahan CSS/template bisa "ke-skip" diem-diem walau data notenya tetep masuk.
   model.mod = Math.floor(Date.now()/1000);
   model.usn = -1;
 }
 
-/* ---- helper suntik watermark "yumelyrics / ankihoney" ke tiap kartu, dipakai pas save ---- */
 const AH_WM_CSS_START = '/* === AnkiHoney Watermark START === */';
 const AH_WM_CSS_END = '/* === AnkiHoney Watermark END === */';
 const AH_WM_HTML_START = '<!-- AnkiHoney Watermark START -->';
@@ -5005,8 +4603,6 @@ function ahStripWmCss(css){
   return css.replace(re, '').trim();
 }
 
-// Suntik watermark ke satu objek model Anki: tambahin div kecil di pojok tiap
-// template (qfmt & afmt) + CSS-nya. Dipanggil otomatis buat semua model pas rebuild.
 function applyWatermarkToModel(model){
   if(!model) return;
   model.css = ahStripWmCss(model.css || '') + AH_WM_CSS;
@@ -5015,14 +4611,10 @@ function applyWatermarkToModel(model){
     qfmt: ahStripWmHtml(t.qfmt || '') + AH_WM_HTML,
     afmt: ahStripWmHtml(t.afmt || '') + AH_WM_HTML
   }));
-  // Sama kayak di applyCardBackgroundToModel: paksa Anki nganggep note type ini
-  // "lebih baru" pas import, biar perubahan (watermark & background) gak ke-skip
-  // kalau note type dengan ID yang sama udah ada duluan di koleksi user.
   model.mod = Math.floor(Date.now()/1000);
   model.usn = -1;
 }
 
-// Suntik watermark ke tag asli Anki (bukan ke field), jadi gak numpang field konten user & gak ngerusak tampilan kartu. Cuma dipanggil pas export.
 const AH_WM_TAG = 'Yumesubs';
 function injectWmIntoTags(tags){
   const parts = (tags || '').trim().split(/\s+/).filter(t=> t && t !== AH_WM_TAG);
@@ -5030,7 +4622,6 @@ function injectWmIntoTags(tags){
   return parts.join(' ');
 }
 
-// Tambahin file foto background ke media map suatu zip (format lama, media map = JSON)
 async function ensureBgMediaInZip(zip, bytes, filename){
   let mediaMap = {};
   const mediaEntry = zip.file('media');
@@ -5039,14 +4630,9 @@ async function ensureBgMediaInZip(zip, bytes, filename){
     try{ mediaMap = JSON.parse(new TextDecoder().decode(bytes2)); }
     catch(e){ const parsed = tryParseMediaProtobuf(bytes2); if(parsed) mediaMap = parsed; }
   }
-  // PENTING (fix bengkak): kalau nama file ini (mediaFilename-nya deterministik dari hash isi
-  // filenya, lihat ahHashBytes) UDAH ADA di media map -- entah dari export sebelumnya di sesi
-  // yang sama atau emang udah ke-embed pas deck ini diimport -- jangan nambahin salinan BARU.
-  // Tanpa cek ini, tiap kali user pencet Download tanpa ganti background pun file yang SAMA
-  // kesisip lagi & lagi di bawah nomor key yang beda-beda, bikin .apkg numpuk salinan duplikat.
   const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === filename);
   if(existingKey !== undefined){
-    if(zip.files[existingKey]) return filename; // udah ada persis, gak usah nulis ulang bytes-nya
+    if(zip.files[existingKey]) return filename; 
   }
   const usedNums = Object.keys(zip.files).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n));
   const mapNums = Object.keys(mediaMap).map(n=>parseInt(n)).filter(n=>!isNaN(n));
@@ -5058,7 +4644,6 @@ async function ensureBgMediaInZip(zip, bytes, filename){
   return filename;
 }
 
-// Suntik background & nama deck custom ke db format lama (in-place). PENTING: Anki cocokin deck pas import by ID bukan nama, jadi bikin ID deck baru biar nama custom kepake (jadwal belajar tetap aman).
 function applyModelRenamesLegacy(){
   if(!state.modelNameOverrides || !Object.keys(state.modelNameOverrides).length) return;
   const res = state.db.exec("SELECT models FROM col");
@@ -5070,17 +4655,14 @@ function applyModelRenamesLegacy(){
   const overrides = state.modelNameOverrides || {};
   Object.keys(overrides).forEach(mid=>{
     const newName = overrides[mid];
-    // Toleran string/number key
     const orig = modelsJson[mid] || modelsJson[parseInt(mid)] || modelsJson[String(mid)];
     if(!orig || orig.name === newName) return;
     const oldId = orig.id || parseInt(mid);
     const newId = Date.now() + 900000 + (offset++);
     modelsJson[String(newId)] = { ...orig, id: newId, name: newName, mod: Math.floor(Date.now()/1000), usn: -1 };
-    // Remap mid di tabel notes
     state.db.run("UPDATE notes SET mid=? WHERE mid=?", [newId, oldId]);
     delete modelsJson[String(mid)];
     if(mid !== String(oldId)) delete modelsJson[String(oldId)];
-    // Update currentMid kalau yang di-rename adalah model aktif
     if(String(state.currentMid) === String(mid) || String(state.currentMid) === String(oldId)){
       state.currentMid = String(newId);
     }
@@ -5095,7 +4677,6 @@ function applyDeckRenamesLegacy(){
   let decksJson;
   try{ decksJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
 
-  // 1. Rename (kasih ID baru) buat deck yang namanya diganti dari form
   let offset = 0;
   const overrides = state.deckNameOverrides || {};
   Object.keys(overrides).forEach(did=>{
@@ -5108,7 +4689,6 @@ function applyDeckRenamesLegacy(){
     delete decksJson[did];
   });
 
-  // 2. Tempelin/refresh deskripsi otomatis AnkiHoney ke semua deck yang ada
   Object.keys(decksJson).forEach(id=>{
     decksJson[id].desc = ahApplyDeckDesc(decksJson[id].desc || '');
   });
@@ -5116,7 +4696,6 @@ function applyDeckRenamesLegacy(){
   state.db.run("UPDATE col SET decks=?", [JSON.stringify(decksJson)]);
 }
 
-// Salin balik editan Front/Back Template & CSS dari state.models ke JSON models mentah, karena export format lama baca ulang dari db bukan dari state.models.
 function applyTemplateEditsToModelsJson(modelsJson){
   Object.keys(modelsJson).forEach(mid=>{
     const edited = state.models[mid];
@@ -5130,9 +4709,6 @@ function applyTemplateEditsToModelsJson(modelsJson){
   });
 }
 
-// Kumpulin semua file media (foto/GIF/video/poster) yang perlu disisipin ke .apkg -- SEMUA sumber
-// upload yang lagi AKTIF dipakai (Desktop, dan kalau syncPlatforms nonaktif, Mobile juga). Sumber
-// mode 'url' dilewat (gak butuh disisipin, CSS-nya langsung nunjuk ke link internet).
 function ahCollectBgMediaFiles(cfg){
   if(!cfg || !(cfg.front || cfg.back)) return [];
   const list = [];
@@ -5146,12 +4722,8 @@ function ahCollectBgMediaFiles(cfg){
   return list;
 }
 
-// Prefix yang dipakai SEMUA file media background bikinan AnkiHoney (foto/GIF/webp/video/poster) --
-// dipakai buat bedain "file kita" vs media asli milik user pas beberesin file lama yang udah gak kepake.
 const AH_BG_MEDIA_PREFIX = /^_ankihoney_bg/;
 
-// Kumpulin nama file background yang LAGI aktif dipakai sekarang (Desktop + Mobile, termasuk
-// poster videonya) -- dipakai buat dibandingin pas beberesin file lama yang udah gak dipake lagi.
 function ahActiveBgMediaFilenames(cfg){
   const set = new Set();
   [cfg && cfg.desktop, cfg && cfg.mobile].forEach(src=>{
@@ -5162,11 +4734,6 @@ function ahActiveBgMediaFilenames(cfg){
   return set;
 }
 
-// Hapus file background LAMA (bikinan AnkiHoney -- misal dari deck yang emang udah ada background-nya
-// pas diimport, atau dari upload sebelumnya di sesi ini) yang GAK ADA lagi di sumber background yang
-// aktif sekarang. Dipanggil tiap kali mau nyimpen/nge-apply background, biar begitu user ganti
-// foto/video, file LAMA-nya ke-hapus dari deck alih-alih numpuk jadi sampah nganggur yang bikin
-// ukuran .apkg hasil akhir makin lama makin gede tiap kali ganti.
 async function ahPurgeOrphanBgMedia(zip, cfg){
   const mediaEntry = zip.file('media');
   if(!mediaEntry) return;
@@ -5195,7 +4762,6 @@ async function applyCardBackgroundLegacy(){
   let modelsJson;
   try{ modelsJson = JSON.parse(res[0].values[0][0]); }catch(e){ return; }
   applyTemplateEditsToModelsJson(modelsJson);
-  // Toleran string/number key: coba currentMid as-is, lalu sebagai string, lalu sebagai int
   const model = modelsJson[state.currentMid]
              || modelsJson[String(state.currentMid)]
              || modelsJson[parseInt(state.currentMid)];
@@ -5203,8 +4769,6 @@ async function applyCardBackgroundLegacy(){
 
   const cfg = state.cardBg;
   const hasBg = ahHasAnyBg(cfg) && (cfg.front || cfg.back);
-  // Beberesin file background LAMA dulu (yang udah gak kepake lagi karena user ganti foto/video baru)
-  // SEBELUM nambahin yang baru -- biar file lamanya beneran kehapus dari deck, gak numpuk jadi sampah.
   await ahPurgeOrphanBgMedia(state.zip, cfg);
   if(hasBg){
     const files = ahCollectBgMediaFiles(cfg);
@@ -5219,15 +4783,7 @@ async function applyCardBackgroundLegacy(){
   state.db.run("UPDATE col SET models=?", [JSON.stringify(modelsJson)]);
 }
 
-/* ---------------- readers yang jalan di semua versi skema Anki ---------------- */
 
-/* ---- decoder protobuf generik minimal (best-effort), dipakai buat baca
-   desain kartu asli (qfmt/afmt/css) dari notetypes.config & templates.config
-   di skema baru (v15+/v18). Field number di bawah dicocokkan dari source
-   rslib Anki (CardTemplateConfig: q_format=1, a_format=2; NotetypeConfig:
-   kind=1, sort_field_idx=2, css=3) — bukan API resmi, jadi kalau versi Anki
-   ke depan ganti layout protobuf-nya, kode ini fallback aman ke template
-   generik biasa (liat hasOriginalDesign di rebuildAsLegacyApkg) ---- */
 function pbReadVarint(bytes, pos){
   let result = 0, shift = 0, b;
   do{
@@ -5276,7 +4832,6 @@ function pbGetVarint(fields, num){
   return last.wireType === 0 ? last.varint : null;
 }
 
-// Nomor field css di NotetypeConfig (best-effort tebakan = 3) gak bisa diverifikasi pasti, jadi scoring semua kandidat string & pilih yang paling "keliatan CSS".
 function pbGuessCss(fields){
   let best = '', bestScore = -Infinity;
   Object.keys(fields).forEach(numStr=>{
@@ -5287,17 +4842,16 @@ function pbGuessCss(fields){
       if(!text) return;
       let score = 0;
       if(/\.card\b/.test(text)) score += 10;
-      if(/\{[^{}]*:[^{}]*;/.test(text)) score += 5; // pola "properti: nilai;"
-      if(/\\documentclass|\\usepackage|\\begin\{document\}/.test(text)) score -= 100; // itu latex, bukan css
-      if(/\{\{.*?\}\}/.test(text)) score -= 100; // itu qfmt/afmt (handlebars), bukan css
-      if(numStr === '3') score += 1; // tie-breaker: field 3 = tebakan awal dari pola proto Anki
+      if(/\{[^{}]*:[^{}]*;/.test(text)) score += 5; 
+      if(/\\documentclass|\\usepackage|\\begin\{document\}/.test(text)) score -= 100; 
+      if(/\{\{.*?\}\}/.test(text)) score -= 100; 
+      if(numStr === '3') score += 1; 
       if(score > bestScore){ bestScore = score; best = text; }
     });
   });
   return bestScore > 0 ? best : (pbGetString(fields, 3) || '');
 }
 
-// Baca css + qfmt/afmt tiap template dari tabel notetypes/templates skema baru -> mid -> {css, type, tmpls}. Best-effort: satu blob gagal decode, note type itu aja dilewatin.
 function getNewSchemaModelDesigns(db){
   const designs = {};
   try{
@@ -5331,7 +4885,6 @@ function getNewSchemaModelDesigns(db){
   return designs;
 }
 
-// Note type: skema lama (v11) simpan JSON di col.models, skema baru (v15+/v18) pindah ke tabel notetypes+fields+templates dibungkus protobuf.
 function getModelsAnyVersion(db){
   let models = {};
   try{
@@ -5355,7 +4908,7 @@ function getModelsAnyVersion(db){
         });
       }
     }
-  }catch(e){ /* skema baru, gapapa lanjut ke fallback */ }
+  }catch(e){  }
 
   if(Object.keys(models).length === 0){
     try{
@@ -5377,7 +4930,7 @@ function getModelsAnyVersion(db){
             flds: (fieldMap[id]||[]).filter(n=>n!==undefined),
             type: d.type || 0,
             css: d.css || '',
-            tmpls: (d.tmpls||[]).filter(t=> t.qfmt) // buang kalau protobuf gagal / kosong
+            tmpls: (d.tmpls||[]).filter(t=> t.qfmt) 
           };
         });
       }
@@ -5386,13 +4939,10 @@ function getModelsAnyVersion(db){
   return models;
 }
 
-// Cek apakah desain kartu asli (qfmt/afmt tiap template) berhasil ditangkap
-// buat suatu model — dipakai buat mutusin rebuild pake desain asli vs generik.
 function modelHasOriginalDesign(m){
   return !!(m && m.tmpls && m.tmpls.length && m.tmpls.every(t=> t.qfmt));
 }
 
-// Nama + deskripsi deck: skema lama -> JSON di col.decks. Skema baru (v18+) -> tabel decks.
 function getDecksAnyVersion(db){
   let decks = {};
   let descs = {};
@@ -5405,7 +4955,7 @@ function getDecksAnyVersion(db){
         Object.keys(parsed).forEach(id=>{ decks[id] = parsed[id].name; descs[id] = parsed[id].desc || ''; });
       }
     }
-  }catch(e){ /* fallback di bawah */ }
+  }catch(e){  }
   if(Object.keys(decks).length === 0){
     try{
       const dk = db.exec("SELECT id, name FROM decks");
@@ -5416,7 +4966,6 @@ function getDecksAnyVersion(db){
   return decks;
 }
 
-// Ambil baris tabel apa adanya (kolom eksplisit stabil v11-v18) buat mindahin cards/revlog pas rebuild collection ke format legacy.
 function readRowsSafe(db, sql){
   try{
     const res = db.exec(sql);
@@ -5429,15 +4978,12 @@ function readRowsSafe(db, sql){
 }
 
 function populateDeckNameInputs(){
-  // Kalau ahRestoreSession() baru aja nitipin nama deck custom dari sesi tersimpan, pakai
-  // itu sebagai nilai awal; kalau nggak ada, reset kosong kayak biasa (perilaku lama).
   const pending = state._pendingDeckNameOverrides || {};
   state._pendingDeckNameOverrides = null;
   state.deckNameOverrides = {};
   const wrap = document.getElementById('deckNameList');
   wrap.innerHTML = '';
 
-  // Cuma tampilin deck yang beneran ditempelin kartu (bukan deck kosong/parent bawaan Anki)
   let idsToShow = (state.usedDeckIds && state.usedDeckIds.length)
     ? state.usedDeckIds.filter(id=> state.decksMap[id] !== undefined)
     : Object.keys(state.decksMap);
@@ -5485,15 +5031,12 @@ function populateNoteTypeNameInputs(){
   const wrap = document.getElementById('noteTypeNameList');
   if(!wrap) return;
   wrap.innerHTML = '';
-  // Kumpulkan semua mid yang dipakai oleh notes, sebagai string
   const midsUsed = [...new Set(state.notes.map(n => String(n.mid)))];
   if(midsUsed.length === 0) return;
   midsUsed.forEach(mid => {
-    // Toleran key string vs number di state.models
     const model = state.models[mid] || state.models[parseInt(mid)];
     if(!model) return;
     const origName = model.name || 'Note Type';
-    // Ambil nilai pending dari string key atau number key
     const pendingVal = pending[mid] !== undefined ? pending[mid]
                      : pending[parseInt(mid)] !== undefined ? pending[parseInt(mid)]
                      : origName;
@@ -5542,7 +5085,7 @@ function populateModelSelect(){
   }
   populateFieldSelect();
   updateBgModelLabel();
-  renderTable(); // fix: dulu tabel baru muncul kalau field select diutak-atik manual, sekarang langsung render pas upload
+  renderTable(); 
   populateTemplateEditor();
   ahAtRefreshMappingsForModel();
 }
@@ -5552,7 +5095,6 @@ function updateBgModelLabel(){
   if(!el) return;
   const model = state.models[state.currentMid];
   el.textContent = model ? model.name : '-';
-  // Reset detect status dulu, lalu cek otomatis
   const statusEl = document.getElementById('bgDetectStatus');
   if(statusEl){ statusEl.className = 'hidden'; statusEl.textContent = ''; }
   ahDetectBgFromModel().catch(err => console.warn('ahDetectBgFromModel:', err));
@@ -5565,11 +5107,6 @@ function populateFieldSelect(){
   const model = state.models[state.currentMid];
   if(!model) return;
 
-  // Inget pilihan field yang dicentang & yang ditandain 🔒 sumber SECARA TERPISAH per
-  // note type (mid) -- dulu ini ke-reset total ke default (cuma field pertama) tiap
-  // pindah note type, jadi kalau user udah rapiin centang+lock buat note type A lalu
-  // ngecek note type B, terus balik lagi ke A, semua pilihannya ilang (bug). Sekarang
-  // dipulihin dari cache kalau note type ini udah pernah diatur sebelumnya.
   const cached = state.fieldSelectionByModel[state.currentMid];
   if(cached){
     state.selectedFieldIdxs = cached.selected.filter(i=> i < model.flds.length);
@@ -5597,19 +5134,12 @@ function populateFieldSelect(){
     chip.appendChild(cb);
     chip.appendChild(document.createTextNode(`${idx+1}. ${name}`));
 
-    // Toggle "field sumber": field yang dipakai AI buat konteks (misal Kanji asli) tapi
-    // HARUSNYA gak ikut berubah pas ditranslate -- beda sama field target yang emang diisi
-    // hasil terjemahan. Ini bikin tool bisa ngedeteksi kalau field sumber ternyata ikut berubah
-    // (tanda ke-translate/ke-swap gak sengaja), tanpa perlu nebak-nebak nama field.
     const lockBtn = document.createElement('span');
     lockBtn.className = 'field-lock' + (isRef ? ' active' : '');
     lockBtn.textContent = isRef ? '🔒' : '🔓';
     lockBtn.title = 'Tandain sebagai field SUMBER/REFERENSI (misal Kanji asli) yang harusnya GAK berubah pas ditranslate — beda sama field target yang emang diisi hasil terjemahan.';
     chip.appendChild(lockBtn);
 
-    // Tombol instruksi khusus per field: field target (misal "Notes") bisa dikasih perintah
-    // tambahan buat AI translator -- ikut kecopy ke teks yang ditempel ke AI, jadi AI-nya tau
-    // persis mau diisi apa di field itu (misal minta penjelasan lengkap kosakata + furigana).
     const instrBtn = document.createElement('span');
     instrBtn.className = 'field-lock field-instr';
     instrBtn.textContent = '📝';
@@ -5677,11 +5207,6 @@ function populateFieldSelect(){
   populateFuriganaFieldSelect();
 }
 
-// Checklist KHUSUS buat tombol "Perbaiki Spasi Furigana" -- terpisah dari checklist field
-// AI-translate di atas (field-nya beda tujuan: yang atas itu field TARGET translate, ini
-// field yang mau DISCAN/DIPERBAIKI spasi furigana-nya). Default-nya SEMUA field kecentang
-// (sama kayak perilaku lama sebelum ada checklist ini), tapi diinget per note type (mid)
-// biar gak ke-reset tiap gonta-ganti note type kayak checklist yang lain.
 function populateFuriganaFieldSelect(){
   const container = document.getElementById('furiganaFieldChecks');
   const wrap = document.getElementById('furiganaFieldWrap');
@@ -5696,7 +5221,7 @@ function populateFuriganaFieldSelect(){
     state.furiganaFieldIdxs = cached.filter(i=> i < model.flds.length);
     if(!state.furiganaFieldIdxs.length) state.furiganaFieldIdxs = model.flds.map((_,i)=>i);
   } else {
-    state.furiganaFieldIdxs = model.flds.map((_,i)=>i); // default: semua field kecentang
+    state.furiganaFieldIdxs = model.flds.map((_,i)=>i); 
   }
 
   model.flds.forEach((name, idx)=>{
@@ -5768,10 +5293,6 @@ function populateRapikanFuriganaFieldSelect(){
   });
 }
 
-// Checklist KHUSUS buat tombol "Rapikan Notes" -- sama polanya kayak checklist furigana
-// di atas, tapi buat field yang mau dikasih baris baru antar bagian (Kosakata & makna
-// utama / Penjelasan / Contoh kalimat / Kosakata yang mirip), biar gak numpuk jadi 1
-// paragraf gede yang pusing dibaca. Default: semua field kecentang, diinget per note type.
 function populateRapikanFieldSelect(){
   const container = document.getElementById('rapikanFieldChecks');
   const wrap = document.getElementById('rapikanFieldWrap');
@@ -5786,7 +5307,7 @@ function populateRapikanFieldSelect(){
     state.rapikanFieldIdxs = cached.filter(i=> i < model.flds.length);
     if(!state.rapikanFieldIdxs.length) state.rapikanFieldIdxs = model.flds.map((_,i)=>i);
   } else {
-    state.rapikanFieldIdxs = model.flds.map((_,i)=>i); // default: semua field kecentang
+    state.rapikanFieldIdxs = model.flds.map((_,i)=>i); 
   }
 
   model.flds.forEach((name, idx)=>{
@@ -5832,7 +5353,6 @@ function updateStats(){
   updateBatchUI();
 }
 
-/* ---------------- batch copy ---------------- */
 function getBatchBounds(total){
   const size = Math.max(1, state.batchSize|0 || 1);
   const totalBatches = Math.max(1, Math.ceil(total / size));
@@ -5849,7 +5369,6 @@ function getBatchRows(){
   return rows.slice(start, end);
 }
 
-// Kunci unik 1 batch dari gabungan ID kartu (bukan index) -- dipakai nandain batch yang udah di-apply biar gak ke-overwrite diam-diam.
 function batchKeyFor(rows){
   return (rows||[]).map(n=> String(n.id)).sort((a,b)=> a.localeCompare(b, undefined, {numeric:true})).join(',');
 }
@@ -5878,7 +5397,7 @@ document.getElementById('batchSizeInput').addEventListener('input', (e)=>{
   let v = parseInt(e.target.value, 10);
   if(!Number.isFinite(v) || v < 1) v = 1;
   state.batchSize = v;
-  state.batchIndex = 0; // balik ke batch pertama biar gak ketinggalan/kelewatan kartu
+  state.batchIndex = 0; 
   updateBatchUI();
 });
 document.getElementById('btnBatchPrev').addEventListener('click', ()=>{
@@ -5889,7 +5408,6 @@ document.getElementById('btnBatchNext').addEventListener('click', ()=>{
   state.batchIndex += 1;
   updateBatchUI();
 });
-/* ---------------- translate otomatis (opsional, langsung manggil API translate) ---------------- */
 
 const AH_AT_STORAGE_PREFIX = 'ankihoney_autotranslate_';
 const AH_RESUME_PREFIX = 'ankihoney_resume_';
@@ -5941,10 +5459,6 @@ function ahClearAutosaveState(hash){
   try{ localStorage.removeItem(ahAutosaveKey(hash)); }
   catch(e){ console.warn('Gagal hapus autosave state', e); }
 }
-// Hapus semua sesi tersimpan buat deck LAIN (deckHash beda dari yang lagi aktif) --
-// dipanggil tiap kali ada sesi baru mau disimpen, biar localStorage gak numpuk penuh sama
-// sesi-sesi deck lama yang udah gak kepake lagi (yang biasanya bikin "Simpan Sesi" ujung-
-// ujungnya gagal karena kepenuhan).
 function ahPurgeOtherSessions(keepHash){
   try{
     const toRemove = [];
@@ -5957,11 +5471,6 @@ function ahPurgeOtherSessions(keepHash){
     toRemove.forEach(key=> localStorage.removeItem(key));
   }catch(e){ console.warn('Gagal beresin sesi lama', e); }
 }
-// Ambil setting background KECUALI data biner berat (dataUrl/bytes/poster*) -- itu kalau
-// disimpen ke localStorage bisa gampang kelewat limit ~5-10MB & bikin SEMUA sesi gagal
-// kesimpen. Jadi background mode "upload file" cuma keinget setting-nya doang (opacity,
-// posisi, dll), fotonya sendiri harus di-upload ulang manual pas sesi dipulihin. Background
-// mode "url" (link online) full aman dipulihin krn cuma nyimpen teks link-nya doang.
 function ahExtractBgSettingsOnly(cardBg){
   if(!cardBg) return null;
   const stripSource = (src)=>{
@@ -5983,10 +5492,6 @@ function ahExtractBgSettingsOnly(cardBg){
     mobile: stripSource(cardBg.mobile)
   };
 }
-// Kumpulin SEMUA progress edit user yang penting buat dipulihin lagi nanti: isi field yang
-// udah diedit, nama deck custom, centang/lock field per note type, instruksi khusus AI per
-// field, checklist furigana/rapikan, progress batch, kata kunci pencarian, & setting
-// background (kecuali file foto/video mentahnya, lihat ahExtractBgSettingsOnly di atas).
 function ahBuildSessionSnapshot(){
   const notes = state.notes.filter(n=> n.dirty).map(n=> ({ id:n.id, fields:n.fields.slice() }));
   return {
@@ -6006,8 +5511,6 @@ function ahBuildSessionSnapshot(){
     cardBgSettings: ahExtractBgSettingsOnly(state.cardBg)
   };
 }
-// Cek apakah snapshot ini beneran ada isinya yang worth disimpen (biar gak nyampah localStorage
-// nyimpen sesi kosong tiap kali user buka deck baru tanpa ngedit apa-apa).
 function ahSnapshotHasContent(snap){
   if(!snap) return false;
   if(snap.notes && snap.notes.length) return true;
@@ -6025,8 +5528,6 @@ function ahSaveDraftAutosave(){
   catch(e){ console.warn('Gagal simpan sesi', e); toast('Gagal simpan sesi -- mungkin penyimpanan browser penuh~', '⚠️'); }
   ahUpdateSessionBar();
 }
-// Dipanggil pas user klik tombol "💾 Simpan Sesi" secara manual -- selalu simpan (walau
-// snapshot-nya keliatan minim) & kasih konfirmasi jelas ke user, beda sama autosave diam-diam.
 function ahManualSaveSession(){
   if(!state.deckHash){ toast('Upload deck dulu sebelum simpan sesi ya~', '⚠️'); return; }
   const snapshot = ahBuildSessionSnapshot();
@@ -6040,11 +5541,7 @@ function ahManualSaveSession(){
   }
   ahUpdateSessionBar();
 }
-// Inti logic "pasang" sebuah snapshot sesi ke state yang lagi aktif + render ulang UI --
-// dipakai bareng sama ahRestoreSession() (dari localStorage) DAN ahImportSessionFromFile()
-// (dari file .json yang diimport, misal buat pindah sesi dari desktop ke HP).
 function ahApplySessionSnapshot(snap){
-  // 1. Pulihin isi field yang udah diedit
   const byId = Object.fromEntries(state.notes.map(n=> [n.id, n]));
   let restoredNotes = 0;
   (snap.notes||[]).forEach(item=>{
@@ -6056,9 +5553,6 @@ function ahApplySessionSnapshot(snap){
     }
   });
 
-  // 2. Pulihin centang/lock field, checklist furigana/rapikan, & instruksi khusus per note
-  //    type -- semua ini kepake OTOMATIS pas populateModelSelect()/populateFieldSelect()
-  //    dipanggil ulang di bawah, karena fungsi-fungsi itu emang baca dari state ini.
   if(snap.fieldSelectionByModel) state.fieldSelectionByModel = snap.fieldSelectionByModel;
   if(snap.furiganaFieldIdxsByModel) state.furiganaFieldIdxsByModel = snap.furiganaFieldIdxsByModel;
   if(snap.rapikanFieldIdxsByModel) state.rapikanFieldIdxsByModel = snap.rapikanFieldIdxsByModel;
@@ -6068,12 +5562,9 @@ function ahApplySessionSnapshot(snap){
   if(snap.batchSize) state.batchSize = snap.batchSize;
   if(snap.tablePageSize) state.tablePageSize = snap.tablePageSize;
 
-  // 3. Titipin nama deck custom -- dibaca & dipasang sama populateDeckNameInputs() di bawah
   state._pendingDeckNameOverrides = snap.deckNameOverrides || {};
   state._pendingModelNameOverrides = snap.modelNameOverrides || {};
 
-  // 4. Pulihin setting background (kecuali foto/video mentahnya, kalau mode "upload" user
-  //    perlu upload ulang manual -- link "url" full kepulihin)
   if(snap.cardBgSettings && state.cardBg){
     const cb = snap.cardBgSettings;
     Object.assign(state.cardBg, {
@@ -6089,7 +5580,6 @@ function ahApplySessionSnapshot(snap){
     });
   }
 
-  // 5. Render ulang semua UI yang bergantung ke state di atas
   populateModelSelect();
   populateDeckNameInputs(); populateNoteTypeNameInputs();
   renderTable();
@@ -6109,9 +5599,6 @@ function ahRestoreSession(){
     : '';
   toast(`Sesi dipulihkan (disimpan ${savedAgo}). ${restoredNotes} note yang udah diedit ikut kepulihin.${bgNote}`, '↺');
 }
-// Download snapshot sesi jadi file .json -- buat dipindahin manual antar device (misal
-// desktop ke HP) lewat WhatsApp/Drive/kabel/dll, karena localStorage gak bisa nyambung
-// otomatis antar browser/device beda.
 function ahExportSessionToFile(){
   if(!state.deckHash){ toast('Upload deck dulu sebelum export sesi ya~', '⚠️'); return; }
   const snapshot = ahBuildSessionSnapshot();
@@ -6133,9 +5620,6 @@ function ahExportSessionToFile(){
     toast('Gagal export sesi.', '⚠️');
   }
 }
-// Baca file .json hasil export dari device lain, lalu pasang ke deck yang lagi kebuka
-// sekarang. Sesi tetap dicocokin ke ISI file .apkg (deckHash) -- kalau beda, dikasih
-// peringatan tapi tetap boleh dipaksa apply (misal buat kasus edge tertentu).
 function ahImportSessionFromFile(file){
   if(!state.deckHash){ toast('Upload deck .apkg dulu sebelum import sesi ya~', '⚠️'); return; }
   const reader = new FileReader();
@@ -6335,8 +5819,6 @@ function ahInBackgroundUpdate(){
 function ahRefreshAllAuxiliary(){
   ahUpdateCostEstimate();
 }
-// Normalisasi field pertama (strip HTML/tanda baca/diakritik) buat cocokin kartu
-// "duplikat" pas checkbox "Skip kartu duplikat" dinyalain -- best-effort, bukan exact match.
 function ahNormalizeDuplicateKey(text){
   const stripped = stripHtml(text||'').toLowerCase();
   return stripped
@@ -6370,7 +5852,6 @@ function ahAtCurrentHint(){
   return mapped ? AT_HINT_MAPPED : AT_HINT_INPLACE;
 }
 
-// Kosongin & sembunyiin tombol "Mulai Ulang yang Gagal" tiap ganti pengaturan atau mulai proses baru.
 function ahAtClearFailedRetry(){
   state.autoTranslate.lastFailedEntries = [];
   const btn = document.getElementById('btnAutoTranslateRetryFailed');
@@ -6382,7 +5863,6 @@ document.getElementById('btnAutoTranslateRetryFailed').addEventListener('click',
   runAutoTranslate(null, entries);
 });
 
-// Inget pilihan terakhir user (engine/API key/bahasa) di localStorage -- gak pernah dikirim ke server kecuali manggil API translate.
 (function initAutoTranslatePanel(){
   const engineSel = document.getElementById('atEngineSelect');
   const apiKeyWrap = document.getElementById('atApiKeyWrap');
@@ -6436,7 +5916,6 @@ document.getElementById('atModeInplace').addEventListener('click', ()=> ahAtSetM
 document.getElementById('atModeMapped').addEventListener('click', ()=> ahAtSetMode('mapped'));
 document.getElementById('atAddMapping').addEventListener('click', ()=> { ahAtAddMappingRow(); ahUpdateCostEstimate(); });
 
-// Toggle mode "Terjemahin" vs "Jelasin Kosakata" -- ganti label/hint & matiin opsi engine yang gak support explain (Google Translate).
 function ahAtSetOp(op){
   state.autoTranslate.op = op;
   ahAtSaveSetting('op', op);
@@ -6479,7 +5958,6 @@ document.getElementById('atEngineSelect').addEventListener('change', function(){
   }
 });
 
-// Bikin 1 baris pasangan "field X -> field Y" buat mode translate "Field beda".
 function ahAtBuildFieldSelect(model, preferIdx){
   const sel = document.createElement('select');
   (model.flds||[]).forEach((name, idx)=>{
@@ -6535,8 +6013,6 @@ function ahAtAddMappingRow(srcIdx, dstIdx){
   row.appendChild(dstWrap);
   list.appendChild(row);
 }
-// Refresh dropdown mapping tiap ganti note type -- field lama udah gak relevan
-// buat note type baru, jadi list mapping-nya direset.
 function ahAtRefreshMappingsForModel(){
   const list = document.getElementById('atMappedList');
   if(!list) return;
@@ -6545,7 +6021,6 @@ function ahAtRefreshMappingsForModel(){
   ahAtRefreshExplainContextField();
 }
 
-// Field opsional "Jelasin Kosakata (AI)": dibaca & dikirim ke AI sebagai konteks tambahan biar penjelasan nyambung sama pemakaian asli, bukan cuma makna kamus.
 function ahAtRefreshExplainContextField(){
   const sel = document.getElementById('atExplainContextField');
   if(!sel) return;
@@ -6575,7 +6050,6 @@ document.getElementById('atExplainContextField')?.addEventListener('change', fun
 
 function ahSleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
 
-// Helper AI engine: provider sering ganti/hapus nama model, jadi deteksi error "model not found/deprecated" biar user tau ini bukan salah mereka.
 function ahMakeEngineError(provider, status, bodyText){
   const snippet = (bodyText||'').slice(0,200);
   const lower = (bodyText||'').toLowerCase();
@@ -6588,7 +6062,6 @@ function ahMakeEngineError(provider, status, bodyText){
   return err;
 }
 
-// Engine #1: Google Translate gratis/gak resmi, gak butuh API key, best-effort (bisa kena rate-limit/blokir).
 async function ahTranslateGoogleFree(text, sl, tl){
   if(!text || !text.trim()) return text;
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl||'auto')}&tl=${encodeURIComponent(tl||'id')}&dt=t&q=${encodeURIComponent(text)}`;
@@ -6598,7 +6071,6 @@ async function ahTranslateGoogleFree(text, sl, tl){
   return ((data && data[0]) || []).map(seg=> (seg && seg[0]) || '').join('');
 }
 
-// Engine #2: Google Cloud Translate API resmi, butuh API key. format:'html' biar tag HTML gak ikut ketranslate.
 async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const body = { q:text, target: tl||'id', format:'html' };
@@ -6611,7 +6083,6 @@ async function ahTranslateGoogleCloud(text, sl, tl, apiKey){
   return data?.data?.translations?.[0]?.translatedText ?? text;
 }
 
-// Engine #3: OpenAI API -- aman buat field ber-HTML/furigana karena diinstruksiin mempertahankan tag persis.
 async function ahTranslateOpenAI(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const sys = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
@@ -6629,7 +6100,6 @@ async function ahTranslateOpenAI(text, sl, tl, apiKey){
 
 const AH_AI_TRANSLATE_SYS = 'Kamu mesin translate profesional. Terjemahin teks yang dikasih ke bahasa target. ATURAN: (1) PERTAHANKAN semua tag HTML/atribut serta tag [sound:...] PERSIS apa adanya, cuma terjemahin teks yang kebaca manusia. (2) Jangan nambahin penjelasan/catatan apapun. (3) Balikin CUMA hasil terjemahannya, tanpa embel-embel lain.';
 
-// Engine #4: Anthropic Claude API -- header anthropic-dangerous-direct-browser-access dibutuhin karena dipanggil langsung dari browser.
 async function ahTranslateClaude(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
@@ -6649,7 +6119,6 @@ async function ahTranslateClaude(text, sl, tl, apiKey){
   return (data?.content||[]).map(b=> b.text || '').join('').trim() || text;
 }
 
-// Engine #5: Google Gemini API (butuh API key sendiri dari Google AI Studio).
 async function ahTranslateGemini(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
@@ -6663,7 +6132,6 @@ async function ahTranslateGemini(text, sl, tl, apiKey){
   return (data?.candidates?.[0]?.content?.parts||[]).map(p=> p.text || '').join('').trim() || text;
 }
 
-// Engine #6: DeepSeek API (kompatibel format OpenAI, butuh API key sendiri dari platform.deepseek.com).
 async function ahTranslateDeepSeek(text, sl, tl, apiKey){
   if(!text || !text.trim()) return text;
   const srcNote = (sl && sl !== 'auto') ? (' (bahasa asal kira-kira: '+sl+')') : '';
@@ -6687,12 +6155,6 @@ async function ahTranslateDispatch(engine, text, sl, tl, apiKey){
   return ahTranslateGoogleFree(text, sl, tl);
 }
 
-/* ---------------- mode "Jelasin Kosakata (AI)" ----------------
-   Sama kayak engine translate di atas, tapi system prompt-nya DIGANTI pakai instruksi
-   custom dari user (default-nya sama kayak template Notes) alih-alih instruksi "translate
-   apa adanya". Cuma didukung sama engine yang beneran AI chat model (OpenAI/Claude/Gemini/
-   DeepSeek) -- Google Translate (gratis/Cloud) itu API terjemahan literal, gak bisa disuruh
-   "jelasin kosakata" karena bukan model bahasa, jadi sengaja gak disediain di sini. */
 function ahBuildExplainPrompt(text, instruction, lang, contextText){
   const langNote = lang ? `\n\nJawab pakai bahasa "${lang}".` : '';
   const contextNote = (contextText && contextText.trim())
@@ -6701,24 +6163,12 @@ function ahBuildExplainPrompt(text, instruction, lang, contextText){
   return `${instruction}${langNote}\n\nBerikut teks/kosakata yang mau dijelasin:\n\n${text}${contextNote}`;
 }
 
-/* ---------------- Post-processing hasil "Jelasin Kosakata (AI)" ----------------
-   PENTING (revisi ke-2): field ini biasanya kepake bareng filter furigana bawaan note
-   type (atau addon sejenis) yang kerjanya nge-scan teks field buat pola "kanji[bacaan]"
-   -- dan filter kayak gitu pada dasarnya nge-anggep field-nya PLAIN TEXT, jadi kalau field-nya
-   udah keisi tag HTML asli (<b>, <ul>, <ruby>, dst -- percobaan sebelumnya), tag-nya malah
-   ke-escape/keliatan literal kayak "<b>" pas dirender (persis laporan user). Makanya SEKARANG
-   hasil AI-nya CUMA dibersihin dari tanda markdown-nya doang (jadi plain text biasa), TANPA
-   nambahin tag HTML apapun -- paragraf/section udah otomatis kepisah sendiri sama baris kosong
-   dari jawaban AI-nya (gak perlu <br>/<p>). Format furigana "kanji[bacaan]" DIBIARIN PERSIS
-   apa adanya, gak disentuh sama sekali -- itu emang formatnya yang diminta di instruksi
-   default Notes, biar filter furigana note type (atau tampilan manual sesuai instruksi) yang
-   urus renderingnya sendiri. */
 function ahFormatExplainResult(text){
   if(!text) return text;
   let out = text.replace(/\r\n?/g, '\n');
-  out = out.replace(/\*\*(.+?)\*\*/g, '$1');            // **bold** -> teks polos (tanda bintangnya doang yang ilang)
-  out = out.replace(/^([ \t]*)[*\-][ \t]+/gm, '$1• ');  // baris bullet "*"/"-" -> "•" (bukan tag <li>)
-  out = out.replace(/\*([^*\n]+)\*/g, '$1');            // sisa *italic* tunggal -> teks polos juga
+  out = out.replace(/\*\*(.+?)\*\*/g, '$1');            
+  out = out.replace(/^([ \t]*)[*\-][ \t]+/gm, '$1• ');  
+  out = out.replace(/\*([^*\n]+)\*/g, '$1');            
   return out.trim();
 }
 
@@ -6789,7 +6239,6 @@ async function ahExplainDispatch(engine, text, instruction, lang, apiKey, contex
   throw new Error('Engine "'+engine+'" gak support mode Jelasin Kosakata -- pilih OpenAI/Claude/Gemini/DeepSeek ya~');
 }
 
-// Translate semua field yang dicentang buat semua note dari note type aktif, sekuensial (bisa dibatalin). Mode 'inplace' (timpa) atau 'mapped' (field A -> field B).
 async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly){
   const model = state.models[state.currentMid];
   if(!model) return;
@@ -6806,15 +6255,9 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
 
   let rows = rowsOverride && rowsOverride.length ? rowsOverride : currentRows();
   if(isRetry){
-    // Retry cuma peduli sama note yang tadi ada field-nya yang gagal -- ambil dari
-    // state.notes langsung (bukan cuma currentRows()) biar tetep ketemu walau user
-    // udah pindah batch/scroll dari posisi pas run pertama gagal.
     const idSet = new Set(retryEntries.map(e=> e.id));
     rows = state.notes.filter(n=> n.mid === state.currentMid && idSet.has(n.id));
   } else if(isResume){
-    // Resume: ambil SEMUA note yang direferensiin di pendingOps yang kesimpen, bukan
-    // cuma currentRows() -- biar tetep ketemu walau user pindah note type/filter/reload
-    // halaman sebelum sempet lanjutin translate-nya.
     const idSet = new Set(state.resumeState.pendingOps.map(e=> e.id));
     rows = state.notes.filter(n=> idSet.has(n.id));
   }
@@ -6822,11 +6265,9 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
   const isBatchScoped = !!(rowsOverride && rowsOverride.length) && !isRetry && !isResume;
 
   const mode = isResume ? (state.resumeState.mode || state.autoTranslate.mode) : state.autoTranslate.mode;
-  let pairs = []; // array of {src, dst} field index -- buat 'inplace', src===dst
+  let pairs = []; 
 
   if(isResume){
-    // Pasangan field udah kesimpen pas resumeState dibuat -- gak perlu baca ulang dari
-    // UI (yang mode/pilihan field-nya bisa aja udah keganti sejak proses ke-interrupt).
     pairs = (state.resumeState.pairs || []).slice();
   } else if(mode === 'mapped'){
     document.querySelectorAll('.at-mapping-row').forEach(row=>{
@@ -6850,8 +6291,6 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
   const apiKey = document.getElementById('atApiKey').value.trim();
   const explainInstruction = document.getElementById('atExplainInstrArea').value.trim();
   const skipDuplicate = document.getElementById('skipDuplicateCards').checked;
-  // Field opsional "Konteks Tambahan" -- CUMA relevan buat mode 'explain', dibaca doang
-  // per-note dan dikirim ke AI sebagai konteks pemakaian (lihat ahBuildExplainPrompt).
   const explainContextSel = document.getElementById('atExplainContextField');
   const explainContextIdx = (op === 'explain' && explainContextSel && explainContextSel.value !== '') ? parseInt(explainContextSel.value) : -1;
 
@@ -6865,19 +6304,9 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
   }
   if(engine !== 'google-free' && !apiKey){ toast('Isi API key dulu ya buat pakai engine ini~', '🔑'); return; }
 
-  // Kunci unik per (note, src, dst) -- dipakai buat mode retry, biar CUMA pasangan
-  // field yang gagal tadi doang yang diulang (bukan semua field di note itu, biar
-  // gak mubazir manggil API buat field yang udah berhasil).
   const retryKeySet = isRetry ? new Set(retryEntries.map(e=> e.id+'#'+e.src+'#'+e.dst)) : null;
 
-  // Retry/Resume: gak perlu nanya konfirmasi timpa lagi (field yang diulang/dilanjut
-  // emang niatnya ditimpa sama hasil yang baru -- resume juga udah dikonfirmasi pas
-  // proses pertama kali dimulai). stageOnly (mode "Preview Sebelum Apply") juga gak
-  // perlu nanya karena BELUM ada yang ditimpa sampai user approve di modal diff.
   if(!isRetry && !isResume && !stageOnly){
-    // Cek dulu: ada berapa note yang field TUJUAN-nya udah ada isi -- karena hasilnya
-    // bakal NIMPA TOTAL isi lama (bukan digabung/append jadi dua). Kalau ada yang bakal
-    // ketimpa, user harus konfirmasi dulu sebelum lanjut.
     const dstIdxsForCheck = [...new Set(pairs.map(p=> p.dst))];
     const willOverwriteCount = rows.filter(n=> dstIdxsForCheck.some(i=> (n.fields[i]||'').trim() !== '')).length;
     if(willOverwriteCount > 0){
@@ -6893,9 +6322,6 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
     }
   }
 
-  // Snapshot SEMUA note note type ini SEBELUM mulai nimpa -- biar bisa di-undo utuh
-  // kalau ternyata hasilnya berantakan / salah pilih field tujuan. Dilewatin buat
-  // stageOnly karena belum ada field yang ditimpa sampai user approve di modal diff.
   if(!stageOnly){
     state.autoTranslateSnapshot = {
       mid: state.currentMid,
@@ -6915,8 +6341,6 @@ async function runAutoTranslate(rowsOverride, retryEntries, isResume, stageOnly)
   progTrackWrap.classList.remove('hidden');
   progFill.classList.remove('done');
   progFill.style.width = '0%';
-  // Sembunyiin tombol "Mulai Ulang yang Gagal" selama proses baru jalan -- baru
-  // dimunculin lagi di akhir kalau emang masih ada yang gagal (lihat bawah).
   document.getElementById('btnAutoTranslateRetryFailed').classList.add('hidden');
 
   const duplicateFirstMap = new Map();
@@ -7137,49 +6561,18 @@ document.getElementById('btnAutoTranslateUndo').addEventListener('click', ()=>{
   toast('Translate otomatis terakhir dibatalin, field balik kayak sebelumnya~', '↩️');
 });
 
-/* ---------------- perbaiki spasi furigana ---------------- */
-// Bug format furigana Anki "kanji[reading]": kalau ada karakter APAPUN yang nempel
-// LANGSUNG persis sebelum sebuah blok kanji yang mau dikasih furigana (baik itu hiragana,
-// katakana, kanji kata lain, angka, atau malah furigana LAIN yang ketutup ']' sebelumnya)
-// tanpa spasi pemisah, hasilnya furigana-nya jadi kebaca ikut nyebar/salah nempel pas
-// ditampilin di Anki. Fix-nya: kasih 1 spasi kosong PERSIS sebelum blok kanji itu -- kanji
-// & bacaannya sendiri gak diubah sama sekali. Kalau blok kanjinya lebih dari 1 karakter
-// (misal 明日[あした], 日本語[にほんご]), spasinya ditaruh SEBELUM karakter kanji PALING
-// DEPAN dari blok itu, BUKAN di tengah-tengah kanjinya (dicek pake lookbehind biar gak
-// kepotong salah, verified terhadap field "Word Furigana"/"Sentence Furigana" bawaan
-// deck Kaishi yang emang udah bener formatnya -- itu jadi acuan/ground truth rule ini).
-// PENTING (fix ke-2): filter furigana bawaan Anki ( " ?([^ >]+?)\[(.+?)\]" ) cuma nganggep
-// SPASI ASCII BIASA (U+0020) atau '>' (abis tag HTML) sebagai "pemisah yang valid" -- karakter
-// APAPUN selain itu (termasuk kanji/hiragana/katakana/romaji/angka, TERMASUK JUGA whitespace
-// non-standar kayak non-breaking space U+00A0, tab, atau newline mentah) ikut ke-anggep bagian
-// dari "kata dasar" yang dikasih ruby/furigana. Dulu di sini dipake `\s` (kelas whitespace JS)
-// buat ngecek "udah ada spasi apa belum" -- masalahnya `\s` di JS ikut nganggep non-breaking
-// space/tab/newline SEBAGAI spasi, padahal Anki TIDAK nganggep itu valid. Makanya kalau hasil
-// AI translator kebetulan keluar non-breaking space (sering kejadian dari API AI) bukannya
-// spasi biasa, fixer versi lama ini ngira "udah dikasih spasi, aman" padahal buat ANKI itu
-// tetep ke-anggep 1 kata sama kanji sebelahnya -- hasilnya furigana ketarik nyebar ke romaji
-// sebelumnya (kadang keliatan nempel di romaji-nya, bukan di kanjinya). Fix: ganti definisi
-// "udah aman" jadi PERSIS spasi ASCII biasa atau '>' doang (samain kayak definisi Anki), biar
-// whitespace non-standar ikut kepaksa dikasih spasi ASCII biasa juga.
 const AH_FURIGANA_NEEDS_SPACE_RE = /(?<=[\s\S])(?<![\u4E00-\u9FFF\u3005 >])(?=[\u4E00-\u9FFF\u3005]+\[[^\[\]]+\])/g;
 
-// Rapikan furigana っ/ッ:
-// Pola B (DIFIX): kanji+っ+SPASI+kanji[fur_gabungan] → pecah furigana di posisi っ
-//   末っ 子[すえっこ] → 末[すえ]っ 子[こ]
-//   引っ 越[ひっこ]  → 引[ひ]っ 越[こ]
-// Pola A (DIBIARKAN): kanji[fur1]っ kanji[fur2] → sudah benar
-//   真[ま]っ 赤[か]  → tidak diubah
 function ahFixSmallTsuFurigana(val){
   if(typeof val !== 'string' || !val) return { out: val, count: 0 };
   if(val.indexOf('っ') === -1 && val.indexOf('ッ') === -1) return { out: val, count: 0 };
   let out = val, count = 0;
-  // (?<!\]) = pastiin tidak ada ] sebelum kanji (berarti kanji tidak punya furigana sendiri = Pola B)
   out = out.replace(
     /(?<!\])([\u4e00-\u9fff\u3005]+)([っッ]) ([\u4e00-\u9fff\u3005]+)\[([^\[\]]+)\]/g,
     (match, k1, tsu, k2, fur) => {
       const smallTsu = fur.includes('っ') ? 'っ' : fur.includes('ッ') ? 'ッ' : null;
       count++;
-      if(!smallTsu) return k1 + tsu + k2 + '[' + fur + ']'; // fallback: hapus spasi saja
+      if(!smallTsu) return k1 + tsu + k2 + '[' + fur + ']'; 
       const si = fur.indexOf(smallTsu);
       const fur1 = fur.slice(0, si), fur2 = fur.slice(si + 1);
       if(!fur1 || !fur2) return k1 + tsu + k2 + '[' + fur + ']';
@@ -7243,11 +6636,6 @@ document.getElementById('btnRapikanFuriganaUndo').addEventListener('click', ()=>
   } catch(err){ console.error('undo rapikan furigana:',err); ahShowErrorPopup('Gagal undo: '+(err&&err.message?err.message:err)); }
 });
 
-// Modal konfirmasi KHUSUS buat "Perbaiki Spasi Furigana" -- dulu pake window.confirm() bawaan
-// browser, tapi itu bisa silently gagal/no-op (balikin false tanpa nampilin dialog apapun) di
-// banyak WebView/in-app-browser/iframe (misal dibuka di dalem app lain, PWA ke-install, dst),
-// jadi kliknya keliatan "gak ngapa-ngapain" padahal sebenernya nemu perubahan. Diganti modal
-// custom biar konsisten & reliable kayak modal-modal lain di tool ini (ahShowErrorPopup, dst).
 function ahShowFuriganaConfirmModal(message, onConfirm){
   let bg = document.getElementById('ahFuriganaConfirmModalBg');
   if(!bg){
@@ -7269,7 +6657,7 @@ function ahShowFuriganaConfirmModal(message, onConfirm){
   }
   bg.querySelector('#ahFuriganaConfirmMsg').textContent = message;
   const okBtn = bg.querySelector('#ahFuriganaConfirmOk');
-  const freshOk = okBtn.cloneNode(true); // buang listener lama biar gak numpuk tiap kepanggil ulang
+  const freshOk = okBtn.cloneNode(true); 
   okBtn.parentNode.replaceChild(freshOk, okBtn);
   freshOk.addEventListener('click', ()=>{ bg.classList.remove('show'); onConfirm(); });
   bg.classList.add('show');
@@ -7280,20 +6668,14 @@ function ahFixFuriganaSpacing(){
     if(!state.notes || !state.notes.length){ toast('Belum ada deck yang dibuka!', '😿'); return; }
 
     const model = state.models[state.currentMid];
-    // Cuma proses catatan dari note type yang lagi aktif di dropdown "Note type" -- sama kayak
-    // fitur-fitur lain di tool ini (Translate, dst), soalnya index field beda arti antar note
-    // type kalau deck-nya punya lebih dari 1 note type.
     const rows = state.notes.filter(n=> n.mid === state.currentMid);
     if(!rows.length){ toast('Gak ada catatan buat note type yang lagi dipilih~', '😿'); return; }
 
-    // Field mana yang mau discan: dari checklist "Field yang mau diperiksa/diperbaiki" di atas
-    // tombol. Kalau checklist-nya somehow belum siap (misal model.flds belum kebaca), fallback
-    // ke SEMUA field per catatan (perilaku lama).
     let fieldIdxs = (state.furiganaFieldIdxs && state.furiganaFieldIdxs.length) ? state.furiganaFieldIdxs.slice() : null;
 
     const changes = [];
     let totalFixes = 0;
-    const perFieldFixes = {}; // idx -> jumlah fix, buat ditampilin di ringkasan
+    const perFieldFixes = {}; 
     rows.forEach(n=>{
       let fixCount = 0;
       const idxsToScan = fieldIdxs || n.fields.map((_,i)=>i);
@@ -7372,16 +6754,6 @@ document.getElementById('btnFixFuriganaUndo').addEventListener('click', ()=>{
   }
 });
 
-/* ---------------- rapikan notes ---------------- */
-// Masalah: field hasil AI (Note dkk) diinstruksiin misahin tiap bagian pakai baris kosong
-// PLAIN TEXT (\n\n), bukan <br>, soalnya field ini diproses filter furigana bawaan note type
-// yang nge-anggep isinya plain text. Tapi HTML nge-collapse newline polos jadi 1 spasi pas
-// ditampilin di Anki -- hasilnya numpuk jadi 1 paragraf raksasa yang pusing dibaca (padahal
-// datanya sendiri gak "rusak"). Kadang malah gak ada newline sama sekali di antara bagian
-// (ketimpa jadi 1 spasi doang dari sononya), jadi gak cukup cuma convert newline->br aja.
-// Fix: (1) convert newline polos yang ADA jadi <br> beneran, (2) kasih baris baru paksa
-// SEBELUM label bagian yang dikenal (Penjelasan/Contoh kalimat/Kosakata yang mirip/dst),
-// idempotent -- aman dipencet berkali-kali, gak bakal numpuk <br> dobel-dobel.
 const AH_RAPIKAN_LABELS = [
   'Kosakata & makna utama:',
   'Penjelasan:',
@@ -7393,14 +6765,11 @@ function ahRapikanText(val){
   if(typeof val !== 'string' || !val) return val;
   let out = val
     .replace(/\r\n/g, '\n')
-    .replace(/\n{2,}/g, '<br><br>') // baris kosong (paragraf) -> 2x <br>
-    .replace(/\n/g, '<br>');        // sisa newline tunggal -> 1x <br>
+    .replace(/\n{2,}/g, '<br><br>') 
+    .replace(/\n/g, '<br>');        
 
   AH_RAPIKAN_LABELS.forEach(label=>{
     const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Bersihin dulu spasi/<br> yang MUNGKIN udah ada persis sebelum label (biar gak dobel
-    // pas tombolnya dipencet berkali-kali), baru pasang ulang <br><br> yang seragam --
-    // kecuali kalau labelnya ada di posisi PALING AWAL field (gak butuh baris baru).
     const re = new RegExp('(?:[ \\t]|<br\\s*/?>)*' + esc, 'g');
     out = out.replace(re, (m, offset)=> offset === 0 ? label : '<br><br>' + label);
   });
@@ -7529,7 +6898,6 @@ document.getElementById('btnRapikanNotesUndo').addEventListener('click', ()=>{
 });
 
 
-// Sama kayak Translate Semua Field, tapi cuma buat kartu di batch aktif -- cocok buat deck gede.
 document.getElementById('btnAutoTranslateBatch').addEventListener('click', ()=>{
   const rows = getBatchRows();
   if(!rows.length){ toast('Batch ini kosong~', '⚠️'); return; }
@@ -7574,7 +6942,6 @@ document.getElementById('btnCopyBatch').addEventListener('click', async ()=>{
   say(`Batch ${state.batchIndex+1} dari ${totalBatches} udah aku copy! Translate ini dulu ya, jangan digabung sama batch lain biar ID-nya gak ketuker~ 🍯`);
 });
 
-/* ---------------- table render ---------------- */
 function renderTable(){
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
@@ -7584,11 +6951,6 @@ function renderTable(){
   const frag = document.createDocumentFragment();
   const selIdxs = (state.selectedFieldIdxs && state.selectedFieldIdxs.length) ? state.selectedFieldIdxs : [0];
 
-  // Pagination -- CUMA buat batasin JUMLAH BARIS YANG DI-RENDER ke DOM sekali render,
-  // biar gak ngelag di deck gede (ribuan notes bikin ribuan textarea sekaligus tiap kali
-  // renderTable() dipanggil, misal tiap centang/uncentang field). Translate/Jelasin/Copy-
-  // Paste tetep jalan ke SEMUA note yang dicentang (lewat currentRows()), gak kepengaruh
-  // sama pagination ini -- ini murni soal apa yang KELIATAN & bisa diedit manual di layar.
   const pageSize = Math.max(1, state.tablePageSize|0 || 50);
   const totalPages = Math.max(1, Math.ceil(allRows.length / pageSize));
   if(state.tablePageIndex >= totalPages) state.tablePageIndex = totalPages - 1;
@@ -7644,21 +7006,11 @@ function renderTable(){
         editTd.appendChild(lbl);
       }
       const ta = document.createElement('textarea');
-      // Field Anki isinya HTML -- kalau ta.value diisi mentah-mentah, <br> yang udah
-      // ada di dalamnya bakal keliatan literal sbg teks "<br>" di textarea (bukan
-      // baris baru beneran). Makanya buat DITAMPILIN, <br> diubah dulu jadi newline
-      // biasa (\n) biar enak diedit & baris kosongnya keliatan kayak harusnya.
       ta.value = ahFieldToPlainForEdit(note.fields[fi] || '');
       ta.dataset.noteId = note.id;
       ta.dataset.fieldIdx = fi;
       if(note.dirty) ta.classList.add('dirty');
       ta.addEventListener('input', ()=>{
-        // Sebaliknya pas DISIMPEN: newline (\n) hasil user pencet Enter di textarea
-        // diubah balik jadi <br> beneran. Kalau ini gak dilakuin, baris kosong cuma
-        // "keliatan" doang di textarea (krn textarea emang nampilin \n sbg baris baru),
-        // tapi begitu field-nya jadi HTML asli (dibuka di Anki), \n polos bakal
-        // di-collapse browser/Anki jadi 1 spasi -- makanya kalau di-import ke Anki,
-        // baris kosongnya ilang & semua kata nyatu jadi 1 paragraf.
         note.fields[fi] = ahPlainEditToField(ta.value);
         note.dirty = true;
         ta.classList.add('dirty');
@@ -7686,23 +7038,16 @@ document.getElementById('btnTablePageNext').addEventListener('click', ()=>{
 });
 document.getElementById('tablePageSizeSelect').addEventListener('change', function(){
   state.tablePageSize = parseInt(this.value) || 50;
-  state.tablePageIndex = 0; // balik ke halaman pertama biar gak bingung posisinya geser
+  state.tablePageIndex = 0; 
   renderTable();
 });
 
-// ---------------------------------------------------------------------------
-// Konversi dua arah antara "field HTML asli" (yang beneran kesimpen & diexport
-// ke .apkg) <-> "teks polos" yang enak diedit manual di textarea "Field (bisa
-// diedit langsung)". Tanpa ini, baris kosong yang keliatan pas ngedit di
-// website cuma newline (\n) polos doang di dalam field -- begitu diimport ke
-// Anki, \n polos itu di-collapse jadi 1 spasi kayak HTML biasa, jadi baris
-// kosongnya ilang & semua kata keliatan nyatu.
 function ahFieldToPlainForEdit(html){
   if(typeof html !== 'string' || !html) return html || '';
   return html
-    .replace(/<br\s*\/?>\s*/gi, '\n')   // <br> / <br/> / <br /> -> newline
-    .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') // antar <p> -> baris kosong
-    .replace(/<\/?p[^>]*>/gi, '');      // sisa <p>/</p> tunggal dibuang aja
+    .replace(/<br\s*\/?>\s*/gi, '\n')   
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') 
+    .replace(/<\/?p[^>]*>/gi, '');      
 }
 
 function ahPlainEditToField(text){
@@ -7716,7 +7061,6 @@ function stripHtml(str){
   return (tmp.textContent || tmp.innerText || '').replace(/\s+/g,' ').trim();
 }
 
-/* ---------------- copy all / paste all ---------------- */
 function currentRows(){
   let rows = state.notes.filter(n=>n.mid===state.currentMid);
   const q = (state.searchQuery || '').trim().toLowerCase();
@@ -7763,10 +7107,6 @@ function buildBlockText(rows){
     return `[[[ID:${n.id}]]]\n${parts}`;
   }).join('\n\n');
 
-  // Kalau ada field yang ditandain "sumber" (🔒), kasih instruksi eksplisit di atas teks biar
-  // AI translator-nya gak salah nerjemahin field yang harusnya dibiarin sama persis. Digabung
-  // sama instruksi khusus per-field (kalau user nulis, misal buat field "Notes") jadi satu
-  // header [INSTRUKSI BUAT AI TRANSLATOR] di atas teks yang dicopy.
   const headerParts = [];
 
   if(refIdxs.length && model){
@@ -7827,7 +7167,6 @@ document.getElementById('btnCopyAll').addEventListener('click', async ()=>{
     toast(`${rows.length} field dicopy! Tinggal paste ke Google Translate / ChatGPT~`, '📋');
     say('Field-nya sudah aku copy ke clipboard! ✂️');
   }catch(e){
-    // fallback
     const ta = document.createElement('textarea');
     ta.value = text; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta);
@@ -7836,7 +7175,7 @@ document.getElementById('btnCopyAll').addEventListener('click', async ()=>{
 });
 
 const pasteModalBg = document.getElementById('pasteModalBg');
-let pasteScopeRows = null; // null = paste bebas (semua kartu tipe ini); array = mode batch (ID harus persis cocok batch aktif)
+let pasteScopeRows = null; 
 
 function openPasteModal(scopeRows){
   pasteScopeRows = scopeRows || null;
@@ -7873,9 +7212,6 @@ document.getElementById('btnCancelPaste').addEventListener('click', ()=> pasteMo
 document.getElementById('btnApplyPaste').addEventListener('click', ()=>{
   const raw = document.getElementById('pasteArea').value;
 
-  // Snapshot dulu SEBELUM diterapin -> biar bisa di-undo kalau ternyata hasilnya berantakan.
-  // Mode Paste Batch: cuma snapshot kartu di batch ini. Mode Paste Bebas: snapshot semua kartu
-  // tipe ini (karena ID mana aja yang bakal kena gak ketauan sebelum di-parse).
   const scopeForSnapshot = pasteScopeRows || currentRows();
   state.pasteSnapshot = {
     mid: state.currentMid,
@@ -7921,17 +7257,7 @@ document.getElementById('btnUndoPaste').addEventListener('click', ()=>{
   say('Oke, aku balikin lagi kayak sebelum paste tadi~ 🔙');
 });
 
-/* ============ EXPORT / IMPORT FIELD LINTAS NOTE TYPE ============
-   Beda sama fitur Paste Terjemahan (yang matching-nya pakai [[[ID:...]]] dan
-   ID note SAMA), fitur ini buat mindahin isi field ke note type LAIN dalam
-   satu deck -- ID note-nya otomatis beda karena notenya emang beda. Jadi
-   matching dilakukan berdasarkan URUTAN BARIS (posisi ke-i sumber -> note
-   ke-i tujuan), bukan ID. ID asli tetap dicatat di teks export cuma buat
-   referensi/debug manusia, sama sekali gak dipakai buat matching. */
 
-// Sengaja gak di-cache ke state -- dipanggil cuma pas modal export/import dibuka
-// (bukan tiap render), dan biar selalu akurat walau abis ganti file / gabung deck
-// (yang bisa bikin cardsRows berubah tanpa event yang jelas buat invalidate cache).
 function ahNidToDid(){
   const map = {};
   (state.cardsRows || []).forEach(r=>{
@@ -8043,8 +7369,8 @@ document.getElementById('btnXntDownloadExport').addEventListener('click', ()=>{
   toast('File export berhasil didownload!', '⬇️');
 });
 
-let xntImportParsed = null; // {sourceNoteType, fields:[names], declaredCount, rows:[{fieldName:value}]}
-let xntFieldMap = [];       // index sejajar xntImportParsed.fields -> index field note type tujuan (-1 = lewati)
+let xntImportParsed = null; 
+let xntFieldMap = [];       
 
 function populateXntTargetModelSelect(){
   const sel = document.getElementById('xntTargetModelSelect');
@@ -8090,7 +7416,6 @@ document.getElementById('btnXntImport').addEventListener('click', ()=>{
 });
 document.getElementById('xntTargetModelSelect').addEventListener('change', ()=>{
   ahXntUpdateDeckWarn();
-  // ganti note type tujuan -> pemetaan lama gak relevan lagi, minta parse ulang.
   xntImportParsed = null;
   document.getElementById('xntFieldMapWrap').innerHTML = '';
   document.getElementById('xntImportSummary').textContent = 'Note type tujuan diganti, klik "Cek & Petakan Field" lagi ya~';
@@ -8099,7 +7424,6 @@ document.getElementById('btnXntCancelImport').addEventListener('click', ()=> doc
 
 const AH_XNT_ALIAS_KEY = 'ankihoney_xnt_field_aliases';
 
-// Default alias kosong -- diisi user sendiri lewat textarea, disimpan otomatis tiap diketik.
 function ahXntLoadAliasArea(){
   const ta = document.getElementById('xntAliasArea');
   let saved = null;
@@ -8114,8 +7438,6 @@ document.getElementById('xntAliasArea').addEventListener('input', (e)=>{
   try{ localStorage.setItem(AH_XNT_ALIAS_KEY, e.target.value); }catch(err){}
 });
 
-// Parse teks alias "NamaSumber=NamaTujuan" (satu baris satu pasang) jadi map
-// key lowercase-trim -> nama tujuan APA ADANYA (dicocokkan case-insensitive ke field asli).
 function ahXntParseAliasMap(){
   const raw = document.getElementById('xntAliasArea').value || '';
   const map = {};
@@ -8129,7 +7451,6 @@ function ahXntParseAliasMap(){
   return map;
 }
 
-// Cari index field tujuan buat satu nama field sumber: exact match dulu, baru fallback ke alias.
 function ahXntResolveTargetFieldIdx(fname, targetModel, aliasMap){
   if(!targetModel) return -1;
   let idx = targetModel.flds.findIndex(t=> t === fname);
@@ -8244,7 +7565,6 @@ document.getElementById('btnXntApply').addEventListener('click', ()=>{
     if(!lanjut) return;
   }
 
-  // Snapshot dulu sebelum diterapin biar bisa di-undo.
   state.xntImportSnapshot = {
     mid: targetMid,
     entries: targetNotes.slice(0, n).map(nt=> ({ id: nt.id, fields: nt.fields.slice(), dirty: nt.dirty }))
@@ -8286,9 +7606,7 @@ document.getElementById('btnXntUndo').addEventListener('click', ()=>{
   toast('Import field terakhir dibatalin~', '↩️');
   say('Oke, aku balikin lagi field-nya kayak sebelum di-import tadi~ 🔙');
 });
-/* ============ END EXPORT / IMPORT FIELD LINTAS NOTE TYPE ============ */
 
-/* ============ HAPUS ISI FIELD ============ */
 const clearFieldState = { idxs: [] };
 
 function populateClearFieldChecks(){
@@ -8386,15 +7704,7 @@ document.getElementById('btnClearFieldUndo').addEventListener('click', ()=>{
   toast('Penghapusan field terakhir dibatalin~', '↩️');
   say('Oke, field-nya aku balikin lagi kayak sebelum dikosongin~ 🔙');
 });
-/* ============ END HAPUS ISI FIELD ============ */
 
-/* ============ HAPUS FIELD DARI NOTE TYPE (permanen, bukan cuma isinya) ============
-   Beda sama "Kosongkan Isi Field" di atas: fitur ini beneran ngurangin jumlah field
-   di note type-nya (model.flds) DAN motong index yang sama di fields array tiap note
-   yang pake note type itu, biar tetep sejajar. Semua cache pilihan field per note type
-   (centang terjemahan, furigana, rapikan, instruksi field) di-reset buat note type ini
-   karena index field-nya udah geser semua -- biar gak ada centang yang nyasar ke field
-   yang salah abis dihapus. */
 
 function ahFieldsUsedInTemplates(model, fieldNames){
   const hits = [];
@@ -8498,7 +7808,6 @@ document.getElementById('btnDeleteFieldApply').addEventListener('click', ()=>{
   );
   if(!lanjut) return;
 
-  // Snapshot lengkap dulu (model + fields tiap note + cache field per note type) biar bisa di-undo.
   state.deleteFieldSnapshot = {
     mid,
     model: JSON.parse(JSON.stringify(model)),
@@ -8517,8 +7826,6 @@ document.getElementById('btnDeleteFieldApply').addEventListener('click', ()=>{
     n.dirty = true;
   });
 
-  // Semua cache index field per note type ini udah gak valid lagi -- reset biar
-  // di-generate ulang dari awal (default: field pertama / semua field kecentang).
   delete state.fieldSelectionByModel[mid];
   delete state.furiganaFieldIdxsByModel[mid];
   delete state.rapikanFuriganaFieldIdxsByModel[mid];
@@ -8565,7 +7872,6 @@ document.getElementById('btnDeleteFieldUndo').addEventListener('click', ()=>{
   toast('Penghapusan field terakhir dibatalin, field-nya balik lagi!', '↩️');
   say('Oke, field-nya aku balikin lagi kayak sebelum dihapus~ 🔙');
 });
-/* ============ END HAPUS FIELD DARI NOTE TYPE ============ */
 
 function snippetOf(str, n){
   n = n || 50;
@@ -8573,7 +7879,6 @@ function snippetOf(str, n){
   return s.length > n ? s.slice(0, n) + '…' : (s || '(kosong)');
 }
 
-// Referensi yang harus sama persis walau beda bahasa (file audio/gambar/link) dipakai sebagai fingerprint nangkep field ke-swap. Field SUMBER: seluruh isinya jadi token.
 function extractInvariantTokens(str, includeFullText){
   const tokens = [];
   const s = str || '';
@@ -8599,32 +7904,26 @@ function applyBlockText(raw, scopeRows){
   const byId = {};
   currentRows().forEach(n=> byId[n.id]=n);
 
-  // Preview tiap kartu (field LAIN di luar yang lagi ditranslate), diambil SEBELUM paste diterapin,
-  // biar warning bisa nunjukin "kartu ini yang mana" tanpa harus scroll ke tabel.
   const notePreviewById = {};
   currentRows().forEach(n=>{
     const txt = n.fields.map((v,i)=> selIdxs.includes(i) ? null : stripHtml(v)).filter(v=>v!==null && v.trim()!=='').join(' · ');
     notePreviewById[n.id] = snippetOf(txt || '(kosong)', 70);
   });
 
-  // Kalau dipanggil dari mode "Paste Batch", ID yang boleh diterapkan HARUS persis
-  // anggota batch yang lagi aktif -- ID valid tapi dari batch lain tetap ditolak & dilaporkan,
-  // biar terjemahan gak nyasar ke kartu di luar batch yang lagi dikerjain.
   const scopeIds = scopeRows ? new Set(scopeRows.map(n=> String(n.id))) : null;
 
-  // ---- Pelacak buat validasi anti-pergeseran/misalignment ----
   const seenIds = new Set();
-  const appliedOrder = [];   // urutan ID yang beneran diterapin (buat deteksi ke-geser/swap)
-  const appliedChanges = []; // {id, fname, oldLen, newLen, oldSnippet, newSnippet, oldTokens, newTokens} tiap field yang diganti
+  const appliedOrder = [];   
+  const appliedChanges = []; 
   const warnings = {
-    duplicateIds: [],      // ID:xxx muncul lebih dari sekali di teks yang di-paste
-    unknownIds: [],        // ID:xxx ada di teks paste tapi gak ketemu di kartu yang lagi dibuka
-    outOfScopeIds: [],     // ID:xxx valid tapi bukan anggota batch yang lagi aktif (mode Paste Batch)
-    fieldNameMismatch: [], // {id, fname} nama tag [Field] gak cocok sama nama field asli notetype
-    droppedFields: [],     // {id, fname} tag field-nya gak bisa dipetakan sama sekali (isinya dibuang)
-    emptiedFields: [],     // {id, fname} field yang tadinya ada isi, sekarang jadi kosong abis di-paste
-    tokenSwaps: [],        // {id, fname, token, foundInId, foundInFname} referensi (sound/img/url/field sumber) yang kayaknya nyasar ke ID lain
-    referenceFieldChanged: [] // {id, fname, oldSnippet, newSnippet} field yang ditandain SUMBER (🔒) tapi ternyata isinya berubah
+    duplicateIds: [],      
+    unknownIds: [],        
+    outOfScopeIds: [],     
+    fieldNameMismatch: [], 
+    droppedFields: [],     
+    emptiedFields: [],     
+    tokenSwaps: [],        
+    referenceFieldChanged: [] 
   };
 
   while((match = regex.exec(raw)) !== null){
@@ -8640,7 +7939,6 @@ function applyBlockText(raw, scopeRows){
 
     appliedOrder.push(String(id));
 
-    // Deteksi format multi-field: baris "[NamaField]" di awal tiap bagian
     const fieldTagRegex = /^\[(.+?)\]\r?\n([\s\S]*?)(?=\n\[.+?\]\r?\n|(?![\s\S]))/gm;
     const fieldMatches = [...blockContent.matchAll(fieldTagRegex)];
 
@@ -8650,9 +7948,6 @@ function applyBlockText(raw, scopeRows){
         const fval = fm[2].replace(/\n+$/,'');
         let idx = model ? model.flds.findIndex(f=> f===fname) : -1;
         if(idx === -1){
-          // Nama tag [Field] gak ketemu persis di notetype -> fallback ke posisi urutan.
-          // Ini rawan salah pasang kalau AI translator ngerubah/ngilangin salah satu tag [Field],
-          // makanya kita catat sebagai warning, bukan diterapin diem-diem.
           if(selIdxs[pos] !== undefined){
             idx = selIdxs[pos];
             warnings.fieldNameMismatch.push({ id, fname, fallbackField: model.flds[idx] });
@@ -8678,7 +7973,6 @@ function applyBlockText(raw, scopeRows){
       });
       count++;
     } else {
-      // format lama (single field, tanpa tag nama field)
       const oldVal = note.fields[selIdxs[0]] || '';
       const oldLen = stripHtml(oldVal).length;
       const newLen = stripHtml(blockContent).length;
@@ -8692,10 +7986,6 @@ function applyBlockText(raw, scopeRows){
     }
   }
 
-  // ---- Deteksi urutan ke-geser/swap ----
-  // ID tetep dipakai sebagai sumber kebenaran (jadi field TETAP masuk ke kartu yang bener sesuai ID),
-  // tapi kalau urutan blok di teks paste beda sama urutan aslinya pas di-copy, itu sinyal AI translator-nya
-  // kemungkinan ngacak/geser baris -- pantas dicurigai walau ID-nya sendiri masih valid semua.
   const expectedSourceRows = scopeRows || currentRows();
   const expectedOrder = expectedSourceRows.map(n=> String(n.id)).filter(id=> appliedOrder.includes(id));
   const orderMismatchSample = [];
@@ -8711,13 +8001,9 @@ function applyBlockText(raw, scopeRows){
   warnings.orderMismatchCount = orderMismatchCount;
   warnings.orderMismatchSample = orderMismatchSample;
 
-  // ---- Deteksi konten yang kayaknya "seharusnya ada di ID lain" ----
-  // Nama file audio/gambar/link itu gak diterjemahin AI, jadi kalau referensi itu ada di field
-  // ASLI-nya ID X tapi ilang dari hasil translate ID X dan malah nongol di hasil translate ID lain,
-  // itu bukti kuat dua field ini ke-swap -- bukan cuma dugaan panjang teks doang.
   appliedChanges.forEach(c=>{
     c.oldTokens.forEach(tok=>{
-      if(c.newTokens.includes(tok)) return; // masih ada di tempat yang bener, aman
+      if(c.newTokens.includes(tok)) return; 
       const foundIn = appliedChanges.find(o=> o !== c && o.newTokens.includes(tok));
       if(foundIn){
         warnings.tokenSwaps.push({ id: c.id, fname: c.fname, token: tok, foundInId: foundIn.id, foundInFname: foundIn.fname });
@@ -8725,13 +8011,9 @@ function applyBlockText(raw, scopeRows){
     });
   });
 
-  // Kalau field sumber yang berubah tadi udah ketauan ke-swap-nya lewat tokenSwaps (di atas),
-  // gak perlu dilaporin dobel di sini -- cukup satu kali dengan bukti yang lebih spesifik.
   const swappedPairs = new Set(warnings.tokenSwaps.map(w=> w.id+'|'+(w.fname||'')));
   warnings.referenceFieldChanged = warnings.referenceFieldChanged.filter(w=> !swappedPairs.has(w.id+'|'+(w.fname||'')));
 
-  // Mode Paste Batch: kita TAU persis ID mana aja yang seharusnya ada -> bisa deteksi kalau
-  // ada kartu di batch ini yang translationnya kelewat/gak ke-paste sama sekali.
   const missingFromBatch = scopeIds
     ? scopeRows.filter(n=> !seenIds.has(String(n.id))).map(n=> n.id)
     : [];
@@ -8792,7 +8074,6 @@ function applyBlockText(raw, scopeRows){
   return count;
 }
 
-/* ---------------- export csv/txt ---------------- */
 function downloadBlob(content, filename, type){
   const blob = new Blob([content], {type});
   const url = URL.createObjectURL(blob);
@@ -8828,20 +8109,7 @@ document.getElementById('btnExportTxt').addEventListener('click', ()=>{
   toast('TXT berhasil didownload!', '⬇️');
 });
 
-/* ---------------- export ke PDF / cetak flashcard fisik ----------------
-   Pendekatan: render tiap note pake field yang dipilih user sendiri (polos,
-   gak pake desain asli note type -- lebih rapi & gak gampang berantakan pas
-   dicetak kecil), lengkap sama gambar (ahPrewarmMediaForPrint/
-   ahResolveMediaForPrintSync -- audio dibuang total karena gak relevan buat
-   kartu kertas & buat ngindarin resiko hang di file audio gede/korup), susun
-   jadi grid per halaman, buka di tab baru. Tab itu ada tombol cetak MANUAL
-   ("🖨️ Cetak / Save as PDF") -- window.print() SENGAJA gak auto-trigger,
-   soalnya dialog print bawaan browser itu blocking (di banyak browser bisa
-   mem-blok SELURUH browser, bukan cuma tab itu) sampe di-Save/Cancel, jadi
-   kalau auto-trigger, tab AnkiHoney bakal kerasa "kebeku"/gak bisa dipencet
-   pas user coba balik buat ubah-ubah pengaturan. */
 
-// Default checklist Depan/Belakang: field pertama buat depan, sisanya buat belakang -- user bisa sesuaikan.
 function ahPdfPopulateFieldPicker(){
   const model = state.models[state.currentMid];
   const fieldNames = (model && model.flds) || [];
@@ -8875,7 +8143,6 @@ document.getElementById('pdfSizeMode').addEventListener('change', ()=>{
   document.getElementById('pdfCustomSizeWrap').classList.toggle('hidden', !isCustom);
 });
 
-// Hitung kolom & baris kartu custom (cm) yang muat di halaman A4/Letter dikurangi margin 10mm, minimal 1x1.
 function ahPdfGridFromCustomSize(paper, widthCm, heightCm){
   const pageWmm = paper === 'letter' ? 215.9 : 210;
   const pageHmm = paper === 'letter' ? 279.4 : 297;
@@ -8894,7 +8161,6 @@ function ahPdfResolveScopeNoteList(){
   return scope === 'all' ? state.notes.filter(n=>n.mid===state.currentMid) : currentRows();
 }
 
-// FIX freeze print preview: saranin "Kualitas Gambar" & "Batch" berdasar jumlah kartu, biar deck ribuan kartu otomatis dikecilin/dipecah tab (dulu default "Original"+semua sekaligus bikin hang).
 function ahPdfSuggestDefaults(totalCount){
   const qualitySel = document.getElementById('pdfImageQuality');
   const batchSel = document.getElementById('pdfBatchSize');
@@ -8921,7 +8187,6 @@ function ahPdfResetSession(){
   btn.dataset.originalLabel = '🖨️ Buka Print Preview';
 }
 
-// Sinkronin tombol utama/status/nav ◀▶ sama batchIndex saat ini -- dipanggil tiap batch selesai atau user pindah batch tanpa generate ulang.
 function ahPdfUpdateBatchUI(session){
   const statusEl = document.getElementById('pdfBatchStatus');
   const navEl = document.getElementById('pdfBatchNav');
@@ -8960,7 +8225,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   const allCount = state.notes.filter(n=>n.mid===state.currentMid).length;
   ahPdfSetScopeOptionCount('pdfScopeFilteredOpt', 'Cuma yang cocok pencarian/filter saat ini', filteredCount);
   ahPdfSetScopeOptionCount('pdfScopeAllOpt', 'SEMUA kartu di note type ini', allCount);
-  ahPdfResetSession(); // jaga-jaga kalau ada sesi batch sebelumnya yang belum kelar
+  ahPdfResetSession(); 
   const scope = document.getElementById('pdfScope').value;
   ahPdfSuggestDefaults(scope === 'all' ? allCount : filteredCount);
   document.getElementById('ahPdfModalBg').classList.add('show');
@@ -8977,7 +8242,6 @@ document.getElementById('btnPdfCancel').addEventListener('click', ()=>{
   ahPdfResetSession();
 });
 
-// Halaman loading ditulis ke tab baru SEBELUM render async -- penting biar window.open() masih keitung aksi klik user (kalau ditunda, browser blok tab-nya).
 function ahPdfLoadingHtml(){
   return `<!doctype html><html><head><meta charset="utf-8"><title>AnkiHoney — Menyiapkan PDF...</title><style>
 html,body{ margin:0; height:100%; display:flex; align-items:center; justify-content:center; font-family:Arial, sans-serif; background:#fff8fb; color:#4a3358; }
@@ -8988,7 +8252,6 @@ html,body{ margin:0; height:100%; display:flex; align-items:center; justify-cont
 </style></head><body><div class="box"><div class="spin">🍯</div><div id="st">Nyiapin kartu buat dicetak...</div></div></body></html>`;
 }
 
-// noteList = kartu buat batch ini saja; session = opsi yang dikumpulin sekali di batch 1, dipake konsisten semua batch.
 async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
   const model = state.models[state.currentMid];
   const { cols, rows, sizeMode, cardWidthCm, cardHeightCm, alignH, alignV, includeBack, backOrder, cutLines, showTags, contentScale, paper, maxDim, batchIndex, totalBatches, frontFields, backFields, fieldFontSize, showFieldLabel } = session;
@@ -9000,9 +8263,6 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
 
   const fieldNames = model.flds || [];
   const perPage = cols * rows;
-  // Mode "grid" (default): kolom/baris rata bagi penuh lebar/tinggi halaman
-  // (1fr). Mode "custom": tiap kotak ukurannya FIX sesuai cm yang diisi user
-  // (sisa ruang di halaman dibiarin kosong, gak ikut di-stretch).
   const trackCols = sizeMode === 'custom' ? `repeat(${cols}, ${cardWidthCm}cm)` : `repeat(${cols}, 1fr)`;
   const trackRows = sizeMode === 'custom' ? `repeat(${rows}, ${cardHeightCm}cm)` : `repeat(${rows}, 1fr)`;
 
@@ -9016,11 +8276,6 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
     return String(str||'').replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // Susun label+isi field secara berurutan (flow dokumen biasa) -- gak pake
-  // desain asli (qfmt/afmt/CSS) note type karena itu didesain buat ukuran
-  // layar penuh (kadang pake vw/vh atau posisi absolute), yang berantakan/
-  // numpuk kalau dipaksa masuk ke sel grid kecil di kertas. Layout polos gini
-  // gak ada elemen yang bisa numpuk/nabrak walau kartunya beragam panjangnya.
   function buildFieldsHtml(fields, chosenNames){
     return chosenNames.map(name=>{
       const val = ahFieldValueByName(fields, fieldNames, name);
@@ -9031,9 +8286,6 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
 
   const rendered = [];
 
-  // TAHAP 1: render tiap kartu (murni sinkron & cepat, gak ada await sama
-  // sekali di sini -- ribuan kartu tetep keitung instan). Media (gambar)
-  // sengaja BELUM diresolve di tahap ini.
   const rawList = [];
   for(let i=0;i<noteList.length;i++){
     if(progressWin && progressWin.closed){
@@ -9050,14 +8302,8 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
     if(i % 300 === 299) await ahYield();
   }
 
-  // TAHAP 2: kumpulin SEMUA nama file gambar unik yang kepake di seluruh
-  // kartu (batch ini), terus resolve sekali per file (bukan diulang-ulang per
-  // kartu) -- SEKALIAN di-downscale (kalau maxDim disetel) biar gambar
-  // resolusi tinggi gak bikin print preview-nya freeze.
   await ahPrewarmMediaForPrint(rawList.flatMap(r=> [r.front, r.back]), progressWin, maxDim);
 
-  // TAHAP 3: tinggal ganti referensi gambar pake blob URL yang udah kesiapin
-  // di cache (sinkron semua, gak ada await lagi) + buang tag [sound:...].
   for(let i=0;i<rawList.length;i++){
     if(progressWin && (i % 300 === 0)){
       const stEl = progressWin.document && progressWin.document.getElementById('st');
@@ -9083,7 +8329,6 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
 
   let bodyHtml = '';
   pages.forEach(pageNotes=>{
-    // Halaman DEPAN, urutan biasa kiri-ke-kanan atas-ke-bawah.
     bodyHtml += `<div class="ah-flash-page" style="grid-template-columns: ${trackCols}; grid-template-rows: ${trackRows};">`;
     pageNotes.forEach(nn=> bodyHtml += cell(nn.front, nn.tags));
     for(let i=pageNotes.length;i<perPage;i++) bodyHtml += emptyCell();
@@ -9092,22 +8337,12 @@ async function ahBuildFlashcardPrintDoc(progressWin, noteList, session){
     if(includeBack){
       bodyHtml += `<div class="ah-flash-page" style="grid-template-columns: ${trackCols}; grid-template-rows: ${trackRows};">`;
       if(backOrder === 'mirror'){
-        // Cerminan per baris: buat printer duplex otomatis ("Flip on Long
-        // Edge") atau tumpukan kertas yang dibalik manual (posisi atas-bawah
-        // tetep sama, cuma mukanya dibalik) -- kolom tiap baris DIBALIK
-        // urutannya biar sisi belakang tiap kartu jatuh persis di balik sisi
-        // depannya secara FISIK.
         for(let r=0;r<rows;r++){
           const rowItems = pageNotes.slice(r*cols, (r+1)*cols);
           while(rowItems.length < cols) rowItems.push(null);
           rowItems.reverse().forEach(nn=>{ bodyHtml += nn ? cell(nn.back, nn.tags) : emptyCell(); });
         }
       } else {
-        // Samain Posisi (default): urutan grid SAMA persis kayak halaman
-        // depan, jadi kartu A yang di kiri-atas halaman depan, arti/sisi
-        // belakangnya juga di kiri-atas halaman belakang -- paling gampang
-        // buat digunting satu-satu terus dicocokin depan-belakangnya tanpa
-        // perlu mikirin arah balik kertas.
         pageNotes.forEach(nn=> bodyHtml += cell(nn.back, nn.tags));
         for(let i=pageNotes.length;i<perPage;i++) bodyHtml += emptyCell();
       }
@@ -9137,18 +8372,11 @@ html,body{ margin:0; padding:0; font-family:Arial, sans-serif; background:#fff; 
   ${cutLineCss}
 }
 .ah-flash-empty{ opacity:.2; }
-/* Posisi konten dalam kotak: align-items ngatur vertikal (Atas/Tengah/Bawah),
-   text-align ngatur horizontal (Kiri/Tengah/Kanan) -- diatur user lewat
-   "Posisi Konten dalam Kotak" di modal export. */
 .ah-flash-inner{
   width:100%; height:100%; overflow:hidden; box-sizing:border-box;
   display:flex; align-items:${alignItemsCss}; justify-content:center;
   padding:10px; text-align:${textAlignCss};
 }
-/* Skala konten -- berguna kalau field kartu kepanjangan / banyak dan jadi
-   kepotong di sel yang kecil (misal pilih kolom/baris banyak). "zoom"
-   didukung Chrome/Edge (paling umum dipakai buat print-to-PDF); browser lain
-   yang gak dukung bakal nampilin ukuran normal (100%) apa adanya. */
 .ah-flash-inner-scale{ zoom: ${contentScale}; width:100%; }
 .ah-flash-inner img{ max-width:100%; max-height:100%; }
 .ah-flash-tags{ margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
@@ -9156,11 +8384,6 @@ html,body{ margin:0; padding:0; font-family:Arial, sans-serif; background:#fff; 
   font-size:.62rem; font-weight:700; color:#8a7398; background:#ffe8f3;
   border-radius:20px; padding:2px 8px; white-space:nowrap;
 }
-/* Layout polos (bukan CSS template asli), jadi gak ada elemen yang bisa
-   numpuk/nabrak walau kartunya beragam panjangnya. overflow:hidden di
-   .ah-flash-inner tetep jadi batas terakhir kalau field-nya kepanjangan buat
-   sel yang dipilih -- kecilin Ukuran Font/Kolom-Baris atau pake Ukuran Konten
-   Kartu kalau masih kepotong. */
 .ah-flash-field-block{ margin-bottom:8px; }
 .ah-flash-field-block:last-child{ margin-bottom:0; }
 .ah-flash-field-label{
@@ -9171,12 +8394,6 @@ html,body{ margin:0; padding:0; font-family:Arial, sans-serif; background:#fff; 
   font-size:${fieldFontSizePx}px; line-height:1.35; word-wrap:break-word; overflow-wrap:break-word;
 }
 .ah-flash-field-value img{ max-width:100%; max-height:180px; }
-/* Bar tombol cetak -- floating & GAK ikut ke-print (@media print di bawah).
-   Print baru dipicu MANUAL kalau user klik tombolnya sendiri, SENGAJA gak
-   auto-trigger window.print() begitu tab ini kebuka -- soalnya di banyak
-   browser (terutama Firefox) dialog print itu blocking buat SELURUH browser
-   sampe di-Save/Cancel dulu, jadi kalau auto kebuka user bisa ngerasa tab
-   AnkiHoney "kebeku" pas balik buat ubah-ubah pengaturan. */
 .ah-print-bar{
   position:sticky; top:0; z-index:9999; display:flex; justify-content:center;
   padding:10px; background:#fff8fb; border-bottom:2px solid #ffe0ef;
@@ -9198,9 +8415,6 @@ document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
 
   let session = state.pdfExportSession;
   if(!session){
-    // Mulai export BARU (bukan lanjutan/ulangan batch) -- kumpulin semua opsi
-    // dari modal SEKALI di sini, terus dipake konsisten di semua batch, dan
-    // pecah cakupan kartu jadi beberapa batch kalau perlu.
     const fullNoteList = ahPdfResolveScopeNoteList();
     if(!fullNoteList.length){
       toast('Gak ada kartu buat dicetak di cakupan ini~', '😿');
@@ -9245,15 +8459,11 @@ document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
       fieldFontSize: document.getElementById('pdfFieldFontSize').value,
       showFieldLabel: document.getElementById('pdfFieldShowLabel').checked,
     };
-    ahRevokePrintMediaCache(); // buang sisa cache print dari percobaan export sebelumnya (opsi bisa udah beda)
+    ahRevokePrintMediaCache(); 
   }
 
   const batchNoteList = session.fullNoteList.slice(session.batchIndex*session.batchSize, (session.batchIndex+1)*session.batchSize);
 
-  // PENTING: window.open() dipanggil DULUAN, sinkron, sebelum ada `await`
-  // apapun -- ini masih dianggap browser sebagai hasil langsung klik user
-  // jadi gak diblokir. Kalau ditunda sampe rendering selesai (yang bisa lama
-  // buat deck gede), banyak browser bakal nolak/nge-freeze tab barunya.
   const w = window.open('', '_blank');
   if(!w){
     toast('Popup diblokir browser -- izinin popup buat situs ini ya, terus coba lagi~', '😿');
@@ -9286,11 +8496,6 @@ document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
         ahPdfResetSession();
         return;
       }
-      // Auto-maju ke batch berikutnya yang belum pernah dibuka (kalau ada) --
-      // tapi modal SENGAJA dibiarin kebuka & session-nya tetep idup, jadi
-      // user bisa pake tombol ◀ ▶ buat pindah ke batch manapun (termasuk
-      // balik lagi ke batch 1) & buka-ulang tab-nya kapan aja lewat tombol
-      // utama, gak cuma bisa maju terus kayak sebelumnya.
       if(session.batchIndex < session.totalBatches - 1) session.batchIndex++;
       ahPdfUpdateBatchUI(session);
     } else {
@@ -9312,7 +8517,6 @@ document.getElementById('btnPdfGenerate').addEventListener('click', async ()=>{
   }
 });
 
-// Tombol ◀▶ cuma mindahin batch "dipilih" (gak langsung generate) -- tombol utama yang beneran buka tab print.
 document.getElementById('btnPdfBatchPrev').addEventListener('click', ()=>{
   const session = state.pdfExportSession;
   if(!session) return;
@@ -9326,7 +8530,6 @@ document.getElementById('btnPdfBatchNext').addEventListener('click', ()=>{
   ahPdfUpdateBatchUI(session);
 });
 
-/* ---------------- import csv/txt ---------------- */
 const importFileInput = document.getElementById('importFileInput');
 document.getElementById('btnImportFile').addEventListener('click', ()=> importFileInput.click());
 importFileInput.addEventListener('change', async e=>{
@@ -9369,7 +8572,6 @@ importFileInput.addEventListener('change', async e=>{
   importFileInput.value = '';
 });
 
-/* ---------------- save final apkg ---------------- */
 document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
   if(!state.notes || !state.notes.length || (!state.db && !state.isMergedDeck)){ toast('Belum ada deck yang dibuka!', '😿'); return; }
   const btn = document.getElementById('btnDownloadApkg');
@@ -9381,21 +8583,6 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
     let updatedCount = state.notes.filter(n=>n.dirty).length;
 
     if(!state.isLatest && !state.isMergedDeck){
-      // Format lama: UPDATE flds+tags di database yang sama. Semua note ditulis ulang
-      // (bukan cuma yang dirty) supaya tag watermark ikut ke-suntik ke semuanya.
-      // PENTING (fix): dulu cuma flds/tags/mod yang diupdate, usn-nya kebiar apa
-      // adanya (biasanya udah pernah ke-sync -> usn>=0). Anki nganggep usn>=0
-      // artinya "note ini state-nya udah sama kayak yang terakhir di-sync ke
-      // server", jadi walau flds-nya keubah lewat SQLite langsung kayak gini,
-      // pas collection ini di-sync ke AnkiWeb, Anki GAK bakal ngirim
-      // perubahannya ke server (nganggep gak ada yg berubah) -- makanya di
-      // desktop keliatan beres pas dibuka lokal tapi abis sync jadi gak konsisten
-      // lagi, dan di HP baru keliatan beneran abis note-nya "disentuh" manual
-      // (Edit Card + centang) yang bikin Anki sendiri nyetel usn=-1 buat note itu.
-      // Fix: paksa usn=-1 (angka sentinel resmi Anki buat "berubah, perlu
-      // di-push pas sync berikutnya") di SETIAP note yang ditulis ulang di sini,
-      // biar perubahannya langsung ke-push pas collection ini disync, gak perlu
-      // disentuh manual satu-satu lagi kayak sebelumnya.
       const stmt = state.db.prepare("UPDATE notes SET flds=?, tags=?, mod=?, usn=? WHERE id=?");
       const now = Math.floor(Date.now()/1000);
       state.notes.forEach(n=>{
@@ -9414,9 +8601,6 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
       const blob = await state.zip.generateAsync({type:'blob'});
       downloadBlob(blob, state.originalFileName, 'application/octet-stream');
     } else {
-      // Format terbaru (zstd/schema v18): rebuild jadi paket format Legacy (schema 11)
-      // supaya bisa ditulis ulang tanpa perlu re-compress zstd. Note id/guid/tag serta
-      // baris cards & revlog (jadwal belajar) dipindah apa adanya biar minim data hilang.
       const blob = await rebuildAsLegacyApkg();
       downloadBlob(blob, state.originalFileName, 'application/octet-stream');
     }
@@ -9433,9 +8617,7 @@ document.getElementById('btnDownloadApkg').addEventListener('click', async ()=>{
   }
 });
 
-/* ---------------- rebuild ke format Legacy (schema 11) ---------------- */
 
-// modelType: 0=standard, 1=cloze (dari note type asli, biar cloze tetep render {{cloze:...}}). templateCount dari ord tertinggi yang dipakai di tabel cards, diabaikan kalau cloze.
 function buildLegacyModel(mid, deckId, modelName, fieldNames, modelType, templateCount){
   modelType = modelType === 1 ? 1 : 0;
   templateCount = Math.max(1, templateCount || 1);
@@ -9443,7 +8625,6 @@ function buildLegacyModel(mid, deckId, modelName, fieldNames, modelType, templat
 
   let tmpls, req;
   if(modelType === 1){
-    // Cloze: field pertama dianggap field cloze utama (paling umum, mis. "Text").
     const clozeField = fieldNames[0] || 'Text';
     const qfmt = `{{cloze:${clozeField}}}`;
     const afmt = `{{cloze:${clozeField}}}` + fieldNames.slice(1).map(f=>`<br>{{${f}}}`).join('');
@@ -9478,8 +8659,6 @@ function buildLegacyModel(mid, deckId, modelName, fieldNames, modelType, templat
   };
 }
 
-// Sama kayak buildLegacyModel, tapi pake desain kartu ASLI (qfmt/afmt/css) yang
-// berhasil ditangkap dari deck sumbernya, bukan bikin template generik baru.
 function buildLegacyModelFromDesign(mid, deckId, modelName, fieldNames, m){
   const flds = fieldNames.map((name,i)=>({name, ord:i, sticky:false, rtl:false, font:"Arial", size:20, media:[]}));
   const tmpls = m.tmpls
@@ -9518,7 +8697,6 @@ function buildLegacyDconf(){
   }};
 }
 
-// FIX: pengganti fzstd.decompress satu-shot. Frame "streaming" (content size gak di header, dipakai Anki buat media per-file) bikin fzstd throw atau hasil kepotong. Solusi: pakai API streaming fzstd.Decompress.
 function zstdDecompressSafe(bytes){
   const chunks = [];
   const stream = new fzstd.Decompress(chunk => chunks.push(chunk));
@@ -9532,8 +8710,6 @@ function zstdDecompressSafe(bytes){
   return out;
 }
 
-// Coba parse mapping media (skema baru simpan sebagai Protobuf MediaEntries: repeated {name, size, sha1}).
-// Best-effort: kalau parsing gagal / hasilnya ga masuk akal, balikin null biar caller fallback aman.
 function tryParseMediaProtobuf(bytes){
   let pos = 0;
   function readVarint(buf){
@@ -9582,13 +8758,6 @@ function tryParseMediaProtobuf(bytes){
         throw new Error('wiretype tak dikenal di level atas: '+wireType);
       }
     }catch(e){
-      // PENTING (fix): dulu satu error DI MANA PUN di 2500+ entry bikin SEMUA
-      // mapping ke-buang (balik null -> caller pake '{}' -> semua nama file media
-      // ilang, audio/gambar jadi gak kebaca sama sekali di Anki). Sekarang begitu
-      // ketemu entry yang gagal di-decode, kita cuma STOP baca dari titik itu
-      // (gak bisa lanjut karena batas entry berikutnya jadi gak jelas), tapi
-      // entry-entry SEBELUMNYA yang udah berhasil ke-parse tetap dipertahankan &
-      // dibalikin -- best-effort partial jauh lebih baik daripada kehilangan semua.
       console.warn('parse media protobuf berhenti di entry ke-'+idx+' (best-effort, entry sebelumnya tetap disimpan):', e);
       break;
     }
@@ -9600,16 +8769,11 @@ async function rebuildAsLegacyApkg(){
   const now = Math.floor(Date.now()/1000);
   const nowMs = Date.now();
 
-  // 1. Ambil cards & revlog apa adanya (kolomnya stabil lintas skema v11-v18).
-  // KALAU deck ini hasil gabungan (fitur Gabung Deck Kedua), note/card/revlog
-  // tambahannya cuma ada di array JS (state.cardsRows/revlogRows), BUKAN di
-  // dalam state.db -- jadi ambil dari situ, bukan query ulang ke state.db.
   const cardsRows = (state.isMergedDeck && state.cardsRows) ? state.cardsRows : readRowsSafe(state.db,
     "SELECT id,nid,did,ord,mod,usn,type,queue,due,ivl,factor,reps,lapses,left,odue,odid,flags,data FROM cards");
   const revlogRows = (state.isMergedDeck && state.revlogRows) ? state.revlogRows : readRowsSafe(state.db,
     "SELECT id,cid,usn,ease,ivl,lastIvl,factor,time,type FROM revlog");
 
-  // 2. Siapkan database baru dengan skema 11 (Legacy 2, kompatibel semua versi Anki)
   const db = new state.SQL.Database();
   db.run(`
     CREATE TABLE col (id integer primary key, crt integer not null, mod integer not null, scm integer not null, ver integer not null, dty integer not null, usn integer not null, ls integer not null, conf text not null, models text not null, decks text not null, dconf text not null, tags text not null);
@@ -9626,17 +8790,8 @@ async function rebuildAsLegacyApkg(){
     CREATE INDEX ix_notes_csum ON notes (csum);
   `);
 
-  // 3. Rebuild models & decks JSON (nama & urutan field/deck dipertahankan, ID numeriknya juga sama
-  //    persis dengan aslinya supaya relasi mid/did di notes & cards tetap valid)
   const usedMids = [...new Set(state.notes.map(n=>n.mid))];
 
-  // PENTING: cards dipindah apa adanya (row[3] = ord = index template kartu itu).
-  // Kalau note type-nya jatuh ke fallback generik (modelHasOriginalDesign gagal) dan
-  // note type itu aslinya punya >1 template (misal custom note type ala "Basic and
-  // reversed"), template generik yang cuma dibikin 1 ("Card 1") bikin kartu dengan
-  // ord>=1 nunjuk ke template yang gak ada pas diimport ke Anki. Makanya kita itung
-  // dulu jumlah template minimum yang dibutuhkan tiap mid dari ord tertinggi yang
-  // beneran dipakai di tabel cards, biar fallback generik ikut bikin sejumlah itu.
   const nidToMid = {};
   state.notes.forEach(n=>{ nidToMid[n.id] = n.mid; });
   const templateCountByMid = {};
@@ -9647,9 +8802,7 @@ async function rebuildAsLegacyApkg(){
     templateCountByMid[mid] = Math.max(templateCountByMid[mid] || 1, ord + 1);
   });
 
-  // Kalau user ganti nama note type → generate ID baru, sama seperti logika deckIdRemap.
-  // Anki cocokkan note type berdasarkan ID; ID sama = update nama diabaikan, ID baru = note type baru.
-  const midRemap = {}; // old mid string -> new mid number
+  const midRemap = {}; 
   let midOffset = 0;
   if(state.modelNameOverrides){
     Object.keys(state.modelNameOverrides).forEach(mid=>{
@@ -9687,14 +8840,7 @@ async function rebuildAsLegacyApkg(){
     applyWatermarkToModel(models['1']);
   }
 
-  // PENTING: Anki nyocokin deck pas import berdasarkan ID, bukan nama — kalau ID
-  // deck di file ini sama kayak deck yang UDAH ADA di koleksi Anki user (dan memang
-  // begitu, karena file ini asalnya export dari deck itu sendiri), nama baru bakal
-  // DIABAIKAN & tetep pake nama lama pas diimport. Makanya buat deck yang namanya
-  // diganti, kasih ID BARU (belum pernah ada) biar Anki nganggep itu deck baru &
-  // beneran pake nama custom-nya. Kartu-kartu yang tadinya nempel di ID lama ikut
-  // dipindah ke ID baru (jadwal belajar aman, itu disimpen di tabel cards, bukan di deck).
-  let deckIdRemap = {}; // old did (string) -> new did (number)
+  let deckIdRemap = {}; 
   let offset = 0;
   Object.keys(state.deckNameOverrides).forEach(id=>{
     const newName = state.deckNameOverrides[id];
@@ -9736,7 +8882,6 @@ async function rebuildAsLegacyApkg(){
     now, nowMs, nowMs, JSON.stringify(conf), JSON.stringify(models), JSON.stringify(decks), JSON.stringify(dconf)
   ]);
 
-  // 4. Pindahin notes (pakai flds yang sudah diedit), cards, & revlog apa adanya
   db.run('BEGIN TRANSACTION');
   const noteStmt = db.prepare("INSERT INTO notes VALUES (?,?,?,?,?,?,?,?,?,?,?)");
   state.notes.forEach(n=>{
@@ -9763,7 +8908,6 @@ async function rebuildAsLegacyApkg(){
   const dbBytes = db.export();
   db.close();
 
-  // 5. Susun ulang zip: database baru + media apa adanya dari zip asli (best-effort untuk mapping-nya)
   const newZip = new JSZip();
   newZip.file('collection.anki2', dbBytes);
 
@@ -9771,13 +8915,6 @@ async function rebuildAsLegacyApkg(){
   let mediaJson = '{}';
   if(mediaEntry){
     let mediaBytes = await mediaEntry.async('uint8array');
-    // FIX (bug utama ilangnya semua nama file media): di format anki21b, file
-    // manifest 'media' ITU SENDIRI ternyata bisa ikut dikompres zstd, sama kayak
-    // file media bernomor. Sebelumnya ini kelewat dicek -- protobuf parser dikasih
-    // byte zstd mentah (bukan protobuf), langsung gagal di entry pertama, dan
-    // caller fallback ke '{}' -> SEMUA 2500+ nama file (audio/gambar) ke-drop,
-    // padahal isi filenya sendiri masih utuh. Deteksi & bongkar dulu di sini,
-    // baru diproses sebagai JSON/protobuf seperti biasa.
     if(mediaBytes.length >= 4 && mediaBytes[0]===0x28 && mediaBytes[1]===0xb5 && mediaBytes[2]===0x2f && mediaBytes[3]===0xfd){
       try{ mediaBytes = zstdDecompressSafe(mediaBytes); }
       catch(e){
@@ -9785,7 +8922,6 @@ async function rebuildAsLegacyApkg(){
         ahShowErrorPopup('Gagal membongkar daftar nama file media (manifest "media") dari deck ini.\nError: ' + (e.message||e));
       }
     }
-    // Coba baca langsung sebagai JSON dulu (kalau ternyata bukan protobuf)
     try{
       const asText = new TextDecoder().decode(mediaBytes);
       JSON.parse(asText);
@@ -9797,12 +8933,6 @@ async function rebuildAsLegacyApkg(){
   }
   newZip.file('media', mediaJson);
 
-  // Salin semua file media bernomor (gambar/audio). PENTING (fix): di format Anki
-  // terbaru (anki21b), file media individual ITU SENDIRI juga dikompres zstd
-  // (bukan cuma collection-nya) -- kalau dicopy "apa adanya" tanpa dibongkar,
-  // hasilnya bukan audio/gambar valid, jadi gak kebaca sama sekali oleh Anki
-  // manapun walau nama filenya benar. Deteksi lewat magic number zstd (4 byte
-  // pertama = 28 B5 2F FD) & bongkar pake fzstd (sama kayak collection.anki21b).
   const mediaFiles = Object.keys(state.zip.files).filter(name => /^\d+$/.test(name));
   const mediaDecompressFailed = [];
   for(const name of mediaFiles){
@@ -9824,12 +8954,6 @@ async function rebuildAsLegacyApkg(){
     );
   }
 
-  // Gabungin media dari deck KEDUA (kalau user pake fitur "Gabung Deck Kedua") --
-  // tiap sumber tambahan dikasih nomor file baru (lanjutan dari nomor tertinggi
-  // yang udah dipakai) biar gak tabrakan sama nomor file media deck utama. Nama
-  // file ASLI yang direferensiin di field notes tetep dipertahankan apa adanya,
-  // kecuali yang udah di-rename otomatis pas proses gabung (lihat renameMap,
-  // dibikin di handleMergeSecondDeck) buat ngehindarin tabrakan nama.
   if(state.extraDeckSources && state.extraDeckSources.length){
     let mergedMediaMap = {};
     try{ mergedMediaMap = JSON.parse(mediaJson); }catch(e){ mergedMediaMap = {}; }
@@ -9858,16 +8982,8 @@ async function rebuildAsLegacyApkg(){
     newZip.file('media', mediaJson);
   }
 
-  // Sisipin foto/GIF/video background (kalau ada & mode upload) sebagai file media baru + update
-  // mapping-nya. Mode URL gak butuh ini sama sekali karena CSS/HTML-nya langsung nunjuk ke link
-  // internet. Bisa lebih dari 1 file sekarang: foto/GIF/video Desktop, poster video-nya (kalau
-  // ada), dan -- kalau "background beda per platform" aktif -- foto/GIF/video + poster Mobile juga.
   const bgCfg = state.cardBg;
 
-  // Beberesin file background LAMA (bikinan AnkiHoney, misal dari deck yang emang udah ada
-  // background-nya pas diimport) yang udah gak kepake lagi karena user ganti foto/video baru --
-  // biar file lamanya beneran KEHAPUS dari deck, bukan ikut ke-copy apa adanya & numpuk jadi
-  // sampah nganggur di .apkg hasil akhir.
   {
     let mediaMapPurge = {};
     try{ mediaMapPurge = JSON.parse(mediaJson); }catch(e){ mediaMapPurge = {}; }
@@ -9890,9 +9006,6 @@ async function rebuildAsLegacyApkg(){
     try{ mediaMap = JSON.parse(mediaJson); }catch(e){ mediaMap = {}; }
     let usedNums = mediaFiles.map(n=>parseInt(n)).concat(Object.keys(mediaMap).map(n=>parseInt(n))).filter(n=>!isNaN(n));
     let nextNum = Math.max(-1, ...usedNums) + 1;
-    // PENTING (fix bengkak): sama kayak ensureBgMediaInZip -- kalau nama file background ini
-    // (deterministik dari hash isinya) UDAH ADA di media map, jangan sisipin salinan baru lagi,
-    // biar export ulang tanpa ganti background gak numpuk duplikat byte yang sama tiap kali.
     let mapChanged = false;
     for(const f of bgFiles){
       const existingKey = Object.keys(mediaMap).find(k => mediaMap[k] === f.filename);
