@@ -411,6 +411,16 @@ header.hero {
 .btn.applied {
   box-shadow: 0 0 0 2px var(--success) inset;
 }
+.btn.applied.locked {
+  box-shadow: 0 0 0 2px var(--success) inset;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+.btn.applied.locked::after {
+  content: '🔒';
+  margin-left: 6px;
+  font-size: 0.8em;
+}
 
 .btn:disabled {
   opacity: 0.4;
@@ -2995,6 +3005,22 @@ function updateBgKindBadge(src){
   el.textContent = src.kind === 'video' ? '🎬 Video' : (isGif ? '🎞️ GIF' : (isWebp ? '🧩 WebP (animasi)' : '🖼️ Foto'));
 }
 
+// Video & GIF (animasi) itu "distraksi" kalau cuma nempel di 1 sisi doang -- makanya keduanya
+// WAJIB diterapkan ke Depan & Belakang SEKALIGUS, gak boleh dimatiin sepihak. Foto statis/WebP
+// biasa tetep bebas (boleh cuma di 1 sisi kayak biasa).
+function ahBgSourceForcesLock(src){
+  if(!src || !ahHasBgSource(src)) return false;
+  if(src.kind === 'video') return true;
+  const refLower = src.mode==='url' ? (src.imageUrl||'').toLowerCase() : (src.mediaFilename||'').toLowerCase();
+  return /\.gif(\?|#|$)/i.test(refLower);
+}
+// Dicek dari SEMUA sumber yang lagi aktif (Desktop, dan Mobile juga kalau syncPlatforms mati) --
+// video/GIF di platform manapun tetep ngunci Depan & Belakang buat KEDUANYA.
+function ahBgApplyLocked(cfg){
+  if(!cfg) return false;
+  return ahBgSourceForcesLock(cfg.desktop) || (!cfg.syncPlatforms && ahBgSourceForcesLock(cfg.mobile));
+}
+
 // Sinkronin SEMUA kontrol form (tombol mode, dropzone, link, badge tipe, dsb) biar sesuai sama
 // sumber background yang lagi aktif -- dipanggil tiap kali ganti tab Desktop/Mobile atau toggle "sama/beda".
 function refreshBgSourceUI(){
@@ -3157,6 +3183,9 @@ async function handleBgImageFile(file){
     src.bytes = bytes;
     src.mediaFilename = '_ankihoney_bg_' + ahHashBytes(bytes) + '.' + ext;
     src.posterDataUrl = null; src.posterBytes = null; src.posterMediaFilename = '';
+    // GIF (animasi) WAJIB tampil di Depan & Belakang sekaligus, sama kayak video -- otomatis
+    // di-ON-in & tombol Terapkan-nya bakal dikunci selama sumber ini masih GIF.
+    if(isGif){ state.cardBg.front = true; state.cardBg.back = true; }
     document.getElementById('bgControls').classList.remove('hidden');
     updateBgKindBadge(src);
     updateBgPreview(); updateBgStatus();
@@ -3217,6 +3246,11 @@ async function handleBgVideoFile(file){
     } else {
       src.posterDataUrl = null; src.posterBytes = null; src.posterMediaFilename = '';
     }
+
+    // Video WAJIB tampil di Depan & Belakang sekaligus (gak boleh cuma 1 sisi) -- otomatis di-ON-in
+    // & tombol Terapkan-nya bakal dikunci (gak bisa dimatiin) selama sumber ini masih video.
+    cfg.front = true;
+    cfg.back = true;
 
     // Pindahin tab preview ke platform yang barusan keisi, biar user langsung liat hasilnya --
     // dan sinkronin toggle "background sama" di UI (checkbox) kalau tadi dipaksa dimatiin.
@@ -3399,12 +3433,20 @@ document.getElementById('bgTextFxPresetWhite').addEventListener('click', ()=>{
 
 document.getElementById('btnApplyFront').addEventListener('click', ()=>{
   if(!ahHasAnyBg(state.cardBg)){ toast('Upload foto/GIF/video atau isi link dulu ya~', '😿'); return; }
+  if(ahBgApplyLocked(state.cardBg) && state.cardBg.front){
+    toast('Video/GIF background WAJIB tampil di Depan & Belakang sekaligus, gak bisa dimatiin sepihak~ Ganti ke foto biasa dulu kalau mau atur per-sisi.', '🔒');
+    return;
+  }
   state.cardBg.front = !state.cardBg.front;
   updateBgPreview(); updateBgStatus();
   toast(state.cardBg.front ? 'Background diterapkan ke Depan!' : 'Background dilepas dari Depan', state.cardBg.front ? '✨' : '↩️');
 });
 document.getElementById('btnApplyBack').addEventListener('click', ()=>{
   if(!ahHasAnyBg(state.cardBg)){ toast('Upload foto/GIF/video atau isi link dulu ya~', '😿'); return; }
+  if(ahBgApplyLocked(state.cardBg) && state.cardBg.back){
+    toast('Video/GIF background WAJIB tampil di Depan & Belakang sekaligus, gak bisa dimatiin sepihak~ Ganti ke foto biasa dulu kalau mau atur per-sisi.', '🔒');
+    return;
+  }
   state.cardBg.back = !state.cardBg.back;
   updateBgPreview(); updateBgStatus();
   toast(state.cardBg.back ? 'Background diterapkan ke Belakang!' : 'Background dilepas dari Belakang', state.cardBg.back ? '✨' : '↩️');
@@ -3624,8 +3666,19 @@ function updateBgPreview(){
     }
   }
 
-  document.getElementById('btnApplyFront').classList.toggle('applied', cfg.front);
-  document.getElementById('btnApplyBack').classList.toggle('applied', cfg.back);
+  {
+    const locked = ahBgApplyLocked(cfg);
+    const btnFront = document.getElementById('btnApplyFront');
+    const btnBack = document.getElementById('btnApplyBack');
+    btnFront.classList.toggle('applied', cfg.front);
+    btnBack.classList.toggle('applied', cfg.back);
+    // Video/GIF ngunci Depan & Belakang biar gak bisa dimatiin sepihak -- kasih tanda gembok +
+    // tooltip di tombolnya biar user ngerti KENAPA gak bisa diklik-matiin, bukan cuma diem2 gak ngefek.
+    btnFront.classList.toggle('locked', locked && cfg.front);
+    btnBack.classList.toggle('locked', locked && cfg.back);
+    btnFront.title = (locked && cfg.front) ? 'Video/GIF wajib tampil di Depan & Belakang -- gak bisa dimatiin sepihak' : '';
+    btnBack.title = (locked && cfg.back) ? 'Video/GIF wajib tampil di Depan & Belakang -- gak bisa dimatiin sepihak' : '';
+  }
 }
 
 function toggleBgPreviewSide(force){
