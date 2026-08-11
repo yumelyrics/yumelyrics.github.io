@@ -226,86 +226,88 @@
     box-shadow:0 4px 18px rgba(0,0,0,.25);
     padding:8mm 10mm;
     font-family:'Noto Sans JP', sans-serif;
+    font-size:10px;
     color:var(--ink);
     transform-origin: top left;
   }
   .doc-title{
     text-align:center;
     font-family:'Noto Serif JP', serif;
-    font-size:20px;
+    font-size:2em;
     letter-spacing:.6em;
     padding-left:.6em;
     margin:0 0 3px;
   }
   .date-line{
     text-align:right;
-    font-size:10px;
-    margin-bottom:5px;
+    font-size:1em;
+    margin-bottom:0.5em;
   }
   .jp-grid{
     display:block;
   }
-  .jp-grid > div{ margin-bottom:3mm; }
+  .jp-grid > div{ margin-bottom:2mm; }
   table.riri{
     width:100%;
     border-collapse:collapse;
     table-layout:fixed;
-    font-size:10.5px;
+    font-size:1.05em;
   }
   table.riri td, table.riri th{
     border:1px solid var(--line);
-    padding:3px 5px;
+    padding:0.3em 5px;
     vertical-align:middle;
   }
   .lbl{
     background:#f0ede4;
-    font-size:9px;
+    font-size:0.9em;
     color:#555;
     width:15mm;
     text-align:center;
   }
-  .furigana{font-size:8.5px; color:#555; letter-spacing:.08em;}
-  .name-cell{font-size:15px; letter-spacing:.06em;}
+  .furigana{font-size:0.85em; color:#555; letter-spacing:.08em;}
+  .name-cell{font-size:1.5em; letter-spacing:.06em;}
   .photo-box{
-    width:26mm; height:34mm;
+    width:100%; height:100%;
+    box-sizing:border-box;
     border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
-    font-size:7px; color:#999; text-align:center;
+    font-size:0.7em; color:#999; text-align:center;
     overflow:hidden;
   }
   .photo-box img{width:100%; height:100%; object-fit:cover;}
-  .note-small{font-size:8px; color:#777;}
+  .note-small{font-size:0.8em; color:#777;}
 
-  table.hist{width:100%; border-collapse:collapse; font-size:10px; margin-top:2mm;}
+  table.hist{width:100%; border-collapse:collapse; font-size:1em; margin-top:1.5mm;}
   table.hist th{
-    border:1px solid var(--line); background:#f0ede4; font-size:8.5px; padding:2px; font-weight:500;
+    border:1px solid var(--line); background:#f0ede4; font-size:0.85em; padding:0.2em 2px; font-weight:500;
   }
   table.hist td{
-    border:1px solid var(--line); padding:2px 5px; height:5mm;
+    border:1px solid var(--line); padding:0.25em 5px;
   }
-  table.hist td.yr, table.hist td.mo{text-align:center; width:9mm; font-size:9.5px;}
-  table.hist td.content{font-size:10px;}
+  table.hist td.yr, table.hist td.mo{text-align:center; width:9mm; font-size:0.95em;}
+  table.hist td.content{font-size:1em;}
 
   .free-title{
-    border:1px solid var(--line); background:#f0ede4; font-size:9px; padding:2px 5px; margin-top:2mm;
+    border:1px solid var(--line); background:#f0ede4; font-size:0.9em; padding:0.2em 5px; margin-top:1.5mm;
   }
   .free-box{
     border:1px solid var(--line); border-top:none;
-    padding:5px 6px; font-size:10px; line-height:1.6; min-height:16mm; white-space:pre-wrap;
+    padding:0.5em 6px; font-size:1em; line-height:1.5; min-height:14mm; white-space:pre-wrap;
   }
-  .req-box{ min-height:22mm; }
+  .req-box{ min-height:18mm; }
 
   .bottom-grid{
     display:grid; grid-template-columns: 1fr 1fr; border:1px solid var(--line); border-top:none;
-    font-size:10px; margin-bottom:2mm;
+    font-size:1em; margin-bottom:1.5mm;
   }
-  .bottom-grid > div{padding:4px 6px; border-left:1px solid var(--line); border-top:1px solid var(--line);}
+  .bottom-grid > div{padding:0.4em 6px; border-left:1px solid var(--line); border-top:1px solid var(--line);}
   .bottom-grid > div:nth-child(1), .bottom-grid > div:nth-child(2){border-top:none;}
   .bottom-grid > div:nth-child(odd){border-left:none;}
-  .bottom-grid .k{font-size:8.5px; color:#555; display:block; margin-bottom:2px;}
+  .bottom-grid .k{font-size:0.85em; color:#555; display:block; margin-bottom:0.2em;}
 
   .notice{
-    font-size:8px; color:#666; line-height:1.7; margin-top:3mm; border-top:1px solid #ccc; padding-top:2mm;
+    font-size:0.8em; color:#666; line-height:1.5; margin-top:2mm; border-top:1px solid #ccc; padding-top:1.5mm;
   }
 
   /* ---------- ID PREVIEW ---------- */
@@ -365,16 +367,15 @@
     body{background:#fff;}
     .tabbar, .form-col, .id-col, .panel-heading{display:none !important;}
     .app{grid-template-columns: 1fr; display:block;}
-    .panel{display:block !important;}
-    .preview-col{padding:0; background:#fff; align-items:stretch;}
+    .preview-col{padding:0; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;}
     .sheet-wrap{max-width:none; overflow:visible;}
     .sheet{
-      box-shadow:none; width:210mm; min-height:297mm; transform:none !important; margin:0;
+      box-shadow:none; width:210mm; min-height:297mm; transform:none !important; margin:0 auto;
     }
-    @page{ size: A4 portrait; margin:8mm; }
+    @page{ size: A4 portrait; margin:0; }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 </head>
 <body>
 
@@ -994,8 +995,8 @@
     // history/qual tables
     const histRows = collectRows(histContainer);
     const qualRows = collectRows(qualContainer);
-    renderHistTable($('p_histBody'), histRows, 8);
-    renderHistTable($('p_qualBody'), qualRows, 5);
+    renderHistTable($('p_histBody'), histRows, 0);
+    renderHistTable($('p_qualBody'), qualRows, 0);
 
     $('p_motivation').textContent = $('f_motivation').value || '\u00A0';
     $('p_selfpr').textContent = $('f_selfpr').value || '\u00A0';
@@ -1067,71 +1068,235 @@
 
   $('printBtn').addEventListener('click', ()=> window.print());
 
-  // ---- xlsx export ----
-  function exportXlsx(){
-    if(typeof XLSX === 'undefined'){
+  // ---- keep the printed sheet on a single A4 page ----
+  // Shrinks the sheet's base font-size (all sizes inside .sheet are in em, relative
+  // to it) so text packs tighter and reclaims vertical space. Unlike a CSS transform/
+  // zoom trick, this is a real layout change so print pagination respects it, and the
+  // physical page size (210x297mm) and photo box (26x34mm) never get distorted.
+  const SHEET_BASE_FONT = 10; // px, must match .sheet{font-size:10px} in CSS
+  const SHEET_MIN_SCALE = 0.8; // never shrink text below 80% — stays readable
+  function fitSheetForPrint(){
+    const sheet = $('sheet');
+    if(!sheet) return;
+    sheet.style.fontSize = '';
+    const mmToPx = 96/25.4;
+    const maxH = 297 * mmToPx;
+    const naturalH = sheet.scrollHeight;
+    if(naturalH > maxH){
+      const scale = Math.max(SHEET_MIN_SCALE, maxH / naturalH);
+      sheet.style.fontSize = (SHEET_BASE_FONT * scale) + 'px';
+    }
+  }
+  function resetSheetAfterPrint(){
+    const sheet = $('sheet');
+    if(sheet) sheet.style.fontSize = '';
+  }
+  window.addEventListener('beforeprint', fitSheetForPrint);
+  window.addEventListener('afterprint', resetSheetAfterPrint);
+
+  // ---- xlsx export (styled, bordered, merged — mirrors the printed 履歴書 layout) ----
+  async function exportXlsx(){
+    if(typeof ExcelJS === 'undefined'){
       alert('Fitur export xlsx gagal dimuat. Cek koneksi internet lalu coba lagi.');
       return;
     }
-    const spouseVal = (document.querySelector('input[name=spouse]:checked')||{}).value || '無';
-    const spouseDutyVal = (document.querySelector('input[name=spouseDuty]:checked')||{}).value || '無';
-    const histRows = collectRows(histContainer);
-    const qualRows = collectRows(qualContainer);
-    const dateVal = $('f_date').value;
-    const dateLabel = dateVal ? (()=>{ const d=new Date(dateVal+'T00:00:00'); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; })() : '';
+    const btn = $('exportXlsxBtn');
+    const origLabel = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Membuat file...';
 
-    const rows = [];
-    rows.push(['履歴書']);
-    rows.push(['作成日', dateLabel]);
-    rows.push([]);
-    rows.push(['ふりがな', $('f_furigana').value]);
-    rows.push(['氏名', $('f_name').value]);
-    rows.push(['国籍', $('f_nationality').value]);
-    rows.push(['在留資格', $('f_visa').value]);
-    rows.push(['生年月日', $('f_dob').value]);
-    rows.push(['性別', $('f_gender').value]);
-    rows.push([]);
-    rows.push(['現住所 ふりがな', $('f_addr_furigana').value]);
-    rows.push(['郵便番号', $('f_zip').value]);
-    rows.push(['住所', $('f_addr').value]);
-    rows.push(['電話番号', $('f_phone').value]);
-    rows.push(['携帯電話', $('f_mobile').value]);
-    rows.push(['メールアドレス', $('f_email').value]);
-    if($('f_contact_addr').value || $('f_contact_zip').value || $('f_contact_phone').value || $('f_contact_email').value){
-      rows.push([]);
-      rows.push(['連絡先 ふりがな', $('f_contact_furigana').value]);
-      rows.push(['連絡先 郵便番号', $('f_contact_zip').value]);
-      rows.push(['連絡先 住所', $('f_contact_addr').value]);
-      rows.push(['連絡先 電話番号', $('f_contact_phone').value]);
-      rows.push(['連絡先 メールアドレス', $('f_contact_email').value]);
+    try{
+      const spouseVal = (document.querySelector('input[name=spouse]:checked')||{}).value || '無';
+      const spouseDutyVal = (document.querySelector('input[name=spouseDuty]:checked')||{}).value || '無';
+      const histRows = collectRows(histContainer);
+      const qualRows = collectRows(qualContainer);
+      const dateVal = $('f_date').value;
+      const dateLabel = dateVal ? (()=>{ const d=new Date(dateVal+'T00:00:00'); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; })() : '　年　月　日';
+      const dobLabel = fmtDateJP($('f_dob').value, true) || '';
+      const hasContact = $('f_contact_addr').value || $('f_contact_zip').value || $('f_contact_phone').value || $('f_contact_email').value;
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = '履歴書メーカー';
+      const ws = wb.addWorksheet('履歴書', {
+        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 1,
+          margins: { left: 0.4, right: 0.4, top: 0.4, bottom: 0.4, header: 0, footer: 0 } },
+        views: [{ showGridLines: false }],
+      });
+
+      const COLS = 8;
+      ws.columns = [
+        { width: 13 }, { width: 9 }, { width: 9 }, { width: 9 },
+        { width: 9 }, { width: 9 }, { width: 9 }, { width: 9 },
+      ];
+
+      const THIN = { style: 'thin', color: { argb: 'FF2A2A2A' } };
+      const BORDER = { top: THIN, left: THIN, bottom: THIN, right: THIN };
+      const FILL_LABEL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0EDE4' } };
+      const FILL_HEAD = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7E1CF' } };
+      const BASE_FONT = { name: 'Yu Gothic', size: 10 };
+
+      const colLetter = i => String.fromCharCode(64 + i);
+      const cell = (row, col) => ws.getCell(`${colLetter(col)}${row}`);
+      const merge = (row, c1, c2) => { if (c2 > c1) ws.mergeCells(`${colLetter(c1)}${row}:${colLetter(c2)}${row}`); };
+
+      function box(row, c1, c2, opts = {}){
+        const { fill, bold, size, align = 'left', valign = 'middle', wrap = false } = opts;
+        merge(row, c1, c2);
+        for(let c = c1; c <= c2; c++){
+          const cc = cell(row, c);
+          cc.border = BORDER;
+          cc.font = { ...BASE_FONT, bold: !!bold, size: size || BASE_FONT.size };
+          cc.alignment = { horizontal: align, vertical: valign, wrapText: wrap };
+          if(fill) cc.fill = fill;
+        }
+      }
+      function labelRow(row, label, value, { valEnd = COLS, valueFont = {} } = {}){
+        box(row, 1, 1, { fill: FILL_LABEL, size: 8.5, align: 'center', wrap: true });
+        cell(row, 1).value = label;
+        box(row, 2, valEnd, { size: 10.5, wrap: true, ...valueFont });
+        cell(row, 2).value = value || '';
+      }
+      function sectionHeader(row, label){
+        box(row, 1, COLS, { fill: FILL_HEAD, bold: true, size: 10.5, align: 'left' });
+        cell(row, 1).value = '　' + label;
+        ws.getRow(row).height = 16;
+      }
+      function tableHeader(row){
+        box(row, 1, 1, { fill: FILL_LABEL, bold: true, size: 8.5, align: 'center' }); cell(row,1).value = '年';
+        box(row, 2, 2, { fill: FILL_LABEL, bold: true, size: 8.5, align: 'center' }); cell(row,2).value = '月';
+        box(row, 3, COLS, { fill: FILL_LABEL, bold: true, size: 8.5, align: 'center' }); cell(row,3).value = '内容';
+      }
+      function dataRow(row, yr, mo, content){
+        box(row, 1, 1, { align: 'center', size: 9.5 }); cell(row,1).value = yr || '';
+        box(row, 2, 2, { align: 'center', size: 9.5 }); cell(row,2).value = mo || '';
+        box(row, 3, COLS, { size: 10 }); cell(row,3).value = content || '';
+      }
+
+      let r = 1;
+
+      // ---- title ----
+      merge(r, 1, 5);
+      cell(r,1).value = '履歴書';
+      cell(r,1).font = { ...BASE_FONT, size: 22, bold: true };
+      cell(r,1).alignment = { horizontal: 'center', vertical: 'middle' };
+      merge(r, 6, 8);
+      cell(r,6).value = `${dateLabel}現在`;
+      cell(r,6).font = { ...BASE_FONT, size: 9 };
+      cell(r,6).alignment = { horizontal: 'right', vertical: 'bottom' };
+      ws.getRow(r).height = 30; r++;
+
+      // ---- basic info + photo box ----
+      const basicStart = r;
+      labelRow(r, 'ふりがな', $('f_furigana').value, { valEnd: 6 }); r++;
+      labelRow(r, '氏　名', $('f_name').value, { valEnd: 6, valueFont: { size: 14, bold: true } }); r++;
+      labelRow(r, '国　籍', $('f_nationality').value, { valEnd: 6 }); r++;
+      labelRow(r, '在留資格', $('f_visa').value, { valEnd: 6 }); r++;
+      box(r, 1, 1, { fill: FILL_LABEL, size: 8.5, align: 'center' }); cell(r,1).value = '生年月日';
+      box(r, 2, 4, { size: 10, wrap: true }); cell(r,2).value = dobLabel;
+      box(r, 5, 5, { fill: FILL_LABEL, size: 8.5, align: 'center' }); cell(r,5).value = '性別';
+      box(r, 6, 6, { align: 'center', size: 10 }); cell(r,6).value = $('f_gender').value;
+      r++;
+      const basicEnd = r - 1;
+      ws.mergeCells(`G${basicStart}:H${basicEnd}`);
+      const photo = cell(basicStart, 7);
+      photo.value = '履歴書用写真\n縦40mm×横30mm';
+      photo.font = { ...BASE_FONT, size: 8, color: { argb: 'FF999999' } };
+      photo.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      for(let rr = basicStart; rr <= basicEnd; rr++){ cell(rr,7).border = BORDER; cell(rr,8).border = BORDER; }
+
+      // ---- address block ----
+      labelRow(r, 'ふりがな', $('f_addr_furigana').value); r++;
+      labelRow(r, '郵便番号', $('f_zip').value ? `〒${$('f_zip').value}` : ''); r++;
+      labelRow(r, '住　所', $('f_addr').value); r++;
+      labelRow(r, '電話番号', $('f_phone').value); r++;
+      labelRow(r, '携帯電話', $('f_mobile').value); r++;
+      labelRow(r, 'メール', $('f_email').value); r++;
+
+      // ---- contact block (optional) ----
+      if(hasContact){
+        r++;
+        sectionHeader(r, '連絡先（現住所以外に連絡を希望する場合）'); r++;
+        labelRow(r, 'ふりがな', $('f_contact_furigana').value); r++;
+        labelRow(r, '郵便番号', $('f_contact_zip').value ? `〒${$('f_contact_zip').value}` : ''); r++;
+        labelRow(r, '住　所', $('f_contact_addr').value); r++;
+        labelRow(r, '電話番号', $('f_contact_phone').value); r++;
+        labelRow(r, 'メール', $('f_contact_email').value); r++;
+      }
+
+      r++; // spacer
+
+      // ---- history ----
+      sectionHeader(r, '学歴・職歴'); r++;
+      tableHeader(r); r++;
+      const histMin = histRows.length;
+      for(let i = 0; i < histMin; i++){
+        const row = histRows[i] || { yr:'', mo:'', content:'' };
+        dataRow(r, row.yr, row.mo, row.content); r++;
+      }
+
+      r++; // spacer
+
+      // ---- qualifications ----
+      sectionHeader(r, '免許・資格'); r++;
+      tableHeader(r); r++;
+      const qualMin = qualRows.length;
+      for(let i = 0; i < qualMin; i++){
+        const row = qualRows[i] || { yr:'', mo:'', content:'' };
+        dataRow(r, row.yr, row.mo, row.content); r++;
+      }
+
+      r++; // spacer
+
+      // ---- motivation ----
+      sectionHeader(r, '志望動機'); r++;
+      box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
+      cell(r,1).value = $('f_motivation').value;
+      ws.getRow(r).height = 60; r++;
+
+      r++;
+      // ---- self-PR ----
+      sectionHeader(r, '特技・自己PR'); r++;
+      box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
+      cell(r,1).value = $('f_selfpr').value;
+      ws.getRow(r).height = 60; r++;
+
+      r++;
+      // ---- bottom grid ----
+      const ch = $('f_commute_h').value, cm = $('f_commute_m').value;
+      box(r, 1, 2, { fill: FILL_LABEL, size: 8.5, align: 'center', wrap: true }); cell(r,1).value = '通勤時間';
+      box(r, 3, 4, { align: 'center', size: 10 }); cell(r,3).value = `約 ${ch||0}時間 ${cm||0}分`;
+      box(r, 5, 6, { fill: FILL_LABEL, size: 8.5, align: 'center', wrap: true }); cell(r,5).value = '扶養家族（配偶者を除く）';
+      box(r, 7, 8, { align: 'center', size: 10 }); cell(r,7).value = `${$('f_dependents').value||0} 人`;
+      r++;
+      box(r, 1, 2, { fill: FILL_LABEL, size: 8.5, align: 'center' }); cell(r,1).value = '配偶者';
+      box(r, 3, 4, { align: 'center', size: 10 }); cell(r,3).value = spouseVal;
+      box(r, 5, 6, { fill: FILL_LABEL, size: 8.5, align: 'center', wrap: true }); cell(r,5).value = '配偶者の扶養義務';
+      box(r, 7, 8, { align: 'center', size: 10 }); cell(r,7).value = spouseDutyVal;
+      r++;
+
+      r++;
+      // ---- 本人希望記入欄 ----
+      sectionHeader(r, '本人希望記入欄'); r++;
+      box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
+      cell(r,1).value = $('f_request').value;
+      ws.getRow(r).height = 60; r++;
+
+      // ---- download ----
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = ($('f_name').value ? $('f_name').value.replace(/\s+/g,'_') : 'rirekisho') + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }catch(err){
+      console.error(err);
+      alert('Gagal membuat file xlsx: ' + err.message);
+    }finally{
+      btn.disabled = false; btn.textContent = origLabel;
     }
-    rows.push([]);
-    rows.push(['学歴・職歴']);
-    rows.push(['年', '月', '内容']);
-    histRows.forEach(r=> rows.push([r.yr, r.mo, r.content]));
-    rows.push([]);
-    rows.push(['免許・資格']);
-    rows.push(['年', '月', '内容']);
-    qualRows.forEach(r=> rows.push([r.yr, r.mo, r.content]));
-    rows.push([]);
-    rows.push(['志望動機', $('f_motivation').value]);
-    rows.push([]);
-    rows.push(['特技・自己PR', $('f_selfpr').value]);
-    rows.push([]);
-    rows.push(['通勤時間', `${$('f_commute_h').value||''}時間${$('f_commute_m').value||''}分`]);
-    rows.push(['扶養家族数（配偶者を除く）', $('f_dependents').value]);
-    rows.push(['配偶者', spouseVal]);
-    rows.push(['配偶者の扶養義務', spouseDutyVal]);
-    rows.push([]);
-    rows.push(['本人希望記入欄', $('f_request').value]);
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{wch:22},{wch:10},{wch:60}];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '履歴書');
-
-    const fileName = ($('f_name').value ? $('f_name').value.replace(/\s+/g,'_') : 'rirekisho') + '.xlsx';
-    XLSX.writeFile(wb, fileName);
   }
   $('exportXlsxBtn').addEventListener('click', exportXlsx);
 
