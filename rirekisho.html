@@ -25,7 +25,6 @@
     color:var(--ink);
   }
 
-  /* ---------- TABS (mobile) ---------- */
   .tabbar{
     position:sticky; top:0; z-index:50;
     display:flex;
@@ -55,7 +54,7 @@
 
   .app{
     display:grid;
-    grid-template-columns: 360px 1fr 320px;
+    grid-template-columns: 360px 1fr;
   }
   @media (max-width: 1179px){
     .app{grid-template-columns: 1fr; display:block;}
@@ -63,7 +62,41 @@
     .panel.active{display:block;}
   }
 
-  /* ---------- FORM PANEL ---------- */
+  .id-toggle-btn{
+    position:fixed;
+    right:18px; bottom:18px;
+    z-index:60;
+    display:flex; align-items:center; gap:6px;
+    padding:11px 16px;
+    background:var(--id-accent);
+    color:#fff;
+    border:none;
+    border-radius:30px;
+    font-family:'Noto Sans',sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(31,92,138,.35);
+  }
+  .id-toggle-btn:hover{background:#184a70;}
+  .id-backdrop{
+    position:fixed; inset:0;
+    background:rgba(20,25,30,.35);
+    z-index:65;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .id-backdrop.open{opacity:1; pointer-events:auto;}
+  .id-close{
+    position:absolute; top:14px; right:14px;
+    width:30px; height:30px;
+    border:none; border-radius:50%;
+    background:#fff; color:var(--id-accent);
+    font-size:16px; line-height:1; cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,.2);
+  }
+
   .form-col{
     background:var(--panel-bg);
     border-right:1px solid var(--panel-border);
@@ -196,7 +229,6 @@
   }
   .btn-print:hover{background:#6e1818;}
 
-  /* ---------- JP PREVIEW ---------- */
   .preview-col{
     padding:20px;
     background:#e8e4d8;
@@ -310,11 +342,27 @@
     font-size:0.8em; color:#666; line-height:1.5; margin-top:2mm; border-top:1px solid #ccc; padding-top:1.5mm;
   }
 
-  /* ---------- ID PREVIEW ---------- */
   .id-col{
     background:#eef3f7;
     border-left:1px solid #d3dde5;
     padding:18px 16px 60px;
+    position:fixed;
+    top:0; right:0;
+    height:100vh;
+    width:min(420px, 92vw);
+    z-index:70;
+    overflow-y:auto;
+    box-shadow:-6px 0 20px rgba(0,0,0,.18);
+    transform:translateX(100%);
+    transition:transform .25s ease;
+  }
+  .id-col.open{transform:translateX(0);}
+  @media (max-width: 1179px){
+    .id-col{
+      display:block;
+      transform:translateX(100%);
+    }
+    .id-col.open{transform:translateX(0);}
   }
   .id-heading{
     font-family:'Noto Sans', sans-serif;
@@ -365,7 +413,7 @@
 
   @media print{
     body{background:#fff;}
-    .tabbar, .form-col, .id-col, .panel-heading{display:none !important;}
+    .tabbar, .form-col, .id-col, .id-toggle-btn, .id-backdrop, .panel-heading{display:none !important;}
     .app{grid-template-columns: 1fr; display:block;}
     .preview-col{padding:0; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;}
     .sheet-wrap{max-width:none; overflow:visible;}
@@ -382,12 +430,13 @@
 <div class="tabbar">
   <button class="tab-btn active" data-tab="form">Form</button>
   <button class="tab-btn" data-tab="jp">Preview 日本語</button>
-  <button class="tab-btn" data-tab="id">Preview Indonesia</button>
 </div>
+
+<button type="button" class="id-toggle-btn" id="idToggleBtn">🇮🇩 Preview Indonesia</button>
+<div class="id-backdrop" id="idBackdrop"></div>
 
 <div class="app">
 
-  <!-- ========== FORM ========== -->
   <div class="form-col panel active" data-panel="form">
     <div class="brand-row">
       <p class="brand">履歴書<span>メーカー</span></p>
@@ -550,7 +599,6 @@
     </div>
   </div>
 
-  <!-- ========== JP PREVIEW ========== -->
   <div class="preview-col panel" data-panel="jp">
     <p class="panel-heading">Format resmi</p>
     <div class="sheet-wrap" id="sheetWrap">
@@ -559,7 +607,6 @@
         <p class="date-line" id="p_date_label">年　月　日現在</p>
 
         <div class="jp-grid">
-          <!-- LEFT: personal info + edu/work history -->
           <div>
             <table class="riri">
               <tr>
@@ -640,7 +687,6 @@
             </table>
           </div>
 
-          <!-- RIGHT: qualifications + pr + misc -->
           <div>
             <table class="hist" style="margin-top:0;">
               <thead><tr><th style="width:9mm;">年</th><th style="width:9mm;">月</th><th>免　許　・　資　格</th></tr></thead>
@@ -670,8 +716,8 @@
     </div>
   </div>
 
-  <!-- ========== ID PREVIEW ========== -->
-  <div class="id-col panel" data-panel="id">
+  <div class="id-col" id="idCol">
+    <button type="button" class="id-close" id="idCloseBtn">✕</button>
     <p class="id-heading">Preview Indonesia</p>
     <p class="id-sub">Bukan dokumen resmi — cuma bantuan baca sebelum print.</p>
 
@@ -743,7 +789,6 @@
   const $ = id => document.getElementById(id);
   let photoData = null;
 
-  // ---- tabs ----
   const tabBtns = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.panel');
   tabBtns.forEach(btn=>{
@@ -755,7 +800,16 @@
     });
   });
 
-  // ---- dynamic row builders ----
+  const idCol = $('idCol');
+  const idBackdrop = $('idBackdrop');
+  const idToggleBtn = $('idToggleBtn');
+  const idCloseBtn = $('idCloseBtn');
+  function openIdCol(){ idCol.classList.add('open'); idBackdrop.classList.add('open'); }
+  function closeIdCol(){ idCol.classList.remove('open'); idBackdrop.classList.remove('open'); }
+  idToggleBtn.addEventListener('click', openIdCol);
+  idCloseBtn.addEventListener('click', closeIdCol);
+  idBackdrop.addEventListener('click', closeIdCol);
+
   function makeDynRow(container, placeholder){
     const row = document.createElement('div');
     row.className = 'dyn-row';
@@ -888,7 +942,6 @@
     $('loadArubaito').classList.remove('active');
   });
 
-  // ---- photo upload ----
   const photoDrop = $('photoDrop');
   const photoInput = $('photoInput');
   photoDrop.addEventListener('click', ()=> photoInput.click());
@@ -904,7 +957,6 @@
     reader.readAsDataURL(file);
   });
 
-  // ---- helpers ----
   function fmtDateJP(dstr, withAge){
     if(!dstr) return null;
     const d = new Date(dstr + 'T00:00:00');
@@ -956,7 +1008,6 @@
   }
 
   function render(){
-    // JP date top
     const dateVal = $('f_date').value;
     if(dateVal){
       const d = new Date(dateVal+'T00:00:00');
@@ -965,7 +1016,6 @@
       $('p_date_label').textContent = '年　月　日現在';
     }
 
-    // basic info -> JP
     $('p_furigana').textContent = $('f_furigana').value || '\u00A0';
     $('p_name').textContent = $('f_name').value || '\u00A0';
     $('p_nationality').textContent = $('f_nationality').value || '\u00A0';
@@ -988,11 +1038,9 @@
     $('p_contact_phone').textContent = $('f_contact_phone').value || '\u00A0';
     $('p_contact_email').textContent = $('f_contact_email').value || '\u00A0';
 
-    // photo
     const box = $('p_photoBox');
     box.innerHTML = photoData ? `<img src="${photoData}" alt="photo">` : `履歴書用写真<br>縦40mm×横30mm`;
 
-    // history/qual tables
     const histRows = collectRows(histContainer);
     const qualRows = collectRows(qualContainer);
     renderHistTable($('p_histBody'), histRows, 0);
@@ -1014,7 +1062,6 @@
 
     $('p_request').textContent = $('f_request').value || '\u00A0';
 
-    // ---- ID preview ----
     $('id_name').textContent = $('f_name').value || '—';
     $('id_furigana').textContent = $('f_furigana').value || '—';
     $('id_nationality').textContent = $('f_nationality').value || '—';
@@ -1068,13 +1115,10 @@
 
   $('printBtn').addEventListener('click', ()=> window.print());
 
-  // ---- keep the printed sheet on a single A4 page ----
-  // Shrinks the sheet's base font-size (all sizes inside .sheet are in em, relative
-  // to it) so text packs tighter and reclaims vertical space. Unlike a CSS transform/
-  // zoom trick, this is a real layout change so print pagination respects it, and the
-  // physical page size (210x297mm) and photo box (26x34mm) never get distorted.
-  const SHEET_BASE_FONT = 10; // px, must match .sheet{font-size:10px} in CSS
-  const SHEET_MIN_SCALE = 0.8; // never shrink text below 80% — stays readable
+  const SHEET_BASE_FONT = 10;
+
+  const SHEET_MIN_SCALE = 0.8;
+
   function fitSheetForPrint(){
     const sheet = $('sheet');
     if(!sheet) return;
@@ -1094,7 +1138,6 @@
   window.addEventListener('beforeprint', fitSheetForPrint);
   window.addEventListener('afterprint', resetSheetAfterPrint);
 
-  // ---- xlsx export (styled, bordered, merged — mirrors the printed 履歴書 layout) ----
   async function exportXlsx(){
     if(typeof ExcelJS === 'undefined'){
       alert('Fitur export xlsx gagal dimuat. Cek koneksi internet lalu coba lagi.');
@@ -1173,7 +1216,6 @@
 
       let r = 1;
 
-      // ---- title ----
       merge(r, 1, 5);
       cell(r,1).value = '履歴書';
       cell(r,1).font = { ...BASE_FONT, size: 22, bold: true };
@@ -1184,7 +1226,6 @@
       cell(r,6).alignment = { horizontal: 'right', vertical: 'bottom' };
       ws.getRow(r).height = 30; r++;
 
-      // ---- basic info + photo box ----
       const basicStart = r;
       labelRow(r, 'ふりがな', $('f_furigana').value, { valEnd: 6 }); r++;
       labelRow(r, '氏　名', $('f_name').value, { valEnd: 6, valueFont: { size: 14, bold: true } }); r++;
@@ -1203,7 +1244,6 @@
       photo.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
       for(let rr = basicStart; rr <= basicEnd; rr++){ cell(rr,7).border = BORDER; cell(rr,8).border = BORDER; }
 
-      // ---- address block ----
       labelRow(r, 'ふりがな', $('f_addr_furigana').value); r++;
       labelRow(r, '郵便番号', $('f_zip').value ? `〒${$('f_zip').value}` : ''); r++;
       labelRow(r, '住　所', $('f_addr').value); r++;
@@ -1211,7 +1251,6 @@
       labelRow(r, '携帯電話', $('f_mobile').value); r++;
       labelRow(r, 'メール', $('f_email').value); r++;
 
-      // ---- contact block (optional) ----
       if(hasContact){
         r++;
         sectionHeader(r, '連絡先（現住所以外に連絡を希望する場合）'); r++;
@@ -1222,9 +1261,9 @@
         labelRow(r, 'メール', $('f_contact_email').value); r++;
       }
 
-      r++; // spacer
+      r++;
 
-      // ---- history ----
+
       sectionHeader(r, '学歴・職歴'); r++;
       tableHeader(r); r++;
       const histMin = histRows.length;
@@ -1233,9 +1272,9 @@
         dataRow(r, row.yr, row.mo, row.content); r++;
       }
 
-      r++; // spacer
+      r++;
 
-      // ---- qualifications ----
+
       sectionHeader(r, '免許・資格'); r++;
       tableHeader(r); r++;
       const qualMin = qualRows.length;
@@ -1244,23 +1283,21 @@
         dataRow(r, row.yr, row.mo, row.content); r++;
       }
 
-      r++; // spacer
+      r++;
 
-      // ---- motivation ----
+
       sectionHeader(r, '志望動機'); r++;
       box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
       cell(r,1).value = $('f_motivation').value;
       ws.getRow(r).height = 60; r++;
 
       r++;
-      // ---- self-PR ----
       sectionHeader(r, '特技・自己PR'); r++;
       box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
       cell(r,1).value = $('f_selfpr').value;
       ws.getRow(r).height = 60; r++;
 
       r++;
-      // ---- bottom grid ----
       const ch = $('f_commute_h').value, cm = $('f_commute_m').value;
       box(r, 1, 2, { fill: FILL_LABEL, size: 8.5, align: 'center', wrap: true }); cell(r,1).value = '通勤時間';
       box(r, 3, 4, { align: 'center', size: 10 }); cell(r,3).value = `約 ${ch||0}時間 ${cm||0}分`;
@@ -1274,13 +1311,11 @@
       r++;
 
       r++;
-      // ---- 本人希望記入欄 ----
       sectionHeader(r, '本人希望記入欄'); r++;
       box(r, 1, COLS, { wrap: true, valign: 'top', size: 10 });
       cell(r,1).value = $('f_request').value;
       ws.getRow(r).height = 60; r++;
 
-      // ---- download ----
       const buf = await wb.xlsx.writeBuffer();
       const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
