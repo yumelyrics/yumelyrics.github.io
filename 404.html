@@ -537,65 +537,16 @@ async function collectAll() {
     })(),
 
     // IP lookup
-// 1. Ambil data IP dengan field yang BENAR
-async function getIpData() {
-  try {
-    const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
-    const j = await resp.json();
-    return {
-      ip: j.ip ?? null, 
-      isp: j.org ?? null, 
-      city: j.city ?? null,
-      country: j.country_name ?? null, 
-      region: j.region ?? null,
-      proxy: j.proxy ?? null, 
-      hosting: j.hosting ?? null, 
-      asn: j.as ?? null, // PERBAIKAN: dari j.asn jadi j.as
-    };
-  } catch (e) {
-    console.error("Error fetching IP:", e);
-    return {
-      ip: null, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null
-    };
-  }
-}
+    (async () => {
+      const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+      const j = await resp.json();
+      return {
+        ip: j.ip ?? null, isp: j.org ?? null, city: j.city ?? null,
+        country: j.country_name ?? null, region: j.region ?? null,
+        proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null,
+      };
+    })(),
 
-// 2. Gunakan fungsi ini saat mengirim data ke Worker
-(async () => {
-  const ipInfo = await getIpData(); // Tunggu sampai data IP siap
-
-  // Buat payload lengkap
-  const payload = {
-    // Masukkan data IP yang sudah benar
-    ip: ipInfo.ip,
-    isp: ipInfo.isp,
-    city: ipInfo.city,
-    country: ipInfo.country,
-    region: ipInfo.region,
-    proxy: ipInfo.proxy,
-    hosting: ipInfo.hosting,
-    asn: ipInfo.asn,
-    
-    // Tambahkan data lain jika perlu
-    url: location.href,
-    screen: {
-      width: screen.width,
-      height: screen.height,
-      pixelRatio: window.devicePixelRatio
-    },
-    browser: {
-      userAgent: navigator.userAgent,
-      language: navigator.language
-    }
-  };
-
-  // Kirim ke Worker
-  fetch("/api/404", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-})();
     // Media devices
     (async () => {
       const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
