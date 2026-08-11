@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://discord.com https://discordapp.com https://rough-snowflake-e4dc.khoirustsani143.workers.dev https://asia-southeast2-yumesubs7.cloudfunctions.net https://*.googleapis.com https://*.cloudfunctions.net; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://api.github.com https://api.imgbb.com https://open.spotify.com https://www.googleapis.com https://www.youtube.com https://img.youtube.com https://discord.com https://discordapp.com https://rough-snowflake-e4dc.yumelyrics.workers.dev https://asia-southeast2-yumesubs7.cloudfunctions.net https://*.googleapis.com https://*.cloudfunctions.net; frame-src https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script>(function(){'use strict';var b=function(e){e.preventDefault();return false};document.addEventListener('contextmenu',b);document.addEventListener('keydown',function(e){var k=(e.key||'').toUpperCase(),c=e.ctrlKey||e.metaKey,s=e.shiftKey;if(k==='F12'||(c&&s&&'IJC'.includes(k))||(c&&!s&&k==='U')||(c&&s&&k==='K')){b(e)}},true);document.addEventListener('dragstart',b);var _dt=0;setInterval(function(){var w=window.outerWidth-window.innerWidth>180,h=window.outerHeight-window.innerHeight>180;if((w||h)&&!_dt){_dt=1;document.documentElement.style.filter='blur(12px)';document.title='Akses diblokir'}},800);})();</script>
 <title>YumeSubs — Admin</title>
 <link rel="icon" type="image/jpeg" href="anime_icon.png">
@@ -1607,7 +1607,7 @@ let unsubSongs = null;
 const ADMIN_GATE_HASH = '65bdd728b4c50ba96c81c0e063b429df48b62ce9413f4582cd5818e4edaa9385';
 const ADMIN_GATE_SESSION = 'yume_admin_gate_ok';
 const ADMIN_GATE_TTL_MS = 4 * 60 * 60 * 1000;
-const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+const UPLOAD_WORKER = 'https://rough-snowflake-e4dc.yumelyrics.workers.dev';
 const UPLOAD_FALLBACK = 'https://asia-southeast2-yumesubs7.cloudfunctions.net/uploadImg';
 // false = tanpa Cloud Functions (gratis). true = setelah deploy verifyAdminGate + Blaze plan
 const GATE_USE_SERVER = false;
@@ -2224,7 +2224,7 @@ window.generateRomaji = async () => {
     const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
     const prompt = `Konversi setiap baris teks Jepang berikut ke romaji Hepburn.\nFormat output: untuk setiap baris JP, tulis baris JP asli lalu baris romajinya di bawahnya. Pisahkan grup dengan baris kosong.\nJika suatu baris sudah romaji/latin, biarkan saja.\nJangan tambahkan penjelasan apapun, hanya output teks.\n\nInput:\n${paragraphs.join('\n\n')}`;
 
-    const WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+    const WORKER = 'https://rough-snowflake-e4dc.yumelyrics.workers.dev';
     const resp = await fetch(WORKER + '/romaji', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2245,7 +2245,7 @@ window.generateRomaji = async () => {
 // ── GENIUS LYRICS FETCH ──
 // Helper: ambil HTML halaman Genius lewat Cloudflare Worker
 async function fetchWithProxies(url){
-  const WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  const WORKER = 'https://rough-snowflake-e4dc.yumelyrics.workers.dev';
   const proxyUrl = WORKER + '/fetch?url=' + encodeURIComponent(url);
   const r = await fetch(proxyUrl);
   if(!r.ok) throw new Error('Worker error: ' + r.status);
@@ -4193,7 +4193,7 @@ function geniusDoSearch(){
 
   // Pakai Cloudflare Worker sebagai proxy — ganti URL di bawah setelah deploy worker
   // Worker code: genius-proxy-worker.js
-  var WORKER_URL = window._geniusWorkerUrl || 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  var WORKER_URL = window._geniusWorkerUrl || 'https://rough-snowflake-e4dc.yumelyrics.workers.dev';
   var p = fetch(WORKER_URL + '/genius-search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -5079,7 +5079,7 @@ function geniusFetchLyrics(url, fullTitle){
   var res = document.getElementById('gd-results');
   if(res) res.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">⏳ Mengambil lirik dari ' + _escH(fullTitle) + '...</div>';
 
-  var WORKER = 'https://rough-snowflake-e4dc.khoirustsani143.workers.dev';
+  var WORKER = 'https://rough-snowflake-e4dc.yumelyrics.workers.dev';
   var p = fetch(WORKER + '/fetch?url=' + encodeURIComponent(url))
     .then(function(r){ if(!r.ok) throw new Error('Worker error: ' + r.status); return r.text(); });
 
