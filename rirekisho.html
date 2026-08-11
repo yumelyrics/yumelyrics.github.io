@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>履歴書メーカー | Rirekisho Maker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;600;700&display=swap');
+
+  :root{
+    --ink:#1c1c1c;
+    --paper:#fdfcf8;
+    --line:#2a2a2a;
+    --accent:#8a1f1f;
+    --panel-bg:#f2efe6;
+    --panel-border:#d8d2c2;
+    --field-bg:#ffffff;
+    --id-accent:#1f5c8a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Noto Sans JP', sans-serif;
+    background:#e8e4d8;
+    color:var(--ink);
+  }
+
+  /* ---------- TABS (mobile) ---------- */
+  .tabbar{
+    position:sticky; top:0; z-index:50;
+    display:flex;
+    background:#1c1c1c;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+  .tabbar button{
+    flex:1;
+    padding:12px 4px;
+    background:none;
+    border:none;
+    color:#a8a396;
+    font-size:12.5px;
+    font-weight:700;
+    font-family:'Noto Sans JP',sans-serif;
+    letter-spacing:.02em;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  .tabbar button.active{
+    color:#fff;
+    border-bottom:3px solid var(--accent);
+  }
+  @media (min-width: 1180px){
+    .tabbar{display:none;}
+  }
+
+  .app{
+    display:grid;
+    grid-template-columns: 360px 1fr 320px;
+  }
+  @media (max-width: 1179px){
+    .app{grid-template-columns: 1fr; display:block;}
+    .panel{display:none;}
+    .panel.active{display:block;}
+  }
+
+  /* ---------- FORM PANEL ---------- */
+  .form-col{
+    background:var(--panel-bg);
+    border-right:1px solid var(--panel-border);
+    padding:20px 18px 60px;
+  }
+  .brand-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin:0 0 18px;
+  }
+  .brand{
+    font-family:'Noto Serif JP', serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.04em;
+    margin:0;
+  }
+  .brand span{color:var(--accent);}
+  .example-toggle{display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;}
+  .example-toggle button{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:10.5px;
+    padding:6px 9px;
+    border-radius:20px;
+    border:1px solid var(--panel-border);
+    background:#fff;
+    color:#5a5546;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .example-toggle button:hover{border-color:var(--accent); color:var(--accent);}
+  .example-toggle button.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .example-toggle button#clearAll{color:#a3866f;}
+  fieldset{
+    border:1px solid var(--panel-border);
+    border-radius:2px;
+    margin:0 0 14px;
+    padding:12px 12px 14px;
+    background:rgba(255,255,255,.35);
+  }
+  legend{
+    font-size:12px;
+    font-weight:700;
+    padding:0 6px;
+    color:var(--accent);
+    letter-spacing:.02em;
+  }
+  label{
+    display:block;
+    font-size:11px;
+    color:#5a5546;
+    margin:8px 0 3px;
+  }
+  label.first{margin-top:0;}
+  input[type=text], input[type=date], input[type=email], input[type=tel], textarea, select{
+    width:100%;
+    padding:8px 8px;
+    font-size:14px;
+    font-family:'Noto Sans JP',sans-serif;
+    border:1px solid var(--panel-border);
+    border-radius:2px;
+    background:var(--field-bg);
+    color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:52px; line-height:1.5;}
+  input::placeholder, textarea::placeholder{color:#b0aa98; font-style:italic;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .radio-group{display:flex; gap:14px; margin-top:6px; font-size:13px;}
+  .radio-group label{display:flex; align-items:center; gap:5px; margin:0; font-size:13px; color:var(--ink);}
+  .radio-group input{width:auto;}
+
+  .photo-drop{
+    border:1.5px dashed var(--panel-border);
+    border-radius:3px;
+    padding:14px;
+    text-align:center;
+    font-size:11px;
+    color:#6b6558;
+    cursor:pointer;
+    background:var(--field-bg);
+  }
+  .photo-drop img{max-width:100%; max-height:120px; display:block; margin:0 auto 6px;}
+  .photo-drop input{display:none;}
+
+  .dyn-row{
+    display:grid;
+    grid-template-columns: 52px 40px 1fr 26px;
+    gap:6px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .dyn-row input{padding:6px 6px; font-size:12px;}
+  .dyn-row .rm{
+    background:none; border:none; color:#a33; cursor:pointer; font-size:16px; line-height:1; padding:2px;
+  }
+  .add-btn{
+    width:100%;
+    padding:8px;
+    font-size:12px;
+    border:1px dashed var(--panel-border);
+    background:transparent;
+    color:#5a5546;
+    border-radius:2px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .add-btn:hover{background:rgba(0,0,0,.03);}
+
+  .tip{font-size:10.5px; color:#8a8474; margin-top:8px; line-height:1.6;}
+
+  .print-wrap{
+    padding:14px 0 0;
+    margin-top:6px;
+    border-top:1px solid var(--panel-border);
+  }
+  .btn-print{
+    width:100%;
+    padding:13px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.03em;
+    cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;
+  }
+  .btn-print:hover{background:#6e1818;}
+
+  /* ---------- JP PREVIEW ---------- */
+  .preview-col{
+    padding:20px;
+    background:#e8e4d8;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .panel-heading{
+    width:100%;
+    max-width:210mm;
+    font-size:11px;
+    font-weight:700;
+    color:#6b6558;
+    letter-spacing:.08em;
+    margin:0 0 10px;
+    text-transform:uppercase;
+  }
+  .sheet-wrap{
+    width:100%;
+    max-width:210mm;
+    overflow:hidden;
+  }
+  .sheet{
+    width:210mm;
+    min-height:297mm;
+    background:var(--paper);
+    box-shadow:0 4px 18px rgba(0,0,0,.25);
+    padding:8mm 10mm;
+    font-family:'Noto Sans JP', sans-serif;
+    color:var(--ink);
+    transform-origin: top left;
+  }
+  .doc-title{
+    text-align:center;
+    font-family:'Noto Serif JP', serif;
+    font-size:20px;
+    letter-spacing:.6em;
+    padding-left:.6em;
+    margin:0 0 3px;
+  }
+  .date-line{
+    text-align:right;
+    font-size:10px;
+    margin-bottom:5px;
+  }
+  .jp-grid{
+    display:block;
+  }
+  .jp-grid > div{ margin-bottom:3mm; }
+  table.riri{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+    font-size:10.5px;
+  }
+  table.riri td, table.riri th{
+    border:1px solid var(--line);
+    padding:3px 5px;
+    vertical-align:middle;
+  }
+  .lbl{
+    background:#f0ede4;
+    font-size:9px;
+    color:#555;
+    width:15mm;
+    text-align:center;
+  }
+  .furigana{font-size:8.5px; color:#555; letter-spacing:.08em;}
+  .name-cell{font-size:15px; letter-spacing:.06em;}
+  .photo-box{
+    width:26mm; height:34mm;
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:7px; color:#999; text-align:center;
+    overflow:hidden;
+  }
+  .photo-box img{width:100%; height:100%; object-fit:cover;}
+  .note-small{font-size:8px; color:#777;}
+
+  table.hist{width:100%; border-collapse:collapse; font-size:10px; margin-top:2mm;}
+  table.hist th{
+    border:1px solid var(--line); background:#f0ede4; font-size:8.5px; padding:2px; font-weight:500;
+  }
+  table.hist td{
+    border:1px solid var(--line); padding:2px 5px; height:5mm;
+  }
+  table.hist td.yr, table.hist td.mo{text-align:center; width:9mm; font-size:9.5px;}
+  table.hist td.content{font-size:10px;}
+
+  .free-title{
+    border:1px solid var(--line); background:#f0ede4; font-size:9px; padding:2px 5px; margin-top:2mm;
+  }
+  .free-box{
+    border:1px solid var(--line); border-top:none;
+    padding:5px 6px; font-size:10px; line-height:1.6; min-height:16mm; white-space:pre-wrap;
+  }
+  .req-box{ min-height:22mm; }
+
+  .bottom-grid{
+    display:grid; grid-template-columns: 1fr 1fr; border:1px solid var(--line); border-top:none;
+    font-size:10px; margin-bottom:2mm;
+  }
+  .bottom-grid > div{padding:4px 6px; border-left:1px solid var(--line); border-top:1px solid var(--line);}
+  .bottom-grid > div:nth-child(1), .bottom-grid > div:nth-child(2){border-top:none;}
+  .bottom-grid > div:nth-child(odd){border-left:none;}
+  .bottom-grid .k{font-size:8.5px; color:#555; display:block; margin-bottom:2px;}
+
+  .notice{
+    font-size:8px; color:#666; line-height:1.7; margin-top:3mm; border-top:1px solid #ccc; padding-top:2mm;
+  }
+
+  /* ---------- ID PREVIEW ---------- */
+  .id-col{
+    background:#eef3f7;
+    border-left:1px solid #d3dde5;
+    padding:18px 16px 60px;
+  }
+  .id-heading{
+    font-family:'Noto Sans', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--id-accent);
+    margin:0 0 2px;
+  }
+  .id-sub{
+    font-size:10.5px; color:#5c6b75; margin:0 0 16px;
+  }
+  .id-card{
+    background:#fff;
+    border:1px solid #d3dde5;
+    border-radius:6px;
+    padding:12px 13px;
+    margin-bottom:12px;
+  }
+  .id-card h4{
+    margin:0 0 8px;
+    font-size:11.5px;
+    color:var(--id-accent);
+    font-family:'Noto Sans',sans-serif;
+    border-bottom:1px solid #e2e9ee;
+    padding-bottom:6px;
+  }
+  .id-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    padding:4px 0;
+    font-family:'Noto Sans',sans-serif;
+    border-bottom:1px dashed #eef1f4;
+  }
+  .id-row:last-child{border-bottom:none;}
+  .id-row .k{color:#6b7680; flex:0 0 42%;}
+  .id-row .v{flex:1; text-align:right; color:#1c2b33; font-weight:600; word-break:break-word;}
+  .id-hist-item{
+    font-size:12px; font-family:'Noto Sans',sans-serif; padding:5px 0; border-bottom:1px dashed #eef1f4;
+  }
+  .id-hist-item:last-child{border-bottom:none;}
+  .id-hist-item .when{color:var(--id-accent); font-weight:700; font-size:11px;}
+  .id-text{
+    font-size:12px; font-family:'Noto Sans',sans-serif; line-height:1.6; white-space:pre-wrap; color:#1c2b33;
+  }
+  .id-empty{color:#a3adb5; font-style:italic;}
+
+  @media print{
+    body{background:#fff;}
+    .tabbar, .form-col, .id-col, .panel-heading{display:none !important;}
+    .app{grid-template-columns: 1fr; display:block;}
+    .panel{display:block !important;}
+    .preview-col{padding:0; background:#fff; align-items:stretch;}
+    .sheet-wrap{max-width:none; overflow:visible;}
+    .sheet{
+      box-shadow:none; width:210mm; min-height:297mm; transform:none !important; margin:0;
+    }
+    @page{ size: A4 portrait; margin:8mm; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-tab="form">Form</button>
+  <button class="tab-btn" data-tab="jp">Preview 日本語</button>
+  <button class="tab-btn" data-tab="id">Preview Indonesia</button>
+</div>
+
+<div class="app">
+
+  <!-- ========== FORM ========== -->
+  <div class="form-col panel active" data-panel="form">
+    <div class="brand-row">
+      <p class="brand">履歴書<span>メーカー</span></p>
+      <div class="example-toggle">
+        <button type="button" id="loadFulltime">正社員 (Karyawan Tetap)</button>
+        <button type="button" id="loadArubaito">アルバイト (Paruh Waktu)</button>
+        <button type="button" id="clearAll">Kosongkan</button>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>写真 Foto</legend>
+      <div class="photo-drop" id="photoDrop">
+        <span id="photoDropText">Tambah foto (3×4cm)</span>
+        <input type="file" id="photoInput" accept="image/*">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>基本情報 Data Diri</legend>
+      <label class="first">日付 (Tanggal isi form)</label>
+      <input type="date" id="f_date">
+
+      <label>ふりがな <span style="font-weight:400; color:#8a8474;">(katakana kalau nama non-Jepang)</span></label>
+      <input type="text" id="f_furigana" placeholder="Cara baca nama pakai katakana" autocomplete="off">
+
+      <label>氏名 (Nama Lengkap)</label>
+      <input type="text" id="f_name" placeholder="Nama depan lalu nama keluarga" autocomplete="off">
+
+      <label>国籍 (Kewarganegaraan)</label>
+      <input type="text" id="f_nationality" placeholder="インドネシア" autocomplete="off">
+
+      <label>在留資格 <span style="font-weight:400; color:#8a8474;">(Status visa — kosongkan/isi "該当なし" kalau masih di luar Jepang)</span></label>
+      <input type="text" id="f_visa" placeholder="該当なし（海外在住のため、内定後にビザ取得予定）" autocomplete="off">
+
+      <div class="row2">
+        <div>
+          <label>生年月日 (Tanggal Lahir)</label>
+          <input type="date" id="f_dob">
+        </div>
+        <div>
+          <label>性別 (Jenis Kelamin)</label>
+          <select id="f_gender">
+            <option value="男">男 (Laki-laki)</option>
+            <option value="女">女 (Perempuan)</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>現住所 Alamat Domisili</legend>
+      <p class="tip" style="margin:0 0 8px;">Belum tinggal di Jepang? Isi alamat, telepon, dan kode pos negara asal kamu apa adanya (nggak perlu format Jepang). Kolom ふりがな boleh dikosongkan kalau alamatnya bukan alamat Jepang.</p>
+      <label class="first">ふりがな (cara baca alamat)</label>
+      <input type="text" id="f_addr_furigana" placeholder="とうきょうと..." autocomplete="off">
+      <label>郵便番号 (Kode Pos)</label>
+      <input type="text" id="f_zip" placeholder="101-0041" autocomplete="off">
+      <label>住所 (Alamat lengkap)</label>
+      <textarea id="f_addr" placeholder="東京都千代田区..." autocomplete="off"></textarea>
+      <div class="row2">
+        <div>
+          <label>電話番号 (Nomor Telepon)</label>
+          <input type="tel" id="f_phone" placeholder="090-1234-5678" autocomplete="off">
+        </div>
+        <div>
+          <label>携帯電話 <span style="font-weight:400; color:#8a8474;">(HP, opsional)</span></label>
+          <input type="tel" id="f_mobile" placeholder="081-2345-6789" autocomplete="off">
+        </div>
+      </div>
+      <p class="tip" style="margin:4px 0 8px;">電話番号 = nomor utama yang paling gampang dihubungi (boleh HP kamu). 携帯電話 cuma buat nomor kedua kalau ada, misal nomor lain/nomor Jepang nanti — kalau cuma punya satu nomor, isi 電話番号 saja dan kosongkan 携帯電話.</p>
+      <label>メールアドレス (Alamat Email)</label>
+      <input type="email" id="f_email" placeholder="you@mail.com" autocomplete="off">
+    </fieldset>
+
+    <fieldset>
+      <legend>連絡先 <span style="font-weight:400;">— opsional, jika beda dari domisili</span></legend>
+      <p class="tip" style="margin:0 0 8px;">Kosongkan semua kalau kontak kamu cuma satu (yang di 現住所 di atas) — bagian ini memang boleh dibiarkan kosong.</p>
+      <label class="first">ふりがな (cara baca nama)</label>
+      <input type="text" id="f_contact_furigana" autocomplete="off">
+      <label>郵便番号 (Kode Pos)</label>
+      <input type="text" id="f_contact_zip" placeholder="〒" autocomplete="off">
+      <label>住所 (Alamat lengkap)</label>
+      <textarea id="f_contact_addr" autocomplete="off"></textarea>
+      <div class="row2">
+        <div>
+          <label>電話番号 (Nomor Telepon)</label>
+          <input type="tel" id="f_contact_phone" autocomplete="off">
+        </div>
+        <div>
+          <label>メールアドレス (Alamat Email)</label>
+          <input type="email" id="f_contact_email" autocomplete="off">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>学歴・職歴 Riwayat Pendidikan & Kerja</legend>
+      <div id="histRows"></div>
+      <button class="add-btn" id="addHist" type="button">+ Tambah baris</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>免許・資格 Lisensi & Sertifikat</legend>
+      <p class="tip" style="margin:0 0 8px;">Punya sertifikat JLPT (N1–N5)? Sangat disarankan dicantumkan di sini — ini salah satu hal pertama yang dilihat HR Jepang untuk pelamar asing.</p>
+      <div id="qualRows"></div>
+      <button class="add-btn" id="addQual" type="button">+ Tambah baris</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>志望動機 Alasan Melamar</legend>
+      <p class="tip" style="margin:0 0 8px;">Kalau kamu melamar dari luar Jepang, sebutkan juga kenapa tertarik kerja di Jepang/perusahaan ini secara spesifik — HR ingin lihat motivasi yang genuine, bukan sekadar "ingin kerja di luar negeri".</p>
+      <label class="first">志望動機 (Kenapa melamar ke perusahaan ini)</label>
+      <textarea id="f_motivation" placeholder="貴社の○○事業に将来性を感じ、これまでの経験を活かして貢献したいと考え、志望いたしました。" style="min-height:70px;"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>特技・自己PR Skill & Self-PR</legend>
+      <label class="first">特技、自己PRなど (Keahlian & Self-PR)</label>
+      <textarea id="f_selfpr" placeholder="フロントエンドからバックエンドまで..." style="min-height:80px;"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>その他 Lainnya</legend>
+      <p class="tip" style="margin:0 0 6px;">Masih di luar Jepang? Kolom 通勤時間 di bawah boleh dikosongkan — tulis rencana relokasi di 本人希望記入欄 saja.</p>
+      <label class="first">通勤時間 (Estimasi waktu ke kantor)</label>
+      <input type="text" id="f_commute_h" placeholder="0" style="display:inline-block;width:28%;">
+      <span style="font-size:11px;"> jam </span>
+      <input type="text" id="f_commute_m" placeholder="45" style="display:inline-block;width:28%;">
+      <span style="font-size:11px;"> menit</span>
+
+      <label>扶養家族数（配偶者を除く） (Jumlah Tanggungan, di luar pasangan)</label>
+      <input type="text" id="f_dependents" placeholder="0">
+
+      <div class="row2">
+        <div>
+          <label>配偶者 (Status Menikah)</label>
+          <div class="radio-group">
+            <label><input type="radio" name="spouse" value="有"> 有 (Ya)</label>
+            <label><input type="radio" name="spouse" value="無" checked> 無 (Tidak)</label>
+          </div>
+        </div>
+        <div>
+          <label>配偶者の扶養義務 (Kewajiban Tanggung Pasangan)</label>
+          <div class="radio-group">
+            <label><input type="radio" name="spouseDuty" value="有"> 有 (Ya)</label>
+            <label><input type="radio" name="spouseDuty" value="無" checked> 無 (Tidak)</label>
+          </div>
+        </div>
+      </div>
+
+      <label>本人希望記入欄 (Permintaan khusus — gaji, jam kerja, dll)</label>
+      <textarea id="f_request" placeholder="貴社の規定に従います。海外在住のため、内定をいただき次第、勤務地近くへの転居を予定しております。" style="min-height:70px;"></textarea>
+    </fieldset>
+
+    <div class="print-wrap">
+      <button class="btn-print" id="printBtn" type="button">Print / Simpan sebagai PDF</button>
+      <p class="tip">A4 · Portrait · margin None</p>
+      <button class="btn-print" id="exportXlsxBtn" type="button" style="background:#1f5c8a; margin-top:8px;">Export ke .xlsx</button>
+      <p class="tip">Kalau perusahaan/portal minta file Excel, bukan PDF</p>
+    </div>
+  </div>
+
+  <!-- ========== JP PREVIEW ========== -->
+  <div class="preview-col panel" data-panel="jp">
+    <p class="panel-heading">Format resmi</p>
+    <div class="sheet-wrap" id="sheetWrap">
+      <div class="sheet" id="sheet">
+        <p class="doc-title">履 歴 書</p>
+        <p class="date-line" id="p_date_label">年　月　日現在</p>
+
+        <div class="jp-grid">
+          <!-- LEFT: personal info + edu/work history -->
+          <div>
+            <table class="riri">
+              <tr>
+                <td class="lbl" style="width:13mm;">ふりがな</td>
+                <td><div class="furigana" id="p_furigana">&nbsp;</div></td>
+                <td rowspan="6" style="width:28mm; text-align:center; padding:2mm;">
+                  <div class="photo-box" id="p_photoBox">履歴書用写真<br>縦40mm×横30mm</div>
+                </td>
+              </tr>
+              <tr>
+                <td class="lbl">氏　名</td>
+                <td class="name-cell" id="p_name">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">国籍</td>
+                <td id="p_nationality">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">在留資格</td>
+                <td id="p_visa">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">生年月日</td>
+                <td id="p_dob">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">性別</td>
+                <td id="p_gender">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">ふりがな</td>
+                <td colspan="2"><div class="furigana" id="p_addr_furigana">&nbsp;</div></td>
+              </tr>
+              <tr>
+                <td class="lbl">現住所</td>
+                <td colspan="2">
+                  <span class="note-small" id="p_zip">〒</span><br>
+                  <span id="p_addr">&nbsp;</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="lbl">電話</td>
+                <td colspan="2" id="p_phone">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">携帯</td>
+                <td colspan="2" id="p_mobile">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">メール</td>
+                <td colspan="2" id="p_email">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">ふりがな</td>
+                <td colspan="2"><div class="furigana" id="p_contact_furigana">&nbsp;</div></td>
+              </tr>
+              <tr>
+                <td class="lbl">連絡先</td>
+                <td colspan="2">
+                  <span class="note-small">（現住所以外に連絡を希望する場合のみ記入）</span><br>
+                  <span class="note-small" id="p_contact_zip">〒</span><br>
+                  <span id="p_contact_addr">&nbsp;</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="lbl">電話</td>
+                <td colspan="2" id="p_contact_phone">&nbsp;</td>
+              </tr>
+              <tr>
+                <td class="lbl">メール</td>
+                <td colspan="2" id="p_contact_email">&nbsp;</td>
+              </tr>
+            </table>
+
+            <table class="hist">
+              <thead><tr><th style="width:9mm;">年</th><th style="width:9mm;">月</th><th>学　歴　・　職　歴　（各別にまとめて書く）</th></tr></thead>
+              <tbody id="p_histBody"></tbody>
+            </table>
+          </div>
+
+          <!-- RIGHT: qualifications + pr + misc -->
+          <div>
+            <table class="hist" style="margin-top:0;">
+              <thead><tr><th style="width:9mm;">年</th><th style="width:9mm;">月</th><th>免　許　・　資　格</th></tr></thead>
+              <tbody id="p_qualBody"></tbody>
+            </table>
+
+            <div class="free-title">志望動機</div>
+            <div class="free-box" id="p_motivation" style="min-height:12mm;">&nbsp;</div>
+
+            <div class="free-title">特技、自己PRなど</div>
+            <div class="free-box" id="p_selfpr" style="min-height:12mm;">&nbsp;</div>
+
+            <div class="bottom-grid" style="margin-top:2mm;">
+              <div><span class="k">通勤時間</span><span id="p_commute">約　　時間　　分</span></div>
+              <div><span class="k">扶養家族（配偶者を除く）</span><span id="p_dependents">&nbsp;人</span></div>
+              <div><span class="k">配偶者</span><span id="p_spouse">&nbsp;</span></div>
+              <div><span class="k">配偶者の扶養義務</span><span id="p_spouseDuty">&nbsp;</span></div>
+            </div>
+
+            <div class="free-title">本人希望記入欄（特に給料・職種・勤務時間・勤務地・その他についての希望などがあれば記入）</div>
+            <div class="free-box req-box" id="p_request">&nbsp;</div>
+
+            <p class="notice">記入上の注意　1．鉛筆以外の黒又は青の筆記具で記入。　2．数字はアラビア数字で、文字はくずさず正確に書く。　3．※印のところは、該当するものを○で囲む。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ID PREVIEW ========== -->
+  <div class="id-col panel" data-panel="id">
+    <p class="id-heading">Preview Indonesia</p>
+    <p class="id-sub">Bukan dokumen resmi — cuma bantuan baca sebelum print.</p>
+
+    <div class="id-card">
+      <h4>Data Diri</h4>
+      <div class="id-row"><span class="k">Nama</span><span class="v" id="id_name">—</span></div>
+      <div class="id-row"><span class="k">Cara baca nama</span><span class="v" id="id_furigana">—</span></div>
+      <div class="id-row"><span class="k">Kewarganegaraan</span><span class="v" id="id_nationality">—</span></div>
+      <div class="id-row"><span class="k">Status visa Jepang</span><span class="v" id="id_visa">—</span></div>
+      <div class="id-row"><span class="k">Tanggal lahir</span><span class="v" id="id_dob">—</span></div>
+      <div class="id-row"><span class="k">Jenis kelamin</span><span class="v" id="id_gender">—</span></div>
+    </div>
+
+    <div class="id-card">
+      <h4>Alamat & Kontak</h4>
+      <div class="id-row"><span class="k">Kode pos</span><span class="v" id="id_zip">—</span></div>
+      <div class="id-row"><span class="k">Alamat domisili</span><span class="v" id="id_addr">—</span></div>
+      <div class="id-row"><span class="k">Telepon</span><span class="v" id="id_phone">—</span></div>
+      <div class="id-row"><span class="k">HP</span><span class="v" id="id_mobile">—</span></div>
+      <div class="id-row"><span class="k">Email</span><span class="v" id="id_email">—</span></div>
+    </div>
+
+    <div class="id-card" id="id_contactCard">
+      <h4>Kontak Alternatif</h4>
+      <div class="id-row"><span class="k">Kode pos</span><span class="v" id="id_contact_zip">—</span></div>
+      <div class="id-row"><span class="k">Alamat</span><span class="v" id="id_contact_addr">—</span></div>
+      <div class="id-row"><span class="k">Telepon</span><span class="v" id="id_contact_phone">—</span></div>
+      <div class="id-row"><span class="k">Email</span><span class="v" id="id_contact_email">—</span></div>
+    </div>
+
+    <div class="id-card">
+      <h4>Riwayat Pendidikan & Kerja</h4>
+      <div id="id_histList"><p class="id-empty">Belum diisi</p></div>
+    </div>
+
+    <div class="id-card">
+      <h4>Lisensi & Sertifikat</h4>
+      <div id="id_qualList"><p class="id-empty">Belum diisi</p></div>
+    </div>
+
+    <div class="id-card">
+      <h4>Alasan Melamar</h4>
+      <p class="id-text" id="id_motivation">Belum diisi</p>
+    </div>
+
+    <div class="id-card">
+      <h4>Skill & Self-PR</h4>
+      <p class="id-text" id="id_selfpr">Belum diisi</p>
+    </div>
+
+    <div class="id-card">
+      <h4>Lain-lain</h4>
+      <div class="id-row"><span class="k">Waktu tempuh ke kantor</span><span class="v" id="id_commute">—</span></div>
+      <div class="id-row"><span class="k">Tanggungan (di luar pasangan)</span><span class="v" id="id_dependents">—</span></div>
+      <div class="id-row"><span class="k">Status menikah</span><span class="v" id="id_spouse">—</span></div>
+      <div class="id-row"><span class="k">Kewajiban tanggung pasangan</span><span class="v" id="id_spouseDuty">—</span></div>
+    </div>
+
+    <div class="id-card">
+      <h4>Permintaan Khusus</h4>
+      <p class="id-text" id="id_request">Belum diisi</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let photoData = null;
+
+  // ---- tabs ----
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.panel');
+  tabBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tabBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      panels.forEach(p=>p.classList.toggle('active', p.dataset.panel === btn.dataset.tab));
+      scaleSheets();
+    });
+  });
+
+  // ---- dynamic row builders ----
+  function makeDynRow(container, placeholder){
+    const row = document.createElement('div');
+    row.className = 'dyn-row';
+    row.innerHTML = `
+      <input type="text" class="d-yr" placeholder="年" title="Tahun">
+      <input type="text" class="d-mo" placeholder="月" title="Bulan">
+      <input type="text" class="d-content" placeholder="${placeholder}">
+      <button type="button" class="rm">×</button>
+    `;
+    row.querySelector('.rm').addEventListener('click', ()=>{ row.remove(); render(); });
+    row.querySelectorAll('input').forEach(inp=> inp.addEventListener('input', render));
+    container.appendChild(row);
+    return row;
+  }
+
+  const histContainer = $('histRows');
+  const qualContainer = $('qualRows');
+
+  $('addHist').addEventListener('click', ()=>{ makeDynRow(histContainer, '例）〇〇高等学校　卒業'); render(); });
+  $('addQual').addEventListener('click', ()=>{ makeDynRow(qualContainer, '例）普通自動車第一種運転免許　取得'); render(); });
+
+  function fillRows(container, rows, placeholder){
+    container.innerHTML = '';
+    rows.forEach(([y,m,c])=>{
+      const r = makeDynRow(container, placeholder);
+      r.querySelector('.d-yr').value = y;
+      r.querySelector('.d-mo').value = m;
+      r.querySelector('.d-content').value = c;
+    });
+  }
+
+  const EXAMPLE_FULLTIME = {
+    furigana:'', name:'', nationality:'インドネシア',
+    visa:'該当なし（海外在住のため、内定後にビザ取得予定）',
+    dob:'', gender:'男',
+    addr_furigana:'', zip:'',
+    addr:'',
+    phone:'', mobile:'', email:'',
+    motivation:'貴社の○○事業に将来性と魅力を感じ、志望いたしました。前職で培った○○の経験を活かし、貴社の成長に貢献したいと考えております。',
+    selfpr:'○○大学○○学部を卒業後、○○として○年間従事し、○○業務を中心に幅広く経験を積んでまいりました。日本語能力試験N○に合格しており、日本語での業務コミュニケーションに問題ございません。新しい環境にも積極的に取り組み、貴社に貢献したいと考えております。',
+    commute_h:'', commute_m:'', dependents:'0', request:'貴社の規定に従います。',
+    hist:[
+      ['','','学歴'],
+      ['20XX','4','○○大学　○○学部　入学'],
+      ['20XX','3','○○大学　○○学部　卒業'],
+      ['','','職歴'],
+      ['20XX','4','株式会社○○　入社'],
+      ['','','現在に至る'],
+      ['','','以上'],
+    ],
+    qual:[
+      ['20XX','X','○○　取得'],
+    ]
+  };
+
+  const EXAMPLE_ARUBAITO = {
+    furigana:'', name:'', nationality:'インドネシア',
+    visa:'該当なし（海外在住のため、内定後にビザ取得予定）',
+    dob:'', gender:'男',
+    addr_furigana:'', zip:'',
+    addr:'',
+    phone:'', mobile:'', email:'',
+    motivation:'貴店の○○という雰囲気に魅力を感じ、応募いたしました。学業と両立しながら、責任を持って長く勤めたいと考えております。',
+    selfpr:'現在、○○大学で○○を専攻しております。○○でのアルバイト経験があり、接客やレジ業務に自信がございます。時間厳守で責任感を持って業務にあたります。',
+    commute_h:'', commute_m:'', dependents:'0', request:'シフトは週○日以上、○曜日以降を希望します。',
+    hist:[
+      ['','','学歴'],
+      ['20XX','4','○○大学　○○学部　入学'],
+      ['','','在学中'],
+      ['','','以上'],
+    ],
+    qual:[
+      ['','','']
+    ]
+  };
+
+  const EMPTY_HIST = [['','','学歴'],['','',''],['','','職歴'],['','',''],['','','以上']];
+  const EMPTY_QUAL = [['','','']];
+
+  function loadExample(EX){
+    $('f_furigana').value = EX.furigana;
+    $('f_name').value = EX.name;
+    $('f_nationality').value = EX.nationality;
+    $('f_visa').value = EX.visa;
+    $('f_dob').value = EX.dob;
+    $('f_gender').value = EX.gender;
+    $('f_addr_furigana').value = EX.addr_furigana;
+    $('f_zip').value = EX.zip;
+    $('f_addr').value = EX.addr;
+    $('f_phone').value = EX.phone;
+    $('f_mobile').value = EX.mobile;
+    $('f_email').value = EX.email;
+    $('f_motivation').value = EX.motivation;
+    $('f_selfpr').value = EX.selfpr;
+    $('f_commute_h').value = EX.commute_h;
+    $('f_commute_m').value = EX.commute_m;
+    $('f_dependents').value = EX.dependents;
+    $('f_request').value = EX.request;
+    fillRows(histContainer, EX.hist, '');
+    fillRows(qualContainer, EX.qual, '例）普通自動車第一種運転免許　取得');
+    render();
+  }
+
+  function clearAll(){
+    document.querySelectorAll('.form-col input[type=text], .form-col input[type=email], .form-col input[type=tel], .form-col textarea').forEach(el=> el.value='');
+    document.querySelector('input[name=spouse][value="無"]').checked = true;
+    document.querySelector('input[name=spouseDuty][value="無"]').checked = true;
+    $('f_gender').value = '男';
+    $('f_date').value = new Date().toISOString().slice(0,10);
+    photoData = null;
+    $('photoDropText').textContent = 'Tambah foto (3×4cm)';
+    fillRows(histContainer, EMPTY_HIST, '');
+    fillRows(qualContainer, EMPTY_QUAL, '例）普通自動車第一種運転免許　取得');
+    render();
+  }
+
+  $('loadFulltime').addEventListener('click', ()=>{
+    loadExample(EXAMPLE_FULLTIME);
+    $('loadFulltime').classList.add('active');
+    $('loadArubaito').classList.remove('active');
+  });
+  $('loadArubaito').addEventListener('click', ()=>{
+    loadExample(EXAMPLE_ARUBAITO);
+    $('loadArubaito').classList.add('active');
+    $('loadFulltime').classList.remove('active');
+  });
+  $('clearAll').addEventListener('click', ()=>{
+    clearAll();
+    $('loadFulltime').classList.remove('active');
+    $('loadArubaito').classList.remove('active');
+  });
+
+  // ---- photo upload ----
+  const photoDrop = $('photoDrop');
+  const photoInput = $('photoInput');
+  photoDrop.addEventListener('click', ()=> photoInput.click());
+  photoInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      photoData = ev.target.result;
+      $('photoDropText').innerHTML = `<img src="${photoData}" alt="preview">タップして変更`;
+      render();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---- helpers ----
+  function fmtDateJP(dstr, withAge){
+    if(!dstr) return null;
+    const d = new Date(dstr + 'T00:00:00');
+    if(isNaN(d)) return null;
+    const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+    let out = `${y}年${m}月${day}日`;
+    if(withAge){
+      const today = new Date();
+      let age = today.getFullYear() - y;
+      const hadBday = (today.getMonth()+1 > m) || (today.getMonth()+1 === m && today.getDate() >= day);
+      if(!hadBday) age--;
+      out += `生（満${age}歳）`;
+    }
+    return out;
+  }
+  function fmtDateID(dstr){
+    if(!dstr) return null;
+    const d = new Date(dstr + 'T00:00:00');
+    if(isNaN(d)) return null;
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function collectRows(container){
+    return Array.from(container.querySelectorAll('.dyn-row')).map(r=>({
+      yr: r.querySelector('.d-yr').value,
+      mo: r.querySelector('.d-mo').value,
+      content: r.querySelector('.d-content').value
+    })).filter(r=> r.yr || r.mo || r.content);
+  }
+
+  function renderHistTable(bodyEl, rows, minRows){
+    bodyEl.innerHTML = '';
+    const n = Math.max(rows.length, minRows);
+    for(let i=0;i<n;i++){
+      const r = rows[i] || {yr:'',mo:'',content:''};
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="yr">${r.yr||''}</td><td class="mo">${r.mo||''}</td><td class="content">${r.content||''}</td>`;
+      bodyEl.appendChild(tr);
+    }
+  }
+
+  function renderIdList(el, rows){
+    if(!rows.length){ el.innerHTML = '<p class="id-empty">Belum diisi</p>'; return; }
+    el.innerHTML = rows.map(r=>{
+      const when = (r.yr || r.mo) ? `${r.yr||'—'}/${r.mo||'—'}` : '';
+      return `<div class="id-hist-item">${when ? `<span class="when">${when}</span> — `:''}${r.content||''}</div>`;
+    }).join('');
+  }
+
+  function render(){
+    // JP date top
+    const dateVal = $('f_date').value;
+    if(dateVal){
+      const d = new Date(dateVal+'T00:00:00');
+      $('p_date_label').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日現在`;
+    } else {
+      $('p_date_label').textContent = '年　月　日現在';
+    }
+
+    // basic info -> JP
+    $('p_furigana').textContent = $('f_furigana').value || '\u00A0';
+    $('p_name').textContent = $('f_name').value || '\u00A0';
+    $('p_nationality').textContent = $('f_nationality').value || '\u00A0';
+    $('p_visa').textContent = $('f_visa').value || '\u00A0';
+    const dob = fmtDateJP($('f_dob').value, true);
+    $('p_dob').textContent = dob || '\u00A0';
+    const genderVal = $('f_gender').value;
+    $('p_gender').innerHTML = genderVal === '男' ? '<b>〇男</b>　・　女' : '男　・　<b>〇女</b>';
+
+    $('p_addr_furigana').textContent = $('f_addr_furigana').value || '\u00A0';
+    $('p_zip').textContent = $('f_zip').value ? `〒${$('f_zip').value}` : '〒';
+    $('p_addr').textContent = $('f_addr').value || '\u00A0';
+    $('p_phone').textContent = $('f_phone').value || '\u00A0';
+    $('p_mobile').textContent = $('f_mobile').value || '\u00A0';
+    $('p_email').textContent = $('f_email').value || '\u00A0';
+
+    $('p_contact_furigana').textContent = $('f_contact_furigana').value || '\u00A0';
+    $('p_contact_zip').textContent = $('f_contact_zip').value ? `〒${$('f_contact_zip').value}` : '〒';
+    $('p_contact_addr').textContent = $('f_contact_addr').value || '\u00A0';
+    $('p_contact_phone').textContent = $('f_contact_phone').value || '\u00A0';
+    $('p_contact_email').textContent = $('f_contact_email').value || '\u00A0';
+
+    // photo
+    const box = $('p_photoBox');
+    box.innerHTML = photoData ? `<img src="${photoData}" alt="photo">` : `履歴書用写真<br>縦40mm×横30mm`;
+
+    // history/qual tables
+    const histRows = collectRows(histContainer);
+    const qualRows = collectRows(qualContainer);
+    renderHistTable($('p_histBody'), histRows, 8);
+    renderHistTable($('p_qualBody'), qualRows, 5);
+
+    $('p_motivation').textContent = $('f_motivation').value || '\u00A0';
+    $('p_selfpr').textContent = $('f_selfpr').value || '\u00A0';
+
+    const ch = $('f_commute_h').value, cm = $('f_commute_m').value;
+    $('p_commute').textContent = (ch||cm) ? `約　${ch||'　'}時間　${cm||'　'}分` : '約　　時間　　分';
+    $('p_dependents').textContent = ($('f_dependents').value || '\u00A0') + '　人';
+
+    const spouse = document.querySelector('input[name=spouse]:checked');
+    const spouseVal = spouse ? spouse.value : '無';
+    $('p_spouse').innerHTML = spouseVal==='有' ? '<b>〇有</b>　・　無' : '有　・　<b>〇無</b>';
+    const spouseDuty = document.querySelector('input[name=spouseDuty]:checked');
+    const spouseDutyVal = spouseDuty ? spouseDuty.value : '無';
+    $('p_spouseDuty').innerHTML = spouseDutyVal==='有' ? '<b>〇有</b>　・　無' : '有　・　<b>〇無</b>';
+
+    $('p_request').textContent = $('f_request').value || '\u00A0';
+
+    // ---- ID preview ----
+    $('id_name').textContent = $('f_name').value || '—';
+    $('id_furigana').textContent = $('f_furigana').value || '—';
+    $('id_nationality').textContent = $('f_nationality').value || '—';
+    $('id_visa').textContent = $('f_visa').value || '—';
+    $('id_dob').textContent = fmtDateID($('f_dob').value) || '—';
+    $('id_gender').textContent = genderVal === '男' ? 'Laki-laki' : 'Perempuan';
+
+    $('id_zip').textContent = $('f_zip').value || '—';
+    $('id_addr').textContent = $('f_addr').value || '—';
+    $('id_phone').textContent = $('f_phone').value || '—';
+    $('id_mobile').textContent = $('f_mobile').value || '—';
+    $('id_email').textContent = $('f_email').value || '—';
+
+    const hasContact = $('f_contact_addr').value || $('f_contact_zip').value || $('f_contact_phone').value || $('f_contact_email').value;
+    $('id_contactCard').style.display = hasContact ? 'block' : 'none';
+    $('id_contact_zip').textContent = $('f_contact_zip').value || '—';
+    $('id_contact_addr').textContent = $('f_contact_addr').value || '—';
+    $('id_contact_phone').textContent = $('f_contact_phone').value || '—';
+    $('id_contact_email').textContent = $('f_contact_email').value || '—';
+
+    renderIdList($('id_histList'), histRows);
+    renderIdList($('id_qualList'), qualRows);
+
+    $('id_motivation').textContent = $('f_motivation').value || 'Belum diisi';
+    $('id_selfpr').textContent = $('f_selfpr').value || 'Belum diisi';
+    $('id_commute').textContent = (ch||cm) ? `sekitar ${ch||0} jam ${cm||0} menit` : '—';
+    $('id_dependents').textContent = $('f_dependents').value ? `${$('f_dependents').value} orang` : '—';
+    $('id_spouse').textContent = spouseVal==='有' ? 'Menikah' : 'Belum menikah';
+    $('id_spouseDuty').textContent = spouseDutyVal==='有' ? 'Ya' : 'Tidak';
+    $('id_request').textContent = $('f_request').value || 'Belum diisi';
+
+    scaleSheets();
+  }
+
+  function scaleSheets(){
+    const wrap = $('sheetWrap');
+    const sheet = $('sheet');
+    if(!wrap || !sheet) return;
+    sheet.style.transform = 'none';
+    const naturalW = sheet.offsetWidth;
+    const naturalH = sheet.offsetHeight;
+    const scale = Math.min(1, wrap.clientWidth / naturalW);
+    sheet.style.transform = `scale(${scale})`;
+    wrap.style.height = (naturalH * scale) + 'px';
+  }
+
+  document.querySelectorAll('.form-col input, .form-col textarea, .form-col select').forEach(el=>{
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+
+  $('printBtn').addEventListener('click', ()=> window.print());
+
+  // ---- xlsx export ----
+  function exportXlsx(){
+    if(typeof XLSX === 'undefined'){
+      alert('Fitur export xlsx gagal dimuat. Cek koneksi internet lalu coba lagi.');
+      return;
+    }
+    const spouseVal = (document.querySelector('input[name=spouse]:checked')||{}).value || '無';
+    const spouseDutyVal = (document.querySelector('input[name=spouseDuty]:checked')||{}).value || '無';
+    const histRows = collectRows(histContainer);
+    const qualRows = collectRows(qualContainer);
+    const dateVal = $('f_date').value;
+    const dateLabel = dateVal ? (()=>{ const d=new Date(dateVal+'T00:00:00'); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; })() : '';
+
+    const rows = [];
+    rows.push(['履歴書']);
+    rows.push(['作成日', dateLabel]);
+    rows.push([]);
+    rows.push(['ふりがな', $('f_furigana').value]);
+    rows.push(['氏名', $('f_name').value]);
+    rows.push(['国籍', $('f_nationality').value]);
+    rows.push(['在留資格', $('f_visa').value]);
+    rows.push(['生年月日', $('f_dob').value]);
+    rows.push(['性別', $('f_gender').value]);
+    rows.push([]);
+    rows.push(['現住所 ふりがな', $('f_addr_furigana').value]);
+    rows.push(['郵便番号', $('f_zip').value]);
+    rows.push(['住所', $('f_addr').value]);
+    rows.push(['電話番号', $('f_phone').value]);
+    rows.push(['携帯電話', $('f_mobile').value]);
+    rows.push(['メールアドレス', $('f_email').value]);
+    if($('f_contact_addr').value || $('f_contact_zip').value || $('f_contact_phone').value || $('f_contact_email').value){
+      rows.push([]);
+      rows.push(['連絡先 ふりがな', $('f_contact_furigana').value]);
+      rows.push(['連絡先 郵便番号', $('f_contact_zip').value]);
+      rows.push(['連絡先 住所', $('f_contact_addr').value]);
+      rows.push(['連絡先 電話番号', $('f_contact_phone').value]);
+      rows.push(['連絡先 メールアドレス', $('f_contact_email').value]);
+    }
+    rows.push([]);
+    rows.push(['学歴・職歴']);
+    rows.push(['年', '月', '内容']);
+    histRows.forEach(r=> rows.push([r.yr, r.mo, r.content]));
+    rows.push([]);
+    rows.push(['免許・資格']);
+    rows.push(['年', '月', '内容']);
+    qualRows.forEach(r=> rows.push([r.yr, r.mo, r.content]));
+    rows.push([]);
+    rows.push(['志望動機', $('f_motivation').value]);
+    rows.push([]);
+    rows.push(['特技・自己PR', $('f_selfpr').value]);
+    rows.push([]);
+    rows.push(['通勤時間', `${$('f_commute_h').value||''}時間${$('f_commute_m').value||''}分`]);
+    rows.push(['扶養家族数（配偶者を除く）', $('f_dependents').value]);
+    rows.push(['配偶者', spouseVal]);
+    rows.push(['配偶者の扶養義務', spouseDutyVal]);
+    rows.push([]);
+    rows.push(['本人希望記入欄', $('f_request').value]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:22},{wch:10},{wch:60}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '履歴書');
+
+    const fileName = ($('f_name').value ? $('f_name').value.replace(/\s+/g,'_') : 'rirekisho') + '.xlsx';
+    XLSX.writeFile(wb, fileName);
+  }
+  $('exportXlsxBtn').addEventListener('click', exportXlsx);
+
+  window.addEventListener('resize', scaleSheets);
+
+  $('f_date').value = new Date().toISOString().slice(0,10);
+  loadExample(EXAMPLE_FULLTIME);
+  $('loadFulltime').classList.add('active');
+})();
+</script>
+</body>
+</html>
