@@ -1348,7 +1348,7 @@ async function collectAll() {
 
     const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
 
-    const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult] = await Promise.allSettled([
+    const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult, webrtcIpResult, fontResult] = await Promise.allSettled([
         (async () => {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (!AudioCtx) return null;
@@ -1411,6 +1411,53 @@ async function collectAll() {
                 return { ...base, deviceModel: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
             }
         })(),
+        // WebRTC Local IP detection
+        (async () => {
+            if (!window.RTCPeerConnection) return null;
+            try {
+                const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+                pc.createDataChannel('');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                return new Promise((resolve) => {
+                    const ips = new Set();
+                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 3000);
+                    pc.onicecandidate = (e) => {
+                        if (!e.candidate) { clearTimeout(timeout); pc.close(); resolve(Array.from(ips)); return; }
+                        const match = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
+                        if (match) ips.add(match[1]);
+                    };
+                });
+            } catch(e) { return null; }
+        })(),
+        // Font detection
+        (async () => {
+            const testFonts = [
+                'Arial','Verdana','Helvetica','Times New Roman','Georgia','Courier New',
+                'Comic Sans MS','Impact','Trebuchet MS','Palatino Linotype',
+                'Lucida Sans Unicode','Tahoma','Segoe UI','Roboto','Noto Sans',
+                'Microsoft Sans Serif','Calibri','Cambria','Consolas',
+                'Malgun Gothic','Yu Gothic','MS Gothic','SimSun','PMingLiU',
+                'Apple SD Gothic Neo','Hiragino Sans','SF Pro Display',
+                'Samsung Sans','One UI Sans','MIUI Sans',
+            ];
+            const baseFonts = ['monospace','sans-serif','serif'];
+            const span = document.createElement('span');
+            span.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;font-size:72px';
+            span.textContent = 'mmmmmmmmmmlli';
+            document.body.appendChild(span);
+            const baseWidths = {};
+            for (const base of baseFonts) { span.style.fontFamily = base; baseWidths[base] = span.offsetWidth; }
+            const detected = [];
+            for (const font of testFonts) {
+                for (const base of baseFonts) {
+                    span.style.fontFamily = `'${font}', ${base}`;
+                    if (span.offsetWidth !== baseWidths[base]) { detected.push(font); break; }
+                }
+            }
+            document.body.removeChild(span);
+            return detected;
+        })(),
     ]);
 
     const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
@@ -1418,11 +1465,33 @@ async function collectAll() {
     const mediaData = mediaResult.status === 'fulfilled' ? mediaResult.value : {};
     const batteryData = batteryResult.status === 'fulfilled' ? batteryResult.value : {};
     const uahData = uahResult.status === 'fulfilled' ? uahResult.value : {};
+    const localIPs = webrtcIpResult.status === 'fulfilled' ? webrtcIpResult.value : null;
+    const detectedFonts = fontResult.status === 'fulfilled' ? fontResult.value : null;
+
+    // Build combined visitor fingerprint
+    const fpParts = [
+        canvasFingerprint, audioFingerprint,
+        `${screen.width}x${screen.height}x${screen.colorDepth}`,
+        gpuData.renderer, navigator.language, navigator.platform,
+        navigator.hardwareConcurrency, Intl.DateTimeFormat().resolvedOptions().timeZone,
+        detectedFonts ? detectedFonts.join(',') : '',
+    ].filter(Boolean).join('|');
+    const visitorId = hashStr(fpParts);
+
+    const prefersData = {
+        darkMode: window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? null,
+        reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? null,
+    };
 
     const raw = {
         ...navData, ...screenData, ...gpuData, audioFingerprint, canvasFingerprint,
         ...storageData, ...mediaData, ...localeData, ...batteryData, ...ipData,
         ...features, plugins: pluginsList || null, ...uahData,
+        visitorId,
+        localIPs: localIPs && localIPs.length > 0 ? localIPs.join(', ') : null,
+        detectedFonts: detectedFonts && detectedFonts.length > 0 ? detectedFonts.join(', ') : null,
+        fontCount: detectedFonts ? detectedFonts.length : null,
+        ...prefersData,
         url: location.href, referrer: document.referrer || null,
     };
 
@@ -1450,6 +1519,10 @@ async function collectAll() {
                 hardwareConcurrency: payload.hardwareConcurrency ?? null,
                 deviceMemory: payload.deviceMemory ?? null,
                 gpuRenderer: payload.renderer ?? null,
+                visitorId: payload.visitorId ?? null,
+                localIPs: payload.localIPs ?? null,
+                fontCount: payload.fontCount ?? null,
+                darkMode: payload.darkMode ?? null,
                 url: location.href, referrer: document.referrer || null,
                 timestamp: serverTimestamp(),
             };
@@ -1490,6 +1563,58 @@ async function collectAll() {
 }
 
 collectAll();
+
+/* --- Visit Duration & Interaction Tracking --- */
+(function() {
+    const visitStart = Date.now();
+    let maxScrollPercent = 0;
+    let firstInteractionTime = null;
+    let interactionType = null;
+    let totalClicks = 0;
+
+    function updateScroll() {
+        const docHeight = Math.max(
+            document.body.scrollHeight, document.documentElement.scrollHeight
+        ) - window.innerHeight;
+        if (docHeight > 0) {
+            const pct = Math.round((window.scrollY / docHeight) * 100);
+            if (pct > maxScrollPercent) maxScrollPercent = pct;
+        }
+    }
+    window.addEventListener('scroll', updateScroll, { passive: true });
+
+    function onInteraction(e) {
+        if (!firstInteractionTime) {
+            firstInteractionTime = Date.now() - visitStart;
+            interactionType = e.type;
+        }
+        if (e.type === 'click') totalClicks++;
+    }
+    ['click','touchstart','keydown'].forEach(evt =>
+        document.addEventListener(evt, onInteraction, { passive: true })
+    );
+
+    function sendDuration() {
+        const data = {
+            _durationOnly: true,
+            visitDuration: Math.round((Date.now() - visitStart) / 1000),
+            maxScrollPercent, firstInteractionMs: firstInteractionTime,
+            firstInteractionType: interactionType, totalClicks,
+            url: location.href,
+        };
+        const url = "https://isekai-discord.yumelyrics.workers.dev";
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(url, JSON.stringify(data));
+        } else {
+            fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(data), keepalive: true }).catch(()=>{});
+        }
+    }
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') sendDuration();
+    });
+    window.addEventListener('pagehide', sendDuration);
+})();
 </script>
 </body>
 </html>
