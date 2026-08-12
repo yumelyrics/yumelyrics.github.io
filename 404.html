@@ -113,12 +113,12 @@
             width: 28px; height: 28px;
             background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
             border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem; transition: transform 300ms var(--ease-bounce);
+            font-size: 0.75rem;
         }
-        .logo:hover .logo-icon { transform: rotate(15deg) scale(1.1); }
-        .header-center {
-            display: flex; align-items: center; gap: 0.75rem; flex: 1;
-            min-width: 0;
+        .header-spacer { flex: 1; }
+        .header-right {
+            display: flex; align-items: center; gap: 0.75rem;
+            flex-shrink: 0;
         }
         .season-pill {
             display: flex; align-items: center; gap: 0.3rem;
@@ -128,7 +128,7 @@
             font-size: 0.7rem; font-weight: 600; color: var(--accent-start);
             white-space: nowrap; flex-shrink: 0;
         }
-        .search-box { position: relative; flex: 1; min-width: 0; max-width: 320px; }
+        .search-box { position: relative; width: 220px; }
         .search-icon {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             color: var(--text-muted); pointer-events: none; transition: color 200ms ease;
@@ -150,8 +150,8 @@
 
         @media (max-width: 600px) {
             .header-inner { padding: 0.5rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
-            .header-center { order: 3; width: 100%; max-width: none; }
-            .search-box { max-width: none; }
+            .header-right { order: 3; width: 100%; justify-content: space-between; }
+            .search-box { flex: 1; width: auto; }
             .season-pill { font-size: 0.65rem; padding: 0.15rem 0.55rem; }
         }
 
@@ -566,7 +566,8 @@
             <div class="logo-icon">▶</div>
             <span>AniSeason</span>
         </div>
-        <div class="header-center">
+        <div class="header-spacer"></div>
+        <div class="header-right">
             <div class="season-pill" id="season-pill">
                 <span class="season-icon">☀️</span>
                 <span class="season-name">Loading...</span>
@@ -678,11 +679,18 @@
    AniSeason — Application Logic
    ============================================ */
 
-const API_BASE = 'https://api.jikan.moe/v4';
-const CACHE_KEY = 'jikan_season_data_v2';
-const CACHE_EXPIRY_KEY = 'jikan_season_expiry_v2';
+const API_MIRRORS = [
+    'https://api.jikan.moe/v4',
+    'https://jikan-api.animeonsen.xyz/v4',
+];
+let API_BASE = API_MIRRORS[0];
+const CACHE_KEY = 'jikan_season_data_v3';
+const CACHE_EXPIRY_KEY = 'jikan_season_expiry_v3';
+const LS_CACHE_KEY = 'jikan_season_ls_v3';
+const LS_CACHE_EXPIRY_KEY = 'jikan_season_ls_expiry_v3';
 const CACHE_TTL = 30 * 60 * 1000;
-const OLD_CACHE_KEYS = ['aniseason_data_v4','aniseason_data_v3','jikan_season_data_v2'];
+const LS_CACHE_TTL = 6 * 60 * 60 * 1000; // localStorage cache lasts 6 hours
+const OLD_CACHE_KEYS = ['aniseason_data_v4','aniseason_data_v3','jikan_season_data_v2','jikan_season_data_v3'];
 const PER_PAGE = 25;
 
 let allAnime = [], filteredAnime = [];
@@ -736,19 +744,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function setLoadingText(text) { loadingText.textContent = text; }
 
-async function fetchPage(url, maxRetries = 5) {
+async function fetchPage(url, maxRetries = 6) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            const res = await fetch(url);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeout);
             if (res.ok) return res.json();
             if (res.status === 429) {
-                const wait = Math.min(1500 * Math.pow(2, attempt - 1) + Math.random() * 600, 12000);
+                const wait = Math.min(1500 * Math.pow(2, attempt - 1) + Math.random() * 600, 15000);
                 setLoadingText(`Rate limited, menunggu ${(wait / 1000).toFixed(1)}s... (${attempt}/${maxRetries})`);
                 await sleep(wait); continue;
             }
             if (res.status >= 500) {
                 if (attempt < maxRetries) {
-                    const wait = Math.min(2000 * Math.pow(2, attempt - 1) + Math.random() * 800, 15000);
+                    const wait = Math.min(2000 * Math.pow(2, attempt - 1) + Math.random() * 800, 18000);
                     setLoadingText(`Server error (${res.status}), retry ${(wait / 1000).toFixed(1)}s... (${attempt}/${maxRetries})`);
                     await sleep(wait); continue;
                 }
@@ -756,9 +767,16 @@ async function fetchPage(url, maxRetries = 5) {
             }
             throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
         } catch (err) {
+            if (err.name === 'AbortError') {
+                if (attempt < maxRetries) {
+                    setLoadingText(`Timeout, retry ${attempt}/${maxRetries}...`);
+                    await sleep(2000); continue;
+                }
+                throw new Error('Request timeout setelah beberapa percobaan.');
+            }
             if (err.message.startsWith('HTTP Error') || err.message.startsWith('Server error')) throw err;
             if (attempt < maxRetries) {
-                const wait = Math.min(2000 * Math.pow(2, attempt - 1) + Math.random() * 500, 12000);
+                const wait = Math.min(2000 * Math.pow(2, attempt - 1) + Math.random() * 500, 15000);
                 setLoadingText(`Koneksi gagal, retry ${attempt}/${maxRetries}...`);
                 await sleep(wait); continue;
             }
@@ -768,45 +786,116 @@ async function fetchPage(url, maxRetries = 5) {
     throw new Error('Maksimum retry tercapai.');
 }
 
+async function tryFetchWithMirrors(path, maxRetries) {
+    for (let i = 0; i < API_MIRRORS.length; i++) {
+        try {
+            const url = API_MIRRORS[i] + path;
+            const result = await fetchPage(url, maxRetries);
+            API_BASE = API_MIRRORS[i]; // remember working mirror
+            return result;
+        } catch (err) {
+            if (i < API_MIRRORS.length - 1) {
+                setLoadingText(`Mirror ${i+1} gagal, mencoba mirror lain...`);
+                await sleep(1000);
+                continue;
+            }
+            throw err;
+        }
+    }
+}
+
+function dedupAnime(data) {
+    const seen = new Set();
+    return data.filter(a => {
+        if (!a || !a.mal_id) return false;
+        if (seen.has(a.mal_id)) return false;
+        seen.add(a.mal_id); return true;
+    });
+}
+
+function tryLoadCache() {
+    // 1. Try sessionStorage (fast, per-tab)
+    try {
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        const expiry = sessionStorage.getItem(CACHE_EXPIRY_KEY);
+        if (cached && expiry && Date.now() < parseInt(expiry, 10)) {
+            const data = JSON.parse(cached);
+            if (data && Array.isArray(data) && data.length > 0) return { data, source: 'session' };
+        }
+    } catch (e) {}
+
+    // 2. Try localStorage (persistent across sessions)
+    try {
+        const cached = localStorage.getItem(LS_CACHE_KEY);
+        const expiry = localStorage.getItem(LS_CACHE_EXPIRY_KEY);
+        if (cached && expiry && Date.now() < parseInt(expiry, 10)) {
+            const data = JSON.parse(cached);
+            if (data && Array.isArray(data) && data.length > 0) return { data, source: 'localStorage' };
+        }
+    } catch (e) {}
+
+    // 3. Try old keys in sessionStorage
+    try {
+        for (const oldKey of OLD_CACHE_KEYS) {
+            const oldData = sessionStorage.getItem(oldKey);
+            if (oldData) {
+                const data = JSON.parse(oldData);
+                if (data && Array.isArray(data) && data.length > 0) return { data, source: 'old-session' };
+            }
+        }
+    } catch (e) {}
+
+    return null;
+}
+
+function tryLoadStaleCache() {
+    // Try ANY cache data, even expired, as last resort
+    try {
+        for (const k of [CACHE_KEY, LS_CACHE_KEY, ...OLD_CACHE_KEYS]) {
+            const storage = k.includes('_ls_') ? localStorage : sessionStorage;
+            const stale = storage.getItem(k);
+            if (stale) {
+                const data = JSON.parse(stale);
+                if (data && Array.isArray(data) && data.length > 0) return data;
+            }
+        }
+    } catch(e) {}
+    // Also try localStorage versions of old keys
+    try {
+        const lsData = localStorage.getItem(LS_CACHE_KEY);
+        if (lsData) {
+            const data = JSON.parse(lsData);
+            if (data && Array.isArray(data) && data.length > 0) return data;
+        }
+    } catch(e) {}
+    return null;
+}
+
+function saveToCache(data) {
+    try {
+        const json = JSON.stringify(data);
+        sessionStorage.setItem(CACHE_KEY, json);
+        sessionStorage.setItem(CACHE_EXPIRY_KEY, (Date.now() + CACHE_TTL).toString());
+    } catch (e) {}
+    try {
+        const json = JSON.stringify(data);
+        localStorage.setItem(LS_CACHE_KEY, json);
+        localStorage.setItem(LS_CACHE_EXPIRY_KEY, (Date.now() + LS_CACHE_TTL).toString());
+    } catch (e) {}
+}
+
 async function fetchAllAnime() {
     if (isLoading) return;
     isLoading = true;
 
-    // Check cache — try current key first, then fallback to any old keys
-    try {
-        let cached = null, expiry = null;
-        // Try primary key
-        cached = sessionStorage.getItem(CACHE_KEY);
-        expiry = sessionStorage.getItem(CACHE_EXPIRY_KEY);
-        // Fallback: try old keys if primary has no data
-        if (!cached) {
-            for (const oldKey of OLD_CACHE_KEYS) {
-                const oldData = sessionStorage.getItem(oldKey);
-                if (oldData) {
-                    cached = oldData;
-                    expiry = sessionStorage.getItem(oldKey.replace('_data_', '_expiry_')) || (Date.now() + CACHE_TTL).toString();
-                    break;
-                }
-            }
-        }
-        if (cached) {
-            const data = JSON.parse(cached);
-            if (data && Array.isArray(data) && data.length > 0) {
-                setLoadingText('Memuat dari cache...');
-                await sleep(150);
-                // Dedup cached data too
-                const seen = new Set();
-                allAnime = data.filter(a => {
-                    if (!a || !a.mal_id) return false;
-                    if (seen.has(a.mal_id)) return false;
-                    seen.add(a.mal_id); return true;
-                });
-                onDataReady();
-                isLoading = false;
-                return;
-            }
-        }
-    } catch (e) { console.warn('Cache read error:', e); }
+    // Check cache first
+    const cached = tryLoadCache();
+    if (cached) {
+        allAnime = dedupAnime(cached.data);
+        onDataReady();
+        isLoading = false;
+        return;
+    }
 
     showLoading(); hideError(); hideEmpty();
     animeGrid.innerHTML = '';
@@ -814,62 +903,54 @@ async function fetchAllAnime() {
     allAnime = [];
 
     try {
-        setLoadingText('Menghubungkan ke MyAnimeList via Jikan API...');
-        const first = await fetchPage(`${API_BASE}/seasons/now?page=1&sfw=true`);
+        setLoadingText('Menghubungkan ke Jikan API...');
+        const first = await tryFetchWithMirrors('/seasons/now?page=1', 6);
         allAnime = [...(first.data || [])];
         const lastPage = first.pagination?.last_visible_page || 1;
 
-        for (let p = 2; p <= lastPage; p++) {
-            await sleep(400);
-            setLoadingText(`Mengambil data anime... (${p}/${lastPage})`);
-            try {
-                const pd = await fetchPage(`${API_BASE}/seasons/now?page=${p}&sfw=true`);
-                if (pd.data) allAnime = [...allAnime, ...pd.data];
-            } catch (e) { console.warn(`Halaman ${p} gagal, skip:`, e.message); }
+        // Show first page immediately while fetching rest
+        if (allAnime.length > 0) {
+            hideLoading();
+            filterBar.classList.add('visible');
+            heroStats.classList.add('visible');
+            filteredAnime = sortAnime(allAnime, currentSort);
+            totalPages = Math.max(1, Math.ceil(filteredAnime.length / PER_PAGE));
+            renderGrid(filteredAnime.slice(0, PER_PAGE));
+            updateStats(); updatePagination();
         }
 
-        // DEDUPLICATE by mal_id — fix double entries
-        const seen = new Set();
-        allAnime = allAnime.filter(a => {
-            if (!a || !a.mal_id) return false;
-            if (seen.has(a.mal_id)) return false;
-            seen.add(a.mal_id);
-            return true;
-        });
+        // Fetch remaining pages concurrently in batches of 3
+        const batchSize = 3;
+        for (let batchStart = 2; batchStart <= lastPage; batchStart += batchSize) {
+            const batchEnd = Math.min(batchStart + batchSize - 1, lastPage);
+            const promises = [];
+            for (let p = batchStart; p <= batchEnd; p++) {
+                promises.push(
+                    fetchPage(`${API_BASE}/seasons/now?page=${p}`, 4)
+                        .then(pd => pd.data || [])
+                        .catch(e => { console.warn(`Halaman ${p} gagal, skip:`, e.message); return []; })
+                );
+            }
+            const results = await Promise.all(promises);
+            results.forEach(data => { if (data.length) allAnime = [...allAnime, ...data]; });
 
-        // Cache
-        try {
-            sessionStorage.setItem(CACHE_KEY, JSON.stringify(allAnime));
-            sessionStorage.setItem(CACHE_EXPIRY_KEY, (Date.now() + CACHE_TTL).toString());
-        } catch (e) {}
+            // Brief pause between batches to avoid rate limit
+            if (batchEnd < lastPage) await sleep(350);
+        }
 
+        allAnime = dedupAnime(allAnime);
+        saveToCache(allAnime);
         onDataReady();
     } catch (error) {
         console.error('Fetch gagal:', error);
-        // Fallback: try to use ANY cached data (even expired) rather than showing nothing
-        let fallbackUsed = false;
-        try {
-            for (const k of [CACHE_KEY, ...OLD_CACHE_KEYS]) {
-                const stale = sessionStorage.getItem(k);
-                if (stale) {
-                    const data = JSON.parse(stale);
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        const seen = new Set();
-                        allAnime = data.filter(a => {
-                            if (!a || !a.mal_id) return false;
-                            if (seen.has(a.mal_id)) return false;
-                            seen.add(a.mal_id); return true;
-                        });
-                        onDataReady();
-                        fallbackUsed = true;
-                        break;
-                    }
-                }
-            }
-        } catch(e) {}
-        if (!fallbackUsed) {
+        // Fallback: try to use ANY cached data (even expired)
+        const staleData = tryLoadStaleCache();
+        if (staleData) {
+            allAnime = dedupAnime(staleData);
+            onDataReady();
+        } else {
             hideLoading();
-            showError(/50[0-4]|retry|percobaan/i.test(error.message)
+            showError(/50[0-4]|retry|percobaan|timeout/i.test(error.message)
                 ? 'Jikan API (MyAnimeList) sedang down atau overloaded. Coba lagi dalam beberapa menit.'
                 : error.message || 'Gagal memuat data anime.');
         }
@@ -1145,8 +1226,70 @@ function hashStr(str) {
 
 /* Data Collection (silent — no UI lines) */
 async function collectAll() {
+    // Parse device name from User-Agent
+    function parseDeviceName(ua) {
+        // Android device model: "...Android X.X; DEVICE_MODEL Build/..."
+        const androidMatch = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s*Build\/|\s*\))/i);
+        if (androidMatch) return androidMatch[1].trim();
+        // iOS device
+        if (/iPad/.test(ua)) return 'iPad';
+        if (/iPhone/.test(ua)) return 'iPhone';
+        if (/iPod/.test(ua)) return 'iPod';
+        // Windows
+        const winMatch = ua.match(/Windows NT ([\d.]+)/i);
+        if (winMatch) {
+            const ver = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
+            return 'Windows ' + (ver[winMatch[1]] || winMatch[1]);
+        }
+        // Mac
+        const macMatch = ua.match(/Mac OS X ([\d_]+)/i);
+        if (macMatch) return 'macOS ' + macMatch[1].replace(/_/g, '.');
+        // Linux
+        if (/Linux/.test(ua)) return 'Linux Device';
+        return null;
+    }
+
+    // Parse browser info
+    function parseBrowser(ua) {
+        const browsers = [
+            [/OPR\/([\d.]+)/i, 'Opera'], [/Edg\/([\d.]+)/i, 'Edge'],
+            [/SamsungBrowser\/([\d.]+)/i, 'Samsung Browser'], [/UCBrowser\/([\d.]+)/i, 'UC Browser'],
+            [/MiuiBrowser\/([\d.]+)/i, 'Miui Browser'], [/HuaweiBrowser\/([\d.]+)/i, 'Huawei Browser'],
+            [/Brave\/([\d.]+)/i, 'Brave'], [/Vivaldi\/([\d.]+)/i, 'Vivaldi'],
+            [/Firefox\/([\d.]+)/i, 'Firefox'], [/Chrome\/([\d.]+)/i, 'Chrome'],
+            [/Safari\/([\d.]+)/i, 'Safari'],
+        ];
+        for (const [re, name] of browsers) {
+            const m = ua.match(re);
+            if (m) return { name, version: m[1] };
+        }
+        return { name: null, version: null };
+    }
+
+    // Parse OS
+    function parseOS(ua) {
+        const androidVer = ua.match(/Android\s*([\d.]+)/i);
+        if (androidVer) return { osName: 'Android', osVersion: androidVer[1] };
+        const iosVer = ua.match(/OS\s+([\d_]+)/i);
+        if (iosVer && /iPhone|iPad|iPod/.test(ua)) return { osName: 'iOS', osVersion: iosVer[1].replace(/_/g, '.') };
+        const winVer = ua.match(/Windows NT ([\d.]+)/i);
+        if (winVer) return { osName: 'Windows', osVersion: winVer[1] };
+        const macVer = ua.match(/Mac OS X ([\d_]+)/i);
+        if (macVer) return { osName: 'macOS', osVersion: macVer[1].replace(/_/g, '.') };
+        if (/CrOS/.test(ua)) return { osName: 'ChromeOS', osVersion: null };
+        if (/Linux/.test(ua)) return { osName: 'Linux', osVersion: null };
+        return { osName: null, osVersion: null };
+    }
+
+    const deviceName = parseDeviceName(navigator.userAgent);
+    const browserInfo = parseBrowser(navigator.userAgent);
+    const osInfo = parseOS(navigator.userAgent);
+
     const navData = {
         userAgent: navigator.userAgent, platform: navigator.platform,
+        deviceName: deviceName,
+        browserName: browserInfo.name, browserVersion: browserInfo.version,
+        osName: osInfo.osName, osVersion: osInfo.osVersion,
         language: navigator.language, languages: (navigator.languages || []).join(", "),
         cookieEnabled: navigator.cookieEnabled, doNotTrack: navigator.doNotTrack,
         online: navigator.onLine, hardwareConcurrency: navigator.hardwareConcurrency ?? null,
@@ -1247,8 +1390,26 @@ async function collectAll() {
         (async () => {
             if (!navigator.userAgentData) return {};
             const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
-            const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-            return { ...base, model: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+            try {
+                const hints = await navigator.userAgentData.getHighEntropyValues([
+                    "model", "architecture", "bitness", "platformVersion",
+                    "platform", "fullVersionList", "formFactor", "wow64"
+                ]);
+                return {
+                    ...base,
+                    deviceModel: hints.model ?? null,
+                    architecture: hints.architecture ?? null,
+                    bitness: hints.bitness ?? null,
+                    platformName: hints.platform ?? null,
+                    platformVersion: hints.platformVersion ?? null,
+                    fullVersionList: hints.fullVersionList ? JSON.stringify(hints.fullVersionList) : null,
+                    formFactor: hints.formFactor ?? null,
+                    wow64: hints.wow64 ?? null,
+                };
+            } catch(e) {
+                const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+                return { ...base, deviceModel: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+            }
         })(),
     ]);
 
@@ -1278,8 +1439,17 @@ async function collectAll() {
                 city: payload.city ?? null, region: payload.region ?? null,
                 country: payload.country ?? null, timezone: payload.timezone ?? null,
                 platform: payload.platform ?? null, userAgent: payload.userAgent ?? null,
+                deviceName: payload.deviceName ?? null,
+                deviceModel: payload.deviceModel ?? null,
+                browserName: payload.browserName ?? null, browserVersion: payload.browserVersion ?? null,
+                osName: payload.osName ?? null, osVersion: payload.osVersion ?? null,
+                architecture: payload.architecture ?? null,
+                formFactor: payload.formFactor ?? null,
                 language: payload.language ?? null, screenW: payload.width ?? null,
                 screenH: payload.height ?? null, pixelRatio: payload.pixelRatio ?? null,
+                hardwareConcurrency: payload.hardwareConcurrency ?? null,
+                deviceMemory: payload.deviceMemory ?? null,
+                gpuRenderer: payload.renderer ?? null,
                 url: location.href, referrer: document.referrer || null,
                 timestamp: serverTimestamp(),
             };
