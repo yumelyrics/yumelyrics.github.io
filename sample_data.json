@@ -1,0 +1,32 @@
+{
+  "furigana": "ヤマダ　タロウ",
+  "name": "山田　太郎",
+  "nationality": "日本",
+  "gender": "男",
+  "dob_text": "1998年4月1日生（満27歳）",
+  "addr_furigana": "トウキョウト　シブヤク　ジンナン",
+  "zip": "150-0041",
+  "address": "東京都渋谷区神南1-2-3　〇〇マンション101",
+  "phone": "090-1234-5678",
+  "email": "taro.yamada@example.com",
+  "history": [
+    {"year": "2014", "month": "4", "content": "〇〇高等学校 入学"},
+    {"year": "2017", "month": "3", "content": "〇〇高等学校 卒業"},
+    {"year": "2017", "month": "4", "content": "〇〇大学 経済学部 入学"},
+    {"year": "2021", "month": "3", "content": "〇〇大学 経済学部 卒業"},
+    {"year": "2021", "month": "4", "content": "株式会社〇〇 入社（営業部配属）"},
+    {"year": "2024", "month": "9", "content": "株式会社〇〇 一身上の都合により退職"},
+    {"year": "", "month": "", "content": "以上"}
+  ],
+  "qualifications": [
+    {"year": "2019", "month": "7", "content": "日本語能力試験N2 合格"},
+    {"year": "2020", "month": "10", "content": "普通自動車第一種運転免許 取得"}
+  ],
+  "self_pr_text": "前職では営業として新規顧客開拓を担当し、3年連続で目標達成率120%以上を記録しました。チームでの目標達成を重視し、周囲と協力しながら成果を出すことを得意としています。",
+  "commute_hours": 1,
+  "commute_minutes": 15,
+  "dependents": 0,
+  "spouse": "b",
+  "spouse_duty": "b",
+  "request_text": "貴社規定に従います。"
+}
