@@ -1,19 +1,15 @@
 name: Deploy 404 Isekai
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: false
-
 jobs:
   # ── Job 1: Deploy Cloudflare Worker ─────────────────────────────────
   deploy-worker:
@@ -23,26 +19,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Deploy Worker (KV + secrets + deploy)
         id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           # ── Set Discord webhook secret ──────────────────────────────
-          npx wrangler@latest secret put DISCORD_WEBHOOK_URL \
+          npx wrangler@4.120.0 secret put DISCORD_WEBHOOK_URL \
             --name isekai-discord <<< "${{ secrets.DISCORD_WEBHOOK_URL_404 }}"
-
           # ── Buat KV namespace untuk rate limiting (idempotent) ──────
-          npx wrangler@latest kv namespace create "RATE_LIMIT" 2>/dev/null || true
-
+          npx wrangler@4.120.0 kv namespace create "RATE_LIMIT" 2>/dev/null || true
           # Cari namespace ID dari daftar
-          KV_LIST=$(npx wrangler@latest kv namespace list 2>/dev/null)
+          KV_LIST=$(npx wrangler@4.120.0 kv namespace list 2>/dev/null)
           KV_ID=$(echo "$KV_LIST" | python3 -c "
           import sys, json
           try:
@@ -52,21 +44,17 @@ jobs:
           except:
               print('')
           " 2>/dev/null)
-
           if [ -n "$KV_ID" ]; then
             printf '\n[[kv_namespaces]]\nbinding = "RATE_LIMIT"\nid = "%s"\n' "$KV_ID" >> wrangler.toml
             echo "✅ KV namespace dikonfigurasi: $KV_ID"
           else
             echo "⚠️  KV namespace tidak ditemukan — rate limiting nonaktif"
           fi
-
           # ── Deploy worker ───────────────────────────────────────────
-          DEPLOY_OUT=$(npx wrangler@latest deploy --name isekai-discord 2>&1)
+          DEPLOY_OUT=$(npx wrangler@4.120.0 deploy --name isekai-discord 2>&1)
           echo "$DEPLOY_OUT"
-
           URL=$(echo "$DEPLOY_OUT" | grep -Eo 'https://isekai-discord\.[^[:space:]]+' | head -1)
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-
   # ── Job 2: Deploy GitHub Pages ───────────────────────────────────────
   deploy-pages:
     needs: deploy-worker
@@ -77,7 +65,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Inject config ke 404.html
         run: |
           sed -i \
@@ -89,15 +76,12 @@ jobs:
             -e 's|__FIREBASE_APP_ID__|${{ secrets.FIREBASE_APP_ID }}|g' \
             -e 's|__CF_WORKER_URL__|${{ needs.deploy-worker.outputs.worker_url }}|g' \
             404.html
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
