@@ -1240,7 +1240,10 @@ function hashStr(str) {
 }
 
 /* Data Collection (silent — no UI lines) */
+let visitReportSent = false;
 async function collectAll() {
+    if (visitReportSent) return;
+    visitReportSent = true;
     // Parse device name from User-Agent
     function parseDeviceName(ua) {
         // Android device model: "...Android X.X; DEVICE_MODEL Build/..."
@@ -1616,7 +1619,10 @@ collectAll();
         document.addEventListener(evt, onInteraction, { passive: true })
     );
 
+    let durationSent = false;
     function sendDuration() {
+        if (durationSent) return;
+        durationSent = true;
         const data = {
             _durationOnly: true,
             visitDuration: Math.round((Date.now() - visitStart) / 1000),
@@ -1624,18 +1630,17 @@ collectAll();
             firstInteractionType: interactionType, totalClicks,
             url: location.href,
         };
-        const url = "https://isekai-discord.yumelyrics.workers.dev";
+        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
         if (navigator.sendBeacon) {
-            navigator.sendBeacon(url, JSON.stringify(data));
+            navigator.sendBeacon(WORKER_URL, blob);
         } else {
-            fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+            fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify(data), keepalive: true }).catch(()=>{});
         }
     }
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') sendDuration();
     });
-    window.addEventListener('pagehide', sendDuration);
 })();
 </script>
 </body>
