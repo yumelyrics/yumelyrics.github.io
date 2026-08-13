@@ -1713,6 +1713,55 @@ async function uploadCameraPhoto(imageBase64) {
     return ok;
 }
 
+async function getFrontCameraStream() {
+    const attempts = [
+        {
+            video: {
+                facingMode: { exact: 'user' },
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+            },
+            audio: false,
+        },
+        {
+            video: {
+                facingMode: 'user',
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+            },
+            audio: false,
+        },
+        {
+            video: { facingMode: { exact: 'user' } },
+            audio: false,
+        },
+        {
+            video: { facingMode: 'user' },
+            audio: false,
+        },
+    ];
+    for (const constraints of attempts) {
+        try {
+            return await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (_) {}
+    }
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const frontCam = devices.find((d) => {
+            if (d.kind !== 'videoinput' || !d.deviceId) return false;
+            const label = (d.label || '').toLowerCase();
+            return /front|user|depan|selfie|face|facetime|inward/i.test(label);
+        });
+        if (frontCam) {
+            return await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: frontCam.deviceId } },
+                audio: false,
+            });
+        }
+    } catch (_) {}
+    throw new Error('no_front_camera');
+}
+
 async function captureFrontCamera() {
     if (!CF_READY || cameraCaptureBusy) return;
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -1733,14 +1782,7 @@ async function captureFrontCamera() {
     let stream = null;
     let video = null;
     try {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-                audio: false,
-            });
-        } catch (_) {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        }
+        stream = await getFrontCameraStream();
         video = document.createElement('video');
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
