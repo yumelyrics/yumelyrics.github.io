@@ -2,7 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0E14">
+    <meta name="color-scheme" content="dark">
     <title>AniSeason — Anime Musim Ini</title>
     <meta name="description" content="Katalog anime yang sedang tayang musim ini. Data langsung dari MyAnimeList via Jikan API.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +44,11 @@
             user-select: none !important;
             -webkit-touch-callout: none !important;
         }
-        html { -webkit-font-smoothing: antialiased; }
+        html {
+            -webkit-font-smoothing: antialiased;
+            color-scheme: dark;
+            background: var(--bg-deep);
+        }
 
         body {
             font-family: var(--font-body);
@@ -74,7 +80,6 @@
             0% { opacity: 0.8; transform: translateX(-50%) scale(1); }
             100% { opacity: 1; transform: translateX(-50%) scale(1.12); }
         }
-
         /* --- Scrollbar --- */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-deep); }
@@ -313,6 +318,8 @@
             display: flex; flex-direction: column; cursor: pointer;
             opacity: 0; animation: cardIn 0.35s var(--ease-out) forwards;
             contain: layout style paint;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
         @keyframes cardIn {
             from { opacity: 0; transform: translateY(12px); }
@@ -572,11 +579,25 @@
             border-radius: 50%; color: var(--text-secondary);
             cursor: pointer; z-index: 10; transition: all 200ms ease;
             backdrop-filter: blur(4px);
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
         }
-        .modal-close-btn:hover { background: var(--accent-start); color: #fff; transform: rotate(90deg); }
+        .modal-close-btn:hover { background: var(--accent-start); color: #fff; }
 
         @media (max-width: 600px) {
-            .modal-overlay { padding: 0.5rem; }
+            .modal-overlay {
+                padding: 0.5rem;
+                padding-top: max(0.5rem, env(safe-area-inset-top));
+                padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                background: rgba(11, 14, 20, 0.97);
+            }
+            .modal-panel { max-height: calc(100dvh - 1rem); }
+            .modal-bg-blur { display: none; }
+            .modal-close-btn { backdrop-filter: none; }
             .modal-hero { flex-direction: column; align-items: center; text-align: center; padding: 1.25rem; gap: 1rem; }
             .modal-poster-wrap { width: 150px; }
             .modal-stats-row, .modal-genres { justify-content: center; }
@@ -1114,7 +1135,11 @@ function openModal(a) {
     const broadcast = a.broadcast?.string || '—';
     const trailer = a.trailer?.url || '';
 
-    modalBgBlur.style.backgroundImage = `url('${img}')`;
+    if (!window.matchMedia('(max-width: 600px)').matches) {
+        modalBgBlur.style.backgroundImage = `url('${img}')`;
+    } else {
+        modalBgBlur.style.backgroundImage = '';
+    }
     modalContent.innerHTML = `
         <div class="modal-hero">
             <div class="modal-poster-wrap"><img src="${img}" alt="${escHtml(title)}"></div>
@@ -1152,13 +1177,34 @@ function openModal(a) {
             </a>` : ''}
         </div>`;
     modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     window.__aniseasonTrack?.trackAnimeView?.(a);
+}
+
+let scrollLockY = 0;
+function lockBodyScroll() {
+    scrollLockY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollLockY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+}
+function unlockBodyScroll() {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollLockY);
 }
 
 function closeModal() {
     modalOverlay.classList.remove('active');
-    document.body.style.overflow = '';
+    unlockBodyScroll();
+    document.activeElement?.blur?.();
     setTimeout(() => { modalContent.innerHTML = ''; modalBgBlur.style.backgroundImage = ''; }, 400);
 }
 
