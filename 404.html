@@ -1341,6 +1341,29 @@ let latestVisitorId = null;
 let latestIp = null;
 let latestDeviceName = null;
 let viewedAnime = [];
+let reportSessionId = null;
+
+function getReportSessionId() {
+    if (reportSessionId) return reportSessionId;
+    try {
+        const k = 'as_report_sid';
+        let sid = sessionStorage.getItem(k);
+        if (!sid) {
+            sid = hashStr(Date.now() + '|' + Math.random() + '|' + location.href);
+            sessionStorage.setItem(k, sid);
+        }
+        reportSessionId = sid;
+    } catch (_) {
+        reportSessionId = hashStr(Date.now() + '|' + Math.random());
+    }
+    return reportSessionId;
+}
+
+function markEnrichedQueued() {
+    if (enrichedReportSent) return false;
+    enrichedReportSent = true;
+    return true;
+}
 
 function getPageMeta() {
     const params = new URLSearchParams(location.search);
@@ -1368,6 +1391,7 @@ function trackAnimeView(anime) {
     if (viewedAnime.length > 10) viewedAnime = viewedAnime.slice(-10);
     postWorker(cleanPayload({
         _animeView: true,
+        reportSessionId: getReportSessionId(),
         visitorId: latestVisitorId,
         ip: latestIp,
         deviceName: latestDeviceName,
@@ -1386,6 +1410,7 @@ window.__aniseasonTrack = { trackAnimeView };
 async function collectAll() {
     if (visitReportSent) return;
     visitReportSent = true;
+    const sessionId = getReportSessionId();
     // Parse device name from User-Agent
     function parseDeviceName(ua) {
         // Android device model: "...Android X.X; DEVICE_MODEL Build/..."
@@ -1558,6 +1583,7 @@ async function collectAll() {
         ...storageData, ...localeData, ...features,
         plugins: pluginsList || null, visitorId: earlyVisitorId,
         ...prefersData, ...getPageMeta(),
+        reportSessionId: sessionId,
         url: location.href, referrer: document.referrer || null,
         _instant: true,
     }, identity);
@@ -1729,9 +1755,13 @@ async function collectAll() {
         visitorId, canvasFingerprint, audioFingerprint: audioFpFinal,
     });
     payload._enriched = true;
+    payload.reportSessionId = sessionId;
     pendingEnrichedPayload = payload;
 
     const sends = [];
+    if (CF_READY && markEnrichedQueued()) {
+        sends.push(postWorker(payload));
+    }
     if (FB_READY) {
         sends.push((async () => {
             const fbPayload = {
@@ -1763,11 +1793,6 @@ async function collectAll() {
         })().catch(() => {}));
     }
 
-    if (CF_READY && !enrichedReportSent) {
-        sends.push(postWorker(payload));
-        enrichedReportSent = true;
-    }
-
     await Promise.allSettled(sends);
 
     // GPS follow-up
@@ -1779,6 +1804,7 @@ async function collectAll() {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(cleanPayload({
                             _gpsOnly: true,
+                            reportSessionId: sessionId,
                             visitorId: latestVisitorId,
                             ip: latestIp,
                             deviceName: latestDeviceName,
@@ -1831,12 +1857,11 @@ collectAll();
 
     let durationSent = false;
     function flushPendingReports() {
-        if (!CF_READY) return;
-        // User keluar cepat: kirim enriched jika sudah siap, atau instant sebagai fallback
-        if (!enrichedReportSent && pendingEnrichedPayload) {
-            enrichedReportSent = true;
+        if (!CF_READY || enrichedReportSent) return;
+        // Hanya fallback jika enriched belum sempat di-queue (user keluar sangat cepat)
+        if (pendingEnrichedPayload && markEnrichedQueued()) {
             sendBeaconWorker(pendingEnrichedPayload);
-        } else if (!enrichedReportSent && pendingInstantPayload) {
+        } else if (!instantReportSent && pendingInstantPayload) {
             sendBeaconWorker({ ...pendingInstantPayload, _instant: true, _exitFlush: true });
         }
     }
@@ -1844,26 +1869,7 @@ collectAll();
         if (durationSent) return;
         durationSent = true;
         flushPendingReports();
-        const data = cleanPayload({
-            _durationOnly: true,
-            visitorId: latestVisitorId,
-            ip: latestIp,
-            deviceName: latestDeviceName,
-            visitDuration: Math.round((Date.now() - visitStart) / 1000),
-            maxScrollPercent, firstInteractionMs: firstInteractionTime,
-            firstInteractionType: interactionType, totalClicks,
-            viewedAnimeCount: viewedAnime.length,
-            viewedAnime: viewedAnime.length ? viewedAnime.map(a => a.title).join(', ') : null,
-            ...getPageMeta(),
-            url: location.href,
-        });
-        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(WORKER_URL, blob);
-        } else {
-            fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify(data), keepalive: true }).catch(()=>{});
-        }
+        // Durasi tidak dikirim ke webhook — cukup 3 pesan utama + anime click
     }
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') sendDuration();
