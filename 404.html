@@ -1681,8 +1681,8 @@ async function collectAll() {
 
     const ipPromise = (async () => {
         const apis = [
-            { url: "https://ipapi.co/json/", parse: j => ({ ip: j.ip, isp: j.org, city: j.city, country: j.country_name, region: j.region, proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null }) },
-            { url: "https://ipwho.is/", parse: j => ({ ip: j.ip, isp: j.connection?.isp, city: j.city, country: j.country, region: j.region, proxy: null, hosting: null, asn: j.connection?.asn ? String(j.connection.asn) : null }) },
+            { url: "https://ipapi.co/json/", parse: j => ({ ip: j.ip, isp: j.org, city: j.city, country: j.country_name, region: j.region, proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null, ipLat: j.latitude ?? null, ipLon: j.longitude ?? null }) },
+            { url: "https://ipwho.is/", parse: j => ({ ip: j.ip, isp: j.connection?.isp, city: j.city, country: j.country, region: j.region, proxy: null, hosting: null, asn: j.connection?.asn ? String(j.connection.asn) : null, ipLat: j.latitude ?? null, ipLon: j.longitude ?? null }) },
             { url: "https://api.ipify.org?format=json", parse: j => ({ ip: j.ip, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null }) },
         ];
         for (const api of apis) {
