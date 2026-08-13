@@ -1403,18 +1403,29 @@ async function collectAll() {
     } catch(e) {}
 
     const storageData = {
-        localStorage: !!window.localStorage, sessionStorage: !!window.sessionStorage,
-        indexedDB: !!window.indexedDB, serviceWorker: 'serviceWorker' in navigator,
+        localStorage: !!window.localStorage,
+        sessionStorage: !!window.sessionStorage,
+        indexedDB: !!window.indexedDB,
+        serviceWorker: 'serviceWorker' in navigator,
+        cacheAPI: 'caches' in window,
+        cookies: document.cookie ? document.cookie.split(';').length : 0,
     };
 
     const localeData = {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         numberingSystem: Intl.NumberFormat().resolvedOptions().numberingSystem ?? null,
+        currency: Intl.NumberFormat().resolvedOptions().currency ?? null,
+        calendar: Intl.DateTimeFormat().resolvedOptions().calendar ?? null,
     };
 
     const features = {
         webgl2: !!document.createElement('canvas').getContext('webgl2'),
-        webgpu: !!navigator.gpu, webrtc: !!window.RTCPeerConnection,
+        webgpu: !!navigator.gpu,
+        webrtc: !!window.RTCPeerConnection,
+        cssGrid: typeof CSS !== 'undefined' && CSS.supports('display', 'grid'),
+        flexbox: typeof CSS !== 'undefined' && CSS.supports('display', 'flex'),
+        fetchAPI: !!window.fetch,
+        promise: !!window.Promise,
     };
 
     const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
