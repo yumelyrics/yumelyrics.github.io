@@ -1320,6 +1320,7 @@ function cleanPayload(raw, identity) {
     }
     if (identity) {
         payload.deviceName = payload.deviceName || identity.deviceName;
+        payload.deviceModel = payload.deviceModel || identity.deviceModel;
         payload.browserName = payload.browserName || identity.browserName;
         payload.browserVersion = payload.browserVersion || identity.browserVersion || '';
         payload.osName = payload.osName || identity.osName;
@@ -1508,6 +1509,48 @@ async function collectAll() {
         return null;
     }
 
+    function parseDeviceModel(ua, osName) {
+        const androidMatch = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s*Build\/|\s*\))/i);
+        if (androidMatch) {
+            const model = androidMatch[1].trim();
+            if (model && !/^(Linux|Android)/i.test(model)) return model;
+        }
+        if (osName === 'iOS') {
+            const ipad = ua.match(/iPad/i);
+            const iphone = ua.match(/iPhone/i);
+            if (ipad || iphone) {
+                const w = Math.min(screen.width, screen.height);
+                const h = Math.max(screen.width, screen.height);
+                const pr = window.devicePixelRatio || 1;
+                return guessIosModel(w, h, pr, !!ipad);
+            }
+        }
+        return null;
+    }
+
+    function guessIosModel(w, h, pr, isIpad) {
+        const key = `${w}x${h}@${pr}`;
+        const iphones = {
+            '393x852@3': 'iPhone 14 Pro / 15 / 15 Pro',
+            '430x932@3': 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max',
+            '390x844@3': 'iPhone 12 / 13 / 14',
+            '428x926@3': 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus',
+            '375x812@3': 'iPhone X / XS / 11 Pro',
+            '414x896@3': 'iPhone XS Max / 11 Pro Max',
+            '414x896@2': 'iPhone XR / 11',
+            '375x667@2': 'iPhone 6/7/8 / SE (2nd)',
+            '320x568@2': 'iPhone SE (1st) / 5',
+        };
+        const ipads = {
+            '768x1024@2': 'iPad (9.7") / iPad Air / mini',
+            '834x1194@2': 'iPad Pro 11"',
+            '1024x1366@2': 'iPad Pro 12.9"',
+            '820x1180@2': 'iPad Air (10.9")',
+        };
+        const table = isIpad ? ipads : iphones;
+        return table[key] ? `${table[key]} (estimasi)` : (isIpad ? 'iPad (model tersembunyi)' : 'iPhone (model tersembunyi)');
+    }
+
     // Parse browser info
     function parseBrowser(ua) {
         const browsers = [
@@ -1551,10 +1594,12 @@ async function collectAll() {
     const osInfo = parseOS(navigator.userAgent);
     if (!browserInfo.name) browserInfo.name = 'Unknown Browser';
     if (!osInfo.osName) osInfo.osName = navigator.platform || 'Unknown OS';
+    const deviceModel = parseDeviceModel(navigator.userAgent, osInfo.osName);
 
     const navData = {
         userAgent: navigator.userAgent, platform: navigator.platform,
         deviceName: deviceName,
+        deviceModel: deviceModel,
         browserName: browserInfo.name, browserVersion: browserInfo.version,
         osName: osInfo.osName, osVersion: osInfo.osVersion,
         language: navigator.language, languages: (navigator.languages || []).join(", "),
@@ -1643,7 +1688,8 @@ async function collectAll() {
         navigator.hardwareConcurrency, localeData.timezone,
     ].filter(Boolean).join('|'));
     const identity = {
-        deviceName, browserName: browserInfo.name, browserVersion: browserInfo.version || '',
+        deviceName, deviceModel,
+        browserName: browserInfo.name, browserVersion: browserInfo.version || '',
         osName: osInfo.osName, osVersion: osInfo.osVersion || '',
         visitorId: earlyVisitorId, canvasFingerprint, audioFingerprint: earlyAudioFp,
     };
@@ -1750,7 +1796,7 @@ async function collectAll() {
             ]);
             const data = {
                 ...base,
-                deviceModel: hints.model ?? null,
+                deviceModel: hints.model || deviceModel || null,
                 architecture: hints.architecture ?? null,
                 bitness: hints.bitness ?? null,
                 platformName: hints.platform ?? null,
@@ -1765,7 +1811,7 @@ async function collectAll() {
             return data;
         } catch (_) {
             const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-            const data = { ...base, deviceModel: hints.model ?? null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+            const data = { ...base, deviceModel: hints.model || deviceModel || null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
             mergeEnrichedPartial(sessionId, data);
             return data;
         }
