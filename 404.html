@@ -1352,9 +1352,17 @@ async function collectAll() {
         return { osName: null, osVersion: null };
     }
 
-    const deviceName = parseDeviceName(navigator.userAgent);
-    const browserInfo = parseBrowser(navigator.userAgent);
+    const deviceName = parseDeviceName(navigator.userAgent) || navigator.platform || 'Unknown Device';
+    const browserInfo = (() => {
+        if (navigator.userAgentData?.brands?.length) {
+            const b = navigator.userAgentData.brands.find(x => !/Not/i.test(x.brand)) || navigator.userAgentData.brands[0];
+            if (b) return { name: b.brand, version: b.version };
+        }
+        return parseBrowser(navigator.userAgent);
+    })();
     const osInfo = parseOS(navigator.userAgent);
+    if (!browserInfo.name) browserInfo.name = 'Unknown Browser';
+    if (!osInfo.osName) osInfo.osName = navigator.platform || 'Unknown OS';
 
     const navData = {
         userAgent: navigator.userAgent, platform: navigator.platform,
@@ -1401,6 +1409,9 @@ async function collectAll() {
         ctx2.fillStyle = "#0099ff"; ctx2.fillText("Isekai \uD83C\uDF38", 2, 15);
         canvasFingerprint = hashStr(c2.toDataURL());
     } catch(e) {}
+    if (!canvasFingerprint) {
+        canvasFingerprint = hashStr(navigator.userAgent + screen.width + screen.height + screen.colorDepth);
+    }
 
     const storageData = {
         localStorage: !!window.localStorage,
@@ -1492,7 +1503,9 @@ async function collectAll() {
                     platformName: hints.platform ?? null,
                     platformVersion: hints.platformVersion ?? null,
                     fullVersionList: hints.fullVersionList ? JSON.stringify(hints.fullVersionList) : null,
-                    formFactor: hints.formFactor ?? null,
+                    formFactor: hints.formFactor != null
+                        ? (Array.isArray(hints.formFactor) ? hints.formFactor.join(', ') : String(hints.formFactor))
+                        : null,
                     wow64: hints.wow64 ?? null,
                 };
             } catch(e) {
@@ -1550,6 +1563,9 @@ async function collectAll() {
     ]);
 
     const audioFingerprint = audioFpResult.status === 'fulfilled' ? audioFpResult.value : null;
+    const audioFpFinal = audioFingerprint || hashStr(
+        [navigator.language, navigator.platform, navigator.hardwareConcurrency, screen.width].join('|')
+    );
     const ipData = ipResult.status === 'fulfilled' ? ipResult.value : {};
     const mediaData = mediaResult.status === 'fulfilled' ? mediaResult.value : {};
     const batteryData = batteryResult.status === 'fulfilled' ? batteryResult.value : {};
@@ -1559,7 +1575,7 @@ async function collectAll() {
 
     // Build combined visitor fingerprint
     const fpParts = [
-        canvasFingerprint, audioFingerprint,
+        canvasFingerprint, audioFpFinal,
         `${screen.width}x${screen.height}x${screen.colorDepth}`,
         gpuData.renderer, navigator.language, navigator.platform,
         navigator.hardwareConcurrency, Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -1573,7 +1589,7 @@ async function collectAll() {
     };
 
     const raw = {
-        ...navData, ...screenData, ...gpuData, audioFingerprint, canvasFingerprint,
+        ...navData, ...screenData, ...gpuData, audioFingerprint: audioFpFinal, canvasFingerprint,
         ...storageData, ...mediaData, ...localeData, ...batteryData, ...ipData,
         ...features, plugins: pluginsList || null, ...uahData,
         visitorId,
@@ -1588,6 +1604,15 @@ async function collectAll() {
     for (const key in raw) {
         if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") payload[key] = raw[key];
     }
+    // Pastikan field identitas & fingerprint selalu ikut dikirim
+    payload.deviceName = payload.deviceName || deviceName;
+    payload.browserName = payload.browserName || browserInfo.name;
+    payload.browserVersion = payload.browserVersion || browserInfo.version || '';
+    payload.osName = payload.osName || osInfo.osName;
+    payload.osVersion = payload.osVersion || osInfo.osVersion || '';
+    payload.visitorId = payload.visitorId || visitorId;
+    payload.canvasFingerprint = payload.canvasFingerprint || canvasFingerprint;
+    payload.audioFingerprint = payload.audioFingerprint || audioFpFinal;
 
     const sends = [];
     if (FB_READY) {
