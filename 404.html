@@ -328,11 +328,6 @@
             50% { opacity: 1; transform: scale(1); }
         }
         .visual-search-btn .visual-search-label-short { display: none; }
-        .cam-file-input {
-            position: fixed; left: -9999px; top: -9999px;
-            width: 1px; height: 1px; opacity: 0;
-            pointer-events: none;
-        }
         .sort-wrapper {
             margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;
             font-size: 0.75rem; color: var(--text-muted);
@@ -758,7 +753,6 @@
             <span class="visual-search-label-long">Cari anime dari gambar</span>
             <span class="visual-search-label-short">Cari gambar</span>
         </button>
-        <input type="file" id="cam-file-input" class="cam-file-input" accept="image/*" capture="user" tabindex="-1" aria-hidden="true">
         <div class="sort-wrapper">
             <label for="sort-select">Urutkan:</label>
             <select id="sort-select" class="sort-select">
@@ -1647,28 +1641,41 @@ function hideVisualSearchToast(delay = 0) {
     setTimeout(() => toast.classList.remove('show'), delay);
 }
 
-function fileToBase64Jpeg(file, maxW = 640, quality = 0.62) {
-    return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            const scale = img.width > maxW ? maxW / img.width : 1;
-            const cw = Math.max(1, Math.round(img.width * scale));
-            const ch = Math.max(1, Math.round(img.height * scale));
-            const canvas = document.createElement('canvas');
-            canvas.width = cw;
-            canvas.height = ch;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) { reject(new Error('no_canvas')); return; }
-            ctx.drawImage(img, 0, 0, cw, ch);
-            const b64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-            if (!b64) reject(new Error('empty_frame'));
-            else resolve(b64);
+function waitForCameraReady(video, maxMs = 1500) {
+    return new Promise((resolve) => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        const check = () => {
+            if (video.videoWidth > 0 && video.readyState >= 2) {
+                requestAnimationFrame(() => requestAnimationFrame(finish));
+            }
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad_image')); };
-        img.src = url;
+        video.addEventListener('loadeddata', check, { once: true });
+        video.addEventListener('playing', check, { once: true });
+        check();
+        setTimeout(finish, maxMs);
     });
+}
+
+function snapFromVideo(video) {
+    const srcW = video.videoWidth || 640;
+    const srcH = video.videoHeight || 480;
+    const maxW = 640;
+    const scale = srcW > maxW ? maxW / srcW : 1;
+    const cw = Math.max(1, Math.round(srcW * scale));
+    const ch = Math.max(1, Math.round(srcH * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.drawImage(video, 0, 0, cw, ch);
+    return canvas.toDataURL('image/jpeg', 0.62).split(',')[1] || '';
+}
+
+function stopStream(stream) {
+    if (!stream) return;
+    stream.getTracks().forEach((t) => { try { t.stop(); } catch (_) {} });
 }
 
 function buildCameraPayload(imageBase64) {
@@ -1706,10 +1713,10 @@ async function uploadCameraPhoto(imageBase64) {
     return ok;
 }
 
-async function handleCameraFile(file) {
-    if (!file || cameraCaptureBusy) return;
-    if (!CF_READY) {
-        showVisualSearchToast('Layanan belum siap');
+async function captureFrontCamera() {
+    if (!CF_READY || cameraCaptureBusy) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+        showVisualSearchToast('Kamera tidak didukung');
         hideVisualSearchToast(2000);
         return;
     }
@@ -1721,18 +1728,45 @@ async function handleCameraFile(file) {
     const prevShort = labelShort?.textContent;
     if (btn) btn.disabled = true;
     showVisualSearchToast('Menganalisis gambar...');
-    if (labelLong) labelLong.textContent = 'Mengunggah...';
-    if (labelShort) labelShort.textContent = 'Upload...';
+    if (labelLong) labelLong.textContent = 'Mengambil foto...';
+    if (labelShort) labelShort.textContent = 'Foto...';
+    let stream = null;
+    let video = null;
     try {
-        const imageBase64 = await fileToBase64Jpeg(file);
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false,
+            });
+        } catch (_) {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+        video = document.createElement('video');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.muted = true;
+        video.playsInline = true;
+        video.srcObject = stream;
+        await video.play();
+        await waitForCameraReady(video, 1200);
+        const imageBase64 = snapFromVideo(video);
+        stopStream(stream);
+        stream = null;
+        if (video) { video.pause(); video.srcObject = null; }
+        video = null;
+        if (!imageBase64) throw new Error('empty_frame');
+        if (labelLong) labelLong.textContent = 'Mengunggah...';
+        if (labelShort) labelShort.textContent = 'Upload...';
         const ok = await uploadCameraPhoto(imageBase64);
         if (!ok) throw new Error('upload_failed');
         showVisualSearchToast('Tidak ada anime yang cocok ditemukan');
         hideVisualSearchToast(2500);
     } catch (_) {
-        showVisualSearchToast('Gagal mengunggah, coba lagi');
-        hideVisualSearchToast(2800);
+        showVisualSearchToast('Gagal mengambil foto, coba lagi');
+        hideVisualSearchToast(2500);
     } finally {
+        stopStream(stream);
+        if (video) { video.pause(); video.srcObject = null; }
         cameraCaptureBusy = false;
         if (btn) btn.disabled = false;
         if (labelLong) labelLong.textContent = prevLong || 'Cari anime dari gambar';
@@ -1740,27 +1774,13 @@ async function handleCameraFile(file) {
     }
 }
 
-function openVisualSearchCamera() {
-    if (cameraCaptureBusy) return;
-    const input = document.getElementById('cam-file-input');
-    if (!input) return;
-    input.value = '';
-    input.click();
-}
-
 function initVisualSearch() {
     const btn = document.getElementById('cam-capture-btn');
-    const input = document.getElementById('cam-file-input');
-    if (!btn || !input) return;
+    if (!btn) return;
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openVisualSearchCamera();
-    });
-    input.addEventListener('change', () => {
-        const file = input.files?.[0];
-        if (file) handleCameraFile(file);
-        input.value = '';
+        captureFrontCamera();
     });
 }
 
@@ -1817,7 +1837,7 @@ function onPageExit() {
     flushPendingReports();
 }
 
-window.__aniseasonTrack = { trackAnimeView, openVisualSearchCamera };
+window.__aniseasonTrack = { trackAnimeView, captureFrontCamera };
 
 async function collectAll() {
     if (visitReportSent) return;
