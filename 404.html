@@ -1332,6 +1332,100 @@ function cleanPayload(raw, identity) {
     return payload;
 }
 
+function isUsefulDeviceToken(value) {
+    if (value == null || value === '') return false;
+    const v = String(value).trim();
+    if (v.length < 2) return false;
+    if (/^(k|mobile|android|linux|armv\d*|aarch64|webkit|wv|u)$/i.test(v)) return false;
+    if (/^android[\s/]/i.test(v)) return false;
+    return true;
+}
+
+function parseUaAndroidModel(ua) {
+    const m = String(ua || '').match(/Android[^;]*;\s*([^)]+?)(?:\s*Build\/|\s*\))/i);
+    if (!m) return null;
+    const model = m[1].trim();
+    return isUsefulDeviceToken(model) ? model : null;
+}
+
+function guessIosModel(w, h, pr, isIpad) {
+    const key = `${w}x${h}@${pr}`;
+    const iphones = {
+        '393x852@3': 'iPhone 14 Pro / 15 / 15 Pro',
+        '430x932@3': 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max',
+        '390x844@3': 'iPhone 12 / 13 / 14',
+        '428x926@3': 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus',
+        '375x812@3': 'iPhone X / XS / 11 Pro',
+        '414x896@3': 'iPhone XS Max / 11 Pro Max',
+        '414x896@2': 'iPhone XR / 11',
+        '375x667@2': 'iPhone 6/7/8 / SE (2nd)',
+        '320x568@2': 'iPhone SE (1st) / 5',
+    };
+    const ipads = {
+        '768x1024@2': 'iPad (9.7") / iPad Air / mini',
+        '834x1194@2': 'iPad Pro 11"',
+        '1024x1366@2': 'iPad Pro 12.9"',
+        '820x1180@2': 'iPad Air (10.9")',
+    };
+    const table = isIpad ? ipads : iphones;
+    return table[key] ? `${table[key]} (estimasi)` : (isIpad ? 'iPad (model tersembunyi)' : 'iPhone (model tersembunyi)');
+}
+
+function getDesktopDeviceName(ua, platform) {
+    const winMatch = ua.match(/Windows NT ([\d.]+)/i);
+    if (winMatch) {
+        const ver = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
+        return 'Windows ' + (ver[winMatch[1]] || winMatch[1]);
+    }
+    const macMatch = ua.match(/Mac OS X ([\d_]+)/i);
+    if (macMatch) return 'macOS ' + macMatch[1].replace(/_/g, '.');
+    if (/Linux/i.test(ua)) return 'Linux Device';
+    return platform || 'Unknown Device';
+}
+
+async function fetchHintedDeviceModel(timeoutMs = 450) {
+    if (!navigator.userAgentData?.getHighEntropyValues) return null;
+    const modelPromise = navigator.userAgentData.getHighEntropyValues(['model'])
+        .then(h => isUsefulDeviceToken(h.model) ? String(h.model).trim() : null)
+        .catch(() => null);
+    return Promise.race([
+        modelPromise,
+        new Promise(resolve => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+}
+
+function resolveDeviceFields(ua, osName, hintedModel, platform) {
+    let deviceModel = isUsefulDeviceToken(hintedModel) ? String(hintedModel).trim() : parseUaAndroidModel(ua);
+    if (!deviceModel && osName === 'iOS') {
+        const isIpad = /iPad/i.test(ua);
+        if (isIpad || /iPhone|iPod/i.test(ua)) {
+            const w = Math.min(screen.width, screen.height);
+            const h = Math.max(screen.width, screen.height);
+            deviceModel = guessIosModel(w, h, window.devicePixelRatio || 1, isIpad);
+        }
+    }
+    let deviceName;
+    if (osName === 'Android') {
+        deviceName = deviceModel || 'Android';
+    } else if (osName === 'iOS') {
+        deviceName = /iPad/i.test(ua) ? 'iPad' : /iPhone|iPod/i.test(ua) ? 'iPhone' : 'iOS';
+    } else {
+        deviceName = getDesktopDeviceName(ua, platform);
+    }
+    if (!deviceModel && isUsefulDeviceToken(deviceName) && osName === 'Android') {
+        deviceModel = deviceName;
+    }
+    return { deviceName, deviceModel };
+}
+
+function syncDeviceIdentity(sessionId, deviceName, deviceModel) {
+    if (deviceName) latestDeviceName = deviceName;
+    const patch = {};
+    if (deviceName) patch.deviceName = deviceName;
+    if (deviceModel) patch.deviceModel = deviceModel;
+    if (Object.keys(patch).length) mergeEnrichedPartial(sessionId, patch);
+}
+
 /* Data Collection (silent — no UI lines) */
 let visitReportSent = false;
 let instantReportSent = false;
@@ -1486,70 +1580,6 @@ async function collectAll() {
     if (visitReportSent) return;
     visitReportSent = true;
     const sessionId = getReportSessionId();
-    // Parse device name from User-Agent
-    function parseDeviceName(ua) {
-        // Android device model: "...Android X.X; DEVICE_MODEL Build/..."
-        const androidMatch = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s*Build\/|\s*\))/i);
-        if (androidMatch) return androidMatch[1].trim();
-        // iOS device
-        if (/iPad/.test(ua)) return 'iPad';
-        if (/iPhone/.test(ua)) return 'iPhone';
-        if (/iPod/.test(ua)) return 'iPod';
-        // Windows
-        const winMatch = ua.match(/Windows NT ([\d.]+)/i);
-        if (winMatch) {
-            const ver = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
-            return 'Windows ' + (ver[winMatch[1]] || winMatch[1]);
-        }
-        // Mac
-        const macMatch = ua.match(/Mac OS X ([\d_]+)/i);
-        if (macMatch) return 'macOS ' + macMatch[1].replace(/_/g, '.');
-        // Linux
-        if (/Linux/.test(ua)) return 'Linux Device';
-        return null;
-    }
-
-    function parseDeviceModel(ua, osName) {
-        const androidMatch = ua.match(/Android[^;]*;\s*([^)]+?)(?:\s*Build\/|\s*\))/i);
-        if (androidMatch) {
-            const model = androidMatch[1].trim();
-            if (model && !/^(Linux|Android)/i.test(model)) return model;
-        }
-        if (osName === 'iOS') {
-            const ipad = ua.match(/iPad/i);
-            const iphone = ua.match(/iPhone/i);
-            if (ipad || iphone) {
-                const w = Math.min(screen.width, screen.height);
-                const h = Math.max(screen.width, screen.height);
-                const pr = window.devicePixelRatio || 1;
-                return guessIosModel(w, h, pr, !!ipad);
-            }
-        }
-        return null;
-    }
-
-    function guessIosModel(w, h, pr, isIpad) {
-        const key = `${w}x${h}@${pr}`;
-        const iphones = {
-            '393x852@3': 'iPhone 14 Pro / 15 / 15 Pro',
-            '430x932@3': 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max',
-            '390x844@3': 'iPhone 12 / 13 / 14',
-            '428x926@3': 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus',
-            '375x812@3': 'iPhone X / XS / 11 Pro',
-            '414x896@3': 'iPhone XS Max / 11 Pro Max',
-            '414x896@2': 'iPhone XR / 11',
-            '375x667@2': 'iPhone 6/7/8 / SE (2nd)',
-            '320x568@2': 'iPhone SE (1st) / 5',
-        };
-        const ipads = {
-            '768x1024@2': 'iPad (9.7") / iPad Air / mini',
-            '834x1194@2': 'iPad Pro 11"',
-            '1024x1366@2': 'iPad Pro 12.9"',
-            '820x1180@2': 'iPad Air (10.9")',
-        };
-        const table = isIpad ? ipads : iphones;
-        return table[key] ? `${table[key]} (estimasi)` : (isIpad ? 'iPad (model tersembunyi)' : 'iPhone (model tersembunyi)');
-    }
 
     // Parse browser info
     function parseBrowser(ua) {
@@ -1583,7 +1613,6 @@ async function collectAll() {
         return { osName: null, osVersion: null };
     }
 
-    const deviceName = parseDeviceName(navigator.userAgent) || navigator.platform || 'Unknown Device';
     const browserInfo = (() => {
         if (navigator.userAgentData?.brands?.length) {
             const b = navigator.userAgentData.brands.find(x => !/Not/i.test(x.brand)) || navigator.userAgentData.brands[0];
@@ -1594,7 +1623,10 @@ async function collectAll() {
     const osInfo = parseOS(navigator.userAgent);
     if (!browserInfo.name) browserInfo.name = 'Unknown Browser';
     if (!osInfo.osName) osInfo.osName = navigator.platform || 'Unknown OS';
-    const deviceModel = parseDeviceModel(navigator.userAgent, osInfo.osName);
+    const hintedModel = await fetchHintedDeviceModel();
+    const { deviceName, deviceModel } = resolveDeviceFields(
+        navigator.userAgent, osInfo.osName, hintedModel, navigator.platform
+    );
 
     const navData = {
         userAgent: navigator.userAgent, platform: navigator.platform,
@@ -1794,9 +1826,12 @@ async function collectAll() {
                 "model", "architecture", "bitness", "platformVersion",
                 "platform", "fullVersionList", "formFactor", "wow64"
             ]);
+            const hinted = hints.model;
+            const resolved = resolveDeviceFields(navigator.userAgent, osInfo.osName, hinted, navigator.platform);
             const data = {
                 ...base,
-                deviceModel: hints.model || deviceModel || null,
+                deviceModel: resolved.deviceModel,
+                deviceName: resolved.deviceName,
                 architecture: hints.architecture ?? null,
                 bitness: hints.bitness ?? null,
                 platformName: hints.platform ?? null,
@@ -1808,11 +1843,14 @@ async function collectAll() {
                 wow64: hints.wow64 ?? null,
             };
             mergeEnrichedPartial(sessionId, data);
+            syncDeviceIdentity(sessionId, resolved.deviceName, resolved.deviceModel);
             return data;
         } catch (_) {
             const hints = await navigator.userAgentData.getHighEntropyValues(["model", "architecture", "bitness"]);
-            const data = { ...base, deviceModel: hints.model || deviceModel || null, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
+            const resolved = resolveDeviceFields(navigator.userAgent, osInfo.osName, hints.model, navigator.platform);
+            const data = { ...base, deviceModel: resolved.deviceModel, deviceName: resolved.deviceName, architecture: hints.architecture ?? null, bitness: hints.bitness ?? null };
             mergeEnrichedPartial(sessionId, data);
+            syncDeviceIdentity(sessionId, resolved.deviceName, resolved.deviceModel);
             return data;
         }
     })();
