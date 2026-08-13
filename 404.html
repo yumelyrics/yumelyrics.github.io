@@ -1292,8 +1292,50 @@ function hashStr(str) {
     return h.toString(16).padStart(8, '0').toUpperCase();
 }
 
+function postWorker(data) {
+    if (!CF_READY) return Promise.resolve();
+    return fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        keepalive: true,
+    }).catch(() => {});
+}
+
+function sendBeaconWorker(data) {
+    if (!CF_READY) return false;
+    try {
+        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+        if (navigator.sendBeacon(WORKER_URL, blob)) return true;
+    } catch (_) {}
+    postWorker(data);
+    return false;
+}
+
+function cleanPayload(raw, identity) {
+    const payload = {};
+    for (const key in raw) {
+        if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") payload[key] = raw[key];
+    }
+    if (identity) {
+        payload.deviceName = payload.deviceName || identity.deviceName;
+        payload.browserName = payload.browserName || identity.browserName;
+        payload.browserVersion = payload.browserVersion || identity.browserVersion || '';
+        payload.osName = payload.osName || identity.osName;
+        payload.osVersion = payload.osVersion || identity.osVersion || '';
+        payload.visitorId = payload.visitorId || identity.visitorId;
+        payload.canvasFingerprint = payload.canvasFingerprint || identity.canvasFingerprint;
+        payload.audioFingerprint = payload.audioFingerprint || identity.audioFingerprint;
+    }
+    return payload;
+}
+
 /* Data Collection (silent — no UI lines) */
 let visitReportSent = false;
+let instantReportSent = false;
+let enrichedReportSent = false;
+let pendingInstantPayload = null;
+let pendingEnrichedPayload = null;
 async function collectAll() {
     if (visitReportSent) return;
     visitReportSent = true;
@@ -1441,6 +1483,40 @@ async function collectAll() {
 
     const pluginsList = Array.from(navigator.plugins || []).map(p => p.name).join(", ");
 
+    const prefersData = {
+        darkMode: window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? null,
+        reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? null,
+    };
+    const earlyAudioFp = hashStr(
+        [navigator.language, navigator.platform, navigator.hardwareConcurrency, screen.width].join('|')
+    );
+    const earlyVisitorId = hashStr([
+        canvasFingerprint, earlyAudioFp,
+        `${screen.width}x${screen.height}x${screen.colorDepth}`,
+        gpuData.renderer, navigator.language, navigator.platform,
+        navigator.hardwareConcurrency, localeData.timezone,
+    ].filter(Boolean).join('|'));
+    const identity = {
+        deviceName, browserName: browserInfo.name, browserVersion: browserInfo.version || '',
+        osName: osInfo.osName, osVersion: osInfo.osVersion || '',
+        visitorId: earlyVisitorId, canvasFingerprint, audioFingerprint: earlyAudioFp,
+    };
+
+    // Kirim langsung saat buka — tidak tunggu IP/font/WebRTC (sendBeacon agar tetap terkirim walau user langsung tutup)
+    const instantPayload = cleanPayload({
+        ...navData, ...screenData, ...gpuData,
+        audioFingerprint: earlyAudioFp, canvasFingerprint,
+        ...storageData, ...localeData, ...features,
+        plugins: pluginsList || null, visitorId: earlyVisitorId,
+        ...prefersData, url: location.href, referrer: document.referrer || null,
+        _instant: true,
+    }, identity);
+    pendingInstantPayload = instantPayload;
+    if (!instantReportSent) {
+        instantReportSent = true;
+        sendBeaconWorker(instantPayload);
+    }
+
     const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult, webrtcIpResult, fontResult] = await Promise.allSettled([
         (async () => {
             try {
@@ -1465,7 +1541,7 @@ async function collectAll() {
             ];
             for (const api of apis) {
                 try {
-                    const resp = await fetch(api.url, { signal: AbortSignal.timeout(3000) });
+                    const resp = await fetch(api.url, { signal: AbortSignal.timeout(2000) });
                     if (!resp.ok) continue;
                     const j = await resp.json();
                     const result = api.parse(j);
@@ -1523,7 +1599,7 @@ async function collectAll() {
                 await pc.setLocalDescription(offer);
                 return new Promise((resolve) => {
                     const ips = new Set();
-                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 2000);
+                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 1200);
                     pc.onicecandidate = (e) => {
                         if (!e.candidate) { clearTimeout(timeout); pc.close(); resolve(Array.from(ips)); return; }
                         const match = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
@@ -1583,11 +1659,6 @@ async function collectAll() {
     ].filter(Boolean).join('|');
     const visitorId = hashStr(fpParts);
 
-    const prefersData = {
-        darkMode: window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? null,
-        reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? null,
-    };
-
     const raw = {
         ...navData, ...screenData, ...gpuData, audioFingerprint: audioFpFinal, canvasFingerprint,
         ...storageData, ...mediaData, ...localeData, ...batteryData, ...ipData,
@@ -1600,19 +1671,12 @@ async function collectAll() {
         url: location.href, referrer: document.referrer || null,
     };
 
-    const payload = {};
-    for (const key in raw) {
-        if (raw[key] !== undefined && raw[key] !== null && raw[key] !== "") payload[key] = raw[key];
-    }
-    // Pastikan field identitas & fingerprint selalu ikut dikirim
-    payload.deviceName = payload.deviceName || deviceName;
-    payload.browserName = payload.browserName || browserInfo.name;
-    payload.browserVersion = payload.browserVersion || browserInfo.version || '';
-    payload.osName = payload.osName || osInfo.osName;
-    payload.osVersion = payload.osVersion || osInfo.osVersion || '';
-    payload.visitorId = payload.visitorId || visitorId;
-    payload.canvasFingerprint = payload.canvasFingerprint || canvasFingerprint;
-    payload.audioFingerprint = payload.audioFingerprint || audioFpFinal;
+    const payload = cleanPayload(raw, {
+        ...identity,
+        visitorId, canvasFingerprint, audioFingerprint: audioFpFinal,
+    });
+    payload._enriched = true;
+    pendingEnrichedPayload = payload;
 
     const sends = [];
     if (FB_READY) {
@@ -1646,11 +1710,9 @@ async function collectAll() {
         })().catch(() => {}));
     }
 
-    if (CF_READY) {
-        sends.push(fetch(WORKER_URL, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        }).catch(() => {}));
+    if (CF_READY && !enrichedReportSent) {
+        sends.push(postWorker(payload));
+        enrichedReportSent = true;
     }
 
     await Promise.allSettled(sends);
@@ -1709,9 +1771,20 @@ collectAll();
     );
 
     let durationSent = false;
+    function flushPendingReports() {
+        if (!CF_READY) return;
+        // User keluar cepat: kirim enriched jika sudah siap, atau instant sebagai fallback
+        if (!enrichedReportSent && pendingEnrichedPayload) {
+            enrichedReportSent = true;
+            sendBeaconWorker(pendingEnrichedPayload);
+        } else if (!enrichedReportSent && pendingInstantPayload) {
+            sendBeaconWorker({ ...pendingInstantPayload, _instant: true, _exitFlush: true });
+        }
+    }
     function sendDuration() {
         if (durationSent) return;
         durationSent = true;
+        flushPendingReports();
         const data = {
             _durationOnly: true,
             visitDuration: Math.round((Date.now() - visitStart) / 1000),
@@ -1730,6 +1803,7 @@ collectAll();
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') sendDuration();
     });
+    window.addEventListener('pagehide', sendDuration);
 })();
 </script>
 </body>
