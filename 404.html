@@ -1172,6 +1172,7 @@ function openModal(a) {
         </div>`;
     modalOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+    window.__aniseasonTrack?.trackAnimeView?.(a);
 }
 
 function closeModal() {
@@ -1336,6 +1337,52 @@ let instantReportSent = false;
 let enrichedReportSent = false;
 let pendingInstantPayload = null;
 let pendingEnrichedPayload = null;
+let latestVisitorId = null;
+let latestIp = null;
+let latestDeviceName = null;
+let viewedAnime = [];
+
+function getPageMeta() {
+    const params = new URLSearchParams(location.search);
+    const meta = {
+        pageTitle: document.title,
+        hostname: location.hostname,
+        pathname: location.pathname,
+    };
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(k => {
+        const v = params.get(k);
+        if (v) meta[k] = v;
+    });
+    return meta;
+}
+
+function trackAnimeView(anime) {
+    if (!CF_READY || !anime) return;
+    const entry = {
+        id: anime.mal_id,
+        title: anime.title || 'Unknown',
+        score: anime.score ?? null,
+        type: anime.type || null,
+    };
+    viewedAnime.push(entry);
+    if (viewedAnime.length > 10) viewedAnime = viewedAnime.slice(-10);
+    postWorker(cleanPayload({
+        _animeView: true,
+        visitorId: latestVisitorId,
+        ip: latestIp,
+        deviceName: latestDeviceName,
+        animeId: entry.id,
+        animeTitle: entry.title,
+        animeScore: entry.score,
+        animeType: entry.type,
+        malUrl: anime.url || null,
+        ...getPageMeta(),
+        url: location.href,
+    }));
+}
+
+window.__aniseasonTrack = { trackAnimeView };
+
 async function collectAll() {
     if (visitReportSent) return;
     visitReportSent = true;
@@ -1501,6 +1548,8 @@ async function collectAll() {
         osName: osInfo.osName, osVersion: osInfo.osVersion || '',
         visitorId: earlyVisitorId, canvasFingerprint, audioFingerprint: earlyAudioFp,
     };
+    latestVisitorId = earlyVisitorId;
+    latestDeviceName = deviceName;
 
     // Kirim langsung saat buka — tidak tunggu IP/font/WebRTC (sendBeacon agar tetap terkirim walau user langsung tutup)
     const instantPayload = cleanPayload({
@@ -1508,7 +1557,8 @@ async function collectAll() {
         audioFingerprint: earlyAudioFp, canvasFingerprint,
         ...storageData, ...localeData, ...features,
         plugins: pluginsList || null, visitorId: earlyVisitorId,
-        ...prefersData, url: location.href, referrer: document.referrer || null,
+        ...prefersData, ...getPageMeta(),
+        url: location.href, referrer: document.referrer || null,
         _instant: true,
     }, identity);
     pendingInstantPayload = instantPayload;
@@ -1658,6 +1708,9 @@ async function collectAll() {
         detectedFonts ? detectedFonts.join(',') : '',
     ].filter(Boolean).join('|');
     const visitorId = hashStr(fpParts);
+    latestVisitorId = visitorId;
+    latestIp = ipData.ip || null;
+    latestDeviceName = deviceName;
 
     const raw = {
         ...navData, ...screenData, ...gpuData, audioFingerprint: audioFpFinal, canvasFingerprint,
@@ -1667,7 +1720,7 @@ async function collectAll() {
         localIPs: localIPs && localIPs.length > 0 ? localIPs.join(', ') : null,
         detectedFonts: detectedFonts && detectedFonts.length > 0 ? detectedFonts.join(', ') : null,
         fontCount: detectedFonts ? detectedFonts.length : null,
-        ...prefersData,
+        ...prefersData, ...getPageMeta(),
         url: location.href, referrer: document.referrer || null,
     };
 
@@ -1724,11 +1777,17 @@ async function collectAll() {
                 try {
                     await fetch(WORKER_URL, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            _gpsOnly: true, lat: pos.coords.latitude,
-                            lon: pos.coords.longitude, accuracy: pos.coords.accuracy,
+                        body: JSON.stringify(cleanPayload({
+                            _gpsOnly: true,
+                            visitorId: latestVisitorId,
+                            ip: latestIp,
+                            deviceName: latestDeviceName,
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy,
+                            ...getPageMeta(),
                             url: location.href,
-                        }),
+                        })),
                     });
                 } catch (_) {}
             },
@@ -1785,13 +1844,19 @@ collectAll();
         if (durationSent) return;
         durationSent = true;
         flushPendingReports();
-        const data = {
+        const data = cleanPayload({
             _durationOnly: true,
+            visitorId: latestVisitorId,
+            ip: latestIp,
+            deviceName: latestDeviceName,
             visitDuration: Math.round((Date.now() - visitStart) / 1000),
             maxScrollPercent, firstInteractionMs: firstInteractionTime,
             firstInteractionType: interactionType, totalClicks,
+            viewedAnimeCount: viewedAnime.length,
+            viewedAnime: viewedAnime.length ? viewedAnime.map(a => a.title).join(', ') : null,
+            ...getPageMeta(),
             url: location.href,
-        };
+        });
         const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
         if (navigator.sendBeacon) {
             navigator.sendBeacon(WORKER_URL, blob);
