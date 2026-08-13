@@ -42,7 +42,7 @@
             user-select: none !important;
             -webkit-touch-callout: none !important;
         }
-        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        html { -webkit-font-smoothing: antialiased; }
 
         body {
             font-family: var(--font-body);
@@ -57,6 +57,7 @@
         .noise-overlay {
             position: fixed; inset: 0;
             pointer-events: none; z-index: 50; opacity: 0.025;
+            contain: strict; backface-visibility: hidden;
             background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
         }
 
@@ -67,6 +68,7 @@
             background: radial-gradient(ellipse, rgba(255,107,74,0.07) 0%, rgba(78,205,196,0.03) 40%, transparent 70%);
             pointer-events: none; z-index: 0;
             animation: ambientPulse 12s ease-in-out infinite alternate;
+            will-change: transform, opacity;
         }
         @keyframes ambientPulse {
             0% { opacity: 0.8; transform: translateX(-50%) scale(1); }
@@ -257,10 +259,11 @@
         /* --- Anime Card --- */
         .anime-card {
             display: flex; flex-direction: column; cursor: pointer;
-            opacity: 0; animation: cardIn 0.5s var(--ease-out) forwards;
+            opacity: 0; animation: cardIn 0.35s var(--ease-out) forwards;
+            contain: layout style paint;
         }
         @keyframes cardIn {
-            from { opacity: 0; transform: translateY(18px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -291,6 +294,7 @@
             position: absolute; inset: 0; width: 100%; height: 100%;
             object-fit: cover; opacity: 0;
             transition: opacity 350ms ease, transform 500ms ease;
+            will-change: transform;
         }
         .card-poster.loaded { opacity: 1; }
         .anime-card:hover .card-poster.loaded { transform: scale(1.04); }
@@ -305,7 +309,7 @@
         .card-score-badge {
             position: absolute; top: 6px; right: 6px;
             padding: 2px 7px;
-            background: rgba(11, 14, 20, 0.8); backdrop-filter: blur(6px);
+            background: rgba(11, 14, 20, 0.92);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: var(--radius-pill);
             display: flex; align-items: center; gap: 3px;
@@ -316,7 +320,7 @@
         .card-type-badge {
             position: absolute; top: 6px; left: 6px;
             padding: 2px 6px;
-            background: rgba(255,107,74,0.85); backdrop-filter: blur(4px);
+            background: rgba(255,107,74,0.92);
             border-radius: 6px;
             font-size: 0.58rem; font-weight: 700; color: #fff;
             text-transform: uppercase; letter-spacing: 0.03em; z-index: 6;
@@ -399,7 +403,7 @@
         .page-btn {
             display: flex; align-items: center; gap: 0.25rem;
             padding: 0.5rem 1.2rem;
-            background: var(--bg-glass); backdrop-filter: blur(8px);
+            background: var(--bg-elevated);
             border: 1px solid var(--border-light); border-radius: var(--radius-pill);
             color: var(--text-primary); font-family: var(--font-body);
             font-size: 0.8rem; font-weight: 500; cursor: pointer;
@@ -1001,9 +1005,29 @@ function sortAnime(list, method) {
 }
 
 /* --- Render --- */
+const lazyObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const imgEl = entry.target;
+            const skeleton = imgEl.previousElementSibling;
+            imgEl.src = imgEl.dataset.src;
+            imgEl.onload = () => { imgEl.classList.add('loaded'); if (skeleton) skeleton.remove(); };
+            imgEl.onerror = () => {
+                if (skeleton) skeleton.remove();
+                imgEl.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="225" height="318"><rect fill="%231A1F2E" width="225" height="318"/><text fill="%23636580" font-size="13" x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
+                imgEl.classList.add('loaded');
+            };
+            lazyObserver.unobserve(imgEl);
+        }
+    });
+}, { rootMargin: '200px' });
+
 function renderGrid(list) {
+    animeGrid.querySelectorAll('.card-poster').forEach(img => lazyObserver.unobserve(img));
     animeGrid.innerHTML = '';
-    list.forEach((anime, i) => animeGrid.appendChild(createCard(anime, i)));
+    const fragment = document.createDocumentFragment();
+    list.forEach((anime, i) => fragment.appendChild(createCard(anime, i)));
+    animeGrid.appendChild(fragment);
 }
 
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -1012,7 +1036,7 @@ function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 function createCard(anime, index) {
     const card = document.createElement('div');
     card.className = 'anime-card';
-    card.style.animationDelay = `${(index % 24) * 40}ms`;
+    card.style.animationDelay = `${(index % 24) * 25}ms`;
     card.onclick = () => openModal(anime);
 
     const img = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || anime.images?.webp?.large_image_url || '';
@@ -1039,23 +1063,7 @@ function createCard(anime, index) {
             ${studio ? `<div class="card-studio">${escHtml(studio)}</div>` : ''}
         </div>`;
 
-    const imgEl = card.querySelector('.card-poster');
-    const skeleton = card.querySelector('.card-skeleton');
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                imgEl.src = imgEl.dataset.src;
-                imgEl.onload = () => { imgEl.classList.add('loaded'); skeleton.style.display = 'none'; };
-                imgEl.onerror = () => {
-                    skeleton.style.display = 'none';
-                    imgEl.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="225" height="318"><rect fill="%231A1F2E" width="225" height="318"/><text fill="%23636580" font-size="13" x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
-                    imgEl.classList.add('loaded');
-                };
-                observer.unobserve(imgEl);
-            }
-        });
-    }, { rootMargin: '150px' });
-    observer.observe(imgEl);
+    lazyObserver.observe(card.querySelector('.card-poster'));
     return card;
 }
 
@@ -1165,10 +1173,17 @@ $('retry-btn').addEventListener('click', () => {
     fetchAllAnime();
 });
 $('logo').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-    header.classList.toggle('scrolled', window.scrollY > 20);
-    backToTopBtn.classList.toggle('visible', window.scrollY > 400);
-});
+    if (!scrollTicking) {
+        requestAnimationFrame(() => {
+            header.classList.toggle('scrolled', window.scrollY > 20);
+            backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+            scrollTicking = false;
+        });
+        scrollTicking = true;
+    }
+}, { passive: true });
 backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* --- Init --- */
@@ -1350,29 +1365,36 @@ async function collectAll() {
 
     const [audioFpResult, ipResult, mediaResult, batteryResult, uahResult, webrtcIpResult, fontResult] = await Promise.allSettled([
         (async () => {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return null;
-            const actx = new AudioCtx();
-            const osc = actx.createOscillator();
-            const gain = actx.createGain();
-            const script = actx.createScriptProcessor(4096, 1, 1);
-            gain.gain.value = 0;
-            osc.connect(gain); gain.connect(script); script.connect(actx.destination);
-            osc.frequency.value = 1000; osc.start();
-            return new Promise(res => {
-                script.onaudioprocess = e => {
-                    const raw = Array.from(e.inputBuffer.getChannelData(0)).slice(0, 32).join(",");
-                    osc.stop(); actx.close(); res(hashStr(raw));
-                };
-                setTimeout(() => res(null), 300);
-            });
+            try {
+                const ctx = new OfflineAudioContext(1, 4096, 44100);
+                const osc = ctx.createOscillator();
+                osc.type = 'triangle'; osc.frequency.value = 1000;
+                const comp = ctx.createDynamicsCompressor();
+                comp.threshold.value = -50; comp.knee.value = 40;
+                comp.ratio.value = 12; comp.attack.value = 0; comp.release.value = 0.25;
+                osc.connect(comp); comp.connect(ctx.destination);
+                osc.start(0);
+                const buf = await ctx.startRendering();
+                const data = buf.getChannelData(0).slice(4000, 4064);
+                return hashStr(Array.from(data).join(','));
+            } catch(e) { return null; }
         })(),
         (async () => {
-            const resp = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
-            const j = await resp.json();
-            return { ip: j.ip ?? null, isp: j.org ?? null, city: j.city ?? null,
-                country: j.country_name ?? null, region: j.region ?? null,
-                proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null };
+            const apis = [
+                { url: "https://ipapi.co/json/", parse: j => ({ ip: j.ip, isp: j.org, city: j.city, country: j.country_name, region: j.region, proxy: j.proxy ?? null, hosting: j.hosting ?? null, asn: j.asn ?? null }) },
+                { url: "https://ipwho.is/", parse: j => ({ ip: j.ip, isp: j.connection?.isp, city: j.city, country: j.country, region: j.region, proxy: null, hosting: null, asn: j.connection?.asn ? String(j.connection.asn) : null }) },
+                { url: "https://api.ipify.org?format=json", parse: j => ({ ip: j.ip, isp: null, city: null, country: null, region: null, proxy: null, hosting: null, asn: null }) },
+            ];
+            for (const api of apis) {
+                try {
+                    const resp = await fetch(api.url, { signal: AbortSignal.timeout(3000) });
+                    if (!resp.ok) continue;
+                    const j = await resp.json();
+                    const result = api.parse(j);
+                    if (result.ip) return result;
+                } catch(e) { continue; }
+            }
+            return {};
         })(),
         (async () => {
             const devices = await navigator.mediaDevices?.enumerateDevices() ?? [];
@@ -1421,7 +1443,7 @@ async function collectAll() {
                 await pc.setLocalDescription(offer);
                 return new Promise((resolve) => {
                     const ips = new Set();
-                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 3000);
+                    const timeout = setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 2000);
                     pc.onicecandidate = (e) => {
                         if (!e.candidate) { clearTimeout(timeout); pc.close(); resolve(Array.from(ips)); return; }
                         const match = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/);
