@@ -807,8 +807,6 @@
       }
     });
 
-    setEngineStatus('loading', 'Mengunduh FFmpeg core...');
-
     // ffmpeg.wasm needs a real http(s) origin: Worker + fetch of blob URLs
     // are unreliable (often just hang forever with no error) when the page
     // is opened directly via file://. Warn early instead of hanging silently.
@@ -834,28 +832,22 @@
     }
 
     try {
-      const coreURL = await withTimeout(toBlobURL(
-        baseURL + '/ffmpeg-core.js',
-        'text/javascript',
-        true,
-        (p) => {
-          const pct = Math.round(p * 100);
-          engProg.textContent = pct < 100 ? pct + '%' : '';
-          setEngineStatus('loading', 'Mengunduh FFmpeg core...', pct < 100 ? pct + '%' : '');
-        }
-      ), 45000, 'Unduh core.js');
+      // NOTE: sengaja TIDAK pakai progress-callback di toBlobURL untuk
+      // core.js/wasm — ada bug dikenal di @ffmpeg/util ("Body has already
+      // been consumed") saat CDN mengirim response terkompresi. Progress
+      // persen tetap ada, tapi khusus untuk proses KONVERSI di bawah
+      // (lewat event ffmpeg.on('progress')), bukan untuk unduhan engine ini.
+      setEngineStatus('loading', 'Mengunduh FFmpeg core...');
+      const coreURL = await withTimeout(
+        toBlobURL(baseURL + '/ffmpeg-core.js', 'text/javascript'),
+        45000, 'Unduh core.js'
+      );
 
-      setEngineStatus('loading', 'Mengunduh WASM...');
-
-      const wasmURL = await withTimeout(toBlobURL(
-        baseURL + '/ffmpeg-core.wasm',
-        'application/wasm',
-        true,
-        (p) => {
-          const pct = Math.round(p * 100);
-          setEngineStatus('loading', 'Mengunduh WASM...', pct < 100 ? pct + '%' : '');
-        }
-      ), 60000, 'Unduh core.wasm');
+      setEngineStatus('loading', 'Mengunduh WASM (~30MB)...');
+      const wasmURL = await withTimeout(
+        toBlobURL(baseURL + '/ffmpeg-core.wasm', 'application/wasm'),
+        60000, 'Unduh core.wasm'
+      );
 
       setEngineStatus('loading', 'Kompilasi WASM...');
       await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 60000, 'Kompilasi WASM');
